@@ -1,17 +1,16 @@
-/*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
+// * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// *
+// * Licensed under the Apache License, Version 2.0 (the "License").
+// * You may not use this file except in compliance with the License.
+// * A copy of the License is located at
+// *
+// *  http://aws.amazon.com/apache2.0
+// *
+// * or in the "license" file accompanying this file. This file is distributed
+// * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+// * express or implied. See the License for the specific language governing
+// * permissions and limitations under the License.
+
 package com.amplifyframework.datastore.syncengine
 
 import android.database.sqlite.SQLiteConstraintException
@@ -35,8 +34,8 @@ import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider
 import com.amplifyframework.testmodels.commentsblog.Blog
 import com.amplifyframework.testmodels.commentsblog.BlogOwner
 import com.amplifyframework.testutils.random.RandomString
-import java.util.concurrent.TimeUnit
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -65,14 +64,15 @@ class MergerTest {
      */
     @Before
     fun setup() {
-        val sqliteStorageAdapter = SQLiteStorageAdapter.forModels(
-            SchemaRegistry.instance(),
-            AmplifyModelProvider.getInstance()
-        )
+        val sqliteStorageAdapter =
+            SQLiteStorageAdapter.forModels(
+                SchemaRegistry.instance(),
+                AmplifyModelProvider.getInstance(),
+            )
         storageAdapter = SynchronousStorageAdapter.delegatingTo(sqliteStorageAdapter)
         storageAdapter.initialize(
             ApplicationProvider.getApplicationContext(),
-            DataStoreConfiguration.defaults()
+            DataStoreConfiguration.defaults(),
         )
         spiedStorageAdapter = Mockito.spy(sqliteStorageAdapter)
         mutationOutbox = PersistentMutationOutbox(sqliteStorageAdapter)
@@ -92,17 +92,18 @@ class MergerTest {
     @Throws(DataStoreException::class, InterruptedException::class)
     fun mergeDeletionForExistingItem() {
         // Arrange: A blog owner, and some metadata about it, are in the store.
-        val blogOwner = BlogOwner.builder()
-            .name("Jameson")
-            .build()
+        val blogOwner =
+            BlogOwner.builder()
+                .name("Jameson")
+                .build()
         val originalMetadata = ModelMetadata(blogOwner.id, false, 1, Temporal.Timestamp.now())
         storageAdapter.save(blogOwner, originalMetadata)
         // Just to be sure, our arrangement worked, and that thing is in there, right? Good.
         assertEquals(
             listOf(blogOwner),
             storageAdapter.query(
-                BlogOwner::class.java
-            )
+                BlogOwner::class.java,
+            ),
         )
 
         // Act: merge a model deletion.
@@ -127,9 +128,10 @@ class MergerTest {
     @Throws(DataStoreException::class, InterruptedException::class)
     fun mergeDeletionForNotExistingItem() {
         // Arrange, to start, there are no items matching the incoming deletion request.
-        val blogOwner = BlogOwner.builder()
-            .name("Jameson")
-            .build()
+        val blogOwner =
+            BlogOwner.builder()
+                .name("Jameson")
+                .build()
         // Note that storageAdapter.save(...) does NOT happen!
         // storageAdapter.save(blogOwner, new ModelMetadata(blogOwner.getId(), false, 1, Time.now()));
 
@@ -153,13 +155,17 @@ class MergerTest {
     @Throws(DataStoreException::class, InterruptedException::class)
     fun mergeSaveForNotExistingItem() {
         // Arrange: nothing in the store, to start.
-        val blogOwner = BlogOwner.builder()
-            .name("Jameson")
-            .build()
-        val metadata = ModelMetadata(
-            blogOwner.modelName + "|" + blogOwner.id, false, 1,
-            Temporal.Timestamp.now()
-        )
+        val blogOwner =
+            BlogOwner.builder()
+                .name("Jameson")
+                .build()
+        val metadata =
+            ModelMetadata(
+                blogOwner.modelName + "|" + blogOwner.id,
+                false,
+                1,
+                Temporal.Timestamp.now(),
+            )
         // Note that storageAdapter.save(...) is NOT called!
         // storageAdapter.save(blogOwner, metadata);
 
@@ -172,14 +178,14 @@ class MergerTest {
         assertEquals(
             listOf(blogOwner),
             storageAdapter.query(
-                BlogOwner::class.java
-            )
+                BlogOwner::class.java,
+            ),
         )
         assertEquals(
             listOf(metadata),
             storageAdapter.query(
-                ModelMetadata::class.java
-            )
+                ModelMetadata::class.java,
+            ),
         )
     }
 
@@ -194,21 +200,24 @@ class MergerTest {
     @Throws(DataStoreException::class, InterruptedException::class)
     fun mergeSaveForExistingItem() {
         // Arrange: an item is already in the store.
-        val originalModel = BlogOwner.builder()
-            .name("Jameson The Original")
-            .build()
-        val originalMetadata = ModelMetadata(
-            originalModel.modelName + "|" + originalModel.id,
-            false,
-            1,
-            Temporal.Timestamp.now()
-        )
+        val originalModel =
+            BlogOwner.builder()
+                .name("Jameson The Original")
+                .build()
+        val originalMetadata =
+            ModelMetadata(
+                originalModel.modelName + "|" + originalModel.id,
+                false,
+                1,
+                Temporal.Timestamp.now(),
+            )
         storageAdapter.save(originalModel, originalMetadata)
 
         // Act: merge a save.
-        val updatedModel = originalModel.copyOfBuilder()
-            .name("Jameson The New and Improved")
-            .build()
+        val updatedModel =
+            originalModel.copyOfBuilder()
+                .name("Jameson The New and Improved")
+                .build()
         val updatedMetadata =
             ModelMetadata(originalMetadata.resolveIdentifier(), false, 2, Temporal.Timestamp.now())
         val observer = merger.merge(ModelWithMetadata(updatedModel, updatedMetadata)).test()
@@ -219,14 +228,14 @@ class MergerTest {
         assertEquals(
             listOf(updatedModel),
             storageAdapter.query(
-                BlogOwner::class.java
-            )
+                BlogOwner::class.java,
+            ),
         )
         assertEquals(
             listOf(updatedMetadata),
             storageAdapter.query(
-                ModelMetadata::class.java
-            )
+                ModelMetadata::class.java,
+            ),
         )
     }
 
@@ -244,18 +253,24 @@ class MergerTest {
         // Arrange: some model with a well known ID exists on the system.
         // We pretend that the user has recently updated it via the DataStore update() API.
         val knownId = RandomString.string()
-        val blogOwner = BlogOwner.builder()
-            .name("Jameson")
-            .id(knownId)
-            .build()
+        val blogOwner =
+            BlogOwner.builder()
+                .name("Jameson")
+                .id(knownId)
+                .build()
         val localMetadata = ModelMetadata(blogOwner.id, false, 1, Temporal.Timestamp.now())
         storageAdapter.save(blogOwner, localMetadata)
-        val schema = ModelSchema.fromModelClass(
-            BlogOwner::class.java
-        )
-        val pendingMutation = PendingMutation.instance(
-            blogOwner, schema, PendingMutation.Type.CREATE, QueryPredicates.all()
-        )
+        val schema =
+            ModelSchema.fromModelClass(
+                BlogOwner::class.java,
+            )
+        val pendingMutation =
+            PendingMutation.instance(
+                blogOwner,
+                schema,
+                PendingMutation.Type.CREATE,
+                QueryPredicates.all(),
+            )
         val enqueueObserver = mutationOutbox.enqueue(pendingMutation).test()
         enqueueObserver.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS)
         enqueueObserver.assertNoErrors().assertComplete()
@@ -271,9 +286,10 @@ class MergerTest {
         // Assert: the item is NOT deleted from the local store.
         // The original is still there.
         // Or in other words, the cloud data was NOT merged.
-        val blogOwnersInStorage = storageAdapter.query(
-            BlogOwner::class.java
-        )
+        val blogOwnersInStorage =
+            storageAdapter.query(
+                BlogOwner::class.java,
+            )
         assertEquals(1, blogOwnersInStorage.size.toLong())
         assertEquals(blogOwner, blogOwnersInStorage[0])
     }
@@ -290,18 +306,24 @@ class MergerTest {
         // Arrange: some model with a well known ID exists on the system.
         // We pretend that the user has recently updated it via the DataStore update() API.
         val knownId = RandomString.string()
-        val blogOwner = BlogOwner.builder()
-            .name("Jameson")
-            .id(knownId)
-            .build()
+        val blogOwner =
+            BlogOwner.builder()
+                .name("Jameson")
+                .id(knownId)
+                .build()
         val localMetadata = ModelMetadata(blogOwner.id, false, 1, Temporal.Timestamp.now())
         storageAdapter.save(blogOwner, localMetadata)
-        val schema = ModelSchema.fromModelClass(
-            BlogOwner::class.java
-        )
-        val pendingMutation = PendingMutation.instance(
-            blogOwner, schema, PendingMutation.Type.DELETE, QueryPredicates.all()
-        )
+        val schema =
+            ModelSchema.fromModelClass(
+                BlogOwner::class.java,
+            )
+        val pendingMutation =
+            PendingMutation.instance(
+                blogOwner,
+                schema,
+                PendingMutation.Type.DELETE,
+                QueryPredicates.all(),
+            )
         val enqueueObserver = mutationOutbox.enqueue(pendingMutation).test()
         enqueueObserver.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS)
         enqueueObserver.assertNoErrors().assertComplete()
@@ -310,17 +332,19 @@ class MergerTest {
         // for the same model ID, into the store. According to the cloud, this same
         // item should be DELETED.
         val cloudMetadata = ModelMetadata(knownId, true, 2, Temporal.Timestamp.now())
-        val observer = mutationOutbox.remove(pendingMutation.mutationId)
-            .andThen(merger.merge(ModelWithMetadata(blogOwner, cloudMetadata)))
-            .test()
+        val observer =
+            mutationOutbox.remove(pendingMutation.mutationId)
+                .andThen(merger.merge(ModelWithMetadata(blogOwner, cloudMetadata)))
+                .test()
         observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS)
         observer.assertNoErrors().assertComplete()
 
         // Assert: the item IS deleted from the local store.
         // Or in other words, the cloud data WAS merged.
-        val blogOwnersInStorage = storageAdapter.query(
-            BlogOwner::class.java
-        )
+        val blogOwnersInStorage =
+            storageAdapter.query(
+                BlogOwner::class.java,
+            )
         assertEquals(0, blogOwnersInStorage.size.toLong())
     }
 
@@ -335,19 +359,24 @@ class MergerTest {
     @Throws(AmplifyException::class, InterruptedException::class)
     fun itemWithLowerVersionIsNotMerged() {
         // Arrange a model and metadata into storage.
-        val existingModel = BlogOwner.builder()
-            .name("Cornelius Daniels")
-            .build()
-        val existingMetadata = ModelMetadata(
-            existingModel.id, false, 55,
-            Temporal.Timestamp.now()
-        )
+        val existingModel =
+            BlogOwner.builder()
+                .name("Cornelius Daniels")
+                .build()
+        val existingMetadata =
+            ModelMetadata(
+                existingModel.id,
+                false,
+                55,
+                Temporal.Timestamp.now(),
+            )
         storageAdapter.save(existingModel, existingMetadata)
 
         // Act: try to merge, but specify a LOWER version.
-        val incomingModel = existingModel.copyOfBuilder()
-            .name("Cornelius Daniels, but woke af, now.")
-            .build()
+        val incomingModel =
+            existingModel.copyOfBuilder()
+                .name("Cornelius Daniels, but woke af, now.")
+                .build()
         val lowerVersionMetadata =
             ModelMetadata(incomingModel.id, false, 33, Temporal.Timestamp.now())
         val modelWithLowerVersionMetadata = ModelWithMetadata(existingModel, lowerVersionMetadata)
@@ -359,8 +388,8 @@ class MergerTest {
         assertEquals(
             listOf(existingModel),
             storageAdapter.query(
-                BlogOwner::class.java
-            )
+                BlogOwner::class.java,
+            ),
         )
 
         // And his metadata is the still the same.
@@ -369,9 +398,10 @@ class MergerTest {
             storageAdapter.query(
                 ModelMetadata::class.java,
                 Where.identifier(
-                    ModelMetadata::class.java, existingModel.primaryKeyString
-                )
-            )
+                    ModelMetadata::class.java,
+                    existingModel.primaryKeyString,
+                ),
+            ),
         )
     }
 
@@ -387,21 +417,24 @@ class MergerTest {
     @Throws(AmplifyException::class, InterruptedException::class)
     fun itemWithSameVersionIsNotMerged() {
         // Arrange a model and metadata into storage.
-        val existingModel = BlogOwner.builder()
-            .name("Cornelius Daniels")
-            .build()
-        val existingMetadata = ModelMetadata(
-            existingModel.modelName + "|" + existingModel.id,
-            false,
-            55,
-            Temporal.Timestamp.now()
-        )
+        val existingModel =
+            BlogOwner.builder()
+                .name("Cornelius Daniels")
+                .build()
+        val existingMetadata =
+            ModelMetadata(
+                existingModel.modelName + "|" + existingModel.id,
+                false,
+                55,
+                Temporal.Timestamp.now(),
+            )
         storageAdapter.save(existingModel, existingMetadata)
 
         // Act: try to merge, but specify a LOWER version.
-        val incomingModel = existingModel.copyOfBuilder()
-            .name("Cornelius Daniels, but woke af, now.")
-            .build()
+        val incomingModel =
+            existingModel.copyOfBuilder()
+                .name("Cornelius Daniels, but woke af, now.")
+                .build()
         val lowerVersionMetadata =
             ModelMetadata(incomingModel.id, false, 33, Temporal.Timestamp.now())
         val modelWithLowerVersionMetadata = ModelWithMetadata(incomingModel, lowerVersionMetadata)
@@ -410,9 +443,10 @@ class MergerTest {
         mergeObserver.assertNoErrors().assertComplete()
 
         // Assert: Joey is still the same old Joey.
-        val actualBlogOwners = storageAdapter.query(
-            BlogOwner::class.java
-        )
+        val actualBlogOwners =
+            storageAdapter.query(
+                BlogOwner::class.java,
+            )
         assertEquals(1, actualBlogOwners.size.toLong())
         assertEquals(existingModel, actualBlogOwners[0])
 
@@ -423,9 +457,9 @@ class MergerTest {
                 ModelMetadata::class.java,
                 Where.identifier(
                     ModelMetadata::class.java,
-                    existingModel.modelName + "|" + existingModel.id
-                )
-            )
+                    existingModel.modelName + "|" + existingModel.id,
+                ),
+            ),
         )
     }
 
@@ -442,23 +476,31 @@ class MergerTest {
     @Throws(AmplifyException::class, InterruptedException::class)
     fun itemWithoutVersionIsNotMerged() {
         // Arrange a model and metadata into storage.
-        val existingModel = BlogOwner.builder()
-            .name("Cornelius Daniels")
-            .build()
-        val existingMetadata = ModelMetadata(
-            existingModel.id, false,
-            1, Temporal.Timestamp.now()
-        )
+        val existingModel =
+            BlogOwner.builder()
+                .name("Cornelius Daniels")
+                .build()
+        val existingMetadata =
+            ModelMetadata(
+                existingModel.id,
+                false,
+                1,
+                Temporal.Timestamp.now(),
+            )
         storageAdapter.save(existingModel, existingMetadata)
 
         // Act: try to merge, but don't specify a version in the metadata being used to merge.
-        val incomingModel = existingModel.copyOfBuilder()
-            .name("Cornelius Daniels, but woke af, now.")
-            .build()
-        val metadataWithoutVersion = ModelMetadata(
-            incomingModel.id, null, null,
-            null
-        )
+        val incomingModel =
+            existingModel.copyOfBuilder()
+                .name("Cornelius Daniels, but woke af, now.")
+                .build()
+        val metadataWithoutVersion =
+            ModelMetadata(
+                incomingModel.id,
+                null,
+                null,
+                null,
+            )
         val incomingModelWithMetadata = ModelWithMetadata(existingModel, metadataWithoutVersion)
         val mergeObserver = merger.merge(incomingModelWithMetadata).test()
         mergeObserver.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS)
@@ -468,8 +510,8 @@ class MergerTest {
         assertEquals(
             listOf(existingModel),
             storageAdapter.query(
-                BlogOwner::class.java
-            )
+                BlogOwner::class.java,
+            ),
         )
 
         // And his metadata is the still the same.
@@ -478,9 +520,10 @@ class MergerTest {
             storageAdapter.query(
                 ModelMetadata::class.java,
                 Where.identifier(
-                    ModelMetadata::class.java, existingModel.id
-                )
-            )
+                    ModelMetadata::class.java,
+                    existingModel.id,
+                ),
+            ),
         )
     }
 
@@ -496,17 +539,22 @@ class MergerTest {
     @Throws(DataStoreException::class, InterruptedException::class)
     fun orphanedItemIsNotMerged() {
         // Arrange: an item and its parent are not in the local store
-        val badOwner = BlogOwner.builder()
-            .name("Raphael")
-            .build()
-        val orphanedBlog = Blog.builder()
-            .name("How Not To Save Blogs")
-            .owner(badOwner)
-            .build()
-        val metadata = ModelMetadata(
-            orphanedBlog.id, false, 1,
-            Temporal.Timestamp.now()
-        )
+        val badOwner =
+            BlogOwner.builder()
+                .name("Raphael")
+                .build()
+        val orphanedBlog =
+            Blog.builder()
+                .name("How Not To Save Blogs")
+                .owner(badOwner)
+                .build()
+        val metadata =
+            ModelMetadata(
+                orphanedBlog.id,
+                false,
+                1,
+                Temporal.Timestamp.now(),
+            )
 
         // Enforce foreign key constraint on in-memory storage adapter
         Mockito.doThrow(SQLiteConstraintException::class.java)
@@ -516,7 +564,7 @@ class MergerTest {
                 ArgumentMatchers.any(),
                 ArgumentMatchers.any(),
                 ArgumentMatchers.any(),
-                ArgumentMatchers.any()
+                ArgumentMatchers.any(),
             )
 
         // Act: merge a creation for an item
@@ -525,9 +573,10 @@ class MergerTest {
         observer.assertNoErrors().assertComplete()
 
         // Assert: orphaned model was not merged locally
-        val blogsInStorage = storageAdapter.query(
-            Blog::class.java
-        )
+        val blogsInStorage =
+            storageAdapter.query(
+                Blog::class.java,
+            )
         assertTrue(blogsInStorage.isEmpty())
     }
 
@@ -547,110 +596,126 @@ class MergerTest {
         val ignoredTimestamp = Temporal.Timestamp.now()
 
         // Capture Storage Changes Returned
-        var capturedStorageItemChanges = mutableListOf<StorageItemChange.Type>()
-        val changeTypeConsumer = Consumer<StorageItemChange.Type> {
-            capturedStorageItemChanges.add(it)
-        }
+        val capturedStorageItemChanges = mutableListOf<StorageItemChange.Type>()
+        val changeTypeConsumer =
+            Consumer<StorageItemChange.Type> {
+                capturedStorageItemChanges.add(it)
+            }
 
         // Hydrate Step for b3
-        val blog3ModelWithMetadata = ModelWithMetadata(
-            Blog.builder().name("blog3Name").id("b3").build(),
-            ModelMetadata("Blog|b3", false, 1, Temporal.Timestamp.now())
-        )
+        val blog3ModelWithMetadata =
+            ModelWithMetadata(
+                Blog.builder().name("blog3Name").id("b3").build(),
+                ModelMetadata("Blog|b3", false, 1, Temporal.Timestamp.now()),
+            )
         storageAdapter.save(blog3ModelWithMetadata.model, blog3ModelWithMetadata.syncMetadata)
-        val pendingMutation = PendingMutation.instance(
-            blog3ModelWithMetadata.model,
-            ModelSchema.fromModelClass(Blog::class.java),
-            PendingMutation.Type.CREATE,
-            QueryPredicates.all()
-        )
+        val pendingMutation =
+            PendingMutation.instance(
+                blog3ModelWithMetadata.model,
+                ModelSchema.fromModelClass(Blog::class.java),
+                PendingMutation.Type.CREATE,
+                QueryPredicates.all(),
+            )
         val enqueueObserver = mutationOutbox.enqueue(pendingMutation).test()
         enqueueObserver.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS)
         enqueueObserver.assertNoErrors().assertComplete()
 
         // Hydrate Step for b4
-        val blog4ModelWithMetadata = ModelWithMetadata(
-            Blog.builder().name("blog4Name").id("b4").build(),
-            ModelMetadata("Blog|b4", false, 1, ignoredTimestamp)
-        )
+        val blog4ModelWithMetadata =
+            ModelWithMetadata(
+                Blog.builder().name("blog4Name").id("b4").build(),
+                ModelMetadata("Blog|b4", false, 1, ignoredTimestamp),
+            )
         storageAdapter.save(blog4ModelWithMetadata.model, blog4ModelWithMetadata.syncMetadata)
 
         // Hydrate Step for b5
-        val blog5ModelWithMetadata = ModelWithMetadata(
-            Blog.builder().name("blog5Name").id("b5").build(),
-            ModelMetadata("Blog|b5", false, 10, ignoredTimestamp)
-        )
+        val blog5ModelWithMetadata =
+            ModelWithMetadata(
+                Blog.builder().name("blog5Name").id("b5").build(),
+                ModelMetadata("Blog|b5", false, 10, ignoredTimestamp),
+            )
         storageAdapter.save(blog5ModelWithMetadata.model, blog5ModelWithMetadata.syncMetadata)
 
         // Hydrate Step for b6
-        val blog6ModelWithMetadata = ModelWithMetadata(
-            Blog.builder().name("blog6Name").id("b6").build(),
-            ModelMetadata("Blog|b6", false, 1, ignoredTimestamp)
-        )
+        val blog6ModelWithMetadata =
+            ModelWithMetadata(
+                Blog.builder().name("blog6Name").id("b6").build(),
+                ModelMetadata("Blog|b6", false, 1, ignoredTimestamp),
+            )
         storageAdapter.save(blog6ModelWithMetadata.model, blog6ModelWithMetadata.syncMetadata)
 
         // Models to Merge
-        val blog1ModelWithMetadata = ModelWithMetadata(
-            Blog.builder().name("blog1Name").id("b1").build(),
-            ModelMetadata("Blog|b1", false, 1, ignoredTimestamp)
-        )
-        val blog2ModelWithMetadata = ModelWithMetadata(
-            Blog.builder().name("blog2Name").id("b2").build(),
-            ModelMetadata("Blog|b2", true, 1, ignoredTimestamp)
-        )
-        val blog3ToUpdate = ModelWithMetadata(
-            blog3ModelWithMetadata.model.copyOfBuilder().name("blog3NameUpdated").build(),
-            ModelMetadata("Blog|b3", true, 2, ignoredTimestamp)
-        )
-        val blog4ToUpdate = ModelWithMetadata(
-            blog4ModelWithMetadata.model.copyOfBuilder().name("blog4NameUpdated").build(),
-            ModelMetadata("Blog|b4", false, 2, ignoredTimestamp)
-        )
-        val blog5ToUpdate = ModelWithMetadata(
-            blog5ModelWithMetadata.model.copyOfBuilder().name("blog5NameUpdated").id("b5").build(),
-            ModelMetadata("Blog|b5", false, 5, ignoredTimestamp)
-        )
-        val blog6ToUpdate = ModelWithMetadata(
-            blog6ModelWithMetadata.model,
-            ModelMetadata("Blog|b6", true, 2, ignoredTimestamp)
-        )
+        val blog1ModelWithMetadata =
+            ModelWithMetadata(
+                Blog.builder().name("blog1Name").id("b1").build(),
+                ModelMetadata("Blog|b1", false, 1, ignoredTimestamp),
+            )
+        val blog2ModelWithMetadata =
+            ModelWithMetadata(
+                Blog.builder().name("blog2Name").id("b2").build(),
+                ModelMetadata("Blog|b2", true, 1, ignoredTimestamp),
+            )
+        val blog3ToUpdate =
+            ModelWithMetadata(
+                blog3ModelWithMetadata.model.copyOfBuilder().name("blog3NameUpdated").build(),
+                ModelMetadata("Blog|b3", true, 2, ignoredTimestamp),
+            )
+        val blog4ToUpdate =
+            ModelWithMetadata(
+                blog4ModelWithMetadata.model.copyOfBuilder().name("blog4NameUpdated").build(),
+                ModelMetadata("Blog|b4", false, 2, ignoredTimestamp),
+            )
+        val blog5ToUpdate =
+            ModelWithMetadata(
+                blog5ModelWithMetadata.model.copyOfBuilder().name("blog5NameUpdated").id("b5").build(),
+                ModelMetadata("Blog|b5", false, 5, ignoredTimestamp),
+            )
+        val blog6ToUpdate =
+            ModelWithMetadata(
+                blog6ModelWithMetadata.model,
+                ModelMetadata("Blog|b6", true, 2, ignoredTimestamp),
+            )
 
         // Expected Blog table result
-        val expectedBlogResult = listOf(
-            blog1ModelWithMetadata.model,
-            blog3ModelWithMetadata.model,
-            blog4ToUpdate.model,
-            blog5ModelWithMetadata.model
-        )
+        val expectedBlogResult =
+            listOf(
+                blog1ModelWithMetadata.model,
+                blog3ModelWithMetadata.model,
+                blog4ToUpdate.model,
+                blog5ModelWithMetadata.model,
+            )
         // Expected ModelMutation table result
-        val expectedMetadataResult = listOf(
-            blog1ModelWithMetadata.syncMetadata,
-            blog2ModelWithMetadata.syncMetadata,
-            blog3ToUpdate.syncMetadata,
-            blog4ToUpdate.syncMetadata,
-            blog5ModelWithMetadata.syncMetadata,
-            blog6ToUpdate.syncMetadata
-        )
+        val expectedMetadataResult =
+            listOf(
+                blog1ModelWithMetadata.syncMetadata,
+                blog2ModelWithMetadata.syncMetadata,
+                blog3ToUpdate.syncMetadata,
+                blog4ToUpdate.syncMetadata,
+                blog5ModelWithMetadata.syncMetadata,
+                blog6ToUpdate.syncMetadata,
+            )
         // Expected Storage Item Changes
-        val expectedStorageItemChanges = listOf(
-            StorageItemChange.Type.CREATE,
-            StorageItemChange.Type.DELETE,
-            StorageItemChange.Type.UPDATE,
-            StorageItemChange.Type.DELETE
-        )
+        val expectedStorageItemChanges =
+            listOf(
+                StorageItemChange.Type.CREATE,
+                StorageItemChange.Type.DELETE,
+                StorageItemChange.Type.UPDATE,
+                StorageItemChange.Type.DELETE,
+            )
 
         // WHEN: Merge Models
-        val observer = merger.merge(
-            listOf(
-                blog1ModelWithMetadata,
-                blog2ModelWithMetadata,
-                blog3ToUpdate,
-                blog4ToUpdate,
-                blog5ToUpdate,
-                blog6ToUpdate
-            ),
-            changeTypeConsumer
-        ).test()
+        val observer =
+            merger.merge(
+                listOf(
+                    blog1ModelWithMetadata,
+                    blog2ModelWithMetadata,
+                    blog3ToUpdate,
+                    blog4ToUpdate,
+                    blog5ToUpdate,
+                    blog6ToUpdate,
+                ),
+                changeTypeConsumer,
+            ).test()
 
         assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
         observer.assertNoErrors().assertComplete()
@@ -677,51 +742,58 @@ class MergerTest {
     @Test
     @Throws(DataStoreException::class, InterruptedException::class)
     fun testBatchMergerReconciliation() {
-
         // Random UUID following RFC 4122 version 4 spec
         val sameRandomId = UUID.randomUUID().toString()
 
         // Models to merge
-        val blogFirstPost1ToBeDisregarded = ModelWithMetadata(
-            Blog.builder().name("Hideo K.").id("DS1").build(),
-            ModelMetadata(sameRandomId, false, 1, Temporal.Timestamp.now())
-        )
-        val blogFirstPost2LatestVer = ModelWithMetadata(
-            Blog.builder().name("Hideo K.").id("DS1").build(),
-            ModelMetadata(sameRandomId, true, 3, Temporal.Timestamp.now())
-        )
-        val blogFirstPost3LatestVerDuplicate = ModelWithMetadata(
-            Blog.builder().name("Hideo K.").id("DS1").build(),
-            ModelMetadata(sameRandomId, false, 3, Temporal.Timestamp.now())
-        )
-        val blogFirstPost4ToBeDisregarded = ModelWithMetadata(
-            Blog.builder().name("Hideo K.").id("DS1").build(),
-            ModelMetadata(sameRandomId, false, 2, Temporal.Timestamp.now())
-        )
-        val blogSecondPost1ToSurvive = ModelWithMetadata(
-            Blog.builder().name("Hideo K.").id("DS2").build(),
-            ModelMetadata(sameRandomId, false, 11, Temporal.Timestamp.now())
-        )
+        val blogFirstPost1ToBeDisregarded =
+            ModelWithMetadata(
+                Blog.builder().name("Hideo K.").id("DS1").build(),
+                ModelMetadata(sameRandomId, false, 1, Temporal.Timestamp.now()),
+            )
+        val blogFirstPost2LatestVer =
+            ModelWithMetadata(
+                Blog.builder().name("Hideo K.").id("DS1").build(),
+                ModelMetadata(sameRandomId, true, 3, Temporal.Timestamp.now()),
+            )
+        val blogFirstPost3LatestVerDuplicate =
+            ModelWithMetadata(
+                Blog.builder().name("Hideo K.").id("DS1").build(),
+                ModelMetadata(sameRandomId, false, 3, Temporal.Timestamp.now()),
+            )
+        val blogFirstPost4ToBeDisregarded =
+            ModelWithMetadata(
+                Blog.builder().name("Hideo K.").id("DS1").build(),
+                ModelMetadata(sameRandomId, false, 2, Temporal.Timestamp.now()),
+            )
+        val blogSecondPost1ToSurvive =
+            ModelWithMetadata(
+                Blog.builder().name("Hideo K.").id("DS2").build(),
+                ModelMetadata(sameRandomId, false, 11, Temporal.Timestamp.now()),
+            )
 
         // Input list of blog posts on remote storage
-        val remotemodels = listOf(
-            blogFirstPost1ToBeDisregarded,
-            blogFirstPost2LatestVer,
-            blogFirstPost3LatestVerDuplicate,
-            blogFirstPost4ToBeDisregarded,
-            blogSecondPost1ToSurvive
-        )
+        val remotemodels =
+            listOf(
+                blogFirstPost1ToBeDisregarded,
+                blogFirstPost2LatestVer,
+                blogFirstPost3LatestVerDuplicate,
+                blogFirstPost4ToBeDisregarded,
+                blogSecondPost1ToSurvive,
+            )
 
         // Expected Blog table result
-        val expectedBlogResult = listOf(
-            blogSecondPost1ToSurvive.model
-        )
+        val expectedBlogResult =
+            listOf(
+                blogSecondPost1ToSurvive.model,
+            )
 
         // Expected Metadata result
-        val expectedMetadataResult = listOf(
-            blogFirstPost2LatestVer.syncMetadata,
-            blogSecondPost1ToSurvive.syncMetadata
-        )
+        val expectedMetadataResult =
+            listOf(
+                blogFirstPost2LatestVer.syncMetadata,
+                blogSecondPost1ToSurvive.syncMetadata,
+            )
 
         val observer = merger.merge(remotemodels).test()
         assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
