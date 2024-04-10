@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.analytics.AnalyticsCategory;
+import com.amplifyframework.annotations.AmplifyFlutterApi;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.auth.AuthCategory;
 import com.amplifyframework.core.category.Category;
@@ -118,6 +119,21 @@ public final class Amplify {
      */
     public static Map<CategoryType, Category<? extends Plugin<?>>> getCategoriesMap() {
         return Immutable.of(CATEGORIES);
+    }
+
+    /**
+     * Appends the given platform information version to the user agent header. This is only for internal use by the
+     * Amplify Flutter library, and is not intended for public consumption.
+     * @param platform The platform identifier
+     * @param version The version string for the platform
+     * @throws AmplifyException If version information has already be configured.
+     */
+    @AmplifyFlutterApi
+    public static void addUserAgentPlatform(
+        @NonNull UserAgent.Platform platform,
+        @NonNull String version
+    ) throws AmplifyException {
+        UserAgent.configure(Map.of(platform, version));
     }
 
     /**
