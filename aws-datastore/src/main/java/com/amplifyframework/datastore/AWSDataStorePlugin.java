@@ -31,6 +31,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.InitializationStatus;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.core.configuration.AmplifyOutputsData;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelIdentifier;
 import com.amplifyframework.core.model.ModelProvider;
@@ -248,9 +249,10 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull JSONObject pluginConfiguration,
             @NonNull Context context
     ) throws DataStoreException {
+        DataStoreConfiguration configuration;
         try {
             // Applies user-provided configs on-top-of any values from the file.
-            this.pluginConfiguration = DataStoreConfiguration
+            configuration = DataStoreConfiguration
                 .builder(pluginConfiguration, userProvidedConfiguration)
                 .build();
         } catch (DataStoreException badConfigException) {
@@ -262,6 +264,18 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             );
         }
 
+        configure(context, configuration);
+    }
+
+    @Override
+    public void configure(@NonNull AmplifyOutputsData configuration, @NonNull Context context) throws AmplifyException {
+        // DataStore does not read any values from AmplifyOutputs, just use the programmatically provided
+        // configuration values
+        configure(context, userProvidedConfiguration);
+    }
+
+    private void configure(Context context, DataStoreConfiguration configuration) {
+        pluginConfiguration = configuration;
         HubChannel hubChannel = HubChannel.forCategoryType(getCategoryType());
         Amplify.Hub.subscribe(hubChannel,
             event -> InitializationStatus.SUCCEEDED.toString().equals(event.getName()),
