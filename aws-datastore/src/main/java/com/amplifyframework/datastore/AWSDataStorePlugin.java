@@ -22,6 +22,7 @@ import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.annotations.InternalAmplifyApi;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.aws.AuthModeStrategyType;
 import com.amplifyframework.api.graphql.GraphQLBehavior;
@@ -268,6 +269,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     }
 
     @Override
+    @InternalAmplifyApi
     public void configure(@NonNull AmplifyOutputsData configuration, @NonNull Context context) throws AmplifyException {
         // DataStore does not read any values from AmplifyOutputs, just use the programmatically provided
         // configuration values

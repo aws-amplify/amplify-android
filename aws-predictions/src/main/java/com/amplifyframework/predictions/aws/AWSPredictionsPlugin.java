@@ -109,6 +109,7 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
     }
 
     @Override
+    @InternalAmplifyApi
     public void configure(
         @NonNull AmplifyOutputsData configuration,
         @NonNull Context context

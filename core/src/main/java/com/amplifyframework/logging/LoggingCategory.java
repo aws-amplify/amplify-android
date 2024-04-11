@@ -21,6 +21,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.annotations.InternalAmplifyApi;
 import com.amplifyframework.core.Resources;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryConfiguration;
@@ -134,6 +135,7 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
     }
 
     @Override
+    @InternalAmplifyApi
     public synchronized void configure(@NonNull AmplifyOutputsData configuration, @NonNull Context context)
         throws AmplifyException {
         // Logging plugin config is read from a separate file
