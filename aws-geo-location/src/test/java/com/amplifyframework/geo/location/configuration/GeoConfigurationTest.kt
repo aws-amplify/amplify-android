@@ -15,6 +15,12 @@
 
 package com.amplifyframework.geo.location.configuration
 
+import com.amplifyframework.testutils.configuration.amplifyOutputsData
+import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldMatchEach
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.should
+import io.kotest.matchers.shouldBe
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -38,5 +44,52 @@ class GeoConfigurationTest {
             .region("us-west-2")
             .build()
         assertEquals(expected, config)
+    }
+
+    @Test
+    fun `configuration can be built from amplify outputs`() {
+        val data = amplifyOutputsData {
+            geo {
+                awsRegion = "test-region"
+                maps {
+                    map("other-map", "other-style")
+                    map("default-map", "default-style")
+                    default = "default-map"
+                }
+                searchIndices {
+                    items += listOf("default-search-index", "other-search-index")
+                    default = "default-search-index"
+                }
+            }
+        }
+
+        val configuration = GeoConfiguration.from(data)
+
+        configuration.region shouldBe "test-region"
+
+        configuration.maps?.shouldNotBeNull()
+        configuration.maps?.run {
+            default should {
+                it.mapName shouldBe "default-map"
+                it.style shouldBe "default-style"
+            }
+
+            items shouldMatchEach listOf(
+                {
+                    it.mapName shouldBe "other-map"
+                    it.style shouldBe "other-style"
+                },
+                {
+                    it.mapName shouldBe "default-map"
+                    it.style shouldBe "default-style"
+                }
+            )
+        }
+
+        configuration.searchIndices?.shouldNotBeNull()
+        configuration.searchIndices?.run {
+            items shouldContainExactly listOf("default-search-index", "other-search-index")
+            default shouldBe "default-search-index"
+        }
     }
 }
