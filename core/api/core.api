@@ -1195,6 +1195,7 @@ public final class com/amplifyframework/core/Amplify {
 	public static fun addPlugin (Lcom/amplifyframework/core/plugin/Plugin;)V
 	public static fun configure (Landroid/content/Context;)V
 	public static fun configure (Lcom/amplifyframework/core/AmplifyConfiguration;Landroid/content/Context;)V
+	public static fun configure (Lcom/amplifyframework/core/configuration/AmplifyOutputs;Landroid/content/Context;)V
 	public static fun getCategoriesMap ()Ljava/util/Map;
 	public static fun removePlugin (Lcom/amplifyframework/core/plugin/Plugin;)V
 }
@@ -1365,6 +1366,22 @@ public final class com/amplifyframework/core/category/SubCategoryType : java/lan
 	public fun toString ()Ljava/lang/String;
 	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/core/category/SubCategoryType;
 	public static fun values ()[Lcom/amplifyframework/core/category/SubCategoryType;
+}
+
+public abstract interface class com/amplifyframework/core/configuration/AmplifyOutputs {
+	public static final field Companion Lcom/amplifyframework/core/configuration/AmplifyOutputs$Companion;
+	public static fun fromResource (I)Lcom/amplifyframework/core/configuration/AmplifyOutputs;
+	public static fun fromString (Ljava/lang/String;)Lcom/amplifyframework/core/configuration/AmplifyOutputs;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputs$Companion {
+	public final fun fromResource (I)Lcom/amplifyframework/core/configuration/AmplifyOutputs;
+	public final fun fromString (Ljava/lang/String;)Lcom/amplifyframework/core/configuration/AmplifyOutputs;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsKt {
+	public static final synthetic fun AmplifyOutputs (I)Lcom/amplifyframework/core/configuration/AmplifyOutputs;
+	public static final synthetic fun AmplifyOutputs (Ljava/lang/String;)Lcom/amplifyframework/core/configuration/AmplifyOutputs;
 }
 
 public final class com/amplifyframework/core/model/AuthRule {

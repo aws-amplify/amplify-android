@@ -22,6 +22,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.analytics.AnalyticsCategory;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
+import com.amplifyframework.core.configuration.AmplifyOutputs;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.logging.LoggingCategory;
 
@@ -62,6 +63,25 @@ public final class RxAmplify {
     public static void configure(@NonNull final AmplifyConfiguration configuration, @NonNull Context context)
             throws AmplifyException {
         Amplify.configure(configuration, context);
+    }
+
+    /**
+     * Configure Amplify using the outputs from the Amplify Gen2 CLI. This is the configure method to use if you are
+     * using the Amplify Gen2 experience.
+     * You must call one of the configure() methods before using any Amplify category.
+     * You must add plugins to the framework before calling configure().
+     * configure() may only be called once per application process, and there is
+     * currently no way to reconfigure Amplify once it has been called.
+     * Subsequent attempts to configure Amplify will generate an AmplifyException.
+     * @param amplifyOutputs An {@link AmplifyOutputs} instance representing the amplify_outputs data to use
+     * @param context An Android context
+     * @throws AmplifyException Indicates one of numerous possible failures to configure the Framework
+     */
+    public static void configure(
+        @NonNull AmplifyOutputs amplifyOutputs,
+        @NonNull Context context
+    ) throws AmplifyException {
+        Amplify.configure(amplifyOutputs, context);
     }
 
     /**
