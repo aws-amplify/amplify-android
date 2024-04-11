@@ -38,6 +38,10 @@ class AmplifyOutputsDataBuilder : AmplifyOutputsData {
     fun notifications(func: NotificationsBuilder.() -> Unit) {
         notifications = NotificationsBuilder().apply(func)
     }
+
+    fun storage(func: StorageBuilder.() -> Unit) {
+        storage = StorageBuilder().apply(func)
+    }
 }
 
 class AnalyticsBuilder : AmplifyOutputsData.Analytics {
@@ -51,4 +55,9 @@ class NotificationsBuilder : AmplifyOutputsData.Notifications {
     override val channels: MutableList<AmplifyOutputsData.AmazonPinpointChannels> = mutableListOf(
         AmplifyOutputsData.AmazonPinpointChannels.FCM
     )
+}
+
+class StorageBuilder : AmplifyOutputsData.Storage {
+    override var awsRegion: String = "us-east-1"
+    override var bucketName: String = "bucket-name"
 }
