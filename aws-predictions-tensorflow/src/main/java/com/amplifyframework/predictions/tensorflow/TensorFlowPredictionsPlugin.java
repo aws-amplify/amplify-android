@@ -21,7 +21,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.annotations.InternalAmplifyApi;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.configuration.AmplifyOutputsData;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.PredictionsPlugin;
 import com.amplifyframework.predictions.models.IdentifyAction;
@@ -80,8 +82,18 @@ public final class TensorFlowPredictionsPlugin extends PredictionsPlugin<TensorF
     public void configure(
             JSONObject pluginConfiguration,
             @NonNull Context context
-    ) throws AmplifyException {
-        this.predictionsService = new TensorFlowPredictionsService(context);
+    ) {
+        configure(context);
+    }
+
+    @Override
+    @InternalAmplifyApi
+    public void configure(@NonNull AmplifyOutputsData configuration, @NonNull Context context) {
+        configure(context);
+    }
+
+    private void configure(@NonNull Context context) {
+        predictionsService = new TensorFlowPredictionsService(context);
     }
 
     @WorkerThread
