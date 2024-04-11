@@ -88,4 +88,9 @@ class AWSS3StoragePathRemoveTest {
             )
         }
     }
+
+    @Test(expected = StorageException::class)
+    fun testRemoveWithInvalidPath() {
+        synchronousStorage.remove(StoragePath.fromString("/invalid"), StorageRemoveOptions.defaultInstance())
+    }
 }
