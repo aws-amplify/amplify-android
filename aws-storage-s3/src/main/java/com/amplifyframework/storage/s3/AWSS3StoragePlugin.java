@@ -20,11 +20,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
 import androidx.annotation.VisibleForTesting;
 
+import com.amplifyframework.annotations.InternalAmplifyApi;
 import com.amplifyframework.annotations.InternalApiWarning;
 import com.amplifyframework.auth.AuthCredentialsProvider;
 import com.amplifyframework.auth.CognitoCredentialsProvider;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.NoOpConsumer;
+import com.amplifyframework.core.configuration.AmplifyOutputsData;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StoragePlugin;
@@ -218,6 +220,29 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             );
         }
 
+        configure(context, region, bucket);
+    }
+
+    @Override
+    @InternalAmplifyApi
+    public void configure(@NonNull AmplifyOutputsData configuration, @NonNull Context context) throws StorageException {
+        AmplifyOutputsData.Storage storage = configuration.getStorage();
+
+        if (storage == null) {
+            throw new StorageException(
+                "Missing storage configuration",
+                "Ensure that storage configuration is present in your Amplify Outputs"
+            );
+        }
+
+        configure(context, storage.getAwsRegion(), storage.getBucketName());
+    }
+
+    private void configure(
+        @NonNull Context context,
+        @NonNull String region,
+        @NonNull String bucket
+    ) throws StorageException {
         try {
             this.storageService = (AWSS3StorageService) storageServiceFactory.create(context, region, bucket);
         } catch (RuntimeException exception) {
