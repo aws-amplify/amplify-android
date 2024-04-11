@@ -15,6 +15,8 @@
 
 package com.amplifyframework.pushnotifications.pinpoint
 
+import com.amplifyframework.core.configuration.AmplifyOutputsData
+import com.amplifyframework.notifications.pushnotifications.PushNotificationsException
 import org.json.JSONObject
 
 class AWSPinpointPushNotificationsConfiguration internal constructor(val appId: String, val region: String) {
@@ -23,6 +25,18 @@ class AWSPinpointPushNotificationsConfiguration internal constructor(val appId: 
             val region = pluginJson?.getString("region")
             val appId = pluginJson?.getString("appId")
             return AWSPinpointPushNotificationsConfiguration(appId!!, region!!)
+        }
+
+        internal fun from(outputs: AmplifyOutputsData): AWSPinpointPushNotificationsConfiguration {
+            val notifications = outputs.notifications ?: throw PushNotificationsException(
+                message = "Missing notifications configuration",
+                recoverySuggestion = "Ensure the notifications category is properly configured"
+            )
+
+            return AWSPinpointPushNotificationsConfiguration(
+                appId = notifications.amazonPinpointAppId,
+                region = notifications.awsRegion
+            )
         }
     }
 }
