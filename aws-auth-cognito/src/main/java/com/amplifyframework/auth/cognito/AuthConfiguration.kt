@@ -19,6 +19,8 @@ import androidx.annotation.IntRange
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.options.AuthFlowType
+import com.amplifyframework.auth.exceptions.ConfigurationException
+import com.amplifyframework.core.configuration.AmplifyOutputsData
 import com.amplifyframework.statemachine.codegen.data.IdentityPoolConfiguration
 import com.amplifyframework.statemachine.codegen.data.OauthConfiguration
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
@@ -109,6 +111,50 @@ data class AuthConfiguration internal constructor(
                 passwordProtectionSettings = getPasswordProtectionSettings(authConfig)
             )
         }
+
+        fun from(amplifyOutputs: AmplifyOutputsData): AuthConfiguration {
+            val auth = amplifyOutputs.auth ?: throw ConfigurationException(
+                "Missing Auth configuration",
+                "Ensure the auth category is properly configured"
+            )
+
+            val oauth = auth.oauth?.let {
+                OauthConfiguration(
+                    appClient = auth.userPoolClientId,
+                    appSecret = null, // Not supported in Gen2
+                    domain = it.domain,
+                    scopes = it.scopes.toSet(),
+                    // Note: Gen2 config gives an array for these values, while Gen1 is just a String. In Gen1
+                    // if you specify multiple URIs the CLI will join them to a comma-delimited string in the json.
+                    // We are matching that behaviour here for Gen2.
+                    signInRedirectURI = it.redirectSignInUri.joinToString(","),
+                    signOutRedirectURI = it.redirectSignOutUri.joinToString(",")
+                )
+            }
+
+            val identityPool = auth.identityPoolId?.let {
+                IdentityPoolConfiguration(region = auth.awsRegion, poolId = it)
+            }
+
+            return AuthConfiguration(
+                userPool = UserPoolConfiguration(
+                    region = auth.awsRegion,
+                    endpoint = null, // Not supported in Gen2
+                    poolId = auth.userPoolId,
+                    appClient = auth.userPoolClientId,
+                    appClientSecret = null, // Not supported in Gen2
+                    pinpointAppId = null // Not supported in Gen2
+                ),
+                identityPool = identityPool,
+                oauth = oauth,
+                authFlowType = auth.authenticationFlowType.toConfigType(),
+                signUpAttributes = auth.standardRequiredAttributes,
+                usernameAttributes = auth.usernameAttributes.map { it.toConfigType() },
+                verificationMechanisms = auth.userVerificationTypes.map { it.toConfigType() },
+                passwordProtectionSettings = auth.passwordPolicy?.toConfigType()
+            )
+        }
+
         private fun getAuthenticationFlowType(authType: String?): AuthFlowType {
             return if (!authType.isNullOrEmpty() && AuthFlowType.values().any { it.name == authType }) {
                 AuthFlowType.valueOf(authType)
@@ -135,5 +181,29 @@ data class AuthConfiguration internal constructor(
         private inline fun <T> JSONArray.map(func: JSONArray.(Int) -> T) = List(length()) {
             func(it)
         }
+
+        private fun AmplifyOutputsData.Auth.AuthenticationFlowType.toConfigType() = when (this) {
+            AmplifyOutputsData.Auth.AuthenticationFlowType.USER_SRP_AUTH -> AuthFlowType.USER_SRP_AUTH
+            AmplifyOutputsData.Auth.AuthenticationFlowType.CUSTOM_AUTH -> AuthFlowType.CUSTOM_AUTH
+        }
+
+        private fun AmplifyOutputsData.Auth.UsernameAttributes.toConfigType() = when (this) {
+            AmplifyOutputsData.Auth.UsernameAttributes.EMAIL -> UsernameAttribute.Email
+            AmplifyOutputsData.Auth.UsernameAttributes.PHONE -> UsernameAttribute.PhoneNumber
+            AmplifyOutputsData.Auth.UsernameAttributes.USERNAME -> UsernameAttribute.Username
+        }
+
+        private fun AmplifyOutputsData.Auth.UserVerificationTypes.toConfigType() = when (this) {
+            AmplifyOutputsData.Auth.UserVerificationTypes.EMAIL -> VerificationMechanism.Email
+            AmplifyOutputsData.Auth.UserVerificationTypes.PHONE -> VerificationMechanism.PhoneNumber
+        }
+
+        private fun AmplifyOutputsData.Auth.PasswordPolicy.toConfigType() = PasswordProtectionSettings(
+            length = minLength ?: 6,
+            requiresNumber = requireNumbers ?: false,
+            requiresSpecial = requireSymbols ?: false,
+            requiresUpper = requireUppercase ?: false,
+            requiresLower = requireLowercase ?: false
+        )
     }
 }
