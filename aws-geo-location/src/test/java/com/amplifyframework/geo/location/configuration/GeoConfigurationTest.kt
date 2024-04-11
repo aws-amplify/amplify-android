@@ -15,7 +15,9 @@
 
 package com.amplifyframework.geo.location.configuration
 
+import com.amplifyframework.geo.GeoException
 import com.amplifyframework.testutils.configuration.amplifyOutputsData
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldMatchEach
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -90,6 +92,62 @@ class GeoConfigurationTest {
         configuration.searchIndices?.run {
             items shouldContainExactly listOf("default-search-index", "other-search-index")
             default shouldBe "default-search-index"
+        }
+    }
+
+    @Test
+    fun `configures with minimal amplify outputs`() {
+        val data = amplifyOutputsData {
+            geo {
+                awsRegion = "test-region"
+            }
+        }
+
+        val configuration = GeoConfiguration.from(data)
+
+        configuration.region shouldBe "test-region"
+    }
+
+    @Test
+    fun `throws if missing geo configuration`() {
+        val data = amplifyOutputsData {
+            // missing geo configuration
+        }
+
+        shouldThrow<GeoException> {
+            GeoConfiguration.from(data)
+        }
+    }
+
+    @Test
+    fun `throws if maps configuration is inconsistent`() {
+        val data = amplifyOutputsData {
+            geo {
+                maps {
+                    map("name1", "style1")
+                    default = "map2" // default does not exist in items
+                }
+            }
+        }
+
+        shouldThrow<GeoException> {
+            GeoConfiguration.from(data)
+        }
+    }
+
+    @Test
+    fun `throws if search indices configuration is inconsistent`() {
+        val data = amplifyOutputsData {
+            geo {
+                searchIndices {
+                    items += "test1"
+                    default = "test2" // default does not exist in items
+                }
+            }
+        }
+
+        shouldThrow<GeoException> {
+            GeoConfiguration.from(data)
         }
     }
 }
