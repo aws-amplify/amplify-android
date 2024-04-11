@@ -25,6 +25,7 @@ import com.amplifyframework.core.Resources;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.core.configuration.AmplifyOutputsData;
 import com.amplifyframework.util.Environment;
 
 import org.json.JSONObject;
@@ -128,6 +129,18 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
     public synchronized void configure(@NonNull CategoryConfiguration configuration, @NonNull Context context)
         throws AmplifyException {
         super.configure(configuration, context);
+        // Logging plugin config is read from a separate file
+        configure(context);
+    }
+
+    @Override
+    public synchronized void configure(@NonNull AmplifyOutputsData configuration, @NonNull Context context)
+        throws AmplifyException {
+        // Logging plugin config is read from a separate file
+        configure(context);
+    }
+
+    private void configure(@NonNull Context context) throws AmplifyException {
         JSONObject loggingConfiguration = readConfigFile(context);
         Set<LoggingPlugin<?>> loggingPlugins = new HashSet<>(getPlugins());
         loggingPlugins.add(defaultPlugin);
