@@ -20,7 +20,6 @@ import android.graphics.Bitmap;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.annotations.InternalAmplifyApi;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.configuration.AmplifyOutputsData;

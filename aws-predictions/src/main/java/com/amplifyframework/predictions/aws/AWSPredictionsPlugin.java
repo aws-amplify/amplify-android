@@ -113,10 +113,10 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
         @NonNull AmplifyOutputsData configuration,
         @NonNull Context context
     ) throws PredictionsException {
-       throw new PredictionsException(
+        throw new PredictionsException(
            "AWSPredictionsPlugin is not supported when using Amplify Gen2",
            "This plugin is not supported by Amplify Gen2. Remove this plugin to use Gen2."
-       );
+        );
     }
 
     private void configure(AWSPredictionsPluginConfiguration configuration) throws PredictionsException {
