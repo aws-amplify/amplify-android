@@ -35,7 +35,7 @@ import java.util.Set;
  * associated key.
  */
 final class AWSApiPluginConfigurationReader {
-    private static final String GEN2_API_NAME = "default";
+    static final String GEN2_API_NAME = "default";
 
     private AWSApiPluginConfigurationReader() { /* no instances */ }
 
@@ -100,8 +100,9 @@ final class AWSApiPluginConfigurationReader {
                 return AuthorizationType.AWS_LAMBDA;
             case OPENID_CONNECT:
                 return AuthorizationType.OPENID_CONNECT;
+            default:
+                return AuthorizationType.NONE;
         }
-        return AuthorizationType.NONE;
     }
 
     private static AWSApiPluginConfiguration parseConfigurationJson(JSONObject configurationJson)
