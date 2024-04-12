@@ -86,7 +86,8 @@ interface AmplifyOutputsData {
         @InternalAmplifyApi
         interface Oauth {
             val identityProviders: List<IdentityProviders>
-            val domain: String
+            val cognitoDomain: String
+            val customDomain: String?
             val scopes: List<String>
             val redirectSignInUri: List<String>
             val redirectSignOutUri: List<String>
@@ -278,7 +279,8 @@ internal data class AmplifyOutputsDataImpl(
         @Serializable
         data class Oauth(
             override val identityProviders: List<IdentityProviders>,
-            override val domain: String,
+            override val cognitoDomain: String,
+            override val customDomain: String?,
             override val scopes: List<String>,
             override val redirectSignInUri: List<String>,
             override val redirectSignOutUri: List<String>,
