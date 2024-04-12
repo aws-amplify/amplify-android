@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.core.configuration.AmplifyOutputsData;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -34,6 +35,8 @@ import java.util.Set;
  * associated key.
  */
 final class AWSApiPluginConfigurationReader {
+    private static final String GEN2_API_NAME = "default";
+
     private AWSApiPluginConfigurationReader() { /* no instances */ }
 
     /**
@@ -54,6 +57,51 @@ final class AWSApiPluginConfigurationReader {
         }
 
         return parseConfigurationJson(configurationJson);
+    }
+
+    static AWSApiPluginConfiguration from(AmplifyOutputsData outputs) throws ApiException {
+        final AmplifyOutputsData.Data data = outputs.getData();
+
+        if (data == null) {
+            throw new ApiException(
+                "Missing data configuration in Amplify Outputs",
+                "Check that your amplify_outputs.json file contains a \"data\" section"
+            );
+        }
+
+        // Gen2 config supports multiple authorization type, but the library only supports one, so we use
+        // the default authorization type
+        final AuthorizationType authorizationType = getAuthorizationType(data.getDefaultAuthorizationType());
+
+        // The Gen2 data config is quite different from Gen1. It only supports defining a single GraphQL API. REST
+        // APIs are not supported.
+        final ApiConfiguration apiConfigBuilder = ApiConfiguration.builder()
+            .endpointType(EndpointType.GRAPHQL)
+            .endpoint(data.getUrl())
+            .region(data.getAwsRegion())
+            .authorizationType(authorizationType)
+            .apiKey(data.getApiKey())
+            .build();
+
+        return AWSApiPluginConfiguration.builder()
+                   .addApi(GEN2_API_NAME, apiConfigBuilder)
+                   .build();
+    }
+
+    private static AuthorizationType getAuthorizationType(AmplifyOutputsData.AwsAppsyncAuthorizationType type) {
+        switch (type) {
+            case AMAZON_COGNITO_USER_POOLS:
+                return AuthorizationType.AMAZON_COGNITO_USER_POOLS;
+            case API_KEY:
+                return AuthorizationType.API_KEY;
+            case AWS_IAM:
+                return AuthorizationType.AWS_IAM;
+            case AWS_LAMBDA:
+                return AuthorizationType.AWS_LAMBDA;
+            case OPENID_CONNECT:
+                return AuthorizationType.OPENID_CONNECT;
+        }
+        return AuthorizationType.NONE;
     }
 
     private static AWSApiPluginConfiguration parseConfigurationJson(JSONObject configurationJson)

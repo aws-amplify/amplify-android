@@ -21,6 +21,8 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.annotations.InternalAmplifyApi;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.aws.auth.ApiRequestDecoratorFactory;
@@ -40,6 +42,7 @@ import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.configuration.AmplifyOutputsData;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.UserAgent;
@@ -131,9 +134,18 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull Context context
     ) throws ApiException {
         // Null-check for configuration is done inside readFrom method
-        AWSApiPluginConfiguration pluginConfig =
-                AWSApiPluginConfigurationReader.readFrom(pluginConfiguration);
+        AWSApiPluginConfiguration pluginConfig = AWSApiPluginConfigurationReader.readFrom(pluginConfiguration);
+        configure(pluginConfig);
+    }
 
+    @Override
+    @InternalAmplifyApi
+    public void configure(@NonNull AmplifyOutputsData configuration, @NonNull Context context) throws AmplifyException {
+        AWSApiPluginConfiguration pluginConfig = AWSApiPluginConfigurationReader.from(configuration);
+        configure(pluginConfig);
+    }
+
+    private void configure(AWSApiPluginConfiguration pluginConfig) {
         for (Map.Entry<String, ApiConfiguration> entry : pluginConfig.getApis().entrySet()) {
             final String apiName = entry.getKey();
             final ApiConfiguration apiConfiguration = entry.getValue();
@@ -148,10 +160,10 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             }
 
             final ApiRequestDecoratorFactory requestDecoratorFactory = new ApiRequestDecoratorFactory(authProvider,
-                    apiConfiguration.getAuthorizationType(),
-                    apiConfiguration.getRegion(),
-                    apiConfiguration.getEndpointType(),
-                    apiConfiguration.getApiKey());
+                apiConfiguration.getAuthorizationType(),
+                apiConfiguration.getRegion(),
+                apiConfiguration.getEndpointType(),
+                apiConfiguration.getApiKey());
 
             ClientDetails clientDetails = null;
             if (EndpointType.REST.equals(endpointType)) {
@@ -169,22 +181,22 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                     });
                 }
                 clientDetails = new ClientDetails(apiConfiguration,
-                                                  okHttpClientBuilder.build(),
-                                                  null,
-                                                  requestDecoratorFactory);
+                    okHttpClientBuilder.build(),
+                    null,
+                    requestDecoratorFactory);
                 restApis.add(apiName);
             } else if (EndpointType.GRAPHQL.equals(endpointType)) {
                 final SubscriptionAuthorizer subscriptionAuthorizer =
                     new SubscriptionAuthorizer(apiConfiguration, authProvider);
                 final OkHttpConfigurator websocketUpgradeConfigurator =
-                        apiWebsocketUpgradeClientConfigurators.get(apiName);
+                    apiWebsocketUpgradeClientConfigurators.get(apiName);
                 final SubscriptionEndpoint subscriptionEndpoint =
                     new SubscriptionEndpoint(apiConfiguration, websocketUpgradeConfigurator, gqlResponseFactory,
-                            subscriptionAuthorizer, apiName);
+                        subscriptionAuthorizer, apiName);
                 clientDetails = new ClientDetails(apiConfiguration,
-                                                  okHttpClientBuilder.build(),
-                                                  subscriptionEndpoint,
-                                                  requestDecoratorFactory);
+                    okHttpClientBuilder.build(),
+                    subscriptionEndpoint,
+                    requestDecoratorFactory);
                 gqlApis.add(apiName);
             }
             if (clientDetails != null) {
