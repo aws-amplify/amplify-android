@@ -1,3 +1,10 @@
+## [Release 2.15.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.15.1)
+
+### Miscellaneous
+- Fix issue where unauthenticated logins caused 401 because refresh caused new credentials to be created ([#2752](https://github.com/aws-amplify/amplify-android/issues/2752))
+
+[See all changes between 2.15.0 and 2.15.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.15.0...release_v2.15.1)
+
 ## [Release 2.15.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.15.0)
 
 ### Features
