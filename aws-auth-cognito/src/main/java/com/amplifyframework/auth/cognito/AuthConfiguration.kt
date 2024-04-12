@@ -64,6 +64,35 @@ data class AuthConfiguration internal constructor(
     val passwordProtectionSettings: PasswordProtectionSettings?
 ) {
 
+    internal fun toGen1Json(configName: String = "Default"): JSONObject {
+        val authConfig = JSONObject().apply {
+            val signupAttributes = signUpAttributes.map { it.keyString.uppercase() }
+            put("signupAttributes", JSONArray(signupAttributes))
+
+            val usernameAttributes = usernameAttributes.map { it.toGen1Json() }
+            put("usernameAttributes", JSONArray(usernameAttributes))
+
+            val verifyMechanisms = verificationMechanisms.map { it.toGen1Json() }
+            put("verificationMechanisms", JSONArray(verifyMechanisms))
+
+            put("authenticationFlowType", authFlowType.name)
+
+            oauth?.let { put("OAuth", it.toGen1Json()) }
+            passwordProtectionSettings?.let { put("passwordProtectionSettings", it.toGen1Json()) }
+        }
+
+        return JSONObject().apply {
+            put("Auth", JSONObject().put(configName, authConfig))
+            userPool?.let { put("CognitoUserPool", JSONObject().put(configName, it.toGen1Json())) }
+            identityPool?.let {
+                put(
+                    "CredentialsProvider",
+                    JSONObject().put("CognitoIdentity", JSONObject().put(configName, it.toGen1Json()))
+                )
+            }
+        }
+    }
+
     internal companion object {
         /**
          * Returns an AuthConfiguration instance from JSON
@@ -179,6 +208,17 @@ data class AuthConfiguration internal constructor(
             )
         }
 
+        private fun PasswordProtectionSettings.toGen1Json() = JSONObject().apply {
+            put("passwordPolicyMinLength", length)
+            val characters = JSONArray().apply {
+                if (requiresLower) put("REQUIRES_LOWER")
+                if (requiresUpper) put("REQUIRES_UPPER")
+                if (requiresNumber) put("REQUIRES_NUMBERS")
+                if (requiresSpecial) put("REQUIRES_SYMBOLS")
+            }
+            put("passwordPolicyCharacters", characters)
+        }
+
         private inline fun <T> JSONArray.map(func: JSONArray.(Int) -> T) = List(length()) {
             func(it)
         }
@@ -194,9 +234,20 @@ data class AuthConfiguration internal constructor(
             AmplifyOutputsData.Auth.UsernameAttributes.Username -> UsernameAttribute.Username
         }
 
+        private fun UsernameAttribute.toGen1Json() = when (this) {
+            UsernameAttribute.Username -> "USERNAME"
+            UsernameAttribute.Email -> "EMAIL"
+            UsernameAttribute.PhoneNumber -> "PHONE_NUMBER"
+        }
+
         private fun AmplifyOutputsData.Auth.UserVerificationTypes.toConfigType() = when (this) {
             AmplifyOutputsData.Auth.UserVerificationTypes.Email -> VerificationMechanism.Email
             AmplifyOutputsData.Auth.UserVerificationTypes.PhoneNumber -> VerificationMechanism.PhoneNumber
+        }
+
+        private fun VerificationMechanism.toGen1Json() = when (this) {
+            VerificationMechanism.Email -> "EMAIL"
+            VerificationMechanism.PhoneNumber -> "PHONE_NUMBER"
         }
 
         private fun AmplifyOutputsData.Auth.PasswordPolicy.toConfigType() = PasswordProtectionSettings(
