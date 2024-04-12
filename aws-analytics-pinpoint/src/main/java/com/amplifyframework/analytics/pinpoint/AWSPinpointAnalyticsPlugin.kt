@@ -29,7 +29,7 @@ import org.json.JSONObject
  * The plugin implementation for Amazon Pinpoint in Analytics category.
  */
 class AWSPinpointAnalyticsPlugin @JvmOverloads constructor(
-    private val options: AWSPinpointAnalyticsPluginOptions? = null
+    private val userOptions: Options? = null
 ) : AnalyticsPlugin<PinpointClient>() {
 
     private val pluginKey = "awsPinpointAnalyticsPlugin"
@@ -86,8 +86,8 @@ class AWSPinpointAnalyticsPlugin @JvmOverloads constructor(
 
         // Use the programmatic options if they were supplied, otherwise read additional options from the
         // amplifyconfiguration file
-        if (options != null) {
-            configBuilder.withAutoFlushEventsInterval(options.autoFlushEventsInterval)
+        if (userOptions != null) {
+            configBuilder.withAutoFlushEventsInterval(userOptions.autoFlushEventsInterval)
         } else if (pinpointAnalyticsConfigJson.has(PinpointConfigurationKey.AUTO_FLUSH_INTERVAL.configurationKey)) {
             configBuilder.withAutoFlushEventsInterval(
                 pinpointAnalyticsConfigJson.getLong(PinpointConfigurationKey.AUTO_FLUSH_INTERVAL.configurationKey)
@@ -99,7 +99,7 @@ class AWSPinpointAnalyticsPlugin @JvmOverloads constructor(
 
     @InternalAmplifyApi
     override fun configure(configuration: AmplifyOutputsData, context: Context) {
-        val options = this.options ?: AWSPinpointAnalyticsPluginOptions.defaults()
+        val options = this.userOptions ?: Options.defaults()
         val analyticsConfig = AWSPinpointAnalyticsPluginConfiguration.from(configuration, options)
         configure(analyticsConfig, context)
     }
@@ -123,6 +123,50 @@ class AWSPinpointAnalyticsPlugin @JvmOverloads constructor(
 
     override fun getVersion(): String {
         return BuildConfig.VERSION_NAME
+    }
+
+    /**
+     * Options that can be specified to fine-tune the behavior of the Pinpoint Analytics Plugin.
+     */
+    data class Options internal constructor(
+        /**
+         * The interval between sends of queued analytics events, in milliseconds
+         */
+        val autoFlushEventsInterval: Long
+    ) {
+        companion object {
+            /**
+             * Create a new [Builder] instance
+             */
+            @JvmStatic
+            fun builder() = Builder()
+
+            /**
+             * Create an [AWSPinpointAnalyticsPlugin.Options] instance
+             */
+            @JvmSynthetic
+            operator fun invoke(func: Builder.() -> Unit) = Builder().apply(func).build()
+
+            internal fun defaults() = builder().build()
+        }
+
+        /**
+         * Builder API for constructing [AWSPinpointAnalyticsPlugin.Options] instances
+         */
+        class Builder internal constructor() {
+            /**
+             * Set the interval between sends of queed analytics events, in milliseconds
+             */
+            var autoFlushEventsInterval: Long = AWSPinpointAnalyticsPluginConfiguration.DEFAULT_AUTO_FLUSH_INTERVAL
+                @JvmSynthetic set
+
+            /**
+             * Set the interval between sends of queed analytics events, in milliseconds
+             */
+            fun autoFlushEventsInterval(value: Long) = apply { autoFlushEventsInterval = value }
+
+            internal fun build() = Options(autoFlushEventsInterval = autoFlushEventsInterval)
+        }
     }
 }
 

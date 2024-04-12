@@ -77,7 +77,7 @@ final class AWSPinpointAnalyticsPluginConfiguration {
 
     static AWSPinpointAnalyticsPluginConfiguration from(
         @NonNull AmplifyOutputsData outputs,
-        @NonNull AWSPinpointAnalyticsPluginOptions options
+        @NonNull AWSPinpointAnalyticsPlugin.Options options
     ) throws AmplifyException {
         AmplifyOutputsData.Analytics analytics = outputs.getAnalytics();
         if (analytics == null) {

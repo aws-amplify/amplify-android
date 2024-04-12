@@ -18,10 +18,10 @@ package com.amplifyframework.analytics.pinpoint
 import io.kotest.matchers.shouldBe
 import org.junit.Test
 
-class AWSPinpointAnalyticsPluginOptionsTest {
+class OptionsTest {
     @Test
     fun `default auto flush interval is the same as in the configuration class`() {
-        val options = AWSPinpointAnalyticsPluginOptions.defaults()
+        val options = AWSPinpointAnalyticsPlugin.Options.defaults()
         val configuration = AWSPinpointAnalyticsPluginConfiguration.builder().build()
 
         options.autoFlushEventsInterval shouldBe configuration.autoFlushEventsInterval

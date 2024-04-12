@@ -29,7 +29,7 @@ class AWSPinpointAnalyticsPluginConfigurationTest {
                 appId = "test-app"
             }
         }
-        val options = AWSPinpointAnalyticsPluginOptions {
+        val options = AWSPinpointAnalyticsPlugin.Options {
             autoFlushEventsInterval = 42
         }
 
