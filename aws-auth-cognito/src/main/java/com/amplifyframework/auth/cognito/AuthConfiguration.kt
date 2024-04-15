@@ -189,14 +189,14 @@ data class AuthConfiguration internal constructor(
         }
 
         private fun AmplifyOutputsData.Auth.UsernameAttributes.toConfigType() = when (this) {
-            AmplifyOutputsData.Auth.UsernameAttributes.EMAIL -> UsernameAttribute.Email
-            AmplifyOutputsData.Auth.UsernameAttributes.PHONE -> UsernameAttribute.PhoneNumber
-            AmplifyOutputsData.Auth.UsernameAttributes.USERNAME -> UsernameAttribute.Username
+            AmplifyOutputsData.Auth.UsernameAttributes.Email -> UsernameAttribute.Email
+            AmplifyOutputsData.Auth.UsernameAttributes.PhoneNumber -> UsernameAttribute.PhoneNumber
+            AmplifyOutputsData.Auth.UsernameAttributes.Username -> UsernameAttribute.Username
         }
 
         private fun AmplifyOutputsData.Auth.UserVerificationTypes.toConfigType() = when (this) {
-            AmplifyOutputsData.Auth.UserVerificationTypes.EMAIL -> VerificationMechanism.Email
-            AmplifyOutputsData.Auth.UserVerificationTypes.PHONE -> VerificationMechanism.PhoneNumber
+            AmplifyOutputsData.Auth.UserVerificationTypes.Email -> VerificationMechanism.Email
+            AmplifyOutputsData.Auth.UserVerificationTypes.PhoneNumber -> VerificationMechanism.PhoneNumber
         }
 
         private fun AmplifyOutputsData.Auth.PasswordPolicy.toConfigType() = PasswordProtectionSettings(

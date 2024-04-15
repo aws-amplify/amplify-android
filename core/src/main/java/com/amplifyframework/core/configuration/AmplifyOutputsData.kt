@@ -99,12 +99,13 @@ interface AmplifyOutputsData {
             }
 
             @InternalAmplifyApi
+            @Serializable
             enum class ResponseType {
                 @SerialName("code")
-                CODE,
+                Code,
 
                 @SerialName("token")
-                TOKEN
+                Token
             }
         }
 
@@ -112,10 +113,27 @@ interface AmplifyOutputsData {
         enum class AuthenticationFlowType { USER_SRP_AUTH, CUSTOM_AUTH }
 
         @InternalAmplifyApi
-        enum class UsernameAttributes { USERNAME, EMAIL, PHONE }
+        @Serializable
+        enum class UsernameAttributes {
+            @SerialName("username")
+            Username,
+
+            @SerialName("email")
+            Email,
+
+            @SerialName("phone_number")
+            PhoneNumber
+        }
 
         @InternalAmplifyApi
-        enum class UserVerificationTypes { EMAIL, PHONE }
+        @Serializable
+        enum class UserVerificationTypes {
+            @SerialName("email")
+            Email,
+
+            @SerialName("phone_number")
+            PhoneNumber
+        }
 
         @InternalAmplifyApi
         enum class MfaConfiguration { NONE, OPTIONAL, REQUIRED }

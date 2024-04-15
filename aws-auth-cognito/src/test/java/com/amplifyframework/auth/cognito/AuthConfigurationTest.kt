@@ -49,11 +49,11 @@ class AuthConfigurationTest {
                     scopes += listOf("myScope", "myScope2")
                     redirectSignInUri += "https://test.com/signin"
                     redirectSignOutUri += "https://test.com/signout"
-                    responseType = AmplifyOutputsData.Auth.Oauth.ResponseType.TOKEN
+                    responseType = AmplifyOutputsData.Auth.Oauth.ResponseType.Token
                 }
                 standardRequiredAttributes += AuthUserAttributeKey.email()
-                usernameAttributes += AmplifyOutputsData.Auth.UsernameAttributes.EMAIL
-                userVerificationTypes += AmplifyOutputsData.Auth.UserVerificationTypes.EMAIL
+                usernameAttributes += AmplifyOutputsData.Auth.UsernameAttributes.Email
+                userVerificationTypes += AmplifyOutputsData.Auth.UserVerificationTypes.Email
                 mfaConfiguration = AmplifyOutputsData.Auth.MfaConfiguration.REQUIRED
                 mfaMethods += AmplifyOutputsData.Auth.MfaMethods.SMS
             }

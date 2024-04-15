@@ -99,7 +99,7 @@ class OauthBuilder : AmplifyOutputsData.Auth.Oauth {
     override val redirectSignInUri: MutableList<String> = mutableListOf()
     override val redirectSignOutUri: MutableList<String> = mutableListOf()
     override var responseType: AmplifyOutputsData.Auth.Oauth.ResponseType =
-        AmplifyOutputsData.Auth.Oauth.ResponseType.CODE
+        AmplifyOutputsData.Auth.Oauth.ResponseType.Code
 }
 
 class GeoBuilder : AmplifyOutputsData.Geo {

@@ -1379,6 +1379,18 @@ public final class com/amplifyframework/core/configuration/AmplifyOutputs$Compan
 	public final fun fromString (Ljava/lang/String;)Lcom/amplifyframework/core/configuration/AmplifyOutputs;
 }
 
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth$ResponseType$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Auth$UserVerificationTypes$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Auth$UsernameAttributes$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
 public final class com/amplifyframework/core/configuration/AmplifyOutputsKt {
 	public static final synthetic fun AmplifyOutputs (I)Lcom/amplifyframework/core/configuration/AmplifyOutputs;
 	public static final synthetic fun AmplifyOutputs (Ljava/lang/String;)Lcom/amplifyframework/core/configuration/AmplifyOutputs;
