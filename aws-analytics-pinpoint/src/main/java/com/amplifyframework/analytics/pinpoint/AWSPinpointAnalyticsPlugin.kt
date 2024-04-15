@@ -20,13 +20,17 @@ import com.amplifyframework.analytics.AnalyticsEventBehavior
 import com.amplifyframework.analytics.AnalyticsPlugin
 import com.amplifyframework.analytics.AnalyticsProperties
 import com.amplifyframework.analytics.UserProfile
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.CognitoCredentialsProvider
+import com.amplifyframework.core.configuration.AmplifyOutputsData
 import org.json.JSONObject
 
 /**
  * The plugin implementation for Amazon Pinpoint in Analytics category.
  */
-class AWSPinpointAnalyticsPlugin : AnalyticsPlugin<PinpointClient>() {
+class AWSPinpointAnalyticsPlugin @JvmOverloads constructor(
+    private val userOptions: Options? = null
+) : AnalyticsPlugin<PinpointClient>() {
 
     private val pluginKey = "awsPinpointAnalyticsPlugin"
     private val analyticsConfigKey = "pinpointAnalytics"
@@ -79,28 +83,37 @@ class AWSPinpointAnalyticsPlugin : AnalyticsPlugin<PinpointClient>() {
         configBuilder.withRegion(
             pinpointAnalyticsConfigJson.getString(PinpointConfigurationKey.REGION.configurationKey)
         )
-        if (pinpointAnalyticsConfigJson.has(PinpointConfigurationKey.AUTO_FLUSH_INTERVAL.configurationKey)) {
+
+        // Use the programmatic options if they were supplied, otherwise read additional options from the
+        // amplifyconfiguration file
+        if (userOptions != null) {
+            configBuilder.withAutoFlushEventsInterval(userOptions.autoFlushEventsInterval)
+        } else if (pinpointAnalyticsConfigJson.has(PinpointConfigurationKey.AUTO_FLUSH_INTERVAL.configurationKey)) {
             configBuilder.withAutoFlushEventsInterval(
                 pinpointAnalyticsConfigJson.getLong(PinpointConfigurationKey.AUTO_FLUSH_INTERVAL.configurationKey)
             )
         }
-        if (pinpointAnalyticsConfigJson.has(PinpointConfigurationKey.TRACK_APP_LIFECYCLE_EVENTS.configurationKey)) {
-            configBuilder.withTrackAppLifecycleEvents(
-                pinpointAnalyticsConfigJson.getBoolean(
-                    PinpointConfigurationKey.TRACK_APP_LIFECYCLE_EVENTS.configurationKey
-                )
-            )
-        }
         val awsAnalyticsConfig = configBuilder.build()
+        configure(awsAnalyticsConfig, context)
+    }
+
+    @InternalAmplifyApi
+    override fun configure(configuration: AmplifyOutputsData, context: Context) {
+        val options = this.userOptions ?: Options.defaults()
+        val analyticsConfig = AWSPinpointAnalyticsPluginConfiguration.from(configuration, options)
+        configure(analyticsConfig, context)
+    }
+
+    private fun configure(configuration: AWSPinpointAnalyticsPluginConfiguration, context: Context) {
         pinpointManager = PinpointManager(
             context,
-            awsAnalyticsConfig,
+            configuration,
             CognitoCredentialsProvider()
         )
 
         awsPinpointAnalyticsPluginBehavior = AWSPinpointAnalyticsPluginBehavior(
             pinpointManager.analyticsClient,
-            pinpointManager.targetingClient,
+            pinpointManager.targetingClient
         )
     }
 
@@ -110,6 +123,50 @@ class AWSPinpointAnalyticsPlugin : AnalyticsPlugin<PinpointClient>() {
 
     override fun getVersion(): String {
         return BuildConfig.VERSION_NAME
+    }
+
+    /**
+     * Options that can be specified to fine-tune the behavior of the Pinpoint Analytics Plugin.
+     */
+    data class Options internal constructor(
+        /**
+         * The interval between sends of queued analytics events, in milliseconds
+         */
+        val autoFlushEventsInterval: Long
+    ) {
+        companion object {
+            /**
+             * Create a new [Builder] instance
+             */
+            @JvmStatic
+            fun builder() = Builder()
+
+            /**
+             * Create an [AWSPinpointAnalyticsPlugin.Options] instance
+             */
+            @JvmSynthetic
+            operator fun invoke(func: Builder.() -> Unit) = Builder().apply(func).build()
+
+            internal fun defaults() = builder().build()
+        }
+
+        /**
+         * Builder API for constructing [AWSPinpointAnalyticsPlugin.Options] instances
+         */
+        class Builder internal constructor() {
+            /**
+             * Set the interval between sends of queed analytics events, in milliseconds
+             */
+            var autoFlushEventsInterval: Long = AWSPinpointAnalyticsPluginConfiguration.DEFAULT_AUTO_FLUSH_INTERVAL
+                @JvmSynthetic set
+
+            /**
+             * Set the interval between sends of queed analytics events, in milliseconds
+             */
+            fun autoFlushEventsInterval(value: Long) = apply { autoFlushEventsInterval = value }
+
+            internal fun build() = Options(autoFlushEventsInterval = autoFlushEventsInterval)
+        }
     }
 }
 
@@ -132,10 +189,5 @@ private enum class PinpointConfigurationKey(
     /**
      * Time interval after which the events are automatically submitted to pinpoint.
      */
-    AUTO_FLUSH_INTERVAL("autoFlushEventsInterval"),
-
-    /**
-     * Whether to track app lifecycle events automatically.
-     */
-    TRACK_APP_LIFECYCLE_EVENTS("trackAppLifecycleEvents");
+    AUTO_FLUSH_INTERVAL("autoFlushEventsInterval")
 }
