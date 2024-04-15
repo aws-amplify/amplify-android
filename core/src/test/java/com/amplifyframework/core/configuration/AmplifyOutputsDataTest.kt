@@ -85,12 +85,12 @@ class AmplifyOutputsDataTest {
                     AuthUserAttributeKey.gender().keyString
                 ),
                 Keys.usernameAttributes to listOf(
-                    AmplifyOutputsData.Auth.UsernameAttributes.USERNAME.name,
-                    AmplifyOutputsData.Auth.UsernameAttributes.EMAIL.name
+                    AmplifyOutputsData.Auth.UsernameAttributes.Username.name,
+                    AmplifyOutputsData.Auth.UsernameAttributes.Email.name
                 ),
                 Keys.userVerificationTypes to listOf(
-                    AmplifyOutputsData.Auth.UserVerificationTypes.EMAIL.name,
-                    AmplifyOutputsData.Auth.UserVerificationTypes.PHONE.name
+                    AmplifyOutputsData.Auth.UserVerificationTypes.Email.name,
+                    AmplifyOutputsData.Auth.UserVerificationTypes.PhoneNumber.name
                 ),
                 Keys.unauthenticatedIdentitiesEnabled to true,
                 Keys.mfaConfiguration to AmplifyOutputsData.Auth.MfaConfiguration.OPTIONAL.name,
@@ -126,19 +126,19 @@ class AmplifyOutputsDataTest {
                 scopes shouldContainExactly listOf("scope1", "scope2")
                 redirectSignInUri shouldContainExactly listOf("https://oauth.com/signin")
                 redirectSignOutUri shouldContainExactly listOf("https://oauth.com/signout")
-                responseType shouldBe AmplifyOutputsData.Auth.Oauth.ResponseType.CODE
+                responseType shouldBe AmplifyOutputsData.Auth.Oauth.ResponseType.Code
             }
             standardRequiredAttributes shouldContainExactly listOf(
                 AuthUserAttributeKey.email(),
                 AuthUserAttributeKey.gender()
             )
             usernameAttributes shouldContainExactly listOf(
-                AmplifyOutputsData.Auth.UsernameAttributes.USERNAME,
-                AmplifyOutputsData.Auth.UsernameAttributes.EMAIL
+                AmplifyOutputsData.Auth.UsernameAttributes.Username,
+                AmplifyOutputsData.Auth.UsernameAttributes.Email
             )
             userVerificationTypes shouldContainExactly listOf(
-                AmplifyOutputsData.Auth.UserVerificationTypes.EMAIL,
-                AmplifyOutputsData.Auth.UserVerificationTypes.PHONE
+                AmplifyOutputsData.Auth.UserVerificationTypes.Email,
+                AmplifyOutputsData.Auth.UserVerificationTypes.PhoneNumber
             )
             unauthenticatedIdentitiesEnabled.shouldBeTrue()
             mfaConfiguration shouldBe AmplifyOutputsData.Auth.MfaConfiguration.OPTIONAL
