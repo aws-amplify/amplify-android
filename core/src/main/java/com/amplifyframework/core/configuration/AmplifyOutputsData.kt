@@ -251,7 +251,7 @@ internal data class AmplifyOutputsDataImpl(
 ) : AmplifyOutputsData {
     @Serializable
     data class Analytics(
-        override val amazonPinpoint: AmplifyOutputsData.Analytics.AmazonPinpoint?
+        override val amazonPinpoint: AmazonPinpoint?
     ) : AmplifyOutputsData.Analytics {
         @Serializable
         data class AmazonPinpoint(
