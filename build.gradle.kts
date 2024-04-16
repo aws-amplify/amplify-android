@@ -68,7 +68,8 @@ tasks.register<Delete>("clean").configure {
 
 val internalApiAnnotations = listOf(
     "com.amplifyframework.annotations.InternalApiWarning",
-    "com.amplifyframework.annotations.InternalAmplifyApi"
+    "com.amplifyframework.annotations.InternalAmplifyApi",
+    "com.amplifyframework.annotations.AmplifyFlutterApi"
 )
 
 subprojects {

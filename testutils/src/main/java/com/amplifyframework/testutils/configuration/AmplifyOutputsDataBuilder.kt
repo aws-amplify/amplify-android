@@ -25,18 +25,39 @@ class AmplifyOutputsDataBuilder : AmplifyOutputsData {
     override var version = "1"
     override var analytics: AmplifyOutputsData.Analytics? = null
     override var auth: AmplifyOutputsData.Auth? = null
-    override val data: AmplifyOutputsData.Data? = null
-    override val geo: AmplifyOutputsData.Geo? = null
-    override val notifications: AmplifyOutputsData.Notifications? = null
-    override val storage: AmplifyOutputsData.Storage? = null
-    override val custom: JsonObject? = null
+    override var data: AmplifyOutputsData.Data? = null
+    override var geo: AmplifyOutputsData.Geo? = null
+    override var notifications: AmplifyOutputsData.Notifications? = null
+    override var storage: AmplifyOutputsData.Storage? = null
+    override var custom: JsonObject? = null
 
     fun analytics(func: AnalyticsBuilder.() -> Unit) {
         analytics = AnalyticsBuilder().apply(func)
+    }
+
+    fun notifications(func: NotificationsBuilder.() -> Unit) {
+        notifications = NotificationsBuilder().apply(func)
+    }
+
+    fun storage(func: StorageBuilder.() -> Unit) {
+        storage = StorageBuilder().apply(func)
     }
 }
 
 class AnalyticsBuilder : AmplifyOutputsData.Analytics {
     override var awsRegion: String = "us-east-1"
     override var appId: String = "analytics-app-id"
+}
+
+class NotificationsBuilder : AmplifyOutputsData.Notifications {
+    override var awsRegion: String = "us-east-1"
+    override var amazonPinpointAppId: String = "pinpoint-app-id"
+    override val channels: MutableList<AmplifyOutputsData.AmazonPinpointChannels> = mutableListOf(
+        AmplifyOutputsData.AmazonPinpointChannels.FCM
+    )
+}
+
+class StorageBuilder : AmplifyOutputsData.Storage {
+    override var awsRegion: String = "us-east-1"
+    override var bucketName: String = "bucket-name"
 }
