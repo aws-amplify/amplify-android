@@ -17,34 +17,29 @@ package com.amplifyframework.geo.location
 import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
-import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.geo.models.Coordinates
+import com.amplifyframework.testutils.DualConfigTestBase
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import org.junit.After
 import org.junit.Assert
 import org.junit.Assert.fail
-import org.junit.BeforeClass
+import org.junit.Before
 import org.junit.Test
 
-class GeoCanaryTest {
+class GeoCanaryTest(configType: ConfigType) : DualConfigTestBase(configType) {
     companion object {
         private const val TIMEOUT_S = 20L
         private val TAG = GeoCanaryTest::class.simpleName
+    }
 
-        @BeforeClass
-        @JvmStatic
-        fun setup() {
-            try {
-                Amplify.addPlugin(AWSCognitoAuthPlugin())
-                Amplify.addPlugin(AWSLocationGeoPlugin())
-                Amplify.configure(ApplicationProvider.getApplicationContext())
-            } catch (error: AmplifyException) {
-                Log.e(TAG, "Could not initialize Amplify", error)
-            }
-        }
+    @Before
+    fun setup() {
+        Amplify.addPlugin(AWSCognitoAuthPlugin())
+        Amplify.addPlugin(AWSLocationGeoPlugin())
+        configureAmplify()
     }
 
     @After
