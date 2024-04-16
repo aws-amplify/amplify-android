@@ -15,14 +15,13 @@
 package com.amplifyframework.storage.s3
 
 import android.util.Log
-import androidx.test.core.app.ApplicationProvider
-import com.amplifyframework.AmplifyException
+import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
-import com.amplifyframework.core.Amplify
 import com.amplifyframework.storage.StorageAccessLevel
 import com.amplifyframework.storage.operation.StorageUploadFileOperation
 import com.amplifyframework.storage.options.StoragePagedListOptions
 import com.amplifyframework.storage.options.StorageUploadFileOptions
+import com.amplifyframework.testutils.DualConfigTestBase
 import java.io.File
 import java.io.FileInputStream
 import java.io.RandomAccessFile
@@ -32,27 +31,24 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import org.junit.Assert
 import org.junit.Assert.fail
-import org.junit.BeforeClass
+import org.junit.Before
 import org.junit.Test
 
-class StorageCanaryTest {
+class StorageCanaryTest(configType: ConfigType) : DualConfigTestBase(configType) {
     companion object {
         private const val TIMEOUT_S = 20L
         private val TAG = StorageCanaryTest::class.simpleName
         private const val TEMP_DIR_PROPERTY = "java.io.tmpdir"
         private val TEMP_DIR = System.getProperty(TEMP_DIR_PROPERTY)
+    }
 
-        @BeforeClass
-        @JvmStatic
-        fun setup() {
-            try {
-                Amplify.addPlugin(AWSCognitoAuthPlugin())
-                Amplify.addPlugin(AWSS3StoragePlugin())
-                Amplify.configure(ApplicationProvider.getApplicationContext())
-            } catch (error: AmplifyException) {
-                Log.e(TAG, "Could not initialize Amplify", error)
-            }
-        }
+    private val auth = AWSCognitoAuthPlugin()
+    private val storage = AWSS3StoragePlugin(CognitoCredentialsProvider(auth))
+
+    @Before
+    fun setup() {
+        configurePlugin(auth)
+        configurePlugin(storage)
     }
 
     @Test
@@ -61,7 +57,7 @@ class StorageCanaryTest {
         val raf = createFile(1)
         val stream = FileInputStream(raf)
         val fileKey = "ExampleKey"
-        Amplify.Storage.uploadInputStream(
+        storage.uploadInputStream(
             fileKey,
             stream,
             { latch.countDown() },
@@ -76,7 +72,7 @@ class StorageCanaryTest {
         val latch = CountDownLatch(1)
         val file = createFile(1)
         val fileKey = UUID.randomUUID().toString()
-        Amplify.Storage.uploadFile(
+        storage.uploadFile(
             fileKey,
             file,
             { latch.countDown() },
@@ -91,7 +87,7 @@ class StorageCanaryTest {
         val uploadLatch = CountDownLatch(1)
         val file = createFile(1)
         val fileName = "ExampleKey${UUID.randomUUID()}"
-        Amplify.Storage.uploadFile(
+        storage.uploadFile(
             fileName,
             file,
             { uploadLatch.countDown() },
@@ -100,7 +96,7 @@ class StorageCanaryTest {
         uploadLatch.await(TIMEOUT_S, TimeUnit.SECONDS)
 
         val downloadLatch = CountDownLatch(1)
-        Amplify.Storage.downloadFile(
+        storage.downloadFile(
             fileName,
             file,
             { downloadLatch.countDown() },
@@ -112,7 +108,7 @@ class StorageCanaryTest {
     @Test
     fun getUrl() {
         val latch = CountDownLatch(1)
-        Amplify.Storage.getUrl(
+        storage.getUrl(
             "ExampleKey",
             {
                 Log.i(TAG, "Successfully generated: ${it.url}")
@@ -130,7 +126,7 @@ class StorageCanaryTest {
         val fileName = "ExampleKey${UUID.randomUUID()}"
         val transferId = AtomicReference<String>()
         val opContainer = AtomicReference<StorageUploadFileOperation<*>>()
-        val op = Amplify.Storage.uploadFile(
+        val op = storage.uploadFile(
             fileName,
             file,
             StorageUploadFileOptions.builder().accessLevel(StorageAccessLevel.PUBLIC).build(),
@@ -148,7 +144,7 @@ class StorageCanaryTest {
         uploadLatch.await(TIMEOUT_S, TimeUnit.SECONDS)
 
         val transferLatch = CountDownLatch(1)
-        Amplify.Storage.getTransfer(
+        storage.getTransfer(
             transferId.get(),
             { operation ->
                 Log.i(TAG, "Current State" + operation.transferState)
@@ -165,7 +161,7 @@ class StorageCanaryTest {
             .setPageSize(1000)
             .build()
         val latch = CountDownLatch(1)
-        Amplify.Storage.list(
+        storage.list(
             "",
             options,
             { result ->
@@ -182,7 +178,7 @@ class StorageCanaryTest {
     @Test
     fun remove() {
         val latch = CountDownLatch(1)
-        Amplify.Storage.remove(
+        storage.remove(
             "myUploadedFileName.txt",
             {
                 Log.i(TAG, "Successfully removed: ${it.key}")
@@ -205,7 +201,7 @@ class StorageCanaryTest {
 
     private fun removeFile(fileKey: String) {
         val latch = CountDownLatch(1)
-        Amplify.Storage.remove(
+        storage.remove(
             fileKey,
             { latch.countDown() },
             { Log.e(TAG, "Failed to remove file", it) }
