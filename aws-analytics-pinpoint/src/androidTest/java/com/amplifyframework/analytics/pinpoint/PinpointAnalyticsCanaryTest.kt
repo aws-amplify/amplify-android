@@ -27,9 +27,11 @@ import com.amplifyframework.analytics.AnalyticsEvent
 import com.amplifyframework.analytics.AnalyticsProperties
 import com.amplifyframework.analytics.UserProfile
 import com.amplifyframework.analytics.pinpoint.models.AWSPinpointUserProfile
+import com.amplifyframework.analytics.pinpoint.test.R
 import com.amplifyframework.auth.AuthPlugin
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.configuration.AmplifyOutputs
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.testutils.HubAccumulator
@@ -45,11 +47,39 @@ import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
 
-class PinpointAnalyticsCanaryTest {
+class PinpointAnalyticsCanaryTest : PinpointAnalyticsCanaryTestBase() {
+    companion object {
+        @BeforeClass
+        @JvmStatic
+        fun setup() {
+            val context = ApplicationProvider.getApplicationContext<Context>()
+            Amplify.Auth.addPlugin(AWSCognitoAuthPlugin() as AuthPlugin<*>)
+            Amplify.addPlugin(AWSPinpointAnalyticsPlugin())
+            Amplify.configure(context)
+            Sleep.milliseconds(COGNITO_CONFIGURATION_TIMEOUT)
+        }
+    }
+}
+
+class PinpointAnalyticsCanaryTestGen2 : PinpointAnalyticsCanaryTestBase() {
+    companion object {
+        @BeforeClass
+        @JvmStatic
+        fun setup() {
+            val context = ApplicationProvider.getApplicationContext<Context>()
+            Amplify.Auth.addPlugin(AWSCognitoAuthPlugin() as AuthPlugin<*>)
+            Amplify.addPlugin(AWSPinpointAnalyticsPlugin())
+            Amplify.configure(AmplifyOutputs(R.raw.amplify_outputs), context)
+            Sleep.milliseconds(COGNITO_CONFIGURATION_TIMEOUT)
+        }
+    }
+}
+
+abstract class PinpointAnalyticsCanaryTestBase {
     companion object {
         private const val CREDENTIALS_RESOURCE_NAME = "credentials"
         private const val CONFIGURATION_NAME = "amplifyconfiguration"
-        private const val COGNITO_CONFIGURATION_TIMEOUT = 5 * 1000L
+        const val COGNITO_CONFIGURATION_TIMEOUT = 5 * 1000L
         private const val PINPOINT_ROUNDTRIP_TIMEOUT = 10 * 1000L
         private const val TIMEOUT_S = 20
         private const val UNIQUE_ID_KEY = "UniqueId"
@@ -64,6 +94,7 @@ class PinpointAnalyticsCanaryTest {
         @JvmStatic
         fun setupBefore() {
             val context = ApplicationProvider.getApplicationContext<Context>()
+
             @RawRes val resourceId = Resources.getRawResourceId(context, CONFIGURATION_NAME)
             appId = readAppIdFromResource(context, resourceId)
             preferences = context.getSharedPreferences(
@@ -71,10 +102,6 @@ class PinpointAnalyticsCanaryTest {
                 Context.MODE_PRIVATE
             )
             setUniqueId()
-            Amplify.Auth.addPlugin(AWSCognitoAuthPlugin() as AuthPlugin<*>)
-            Amplify.addPlugin(AWSPinpointAnalyticsPlugin())
-            Amplify.configure(context)
-            Sleep.milliseconds(COGNITO_CONFIGURATION_TIMEOUT)
             synchronousAuth = SynchronousAuth.delegatingTo(Amplify.Auth)
         }
 
@@ -117,6 +144,7 @@ class PinpointAnalyticsCanaryTest {
     @Before
     fun flushEvents() {
         val context = ApplicationProvider.getApplicationContext<Context>()
+
         @RawRes val resourceId = Resources.getRawResourceId(context, CREDENTIALS_RESOURCE_NAME)
         val userAndPasswordPair = readCredentialsFromResource(context, resourceId)
         synchronousAuth.signOut()

@@ -16,7 +16,7 @@ def module_backends = [
 def canaryTests = [
         'aws-datastore'   : ['com.amplifyframework.datastore.DatastoreCanaryTest'],
         'aws-auth-cognito': ['com.amplifyframework.auth.cognito.AuthCanaryTest'],
-        'aws-analytics-pinpoint': ['com.amplifyframework.analytics.pinpoint.PinpointAnalyticsCanaryTest'],
+        'aws-analytics-pinpoint': ['com.amplifyframework.analytics.pinpoint.PinpointAnalyticsCanaryTest', 'com.amplifyframework.analytics.pinpoint.PinpointAnalyticsCanaryTestGen2'],
         'aws-geo-location': ['com.amplifyframework.geo.location.GeoCanaryTest'],
         'aws-predictions': ['com.amplifyframework.predictions.aws.PredictionsCanaryTest'],
 //      'aws-push-notifications-pinpoint': ['com.amplifyframework.pushnotifications.pinpoint.NotificationsCanaryTest'],
