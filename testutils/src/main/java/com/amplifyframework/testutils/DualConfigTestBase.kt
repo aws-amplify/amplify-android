@@ -15,6 +15,13 @@
 
 package com.amplifyframework.testutils
 
+import android.content.Context
+import androidx.annotation.RawRes
+import androidx.test.core.app.ApplicationProvider
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.AmplifyConfiguration
+import com.amplifyframework.core.configuration.AmplifyOutputs
+import org.junit.Assume.assumeTrue
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
@@ -25,7 +32,7 @@ import org.junit.runners.Parameterized
  * Extend this class and add a parameter to your test class constructor. This will run
  * each test in your class twice, once for each config type.
  *
- * class ConfigTest(private val configType: ConfigType) : DualConfigTestBase() {
+ * class ConfigTest(configType: ConfigType) : DualConfigTestBase(configType) {
  *     @Test
  *     fun myTest() {
  *        val configuration = when(configType) {
@@ -36,11 +43,44 @@ import org.junit.runners.Parameterized
  * }
  */
 @RunWith(Parameterized::class)
-abstract class DualConfigTestBase {
+abstract class DualConfigTestBase(protected val configType: ConfigType) {
 
     enum class ConfigType {
         Gen1,
         Gen2
+    }
+
+    // Skips a test if it's not running for Gen1
+    protected fun assumeGen1() = assumeTrue(configType == ConfigType.Gen1)
+
+    // Skips a test if it's not running for Gen2
+    protected fun assumeGen2() = assumeTrue(configType == ConfigType.Gen2)
+
+    // Configures Amplify with either the Gen1 or Gen2 config
+    protected fun configureAmplify(
+        @RawRes gen1ResourceId: Int? = null,
+        @RawRes gen2ResourceId: Int? = null
+    ) {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        requireGen1 {
+            val id = gen1ResourceId ?: Resources.getRawResourceId(context, "amplifyconfiguration")
+            val configuration = AmplifyConfiguration.fromConfigFile(context, id)
+            Amplify.configure(configuration, context)
+        }
+        requireGen2 {
+            val id = gen2ResourceId ?: Resources.getRawResourceId(context, "amplify_outputs")
+            Amplify.configure(AmplifyOutputs(id), context)
+        }
+    }
+
+    // Runs the given block if this test is for gen1 config
+    protected fun requireGen1(block: () -> Unit) {
+        if (configType == ConfigType.Gen1) block()
+    }
+
+    // Runs the given block if this test is for gen2 config
+    protected fun requireGen2(block: () -> Unit) {
+        if (configType == ConfigType.Gen2) block()
     }
 
     companion object {

@@ -26,13 +26,11 @@ import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.result.AWSCognitoAuthSignOutResult
-import com.amplifyframework.auth.cognito.test.R
 import com.amplifyframework.auth.cognito.testutils.Credentials
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.core.Amplify
-import com.amplifyframework.core.configuration.AmplifyOutputs
 import com.amplifyframework.testutils.DualConfigTestBase
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
@@ -47,7 +45,7 @@ import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 
-class AuthCanaryTest(private val configType: ConfigType) : DualConfigTestBase() {
+class AuthCanaryTest(configType: ConfigType) : DualConfigTestBase(configType) {
     companion object {
         private const val TIMEOUT_S = 20L
         private val TAG = AuthCanaryTest::class.simpleName
@@ -71,7 +69,12 @@ class AuthCanaryTest(private val configType: ConfigType) : DualConfigTestBase() 
 
     @Before
     fun setup() {
+        // Rest APIs aren't supported on Gen2 schema v1
+        requireGen1 { Amplify.addPlugin(AWSApiPlugin()) }
+
+        Amplify.addPlugin(auth)
         configureAmplify()
+
         signOutUser()
         val context = ApplicationProvider.getApplicationContext<Context>()
         Dispatchers.setMain(mainThreadSurrogate)
@@ -84,29 +87,13 @@ class AuthCanaryTest(private val configType: ConfigType) : DualConfigTestBase() 
         signedUpNewUser = false
     }
 
-    private fun configureAmplify() {
-        when (configType) {
-            ConfigType.Gen1 -> {
-                Amplify.addPlugin(AWSApiPlugin())
-                Amplify.addPlugin(auth)
-                Amplify.configure(ApplicationProvider.getApplicationContext())
-            }
-            ConfigType.Gen2 -> {
-                Amplify.addPlugin(auth)
-                Amplify.configure(
-                    AmplifyOutputs(R.raw.amplify_outputs),
-                    ApplicationProvider.getApplicationContext()
-                )
-            }
-        }
-    }
-
     @After
     fun teardown() {
         if (signedUpNewUser) {
             signedUpNewUser = false
             signOutUser()
-            deleteTemporaryUser(tempUsername)
+
+            requireGen1 { deleteTemporaryUser(tempUsername) }
         }
     }
 
@@ -289,6 +276,9 @@ class AuthCanaryTest(private val configType: ConfigType) : DualConfigTestBase() 
 
     @Test
     fun updatePassword() {
+        // Gen2 doesn't support REST API as of v1 schema
+        assumeGen1()
+
         signUpUser(tempUsername, tempPassword)
         confirmTemporaryUserSignUp(tempUsername)
         signInUser(tempUsername, tempPassword)
@@ -429,6 +419,9 @@ class AuthCanaryTest(private val configType: ConfigType) : DualConfigTestBase() 
 
     @Test
     fun deleteUser() {
+        // Gen2 doesn't support REST API as of v1 schema
+        assumeGen1()
+
         signUpUser(tempUsername, tempPassword)
         confirmTemporaryUserSignUp(tempUsername)
         signInUser(tempUsername, tempPassword)
@@ -503,9 +496,6 @@ class AuthCanaryTest(private val configType: ConfigType) : DualConfigTestBase() 
     }
 
     private fun deleteTemporaryUser(user: String) {
-        // Gen2 doesn't support REST API as of v1 schema
-        if (configType == ConfigType.Gen2) return
-
         signInUser(username, password)
         val latch = CountDownLatch(1)
         val request = RestOptions.builder()
@@ -526,9 +516,6 @@ class AuthCanaryTest(private val configType: ConfigType) : DualConfigTestBase() 
     }
 
     private fun confirmTemporaryUserSignUp(user: String) {
-        // Gen2 doesn't support REST API as of v1 schema
-        if (configType == ConfigType.Gen2) return
-
         signInUser(username, password)
         val latch = CountDownLatch(1)
         val request = RestOptions.builder()
