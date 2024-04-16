@@ -16,13 +16,14 @@ package com.amplifyframework.storage.s3
 
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
-import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.configuration.AmplifyOutputs
 import com.amplifyframework.storage.StorageAccessLevel
 import com.amplifyframework.storage.operation.StorageUploadFileOperation
 import com.amplifyframework.storage.options.StoragePagedListOptions
 import com.amplifyframework.storage.options.StorageUploadFileOptions
+import com.amplifyframework.storage.s3.test.R
 import java.io.File
 import java.io.FileInputStream
 import java.io.RandomAccessFile
@@ -35,24 +36,36 @@ import org.junit.Assert.fail
 import org.junit.BeforeClass
 import org.junit.Test
 
-class StorageCanaryTest {
+class StorageCanaryTest : StorageCanaryTestBase() {
     companion object {
-        private const val TIMEOUT_S = 20L
-        private val TAG = StorageCanaryTest::class.simpleName
-        private const val TEMP_DIR_PROPERTY = "java.io.tmpdir"
-        private val TEMP_DIR = System.getProperty(TEMP_DIR_PROPERTY)
-
         @BeforeClass
         @JvmStatic
         fun setup() {
-            try {
-                Amplify.addPlugin(AWSCognitoAuthPlugin())
-                Amplify.addPlugin(AWSS3StoragePlugin())
-                Amplify.configure(ApplicationProvider.getApplicationContext())
-            } catch (error: AmplifyException) {
-                Log.e(TAG, "Could not initialize Amplify", error)
-            }
+            Amplify.addPlugin(AWSCognitoAuthPlugin())
+            Amplify.addPlugin(AWSS3StoragePlugin())
+            Amplify.configure(ApplicationProvider.getApplicationContext())
         }
+    }
+}
+
+class StorageCanaryTestGen2 : StorageCanaryTestBase() {
+    companion object {
+        @BeforeClass
+        @JvmStatic
+        fun setup() {
+            Amplify.addPlugin(AWSCognitoAuthPlugin())
+            Amplify.addPlugin(AWSS3StoragePlugin())
+            Amplify.configure(AmplifyOutputs(R.raw.amplify_outputs), ApplicationProvider.getApplicationContext())
+        }
+    }
+}
+
+abstract class StorageCanaryTestBase {
+    companion object {
+        private const val TIMEOUT_S = 20L
+        val TAG = StorageCanaryTestBase::class.simpleName
+        private const val TEMP_DIR_PROPERTY = "java.io.tmpdir"
+        private val TEMP_DIR = System.getProperty(TEMP_DIR_PROPERTY)
     }
 
     @Test
