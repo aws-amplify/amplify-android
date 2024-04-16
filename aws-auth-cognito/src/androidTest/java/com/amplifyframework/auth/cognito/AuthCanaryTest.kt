@@ -18,7 +18,6 @@ package com.amplifyframework.auth.cognito
 import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
-import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.aws.AWSApiPlugin
 import com.amplifyframework.api.rest.RestOptions
 import com.amplifyframework.auth.AuthProvider
@@ -27,27 +26,28 @@ import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.result.AWSCognitoAuthSignOutResult
+import com.amplifyframework.auth.cognito.test.R
 import com.amplifyframework.auth.cognito.testutils.Credentials
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.configuration.AmplifyOutputs
+import com.amplifyframework.testutils.DualConfigTestBase
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
-import org.junit.BeforeClass
 import org.junit.Ignore
 import org.junit.Test
 
-class AuthCanaryTest {
+class AuthCanaryTest(private val configType: ConfigType) : DualConfigTestBase() {
     companion object {
         private const val TIMEOUT_S = 20L
         private val TAG = AuthCanaryTest::class.simpleName
@@ -61,18 +61,6 @@ class AuthCanaryTest {
             (AuthUserAttribute(AuthUserAttributeKey.updatedAt(), "${System.currentTimeMillis()}"))
         )
         private val auth = AWSCognitoAuthPlugin()
-
-        @BeforeClass
-        @JvmStatic
-        fun setup() {
-            try {
-                Amplify.addPlugin(AWSApiPlugin())
-                Amplify.addPlugin(auth)
-                Amplify.configure(ApplicationProvider.getApplicationContext())
-            } catch (error: AmplifyException) {
-                Log.e(TAG, "Could not initialize Amplify", error)
-            }
-        }
     }
 
     private lateinit var username: String
@@ -81,9 +69,9 @@ class AuthCanaryTest {
     private lateinit var tempPassword: String
     private var signedUpNewUser = false
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     @Before
-    fun resetAuth() {
+    fun setup() {
+        configureAmplify()
         signOutUser()
         val context = ApplicationProvider.getApplicationContext<Context>()
         Dispatchers.setMain(mainThreadSurrogate)
@@ -94,6 +82,23 @@ class AuthCanaryTest {
         tempUsername = UUID.randomUUID().toString()
         tempPassword = UUID.randomUUID().toString()
         signedUpNewUser = false
+    }
+
+    private fun configureAmplify() {
+        when (configType) {
+            ConfigType.Gen1 -> {
+                Amplify.addPlugin(AWSApiPlugin())
+                Amplify.addPlugin(auth)
+                Amplify.configure(ApplicationProvider.getApplicationContext())
+            }
+            ConfigType.Gen2 -> {
+                Amplify.addPlugin(auth)
+                Amplify.configure(
+                    AmplifyOutputs(R.raw.amplify_outputs),
+                    ApplicationProvider.getApplicationContext()
+                )
+            }
+        }
     }
 
     @After
@@ -498,6 +503,9 @@ class AuthCanaryTest {
     }
 
     private fun deleteTemporaryUser(user: String) {
+        // Gen2 doesn't support REST API as of v1 schema
+        if (configType == ConfigType.Gen2) return
+
         signInUser(username, password)
         val latch = CountDownLatch(1)
         val request = RestOptions.builder()
@@ -518,6 +526,9 @@ class AuthCanaryTest {
     }
 
     private fun confirmTemporaryUserSignUp(user: String) {
+        // Gen2 doesn't support REST API as of v1 schema
+        if (configType == ConfigType.Gen2) return
+
         signInUser(username, password)
         val latch = CountDownLatch(1)
         val request = RestOptions.builder()
