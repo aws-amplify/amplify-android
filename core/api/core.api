@@ -1193,7 +1193,6 @@ public final class com/amplifyframework/core/Amplify {
 	public static final field Predictions Lcom/amplifyframework/predictions/PredictionsCategory;
 	public static final field Storage Lcom/amplifyframework/storage/StorageCategory;
 	public static fun addPlugin (Lcom/amplifyframework/core/plugin/Plugin;)V
-	public static fun addUserAgentPlatform (Lcom/amplifyframework/util/UserAgent$Platform;Ljava/lang/String;)V
 	public static fun configure (Landroid/content/Context;)V
 	public static fun configure (Lcom/amplifyframework/core/AmplifyConfiguration;Landroid/content/Context;)V
 	public static fun configure (Lcom/amplifyframework/core/configuration/AmplifyOutputs;Landroid/content/Context;)V
