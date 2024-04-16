@@ -49,6 +49,14 @@ class AmplifyOutputsDataBuilder : AmplifyOutputsData {
 }
 
 class AnalyticsBuilder : AmplifyOutputsData.Analytics {
+    override var amazonPinpoint: AmplifyOutputsData.Analytics.AmazonPinpoint? = null
+
+    fun amazonPinpoint(func: AmazonPinpointBuilder.() -> Unit) {
+        amazonPinpoint = AmazonPinpointBuilder().apply(func)
+    }
+}
+
+class AmazonPinpointBuilder : AmplifyOutputsData.Analytics.AmazonPinpoint {
     override var awsRegion: String = "us-east-1"
     override var appId: String = "analytics-app-id"
 }

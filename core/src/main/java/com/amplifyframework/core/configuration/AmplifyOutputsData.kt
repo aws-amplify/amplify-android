@@ -54,8 +54,13 @@ interface AmplifyOutputsData {
 
     @InternalAmplifyApi
     interface Analytics {
-        val awsRegion: String
-        val appId: String
+        val amazonPinpoint: AmazonPinpoint?
+
+        @InternalAmplifyApi
+        interface AmazonPinpoint {
+            val awsRegion: String
+            val appId: String
+        }
     }
 
     @InternalAmplifyApi
@@ -246,9 +251,14 @@ internal data class AmplifyOutputsDataImpl(
 ) : AmplifyOutputsData {
     @Serializable
     data class Analytics(
-        override val awsRegion: String,
-        override val appId: String
-    ) : AmplifyOutputsData.Analytics
+        override val amazonPinpoint: AmazonPinpoint?
+    ) : AmplifyOutputsData.Analytics {
+        @Serializable
+        data class AmazonPinpoint(
+            override val awsRegion: String,
+            override val appId: String
+        ) : AmplifyOutputsData.Analytics.AmazonPinpoint
+    }
 
     @Serializable
     data class Auth(

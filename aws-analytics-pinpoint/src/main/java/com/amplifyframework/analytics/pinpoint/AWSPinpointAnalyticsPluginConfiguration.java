@@ -80,7 +80,7 @@ final class AWSPinpointAnalyticsPluginConfiguration {
         @NonNull AWSPinpointAnalyticsPlugin.Options options
     ) throws AmplifyException {
         AmplifyOutputsData.Analytics analytics = outputs.getAnalytics();
-        if (analytics == null) {
+        if (analytics == null || analytics.getAmazonPinpoint() == null) {
             throw new AnalyticsException(
                 "Missing Analytics configuration",
                 "Ensure that analytics is enabled and exists in your configuration file"
@@ -90,8 +90,8 @@ final class AWSPinpointAnalyticsPluginConfiguration {
         // Note: autoFlushEventsInterval is not supported in Gen2 config.
         // Customers should use the programmatic plugin options API instead.
         return builder()
-                   .withAppId(analytics.getAppId())
-                   .withRegion(analytics.getAwsRegion())
+                   .withAppId(analytics.getAmazonPinpoint().getAppId())
+                   .withRegion(analytics.getAmazonPinpoint().getAwsRegion())
                    .withAutoFlushEventsInterval(options.getAutoFlushEventsInterval())
                    .build();
     }

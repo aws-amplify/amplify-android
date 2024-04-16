@@ -25,8 +25,10 @@ class AWSPinpointAnalyticsPluginConfigurationTest {
     fun `reads values from AmplifyOutputsData and Options`() {
         val outputs = amplifyOutputsData {
             analytics {
-                awsRegion = "test-region"
-                appId = "test-app"
+                amazonPinpoint {
+                    awsRegion = "test-region"
+                    appId = "test-app"
+                }
             }
         }
         val options = AWSPinpointAnalyticsPlugin.Options {
