@@ -18,7 +18,6 @@ import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
-import com.amplifyframework.core.Amplify
 import com.amplifyframework.geo.models.Coordinates
 import com.amplifyframework.testutils.DualConfigTestBase
 import java.util.concurrent.CountDownLatch
@@ -35,11 +34,13 @@ class GeoCanaryTest(configType: ConfigType) : DualConfigTestBase(configType) {
         private val TAG = GeoCanaryTest::class.simpleName
     }
 
+    private val auth = AWSCognitoAuthPlugin()
+    private val geo = AWSLocationGeoPlugin(authCategory = auth)
+
     @Before
     fun setup() {
-        Amplify.addPlugin(AWSCognitoAuthPlugin())
-        Amplify.addPlugin(AWSLocationGeoPlugin())
-        configureAmplify()
+        configurePlugin(auth)
+        configurePlugin(geo)
     }
 
     @After
@@ -53,7 +54,7 @@ class GeoCanaryTest(configType: ConfigType) : DualConfigTestBase(configType) {
         signInWithCognito()
         val searchQuery = "Amazon Go"
         try {
-            Amplify.Geo.searchByText(
+            geo.searchByText(
                 searchQuery,
                 {
                     for (place in it.places) {
@@ -75,7 +76,7 @@ class GeoCanaryTest(configType: ConfigType) : DualConfigTestBase(configType) {
         signInWithCognito()
         val position = Coordinates(47.6153, -122.3384)
         try {
-            Amplify.Geo.searchByCoordinates(
+            geo.searchByCoordinates(
                 position,
                 {
                     for (place in it.places) {
@@ -95,7 +96,7 @@ class GeoCanaryTest(configType: ConfigType) : DualConfigTestBase(configType) {
         val latch = CountDownLatch(1)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val (username, password) = Credentials.load(context)
-        Amplify.Auth.signIn(
+        auth.signIn(
             username,
             password,
             { latch.countDown() },
@@ -106,7 +107,7 @@ class GeoCanaryTest(configType: ConfigType) : DualConfigTestBase(configType) {
 
     private fun signOutFromCognito() {
         val latch = CountDownLatch(1)
-        Amplify.Auth.signOut {
+        auth.signOut {
             latch.countDown()
         }
         latch.await(TIMEOUT_S, TimeUnit.SECONDS)

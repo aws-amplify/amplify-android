@@ -1,8 +1,8 @@
 public final class com/amplifyframework/geo/location/AWSLocationGeoPlugin : com/amplifyframework/geo/GeoCategoryPlugin {
 	public static final field Companion Lcom/amplifyframework/geo/location/AWSLocationGeoPlugin$Companion;
 	public fun <init> ()V
-	public fun <init> (Lcom/amplifyframework/geo/location/configuration/GeoConfiguration;Lcom/amplifyframework/auth/AuthCategory;)V
-	public synthetic fun <init> (Lcom/amplifyframework/geo/location/configuration/GeoConfiguration;Lcom/amplifyframework/auth/AuthCategory;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lcom/amplifyframework/geo/location/configuration/GeoConfiguration;Lcom/amplifyframework/auth/AuthCategoryBehavior;)V
+	public synthetic fun <init> (Lcom/amplifyframework/geo/location/configuration/GeoConfiguration;Lcom/amplifyframework/auth/AuthCategoryBehavior;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun configure (Lorg/json/JSONObject;Landroid/content/Context;)V
 	public fun getAvailableMaps (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun getDefaultMap (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V

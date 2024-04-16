@@ -15,9 +15,12 @@
 
 package com.amplifyframework.api.aws.sigv4;
 
+import androidx.annotation.VisibleForTesting;
+
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiException.ApiAuthException;
+import com.amplifyframework.auth.AuthCategoryBehavior;
 import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.CognitoCredentialsProvider;
 import com.amplifyframework.core.Amplify;
@@ -36,6 +39,7 @@ public final class DefaultCognitoUserPoolsAuthProvider implements CognitoUserPoo
     private String lastTokenRetrievalFailureMessage;
     private AuthUser currentUser;
     private String currentUserRetrievalFailureMessage;
+    private final AuthCategoryBehavior authCategory;
 
     /**
      * Creates the object with the instance of {@link CognitoCredentialsProvider}.
@@ -44,13 +48,26 @@ public final class DefaultCognitoUserPoolsAuthProvider implements CognitoUserPoo
      * @throws ApiAuthException Thrown if the AWSCognitoAuth plugin is not added.
      */
     public DefaultCognitoUserPoolsAuthProvider() throws ApiAuthException {
+        this(Amplify.Auth);
+    }
+
+    /**
+     * Creates the object with the instance of {@link CognitoCredentialsProvider}.
+     * used to provide implementation to fetch auth token.
+     * @param authCategory The implementation of the Auth category to use
+     *
+     * @throws ApiAuthException Thrown if the AWSCognitoAuth plugin is not added.
+     */
+    @VisibleForTesting
+    public DefaultCognitoUserPoolsAuthProvider(AuthCategoryBehavior authCategory) throws ApiAuthException {
+        this.authCategory = authCategory;
         try {
             this.credentialsProvider = new CognitoCredentialsProvider();
         } catch (IllegalStateException exception) {
             throw new ApiAuthException(
-                    "AWSApiPlugin depends on AWSCognitoAuthPlugin but it is currently missing",
-                    exception,
-                    "Before configuring Amplify, be sure to add AWSCognitoAuthPlugin same as you added AWSApiPlugin."
+                "AWSApiPlugin depends on AWSCognitoAuthPlugin but it is currently missing",
+                exception,
+                "Before configuring Amplify, be sure to add AWSCognitoAuthPlugin same as you added AWSApiPlugin."
             );
         }
     }
@@ -96,7 +113,7 @@ public final class DefaultCognitoUserPoolsAuthProvider implements CognitoUserPoo
 
     private synchronized void fetchUser() throws ApiException {
         final Semaphore semaphore = new Semaphore(0);
-        Amplify.Auth.getCurrentUser(value -> {
+        authCategory.getCurrentUser(value -> {
             currentUser = value;
             semaphore.release();
         }, value -> {

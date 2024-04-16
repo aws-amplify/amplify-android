@@ -29,7 +29,7 @@ import kotlin.coroutines.suspendCoroutine
  * Wrapper to provide credentials from Auth synchronously and asynchronously
  */
 open class CognitoCredentialsProvider @InternalAmplifyApi constructor(
-    private val authCategory: AuthCategory
+    private val authCategory: AuthCategoryBehavior
 ) : AuthCredentialsProvider {
 
     constructor() : this(Amplify.Auth)

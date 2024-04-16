@@ -21,7 +21,7 @@ import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.annotations.InternalApiWarning
-import com.amplifyframework.auth.AuthCategory
+import com.amplifyframework.auth.AuthCategoryBehavior
 import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
@@ -50,7 +50,7 @@ import org.json.JSONObject
 class AWSLocationGeoPlugin(
     // for programmatically overriding amplifyconfiguration.json
     private val userConfiguration: GeoConfiguration? = null,
-    private val authCategory: AuthCategory = Amplify.Auth
+    private val authCategory: AuthCategoryBehavior = Amplify.Auth
 ) : GeoCategoryPlugin<LocationClient?>() {
     companion object {
         private const val GEO_PLUGIN_KEY = "awsLocationGeoPlugin"
