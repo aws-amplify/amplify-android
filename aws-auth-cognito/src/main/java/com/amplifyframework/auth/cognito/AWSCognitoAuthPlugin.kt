@@ -146,7 +146,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         } catch (exception: Exception) {
             throw ConfigurationException(
                 "Failed to configure AWSCognitoAuthPlugin.",
-                "Make sure your amplify-outputs.json is valid.",
+                "Make sure your amplify_outputs.json is valid.",
                 exception
             )
         }
