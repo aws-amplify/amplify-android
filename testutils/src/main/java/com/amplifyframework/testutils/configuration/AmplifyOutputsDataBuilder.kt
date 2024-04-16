@@ -35,6 +35,10 @@ class AmplifyOutputsDataBuilder : AmplifyOutputsData {
         analytics = AnalyticsBuilder().apply(func)
     }
 
+    fun geo(func: GeoBuilder.() -> Unit) {
+        geo = GeoBuilder().apply(func)
+    }
+
     fun notifications(func: NotificationsBuilder.() -> Unit) {
         notifications = NotificationsBuilder().apply(func)
     }
@@ -47,6 +51,37 @@ class AmplifyOutputsDataBuilder : AmplifyOutputsData {
 class AnalyticsBuilder : AmplifyOutputsData.Analytics {
     override var awsRegion: String = "us-east-1"
     override var appId: String = "analytics-app-id"
+}
+
+class GeoBuilder : AmplifyOutputsData.Geo {
+    override var awsRegion: String = "us-east-1"
+    override var maps: AmplifyOutputsData.Geo.Maps? = null
+    override var searchIndices: AmplifyOutputsData.Geo.SearchIndices? = null
+    override var geofenceCollections: AmplifyOutputsData.Geo.GeofenceCollections? = null
+
+    fun maps(func: GeoMapsBuilder.() -> Unit) {
+        maps = GeoMapsBuilder().apply(func)
+    }
+
+    fun searchIndices(func: GeoSearchIndicesBuilder.() -> Unit) {
+        searchIndices = GeoSearchIndicesBuilder().apply(func)
+    }
+}
+
+class GeoMapsBuilder : AmplifyOutputsData.Geo.Maps {
+    override val items: MutableMap<String, AmplifyOutputsData.AmazonLocationServiceConfig> = mutableMapOf()
+    override var default: String = ""
+
+    fun map(name: String, style: String) {
+        items += name to LocationServiceConfig(style)
+    }
+
+    data class LocationServiceConfig(override val style: String) : AmplifyOutputsData.AmazonLocationServiceConfig
+}
+
+class GeoSearchIndicesBuilder : AmplifyOutputsData.Geo.SearchIndices {
+    override val items: MutableSet<String> = mutableSetOf()
+    override var default: String = ""
 }
 
 class NotificationsBuilder : AmplifyOutputsData.Notifications {
