@@ -81,17 +81,22 @@ abstract class DualConfigTestBase(protected val configType: ConfigType) {
         @RawRes gen2ResourceId: Int? = null
     ) {
         val context = ApplicationProvider.getApplicationContext<Context>()
+
         requireGen1 {
             val id = gen1ResourceId ?: Resources.getRawResourceId(context, "amplifyconfiguration")
             val configuration = AmplifyConfiguration.fromConfigFile(context, id)
             val json = configuration.forCategoryType(plugin.categoryType).getPluginConfig(plugin.pluginKey)
             plugin.configure(json, context)
         }
+
         requireGen2 {
             val id = gen2ResourceId ?: Resources.getRawResourceId(context, "amplify_outputs")
             val data = AmplifyOutputsData.deserialize(context, AmplifyOutputs(id))
             plugin.configure(data, context)
         }
+
+        // Initialize the plugin
+        plugin.initialize(context)
     }
 
     // Runs the given block if this test is for gen1 config
