@@ -17,9 +17,10 @@ package com.amplifyframework.geo.location
 import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
-import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.configuration.AmplifyOutputs
+import com.amplifyframework.geo.location.test.R
 import com.amplifyframework.geo.models.Coordinates
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -29,22 +30,34 @@ import org.junit.Assert.fail
 import org.junit.BeforeClass
 import org.junit.Test
 
-class GeoCanaryTest {
+class GeoCanaryTest : GeoCanaryTestBase() {
     companion object {
-        private const val TIMEOUT_S = 20L
-        private val TAG = GeoCanaryTest::class.simpleName
-
         @BeforeClass
         @JvmStatic
         fun setup() {
-            try {
-                Amplify.addPlugin(AWSCognitoAuthPlugin())
-                Amplify.addPlugin(AWSLocationGeoPlugin())
-                Amplify.configure(ApplicationProvider.getApplicationContext())
-            } catch (error: AmplifyException) {
-                Log.e(TAG, "Could not initialize Amplify", error)
-            }
+            Amplify.addPlugin(AWSCognitoAuthPlugin())
+            Amplify.addPlugin(AWSLocationGeoPlugin())
+            Amplify.configure(ApplicationProvider.getApplicationContext())
         }
+    }
+}
+
+class GeoCanaryTestGen2 : GeoCanaryTestBase() {
+    companion object {
+        @BeforeClass
+        @JvmStatic
+        fun setup() {
+            Amplify.addPlugin(AWSCognitoAuthPlugin())
+            Amplify.addPlugin(AWSLocationGeoPlugin())
+            Amplify.configure(AmplifyOutputs(R.raw.amplify_outputs), ApplicationProvider.getApplicationContext())
+        }
+    }
+}
+
+abstract class GeoCanaryTestBase {
+    companion object {
+        private const val TIMEOUT_S = 20L
+        private val TAG = GeoCanaryTestBase::class.simpleName
     }
 
     @After

@@ -48,6 +48,7 @@ readonly config_files=(
     "aws-geo-location/src/androidTest/res/raw/amplifyconfiguration.json"
     "aws-geo-location/src/androidTest/res/raw/awsconfiguration.json"
     "aws-geo-location/src/androidTest/res/raw/credentials.json"
+    "aws-geo-location/src/androidTest/res/raw/amplify_outputs.json"
 
     # Maplibre Adapter
     "maplibre-adapter/src/androidTest/res/raw/amplifyconfiguration.json"
