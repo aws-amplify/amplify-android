@@ -40,6 +40,10 @@ class AmplifyOutputsDataBuilder : AmplifyOutputsData {
         auth = AuthBuilder().apply(func)
     }
 
+    fun data(func: DataBuilder.() -> Unit) {
+        data = DataBuilder().apply(func)
+    }
+
     fun geo(func: GeoBuilder.() -> Unit) {
         geo = GeoBuilder().apply(func)
     }
@@ -108,6 +112,16 @@ class OauthBuilder : AmplifyOutputsData.Auth.Oauth {
     override val redirectSignOutUri: MutableList<String> = mutableListOf()
     override var responseType: AmplifyOutputsData.Auth.Oauth.ResponseType =
         AmplifyOutputsData.Auth.Oauth.ResponseType.Code
+}
+
+class DataBuilder : AmplifyOutputsData.Data {
+    override var awsRegion: String = "us-east-1"
+    override var url: String = "https://test.com"
+    override var apiKey: String? = null
+    override var defaultAuthorizationType: AmplifyOutputsData.AwsAppsyncAuthorizationType =
+        AmplifyOutputsData.AwsAppsyncAuthorizationType.AMAZON_COGNITO_USER_POOLS
+    override val authorizationTypes: MutableList<AmplifyOutputsData.AwsAppsyncAuthorizationType> =
+        mutableListOf(AmplifyOutputsData.AwsAppsyncAuthorizationType.AMAZON_COGNITO_USER_POOLS)
 }
 
 class GeoBuilder : AmplifyOutputsData.Geo {
