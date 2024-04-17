@@ -97,12 +97,13 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         }
     }
 
-    private lateinit var pluginConfigurationJSON: JSONObject
-
+    // This function is used for versions of the Authenticator component <= 1.1.0 to get the configuration values needed
+    // to configure the Authenticator UI. Starting in 1.2.0 it uses getAuthConfiguration() instead. In order to support
+    // older Authenticator versions we translate the config - whether it comes from Gen1 or Gen2 - back into Gen1 JSON
     @InternalAmplifyApi
     @Deprecated("Use getAuthConfiguration instead", replaceWith = ReplaceWith("getAuthConfiguration()"))
     fun getPluginConfiguration(): JSONObject {
-        return pluginConfigurationJSON
+        return getAuthConfiguration().toGen1Json()
     }
 
     @InternalAmplifyApi
@@ -127,7 +128,6 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
 
     @Throws(AmplifyException::class)
     override fun configure(pluginConfiguration: JSONObject, context: Context) {
-        pluginConfigurationJSON = pluginConfiguration
         try {
             configure(AuthConfiguration.fromJson(pluginConfiguration), context)
         } catch (exception: Exception) {
