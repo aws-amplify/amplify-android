@@ -1,6 +1,9 @@
 #!/bin/bash
 project_arn=$DEVICEFARM_PROJECT_ARN
 max_devices=$NUMBER_OF_DEVICES_TO_TEST
+test_spec_arn=$DEVICEFARM_TEST_SPEC_ARN
+orchestrator_arn=$DEVICEFARM_ORCHESTRATOR_ARN
+test_services_arn=$DEVICEFARM_TEST_SERVICES_ARN
 module_name=$1
 file_name="$module_name-debug-androidTest.apk"
 full_path="$module_name/build/outputs/apk/androidTest/debug/$file_name"
@@ -118,8 +121,11 @@ run_arn=`aws devicefarm schedule-run --project-arn=$project_arn \
                                 ],
                                 "maxDevices": '$max_devices'
                             }' \
+                            --configuration='{
+                                "auxiliaryApps": ["'$orchestrator_arn'","'$test_services_arn'"]
+                            }' \
                             --name="$file_name-$CODEBUILD_SOURCE_VERSION" \
-                            --test="type=INSTRUMENTATION,testPackageArn=$test_package_upload_arn" \
+                            --test="testSpecArn=$test_spec_arn,type=INSTRUMENTATION,testPackageArn=$test_package_upload_arn" \
                             --execution-configuration="jobTimeoutMinutes=30,videoCapture=false" \
                             --query="run.arn" \
                             --output=text \
