@@ -15,6 +15,7 @@
 
 package com.amplifyframework.testutils.configuration
 
+import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.core.configuration.AmplifyOutputsData
 import kotlinx.serialization.json.JsonObject
 
@@ -33,6 +34,10 @@ class AmplifyOutputsDataBuilder : AmplifyOutputsData {
 
     fun analytics(func: AnalyticsBuilder.() -> Unit) {
         analytics = AnalyticsBuilder().apply(func)
+    }
+
+    fun auth(func: AuthBuilder.() -> Unit) {
+        auth = AuthBuilder().apply(func)
     }
 
     fun geo(func: GeoBuilder.() -> Unit) {
@@ -59,6 +64,50 @@ class AnalyticsBuilder : AmplifyOutputsData.Analytics {
 class AmazonPinpointBuilder : AmplifyOutputsData.Analytics.AmazonPinpoint {
     override var awsRegion: String = "us-east-1"
     override var appId: String = "analytics-app-id"
+}
+
+class AuthBuilder : AmplifyOutputsData.Auth {
+    override var awsRegion: String = "us-east-1"
+    override var authenticationFlowType: AmplifyOutputsData.Auth.AuthenticationFlowType =
+        AmplifyOutputsData.Auth.AuthenticationFlowType.USER_SRP_AUTH
+    override var userPoolId: String = "user-pool-id"
+    override var userPoolClientId: String = "user-pool-client-id"
+    override var identityPoolId: String? = null
+    override var passwordPolicy: AmplifyOutputsData.Auth.PasswordPolicy? = null
+    override var oauth: AmplifyOutputsData.Auth.Oauth? = null
+    override val standardRequiredAttributes: MutableList<AuthUserAttributeKey> = mutableListOf()
+    override val usernameAttributes: MutableList<AmplifyOutputsData.Auth.UsernameAttributes> = mutableListOf()
+    override val userVerificationTypes: MutableList<AmplifyOutputsData.Auth.UserVerificationTypes> = mutableListOf()
+    override var unauthenticatedIdentitiesEnabled: Boolean = true
+    override var mfaConfiguration: AmplifyOutputsData.Auth.MfaConfiguration? = null
+    override val mfaMethods: MutableList<AmplifyOutputsData.Auth.MfaMethods> = mutableListOf()
+
+    fun passwordPolicy(func: PasswordPolicyBuilder.() -> Unit) {
+        passwordPolicy = PasswordPolicyBuilder().apply(func)
+    }
+
+    fun oauth(func: OauthBuilder.() -> Unit) {
+        oauth = OauthBuilder().apply(func)
+    }
+}
+
+class PasswordPolicyBuilder : AmplifyOutputsData.Auth.PasswordPolicy {
+    override var minLength: Int? = null
+    override var requireNumbers: Boolean? = null
+    override var requireLowercase: Boolean? = null
+    override var requireUppercase: Boolean? = null
+    override var requireSymbols: Boolean? = null
+}
+
+class OauthBuilder : AmplifyOutputsData.Auth.Oauth {
+    override val identityProviders: MutableList<AmplifyOutputsData.Auth.Oauth.IdentityProviders> = mutableListOf()
+    override var cognitoDomain: String = "domain"
+    override var customDomain: String? = null
+    override val scopes: MutableList<String> = mutableListOf()
+    override val redirectSignInUri: MutableList<String> = mutableListOf()
+    override val redirectSignOutUri: MutableList<String> = mutableListOf()
+    override var responseType: AmplifyOutputsData.Auth.Oauth.ResponseType =
+        AmplifyOutputsData.Auth.Oauth.ResponseType.Code
 }
 
 class GeoBuilder : AmplifyOutputsData.Geo {

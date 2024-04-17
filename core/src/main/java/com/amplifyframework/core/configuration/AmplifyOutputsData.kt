@@ -91,7 +91,8 @@ interface AmplifyOutputsData {
         @InternalAmplifyApi
         interface Oauth {
             val identityProviders: List<IdentityProviders>
-            val domain: String
+            val cognitoDomain: String
+            val customDomain: String?
             val scopes: List<String>
             val redirectSignInUri: List<String>
             val redirectSignOutUri: List<String>
@@ -103,12 +104,13 @@ interface AmplifyOutputsData {
             }
 
             @InternalAmplifyApi
+            @Serializable
             enum class ResponseType {
                 @SerialName("code")
-                CODE,
+                Code,
 
                 @SerialName("token")
-                TOKEN
+                Token
             }
         }
 
@@ -116,10 +118,27 @@ interface AmplifyOutputsData {
         enum class AuthenticationFlowType { USER_SRP_AUTH, CUSTOM_AUTH }
 
         @InternalAmplifyApi
-        enum class UsernameAttributes { USERNAME, EMAIL, PHONE }
+        @Serializable
+        enum class UsernameAttributes {
+            @SerialName("username")
+            Username,
+
+            @SerialName("email")
+            Email,
+
+            @SerialName("phone_number")
+            PhoneNumber
+        }
 
         @InternalAmplifyApi
-        enum class UserVerificationTypes { EMAIL, PHONE }
+        @Serializable
+        enum class UserVerificationTypes {
+            @SerialName("email")
+            Email,
+
+            @SerialName("phone_number")
+            PhoneNumber
+        }
 
         @InternalAmplifyApi
         enum class MfaConfiguration { NONE, OPTIONAL, REQUIRED }
@@ -288,7 +307,8 @@ internal data class AmplifyOutputsDataImpl(
         @Serializable
         data class Oauth(
             override val identityProviders: List<IdentityProviders>,
-            override val domain: String,
+            override val cognitoDomain: String,
+            override val customDomain: String?,
             override val scopes: List<String>,
             override val redirectSignInUri: List<String>,
             override val redirectSignOutUri: List<String>,

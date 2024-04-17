@@ -61,6 +61,7 @@ import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.category.CategoryType
+import com.amplifyframework.core.configuration.AmplifyOutputsData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -128,27 +129,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     override fun configure(pluginConfiguration: JSONObject, context: Context) {
         pluginConfigurationJSON = pluginConfiguration
         try {
-            val configuration = AuthConfiguration.fromJson(pluginConfiguration)
-            val credentialStoreClient = CredentialStoreClient(configuration, context, logger)
-            val authEnvironment = AuthEnvironment(
-                context,
-                configuration,
-                AWSCognitoAuthService.fromConfiguration(configuration),
-                credentialStoreClient,
-                configuration.userPool?.let { UserContextDataProvider(context, it.poolId!!, it.appClient!!) },
-                HostedUIClient.create(context, configuration.oauth, logger),
-                logger
-            )
-
-            val authStateMachine = AuthStateMachine(authEnvironment)
-            realPlugin = RealAWSCognitoAuthPlugin(
-                configuration,
-                authEnvironment,
-                authStateMachine,
-                logger
-            )
-
-            blockQueueChannelWhileConfiguring()
+            configure(AuthConfiguration.fromJson(pluginConfiguration), context)
         } catch (exception: Exception) {
             throw ConfigurationException(
                 "Failed to configure AWSCognitoAuthPlugin.",
@@ -156,6 +137,42 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
                 exception
             )
         }
+    }
+
+    @InternalAmplifyApi
+    override fun configure(amplifyOutputs: AmplifyOutputsData, context: Context) {
+        try {
+            configure(AuthConfiguration.from(amplifyOutputs), context)
+        } catch (exception: Exception) {
+            throw ConfigurationException(
+                "Failed to configure AWSCognitoAuthPlugin.",
+                "Make sure your amplify_outputs.json is valid.",
+                exception
+            )
+        }
+    }
+
+    private fun configure(configuration: AuthConfiguration, context: Context) {
+        val credentialStoreClient = CredentialStoreClient(configuration, context, logger)
+        val authEnvironment = AuthEnvironment(
+            context,
+            configuration,
+            AWSCognitoAuthService.fromConfiguration(configuration),
+            credentialStoreClient,
+            configuration.userPool?.let { UserContextDataProvider(context, it.poolId!!, it.appClient!!) },
+            HostedUIClient.create(context, configuration.oauth, logger),
+            logger
+        )
+
+        val authStateMachine = AuthStateMachine(authEnvironment)
+        realPlugin = RealAWSCognitoAuthPlugin(
+            configuration,
+            authEnvironment,
+            authStateMachine,
+            logger
+        )
+
+        blockQueueChannelWhileConfiguring()
     }
 
     // Auth configuration is an async process. Wait until the state machine is in a settled state before attempting
