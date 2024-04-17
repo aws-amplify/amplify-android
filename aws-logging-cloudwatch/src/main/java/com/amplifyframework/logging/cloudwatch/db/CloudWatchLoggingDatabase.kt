@@ -82,12 +82,17 @@ internal class CloudWatchLoggingDatabase(
 
     internal suspend fun bulkDelete(eventIds: List<Long>) = withContext(coroutineDispatcher) {
         contentUri
-        val whereClause = "${LogEventTable.COLUMN_ID} in (?)"
-        database.delete(
-            LogEventTable.TABLE_LOG_EVENT,
-            whereClause,
-            arrayOf(eventIds.joinToString(","))
-        )
+        if (eventIds.isNotEmpty()) {
+            val params = List(eventIds.size) { "?" }.joinToString(",")
+            val whereClause = "${LogEventTable.COLUMN_ID} in ($params)}"
+            database.delete(
+                LogEventTable.TABLE_LOG_EVENT,
+                whereClause,
+                eventIds.toTypedArray()
+            )
+        } else {
+
+        }
     }
 
     internal fun isCacheFull(cacheSizeInMB: Int): Boolean {
