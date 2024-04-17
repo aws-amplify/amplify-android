@@ -60,6 +60,10 @@ class AuthCanaryTest : AuthCanaryTestBase(ConfigType.Gen1) {
             Amplify.configure(ApplicationProvider.getApplicationContext())
         }
     }
+
+    @Test
+    fun noopTest() {
+    }
 }
 
 class AuthCanaryTestGen2 : AuthCanaryTestBase(ConfigType.Gen2) {
@@ -70,6 +74,10 @@ class AuthCanaryTestGen2 : AuthCanaryTestBase(ConfigType.Gen2) {
             Amplify.addPlugin(auth)
             Amplify.configure(AmplifyOutputs(R.raw.amplify_outputs), ApplicationProvider.getApplicationContext())
         }
+    }
+
+    @Test
+    fun noopTest() {
     }
 }
 
