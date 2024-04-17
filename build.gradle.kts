@@ -151,6 +151,7 @@ fun Project.configureAndroid() {
                 unitTests {
                     isIncludeAndroidResources = true
                 }
+                execution = "ANDROIDX_TEST_ORCHESTRATOR"
             }
 
             buildConfigField("String", "VERSION_NAME", "\"$sdkVersionName\"")
