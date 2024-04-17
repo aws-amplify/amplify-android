@@ -18,6 +18,8 @@ import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.configuration.AmplifyOutputs
+import com.amplifyframework.datastore.test.R
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider
 import com.amplifyframework.testmodels.commentsblog.Post
@@ -32,11 +34,8 @@ import org.junit.Assert.fail
 import org.junit.BeforeClass
 import org.junit.Test
 
-class DatastoreCanaryTest {
+class DatastoreCanaryTest : DatastoreCanaryTestBase() {
     companion object {
-        private const val TIMEOUT_S = 20L
-        private val TAG = DatastoreCanaryTest::class.simpleName
-
         @BeforeClass
         @JvmStatic
         fun setup() {
@@ -51,6 +50,32 @@ class DatastoreCanaryTest {
                 Log.e(TAG, "Could not initialize Amplify", error)
             }
         }
+    }
+}
+
+class DatastoreCanaryTestGen2 : DatastoreCanaryTestBase() {
+    companion object {
+        @BeforeClass
+        @JvmStatic
+        fun setup() {
+            try {
+                Amplify.addPlugin(
+                    AWSDataStorePlugin.builder()
+                        .modelProvider(AmplifyModelProvider.getInstance())
+                        .build()
+                )
+                Amplify.configure(AmplifyOutputs(R.raw.amplify_outputs), ApplicationProvider.getApplicationContext())
+            } catch (error: AmplifyException) {
+                Log.e(TAG, "Could not initialize Amplify", error)
+            }
+        }
+    }
+}
+
+abstract class DatastoreCanaryTestBase {
+    companion object {
+        private const val TIMEOUT_S = 20L
+        val TAG = DatastoreCanaryTestBase::class.simpleName
     }
 
     @After
