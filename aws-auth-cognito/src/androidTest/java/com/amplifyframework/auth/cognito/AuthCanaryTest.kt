@@ -18,7 +18,6 @@ package com.amplifyframework.auth.cognito
 import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
-import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.aws.AWSApiPlugin
 import com.amplifyframework.api.rest.RestOptions
 import com.amplifyframework.auth.AuthProvider
@@ -27,11 +26,14 @@ import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.result.AWSCognitoAuthSignOutResult
+import com.amplifyframework.auth.cognito.test.R
 import com.amplifyframework.auth.cognito.testutils.Credentials
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.configuration.AmplifyOutputs
+import com.amplifyframework.testutils.configuration.ConfigType
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -42,15 +44,39 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
+import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Ignore
 import org.junit.Test
 
-class AuthCanaryTest {
+class AuthCanaryTest : AuthCanaryTestBase(ConfigType.Gen1) {
+    companion object {
+        @BeforeClass
+        @JvmStatic
+        fun setup() {
+            Amplify.addPlugin(AWSApiPlugin())
+            Amplify.addPlugin(auth)
+            Amplify.configure(ApplicationProvider.getApplicationContext())
+        }
+    }
+}
+
+class AuthCanaryTestGen2 : AuthCanaryTestBase(ConfigType.Gen2) {
+    companion object {
+        @BeforeClass
+        @JvmStatic
+        fun setup() {
+            Amplify.addPlugin(auth)
+            Amplify.configure(AmplifyOutputs(R.raw.amplify_outputs), ApplicationProvider.getApplicationContext())
+        }
+    }
+}
+
+abstract class AuthCanaryTestBase(protected val configType: ConfigType) {
     companion object {
         private const val TIMEOUT_S = 20L
-        private val TAG = AuthCanaryTest::class.simpleName
+        val TAG = AuthCanaryTestBase::class.simpleName
         private val mainThreadSurrogate = newSingleThreadContext("Main thread")
         private val attributes = listOf(
             (AuthUserAttribute(AuthUserAttributeKey.address(), "Sesame Street")),
@@ -60,19 +86,7 @@ class AuthCanaryTest {
             (AuthUserAttribute(AuthUserAttributeKey.phoneNumber(), "+16268319333")), // Elmo's phone #
             (AuthUserAttribute(AuthUserAttributeKey.updatedAt(), "${System.currentTimeMillis()}"))
         )
-        private val auth = AWSCognitoAuthPlugin()
-
-        @BeforeClass
-        @JvmStatic
-        fun setup() {
-            try {
-                Amplify.addPlugin(AWSApiPlugin())
-                Amplify.addPlugin(auth)
-                Amplify.configure(ApplicationProvider.getApplicationContext())
-            } catch (error: AmplifyException) {
-                Log.e(TAG, "Could not initialize Amplify", error)
-            }
-        }
+        val auth = AWSCognitoAuthPlugin()
     }
 
     private lateinit var username: String
@@ -101,7 +115,11 @@ class AuthCanaryTest {
         if (signedUpNewUser) {
             signedUpNewUser = false
             signOutUser()
-            deleteTemporaryUser(tempUsername)
+
+            // Gen2 does not support REST API as of v1 schema
+            if (configType == ConfigType.Gen1) {
+                deleteTemporaryUser(tempUsername)
+            }
         }
     }
 
@@ -284,6 +302,9 @@ class AuthCanaryTest {
 
     @Test
     fun updatePassword() {
+        // Gen2 does not support REST API as of v1 schema so we cannot confirm the temporary user
+        assumeTrue(configType == ConfigType.Gen1)
+
         signUpUser(tempUsername, tempPassword)
         confirmTemporaryUserSignUp(tempUsername)
         signInUser(tempUsername, tempPassword)
@@ -424,6 +445,9 @@ class AuthCanaryTest {
 
     @Test
     fun deleteUser() {
+        // Gen2 does not support REST API as of v1 schema so we cannot confirm the temporary user
+        assumeTrue(configType == ConfigType.Gen1)
+
         signUpUser(tempUsername, tempPassword)
         confirmTemporaryUserSignUp(tempUsername)
         signInUser(tempUsername, tempPassword)
@@ -433,7 +457,9 @@ class AuthCanaryTest {
                 signedUpNewUser = false
                 latch.countDown()
             },
-            { fail("Delete user failed: $it") }
+            {
+                fail("Delete user failed: $it")
+            }
         )
         assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
     }
