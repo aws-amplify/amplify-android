@@ -90,8 +90,6 @@ internal class CloudWatchLoggingDatabase(
                 whereClause,
                 eventIds.toTypedArray()
             )
-        } else {
-
         }
     }
 
