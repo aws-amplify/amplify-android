@@ -39,15 +39,17 @@ class AmplifyOutputsDataTest {
     fun `parses Analytics configuration`() {
         val json = createJson(
             Keys.analytics to mapOf(
-                Keys.region to "us-east-1",
-                Keys.appId to "testAppId"
+                Keys.pinpoint to mapOf(
+                    Keys.region to "us-east-1",
+                    Keys.appId to "testAppId"
+                )
             )
         )
 
         val outputs = AmplifyOutputsData.deserialize(json)
 
-        outputs.analytics.shouldNotBeNull()
-        outputs.analytics?.run {
+        outputs.analytics?.amazonPinpoint.shouldNotBeNull()
+        outputs.analytics?.amazonPinpoint?.run {
             awsRegion shouldBe "us-east-1"
             appId shouldBe "testAppId"
         }
@@ -74,7 +76,8 @@ class AmplifyOutputsDataTest {
                         AmplifyOutputsData.Auth.Oauth.IdentityProviders.FACEBOOK.name,
                         AmplifyOutputsData.Auth.Oauth.IdentityProviders.GOOGLE.name
                     ),
-                    Keys.oauthDomain to "https://oauth.com",
+                    Keys.oauthCognitoDomain to "https://oauth.com",
+                    Keys.oauthCustomDomain to "https://custom.com",
                     Keys.oauthScopes to listOf("scope1", "scope2"),
                     Keys.oauthSignInUri to listOf("https://oauth.com/signin"),
                     Keys.oauthSignOutUri to listOf("https://oauth.com/signout"),
@@ -85,12 +88,12 @@ class AmplifyOutputsDataTest {
                     AuthUserAttributeKey.gender().keyString
                 ),
                 Keys.usernameAttributes to listOf(
-                    AmplifyOutputsData.Auth.UsernameAttributes.Username.name,
-                    AmplifyOutputsData.Auth.UsernameAttributes.Email.name
+                    AmplifyOutputsData.Auth.UsernameAttributes.Username.snakename,
+                    AmplifyOutputsData.Auth.UsernameAttributes.Email.snakename
                 ),
                 Keys.userVerificationTypes to listOf(
-                    AmplifyOutputsData.Auth.UserVerificationTypes.Email.name,
-                    AmplifyOutputsData.Auth.UserVerificationTypes.PhoneNumber.name
+                    AmplifyOutputsData.Auth.UserVerificationTypes.Email.snakename,
+                    AmplifyOutputsData.Auth.UserVerificationTypes.PhoneNumber.snakename
                 ),
                 Keys.unauthenticatedIdentitiesEnabled to true,
                 Keys.mfaConfiguration to AmplifyOutputsData.Auth.MfaConfiguration.OPTIONAL.name,
@@ -122,7 +125,8 @@ class AmplifyOutputsDataTest {
                     AmplifyOutputsData.Auth.Oauth.IdentityProviders.FACEBOOK,
                     AmplifyOutputsData.Auth.Oauth.IdentityProviders.GOOGLE
                 )
-                domain shouldBe "https://oauth.com"
+                cognitoDomain shouldBe "https://oauth.com"
+                customDomain shouldBe "https://custom.com"
                 scopes shouldContainExactly listOf("scope1", "scope2")
                 redirectSignInUri shouldContainExactly listOf("https://oauth.com/signin")
                 redirectSignOutUri shouldContainExactly listOf("https://oauth.com/signout")
@@ -282,6 +286,27 @@ class AmplifyOutputsDataTest {
         return JSONObject(data as Map<*, *>).toString()
     }
 
+    private val <E : Enum<E>> E.snakename: String
+        get() {
+            val builder = StringBuilder()
+            var appendUnderscore = false
+
+            name.forEach { char ->
+                if (char.isUpperCase()) {
+                    if (appendUnderscore) {
+                        builder.append('_')
+                    }
+                    builder.append(char.lowercase())
+                    appendUnderscore = false
+                } else {
+                    builder.append(char)
+                    appendUnderscore = true
+                }
+            }
+
+            return builder.toString()
+        }
+
     object Keys {
         const val version = "version"
         const val region = "aws_region"
@@ -290,6 +315,7 @@ class AmplifyOutputsDataTest {
 
         // Analytics
         const val analytics = "analytics"
+        const val pinpoint = "amazon_pinpoint"
         const val appId = "app_id"
 
         // Auth
@@ -306,7 +332,8 @@ class AmplifyOutputsDataTest {
         const val passwordLower = "require_lowercase"
         const val oauth = "oauth"
         const val oauthIdentityProviders = "identity_providers"
-        const val oauthDomain = "domain"
+        const val oauthCognitoDomain = "cognito_domain"
+        const val oauthCustomDomain = "custom_domain"
         const val oauthScopes = "scopes"
         const val oauthSignInUri = "redirect_sign_in_uri"
         const val oauthSignOutUri = "redirect_sign_out_uri"
