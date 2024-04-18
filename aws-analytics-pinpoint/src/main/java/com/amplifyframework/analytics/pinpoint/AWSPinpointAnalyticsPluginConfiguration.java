@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.analytics.AnalyticsException;
+import com.amplifyframework.annotations.InternalAmplifyApi;
 import com.amplifyframework.core.configuration.AmplifyOutputsData;
 
 /**
@@ -75,6 +76,7 @@ final class AWSPinpointAnalyticsPluginConfiguration {
         return new Builder();
     }
 
+    @InternalAmplifyApi
     static AWSPinpointAnalyticsPluginConfiguration from(
         @NonNull AmplifyOutputsData outputs,
         @NonNull AWSPinpointAnalyticsPlugin.Options options
