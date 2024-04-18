@@ -58,7 +58,6 @@ class AmplifyOutputsDataTest {
         val json = createJson(
             Keys.auth to mapOf(
                 Keys.region to "us-east-1",
-                Keys.authFlowType to AmplifyOutputsData.Auth.AuthenticationFlowType.USER_SRP_AUTH.name,
                 Keys.userPoolId to "user-pool",
                 Keys.userPoolClientId to "user-pool-client",
                 Keys.identityPoolId to "identity-pool",
@@ -106,7 +105,6 @@ class AmplifyOutputsDataTest {
         outputs.auth.shouldNotBeNull()
         outputs.auth?.run {
             awsRegion shouldBe "us-east-1"
-            authenticationFlowType shouldBe AmplifyOutputsData.Auth.AuthenticationFlowType.USER_SRP_AUTH
             userPoolId shouldBe "user-pool"
             userPoolClientId shouldBe "user-pool-client"
             identityPoolId shouldBe "identity-pool"
@@ -294,7 +292,6 @@ class AmplifyOutputsDataTest {
 
         // Auth
         const val auth = "auth"
-        const val authFlowType = "authentication_flow_type"
         const val userPoolId = "user_pool_id"
         const val userPoolClientId = "user_pool_client_id"
         const val identityPoolId = "identity_pool_id"

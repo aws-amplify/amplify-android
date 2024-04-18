@@ -72,8 +72,6 @@ class AmazonPinpointBuilder : AmplifyOutputsData.Analytics.AmazonPinpoint {
 
 class AuthBuilder : AmplifyOutputsData.Auth {
     override var awsRegion: String = "us-east-1"
-    override var authenticationFlowType: AmplifyOutputsData.Auth.AuthenticationFlowType =
-        AmplifyOutputsData.Auth.AuthenticationFlowType.USER_SRP_AUTH
     override var userPoolId: String = "user-pool-id"
     override var userPoolClientId: String = "user-pool-client-id"
     override var identityPoolId: String? = null

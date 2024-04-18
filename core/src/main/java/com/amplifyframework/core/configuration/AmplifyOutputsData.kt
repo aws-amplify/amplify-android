@@ -22,7 +22,6 @@ import com.amplifyframework.AmplifyException
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.core.configuration.AmplifyOutputsData.AmazonPinpointChannels
-import com.amplifyframework.core.configuration.AmplifyOutputsData.Auth.AuthenticationFlowType
 import com.amplifyframework.core.configuration.AmplifyOutputsData.Auth.MfaConfiguration
 import com.amplifyframework.core.configuration.AmplifyOutputsData.Auth.MfaMethods
 import com.amplifyframework.core.configuration.AmplifyOutputsData.Auth.Oauth.IdentityProviders
@@ -66,7 +65,6 @@ interface AmplifyOutputsData {
     @InternalAmplifyApi
     interface Auth {
         val awsRegion: String
-        val authenticationFlowType: AuthenticationFlowType
         val userPoolId: String
         val userPoolClientId: String
         val identityPoolId: String?
@@ -113,9 +111,6 @@ interface AmplifyOutputsData {
                 Token
             }
         }
-
-        @InternalAmplifyApi
-        enum class AuthenticationFlowType { USER_SRP_AUTH, CUSTOM_AUTH }
 
         @InternalAmplifyApi
         @Serializable
@@ -282,7 +277,6 @@ internal data class AmplifyOutputsDataImpl(
     @Serializable
     data class Auth(
         override val awsRegion: String,
-        override val authenticationFlowType: AuthenticationFlowType = AuthenticationFlowType.USER_SRP_AUTH,
         override val userPoolId: String,
         override val userPoolClientId: String,
         override val identityPoolId: String?,

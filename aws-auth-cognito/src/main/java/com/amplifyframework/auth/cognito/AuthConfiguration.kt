@@ -177,7 +177,7 @@ data class AuthConfiguration internal constructor(
                 ),
                 identityPool = identityPool,
                 oauth = oauth,
-                authFlowType = auth.authenticationFlowType.toConfigType(),
+                authFlowType = AuthFlowType.USER_SRP_AUTH,
                 signUpAttributes = auth.standardRequiredAttributes,
                 usernameAttributes = auth.usernameAttributes.map { it.toConfigType() },
                 verificationMechanisms = auth.userVerificationTypes.map { it.toConfigType() },
@@ -221,11 +221,6 @@ data class AuthConfiguration internal constructor(
 
         private inline fun <T> JSONArray.map(func: JSONArray.(Int) -> T) = List(length()) {
             func(it)
-        }
-
-        private fun AmplifyOutputsData.Auth.AuthenticationFlowType.toConfigType() = when (this) {
-            AmplifyOutputsData.Auth.AuthenticationFlowType.USER_SRP_AUTH -> AuthFlowType.USER_SRP_AUTH
-            AmplifyOutputsData.Auth.AuthenticationFlowType.CUSTOM_AUTH -> AuthFlowType.CUSTOM_AUTH
         }
 
         private fun AmplifyOutputsData.Auth.UsernameAttributes.toConfigType() = when (this) {
