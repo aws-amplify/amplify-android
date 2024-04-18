@@ -124,7 +124,7 @@ run_arn=`aws devicefarm schedule-run --project-arn=$project_arn \
                             --configuration="auxiliaryApps=$orchestrator_arn,$test_services_arn" \
                             --name="$file_name-$CODEBUILD_SOURCE_VERSION" \
                             --test="testSpecArn=$test_spec_arn,type=INSTRUMENTATION,testPackageArn=$test_package_upload_arn" \
-                            --execution-configuration="jobTimeoutMinutes=30,videoCapture=false" \
+                            --execution-configuration="jobTimeoutMinutes=60,videoCapture=false" \
                             --query="run.arn" \
                             --output=text \
                             --region="us-west-2"`
