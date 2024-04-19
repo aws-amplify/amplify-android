@@ -180,7 +180,6 @@ class AuthConfigurationTest {
                 userPoolId = "userpool"
                 userPoolClientId = "userpool-client"
                 identityPoolId = "identity-pool"
-                authenticationFlowType = AmplifyOutputsData.Auth.AuthenticationFlowType.CUSTOM_AUTH
                 passwordPolicy {
                     requireLowercase = true
                     requireSymbols = true
@@ -203,7 +202,7 @@ class AuthConfigurationTest {
 
         val configuration = AuthConfiguration.from(data)
 
-        configuration.authFlowType shouldBe AuthFlowType.CUSTOM_AUTH
+        configuration.authFlowType shouldBe AuthFlowType.USER_SRP_AUTH
         configuration.userPool.shouldNotBeNull().run {
             region shouldBe "test-region"
             poolId shouldBe "userpool"
@@ -243,13 +242,12 @@ class AuthConfigurationTest {
                 awsRegion = "test-region"
                 userPoolId = "userpool"
                 userPoolClientId = "userpool-client"
-                authenticationFlowType = AmplifyOutputsData.Auth.AuthenticationFlowType.CUSTOM_AUTH
             }
         }
 
         val configuration = AuthConfiguration.from(data)
 
-        configuration.authFlowType shouldBe AuthFlowType.CUSTOM_AUTH
+        configuration.authFlowType shouldBe AuthFlowType.USER_SRP_AUTH
         configuration.userPool.shouldNotBeNull().run {
             region shouldBe "test-region"
             poolId shouldBe "userpool"
