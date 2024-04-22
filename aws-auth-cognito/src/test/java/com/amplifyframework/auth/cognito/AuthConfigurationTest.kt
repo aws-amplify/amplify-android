@@ -185,7 +185,7 @@ class AuthConfigurationTest {
                     requireSymbols = true
                 }
                 oauth {
-                    cognitoDomain = "https://test.com"
+                    domain = "https://test.com"
                     identityProviders += AmplifyOutputsData.Auth.Oauth.IdentityProviders.GOOGLE
                     scopes += listOf("myScope", "myScope2")
                     redirectSignInUri += "https://test.com/signin"
@@ -257,22 +257,6 @@ class AuthConfigurationTest {
         configuration.oauth.shouldBeNull()
         configuration.passwordProtectionSettings.shouldBeNull()
         configuration.identityPool.shouldBeNull()
-    }
-
-    @Test
-    fun `uses custom oauth domain if specified`() {
-        val data = amplifyOutputsData {
-            auth {
-                oauth {
-                    cognitoDomain = "cognito"
-                    customDomain = "custom"
-                }
-            }
-        }
-
-        val configuration = AuthConfiguration.from(data)
-
-        configuration.oauth?.domain shouldBe "custom"
     }
 
     @Test

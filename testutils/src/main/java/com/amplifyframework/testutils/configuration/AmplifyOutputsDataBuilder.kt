@@ -103,8 +103,7 @@ class PasswordPolicyBuilder : AmplifyOutputsData.Auth.PasswordPolicy {
 
 class OauthBuilder : AmplifyOutputsData.Auth.Oauth {
     override val identityProviders: MutableList<AmplifyOutputsData.Auth.Oauth.IdentityProviders> = mutableListOf()
-    override var cognitoDomain: String = "domain"
-    override var customDomain: String? = null
+    override var domain: String = "domain"
     override val scopes: MutableList<String> = mutableListOf()
     override val redirectSignInUri: MutableList<String> = mutableListOf()
     override val redirectSignOutUri: MutableList<String> = mutableListOf()
