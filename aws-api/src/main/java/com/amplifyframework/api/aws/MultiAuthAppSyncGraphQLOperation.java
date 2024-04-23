@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws;
 
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
@@ -142,7 +143,8 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends AWSGraphQLOperati
         }
     }
 
-    private boolean hasAuthRelatedErrors(GraphQLResponse<R> response) {
+    @VisibleForTesting
+    boolean hasAuthRelatedErrors(GraphQLResponse<R> response) {
         for (GraphQLResponse.Error error : response.getErrors()) {
             if (!Empty.check(error.getExtensions())) {
                 AppSyncExtensions extensions = new AppSyncExtensions(error.getExtensions());
@@ -150,6 +152,11 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends AWSGraphQLOperati
             }
         }
         return false;
+    }
+
+    @VisibleForTesting
+    void setAuthTypes(AuthorizationTypeIterator authTypes) {
+        this.authTypes = authTypes;
     }
 
     static <R> Builder<R> builder() {
