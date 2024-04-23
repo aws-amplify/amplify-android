@@ -17,6 +17,7 @@ package com.amplifyframework.pinpoint.core
 
 import android.app.Application
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import com.amplifyframework.analytics.AnalyticsChannelEventName
 import com.amplifyframework.annotations.InternalAmplifyApi
@@ -69,7 +70,8 @@ class AnalyticsClient(
     private val globalMetrics = ConcurrentHashMap<String, Double>()
 
     private val autoEventSubmitter = AutoEventSubmitter(this, autoFlushEventsInterval)
-    private val autoSessionTracker = if (trackLifecycleEvents) {
+
+    @VisibleForTesting val autoSessionTracker = if (trackLifecycleEvents) {
         sessionClient?.let { AutoSessionTracker(this, it) }
     } else {
         null
