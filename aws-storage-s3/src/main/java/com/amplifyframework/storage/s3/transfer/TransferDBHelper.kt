@@ -24,14 +24,16 @@ import android.database.sqlite.SQLiteOpenHelper
 import android.database.sqlite.SQLiteQueryBuilder
 import android.net.Uri
 import android.text.TextUtils
-import androidx.annotation.VisibleForTesting
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
 
-@VisibleForTesting
-internal class TransferDBHelper(private val context: Context) :
-    SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+internal class TransferDBHelper(private val context: Context) : SQLiteOpenHelper(
+    context,
+    DATABASE_NAME,
+    null,
+    DATABASE_VERSION
+) {
 
     internal val contentUri: Uri
     private val uriMatcher: UriMatcher
