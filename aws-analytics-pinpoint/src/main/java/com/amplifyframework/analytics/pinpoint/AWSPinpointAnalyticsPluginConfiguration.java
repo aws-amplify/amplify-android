@@ -33,11 +33,13 @@ final class AWSPinpointAnalyticsPluginConfiguration {
     private final String appId;
     private final String region;
     private final long autoFlushEventsInterval;
+    private final boolean trackAppLifecycleEvents;
 
     private AWSPinpointAnalyticsPluginConfiguration(Builder builder) {
         this.appId = builder.appId;
         this.region = builder.region;
         this.autoFlushEventsInterval = builder.autoFlushEventsInterval;
+        this.trackAppLifecycleEvents = builder.trackAppLifecycleEvents;
     }
 
     /**
@@ -65,6 +67,14 @@ final class AWSPinpointAnalyticsPluginConfiguration {
      */
     long getAutoFlushEventsInterval() {
         return autoFlushEventsInterval;
+    }
+
+    /**
+     * Is auto session tracking enabled.
+     * @return Is auto session tracking enabled.
+     */
+    boolean isTrackAppLifecycleEvents() {
+        return trackAppLifecycleEvents;
     }
 
     /**
@@ -105,6 +115,7 @@ final class AWSPinpointAnalyticsPluginConfiguration {
         private String appId;
         private String region;
         private long autoFlushEventsInterval = DEFAULT_AUTO_FLUSH_INTERVAL;
+        private boolean trackAppLifecycleEvents = false;
 
         Builder withAppId(final String appId) {
             this.appId = appId;
@@ -113,6 +124,11 @@ final class AWSPinpointAnalyticsPluginConfiguration {
 
         Builder withRegion(final String region) {
             this.region = region;
+            return this;
+        }
+
+        Builder withTrackAppLifecycleEvents(final boolean trackAppLifecycleEvents) {
+            this.trackAppLifecycleEvents = trackAppLifecycleEvents;
             return this;
         }
 

@@ -33,6 +33,7 @@ class AWSPinpointAnalyticsPluginConfigurationTest {
         }
         val options = AWSPinpointAnalyticsPlugin.Options {
             autoFlushEventsInterval = 42
+            trackLifecycleEvents = false
         }
 
         val configuration = AWSPinpointAnalyticsPluginConfiguration.from(outputs, options)
@@ -40,5 +41,6 @@ class AWSPinpointAnalyticsPluginConfigurationTest {
         configuration.appId shouldBe "test-app"
         configuration.region shouldBe "test-region"
         configuration.autoFlushEventsInterval shouldBe 42
+        configuration.isTrackAppLifecycleEvents shouldBe false
     }
 }
