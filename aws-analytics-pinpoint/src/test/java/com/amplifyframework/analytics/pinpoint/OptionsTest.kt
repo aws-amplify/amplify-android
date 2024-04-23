@@ -15,6 +15,7 @@
 
 package com.amplifyframework.analytics.pinpoint
 
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import org.junit.Test
 
@@ -25,5 +26,11 @@ class OptionsTest {
         val configuration = AWSPinpointAnalyticsPluginConfiguration.builder().build()
 
         options.autoFlushEventsInterval shouldBe configuration.autoFlushEventsInterval
+    }
+
+    @Test
+    fun `default track lifecycle events is true`() {
+        val options = AWSPinpointAnalyticsPlugin.Options.defaults()
+        options.trackLifecycleEvents.shouldBeTrue()
     }
 }

@@ -105,6 +105,7 @@ final class AWSPinpointAnalyticsPluginConfiguration {
                    .withAppId(analytics.getAmazonPinpoint().getAppId())
                    .withRegion(analytics.getAmazonPinpoint().getAwsRegion())
                    .withAutoFlushEventsInterval(options.getAutoFlushEventsInterval())
+                   .withTrackAppLifecycleEvents(options.getTrackLifecycleEvents())
                    .build();
     }
 
