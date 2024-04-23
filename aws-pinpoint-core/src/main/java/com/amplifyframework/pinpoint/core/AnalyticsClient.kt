@@ -42,6 +42,7 @@ import kotlinx.coroutines.launch
 class AnalyticsClient(
     val context: Context,
     autoFlushEventsInterval: Long,
+    trackLifecycleEvents: Boolean,
     pinpointClient: PinpointClient,
     targetingClient: TargetingClient,
     pinpointDatabase: PinpointDatabase,
@@ -68,7 +69,11 @@ class AnalyticsClient(
     private val globalMetrics = ConcurrentHashMap<String, Double>()
 
     private val autoEventSubmitter = AutoEventSubmitter(this, autoFlushEventsInterval)
-    private val autoSessionTracker = sessionClient?.let { AutoSessionTracker(this, it) }
+    private val autoSessionTracker = if (trackLifecycleEvents) {
+        sessionClient?.let { AutoSessionTracker(this, it) }
+    } else {
+        null
+    }
 
     init {
         sessionClient?.let {

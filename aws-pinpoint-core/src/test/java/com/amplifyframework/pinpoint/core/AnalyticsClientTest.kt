@@ -67,6 +67,7 @@ class AnalyticsClientTest {
         analyticsClient = AnalyticsClient(
             ApplicationProvider.getApplicationContext(),
             30000L,
+            true,
             pinpointClient,
             targetingClient,
             pinpointDatabase,
