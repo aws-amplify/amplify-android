@@ -115,7 +115,7 @@ final class AWSPinpointAnalyticsPluginConfiguration {
         private String appId;
         private String region;
         private long autoFlushEventsInterval = DEFAULT_AUTO_FLUSH_INTERVAL;
-        private boolean trackAppLifecycleEvents = false;
+        private boolean trackAppLifecycleEvents = true;
 
         Builder withAppId(final String appId) {
             this.appId = appId;

@@ -16,6 +16,7 @@
 package com.amplifyframework.analytics.pinpoint
 
 import com.amplifyframework.testutils.configuration.amplifyOutputsData
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import org.junit.Test
 
@@ -42,5 +43,17 @@ class AWSPinpointAnalyticsPluginConfigurationTest {
         configuration.region shouldBe "test-region"
         configuration.autoFlushEventsInterval shouldBe 42
         configuration.isTrackAppLifecycleEvents shouldBe false
+    }
+
+    @Test
+    fun `default auto flush interval is 30 seconds`() {
+        val configuration = AWSPinpointAnalyticsPluginConfiguration.builder().build()
+        configuration.autoFlushEventsInterval shouldBe 30_000
+    }
+
+    @Test
+    fun `default track lifecycle events is true`() {
+        val configuration = AWSPinpointAnalyticsPluginConfiguration.builder().build()
+        configuration.isTrackAppLifecycleEvents.shouldBeTrue()
     }
 }
