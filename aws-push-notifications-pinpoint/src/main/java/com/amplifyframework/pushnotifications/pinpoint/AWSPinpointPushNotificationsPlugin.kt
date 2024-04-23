@@ -57,6 +57,7 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
 
         private const val DATABASE_NAME = "awspushnotifications.db"
         private const val DEFAULT_AUTO_FLUSH_INTERVAL = 30000L
+        private const val DEFAULT_TRACK_LIFECYCLE_EVENTS = true
         private const val AWS_PINPOINT_PUSHNOTIFICATIONS_PREFERENCES_SUFFIX = "515d6767-01b7-49e5-8273-c8d11b0f331d"
         private const val AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_LEGACY_KEY = "AWSPINPOINT.GCMTOKEN"
     }
@@ -164,6 +165,7 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         return AnalyticsClient(
             context,
             DEFAULT_AUTO_FLUSH_INTERVAL,
+            DEFAULT_TRACK_LIFECYCLE_EVENTS,
             pinpointClient,
             targetingClient,
             pinpointDatabase,
