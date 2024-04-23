@@ -151,8 +151,7 @@ data class AuthConfiguration internal constructor(
                 OauthConfiguration(
                     appClient = auth.userPoolClientId,
                     appSecret = null, // Not supported in Gen2
-                    // Use the custom domain if specified, otherwise use the generated cognito domain
-                    domain = it.customDomain ?: it.cognitoDomain,
+                    domain = it.domain,
                     scopes = it.scopes.toSet(),
                     // Note: Gen2 config gives an array for these values, while Gen1 is just a String. In Gen1
                     // if you specify multiple URIs the CLI will join them to a comma-delimited string in the json.
