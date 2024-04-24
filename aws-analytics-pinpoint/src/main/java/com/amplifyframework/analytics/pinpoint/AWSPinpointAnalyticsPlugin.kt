@@ -186,6 +186,9 @@ class AWSPinpointAnalyticsPlugin @JvmOverloads constructor(
              */
             fun autoFlushEventsInterval(value: Long) = apply { autoFlushEventsInterval = value }
 
+            /**
+             * Set whether or not the plugin will stop/start sessions when the app goes to the background/foreground.
+             */
             fun trackLifecycleEvents(value: Boolean) = apply { trackLifecycleEvents = value }
 
             internal fun build() = Options(
