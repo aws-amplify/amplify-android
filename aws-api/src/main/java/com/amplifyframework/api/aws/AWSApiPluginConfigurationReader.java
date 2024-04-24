@@ -83,7 +83,7 @@ final class AWSApiPluginConfigurationReader {
             .build();
 
         return AWSApiPluginConfiguration.builder()
-                   .addApi(AWSApiPlugin.GEN2_DATA_API_NAME, apiConfigBuilder)
+                   .addApi(AWSApiPlugin.DEFAULT_GRAPHQL_API, apiConfigBuilder)
                    .build();
     }
 

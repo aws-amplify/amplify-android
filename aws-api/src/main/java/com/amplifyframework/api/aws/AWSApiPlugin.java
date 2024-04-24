@@ -76,9 +76,10 @@ import okhttp3.Protocol;
 public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     /**
-     * The ApiName used by default for the GraphQL API represented by defineData in Amplify Gen2.
+     * The ApiName used by default for the GraphQL API represented by defineData in amplify_outputs. This constant is
+     * not used for APIs present in amplifyconfiguration.json since they always have names.
      */
-    public static final String GEN2_DATA_API_NAME = "gen2DataApiName";
+    public static final String DEFAULT_GRAPHQL_API = "defaultGraphQLApi";
 
     private final Map<String, ClientDetails> apiDetails;
     private final Map<String, OkHttpConfigurator> apiHttpClientConfigurators;
