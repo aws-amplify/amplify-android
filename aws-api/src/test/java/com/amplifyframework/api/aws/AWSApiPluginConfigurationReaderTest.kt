@@ -15,7 +15,7 @@
 package com.amplifyframework.api.aws
 
 import com.amplifyframework.api.ApiException
-import com.amplifyframework.api.aws.AWSApiPluginConfigurationReader.GEN2_API_NAME
+import com.amplifyframework.api.aws.AWSApiPlugin.GEN2_DATA_API_NAME
 import com.amplifyframework.core.configuration.AmplifyOutputsData
 import com.amplifyframework.testutils.Resources
 import com.amplifyframework.testutils.configuration.amplifyOutputsData
@@ -80,8 +80,8 @@ class AWSApiPluginConfigurationReaderTest {
 
         val config = AWSApiPluginConfigurationReader.from(outputs)
 
-        config.apis shouldContainKey GEN2_API_NAME
-        config.apis[GEN2_API_NAME]!!.run {
+        config.apis shouldContainKey GEN2_DATA_API_NAME
+        config.apis[GEN2_DATA_API_NAME]!!.run {
             region shouldBe "test-region"
             endpointType shouldBe EndpointType.GRAPHQL
             endpoint shouldBe "https://aws.com"
@@ -100,8 +100,8 @@ class AWSApiPluginConfigurationReaderTest {
 
         val config = AWSApiPluginConfigurationReader.from(outputs)
 
-        config.apis shouldContainKey GEN2_API_NAME
-        config.apis[GEN2_API_NAME]!!.run {
+        config.apis shouldContainKey GEN2_DATA_API_NAME
+        config.apis[GEN2_DATA_API_NAME]!!.run {
             apiKey.shouldBeNull()
         }
     }

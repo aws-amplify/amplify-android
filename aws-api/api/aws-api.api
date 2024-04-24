@@ -1,4 +1,5 @@
 public final class com/amplifyframework/api/aws/AWSApiPlugin : com/amplifyframework/api/ApiPlugin {
+	public static final field GEN2_DATA_API_NAME Ljava/lang/String;
 	public fun <init> ()V
 	public fun <init> (Lcom/amplifyframework/api/aws/ApiAuthProviders;)V
 	public static fun builder ()Lcom/amplifyframework/api/aws/AWSApiPlugin$Builder;

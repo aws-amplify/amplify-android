@@ -35,7 +35,6 @@ import java.util.Set;
  * associated key.
  */
 final class AWSApiPluginConfigurationReader {
-    static final String GEN2_API_NAME = "default";
 
     private AWSApiPluginConfigurationReader() { /* no instances */ }
 
@@ -84,7 +83,7 @@ final class AWSApiPluginConfigurationReader {
             .build();
 
         return AWSApiPluginConfiguration.builder()
-                   .addApi(GEN2_API_NAME, apiConfigBuilder)
+                   .addApi(AWSApiPlugin.GEN2_DATA_API_NAME, apiConfigBuilder)
                    .build();
     }
 
