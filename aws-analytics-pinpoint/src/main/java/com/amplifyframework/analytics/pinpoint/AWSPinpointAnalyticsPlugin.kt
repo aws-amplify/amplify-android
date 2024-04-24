@@ -88,10 +88,20 @@ class AWSPinpointAnalyticsPlugin @JvmOverloads constructor(
         // amplifyconfiguration file
         if (userOptions != null) {
             configBuilder.withAutoFlushEventsInterval(userOptions.autoFlushEventsInterval)
-        } else if (pinpointAnalyticsConfigJson.has(PinpointConfigurationKey.AUTO_FLUSH_INTERVAL.configurationKey)) {
-            configBuilder.withAutoFlushEventsInterval(
-                pinpointAnalyticsConfigJson.getLong(PinpointConfigurationKey.AUTO_FLUSH_INTERVAL.configurationKey)
-            )
+                .withTrackAppLifecycleEvents(userOptions.trackLifecycleEvents)
+        } else {
+            if (pinpointAnalyticsConfigJson.has(PinpointConfigurationKey.AUTO_FLUSH_INTERVAL.configurationKey)) {
+                configBuilder.withAutoFlushEventsInterval(
+                    pinpointAnalyticsConfigJson.getLong(PinpointConfigurationKey.AUTO_FLUSH_INTERVAL.configurationKey)
+                )
+            }
+            if (pinpointAnalyticsConfigJson.has(PinpointConfigurationKey.TRACK_APP_LIFECYCLE_EVENTS.configurationKey)) {
+                configBuilder.withTrackAppLifecycleEvents(
+                    pinpointAnalyticsConfigJson.getBoolean(
+                        PinpointConfigurationKey.TRACK_APP_LIFECYCLE_EVENTS.configurationKey
+                    )
+                )
+            }
         }
         val awsAnalyticsConfig = configBuilder.build()
         configure(awsAnalyticsConfig, context)
@@ -132,7 +142,12 @@ class AWSPinpointAnalyticsPlugin @JvmOverloads constructor(
         /**
          * The interval between sends of queued analytics events, in milliseconds
          */
-        val autoFlushEventsInterval: Long
+        val autoFlushEventsInterval: Long,
+
+        /**
+         * If true then the plugin will stop sessions when the app goes to the background
+         */
+        val trackLifecycleEvents: Boolean
     ) {
         companion object {
             /**
@@ -155,9 +170,15 @@ class AWSPinpointAnalyticsPlugin @JvmOverloads constructor(
          */
         class Builder internal constructor() {
             /**
-             * Set the interval between sends of queed analytics events, in milliseconds
+             * Set the interval between sends of queued analytics events, in milliseconds
              */
             var autoFlushEventsInterval: Long = AWSPinpointAnalyticsPluginConfiguration.DEFAULT_AUTO_FLUSH_INTERVAL
+                @JvmSynthetic set
+
+            /**
+             * Set whether or not the plugin will stop/start sessions when the app goes to the background/foreground.
+             */
+            var trackLifecycleEvents: Boolean = true
                 @JvmSynthetic set
 
             /**
@@ -165,7 +186,15 @@ class AWSPinpointAnalyticsPlugin @JvmOverloads constructor(
              */
             fun autoFlushEventsInterval(value: Long) = apply { autoFlushEventsInterval = value }
 
-            internal fun build() = Options(autoFlushEventsInterval = autoFlushEventsInterval)
+            /**
+             * Set whether or not the plugin will stop/start sessions when the app goes to the background/foreground.
+             */
+            fun trackLifecycleEvents(value: Boolean) = apply { trackLifecycleEvents = value }
+
+            internal fun build() = Options(
+                autoFlushEventsInterval = autoFlushEventsInterval,
+                trackLifecycleEvents = trackLifecycleEvents
+            )
         }
     }
 }
@@ -189,5 +218,10 @@ private enum class PinpointConfigurationKey(
     /**
      * Time interval after which the events are automatically submitted to pinpoint.
      */
-    AUTO_FLUSH_INTERVAL("autoFlushEventsInterval")
+    AUTO_FLUSH_INTERVAL("autoFlushEventsInterval"),
+
+    /**
+     * Whether to track app lifecycle events automatically.
+     */
+    TRACK_APP_LIFECYCLE_EVENTS("trackAppLifecycleEvents")
 }

@@ -33,11 +33,13 @@ final class AWSPinpointAnalyticsPluginConfiguration {
     private final String appId;
     private final String region;
     private final long autoFlushEventsInterval;
+    private final boolean trackAppLifecycleEvents;
 
     private AWSPinpointAnalyticsPluginConfiguration(Builder builder) {
         this.appId = builder.appId;
         this.region = builder.region;
         this.autoFlushEventsInterval = builder.autoFlushEventsInterval;
+        this.trackAppLifecycleEvents = builder.trackAppLifecycleEvents;
     }
 
     /**
@@ -68,6 +70,14 @@ final class AWSPinpointAnalyticsPluginConfiguration {
     }
 
     /**
+     * Is auto session tracking enabled.
+     * @return Is auto session tracking enabled.
+     */
+    boolean isTrackAppLifecycleEvents() {
+        return trackAppLifecycleEvents;
+    }
+
+    /**
      * Return a builder that can be used to construct a new instance of
      * {@link AWSPinpointAnalyticsPluginConfiguration}.
      * @return An {@link AWSPinpointAnalyticsPluginConfiguration.Builder} instance
@@ -95,6 +105,7 @@ final class AWSPinpointAnalyticsPluginConfiguration {
                    .withAppId(analytics.getAmazonPinpoint().getAppId())
                    .withRegion(analytics.getAmazonPinpoint().getAwsRegion())
                    .withAutoFlushEventsInterval(options.getAutoFlushEventsInterval())
+                   .withTrackAppLifecycleEvents(options.getTrackLifecycleEvents())
                    .build();
     }
 
@@ -105,6 +116,7 @@ final class AWSPinpointAnalyticsPluginConfiguration {
         private String appId;
         private String region;
         private long autoFlushEventsInterval = DEFAULT_AUTO_FLUSH_INTERVAL;
+        private boolean trackAppLifecycleEvents = true;
 
         Builder withAppId(final String appId) {
             this.appId = appId;
@@ -113,6 +125,11 @@ final class AWSPinpointAnalyticsPluginConfiguration {
 
         Builder withRegion(final String region) {
             this.region = region;
+            return this;
+        }
+
+        Builder withTrackAppLifecycleEvents(final boolean trackAppLifecycleEvents) {
+            this.trackAppLifecycleEvents = trackAppLifecycleEvents;
             return this;
         }
 
