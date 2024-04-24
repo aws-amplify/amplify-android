@@ -1,3 +1,11 @@
+## [Release 2.15.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.15.2)
+
+### Bug Fixes
+- **auth:** Fix incorrect statement about when userId is returned in AuthSignUpResult ([#2782](https://github.com/aws-amplify/amplify-android/issues/2782))
+- **storage:** Fix multiple instances of TransferDB leading to SQLiteDatabaseLockedException ([#2786](https://github.com/aws-amplify/amplify-android/issues/2786))
+
+[See all changes between 2.15.1 and 2.15.2](https://github.com/aws-amplify/amplify-android/compare/release_v2.15.1...release_v2.15.2)
+
 ## [Release 2.15.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.15.1)
 
 ### Bug Fixes
