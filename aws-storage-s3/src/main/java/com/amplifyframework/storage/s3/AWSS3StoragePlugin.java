@@ -255,7 +255,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         configure(context, storage.getAwsRegion(), storage.getBucketName());
     }
 
-    @SuppressWarnings("MagicNumber") // TODO: Remove once default values are moved to configuration
+    @SuppressWarnings("deprecation")
     private void configure(
         @NonNull Context context,
         @NonNull String region,
@@ -308,7 +308,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     ) {
         return getUrl(path, StorageGetUrlOptions.defaultInstance(), onSuccess, onError);
     }
-    
+
     @NonNull
     @Override
     @SuppressWarnings("deprecation")
