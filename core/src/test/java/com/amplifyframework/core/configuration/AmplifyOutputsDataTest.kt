@@ -75,8 +75,7 @@ class AmplifyOutputsDataTest {
                         AmplifyOutputsData.Auth.Oauth.IdentityProviders.FACEBOOK.name,
                         AmplifyOutputsData.Auth.Oauth.IdentityProviders.GOOGLE.name
                     ),
-                    Keys.oauthCognitoDomain to "https://oauth.com",
-                    Keys.oauthCustomDomain to "https://custom.com",
+                    Keys.domain to "https://oauth.com",
                     Keys.oauthScopes to listOf("scope1", "scope2"),
                     Keys.oauthSignInUri to listOf("https://oauth.com/signin"),
                     Keys.oauthSignOutUri to listOf("https://oauth.com/signout"),
@@ -123,8 +122,7 @@ class AmplifyOutputsDataTest {
                     AmplifyOutputsData.Auth.Oauth.IdentityProviders.FACEBOOK,
                     AmplifyOutputsData.Auth.Oauth.IdentityProviders.GOOGLE
                 )
-                cognitoDomain shouldBe "https://oauth.com"
-                customDomain shouldBe "https://custom.com"
+                domain shouldBe "https://oauth.com"
                 scopes shouldContainExactly listOf("scope1", "scope2")
                 redirectSignInUri shouldContainExactly listOf("https://oauth.com/signin")
                 redirectSignOutUri shouldContainExactly listOf("https://oauth.com/signout")
@@ -329,8 +327,7 @@ class AmplifyOutputsDataTest {
         const val passwordLower = "require_lowercase"
         const val oauth = "oauth"
         const val oauthIdentityProviders = "identity_providers"
-        const val oauthCognitoDomain = "cognito_domain"
-        const val oauthCustomDomain = "custom_domain"
+        const val domain = "domain"
         const val oauthScopes = "scopes"
         const val oauthSignInUri = "redirect_sign_in_uri"
         const val oauthSignOutUri = "redirect_sign_out_uri"
