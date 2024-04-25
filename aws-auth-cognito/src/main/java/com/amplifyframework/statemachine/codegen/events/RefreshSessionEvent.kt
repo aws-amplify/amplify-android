@@ -24,7 +24,7 @@ internal class RefreshSessionEvent(val eventType: EventType, override val time: 
     sealed class EventType {
         data class RefreshUserPoolTokens(val signedInData: SignedInData) : EventType()
         data class RefreshAuthSession(val signedInData: SignedInData, val logins: LoginsMapProvider) : EventType()
-        data class RefreshUnAuthSession(val logins: LoginsMapProvider) : EventType()
+        data class RefreshUnAuthSession(val identityId: String, val logins: LoginsMapProvider) : EventType()
         data class Refreshed(val signedInData: SignedInData) : EventType()
     }
 

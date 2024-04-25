@@ -32,6 +32,7 @@ import org.mockito.Mockito
 
 public class AWSS3StorageListOperationTest {
 
+    @Suppress("deprecation")
     private lateinit var awsS3StorageListOperation: AWSS3StorageListOperation
     private lateinit var storageService: StorageService
     private lateinit var authCredentialsProvider: AuthCredentialsProvider
@@ -43,6 +44,7 @@ public class AWSS3StorageListOperationTest {
     }
 
     @Test
+    @Suppress("deprecation")
     fun defaultPrefixResolverAWSS3PluginConfigTest() {
         val path = ""
         val expectedKey = "public/"
@@ -66,6 +68,7 @@ public class AWSS3StorageListOperationTest {
     }
 
     @Test
+    @Suppress("deprecation")
     fun customEmptyResolverAWSS3PluginConfigTest() {
         val path = ""
         val expectedKey = ""
@@ -100,6 +103,7 @@ public class AWSS3StorageListOperationTest {
     }
 
     @Test
+    @Suppress("deprecation")
     fun customResolverAWSS3PluginConfigTest() {
         val path = ""
         val expectedKey = "publicCustom/"

@@ -302,33 +302,50 @@ public final class com/amplifyframework/kotlin/storage/KotlinStorageFacade : com
 	public fun <init> ()V
 	public fun <init> (Lcom/amplifyframework/storage/StorageCategoryBehavior;)V
 	public synthetic fun <init> (Lcom/amplifyframework/storage/StorageCategoryBehavior;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun downloadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageDownloadFileOptions;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
 	public fun downloadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageDownloadFileOptions;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
 	public fun getTransfer (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getUrl (Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/storage/options/StorageGetUrlOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getUrl (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageGetUrlOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun list (Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/storage/options/StoragePagedListOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun list (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageListOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun list (Ljava/lang/String;Lcom/amplifyframework/storage/options/StoragePagedListOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun remove (Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/storage/options/StorageRemoveOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun remove (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageRemoveOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun uploadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageUploadFileOptions;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
 	public fun uploadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageUploadFileOptions;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
+	public fun uploadInputStream (Lcom/amplifyframework/storage/StoragePath;Ljava/io/InputStream;Lcom/amplifyframework/storage/options/StorageUploadInputStreamOptions;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
 	public fun uploadInputStream (Ljava/lang/String;Ljava/io/InputStream;Lcom/amplifyframework/storage/options/StorageUploadInputStreamOptions;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
 }
 
 public abstract interface class com/amplifyframework/kotlin/storage/Storage {
+	public abstract fun downloadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageDownloadFileOptions;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
 	public abstract fun downloadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageDownloadFileOptions;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
 	public abstract fun getTransfer (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getUrl (Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/storage/options/StorageGetUrlOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getUrl (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageGetUrlOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun list (Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/storage/options/StoragePagedListOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun list (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageListOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun list (Ljava/lang/String;Lcom/amplifyframework/storage/options/StoragePagedListOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun remove (Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/storage/options/StorageRemoveOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun remove (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageRemoveOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun uploadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageUploadFileOptions;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
 	public abstract fun uploadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageUploadFileOptions;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
+	public abstract fun uploadInputStream (Lcom/amplifyframework/storage/StoragePath;Ljava/io/InputStream;Lcom/amplifyframework/storage/options/StorageUploadInputStreamOptions;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
 	public abstract fun uploadInputStream (Ljava/lang/String;Ljava/io/InputStream;Lcom/amplifyframework/storage/options/StorageUploadInputStreamOptions;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
 }
 
 public final class com/amplifyframework/kotlin/storage/Storage$DefaultImpls {
+	public static synthetic fun downloadFile$default (Lcom/amplifyframework/kotlin/storage/Storage;Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageDownloadFileOptions;ILjava/lang/Object;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
 	public static synthetic fun downloadFile$default (Lcom/amplifyframework/kotlin/storage/Storage;Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageDownloadFileOptions;ILjava/lang/Object;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
+	public static synthetic fun getUrl$default (Lcom/amplifyframework/kotlin/storage/Storage;Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/storage/options/StorageGetUrlOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun getUrl$default (Lcom/amplifyframework/kotlin/storage/Storage;Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageGetUrlOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun list$default (Lcom/amplifyframework/kotlin/storage/Storage;Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageListOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun remove$default (Lcom/amplifyframework/kotlin/storage/Storage;Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/storage/options/StorageRemoveOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun remove$default (Lcom/amplifyframework/kotlin/storage/Storage;Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageRemoveOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun uploadFile$default (Lcom/amplifyframework/kotlin/storage/Storage;Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageUploadFileOptions;ILjava/lang/Object;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
 	public static synthetic fun uploadFile$default (Lcom/amplifyframework/kotlin/storage/Storage;Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageUploadFileOptions;ILjava/lang/Object;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
+	public static synthetic fun uploadInputStream$default (Lcom/amplifyframework/kotlin/storage/Storage;Lcom/amplifyframework/storage/StoragePath;Ljava/io/InputStream;Lcom/amplifyframework/storage/options/StorageUploadInputStreamOptions;ILjava/lang/Object;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
 	public static synthetic fun uploadInputStream$default (Lcom/amplifyframework/kotlin/storage/Storage;Ljava/lang/String;Ljava/io/InputStream;Lcom/amplifyframework/storage/options/StorageUploadInputStreamOptions;ILjava/lang/Object;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
 }
 
