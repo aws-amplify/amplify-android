@@ -20,6 +20,7 @@ public final class com/amplifyframework/rx/RxAmplify {
 	public static fun addPlugin (Lcom/amplifyframework/core/plugin/Plugin;)V
 	public static fun configure (Landroid/content/Context;)V
 	public static fun configure (Lcom/amplifyframework/core/AmplifyConfiguration;Landroid/content/Context;)V
+	public static fun configure (Lcom/amplifyframework/core/configuration/AmplifyOutputs;Landroid/content/Context;)V
 	public static fun removePlugin (Lcom/amplifyframework/core/plugin/Plugin;)V
 }
 
