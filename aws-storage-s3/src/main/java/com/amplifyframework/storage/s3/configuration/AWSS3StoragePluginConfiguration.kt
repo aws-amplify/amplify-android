@@ -28,6 +28,7 @@ class AWSS3StoragePluginConfiguration private constructor(builder: Builder) {
                 .build()
     }
 
+    @Deprecated("Unused for operations using StoragePath")
     fun getAWSS3PluginPrefixResolver(authCredentialsProvider: AuthCredentialsProvider): AWSS3PluginPrefixResolver {
         return awsS3PluginPrefixResolver ?: StorageAccessLevelAwarePrefixResolver(
             authCredentialsProvider
@@ -35,6 +36,7 @@ class AWSS3StoragePluginConfiguration private constructor(builder: Builder) {
     }
 
     class Builder {
+        @Deprecated("Unused for operations using StoragePath")
         var awsS3PluginPrefixResolver: AWSS3PluginPrefixResolver? = null
 
         fun build(): AWSS3StoragePluginConfiguration = AWSS3StoragePluginConfiguration(this)

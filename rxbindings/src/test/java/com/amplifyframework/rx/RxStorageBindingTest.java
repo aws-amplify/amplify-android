@@ -23,6 +23,7 @@ import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageCategoryBehavior;
 import com.amplifyframework.storage.StorageCategoryConfiguration;
 import com.amplifyframework.storage.StorageException;
+import com.amplifyframework.storage.StoragePath;
 import com.amplifyframework.storage.StoragePlugin;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.operation.StorageGetUrlOperation;
@@ -87,6 +88,8 @@ public final class RxStorageBindingTest {
     private File localFile;
     private InputStream localInputStream;
     private String remoteKey;
+    private StoragePath remoteStoragePath;
+    private String remoteStoragePathString;
 
     /**
      * Creates a StorageCategory backed by a mock plugin. Uses this category
@@ -116,6 +119,8 @@ public final class RxStorageBindingTest {
         localFile = File.createTempFile("random", "data");
         localInputStream = new ByteArrayInputStream(RandomBytes.bytes());
         remoteKey = RandomString.string();
+        remoteStoragePathString = RandomString.string();
+        remoteStoragePath = StoragePath.fromString("/" + remoteStoragePathString);
     }
 
     /**
@@ -124,6 +129,7 @@ public final class RxStorageBindingTest {
      * the binding should emit the result via the single.
      * @throws MalformedURLException Not expected; it's part of the URL constructor signature, though
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void getUrlReturnsResult() throws MalformedURLException {
         URL someRandomUrl = new URL("https://bogus.tld/foo");
@@ -145,10 +151,38 @@ public final class RxStorageBindingTest {
     }
 
     /**
+     * When the delegate returns a result from the
+     * {@link StorageCategoryBehavior#getUrl(com.amplifyframework.storage.StoragePath,
+     * StorageGetUrlOptions, Consumer, Consumer)},
+     * the binding should emit the result via the single.
+     * @throws MalformedURLException Not expected; it's part of the URL constructor signature, though
+     */
+    @Test
+    public void getUrlStoragePathReturnsResult() throws MalformedURLException {
+        URL someRandomUrl = new URL("https://bogus.tld/foo");
+        StorageGetUrlResult expectedResult = StorageGetUrlResult.fromUrl(someRandomUrl);
+
+        doAnswer(invocation -> {
+            int indexOfResultConsumer = 2;
+            Consumer<StorageGetUrlResult> onResult = invocation.getArgument(indexOfResultConsumer);
+            onResult.accept(expectedResult);
+            return mock(StorageGetUrlOperation.class);
+        }).when(delegate)
+                .getUrl(eq(remoteStoragePath), any(StorageGetUrlOptions.class), anyConsumer(), anyConsumer());
+
+        rxStorage.getUrl(remoteStoragePath, StorageGetUrlOptions.defaultInstance())
+                .test()
+                .awaitCount(1)
+                .assertNoErrors()
+                .assertValue(expectedResult);
+    }
+
+    /**
      * When the delegate emits a failure from the
      * {@link StorageCategoryBehavior#getUrl(String, StorageGetUrlOptions, Consumer, Consumer)},
      * the binding should emit a failure to its single observer.
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void getUrlEmitsFailure() {
         StorageException expectedException = new StorageException("oh", "boy!");
@@ -168,12 +202,36 @@ public final class RxStorageBindingTest {
     }
 
     /**
+     * When the delegate emits a failure from the
+     * {@link StorageCategoryBehavior#getUrl(StoragePath, StorageGetUrlOptions, Consumer, Consumer)},
+     * the binding should emit a failure to its single observer.
+     */
+    @Test
+    public void getUrlStoragePathEmitsFailure() {
+        StorageException expectedException = new StorageException("oh", "boy!");
+
+        doAnswer(invocation -> {
+            int indexOfErrorConsumer = 3;
+            Consumer<StorageException> onError = invocation.getArgument(indexOfErrorConsumer);
+            onError.accept(expectedException);
+            return mock(StorageGetUrlOperation.class);
+        }).when(delegate)
+                .getUrl(eq(remoteStoragePath), any(StorageGetUrlOptions.class), anyConsumer(), anyConsumer());
+
+        rxStorage.getUrl(remoteStoragePath, StorageGetUrlOptions.defaultInstance())
+                .test()
+                .awaitDone(TIMEOUT_MS, TimeUnit.MILLISECONDS)
+                .assertError(expectedException);
+    }
+
+    /**
      * When {@link StorageCategoryBehavior#downloadFile(String, File, StorageDownloadFileOptions,
      * Consumer, Consumer, Consumer)} invokes its success callback, the {@link StorageDownloadFileResult}
      * should propagate via the {@link Single} returned by
      * {@link RxStorageBinding.RxProgressAwareSingleOperation#observeResult()}.
      * @throws InterruptedException not expected.
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void downloadFileReturnsResult() throws InterruptedException {
         StorageDownloadFileResult result = StorageDownloadFileResult.fromFile(mock(File.class));
@@ -208,22 +266,58 @@ public final class RxStorageBindingTest {
     }
 
     /**
+     * When {@link StorageCategoryBehavior#downloadFile(StoragePath, File, StorageDownloadFileOptions,
+     * Consumer, Consumer, Consumer)} invokes its success callback, the {@link StorageDownloadFileResult}
+     * should propagate via the {@link Single} returned by
+     * {@link RxStorageBinding.RxProgressAwareSingleOperation#observeResult()}.
+     * @throws InterruptedException not expected.
+     */
+    @Test
+    public void downloadFileStoragePathReturnsResult() throws InterruptedException {
+        StorageDownloadFileResult result = StorageDownloadFileResult.fromFile(mock(File.class));
+        doAnswer(invocation -> {
+            // 0 key, 1 local, 2 options, 3 onProgress 4 onResult, 5 onError
+            final int indexOfProgressConsumer = 3;
+            final int indexOfResultConsumer = 4;
+            Consumer<StorageTransferProgress> progressConsumer = invocation.getArgument(indexOfProgressConsumer);
+            Consumer<StorageDownloadFileResult> resultConsumer = invocation.getArgument(indexOfResultConsumer);
+
+            Observable.interval(100, 100, TimeUnit.MILLISECONDS)
+                    .take(5)
+                    .doOnNext(aLong -> progressConsumer.accept(new StorageTransferProgress(aLong, 500)))
+                    .doOnComplete(() -> resultConsumer.accept(result))
+                    .subscribe();
+            return mock(StorageDownloadFileOperation.class);
+        }).when(delegate).downloadFile(eq(remoteStoragePath),
+                eq(localFile),
+                any(StorageDownloadFileOptions.class),
+                anyConsumer(),
+                anyConsumer(),
+                anyConsumer());
+
+        RxStorageBinding.RxProgressAwareSingleOperation<StorageDownloadFileResult> rxOperation =
+                rxStorage.downloadFile(remoteStoragePath, localFile, StorageDownloadFileOptions.defaultInstance());
+        TestObserver<StorageDownloadFileResult> testObserver = rxOperation.observeResult().test();
+        TestObserver<StorageTransferProgress> testProgressObserver = rxOperation.observeProgress().test();
+        testObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        testObserver.assertValues(result);
+        testProgressObserver.awaitCount(5);
+        testProgressObserver.assertValueCount(5);
+    }
+
+    /**
      * When {@link StorageCategoryBehavior#downloadFile(String, File, StorageDownloadFileOptions,
      * Consumer, Consumer, Consumer)} invokes its pause, resume and cancel operation, the {@link
      * StorageDownloadFileOperation}
      * should invoke corresponding api.
      *
-     * @throws InterruptedException not expected.
      */
     @Test
-    public void performActionOnDownloadFile() throws InterruptedException {
-        StorageDownloadFileResult result = StorageDownloadFileResult.fromFile(mock(File.class));
+    public void performActionOnDownloadFile() {
         String transferId = UUID.randomUUID().toString();
         StorageDownloadFileOperation<?> storageDownloadFileOperationMock = mock(StorageDownloadFileOperation.class);
         when(storageDownloadFileOperationMock.getTransferId()).thenReturn(transferId);
-        doAnswer(invocation -> {
-            return storageDownloadFileOperationMock;
-        }).when(delegate).downloadFile(eq(remoteKey),
+        doAnswer(invocation -> storageDownloadFileOperationMock).when(delegate).downloadFile(eq(remoteStoragePath),
             eq(localFile),
             any(StorageDownloadFileOptions.class),
             anyConsumer(),
@@ -231,7 +325,7 @@ public final class RxStorageBindingTest {
             anyConsumer());
 
         RxStorageBinding.RxProgressAwareSingleOperation<StorageDownloadFileResult> rxOperation =
-            rxStorage.downloadFile(remoteKey, localFile, StorageDownloadFileOptions.defaultInstance());
+            rxStorage.downloadFile(remoteStoragePath, localFile, StorageDownloadFileOptions.defaultInstance());
         assertEquals(transferId, rxOperation.getTransferId());
         InOrder inOrder = inOrder(storageDownloadFileOperationMock);
 
@@ -248,6 +342,7 @@ public final class RxStorageBindingTest {
      * its error callback, the {@link StorageException} is communicated via the {@link Single}
      * returned by {@link RxStorageCategoryBehavior#downloadFile(String, File)}.
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void downloadFileReturnsError() {
         StorageException downloadError = new StorageException("Test exception.", "It is expected.");
@@ -271,11 +366,39 @@ public final class RxStorageBindingTest {
     }
 
     /**
+     * When {@link StorageCategoryBehavior#downloadFile(StoragePath, File, Consumer, Consumer)} invokes
+     * its error callback, the {@link StorageException} is communicated via the {@link Single}
+     * returned by {@link RxStorageCategoryBehavior#downloadFile(String, File)}.
+     */
+    @Test
+    public void downloadFileStoragePathReturnsError() {
+        StorageException downloadError = new StorageException("Test exception.", "It is expected.");
+        doAnswer(invocation -> {
+            // 0 key, 1 local, 2 options, 3 onProgress 4 onResult, 5 onError
+            final int indexOfErrorConsumer = 5;
+            Consumer<StorageException> resultConsumer = invocation.getArgument(indexOfErrorConsumer);
+            resultConsumer.accept(downloadError);
+            return mock(StorageDownloadFileOperation.class);
+        }).when(delegate).downloadFile(eq(remoteStoragePath),
+                eq(localFile),
+                any(StorageDownloadFileOptions.class),
+                anyConsumer(),
+                anyConsumer(),
+                anyConsumer());
+
+        rxStorage.downloadFile(remoteStoragePath, localFile)
+                .observeResult()
+                .test()
+                .assertError(downloadError);
+    }
+
+    /**
      * When {@link StorageCategoryBehavior#uploadFile(String, File, Consumer, Consumer)} returns
      * a {@link StorageUploadFileResult}, then the {@link Single} returned by
      * {@link RxStorageCategoryBehavior#uploadFile(String, File)} should emit that result.
      * @throws InterruptedException Not expected.
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void uploadFileReturnsResult() throws InterruptedException {
         StorageUploadFileResult result = StorageUploadFileResult.fromKey(remoteKey);
@@ -310,21 +433,58 @@ public final class RxStorageBindingTest {
     }
 
     /**
-     * When {@link StorageCategoryBehavior#uploadFile(String, File, Consumer, Consumer)} returns
-     * a {@link RxStorageBinding.RxProgressAwareSingleOperation}, then the pause, resume and cancel action
-     * performed on the rxOperation should invoke corresponding api in {@link StorageUploadFileOperation}.
-     *
+     * When {@link StorageCategoryBehavior#uploadFile(StoragePath, File, Consumer, Consumer)} returns
+     * a {@link StorageUploadFileResult}, then the {@link Single} returned by
+     * {@link RxStorageCategoryBehavior#uploadFile(String, File)} should emit that result.
      * @throws InterruptedException Not expected.
      */
     @Test
-    public void performActionOnUploadFile() throws InterruptedException {
-        StorageUploadFileResult result = StorageUploadFileResult.fromKey(remoteKey);
+    public void uploadFileStoragePathReturnsResult() throws InterruptedException {
+        StorageUploadFileResult result = new StorageUploadFileResult(remoteStoragePathString, remoteStoragePathString);
+        doAnswer(invocation -> {
+            // 0 key, 1 local, 2 options, 3 onProgress, 4 onResult, 5 onError
+            final int indexOfResultConsumer = 4;
+            final int indexOfProgressConsumer = 3;
+            Consumer<StorageUploadFileResult> resultConsumer = invocation.getArgument(indexOfResultConsumer);
+            Consumer<StorageTransferProgress> progressConsumer = invocation.getArgument(indexOfProgressConsumer);
+
+            Observable.interval(100, 100, TimeUnit.MILLISECONDS)
+                    .take(5)
+                    .doOnNext(aLong -> progressConsumer.accept(new StorageTransferProgress(aLong, 500)))
+                    .doOnComplete(() -> resultConsumer.accept(result))
+                    .subscribe();
+            return mock(StorageUploadFileOperation.class);
+        }).when(delegate).uploadFile(eq(remoteStoragePath),
+                eq(localFile),
+                any(StorageUploadFileOptions.class),
+                anyConsumer(),
+                anyConsumer(),
+                anyConsumer());
+
+        RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadFileResult> rxOperation =
+                rxStorage.uploadFile(remoteStoragePath, localFile);
+        TestObserver<StorageUploadFileResult> testObserver = rxOperation.observeResult().test();
+        TestObserver<StorageTransferProgress> testProgressObserver = rxOperation.observeProgress().test();
+        testObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        testObserver.assertValues(result);
+        testProgressObserver.awaitCount(5);
+        testProgressObserver.assertValueCount(5);
+    }
+
+    /**
+     * When {@link StorageCategoryBehavior#uploadFile(StoragePath, File, Consumer, Consumer)} returns
+     * a {@link RxStorageBinding.RxProgressAwareSingleOperation}, then the pause, resume and cancel action
+     * performed on the rxOperation should invoke corresponding api in {@link StorageUploadFileOperation}.
+     *
+     */
+    @Test
+    public void performActionOnUploadFile() {
         String transferId = UUID.randomUUID().toString();
         StorageUploadFileOperation<?> storageUploadFileOperationMock = mock(StorageUploadFileOperation.class);
         when(storageUploadFileOperationMock.getTransferId()).thenReturn(transferId);
         doAnswer(invocation -> {
             return storageUploadFileOperationMock;
-        }).when(delegate).uploadFile(eq(remoteKey),
+        }).when(delegate).uploadFile(eq(remoteStoragePath),
             eq(localFile),
             any(StorageUploadFileOptions.class),
             anyConsumer(),
@@ -332,7 +492,7 @@ public final class RxStorageBindingTest {
             anyConsumer());
 
         RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadFileResult> rxOperation =
-            rxStorage.uploadFile(remoteKey, localFile);
+            rxStorage.uploadFile(remoteStoragePath, localFile);
         assertEquals(transferId, rxOperation.getTransferId());
         InOrder inOrder = inOrder(storageUploadFileOperationMock);
         rxOperation.pause();
@@ -349,6 +509,7 @@ public final class RxStorageBindingTest {
      * {@link RxStorageCategoryBehavior#uploadInputStream(String, InputStream)} should emit that result.
      * @throws InterruptedException Not expected.
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void uploadInputStreamReturnsResult() throws InterruptedException {
         StorageUploadInputStreamResult result = StorageUploadInputStreamResult.fromKey(remoteKey);
@@ -383,23 +544,63 @@ public final class RxStorageBindingTest {
     }
 
     /**
-     * When {@link StorageCategoryBehavior#uploadInputStream(String, InputStream, Consumer, Consumer)} returns
+     * When {@link StorageCategoryBehavior#uploadInputStream(StoragePath, InputStream, Consumer,
+     * Consumer)} returns
+     * a {@link StorageUploadInputStreamResult}, then the {@link Single} returned by
+     * {@link RxStorageCategoryBehavior#uploadInputStream(String, InputStream)} should emit that result.
+     * @throws InterruptedException Not expected.
+     */
+    @Test
+    public void uploadInputStreamStoragePathReturnsResult() throws InterruptedException {
+        StorageUploadInputStreamResult result = new StorageUploadInputStreamResult(
+                remoteStoragePathString,
+                remoteStoragePathString
+        );
+        doAnswer(invocation -> {
+            // 0 key, 1 local, 2 options, 3 onProgress, 4 onResult, 5 onError
+            final int indexOfResultConsumer = 4;
+            final int indexOfProgressConsumer = 3;
+            Consumer<StorageUploadInputStreamResult> resultConsumer = invocation.getArgument(indexOfResultConsumer);
+            Consumer<StorageTransferProgress> progressConsumer = invocation.getArgument(indexOfProgressConsumer);
+
+            Observable.interval(100, 100, TimeUnit.MILLISECONDS)
+                    .take(5)
+                    .doOnNext(aLong -> progressConsumer.accept(new StorageTransferProgress(aLong, 500)))
+                    .doOnComplete(() -> resultConsumer.accept(result))
+                    .subscribe();
+            return mock(StorageUploadInputStreamOperation.class);
+        }).when(delegate).uploadInputStream(eq(remoteStoragePath),
+                eq(localInputStream),
+                any(StorageUploadInputStreamOptions.class),
+                anyConsumer(),
+                anyConsumer(),
+                anyConsumer());
+
+        RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadInputStreamResult> rxOperation =
+                rxStorage.uploadInputStream(remoteStoragePath, localInputStream);
+        TestObserver<StorageUploadInputStreamResult> testObserver = rxOperation.observeResult().test();
+        TestObserver<StorageTransferProgress> testProgressObserver = rxOperation.observeProgress().test();
+        testObserver.await(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        testObserver.assertValues(result);
+        testProgressObserver.awaitCount(5);
+        testProgressObserver.assertValueCount(5);
+    }
+
+    /**
+     * When {@link StorageCategoryBehavior#uploadInputStream(StoragePath, InputStream, Consumer, Consumer)} returns
      * a {@link StorageUploadInputStreamResult}, then the {@link Single} returned by
      * {@link RxStorageCategoryBehavior#uploadInputStream(String, InputStream)} should invoke corresponding API in
      * {@link StorageUploadInputStreamOperation}.
      *
-     * @throws InterruptedException Not expected.
      */
     @Test
-    public void performActionOnUploadInputStream() throws InterruptedException {
-        StorageUploadInputStreamResult result = StorageUploadInputStreamResult.fromKey(remoteKey);
+    public void performActionOnUploadInputStream() {
         String transferId = UUID.randomUUID().toString();
         StorageUploadInputStreamOperation<?> storageUploadInputStreamOperationMock =
             mock(StorageUploadInputStreamOperation.class);
         when(storageUploadInputStreamOperationMock.getTransferId()).thenReturn(transferId);
-        doAnswer(invocation -> {
-            return storageUploadInputStreamOperationMock;
-        }).when(delegate).uploadInputStream(eq(remoteKey),
+        doAnswer(invocation -> storageUploadInputStreamOperationMock).when(delegate)
+                .uploadInputStream(eq(remoteStoragePath),
             eq(localInputStream),
             any(StorageUploadInputStreamOptions.class),
             anyConsumer(),
@@ -407,7 +608,7 @@ public final class RxStorageBindingTest {
             anyConsumer());
 
         RxStorageBinding.RxProgressAwareSingleOperation<StorageUploadInputStreamResult> rxOperation =
-            rxStorage.uploadInputStream(remoteKey, localInputStream);
+            rxStorage.uploadInputStream(remoteStoragePath, localInputStream);
         assertEquals(transferId, rxOperation.getTransferId());
         InOrder inOrder = inOrder(storageUploadInputStreamOperationMock);
         rxOperation.pause();
@@ -423,6 +624,7 @@ public final class RxStorageBindingTest {
      * an {@link StorageException}, then the {@link Single} returned by
      * {@link RxStorageCategoryBehavior#uploadFile(String, File)} should emit a {@link StorageException}.
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void uploadFileReturnsError() {
         StorageException error = new StorageException("Error uploading.", "Expected.");
@@ -447,10 +649,39 @@ public final class RxStorageBindingTest {
     }
 
     /**
+     * When {@link StorageCategoryBehavior#uploadFile(StoragePath, File, Consumer, Consumer)} returns
+     * an {@link StorageException}, then the {@link Single} returned by
+     * {@link RxStorageCategoryBehavior#uploadFile(String, File)} should emit a {@link StorageException}.
+     */
+    @Test
+    public void uploadFileStoragePathReturnsError() {
+        StorageException error = new StorageException("Error uploading.", "Expected.");
+        doAnswer(invocation -> {
+            // 0 key, 1 local, 2 options, 3 onProgress 4 onResult, 5 onError
+            final int indexOfResultConsumer = 5;
+            Consumer<StorageException> errorConsumer = invocation.getArgument(indexOfResultConsumer);
+            errorConsumer.accept(error);
+            return mock(StorageUploadFileOperation.class);
+        }).when(delegate).uploadFile(eq(remoteStoragePath),
+                eq(localFile),
+                any(StorageUploadFileOptions.class),
+                anyConsumer(),
+                anyConsumer(),
+                anyConsumer());
+
+        rxStorage
+                .uploadFile(remoteStoragePath, localFile)
+                .observeResult()
+                .test()
+                .assertError(error);
+    }
+
+    /**
      * When {@link StorageCategoryBehavior#uploadInputStream(String, InputStream, Consumer, Consumer)} returns
      * an {@link StorageException}, then the {@link Single} returned by
      * {@link RxStorageCategoryBehavior#uploadInputStream(String, InputStream)} should emit a {@link StorageException}.
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void uploadInputStreamReturnsError() {
         StorageException error = new StorageException("Error uploading.", "Expected.");
@@ -475,10 +706,39 @@ public final class RxStorageBindingTest {
     }
 
     /**
+     * When {@link StorageCategoryBehavior#uploadInputStream(StoragePath, InputStream, Consumer, Consumer)} returns
+     * an {@link StorageException}, then the {@link Single} returned by
+     * {@link RxStorageCategoryBehavior#uploadInputStream(String, InputStream)} should emit a {@link StorageException}.
+     */
+    @Test
+    public void uploadInputStreamStoragePathReturnsError() {
+        StorageException error = new StorageException("Error uploading.", "Expected.");
+        doAnswer(invocation -> {
+            // 0 key, 1 local, 2 options, 3 onProgress 4 onResult, 5 onError
+            final int indexOfResultConsumer = 5;
+            Consumer<StorageException> errorConsumer = invocation.getArgument(indexOfResultConsumer);
+            errorConsumer.accept(error);
+            return mock(StorageUploadInputStreamOperation.class);
+        }).when(delegate).uploadInputStream(eq(remoteStoragePath),
+                eq(localInputStream),
+                any(StorageUploadInputStreamOptions.class),
+                anyConsumer(),
+                anyConsumer(),
+                anyConsumer());
+
+        rxStorage
+                .uploadInputStream(remoteStoragePath, localInputStream)
+                .observeResult()
+                .test()
+                .assertError(error);
+    }
+
+    /**
      * When {@link StorageCategoryBehavior#list(String, Consumer, Consumer)} emits a result,
      * then the {@link Single} returned by {@link RxStorageCategoryBehavior#list(String)}
      * should emit an {@link StorageListResult}.
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void listReturnsResult() {
         StorageListResult result = StorageListResult.fromItems(Collections.emptyList(), null);
@@ -498,10 +758,34 @@ public final class RxStorageBindingTest {
     }
 
     /**
+     * When {@link StorageCategoryBehavior#list(StoragePath, StoragePagedListOptions, Consumer,
+     * Consumer)} emits a result, then the {@link Single} returned by list that should emit an
+     * {@link StorageListResult}.
+     */
+    @Test
+    public void listStoragePathReturnsResult() {
+        StorageListResult result = StorageListResult.fromItems(Collections.emptyList(), null);
+        doAnswer(invocation -> {
+            final int indexOfResultConsumer = 2; // 0 localPath, 1 options, 2 onResult, 3 onError
+            Consumer<StorageListResult> resultConsumer = invocation.getArgument(indexOfResultConsumer);
+            resultConsumer.accept(result);
+            return mock(StorageListOperation.class);
+        })
+                .when(delegate)
+                .list(eq(remoteStoragePath), any(StoragePagedListOptions.class), anyConsumer(), anyConsumer());
+
+        rxStorage
+                .list(remoteStoragePath, StoragePagedListOptions.builder().build())
+                .test()
+                .assertValues(result);
+    }
+
+    /**
      * When the {@link StorageCategoryBehavior#list(String, Consumer, Consumer)} emits an error,
      * the {@link Single} returned by {@link RxStorageCategoryBehavior#list(String)} should emit an
      * {@link StorageException}.
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void listReturnsError() {
         StorageException error = new StorageException("Error removing item.", "Expected.");
@@ -521,16 +805,47 @@ public final class RxStorageBindingTest {
     }
 
     /**
-     * When the {@link StorageCategoryBehavior#remove(String, Consumer, Consumer)} emits
-     * a result, the {@link Single} returned by {@link RxStorageCategoryBehavior#remove(String)} should
-     * emit a {@link StorageRemoveResult}.
+     * When the {@link StorageCategoryBehavior#list(StoragePath, StoragePagedListOptions, Consumer,
+     * Consumer)} emits an error,
+     * the {@link Single} returned by list that should emit a {@link StorageException}.
      */
+    @Test
+    public void listStoragePathReturnsError() {
+        StorageException error = new StorageException("Error removing item.", "Expected.");
+        doAnswer(invocation -> {
+            final int indexOfErrorConsumer = 3; // 0 localPath, 1 options, 2 onResult, 3 onError
+            Consumer<StorageException> errorConsumer = invocation.getArgument(indexOfErrorConsumer);
+            errorConsumer.accept(error);
+            return mock(StorageListOperation.class);
+        })
+            .when(delegate)
+            .list(
+                eq(remoteStoragePath),
+                any(StoragePagedListOptions.class),
+                anyConsumer(),
+                anyConsumer()
+            );
+
+        rxStorage
+                .list(remoteStoragePath, StoragePagedListOptions.builder().build())
+                .test()
+                .assertError(error);
+    }
+
+
+    /**
+     * When the {@link StorageCategoryBehavior#remove(String, Consumer, Consumer)} emits
+     * a result, the {@link Single} returned by {@link RxStorageCategoryBehavior#remove(String)}
+     * should emit a {@link StorageRemoveResult}.
+     */
+    @SuppressWarnings("deprecation")
     @Test
     public void removeReturnsResult() {
         StorageRemoveResult result = StorageRemoveResult.fromKey(remoteKey);
         doAnswer(invocation -> {
             final int indexOfResultConsumer = 1; // 0 remoteKey, 1 onResult, 2 onError
-            Consumer<StorageRemoveResult> resultConsumer = invocation.getArgument(indexOfResultConsumer);
+            Consumer<StorageRemoveResult> resultConsumer =
+                    invocation.getArgument(indexOfResultConsumer);
             resultConsumer.accept(result);
             return mock(StorageRemoveOperation.class);
         })
@@ -544,10 +859,34 @@ public final class RxStorageBindingTest {
     }
 
     /**
+     * When the {@link StorageCategoryBehavior#remove(StoragePath, Consumer, Consumer)} emits
+     * a result, the {@link Single} returned by {@link RxStorageCategoryBehavior#remove(String)} should
+     * emit a {@link StorageRemoveResult}.
+     */
+    @Test
+    public void removeStoragePathReturnsResult() {
+        StorageRemoveResult result = new StorageRemoveResult(remoteStoragePathString, remoteStoragePathString);
+        doAnswer(invocation -> {
+            final int indexOfResultConsumer = 1; // 0 remoteKey, 1 onResult, 2 onError
+            Consumer<StorageRemoveResult> resultConsumer = invocation.getArgument(indexOfResultConsumer);
+            resultConsumer.accept(result);
+            return mock(StorageRemoveOperation.class);
+        })
+                .when(delegate)
+                .remove(eq(remoteStoragePath), anyConsumer(), anyConsumer());
+
+        rxStorage
+                .remove(remoteStoragePath)
+                .test()
+                .assertValues(result);
+    }
+
+    /**
      * When {@link StorageCategoryBehavior#remove(String, Consumer, Consumer)} calls its
      * error consumer, then the {@link Single} returned by {@link RxStorageCategoryBehavior#remove(String)}
      * should emit an error.
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void removeReturnsError() {
         StorageException error = new StorageException("Error removing item.", "Expected.");
@@ -564,6 +903,29 @@ public final class RxStorageBindingTest {
             .remove(remoteKey)
             .test()
             .assertError(error);
+    }
+
+    /**
+     * When {@link StorageCategoryBehavior#remove(StoragePath, Consumer, Consumer)} calls its
+     * error consumer, then the {@link Single} returned by {@link RxStorageCategoryBehavior#remove(String)}
+     * should emit an error.
+     */
+    @Test
+    public void removeReturnsStoragePathError() {
+        StorageException error = new StorageException("Error removing item.", "Expected.");
+        doAnswer(invocation -> {
+            final int indexOfErrorConsumer = 2; // 0 remoteKey, 1 onResult, 2 onError
+            Consumer<StorageException> errorConsumer = invocation.getArgument(indexOfErrorConsumer);
+            errorConsumer.accept(error);
+            return mock(StorageRemoveOperation.class);
+        })
+                .when(delegate)
+                .remove(eq(remoteStoragePath), anyConsumer(), anyConsumer());
+
+        rxStorage
+                .remove(remoteStoragePath)
+                .test()
+                .assertError(error);
     }
 
     /**

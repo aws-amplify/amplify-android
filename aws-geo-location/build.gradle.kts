@@ -30,6 +30,7 @@ dependencies {
     testImplementation(project(":testutils"))
     testImplementation(libs.test.junit)
     testImplementation(libs.test.robolectric)
+    testImplementation(libs.test.kotest.assertions)
 
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(project(":aws-auth-cognito"))

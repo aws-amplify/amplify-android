@@ -21,7 +21,6 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.BuildConfig;
-import com.amplifyframework.core.test.R;
 import com.amplifyframework.util.UserAgent;
 
 import org.junit.BeforeClass;
@@ -29,7 +28,6 @@ import org.junit.Test;
 
 import java.util.LinkedHashMap;
 
-import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -44,11 +42,7 @@ public final class UserAgentConfigurationTest {
      */
     @BeforeClass
     public static void setUpOnce() throws AmplifyException {
-        Context context = getApplicationContext();
-        AmplifyConfiguration config = AmplifyConfiguration.builder(context, R.raw.amplifyconfiguration)
-                .addPlatform(UserAgent.Platform.FLUTTER, BuildConfig.VERSION_NAME)
-                .build();
-        Amplify.configure(config, context);
+        Amplify.addUserAgentPlatform(UserAgent.Platform.FLUTTER, BuildConfig.VERSION_NAME);
     }
 
     /**

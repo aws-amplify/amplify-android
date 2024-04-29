@@ -28,6 +28,7 @@ public class StorageDownloadFileOptions extends StorageOptions {
      * attributes from builder instance.
      * @param builder the builder with configured attributes
      */
+    @SuppressWarnings("deprecation")
     protected StorageDownloadFileOptions(final Builder<?> builder) {
         super(builder.getAccessLevel(), builder.getTargetIdentityId());
     }
@@ -55,6 +56,7 @@ public class StorageDownloadFileOptions extends StorageOptions {
      *         values in the provided options
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public static Builder<?> from(@NonNull final StorageDownloadFileOptions options) {
         return builder()
             .accessLevel(options.getAccessLevel())
@@ -74,6 +76,7 @@ public class StorageDownloadFileOptions extends StorageOptions {
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("deprecation")
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -90,6 +93,7 @@ public class StorageDownloadFileOptions extends StorageOptions {
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("deprecation")
     public int hashCode() {
         return ObjectsCompat.hash(
                 getAccessLevel(),
@@ -102,6 +106,7 @@ public class StorageDownloadFileOptions extends StorageOptions {
      */
     @NonNull
     @Override
+    @SuppressWarnings("deprecation")
     public String toString() {
         return "StorageDownloadFileOptions {" +
             "accessLevel=" + getAccessLevel() +

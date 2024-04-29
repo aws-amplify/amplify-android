@@ -26,6 +26,8 @@ import com.amplifyframework.pinpoint.core.models.PinpointEvent
 import com.amplifyframework.pinpoint.core.models.PinpointSession
 import com.amplifyframework.pinpoint.core.models.SDKInfo
 import com.amplifyframework.pinpoint.core.util.getUniqueId
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -67,6 +69,7 @@ class AnalyticsClientTest {
         analyticsClient = AnalyticsClient(
             ApplicationProvider.getApplicationContext(),
             30000L,
+            true,
             pinpointClient,
             targetingClient,
             pinpointDatabase,
@@ -159,6 +162,48 @@ class AnalyticsClientTest {
         val metricValue = 1.0
         analyticsClient.addGlobalMetric(metricName, metricValue)
         assertEquals(metricValue, analyticsClient.getGlobalMetrics()[metricName])
+    }
+
+    @Test
+    fun `auto tracker is null if trackLifecycleEvents is false`() {
+        val client = AnalyticsClient(
+            ApplicationProvider.getApplicationContext(),
+            30000L,
+            false,
+            pinpointClient,
+            targetingClient,
+            pinpointDatabase,
+            sharedPrefs.getUniqueId(),
+            androidAppDetails,
+            androidDeviceDetails,
+            sessionClient,
+            UnconfinedTestDispatcher(),
+            sdkInfo,
+            eventRecorder
+        )
+
+        client.autoSessionTracker.shouldBeNull()
+    }
+
+    @Test
+    fun `auto tracker is not null if trackLifecycleEvents is true`() {
+        val client = AnalyticsClient(
+            ApplicationProvider.getApplicationContext(),
+            30000L,
+            true,
+            pinpointClient,
+            targetingClient,
+            pinpointDatabase,
+            sharedPrefs.getUniqueId(),
+            androidAppDetails,
+            androidDeviceDetails,
+            sessionClient,
+            UnconfinedTestDispatcher(),
+            sdkInfo,
+            eventRecorder
+        )
+
+        client.autoSessionTracker.shouldNotBeNull()
     }
 
     @After
