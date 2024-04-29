@@ -1,3 +1,11 @@
+## [Release 2.16.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.16.0)
+
+### Features
+- **storage:** Gen2 Storage API ([#2758](https://github.com/aws-amplify/amplify-android/issues/2758))
+- **all:** Add Gen2 Config ([#2771](https://github.com/aws-amplify/amplify-android/issues/2771))
+
+[See all changes between 2.15.2 and 2.16.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.15.2...release_v2.16.0)
+
 ## [Release 2.15.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.15.2)
 
 ### Bug Fixes
