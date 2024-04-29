@@ -32,6 +32,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import java.util.concurrent.ExecutorService
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
@@ -40,7 +41,6 @@ import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Before
 import org.junit.Test
-import java.util.concurrent.ExecutorService
 
 class MultiAuthAppSyncGraphQLOperationTest {
 
@@ -67,7 +67,6 @@ class MultiAuthAppSyncGraphQLOperationTest {
             .endpoint("https://amazon.com")
             .apiName("TestAPI")
             .build()
-
     }
 
     // should submit dispatchRequest on auth-related error when more auth types are available
@@ -75,8 +74,8 @@ class MultiAuthAppSyncGraphQLOperationTest {
     fun `submit dispatchRequest when more auth types available`() {
 
         val body = "{\"errors\":" +
-                " [{\"message\": \"Auth error\"," +
-                " \"extensions\": {\"errorType\": \"Unauthorized\"}}]}"
+            " [{\"message\": \"Auth error\"," +
+            " \"extensions\": {\"errorType\": \"Unauthorized\"}}]}"
         val responseBody = body.toResponseBody()
 
         val response = Response.Builder()
@@ -97,11 +96,10 @@ class MultiAuthAppSyncGraphQLOperationTest {
         extensions["errorType"] = "Unauthorized"
         val gqlErrors = GraphQLResponse.Error("Unauthorized", null, null, extensions)
         val gqlResponse = GraphQLResponse<ModelWithTwoAuthModes>(null, mutableListOf(gqlErrors))
-        gqlResponse.errors.replaceAll {  gqlErrors }
-
+        gqlResponse.errors.replaceAll { gqlErrors }
         every { responseFactoryMock.buildResponse<ModelWithTwoAuthModes>(any(), any(), any()) } returns gqlResponse
 
-        every { authTypes.hasNext() } returnsMany listOf(true,false)
+        every { authTypes.hasNext() } returnsMany listOf(true, false)
         operation.setAuthTypes(authTypes)
 
         val runnableSlot = slot<Runnable>()
@@ -112,7 +110,7 @@ class MultiAuthAppSyncGraphQLOperationTest {
         operation.OkHttpCallback().onResponse(mockk(), response)
 
         // Made sure that it goes thru DispatchRequest then failed
-        verify(exactly = 1){
+        verify(exactly = 1) {
             executorService.submit(capture(runnableSlot))
             onFailure.accept(exception)
         }
@@ -121,8 +119,8 @@ class MultiAuthAppSyncGraphQLOperationTest {
     @Test
     fun `should invoke onFailure when no more auth types and has auth errors`() {
         val body = "{\"errors\":" +
-                " [{\"message\": \"Auth error\"," +
-                " \"extensions\": {\"errorType\": \"Unauthorized\"}}]}"
+            " [{\"message\": \"Auth error\"," +
+            " \"extensions\": {\"errorType\": \"Unauthorized\"}}]}"
         val responseBody = body.toResponseBody()
 
         val response = Response.Builder()
@@ -143,7 +141,7 @@ class MultiAuthAppSyncGraphQLOperationTest {
         extensions["errorType"] = "Unauthorized"
         val gqlErrors = GraphQLResponse.Error("Unauthorized", null, null, extensions)
         val gqlResponse = GraphQLResponse<ModelWithTwoAuthModes>(null, mutableListOf(gqlErrors))
-        gqlResponse.errors.replaceAll {  gqlErrors }
+        gqlResponse.errors.replaceAll { gqlErrors }
 
         every { responseFactoryMock.buildResponse<ModelWithTwoAuthModes>(any(), any(), any()) } returns gqlResponse
         every { authTypes.hasNext() } returns false // No more auth types available
