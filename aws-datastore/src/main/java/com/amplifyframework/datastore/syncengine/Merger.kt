@@ -47,16 +47,13 @@ internal class Merger(
     private val localStorageAdapter: LocalStorageAdapter
 ) {
     /**
-     * Merge a batch of items back into the local store, using a default strategy.
-     * @param modelWithMetadata Models, combined with metadata about it
+     * Merge an item back into the local store, using a default strategy.
+     * @param modelWithMetadata A model, combined with metadata about it
      * @param <T> Type of model
      * @return A completable operation to merge the model
      </T> */
     fun <T : Model> merge(modelWithMetadata: ModelWithMetadata<T>): Completable {
         return merge(listOf(modelWithMetadata), NoOpConsumer.create())
-    }
-    fun <T : Model> merge(modelWithMetadata: List<ModelWithMetadata<T>>): Completable {
-        return merge(modelWithMetadata, NoOpConsumer.create())
     }
     fun <T : Model> merge(
         modelsWithMetadata: List<ModelWithMetadata<T>>,
