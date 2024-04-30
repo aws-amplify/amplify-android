@@ -19,6 +19,7 @@ import android.content.Context
 import android.content.UriMatcher
 import android.database.Cursor
 import android.net.Uri
+import androidx.annotation.VisibleForTesting
 import com.amplifyframework.core.store.EncryptedKeyValueRepository
 import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
 import java.util.UUID
@@ -84,7 +85,7 @@ internal class CloudWatchLoggingDatabase(
         contentUri
         if (eventIds.isNotEmpty()) {
             val params = List(eventIds.size) { "?" }.joinToString(",")
-            val whereClause = "${LogEventTable.COLUMN_ID} in ($params)}"
+            val whereClause = "${LogEventTable.COLUMN_ID} in ($params)"
             database.delete(
                 LogEventTable.TABLE_LOG_EVENT,
                 whereClause,
@@ -106,6 +107,7 @@ internal class CloudWatchLoggingDatabase(
         database.delete(LogEventTable.TABLE_LOG_EVENT, null, null)
     }
 
+    @VisibleForTesting()
     private fun insertEvent(event: CloudWatchLogEvent): Uri {
         val contentValues = ContentValues()
         contentValues.put(LogEventTable.COLUMN_TIMESTAMP, event.timestamp)
@@ -135,6 +137,7 @@ internal class CloudWatchLoggingDatabase(
         )
     }
 
+    @VisibleForTesting
     private fun getDatabasePassphrase(): String {
         return encryptedKeyValueRepository.get(passphraseKey) ?: kotlin.run {
             val passphrase = UUID.randomUUID().toString()

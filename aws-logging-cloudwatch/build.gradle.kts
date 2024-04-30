@@ -37,15 +37,31 @@ dependencies {
     implementation(libs.kotlin.serializationJson)
     implementation(libs.androidx.workmanager)
     implementation(libs.kotlin.futures)
+    implementation(libs.androidx.junit.ktx)
 
     testImplementation(project(":testutils"))
+    testImplementation(project(":core"))
+    testImplementation(project(":aws-core"))
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockk)
     testImplementation(libs.test.robolectric)
     testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.kotlin.coroutines)
     testImplementation(libs.test.androidx.workmanager)
-    testImplementation(project(":aws-logging-cloudwatch"))
+
+    androidTestImplementation(libs.test.robolectric)
+    androidTestImplementation(libs.test.mockito.core)
+    androidTestImplementation(project(":testmodels"))
+    androidTestImplementation(libs.test.aws.sdk.core)
+    androidTestImplementation(libs.androidx.annotation)
+    androidTestImplementation(libs.test.androidx.core)
+    androidTestImplementation(libs.test.androidx.runner)
+    androidTestImplementation(libs.test.androidx.junit)
+    androidTestImplementation(libs.test.kotlin.coroutines)
+    androidTestImplementation(libs.test.mockk)
+
+    androidTestImplementation(project(":aws-logging-cloudwatch"))
+    androidTestImplementation(project(":testutils"))
 }
 
 android.kotlinOptions {
