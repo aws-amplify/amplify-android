@@ -37,7 +37,6 @@ dependencies {
     implementation(libs.kotlin.serializationJson)
     implementation(libs.androidx.workmanager)
     implementation(libs.kotlin.futures)
-    implementation(libs.androidx.junit.ktx)
 
     testImplementation(project(":testutils"))
     testImplementation(project(":core"))
