@@ -82,7 +82,6 @@ internal class CloudWatchLoggingDatabase(
     }
 
     internal suspend fun bulkDelete(eventIds: List<Long>) = withContext(coroutineDispatcher) {
-        contentUri
         if (eventIds.isNotEmpty()) {
             val params = List(eventIds.size) { "?" }.joinToString(",")
             val whereClause = "${LogEventTable.COLUMN_ID} in ($params)"
@@ -107,7 +106,6 @@ internal class CloudWatchLoggingDatabase(
         database.delete(LogEventTable.TABLE_LOG_EVENT, null, null)
     }
 
-    @VisibleForTesting()
     private fun insertEvent(event: CloudWatchLogEvent): Uri {
         val contentValues = ContentValues()
         contentValues.put(LogEventTable.COLUMN_TIMESTAMP, event.timestamp)
@@ -137,8 +135,8 @@ internal class CloudWatchLoggingDatabase(
         )
     }
 
-    @VisibleForTesting
-    private fun getDatabasePassphrase(): String {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun getDatabasePassphrase(): String {
         return encryptedKeyValueRepository.get(passphraseKey) ?: kotlin.run {
             val passphrase = UUID.randomUUID().toString()
             // If the database is restored from backup and the passphrase key is not present,

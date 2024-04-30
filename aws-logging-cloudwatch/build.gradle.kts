@@ -39,8 +39,6 @@ dependencies {
     implementation(libs.kotlin.futures)
 
     testImplementation(project(":testutils"))
-    testImplementation(project(":core"))
-    testImplementation(project(":aws-core"))
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockk)
     testImplementation(libs.test.robolectric)
@@ -49,15 +47,13 @@ dependencies {
     testImplementation(libs.test.androidx.workmanager)
 
     androidTestImplementation(libs.test.robolectric)
-    androidTestImplementation(libs.test.mockito.core)
-    androidTestImplementation(project(":testmodels"))
-    androidTestImplementation(libs.test.aws.sdk.core)
     androidTestImplementation(libs.androidx.annotation)
     androidTestImplementation(libs.test.androidx.core)
     androidTestImplementation(libs.test.androidx.runner)
     androidTestImplementation(libs.test.androidx.junit)
     androidTestImplementation(libs.test.kotlin.coroutines)
     androidTestImplementation(libs.test.mockk)
+    androidTestImplementation(libs.test.kotest.assertions)
 
     androidTestImplementation(project(":aws-logging-cloudwatch"))
     androidTestImplementation(project(":testutils"))

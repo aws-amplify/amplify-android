@@ -17,6 +17,12 @@ package com.amplifyframework.logging.cloudwatch.db
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
+import io.kotest.matchers.MatcherResult
+import io.kotest.matchers.Matcher
+import io.kotest.matchers.collections.shouldExist
+import io.kotest.matchers.collections.shouldMatchEach
+import io.kotest.matchers.should
+import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -36,12 +42,6 @@ class CloudWatchLoggingDatabaseInstrumentationTest {
     private val context = InstrumentationRegistry.getInstrumentation().context
     private val testCoroutine = UnconfinedTestDispatcher()
     private val loggingDbClass = CloudWatchLoggingDatabase(context, testCoroutine)
-    private val database by lazy {
-        System.loadLibrary("sqlcipher")
-        val passPhraseGetter = loggingDbClass.javaClass.getDeclaredMethod("getDatabasePassphrase", String::class.java)
-        passPhraseGetter.isAccessible = true
-        CloudWatchDatabaseHelper(context).getWritableDatabase(passPhraseGetter.invoke(loggingDbClass) as String)
-    }
 
     private val testTimestamp1 = Instant.now().epochSecond
     private val testTimestamp2 = Instant.now().epochSecond + 300
@@ -74,11 +74,10 @@ class CloudWatchLoggingDatabaseInstrumentationTest {
 
         val savedLogs = loggingDbClass.queryAllEvents()
 
-        assertNotNull(savedLogs)
-        assertEquals(2, savedLogs.size)
-        assertEquals("Customer Obsession", savedLogs[0].message)
-        assertEquals(testTimestamp2, savedLogs[1].timestamp)
-        loggingDbClass.clearDatabase()
+        savedLogs shouldMatchEach listOf(
+            { it shouldMatchEvent testCloudWatchLogEvent1 },
+            { it shouldMatchEvent testCloudWatchLogEvent2 }
+        )
     }
 
     /**
@@ -86,14 +85,18 @@ class CloudWatchLoggingDatabaseInstrumentationTest {
      */
     @Test
     fun queryAllEvents_Successfully_Retrieves_Every_Log() = runTest {
-        assertEquals(0, loggingDbClass.queryAllEvents().size)
+        loggingDbClass.queryAllEvents().size shouldBe 0
         loggingDbClass.saveLogEvent(testCloudWatchLogEvent1)
-        assertEquals(1, loggingDbClass.queryAllEvents().size)
+        loggingDbClass.queryAllEvents().size shouldBe 1
         loggingDbClass.saveLogEvent(testCloudWatchLogEvent3)
 
         val savedLogs = loggingDbClass.queryAllEvents()
-        assertEquals("Bias for Action", savedLogs[savedLogs.size -1].message)
-        loggingDbClass.clearDatabase()
+
+        savedLogs shouldMatchEach listOf(
+            { it shouldMatchEvent testCloudWatchLogEvent1 },
+            { it shouldMatchEvent testCloudWatchLogEvent3 }
+        )
+        savedLogs[savedLogs.size -1] shouldMatchEvent testCloudWatchLogEvent3
     }
 
     /**
@@ -106,16 +109,19 @@ class CloudWatchLoggingDatabaseInstrumentationTest {
         loggingDbClass.saveLogEvent(testCloudWatchLogEvent2)
         loggingDbClass.saveLogEvent(testCloudWatchLogEvent3)
         loggingDbClass.saveLogEvent(testCloudWatchLogEvent4)
-        var deleteTargetLogs: MutableList<Long> = loggingDbClass.queryAllEvents().map { it.id } .toMutableList()
-        deleteTargetLogs = deleteTargetLogs.subList(0,1)
+        val deleteTargetLogs = loggingDbClass.queryAllEvents().take(1).map { it.id }
 
         loggingDbClass.bulkDelete(deleteTargetLogs)
 
         val savedLogs = loggingDbClass.queryAllEvents()
 
-        assertEquals(3, savedLogs.size)
-        assertEquals("Ownership", savedLogs[0].message)
-        loggingDbClass.clearDatabase()
+        savedLogs.size shouldBe 3
+        savedLogs shouldMatchEach listOf(
+            { it shouldMatchEvent testCloudWatchLogEvent2 },
+            { it shouldMatchEvent testCloudWatchLogEvent3 },
+            { it shouldMatchEvent testCloudWatchLogEvent4 }
+        )
+        savedLogs[0].message shouldBe "Ownership"
     }
 
     /**
@@ -128,7 +134,7 @@ class CloudWatchLoggingDatabaseInstrumentationTest {
         loggingDbClass.saveLogEvent(testCloudWatchLogEvent2)
         loggingDbClass.saveLogEvent(testCloudWatchLogEvent3)
         loggingDbClass.saveLogEvent(testCloudWatchLogEvent4)
-        val deleteTargetLogs: MutableList<Long> = loggingDbClass.queryAllEvents().map { it.id } .toMutableList()
+        val deleteTargetLogs = loggingDbClass.queryAllEvents().map { it.id } .toMutableList()
         deleteTargetLogs.removeAt(1)
         deleteTargetLogs.removeAt(2)
 
@@ -136,9 +142,12 @@ class CloudWatchLoggingDatabaseInstrumentationTest {
 
         val savedLogs = loggingDbClass.queryAllEvents()
 
-        assertEquals(2, savedLogs.size)
-        assertEquals("Frugality", savedLogs[1].message)
-        loggingDbClass.clearDatabase()
+        savedLogs.size shouldBe 2
+        savedLogs shouldMatchEach listOf(
+            { it shouldMatchEvent testCloudWatchLogEvent2 },
+            { it shouldMatchEvent testCloudWatchLogEvent4 }
+        )
+        savedLogs[savedLogs.size -1].message shouldBe "Frugality"
     }
 
     /**
@@ -146,10 +155,26 @@ class CloudWatchLoggingDatabaseInstrumentationTest {
      */
     @Test
     fun clearDatabase_Wipes_All_Logs_Out() = runTest {
-        assertEquals(0, loggingDbClass.queryAllEvents().size)
-        loggingDbClass.saveLogEvent(testCloudWatchLogEvent1)
-        assertEquals(1, loggingDbClass.queryAllEvents().size)
         loggingDbClass.clearDatabase()
-        assertEquals(0, loggingDbClass.queryAllEvents().size)
+        loggingDbClass.queryAllEvents().size shouldBe 0
     }
+
+    /**
+     * This test verifies getDatabasePassphrase() does not change its value every call
+     */
+    @Test
+    fun getDatabasePassphrase_Should_Be_Same_Each_Run() = runTest {
+        loggingDbClass.getDatabasePassphrase() shouldBe loggingDbClass.getDatabasePassphrase()
+    }
+
+    private infix fun LogEvent.shouldMatchEvent(event: CloudWatchLogEvent) = this should Matcher {
+        MatcherResult(
+            it.message == event.message && it.timestamp == event.timestamp,
+            { "event $it should match $event but it does not" },
+            { "event $it should not match $event but it does" }
+        )
+    }
+
+    private fun List<LogEvent>.shouldMatchEvents(vararg events: CloudWatchLogEvent) =
+        this shouldMatchEach events.map { event -> { it shouldMatchEvent event } }
 }
