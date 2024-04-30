@@ -29,6 +29,8 @@ import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.Date
 import java.util.Locale
 
@@ -180,7 +182,17 @@ internal class AWSCognitoLegacyCredentialStore(
         val accessKey = idAndCredentialsKeyValue.get(namespace(AK_KEY))
         val secretKey = idAndCredentialsKeyValue.get(namespace(SK_KEY))
         val sessionToken = idAndCredentialsKeyValue.get(namespace(ST_KEY))
-        val expiration = idAndCredentialsKeyValue.get(namespace(EXP_KEY))?.toLongOrNull()
+        var expiration = idAndCredentialsKeyValue.get(namespace(EXP_KEY))?.toLongOrNull()
+
+        // V2 AWSCredential expiration is in epoch seconds whereas legacy expiration may be in epoch milliseconds
+        // Session expiration should be within 24 hours so if we see a date in the far future, we can assume the
+        // timestamp is encoded in milliseconds.
+        val expirationInstant = expiration?.let { Instant.ofEpochSecond(it) }
+        if (expiration != null &&
+            expirationInstant?.isAfter(Instant.now().plus(365, ChronoUnit.DAYS)) == true
+        ) {
+            expiration /= 1000
+        }
 
         return if (accessKey == null && secretKey == null && sessionToken == null) {
             null
