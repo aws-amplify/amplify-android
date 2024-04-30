@@ -68,7 +68,7 @@ class CloudWatchLoggingDatabaseInstrumentationTest {
      * CloudWatchLogEvent to saveLogEvent() method
      */
     @Test
-    fun `saveLogEvent$aws_logging_cloudwatch_debug`() = runTest {
+    fun saveLogEvent_Saves_Two_Logs_After_Two_Calls() = runTest {
         loggingDbClass.saveLogEvent(testCloudWatchLogEvent1)
         loggingDbClass.saveLogEvent(testCloudWatchLogEvent2)
 
@@ -85,7 +85,7 @@ class CloudWatchLoggingDatabaseInstrumentationTest {
      * This test verifies if the CloudWatch Logs are retrieved
      */
     @Test
-    fun `queryAllEvents$aws_logging_cloudwatch_debug`() = runTest {
+    fun queryAllEvents_Successfully_Retrieves_Every_Log() = runTest {
         assertEquals(0, loggingDbClass.queryAllEvents().size)
         loggingDbClass.saveLogEvent(testCloudWatchLogEvent1)
         assertEquals(1, loggingDbClass.queryAllEvents().size)
@@ -141,15 +141,11 @@ class CloudWatchLoggingDatabaseInstrumentationTest {
         loggingDbClass.clearDatabase()
     }
 
-    @Test
-    fun `isCacheFull$aws_logging_cloudwatch_debug`() {
-    }
-
     /**
      * This test verifies if the Database is cleared after clearDatabase() method is called
      */
     @Test
-    fun clearDatabase_Successfully_Deletes_All_Logs() = runTest {
+    fun clearDatabase_Wipes_All_Logs_Out() = runTest {
         assertEquals(0, loggingDbClass.queryAllEvents().size)
         loggingDbClass.saveLogEvent(testCloudWatchLogEvent1)
         assertEquals(1, loggingDbClass.queryAllEvents().size)
