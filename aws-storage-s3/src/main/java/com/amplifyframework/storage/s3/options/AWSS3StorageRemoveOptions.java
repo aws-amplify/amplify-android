@@ -53,6 +53,7 @@ public final class AWSS3StorageRemoveOptions extends StorageRemoveOptions {
      *         values in the provided options
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public static Builder from(@NonNull final AWSS3StorageRemoveOptions options) {
         return builder()
             .accessLevel(options.getAccessLevel())
@@ -69,6 +70,7 @@ public final class AWSS3StorageRemoveOptions extends StorageRemoveOptions {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -82,6 +84,7 @@ public final class AWSS3StorageRemoveOptions extends StorageRemoveOptions {
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public int hashCode() {
         return ObjectsCompat.hash(
                 getAccessLevel(),
@@ -91,6 +94,7 @@ public final class AWSS3StorageRemoveOptions extends StorageRemoveOptions {
 
     @NonNull
     @Override
+    @SuppressWarnings("deprecation")
     public String toString() {
         return "AWSS3StorageRemoveOptions {" +
                 "accessLevel=" + getAccessLevel() +

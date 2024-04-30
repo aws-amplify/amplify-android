@@ -50,6 +50,7 @@ public final class S3Keys {
      * @return Formatted key to be used internally by S3 plugin
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public static String createServiceKey(
             @NonNull StorageAccessLevel accessLevel,
             @NonNull String identityId,
@@ -69,6 +70,7 @@ public final class S3Keys {
      * @return Formatted key to be used internally by S3 plugin
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public static String getAccessLevelPrefix(
             @NonNull StorageAccessLevel accessLevel,
             @NonNull String identityId

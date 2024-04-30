@@ -30,6 +30,7 @@ public class StoragePagedListOptions extends StorageOptions {
      * attributes from builder instance.
      * @param builder the builder with configured attributes
      */
+    @SuppressWarnings("deprecation")
     protected StoragePagedListOptions(Builder<?> builder) {
         super(builder.getAccessLevel(), builder.getTargetIdentityId());
         pageSize = builder.pageSize;

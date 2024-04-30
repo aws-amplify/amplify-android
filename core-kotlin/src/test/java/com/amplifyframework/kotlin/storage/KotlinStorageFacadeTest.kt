@@ -19,6 +19,7 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.storage.StorageCategoryBehavior
 import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.StorageItem
+import com.amplifyframework.storage.StoragePath
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation
 import com.amplifyframework.storage.operation.StorageTransferOperation
 import com.amplifyframework.storage.operation.StorageUploadFileOperation
@@ -63,6 +64,7 @@ class KotlinStorageFacadeTest {
      * When the getUrl() delegate emits a value, it should be returned
      * via the coroutine API.
      */
+    @Suppress("deprecation")
     @Test
     fun getUrlSucceeds() = runBlocking {
         val forRemoteKey = "delete_me.png"
@@ -78,9 +80,25 @@ class KotlinStorageFacadeTest {
         assertEquals(result, storage.getUrl(forRemoteKey))
     }
 
+    @Test
+    fun getUrlStoragePathSucceeds() = runBlocking {
+        val forRemotePath = StoragePath.fromString("delete_me.png")
+        val result = StorageGetUrlResult.fromUrl(URL("https://s3.amazon.biz/file.png"))
+        every {
+            delegate.getUrl(eq(forRemotePath), any(), any(), any())
+        } answers {
+            val onResultArg = it.invocation.args[/* index of result consumer = */ 2]
+            val onResult = onResultArg as Consumer<StorageGetUrlResult>
+            onResult.accept(result)
+            mockk()
+        }
+        assertEquals(result, storage.getUrl(forRemotePath))
+    }
+
     /**
      * When the getUrl() delegate emits an error, it should be thrown from the coroutine API.
      */
+    @Suppress("deprecation")
     @Test(expected = StorageException::class)
     fun getUrlThrows(): Unit = runBlocking {
         val forRemoteKey = "delete_me.png"
@@ -96,10 +114,26 @@ class KotlinStorageFacadeTest {
         storage.getUrl(forRemoteKey)
     }
 
+    @Test(expected = StorageException::class)
+    fun getUrlStoragePathThrows(): Unit = runBlocking {
+        val forRemotePath = StoragePath.fromString("delete_me.png")
+        val error = StorageException("uh", "oh")
+        every {
+            delegate.getUrl(eq(forRemotePath), any(), any(), any())
+        } answers {
+            val indexOfErrorConsumer = 3
+            val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<StorageException>
+            onError.accept(error)
+            mockk()
+        }
+        storage.getUrl(forRemotePath)
+    }
+
     /**
      * When the downloadFile() delegate emits a result, it should
      * be returned from the coroutine API.
      */
+    @Suppress("deprecation")
     @Test
     fun downloadFileSucceeds(): Unit = runBlocking {
         val fromRemoteKey = "kool-pic.png"
@@ -136,13 +170,49 @@ class KotlinStorageFacadeTest {
         assertEquals(toLocalFile, download.result().file)
     }
 
+    @Test
+    fun downloadFileStoragePathSucceeds(): Unit = runBlocking {
+        val fromRemotePath = StoragePath.fromString("kool-pic.png")
+        val toLocalFile = File("/local/path/kool-pic.png")
+        val transferId = UUID.randomUUID().toString()
+        val progressEvents = (0L until 101 step 50)
+            .map { amount -> StorageTransferProgress(amount, 100) }
+
+        val cancelable = mockk<StorageDownloadFileOperation<*>>()
+        every { cancelable.cancel() } answers {}
+        every { cancelable.transferId } answers { transferId }
+
+        every {
+            delegate.downloadFile(eq(fromRemotePath), eq(toLocalFile), any(), any(), any(), any())
+        } answers {
+            val onProgressArg = it.invocation.args[/* index of progress consumer = */ 3]
+            val onProgress = onProgressArg as Consumer<StorageTransferProgress>
+            val onResultArg = it.invocation.args[/* index of result consumer = */ 4]
+            val onResult = onResultArg as Consumer<StorageDownloadFileResult>
+            GlobalScope.launch {
+                progressEvents.forEach { progressEvent ->
+                    delay(200)
+                    onProgress.accept(progressEvent)
+                }
+                onResult.accept(StorageDownloadFileResult.fromFile(toLocalFile))
+            }
+            cancelable
+        }
+
+        val download = storage.downloadFile(fromRemotePath, toLocalFile)
+        assertEquals(transferId, download.transferId)
+        val actualProgressEvents = download.progress().take(progressEvents.size).toList()
+        assertEquals(progressEvents, actualProgressEvents)
+        assertEquals(toLocalFile, download.result().file)
+    }
+
     /**
      * When the downloadFile() kotlin operation invokes pause, resume & cancel operation then corresponding
      * delegate apis are invoked.
      */
     @Test
     fun performActionsOnDownloadFile(): Unit = runBlocking {
-        val fromRemoteKey = "kool-pic.png"
+        val fromRemotePath = StoragePath.fromString("kool-pic.png")
         val toLocalFile = File("/local/path/kool-pic.png")
         val transferId = UUID.randomUUID().toString()
 
@@ -153,12 +223,12 @@ class KotlinStorageFacadeTest {
         every { cancelable.transferId } answers { transferId }
 
         every {
-            delegate.downloadFile(eq(fromRemoteKey), eq(toLocalFile), any(), any(), any(), any())
+            delegate.downloadFile(eq(fromRemotePath), eq(toLocalFile), any(), any(), any(), any())
         } answers {
             cancelable
         }
 
-        val download = storage.downloadFile(fromRemoteKey, toLocalFile)
+        val download = storage.downloadFile(fromRemotePath, toLocalFile)
         download.pause()
         download.resume()
         download.cancel()
@@ -173,6 +243,7 @@ class KotlinStorageFacadeTest {
      * When the downloadFile() API emits an error, it should be thrown from
      * the coroutine API.
      */
+    @Suppress("deprecation")
     @Test(expected = StorageException::class)
     fun downloadFileThrows(): Unit = runBlocking {
         val fromRemoteKey = "kool-pic.png"
@@ -195,10 +266,33 @@ class KotlinStorageFacadeTest {
             .result()
     }
 
+    @Test(expected = StorageException::class)
+    fun downloadFileStoragePathThrows(): Unit = runBlocking {
+        val remotePath = StoragePath.fromString("kool-pic.png")
+        val toLocalFile = File("/local/path/kool-pic.png")
+        val error = StorageException("uh", "oh")
+        val transferId = UUID.randomUUID().toString()
+        val cancelable = mockk<StorageDownloadFileOperation<*>>()
+        every { cancelable.cancel() } answers {}
+        every { cancelable.transferId } answers { transferId }
+        every {
+            delegate.downloadFile(eq(remotePath), eq(toLocalFile), any(), any(), any(), any())
+        } answers {
+            val indexOfErrorConsumer = 5
+            val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<StorageException>
+            onError.accept(error)
+            cancelable
+        }
+
+        storage.downloadFile(remotePath, toLocalFile)
+            .result()
+    }
+
     /**
      * When the uploadFile() delegate emits a result, it should be
      * returned via the coroutine API.
      */
+    @Suppress("deprecation")
     @Test
     fun uploadFileSucceeds() = runBlocking {
         val toRemoteKey = "kool-pic.png"
@@ -235,10 +329,49 @@ class KotlinStorageFacadeTest {
         assertEquals(toRemoteKey, upload.result().key)
     }
 
+    @Test
+    fun uploadFileStoragePathSucceeds() = runBlocking {
+        val stringPath = "/delete_me.png"
+        val remotePath = StoragePath.fromString(stringPath)
+        val fromLocalFile = File("/local/path/kool-pic.png")
+
+        val progressEvents = (0L until 101 step 50)
+            .map { amount -> StorageTransferProgress(amount, 100) }
+        val transferId = UUID.randomUUID().toString()
+        val cancelable = mockk<StorageUploadFileOperation<*>>()
+        every { cancelable.cancel() } answers {}
+        every { cancelable.transferId } answers { transferId }
+        every {
+            delegate.uploadFile(eq(remotePath), eq(fromLocalFile), any(), any(), any(), any())
+        } answers {
+            val onProgressArg = it.invocation.args[/* index of progress consumer = */ 3]
+            val onProgress = onProgressArg as Consumer<StorageTransferProgress>
+            val onResultArg = it.invocation.args[/* index of result consumer = */ 4]
+            val onResult = onResultArg as Consumer<StorageUploadFileResult>
+            GlobalScope.launch {
+                progressEvents.forEach { progressEvent ->
+                    delay(200)
+                    onProgress.accept(progressEvent)
+                }
+                onResult.accept(StorageUploadFileResult(stringPath, stringPath))
+            }
+            cancelable
+        }
+
+        val upload = storage.uploadFile(remotePath, fromLocalFile)
+        assertEquals(transferId, upload.transferId)
+        val receivedProgressEvents = upload.progress().take(3).toList()
+        assertEquals(transferId, upload.transferId)
+        assertEquals(progressEvents, receivedProgressEvents)
+        assertEquals(stringPath, upload.result().key)
+        assertEquals(stringPath, upload.result().path)
+    }
+
     /**
      * When the underlying uploadFile() emits an error,
      * it should be thrown from the coroutine API.
      */
+    @Suppress("deprecation")
     @Test(expected = StorageException::class)
     fun uploadFileThrows(): Unit = runBlocking {
         val toRemoteKey = "kool-pic.png"
@@ -261,13 +394,35 @@ class KotlinStorageFacadeTest {
             .result()
     }
 
+    @Test(expected = StorageException::class)
+    fun uploadFileStoragePathThrows(): Unit = runBlocking {
+        val remotePath = StoragePath.fromString("kool-pic.png")
+        val fromLocalFile = File("/local/path/kool-pic.png")
+        val error = StorageException("uh", "oh")
+        val transferId = UUID.randomUUID().toString()
+        val cancelable = mockk<StorageUploadFileOperation<*>>()
+        every { cancelable.cancel() } answers {}
+        every { cancelable.transferId } answers { transferId }
+        every {
+            delegate.uploadFile(eq(remotePath), eq(fromLocalFile), any(), any(), any(), any())
+        } answers {
+            val indexOfErrorConsumer = 5
+            val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<StorageException>
+            onError.accept(error)
+            cancelable
+        }
+
+        storage.uploadFile(remotePath, fromLocalFile)
+            .result()
+    }
+
     /**
      * When the uploadFile() kotlin operation invokes pause, resume & cancel operation then corresponding
      * delegate apis are invoked.
      */
     @Test
     fun performActionOnUploadFileSucceeds() = runBlocking {
-        val toRemoteKey = "kool-pic.png"
+        val remotePath = StoragePath.fromString("kool-pic.png")
         val fromLocalFile = File("/local/path/kool-pic.png")
         val transferId = UUID.randomUUID().toString()
         val cancelable = mockk<StorageUploadFileOperation<*>>()
@@ -276,12 +431,12 @@ class KotlinStorageFacadeTest {
         every { cancelable.resume() } answers {}
         every { cancelable.transferId } answers { transferId }
         every {
-            delegate.uploadFile(eq(toRemoteKey), eq(fromLocalFile), any(), any(), any(), any())
+            delegate.uploadFile(eq(remotePath), eq(fromLocalFile), any(), any(), any(), any())
         } answers {
             cancelable
         }
 
-        val upload = storage.uploadFile(toRemoteKey, fromLocalFile)
+        val upload = storage.uploadFile(remotePath, fromLocalFile)
         upload.pause()
         upload.resume()
         upload.cancel()
@@ -296,6 +451,7 @@ class KotlinStorageFacadeTest {
      * When the underlying uploadInputStream() delegate emits a result,
      * it should be returned from the coroutine API.
      */
+    @Suppress("deprecation")
     @Test
     fun uploadInputStreamSucceeds() = runBlocking {
         val toRemoteKey = "kool-pic.png"
@@ -331,10 +487,48 @@ class KotlinStorageFacadeTest {
         assertEquals(toRemoteKey, upload.result().key)
     }
 
+    @Test
+    fun uploadInputStreamStoragePathSucceeds() = runBlocking {
+        val stringPath = "/delete_me.png"
+        val remotePath = StoragePath.fromString(stringPath)
+        val fromStream = mockk<InputStream>()
+        val transferId = UUID.randomUUID().toString()
+        val progressEvents = (0L until 101 step 50)
+            .map { amount -> StorageTransferProgress(amount, 100) }
+
+        val cancelable = mockk<StorageUploadInputStreamOperation<*>>()
+        every { cancelable.cancel() } answers {}
+        every { cancelable.transferId } answers { transferId }
+        every {
+            delegate.uploadInputStream(eq(remotePath), eq(fromStream), any(), any(), any(), any())
+        } answers {
+            val onProgressArg = it.invocation.args[/* index of progress consumer = */ 3]
+            val onProgress = onProgressArg as Consumer<StorageTransferProgress>
+            val onResultArg = it.invocation.args[/* index of result consumer = */ 4]
+            val onResult = onResultArg as Consumer<StorageUploadInputStreamResult>
+            GlobalScope.launch {
+                progressEvents.forEach { progressEvent ->
+                    delay(200)
+                    onProgress.accept(progressEvent)
+                }
+                onResult.accept(StorageUploadInputStreamResult(stringPath, stringPath))
+            }
+            cancelable
+        }
+
+        val upload = storage.uploadInputStream(remotePath, fromStream)
+        assertEquals(transferId, upload.transferId)
+        val receivedProgressEvents = upload.progress().take(3).toList()
+        assertEquals(progressEvents, receivedProgressEvents)
+        assertEquals(stringPath, upload.result().key)
+        assertEquals(stringPath, upload.result().path)
+    }
+
     /**
      * When the underlying uploadInputStream() emits an error,
      * it should be thrown from the coroutine API.
      */
+    @Suppress("deprecation")
     @Test(expected = StorageException::class)
     fun uploadInputStreamThrows(): Unit = runBlocking {
         val toRemoteKey = "kool-pic.png"
@@ -358,13 +552,36 @@ class KotlinStorageFacadeTest {
             .result()
     }
 
+    @Test(expected = StorageException::class)
+    fun uploadInputStreamStoragePathThrows(): Unit = runBlocking {
+        val remotePath = StoragePath.fromString("kool-pic.png")
+        val fromStream = mockk<InputStream>()
+        val error = StorageException("uh", "oh")
+        val transferId = UUID.randomUUID().toString()
+        val cancelable = mockk<StorageUploadInputStreamOperation<*>>()
+        every { cancelable.cancel() } answers {}
+        every { cancelable.transferId } answers { transferId }
+
+        every {
+            delegate.uploadInputStream(eq(remotePath), eq(fromStream), any(), any(), any(), any())
+        } answers {
+            val indexOfErrorConsumer = 5
+            val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<StorageException>
+            onError.accept(error)
+            cancelable
+        }
+
+        storage.uploadInputStream(remotePath, fromStream)
+            .result()
+    }
+
     /**
      * When the underlying uploadInputStream() kotlin operation invokes pause, resume & cancel operation then the
      * corresponding delegate apis are invoked.
      */
     @Test
     fun performActionOnUploadInputStream() = runBlocking {
-        val toRemoteKey = "kool-pic.png"
+        val remotePath = StoragePath.fromString("kool-pic.png")
         val fromStream = mockk<InputStream>()
         val transferId = UUID.randomUUID().toString()
         val cancelable = mockk<StorageUploadInputStreamOperation<*>>()
@@ -374,12 +591,12 @@ class KotlinStorageFacadeTest {
         every { cancelable.transferId } answers { transferId }
 
         every {
-            delegate.uploadInputStream(eq(toRemoteKey), eq(fromStream), any(), any(), any(), any())
+            delegate.uploadInputStream(eq(remotePath), eq(fromStream), any(), any(), any(), any())
         } answers {
             cancelable
         }
 
-        val upload = storage.uploadInputStream(toRemoteKey, fromStream)
+        val upload = storage.uploadInputStream(remotePath, fromStream)
         upload.pause()
         upload.resume()
         upload.cancel()
@@ -394,6 +611,7 @@ class KotlinStorageFacadeTest {
      * When the remove() delegate emits a result, it should be returned
      * from the coroutine API.
      */
+    @Suppress("deprecation")
     @Test
     fun removeSucceeds() = runBlocking {
         val key = "delete_me.png"
@@ -410,10 +628,28 @@ class KotlinStorageFacadeTest {
         assertEquals(result, storage.remove(key))
     }
 
+    @Test
+    fun removeStoragePathSucceeds() = runBlocking {
+        val stringPath = "/delete_me.png"
+        val remotePath = StoragePath.fromString(stringPath)
+        val result = StorageRemoveResult(stringPath, stringPath)
+        every {
+            delegate.remove(eq(remotePath), any(), any(), any())
+        } answers {
+            val indexOfResultConsumer = 2
+            val arg = it.invocation.args[indexOfResultConsumer]
+            val onResult = arg as Consumer<StorageRemoveResult>
+            onResult.accept(result)
+            mockk()
+        }
+        assertEquals(result, storage.remove(remotePath))
+    }
+
     /**
      * When the remove() delegate emits an error, it should be thrown
      * from the coroutine API.
      */
+    @Suppress("deprecation")
     @Test(expected = StorageException::class)
     fun removeThrows(): Unit = runBlocking {
         val key = "delete_me.png"
@@ -429,14 +665,47 @@ class KotlinStorageFacadeTest {
         storage.remove(key)
     }
 
+    @Test(expected = StorageException::class)
+    fun removeStoragePathThrows(): Unit = runBlocking {
+        val path = StoragePath.fromString("delete_me.png")
+        val error = StorageException("uh", "oh")
+        every {
+            delegate.remove(eq(path), any(), any(), any())
+        } answers {
+            val indexOfErrorConsumer = 3
+            val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<StorageException>
+            onError.accept(error)
+            mockk()
+        }
+        storage.remove(path)
+    }
+
     /**
      * When the list() delegate emits a result, it should be returned through the
      * coroutine API.
      */
+    @Suppress("deprecation")
     @Test
     fun listSucceeds() = runBlocking {
         val path = "/beach/photos"
-        val item = StorageItem("me_at_beach.png", 100L, Date(), "eTag", "props")
+        val item = StorageItem("/beach/photos/me_at_beach.png", "me_at_beach.png", 100L, Date(), "eTag", "props")
+        val result = StorageListResult.fromItems(listOf(item), null)
+        every {
+            delegate.list(eq(path), any<StoragePagedListOptions>(), any(), any())
+        } answers {
+            val indexOfResultConsumer = 2
+            val arg = it.invocation.args[indexOfResultConsumer]
+            val onResult = arg as Consumer<StorageListResult>
+            onResult.accept(result)
+            mockk()
+        }
+        assertEquals(result, storage.list(path, StoragePagedListOptions.builder().build()))
+    }
+
+    @Test
+    fun listStoragePathSucceeds() = runBlocking {
+        val path = StoragePath.fromString("beach/photos")
+        val item = StorageItem("/me_at_beach.png", "/me_at_beach.png", 100L, Date(), "eTag", "props")
         val result = StorageListResult.fromItems(listOf(item), null)
         every {
             delegate.list(eq(path), any<StoragePagedListOptions>(), any(), any())
@@ -454,9 +723,25 @@ class KotlinStorageFacadeTest {
      * When the list() delegate emits an error, it should be thrown from the coroutine
      * API.
      */
+    @Suppress("deprecation")
     @Test(expected = StorageException::class)
     fun listThrows(): Unit = runBlocking {
         val path = "/beach/photos"
+        val error = StorageException("uh", "oh")
+        every {
+            delegate.list(eq(path), any<StoragePagedListOptions>(), any(), any())
+        } answers {
+            val indexOfErrorConsumer = 3
+            val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<StorageException>
+            onError.accept(error)
+            mockk()
+        }
+        storage.list(path, StoragePagedListOptions.builder().build())
+    }
+
+    @Test(expected = StorageException::class)
+    fun listStoragePathThrows(): Unit = runBlocking {
+        val path = StoragePath.fromString("beach/photos")
         val error = StorageException("uh", "oh")
         every {
             delegate.list(eq(path), any<StoragePagedListOptions>(), any(), any())

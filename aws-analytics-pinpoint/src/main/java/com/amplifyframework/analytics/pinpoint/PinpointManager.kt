@@ -75,17 +75,18 @@ internal class PinpointManager constructor(
             encryptedStore,
             sharedPrefs,
             androidAppDetails,
-            androidDeviceDetails,
+            androidDeviceDetails
         )
         analyticsClient = AnalyticsClient(
             context,
             awsPinpointConfiguration.autoFlushEventsInterval,
+            awsPinpointConfiguration.isTrackAppLifecycleEvents,
             pinpointClient,
             targetingClient,
             pinpointDatabase,
             sharedPrefs.getUniqueId(),
             androidAppDetails,
-            androidDeviceDetails,
+            androidDeviceDetails
         )
     }
 }

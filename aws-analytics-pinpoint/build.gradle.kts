@@ -41,6 +41,8 @@ dependencies {
     testImplementation(libs.test.androidx.junit)
     testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.kotlin.coroutines)
+    testImplementation(libs.test.kotest.assertions)
+    testImplementation(project(":testutils"))
     testImplementation(project(":aws-analytics-pinpoint"))
 
     androidTestImplementation(project(":testutils"))

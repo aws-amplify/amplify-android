@@ -40,6 +40,10 @@ import java.util.concurrent.ExecutorService
 /**
  * An operation to upload an InputStream from AWS S3.
  */
+@Deprecated(
+    "Class should not be public and explicitly cast to. Cast to StorageUploadInputStreamOperation." +
+        "Internal usages are moving to AWSS3StoragePathUploadInputStreamOperation"
+)
 class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
     transferId: String,
     private val storageService: StorageService,
@@ -199,10 +203,9 @@ class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
 
     override fun setOnSuccess(onSuccess: Consumer<StorageUploadInputStreamResult>?) {
         super.setOnSuccess(onSuccess)
-        request?.let {
-            if (transferState == TransferState.COMPLETED) {
-                onSuccess?.accept(StorageUploadInputStreamResult.fromKey(it.key))
-            }
+        val serviceKey = transferObserver?.key
+        if (transferState == TransferState.COMPLETED && serviceKey != null) {
+            onSuccess?.accept(StorageUploadInputStreamResult(serviceKey, serviceKey))
         }
     }
 

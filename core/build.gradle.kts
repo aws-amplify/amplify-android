@@ -14,6 +14,7 @@
  */
 
 plugins {
+    id("org.jetbrains.kotlin.plugin.serialization")
     id("com.android.library")
     id("kotlin-android")
 }
@@ -53,6 +54,7 @@ dependencies {
     testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.jsonassert)
     testImplementation(libs.gson)
+    testImplementation(libs.test.kotest.assertions)
 
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(libs.androidx.annotation)

@@ -61,6 +61,7 @@ import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.category.CategoryType
+import com.amplifyframework.core.configuration.AmplifyOutputsData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -96,12 +97,13 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         }
     }
 
-    private lateinit var pluginConfigurationJSON: JSONObject
-
+    // This function is used for versions of the Authenticator component <= 1.1.0 to get the configuration values needed
+    // to configure the Authenticator UI. Starting in 1.2.0 it uses getAuthConfiguration() instead. In order to support
+    // older Authenticator versions we translate the config - whether it comes from Gen1 or Gen2 - back into Gen1 JSON
     @InternalAmplifyApi
     @Deprecated("Use getAuthConfiguration instead", replaceWith = ReplaceWith("getAuthConfiguration()"))
     fun getPluginConfiguration(): JSONObject {
-        return pluginConfigurationJSON
+        return getAuthConfiguration().toGen1Json()
     }
 
     @InternalAmplifyApi
@@ -126,29 +128,8 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
 
     @Throws(AmplifyException::class)
     override fun configure(pluginConfiguration: JSONObject, context: Context) {
-        pluginConfigurationJSON = pluginConfiguration
         try {
-            val configuration = AuthConfiguration.fromJson(pluginConfiguration)
-            val credentialStoreClient = CredentialStoreClient(configuration, context, logger)
-            val authEnvironment = AuthEnvironment(
-                context,
-                configuration,
-                AWSCognitoAuthService.fromConfiguration(configuration),
-                credentialStoreClient,
-                configuration.userPool?.let { UserContextDataProvider(context, it.poolId!!, it.appClient!!) },
-                HostedUIClient.create(context, configuration.oauth, logger),
-                logger
-            )
-
-            val authStateMachine = AuthStateMachine(authEnvironment)
-            realPlugin = RealAWSCognitoAuthPlugin(
-                configuration,
-                authEnvironment,
-                authStateMachine,
-                logger
-            )
-
-            blockQueueChannelWhileConfiguring()
+            configure(AuthConfiguration.fromJson(pluginConfiguration), context)
         } catch (exception: Exception) {
             throw ConfigurationException(
                 "Failed to configure AWSCognitoAuthPlugin.",
@@ -156,6 +137,42 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
                 exception
             )
         }
+    }
+
+    @InternalAmplifyApi
+    override fun configure(amplifyOutputs: AmplifyOutputsData, context: Context) {
+        try {
+            configure(AuthConfiguration.from(amplifyOutputs), context)
+        } catch (exception: Exception) {
+            throw ConfigurationException(
+                "Failed to configure AWSCognitoAuthPlugin.",
+                "Make sure your amplify_outputs.json is valid.",
+                exception
+            )
+        }
+    }
+
+    private fun configure(configuration: AuthConfiguration, context: Context) {
+        val credentialStoreClient = CredentialStoreClient(configuration, context, logger)
+        val authEnvironment = AuthEnvironment(
+            context,
+            configuration,
+            AWSCognitoAuthService.fromConfiguration(configuration),
+            credentialStoreClient,
+            configuration.userPool?.let { UserContextDataProvider(context, it.poolId!!, it.appClient!!) },
+            HostedUIClient.create(context, configuration.oauth, logger),
+            logger
+        )
+
+        val authStateMachine = AuthStateMachine(authEnvironment)
+        realPlugin = RealAWSCognitoAuthPlugin(
+            configuration,
+            authEnvironment,
+            authStateMachine,
+            logger
+        )
+
+        blockQueueChannelWhileConfiguring()
     }
 
     // Auth configuration is an async process. Wait until the state machine is in a settled state before attempting
