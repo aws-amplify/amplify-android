@@ -53,7 +53,7 @@ import static org.junit.Assert.assertNotNull;
  * Instrumentation test to confirm that Storage List behaves
  * correctly with regards to the provided storage access level.
  */
-
+@SuppressWarnings("deprecation")
 public final class AWSS3StorageListAccessLevelTest {
     private static final String TEST_DIR_NAME = Long.toString(System.currentTimeMillis());
     private static final long UPLOAD_SIZE = 100L;
@@ -104,7 +104,10 @@ public final class AWSS3StorageListAccessLevelTest {
         }
     }
 
-    private void assertListContainsUploadedFile(StorageListResult result) {
+    private void assertListContainsUploadedFile(
+            StorageListResult result,
+            String pathPrefix
+    ) {
         List<StorageItem> items = result.getItems();
         assertNotNull(items);
         assertEquals(1, items.size());
@@ -113,6 +116,8 @@ public final class AWSS3StorageListAccessLevelTest {
         StorageItem storedItem = items.get(0);
         assertEquals(UPLOAD_SIZE, storedItem.getSize());
         assertEquals(uploadKey, storedItem.getKey());
+        assertEquals(pathPrefix + uploadKey, storedItem.getPath());
+
     }
 
     /**
@@ -126,7 +131,7 @@ public final class AWSS3StorageListAccessLevelTest {
             .accessLevel(StorageAccessLevel.PUBLIC)
             .build();
         StorageListResult result = storage.list(TEST_DIR_NAME, listOptions);
-        assertListContainsUploadedFile(result);
+        assertListContainsUploadedFile(result, "public/");
     }
 
     /**
@@ -144,7 +149,7 @@ public final class AWSS3StorageListAccessLevelTest {
             .targetIdentityId(userOne.getIdentityId())
             .build();
         StorageListResult result = storage.list(TEST_DIR_NAME, listOptions);
-        assertListContainsUploadedFile(result);
+        assertListContainsUploadedFile(result, "protected/" + userOne.getIdentityId() + "/");
     }
 
     /**
@@ -163,7 +168,7 @@ public final class AWSS3StorageListAccessLevelTest {
             .targetIdentityId(userOne.getIdentityId())
             .build();
         StorageListResult result = storage.list(TEST_DIR_NAME, listOptions);
-        assertListContainsUploadedFile(result);
+        assertListContainsUploadedFile(result, "private/" + userOne.getIdentityId() + "/");
     }
 
     /**
@@ -179,7 +184,7 @@ public final class AWSS3StorageListAccessLevelTest {
             .targetIdentityId(userOne.getIdentityId())
             .build();
         StorageListResult result = storage.list(TEST_DIR_NAME, listOptions);
-        assertListContainsUploadedFile(result);
+        assertListContainsUploadedFile(result, "protected/" + userOne.getIdentityId() + "/");
     }
 
     /**
@@ -220,7 +225,7 @@ public final class AWSS3StorageListAccessLevelTest {
             .targetIdentityId(userOne.getIdentityId())
             .build();
         StorageListResult result = storage.list(TEST_DIR_NAME, listOptions);
-        assertListContainsUploadedFile(result);
+        assertListContainsUploadedFile(result, "private/" + userOne.getIdentityId() + "/");
     }
 
     /**
@@ -240,7 +245,7 @@ public final class AWSS3StorageListAccessLevelTest {
             .targetIdentityId(userTwo.getIdentityId())
             .build();
         StorageListResult result = storage.list(TEST_DIR_NAME, listOptions);
-        assertListContainsUploadedFile(result);
+        assertListContainsUploadedFile(result, "protected/" + userTwo.getIdentityId() + "/");
     }
 
     /**
@@ -260,14 +265,13 @@ public final class AWSS3StorageListAccessLevelTest {
             .targetIdentityId(userTwo.getIdentityId())
             .build();
         StorageListResult result = storage.list(TEST_DIR_NAME, listOptions);
-        assertListContainsUploadedFile(result);
+        assertListContainsUploadedFile(result, "private/" + userTwo.getIdentityId() + "/");
     }
 
     private static void uploadTestFiles() throws Exception {
         // Create a temporary file to upload
         File uploadFile = new RandomTempFile(UPLOAD_SIZE);
         String uploadName = uploadFile.getName();
-        String uploadPath = uploadFile.getAbsolutePath();
         uploadKey = TEST_DIR_NAME + "/" + uploadName;
         StorageUploadFileOptions options;
 
@@ -307,7 +311,6 @@ public final class AWSS3StorageListAccessLevelTest {
         // Create a temporary file to upload
         File uploadFile = new RandomTempFile(UPLOAD_SIZE);
         String uploadName = uploadFile.getName();
-        String uploadPath = uploadFile.getAbsolutePath();
         pagedUploadKeyPrefix = "PAGED" + TEST_DIR_NAME + "/" + uploadName;
         StorageUploadFileOptions options;
 

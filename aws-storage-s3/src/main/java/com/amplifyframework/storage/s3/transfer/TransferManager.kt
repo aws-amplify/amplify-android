@@ -43,7 +43,7 @@ import kotlin.math.min
  * download files. It inserts upload and download records into the database and
  * enqueue a WorkRequest for WorkManager to service the transfer
  */
-internal class TransferManager @JvmOverloads constructor(
+internal class TransferManager(
     context: Context,
     s3: S3Client,
     private val pluginKey: String,
@@ -51,7 +51,8 @@ internal class TransferManager @JvmOverloads constructor(
 ) {
 
     private val transferDB: TransferDB = TransferDB.getInstance(context)
-    val transferStatusUpdater: TransferStatusUpdater = TransferStatusUpdater.getInstance(context)
+    val transferStatusUpdater: TransferStatusUpdater = TransferStatusUpdater(transferDB)
+
     private val logger =
         Amplify.Logging.logger(
             CategoryType.STORAGE,

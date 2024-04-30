@@ -18,6 +18,7 @@ package com.amplifyframework.kotlin.storage
 import com.amplifyframework.core.async.Cancelable
 import com.amplifyframework.core.async.Resumable
 import com.amplifyframework.storage.StorageException
+import com.amplifyframework.storage.StoragePath
 import com.amplifyframework.storage.operation.StorageTransferOperation
 import com.amplifyframework.storage.options.StorageDownloadFileOptions
 import com.amplifyframework.storage.options.StorageGetUrlOptions
@@ -46,12 +47,20 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 
 interface Storage {
+    @Deprecated("Use overload with StoragePath instead.")
     @Throws(StorageException::class)
     suspend fun getUrl(
         key: String,
         options: StorageGetUrlOptions = StorageGetUrlOptions.defaultInstance()
     ): StorageGetUrlResult
 
+    @Throws(StorageException::class)
+    suspend fun getUrl(
+        path: StoragePath,
+        options: StorageGetUrlOptions = StorageGetUrlOptions.defaultInstance()
+    ): StorageGetUrlResult
+
+    @Deprecated("Use overload with StoragePath instead.")
     @ExperimentalCoroutinesApi
     @FlowPreview
     fun downloadFile(
@@ -62,12 +71,30 @@ interface Storage {
 
     @ExperimentalCoroutinesApi
     @FlowPreview
+    fun downloadFile(
+        path: StoragePath,
+        local: File,
+        options: StorageDownloadFileOptions = StorageDownloadFileOptions.defaultInstance()
+    ): InProgressStorageOperation<StorageDownloadFileResult>
+
+    @Deprecated("Use overload with StoragePath instead.")
+    @ExperimentalCoroutinesApi
+    @FlowPreview
     fun uploadFile(
         key: String,
         local: File,
         options: StorageUploadFileOptions = StorageUploadFileOptions.defaultInstance()
     ): InProgressStorageOperation<StorageUploadFileResult>
 
+    @ExperimentalCoroutinesApi
+    @FlowPreview
+    fun uploadFile(
+        path: StoragePath,
+        local: File,
+        options: StorageUploadFileOptions = StorageUploadFileOptions.defaultInstance()
+    ): InProgressStorageOperation<StorageUploadFileResult>
+
+    @Deprecated("Use overload with StoragePath instead.")
     @FlowPreview
     @ExperimentalCoroutinesApi
     fun uploadInputStream(
@@ -76,22 +103,50 @@ interface Storage {
         options: StorageUploadInputStreamOptions = StorageUploadInputStreamOptions.defaultInstance()
     ): InProgressStorageOperation<StorageUploadInputStreamResult>
 
+    @FlowPreview
+    @ExperimentalCoroutinesApi
+    fun uploadInputStream(
+        path: StoragePath,
+        local: InputStream,
+        options: StorageUploadInputStreamOptions = StorageUploadInputStreamOptions.defaultInstance()
+    ): InProgressStorageOperation<StorageUploadInputStreamResult>
+
+    @Deprecated("Use overload with StoragePath instead.")
     @Throws(StorageException::class)
     suspend fun remove(
         key: String,
         options: StorageRemoveOptions = StorageRemoveOptions.defaultInstance()
     ): StorageRemoveResult
 
-    @Deprecated("use the paged list api instead.", replaceWith = ReplaceWith("list(String, StoragePagedListOptions)"))
+    @Throws(StorageException::class)
+    suspend fun remove(
+        path: StoragePath,
+        options: StorageRemoveOptions = StorageRemoveOptions.defaultInstance()
+    ): StorageRemoveResult
+
+    @Deprecated(
+        "use the paged list StoragePath api instead.",
+        replaceWith = ReplaceWith("list(StoragePath, StoragePagedListOptions)")
+    )
     @Throws(StorageException::class)
     suspend fun list(
         path: String,
         options: StorageListOptions = StorageListOptions.defaultInstance()
     ): StorageListResult
 
+    @Deprecated(
+        "use the paged list StoragePath api instead.",
+        replaceWith = ReplaceWith("list(StoragePath, StoragePagedListOptions)")
+    )
     @Throws(StorageException::class)
     suspend fun list(
         path: String,
+        options: StoragePagedListOptions
+    ): StorageListResult
+
+    @Throws(StorageException::class)
+    suspend fun list(
+        path: StoragePath,
         options: StoragePagedListOptions
     ): StorageListResult
 

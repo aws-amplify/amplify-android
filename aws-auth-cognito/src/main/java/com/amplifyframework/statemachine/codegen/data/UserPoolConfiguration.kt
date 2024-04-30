@@ -32,6 +32,15 @@ data class UserPoolConfiguration internal constructor(
     val pinpointAppId: String?
 ) {
 
+    internal fun toGen1Json() = JSONObject().apply {
+        region?.let { put(Config.REGION.key, it) }
+        endpoint?.let { put(Config.ENDPOINT.key, it) }
+        poolId?.let { put(Config.POOL_ID.key, it) }
+        appClient?.let { put(Config.APP_CLIENT_ID.key, it) }
+        appClientSecret?.let { put(Config.APP_CLIENT_SECRET.key, it) }
+        pinpointAppId?.let { put(Config.PINPOINT_APP_ID.key, it) }
+    }
+
     internal companion object {
         private const val DEFAULT_REGION = "us-east-1"
 
@@ -103,8 +112,9 @@ data class UserPoolConfiguration internal constructor(
                         "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9]" +
                             "[A-Za-z0-9\\-]*[A-Za-z0-9])\$"
                     )
-                    if (!regex.matches(it))
+                    if (!regex.matches(it)) {
                         throw Exception("Invalid endpoint")
+                    }
                 }
                 return endpoint?.let {
                     "https://$endpoint"

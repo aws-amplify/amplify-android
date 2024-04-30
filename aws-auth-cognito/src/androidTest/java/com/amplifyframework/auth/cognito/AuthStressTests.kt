@@ -55,7 +55,6 @@ class AuthStressTests {
             } catch (error: AmplifyException) {
                 Log.e("MyAmplifyApp", "Could not initialize Amplify", error)
             }
-            Thread.sleep(5000)
         }
     }
 

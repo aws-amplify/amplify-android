@@ -19,6 +19,8 @@ import androidx.annotation.IntRange
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.options.AuthFlowType
+import com.amplifyframework.auth.exceptions.ConfigurationException
+import com.amplifyframework.core.configuration.AmplifyOutputsData
 import com.amplifyframework.statemachine.codegen.data.IdentityPoolConfiguration
 import com.amplifyframework.statemachine.codegen.data.OauthConfiguration
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
@@ -61,6 +63,35 @@ data class AuthConfiguration internal constructor(
     val verificationMechanisms: List<VerificationMechanism>,
     val passwordProtectionSettings: PasswordProtectionSettings?
 ) {
+
+    internal fun toGen1Json(configName: String = "Default"): JSONObject {
+        val authConfig = JSONObject().apply {
+            val signupAttributes = signUpAttributes.map { it.keyString.uppercase() }
+            put("signupAttributes", JSONArray(signupAttributes))
+
+            val usernameAttributes = usernameAttributes.map { it.toGen1Json() }
+            put("usernameAttributes", JSONArray(usernameAttributes))
+
+            val verifyMechanisms = verificationMechanisms.map { it.toGen1Json() }
+            put("verificationMechanisms", JSONArray(verifyMechanisms))
+
+            put("authenticationFlowType", authFlowType.name)
+
+            oauth?.let { put("OAuth", it.toGen1Json()) }
+            passwordProtectionSettings?.let { put("passwordProtectionSettings", it.toGen1Json()) }
+        }
+
+        return JSONObject().apply {
+            put("Auth", JSONObject().put(configName, authConfig))
+            userPool?.let { put("CognitoUserPool", JSONObject().put(configName, it.toGen1Json())) }
+            identityPool?.let {
+                put(
+                    "CredentialsProvider",
+                    JSONObject().put("CognitoIdentity", JSONObject().put(configName, it.toGen1Json()))
+                )
+            }
+        }
+    }
 
     internal companion object {
         /**
@@ -109,6 +140,50 @@ data class AuthConfiguration internal constructor(
                 passwordProtectionSettings = getPasswordProtectionSettings(authConfig)
             )
         }
+
+        fun from(amplifyOutputs: AmplifyOutputsData): AuthConfiguration {
+            val auth = amplifyOutputs.auth ?: throw ConfigurationException(
+                "Missing Auth configuration",
+                "Ensure the auth category is properly configured"
+            )
+
+            val oauth = auth.oauth?.let {
+                OauthConfiguration(
+                    appClient = auth.userPoolClientId,
+                    appSecret = null, // Not supported in Gen2
+                    domain = it.domain,
+                    scopes = it.scopes.toSet(),
+                    // Note: Gen2 config gives an array for these values, while Gen1 is just a String. In Gen1
+                    // if you specify multiple URIs the CLI will join them to a comma-delimited string in the json.
+                    // We are matching that behaviour here for Gen2.
+                    signInRedirectURI = it.redirectSignInUri.joinToString(","),
+                    signOutRedirectURI = it.redirectSignOutUri.joinToString(",")
+                )
+            }
+
+            val identityPool = auth.identityPoolId?.let {
+                IdentityPoolConfiguration(region = auth.awsRegion, poolId = it)
+            }
+
+            return AuthConfiguration(
+                userPool = UserPoolConfiguration(
+                    region = auth.awsRegion,
+                    endpoint = null, // Not supported in Gen2
+                    poolId = auth.userPoolId,
+                    appClient = auth.userPoolClientId,
+                    appClientSecret = null, // Not supported in Gen2
+                    pinpointAppId = null // Not supported in Gen2
+                ),
+                identityPool = identityPool,
+                oauth = oauth,
+                authFlowType = AuthFlowType.USER_SRP_AUTH,
+                signUpAttributes = auth.standardRequiredAttributes,
+                usernameAttributes = auth.usernameAttributes.map { it.toConfigType() },
+                verificationMechanisms = auth.userVerificationTypes.map { it.toConfigType() },
+                passwordProtectionSettings = auth.passwordPolicy?.toConfigType()
+            )
+        }
+
         private fun getAuthenticationFlowType(authType: String?): AuthFlowType {
             return if (!authType.isNullOrEmpty() && AuthFlowType.values().any { it.name == authType }) {
                 AuthFlowType.valueOf(authType)
@@ -132,8 +207,49 @@ data class AuthConfiguration internal constructor(
             )
         }
 
+        private fun PasswordProtectionSettings.toGen1Json() = JSONObject().apply {
+            put("passwordPolicyMinLength", length)
+            val characters = JSONArray().apply {
+                if (requiresLower) put("REQUIRES_LOWER")
+                if (requiresUpper) put("REQUIRES_UPPER")
+                if (requiresNumber) put("REQUIRES_NUMBERS")
+                if (requiresSpecial) put("REQUIRES_SYMBOLS")
+            }
+            put("passwordPolicyCharacters", characters)
+        }
+
         private inline fun <T> JSONArray.map(func: JSONArray.(Int) -> T) = List(length()) {
             func(it)
         }
+
+        private fun AmplifyOutputsData.Auth.UsernameAttributes.toConfigType() = when (this) {
+            AmplifyOutputsData.Auth.UsernameAttributes.Email -> UsernameAttribute.Email
+            AmplifyOutputsData.Auth.UsernameAttributes.PhoneNumber -> UsernameAttribute.PhoneNumber
+            AmplifyOutputsData.Auth.UsernameAttributes.Username -> UsernameAttribute.Username
+        }
+
+        private fun UsernameAttribute.toGen1Json() = when (this) {
+            UsernameAttribute.Username -> "USERNAME"
+            UsernameAttribute.Email -> "EMAIL"
+            UsernameAttribute.PhoneNumber -> "PHONE_NUMBER"
+        }
+
+        private fun AmplifyOutputsData.Auth.UserVerificationTypes.toConfigType() = when (this) {
+            AmplifyOutputsData.Auth.UserVerificationTypes.Email -> VerificationMechanism.Email
+            AmplifyOutputsData.Auth.UserVerificationTypes.PhoneNumber -> VerificationMechanism.PhoneNumber
+        }
+
+        private fun VerificationMechanism.toGen1Json() = when (this) {
+            VerificationMechanism.Email -> "EMAIL"
+            VerificationMechanism.PhoneNumber -> "PHONE_NUMBER"
+        }
+
+        private fun AmplifyOutputsData.Auth.PasswordPolicy.toConfigType() = PasswordProtectionSettings(
+            length = minLength ?: 6,
+            requiresNumber = requireNumbers ?: false,
+            requiresSpecial = requireSymbols ?: false,
+            requiresUpper = requireUppercase ?: false,
+            requiresLower = requireLowercase ?: false
+        )
     }
 }

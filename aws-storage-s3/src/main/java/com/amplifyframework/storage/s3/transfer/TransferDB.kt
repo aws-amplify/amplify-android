@@ -15,11 +15,11 @@
 
 package com.amplifyframework.storage.s3.transfer
 
-import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import android.net.Uri
+import androidx.annotation.VisibleForTesting
 import aws.sdk.kotlin.services.s3.model.CompletedPart
 import aws.sdk.kotlin.services.s3.model.ObjectCannedAcl
 import com.amplifyframework.core.Amplify
@@ -33,33 +33,33 @@ import java.io.File
 /**
  * SQlite database to store transfer records
  */
-@SuppressLint("VisibleForTests")
 internal class TransferDB private constructor(context: Context) {
 
-    private var transferDBHelper: TransferDBHelper = synchronized(this) {
-        TransferDBHelper(context)
-    }
+    private val transferDBHelper = TransferDBHelper(context)
 
-    private val logger =
-        Amplify.Logging.logger(
-            CategoryType.STORAGE,
-            AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
-        )
+    private val logger = Amplify.Logging.logger(
+        CategoryType.STORAGE,
+        AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
+    )
 
     companion object {
         private const val QUERY_PLACE_HOLDER_STRING = ",?"
-        private val instance: TransferDB? = null
 
-        @JvmStatic
+        @Volatile
+        @VisibleForTesting
+        var instance: TransferDB? = null
+
         fun getInstance(context: Context): TransferDB {
-            return instance ?: TransferDB(context)
+            // Use double check locking for thread safety. It is important that there is never more than one instance
+            // of this class since it holds an SQLiteOpenHelper.
+            return instance ?: synchronized(this) {
+                instance ?: TransferDB(context).also { instance = it }
+            }
         }
     }
 
     fun closeDB() {
-        synchronized(this) {
-            transferDBHelper.close()
-        }
+        transferDBHelper.close()
     }
 
     /**

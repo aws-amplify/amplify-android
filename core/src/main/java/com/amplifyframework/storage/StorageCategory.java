@@ -61,6 +61,8 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
 
     @NonNull
     @Override
+    @Deprecated
+    @SuppressWarnings("deprecation")
     public StorageGetUrlOperation<?> getUrl(
             @NonNull String key,
             @NonNull Consumer<StorageGetUrlResult> onSuccess,
@@ -71,6 +73,17 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
     @NonNull
     @Override
     public StorageGetUrlOperation<?> getUrl(
+            @NonNull StoragePath path,
+            @NonNull Consumer<StorageGetUrlResult> onSuccess,
+            @NonNull Consumer<StorageException> onError) {
+        return getSelectedPlugin().getUrl(path, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    @Deprecated
+    @SuppressWarnings("deprecation")
+    public StorageGetUrlOperation<?> getUrl(
             @NonNull String key,
             @NonNull StorageGetUrlOptions options,
             @NonNull Consumer<StorageGetUrlResult> onSuccess,
@@ -80,6 +93,18 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
 
     @NonNull
     @Override
+    public StorageGetUrlOperation<?> getUrl(
+            @NonNull StoragePath path,
+            @NonNull StorageGetUrlOptions options,
+            @NonNull Consumer<StorageGetUrlResult> onSuccess,
+            @NonNull Consumer<StorageException> onError) {
+        return getSelectedPlugin().getUrl(path, options, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    @Deprecated
+    @SuppressWarnings("deprecation")
     public StorageDownloadFileOperation<?> downloadFile(
             @NonNull String key,
             @NonNull File local,
@@ -91,6 +116,18 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
 
     @NonNull
     @Override
+    public StorageDownloadFileOperation<?> downloadFile(
+            @NonNull StoragePath path,
+            @NonNull File local,
+            @NonNull Consumer<StorageDownloadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError) {
+        return getSelectedPlugin().downloadFile(path, local, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    @Deprecated
+    @SuppressWarnings("deprecation")
     public StorageDownloadFileOperation<?> downloadFile(
             @NonNull String key,
             @NonNull File local,
@@ -104,6 +141,19 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
     @NonNull
     @Override
     public StorageDownloadFileOperation<?> downloadFile(
+            @NonNull StoragePath path,
+            @NonNull File local,
+            @NonNull StorageDownloadFileOptions options,
+            @NonNull Consumer<StorageDownloadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError) {
+        return getSelectedPlugin().downloadFile(path, local, options, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    @Deprecated
+    @SuppressWarnings("deprecation")
+    public StorageDownloadFileOperation<?> downloadFile(
             @NonNull String key,
             @NonNull File local,
             @NonNull StorageDownloadFileOptions options,
@@ -116,6 +166,20 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
 
     @NonNull
     @Override
+    public StorageDownloadFileOperation<?> downloadFile(
+            @NonNull StoragePath path,
+            @NonNull File local,
+            @NonNull StorageDownloadFileOptions options,
+            @NonNull Consumer<StorageTransferProgress> onProgress,
+            @NonNull Consumer<StorageDownloadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError) {
+        return getSelectedPlugin().downloadFile(path, local, options, onProgress, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    @Deprecated
+    @SuppressWarnings("deprecation")
     public StorageUploadFileOperation<?> uploadFile(
             @NonNull String key,
             @NonNull File local,
@@ -127,6 +191,18 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
 
     @NonNull
     @Override
+    public StorageUploadFileOperation<?> uploadFile(
+            @NonNull StoragePath path,
+            @NonNull File local,
+            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError) {
+        return getSelectedPlugin().uploadFile(path, local, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    @Deprecated
+    @SuppressWarnings("deprecation")
     public StorageUploadFileOperation<?> uploadFile(
             @NonNull String key,
             @NonNull File local,
@@ -140,6 +216,19 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
     @NonNull
     @Override
     public StorageUploadFileOperation<?> uploadFile(
+            @NonNull StoragePath path,
+            @NonNull File local,
+            @NonNull StorageUploadFileOptions options,
+            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError) {
+        return getSelectedPlugin().uploadFile(path, local, options, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    @Deprecated
+    @SuppressWarnings("deprecation")
+    public StorageUploadFileOperation<?> uploadFile(
             @NonNull String key,
             @NonNull File local,
             @NonNull StorageUploadFileOptions options,
@@ -152,6 +241,20 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
 
     @NonNull
     @Override
+    public StorageUploadFileOperation<?> uploadFile(
+            @NonNull StoragePath path,
+            @NonNull File local,
+            @NonNull StorageUploadFileOptions options,
+            @NonNull Consumer<StorageTransferProgress> onProgress,
+            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError) {
+        return getSelectedPlugin().uploadFile(path, local, options, onProgress, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    @Deprecated
+    @SuppressWarnings("deprecation")
     public StorageUploadInputStreamOperation<?> uploadInputStream(
             @NonNull String key,
             @NonNull InputStream local,
@@ -164,6 +267,18 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
     @NonNull
     @Override
     public StorageUploadInputStreamOperation<?> uploadInputStream(
+            @NonNull StoragePath path,
+            @NonNull InputStream local,
+            @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
+            @NonNull Consumer<StorageException> onError) {
+        return getSelectedPlugin().uploadInputStream(path, local, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    @Deprecated
+    @SuppressWarnings("deprecation")
+    public StorageUploadInputStreamOperation<?> uploadInputStream(
             @NonNull String key,
             @NonNull InputStream local,
             @NonNull StorageUploadInputStreamOptions options,
@@ -173,8 +288,20 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
         return getSelectedPlugin().uploadInputStream(key, local, options, onSuccess, onError);
     }
 
+    @Override
+    public StorageUploadInputStreamOperation<?> uploadInputStream(
+            @NonNull StoragePath path,
+            @NonNull InputStream local,
+            @NonNull StorageUploadInputStreamOptions options,
+            @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
+            @NonNull Consumer<StorageException> onError) {
+        return getSelectedPlugin().uploadInputStream(path, local, options, onSuccess, onError);
+    }
+
     @NonNull
     @Override
+    @Deprecated
+    @SuppressWarnings("deprecation")
     public StorageUploadInputStreamOperation<?> uploadInputStream(
             @NonNull String key,
             @NonNull InputStream local,
@@ -184,6 +311,18 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
             @NonNull Consumer<StorageException> onError
     ) {
         return getSelectedPlugin().uploadInputStream(key, local, options, onProgress, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public StorageUploadInputStreamOperation<?> uploadInputStream(
+            @NonNull StoragePath path,
+            @NonNull InputStream local,
+            @NonNull StorageUploadInputStreamOptions options,
+            @NonNull Consumer<StorageTransferProgress> onProgress,
+            @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
+            @NonNull Consumer<StorageException> onError) {
+        return getSelectedPlugin().uploadInputStream(path, local, options, onProgress, onSuccess, onError);
     }
 
     @Override
@@ -197,6 +336,8 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
 
     @NonNull
     @Override
+    @Deprecated
+    @SuppressWarnings("deprecation")
     public StorageRemoveOperation<?> remove(
             @NonNull String key,
             @NonNull Consumer<StorageRemoveResult> onSuccess,
@@ -208,12 +349,33 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
     @NonNull
     @Override
     public StorageRemoveOperation<?> remove(
+            @NonNull StoragePath path,
+            @NonNull Consumer<StorageRemoveResult> onSuccess,
+            @NonNull Consumer<StorageException> onError) {
+        return getSelectedPlugin().remove(path, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    @Deprecated
+    @SuppressWarnings("deprecation")
+    public StorageRemoveOperation<?> remove(
             @NonNull String key,
             @NonNull StorageRemoveOptions options,
             @NonNull Consumer<StorageRemoveResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
         return getSelectedPlugin().remove(key, options, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public StorageRemoveOperation<?> remove(
+            @NonNull StoragePath path,
+            @NonNull StorageRemoveOptions options,
+            @NonNull Consumer<StorageRemoveResult> onSuccess,
+            @NonNull Consumer<StorageException> onError) {
+        return getSelectedPlugin().remove(path, options, onSuccess, onError);
     }
 
     @NonNull
@@ -242,10 +404,22 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
     }
 
     @Override
+    @Deprecated
+    @SuppressWarnings("deprecation")
     public StorageListOperation<?> list(@NonNull String path,
                                      @NonNull StoragePagedListOptions options,
                                      @NonNull Consumer<StorageListResult> onSuccess,
                                      @NonNull Consumer<StorageException> onError) {
+        return getSelectedPlugin().list(path, options, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public StorageListOperation<?> list(
+            @NonNull StoragePath path,
+            @NonNull StoragePagedListOptions options,
+            @NonNull Consumer<StorageListResult> onSuccess,
+            @NonNull Consumer<StorageException> onError) {
         return getSelectedPlugin().list(path, options, onSuccess, onError);
     }
 }
