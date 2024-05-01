@@ -19,7 +19,7 @@ import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import io.mockk.every
 import io.mockk.mockkStatic
-import io.mockk.unmockkAll
+import io.mockk.unmockkStatic
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import kotlin.test.assertEquals
@@ -45,7 +45,7 @@ class SessionHelperTests {
 
     @After
     fun teardown() {
-        unmockkAll()
+        unmockkStatic(Instant::class)
     }
 
     @Test
