@@ -19,6 +19,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
 import io.kotest.matchers.MatcherResult
 import io.kotest.matchers.Matcher
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldExist
 import io.kotest.matchers.collections.shouldMatchEach
 import io.kotest.matchers.should
@@ -74,10 +75,7 @@ class CloudWatchLoggingDatabaseInstrumentationTest {
 
         val savedLogs = loggingDbClass.queryAllEvents()
 
-        savedLogs shouldMatchEach listOf(
-            { it shouldMatchEvent testCloudWatchLogEvent1 },
-            { it shouldMatchEvent testCloudWatchLogEvent2 }
-        )
+        savedLogs.shouldMatchEvents(testCloudWatchLogEvent1, testCloudWatchLogEvent2)
     }
 
     /**
@@ -92,11 +90,7 @@ class CloudWatchLoggingDatabaseInstrumentationTest {
 
         val savedLogs = loggingDbClass.queryAllEvents()
 
-        savedLogs shouldMatchEach listOf(
-            { it shouldMatchEvent testCloudWatchLogEvent1 },
-            { it shouldMatchEvent testCloudWatchLogEvent3 }
-        )
-        savedLogs[savedLogs.size -1] shouldMatchEvent testCloudWatchLogEvent3
+        savedLogs.shouldMatchEvents(testCloudWatchLogEvent1, testCloudWatchLogEvent3)
     }
 
     /**
@@ -115,13 +109,7 @@ class CloudWatchLoggingDatabaseInstrumentationTest {
 
         val savedLogs = loggingDbClass.queryAllEvents()
 
-        savedLogs.size shouldBe 3
-        savedLogs shouldMatchEach listOf(
-            { it shouldMatchEvent testCloudWatchLogEvent2 },
-            { it shouldMatchEvent testCloudWatchLogEvent3 },
-            { it shouldMatchEvent testCloudWatchLogEvent4 }
-        )
-        savedLogs[0].message shouldBe "Ownership"
+        savedLogs.shouldMatchEvents(testCloudWatchLogEvent2, testCloudWatchLogEvent3, testCloudWatchLogEvent4)
     }
 
     /**
@@ -142,12 +130,7 @@ class CloudWatchLoggingDatabaseInstrumentationTest {
 
         val savedLogs = loggingDbClass.queryAllEvents()
 
-        savedLogs.size shouldBe 2
-        savedLogs shouldMatchEach listOf(
-            { it shouldMatchEvent testCloudWatchLogEvent2 },
-            { it shouldMatchEvent testCloudWatchLogEvent4 }
-        )
-        savedLogs[savedLogs.size -1].message shouldBe "Frugality"
+        savedLogs.shouldMatchEvents(testCloudWatchLogEvent2, testCloudWatchLogEvent4)
     }
 
     /**
@@ -156,7 +139,7 @@ class CloudWatchLoggingDatabaseInstrumentationTest {
     @Test
     fun clearDatabase_Wipes_All_Logs_Out() = runTest {
         loggingDbClass.clearDatabase()
-        loggingDbClass.queryAllEvents().size shouldBe 0
+        loggingDbClass.queryAllEvents().shouldBeEmpty()
     }
 
     /**
