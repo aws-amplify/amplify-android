@@ -96,7 +96,6 @@ class AWSCognitoLegacyCredentialStoreTest {
 
         private const val expirationTimestampInSec: Long = 1714431706
         private const val expirationTimestampInMs: Long = 1714431706486
-
     }
 
     @Mock

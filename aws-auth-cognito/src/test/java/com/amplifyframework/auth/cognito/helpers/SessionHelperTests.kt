@@ -82,12 +82,16 @@ class SessionHelperTests {
         every { Instant.now() } returns currentInstant
 
         // Expiration is encoded in ms to simulate v1 > v2 migration issue
-        assertFalse(SessionHelper.isValidSession(AWSCredentials(
-            accessKeyId = dummyToken,
-            secretAccessKey = dummyToken,
-            sessionToken = dummyToken,
-            expiration = currentInstant.plus(30, ChronoUnit.MINUTES).toEpochMilli()
-        )))
+        assertFalse(
+            SessionHelper.isValidSession(
+                AWSCredentials(
+                    accessKeyId = dummyToken,
+                    secretAccessKey = dummyToken,
+                    sessionToken = dummyToken,
+                    expiration = currentInstant.plus(30, ChronoUnit.MINUTES).toEpochMilli()
+                )
+            )
+        )
     }
 
     @Test
@@ -95,12 +99,16 @@ class SessionHelperTests {
         mockkStatic(Instant::class)
         every { Instant.now() } returns currentInstant
 
-        assertFalse(SessionHelper.isValidSession(AWSCredentials(
-            accessKeyId = dummyToken,
-            secretAccessKey = dummyToken,
-            sessionToken = dummyToken,
-            expiration = currentInstant.minus(1, ChronoUnit.MINUTES).epochSecond
-        )))
+        assertFalse(
+            SessionHelper.isValidSession(
+                AWSCredentials(
+                    accessKeyId = dummyToken,
+                    secretAccessKey = dummyToken,
+                    sessionToken = dummyToken,
+                    expiration = currentInstant.minus(1, ChronoUnit.MINUTES).epochSecond
+                )
+            )
+        )
     }
 
     @Test
@@ -108,11 +116,15 @@ class SessionHelperTests {
         mockkStatic(Instant::class)
         every { Instant.now() } returns currentInstant
 
-        assertTrue(SessionHelper.isValidSession(AWSCredentials(
-            accessKeyId = dummyToken,
-            secretAccessKey = dummyToken,
-            sessionToken = dummyToken,
-            expiration = currentInstant.plus(1, ChronoUnit.MINUTES).epochSecond
-        )))
+        assertTrue(
+            SessionHelper.isValidSession(
+                AWSCredentials(
+                    accessKeyId = dummyToken,
+                    secretAccessKey = dummyToken,
+                    sessionToken = dummyToken,
+                    expiration = currentInstant.plus(1, ChronoUnit.MINUTES).epochSecond
+                )
+            )
+        )
     }
 }
