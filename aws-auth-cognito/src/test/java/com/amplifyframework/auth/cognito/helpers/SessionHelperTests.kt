@@ -17,15 +17,11 @@ package com.amplifyframework.auth.cognito.helpers
 
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
-import io.mockk.every
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import org.junit.After
 import org.junit.Test
 
 class SessionHelperTests {
@@ -42,11 +38,6 @@ class SessionHelperTests {
 
     // Encoded Date Time: April 30, 2024 02:00AM
     private val currentInstant = Instant.ofEpochSecond(1714467600)
-
-    @After
-    fun teardown() {
-        unmockkStatic(Instant::class)
-    }
 
     @Test
     fun testGetExpiration() {
@@ -78,9 +69,6 @@ class SessionHelperTests {
 
     @Test
     fun `Pulling a V1 credential should fail isValidSession check`() {
-        mockkStatic(Instant::class)
-        every { Instant.now() } returns currentInstant
-
         // Expiration is encoded in ms to simulate v1 > v2 migration issue
         assertFalse(
             SessionHelper.isValidSession(
@@ -88,7 +76,7 @@ class SessionHelperTests {
                     accessKeyId = dummyToken,
                     secretAccessKey = dummyToken,
                     sessionToken = dummyToken,
-                    expiration = currentInstant.plus(30, ChronoUnit.MINUTES).toEpochMilli()
+                    expiration = Instant.now().plus(30, ChronoUnit.MINUTES).toEpochMilli()
                 )
             )
         )
@@ -96,16 +84,13 @@ class SessionHelperTests {
 
     @Test
     fun `Session with an expiration in the past should fail isValidSession check`() {
-        mockkStatic(Instant::class)
-        every { Instant.now() } returns currentInstant
-
         assertFalse(
             SessionHelper.isValidSession(
                 AWSCredentials(
                     accessKeyId = dummyToken,
                     secretAccessKey = dummyToken,
                     sessionToken = dummyToken,
-                    expiration = currentInstant.minus(1, ChronoUnit.MINUTES).epochSecond
+                    expiration = Instant.now().minus(1, ChronoUnit.MINUTES).epochSecond
                 )
             )
         )
@@ -113,16 +98,13 @@ class SessionHelperTests {
 
     @Test
     fun `Session with an expiration in the future should pass isValidSession check`() {
-        mockkStatic(Instant::class)
-        every { Instant.now() } returns currentInstant
-
         assertTrue(
             SessionHelper.isValidSession(
                 AWSCredentials(
                     accessKeyId = dummyToken,
                     secretAccessKey = dummyToken,
                     sessionToken = dummyToken,
-                    expiration = currentInstant.plus(1, ChronoUnit.MINUTES).epochSecond
+                    expiration = Instant.now().plus(1, ChronoUnit.MINUTES).epochSecond
                 )
             )
         )

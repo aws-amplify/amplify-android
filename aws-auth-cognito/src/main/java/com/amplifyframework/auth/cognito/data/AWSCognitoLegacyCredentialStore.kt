@@ -182,16 +182,16 @@ internal class AWSCognitoLegacyCredentialStore(
         val accessKey = idAndCredentialsKeyValue.get(namespace(AK_KEY))
         val secretKey = idAndCredentialsKeyValue.get(namespace(SK_KEY))
         val sessionToken = idAndCredentialsKeyValue.get(namespace(ST_KEY))
-        var expiration = idAndCredentialsKeyValue.get(namespace(EXP_KEY))?.toLongOrNull()
 
         // V2 AWSCredential expiration is in epoch seconds whereas legacy expiration may be in epoch milliseconds
         // Session expiration should be within 24 hours so if we see a date in the far future, we can assume the
         // timestamp is encoded in milliseconds.
-        val expirationInstant = expiration?.let { Instant.ofEpochSecond(it) }
-        if (expiration != null &&
-            expirationInstant?.isAfter(Instant.now().plus(365, ChronoUnit.DAYS)) == true
-        ) {
-            expiration /= 1000
+        val expiration = idAndCredentialsKeyValue.get(namespace(EXP_KEY))?.toLongOrNull()?.let {
+            if (Instant.ofEpochSecond(it).isAfter(Instant.now().plus(365, ChronoUnit.DAYS))) {
+                it / 1000
+            } else {
+                it
+            }
         }
 
         return if (accessKey == null && secretKey == null && sessionToken == null) {
