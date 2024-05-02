@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -13,19 +13,18 @@
  * permissions and limitations under the License.
  */
 
-plugins {
-    alias(libs.plugins.amplify.android.library)
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        maven("https://plugins.gradle.org/m2/")
+    }
+    versionCatalogs {
+        create("libs") {
+            from(files("../gradle/libs.versions.toml"))
+        }
+    }
 }
 
-android {
-    namespace = "com.amplifyframework.testmodels"
-}
-
-dependencies {
-    implementation(project(":core"))
-    implementation(project(":aws-api-appsync"))
-    implementation(libs.androidx.core)
-
-    testImplementation(project(":testutils"))
-    testImplementation(libs.test.junit)
-}
+rootProject.name = "build-logic"
+include(":plugins")

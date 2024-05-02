@@ -14,9 +14,11 @@
  */
 
 pluginManagement {
+    includeBuild("build-logic")
     repositories {
         gradlePluginPortal()
         google()
+        mavenCentral()
     }
 }
 
@@ -47,6 +49,7 @@ include(":aws-predictions")
 include(":aws-predictions-tensorflow")
 include(":aws-push-notifications-pinpoint")
 include(":aws-storage-s3")
+include(":aws-logging-cloudwatch")
 
 // Test Utilities and assets
 include(":testutils")
@@ -59,7 +62,6 @@ include(":aws-api-appsync")
 include(":maplibre-adapter")
 include(":aws-pinpoint-core")
 include(":aws-push-notifications-pinpoint-common")
-include(":aws-logging-cloudwatch")
 
 // Events API
 include(":aws-sdk-appsync-core")
