@@ -142,7 +142,7 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends AWSGraphQLOperati
         }
     }
 
-    boolean hasAuthRelatedErrors(GraphQLResponse<R> response) {
+    private boolean hasAuthRelatedErrors(GraphQLResponse<R> response) {
         for (GraphQLResponse.Error error : response.getErrors()) {
             if (!Empty.check(error.getExtensions())) {
                 AppSyncExtensions extensions = new AppSyncExtensions(error.getExtensions());
