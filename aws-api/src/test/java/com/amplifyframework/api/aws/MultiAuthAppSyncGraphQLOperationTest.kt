@@ -19,6 +19,7 @@ package com.amplifyframework.api.aws
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.ApiException.ApiAuthException
 import com.amplifyframework.api.aws.auth.ApiRequestDecoratorFactory
+import com.amplifyframework.api.aws.auth.RequestDecorator
 import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.model.ModelQuery
 import com.amplifyframework.core.Consumer
@@ -27,131 +28,153 @@ import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelOperation
 import com.amplifyframework.core.model.annotations.AuthRule
 import com.amplifyframework.core.model.annotations.ModelConfig
-import com.amplifyframework.core.model.auth.AuthorizationTypeIterator
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.slot
 import io.mockk.verify
 import java.util.concurrent.ExecutorService
+import okhttp3.Callback
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
-import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class MultiAuthAppSyncGraphQLOperationTest {
 
     private val client = mockk<OkHttpClient>(relaxed = true)
-    private val onResponse = mockk<Consumer<GraphQLResponse<ModelWithTwoAuthModes>>>(relaxed = true)
+    private val onResponse2 = mockk<Consumer<GraphQLResponse<ModelWithTwoAuthModes>>>(relaxed = true)
+    private val onResponse1 = mockk<Consumer<GraphQLResponse<ModelWithOneAuthMode>>>(relaxed = true)
     private val onFailure = mockk<Consumer<ApiException>>(relaxed = true)
     private val executorService = mockk<ExecutorService>(relaxed = true)
-    private val authTypes = mockk<AuthorizationTypeIterator>(relaxed = true)
-    private val request = ModelQuery[ModelWithTwoAuthModes::class.java, "1"]
-
+    private val request2 = ModelQuery[ModelWithTwoAuthModes::class.java, "1"]
+    private val request1 = ModelQuery[ModelWithOneAuthMode::class.java, "1"]
     private val responseFactoryMock = mockk<GsonGraphQLResponseFactory>()
-    private lateinit var operation: MultiAuthAppSyncGraphQLOperation<ModelWithTwoAuthModes>
+    private val apiRequestDecoratorFactory = mockk<ApiRequestDecoratorFactory>()
+    private val requestDecorator = mockk<RequestDecorator>()
+    private val decoratedOkHttpRequest = mockk<Request>()
+    private val mockCall = mockk<okhttp3.Call>()
 
-    @Before
-    fun setup() {
-        operation = MultiAuthAppSyncGraphQLOperation.Builder<ModelWithTwoAuthModes>()
+    @Test
+    fun `submit dispatchRequest when more auth types available then fail`() {
+        val operation = MultiAuthAppSyncGraphQLOperation.Builder<ModelWithTwoAuthModes>()
             .client(client)
-            .request(request)
+            .request(request2)
             .responseFactory(responseFactoryMock)
-            .onResponse(onResponse)
+            .onResponse(onResponse2)
             .onFailure(onFailure)
-            .apiRequestDecoratorFactory(mockk<ApiRequestDecoratorFactory>())
+            .apiRequestDecoratorFactory(apiRequestDecoratorFactory)
             .executorService(executorService)
             .endpoint("https://amazon.com")
             .apiName("TestAPI")
             .build()
-    }
 
-    // should submit dispatchRequest on auth-related error when more auth types are available
-    @Test
-    fun `submit dispatchRequest when more auth types available`() {
+        val response = buildResponse()
+        val exception = buildAuthException()
 
-        val body = "{\"errors\":" +
-            " [{\"message\": \"Auth error\"," +
-            " \"extensions\": {\"errorType\": \"Unauthorized\"}}]}"
-        val responseBody = body.toResponseBody()
-
-        val response = Response.Builder()
-            .code(200)
-            .body(responseBody)
-            .request(Request(url = "https://amazon.com".toHttpUrl()))
-            .protocol(Protocol.HTTP_1_0)
-            .message("testing for submit dispatch request when more auth types available")
-            .build()
-
-        val exception = ApiAuthException(
-            "Unable to successfully complete request with any of the compatible auth types.",
-            "Check your application logs for detail."
-        )
-
-        // Build the expected response.
-        val extensions: MutableMap<String, Any?> = HashMap()
-        extensions["errorType"] = "Unauthorized"
-        val gqlErrors = GraphQLResponse.Error("Unauthorized", null, null, extensions)
+        val gqlErrors = buildGQLErrors()
         val gqlResponse = GraphQLResponse<ModelWithTwoAuthModes>(null, mutableListOf(gqlErrors))
         gqlResponse.errors.replaceAll { gqlErrors }
         every { responseFactoryMock.buildResponse<ModelWithTwoAuthModes>(any(), any(), any()) } returns gqlResponse
 
-        every { authTypes.hasNext() } returnsMany listOf(true, false)
-        operation.setAuthTypes(authTypes)
+        every { apiRequestDecoratorFactory.forAuthType(any()) } returns requestDecorator
 
-        val runnableSlot = slot<Runnable>()
-        every { executorService.submit(capture(runnableSlot)) } answers {
-            runnableSlot.captured.run()
-            mockk(relaxed = true)
+        every { requestDecorator.decorate(any()) } returns decoratedOkHttpRequest
+
+        every { executorService.submit(any()) } answers {
+            firstArg<Runnable>().run()
+            mockk()
         }
-        operation.OkHttpCallback().onResponse(mockk(), response)
+        // Mocks Callback
+        every { client.newCall(decoratedOkHttpRequest) } returns mockCall
+        every { mockCall.enqueue(any()) } answers {
+            val callback = firstArg<Callback>()
+            callback.onResponse(mockk(relaxed = true), response)
+        }
+        operation.start()
 
-        // Made sure that it goes thru DispatchRequest then failed
-        verify(exactly = 1) {
-            executorService.submit(capture(runnableSlot))
+        verify(exactly = 2) {
+            executorService.submit(any())
+        }
+        verify {
             onFailure.accept(exception)
         }
     }
 
     @Test
-    fun `should invoke onFailure when no more auth types and has auth errors`() {
-        val body = "{\"errors\":" +
-            " [{\"message\": \"Auth error\"," +
-            " \"extensions\": {\"errorType\": \"Unauthorized\"}}]}"
-        val responseBody = body.toResponseBody()
-
-        val response = Response.Builder()
-            .code(200)
-            .body(responseBody)
-            .request(Request(url = "https://amazon.com".toHttpUrl()))
-            .protocol(Protocol.HTTP_1_0)
-            .message("testing for submit dispatch request when more auth types available")
+    fun `should invoke onFailure with single auth type and has auth error`() {
+        val operation = MultiAuthAppSyncGraphQLOperation.Builder<ModelWithOneAuthMode>()
+            .client(client)
+            .request(request1)
+            .responseFactory(responseFactoryMock)
+            .onResponse(onResponse1)
+            .onFailure(onFailure)
+            .apiRequestDecoratorFactory(apiRequestDecoratorFactory)
+            .executorService(executorService)
+            .endpoint("https://amazon.com")
+            .apiName("TestAPI")
             .build()
 
-        val exception = ApiAuthException(
-            "Unable to successfully complete request with any of the compatible auth types.",
-            "Check your application logs for detail."
-        )
+        val response = buildResponse()
+        val exception = buildAuthException()
 
-        // Build the expected response.
-        val extensions: MutableMap<String, Any?> = HashMap()
-        extensions["errorType"] = "Unauthorized"
-        val gqlErrors = GraphQLResponse.Error("Unauthorized", null, null, extensions)
+        val gqlErrors = buildGQLErrors()
         val gqlResponse = GraphQLResponse<ModelWithTwoAuthModes>(null, mutableListOf(gqlErrors))
         gqlResponse.errors.replaceAll { gqlErrors }
 
         every { responseFactoryMock.buildResponse<ModelWithTwoAuthModes>(any(), any(), any()) } returns gqlResponse
-        every { authTypes.hasNext() } returns false // No more auth types available
 
-        operation.setAuthTypes(authTypes)
-        operation.OkHttpCallback().onResponse(mockk(relaxed = true), response)
+        every { apiRequestDecoratorFactory.forAuthType(any()) } returns requestDecorator
+
+        every { requestDecorator.decorate(any()) } returns decoratedOkHttpRequest
+
+        every { executorService.submit(any()) } answers {
+            firstArg<Runnable>().run()
+            mockk()
+        }
+        // Mocks Callback
+        every { client.newCall(decoratedOkHttpRequest) } returns mockCall
+        every { mockCall.enqueue(any()) } answers {
+            val callback = firstArg<Callback>()
+            callback.onResponse(mockk(relaxed = true), response)
+        }
+
+        operation.start()
 
         verify(exactly = 1) {
+            executorService.submit(any())
             onFailure.accept(exception)
         }
+    }
+
+    private fun buildResponse(): Response {
+        val responseBody = "{\"errors\":" +
+            " [{\"message\": \"Auth error\"," +
+            " \"extensions\": {\"errorType\": \"Unauthorized\"}}]}"
+        return Response.Builder()
+            .code(200)
+            .body(responseBody.toResponseBody())
+            .request(Request(url = "https://amazon.com".toHttpUrl()))
+            .protocol(Protocol.HTTP_1_0)
+            .message("testing for submit dispatch request when more auth types available")
+            .build()
+    }
+
+    private fun buildAuthException(): ApiAuthException {
+        return ApiAuthException(
+            "Unable to successfully complete request with any of the compatible auth types.",
+            "Check your application logs for detail."
+        )
+    }
+
+    private fun buildGQLErrors(): GraphQLResponse.Error {
+        val extensions: MutableMap<String, Any?> = HashMap()
+        extensions["errorType"] = "Unauthorized"
+        return GraphQLResponse.Error("Unauthorized", null, null, extensions)
     }
 
     @ModelConfig(
@@ -166,4 +189,14 @@ class MultiAuthAppSyncGraphQLOperationTest {
         ]
     )
     private class ModelWithTwoAuthModes : Model
+
+    @ModelConfig(
+        authRules = [
+            AuthRule(
+                allow = AuthStrategy.OWNER,
+                operations = [ModelOperation.CREATE, ModelOperation.UPDATE, ModelOperation.DELETE, ModelOperation.READ]
+            )
+        ]
+    )
+    private class ModelWithOneAuthMode : Model
 }
