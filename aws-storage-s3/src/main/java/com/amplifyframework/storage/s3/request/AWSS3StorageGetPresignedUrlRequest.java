@@ -23,9 +23,12 @@ import com.amplifyframework.storage.StorageAccessLevel;
 /**
  * Parameters to provide to S3 that describe a request to retrieve
  * pre-signed object URL.
+ * @deprecated  this class is only constructed internally through deprecated transfer methods.
  */
+@Deprecated
 public final class AWSS3StorageGetPresignedUrlRequest {
     private final String key;
+    @SuppressWarnings("deprecation")
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
     private final int expires;
@@ -43,6 +46,7 @@ public final class AWSS3StorageGetPresignedUrlRequest {
      * @param expires The number of seconds before the URL expires
      * @param useAccelerateEndpoint Flag to enable acceleration mode
      */
+    @SuppressWarnings("deprecation")
     public AWSS3StorageGetPresignedUrlRequest(
             @NonNull String key,
             @NonNull StorageAccessLevel accessLevel,
@@ -61,6 +65,7 @@ public final class AWSS3StorageGetPresignedUrlRequest {
      * @return Access level
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public StorageAccessLevel getAccessLevel() {
         return accessLevel;
     }

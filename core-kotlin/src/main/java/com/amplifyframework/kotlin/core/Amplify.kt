@@ -20,6 +20,7 @@ import com.amplifyframework.AmplifyException
 import com.amplifyframework.analytics.AnalyticsCategory
 import com.amplifyframework.core.Amplify as delegate
 import com.amplifyframework.core.AmplifyConfiguration
+import com.amplifyframework.core.configuration.AmplifyOutputs
 import com.amplifyframework.core.plugin.Plugin
 import com.amplifyframework.kotlin.api.KotlinApiFacade
 import com.amplifyframework.kotlin.auth.KotlinAuthFacade
@@ -83,6 +84,22 @@ class Amplify {
         @Throws(AmplifyException::class)
         fun configure(configuration: AmplifyConfiguration, context: Context) {
             delegate.configure(configuration, context)
+        }
+
+        /**
+         * Configure Amplify using the outputs from the Amplify Gen2 CLI. This is the configure method to use if you are
+         * using the Amplify Gen2 experience.
+         * You must call one of the configure() methods before using any Amplify category.
+         * You must add plugins to the framework before calling configure().
+         * configure() may only be called once per application process, and there is
+         * currently no way to reconfigure Amplify once it has been called.
+         * Subsequent attempts to configure Amplify will generate an AmplifyException.
+         * @param amplifyOutputs An [AmplifyOutputs] instance representing the amplify_outputs data to use
+         * @param context An Android context
+         */
+        @Throws(AmplifyException::class)
+        fun configure(amplifyOutputs: AmplifyOutputs, context: Context) {
+            delegate.configure(amplifyOutputs, context)
         }
 
         /**

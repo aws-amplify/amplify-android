@@ -19,6 +19,7 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.kotlin.storage.Storage.InProgressStorageOperation
 import com.amplifyframework.storage.StorageCategoryBehavior as Delegate
 import com.amplifyframework.storage.StorageException
+import com.amplifyframework.storage.StoragePath
 import com.amplifyframework.storage.operation.StorageTransferOperation
 import com.amplifyframework.storage.options.StorageDownloadFileOptions
 import com.amplifyframework.storage.options.StorageGetUrlOptions
@@ -47,6 +48,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 
 class KotlinStorageFacade(private val delegate: Delegate = Amplify.Storage) : Storage {
     @Throws(StorageException::class)
+    @Deprecated("Use method with StoragePath instead")
     override suspend fun getUrl(key: String, options: StorageGetUrlOptions):
         StorageGetUrlResult {
         return suspendCoroutine { continuation ->
@@ -59,8 +61,22 @@ class KotlinStorageFacade(private val delegate: Delegate = Amplify.Storage) : St
         }
     }
 
+    @Throws(StorageException::class)
+    override suspend fun getUrl(path: StoragePath, options: StorageGetUrlOptions):
+        StorageGetUrlResult {
+        return suspendCoroutine { continuation ->
+            delegate.getUrl(
+                path,
+                options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
     @ExperimentalCoroutinesApi
     @FlowPreview
+    @Deprecated("Use method with StoragePath instead")
     override fun downloadFile(key: String, local: File, options: StorageDownloadFileOptions):
         InProgressStorageOperation<StorageDownloadFileResult> {
         val progress = MutableSharedFlow<StorageTransferProgress>(replay = 1)
@@ -85,6 +101,31 @@ class KotlinStorageFacade(private val delegate: Delegate = Amplify.Storage) : St
 
     @ExperimentalCoroutinesApi
     @FlowPreview
+    override fun downloadFile(path: StoragePath, local: File, options: StorageDownloadFileOptions):
+        InProgressStorageOperation<StorageDownloadFileResult> {
+        val progress = MutableSharedFlow<StorageTransferProgress>(replay = 1)
+        val results = MutableSharedFlow<StorageDownloadFileResult>(replay = 1)
+        val errors = MutableSharedFlow<StorageException>(replay = 1)
+        val operation = delegate.downloadFile(
+            path,
+            local,
+            options,
+            { progress.tryEmit(it) },
+            { results.tryEmit(it) },
+            { errors.tryEmit(it) }
+        )
+        return InProgressStorageOperation(
+            operation.transferId,
+            results.asSharedFlow(),
+            progress.asSharedFlow(),
+            errors.asSharedFlow(),
+            operation
+        )
+    }
+
+    @ExperimentalCoroutinesApi
+    @FlowPreview
+    @Deprecated("Use method with StoragePath instead")
     override fun uploadFile(key: String, local: File, options: StorageUploadFileOptions):
         InProgressStorageOperation<StorageUploadFileResult> {
         val progress = MutableSharedFlow<StorageTransferProgress>(replay = 1)
@@ -107,8 +148,33 @@ class KotlinStorageFacade(private val delegate: Delegate = Amplify.Storage) : St
         )
     }
 
+    @ExperimentalCoroutinesApi
+    @FlowPreview
+    override fun uploadFile(path: StoragePath, local: File, options: StorageUploadFileOptions):
+        InProgressStorageOperation<StorageUploadFileResult> {
+        val progress = MutableSharedFlow<StorageTransferProgress>(replay = 1)
+        val results = MutableSharedFlow<StorageUploadFileResult>(replay = 1)
+        val errors = MutableSharedFlow<StorageException>(replay = 1)
+        val operation = delegate.uploadFile(
+            path,
+            local,
+            options,
+            { progress.tryEmit(it) },
+            { results.tryEmit(it) },
+            { errors.tryEmit(it) }
+        )
+        return InProgressStorageOperation(
+            operation.transferId,
+            results.asSharedFlow(),
+            progress.asSharedFlow(),
+            errors.asSharedFlow(),
+            operation
+        )
+    }
+
     @FlowPreview
     @ExperimentalCoroutinesApi
+    @Deprecated("Use method with StoragePath instead")
     override fun uploadInputStream(
         key: String,
         local: InputStream,
@@ -135,7 +201,36 @@ class KotlinStorageFacade(private val delegate: Delegate = Amplify.Storage) : St
         )
     }
 
+    @FlowPreview
+    @ExperimentalCoroutinesApi
+    override fun uploadInputStream(
+        path: StoragePath,
+        local: InputStream,
+        options: StorageUploadInputStreamOptions
+    ):
+        InProgressStorageOperation<StorageUploadInputStreamResult> {
+        val progress = MutableSharedFlow<StorageTransferProgress>(replay = 1)
+        val results = MutableSharedFlow<StorageUploadInputStreamResult>(replay = 1)
+        val errors = MutableSharedFlow<StorageException>(replay = 1)
+        val cancelable = delegate.uploadInputStream(
+            path,
+            local,
+            options,
+            { progress.tryEmit(it) },
+            { results.tryEmit(it) },
+            { errors.tryEmit(it) }
+        )
+        return InProgressStorageOperation(
+            cancelable.transferId,
+            results.asSharedFlow(),
+            progress.asSharedFlow(),
+            errors.asSharedFlow(),
+            cancelable
+        )
+    }
+
     @Throws(StorageException::class)
+    @Deprecated("Use method with StoragePath instead")
     override suspend fun remove(key: String, options: StorageRemoveOptions): StorageRemoveResult {
         return suspendCoroutine { continuation ->
             delegate.remove(
@@ -148,7 +243,22 @@ class KotlinStorageFacade(private val delegate: Delegate = Amplify.Storage) : St
     }
 
     @Throws(StorageException::class)
-    @Deprecated("use the paged list api instead.", replaceWith = ReplaceWith("list(String, StoragePagedListOptions)"))
+    override suspend fun remove(path: StoragePath, options: StorageRemoveOptions): StorageRemoveResult {
+        return suspendCoroutine { continuation ->
+            delegate.remove(
+                path,
+                options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    @Throws(StorageException::class)
+    @Deprecated(
+        "use the paged list StoragePath api instead.",
+        replaceWith = ReplaceWith("list(String, StoragePagedListOptions)")
+    )
     override suspend fun list(path: String, options: StorageListOptions): StorageListResult {
         return suspendCoroutine { continuation ->
             delegate.list(
@@ -161,7 +271,23 @@ class KotlinStorageFacade(private val delegate: Delegate = Amplify.Storage) : St
     }
 
     @Throws(StorageException::class)
+    @Deprecated(
+        "use the paged list StoragePath api instead.",
+        replaceWith = ReplaceWith("list(StoragePath, StoragePagedListOptions)")
+    )
     override suspend fun list(path: String, options: StoragePagedListOptions): StorageListResult {
+        return suspendCoroutine { continuation ->
+            delegate.list(
+                path,
+                options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    @Throws(StorageException::class)
+    override suspend fun list(path: StoragePath, options: StoragePagedListOptions): StorageListResult {
         return suspendCoroutine { continuation ->
             delegate.list(
                 path,

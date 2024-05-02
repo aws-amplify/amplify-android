@@ -18,32 +18,62 @@ package com.amplifyframework.storage.result;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.annotations.InternalAmplifyApi;
+
 import java.util.Objects;
 
 /**
  * The result of an upload operation in the Storage category.
  */
 public class StorageUploadResult extends StorageTransferResult {
+    private final String path;
     private final String key;
 
-    StorageUploadResult(String key) {
+    /**
+     * Creates a new StorageUploadResult.
+     * Although this has public access, it is intended for internal use and should not be used directly by host
+     * applications. The behavior of this may change without warning.
+     * @param path Path for an item that was uploaded successfully
+     * @param key Key for an item that was uploaded successfully
+     */
+    @InternalAmplifyApi
+    public StorageUploadResult(String path, String key) {
+        this.path = path;
         this.key = key;
     }
 
     /**
      * Creates a new StorageUploadResult from a storage item key.
+     * @deprecated This method should not be used and will result in an incorrect path that
+     * shows the key value instead of the full path.
      * @param key Key for an item that was uploaded successfully
      * @return A storage upload result containing the item key
      */
+    @Deprecated
     @NonNull
     public static StorageUploadResult fromKey(@NonNull String key) {
-        return new StorageUploadResult(Objects.requireNonNull(key));
+        return new StorageUploadResult(
+                Objects.requireNonNull(key),
+                Objects.requireNonNull(key)
+        );
+    }
+
+    /**
+     * Gets the path for the item was successfully uploaded.
+     * @return Path for item that was uploaded
+     */
+    @NonNull
+    public String getPath() {
+        return path;
     }
 
     /**
      * Gets the key for the item was successfully uploaded.
+     * @deprecated Will be replaced by path because transfer operations that use StoragePath do
+     * not have a concept of a "key". Will return the full path if StoragePath was used.
      * @return Key for item that was uploaded
      */
+    @Deprecated
     @NonNull
     public String getKey() {
         return key;
@@ -65,7 +95,7 @@ public class StorageUploadResult extends StorageTransferResult {
 
         StorageUploadResult that = (StorageUploadResult) thatObject;
 
-        return ObjectsCompat.equals(key, that.key);
+        return ObjectsCompat.equals(key, that.key) && ObjectsCompat.equals(path, that.path);
     }
 
     /**

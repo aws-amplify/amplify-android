@@ -38,6 +38,7 @@ public abstract class StorageUploadOptions extends StorageOptions {
      * @param <B>     the type of builder to chain with
      * @param <O>     the type of StorageUploadOptions
      */
+    @SuppressWarnings("deprecation")
     protected <B extends Builder<B, O>, O extends StorageUploadOptions>
         StorageUploadOptions(final Builder<B, O> builder) {
         super(builder.getAccessLevel(), builder.getTargetIdentityId());
@@ -67,6 +68,7 @@ public abstract class StorageUploadOptions extends StorageOptions {
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("deprecation")
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -85,6 +87,7 @@ public abstract class StorageUploadOptions extends StorageOptions {
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("deprecation")
     public int hashCode() {
         return ObjectsCompat.hash(
                 getAccessLevel(),
@@ -99,6 +102,7 @@ public abstract class StorageUploadOptions extends StorageOptions {
      */
     @NonNull
     @Override
+    @SuppressWarnings("deprecation")
     public String toString() {
         return "StorageUploadOptions {" +
                 "accessLevel=" + getAccessLevel() +

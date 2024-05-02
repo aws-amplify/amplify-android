@@ -52,12 +52,14 @@ public interface StorageCategoryBehavior {
     /**
      * Retrieve the remote URL for the object from storage.
      * Provide callbacks to obtain the URL retrieval results.
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param key the unique identifier for the object in storage
      * @param onSuccess Called if operation completed successfully and furnishes a result
      * @param onError Called if an error occurs during operation
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      */
+    @Deprecated
     @NonNull
     StorageGetUrlOperation<?> getUrl(
             @NonNull String key,
@@ -66,9 +68,25 @@ public interface StorageCategoryBehavior {
 
     /**
      * Retrieve the remote URL for the object from storage.
+     * Provide callbacks to obtain the URL retrieval results.
+     * @param path the path of the object in storage
+     * @param onSuccess Called if operation completed successfully and furnishes a result
+     * @param onError Called if an error occurs during operation
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     */
+    @NonNull
+    StorageGetUrlOperation<?> getUrl(
+            @NonNull StoragePath path,
+            @NonNull Consumer<StorageGetUrlResult> onSuccess,
+            @NonNull Consumer<StorageException> onError);
+
+    /**
+     * Retrieve the remote URL for the object from storage.
      * Set advanced options such as the access level of the object
      * or the expiration details of the URL.
      * Provide callbacks to obtain the URL retrieval results.
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param key the unique identifier for the object in storage
      * @param options parameters specific to plugin behavior
      * @param onSuccess Called if operation completed successfully and furnishes a result
@@ -76,6 +94,7 @@ public interface StorageCategoryBehavior {
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      */
+    @Deprecated
     @NonNull
     StorageGetUrlOperation<?> getUrl(
             @NonNull String key,
@@ -84,9 +103,45 @@ public interface StorageCategoryBehavior {
             @NonNull Consumer<StorageException> onError);
 
     /**
+     * Retrieve the remote URL for the object from storage.
+     * Provide callbacks to obtain the URL retrieval results.
+     * @param path the path of the object in storage
+     * @param options parameters specific to plugin behavior
+     * @param onSuccess Called if operation completed successfully and furnishes a result
+     * @param onError Called if an error occurs during operation
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     */
+    @NonNull
+    StorageGetUrlOperation<?> getUrl(
+            @NonNull StoragePath path,
+            @NonNull StorageGetUrlOptions options,
+            @NonNull Consumer<StorageGetUrlResult> onSuccess,
+            @NonNull Consumer<StorageException> onError);
+
+    /**
      * Download a remote resource and store it as a local file.
      * Provide callbacks to obtain the download results.
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param key the unique identifier for the object in storage
+     * @param local the path to a local file
+     * @param onSuccess Called if operation completed successfully and furnishes a result
+     * @param onError Called if an error occurs during operation
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     */
+    @Deprecated
+    @NonNull
+    StorageDownloadFileOperation<?> downloadFile(
+            @NonNull String key,
+            @NonNull File local,
+            @NonNull Consumer<StorageDownloadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError);
+
+    /**
+     * Download a remote resource and store it as a local file.
+     * Provide callbacks to obtain the download results.
+     * @param path the path of the object in storage
      * @param local the path to a local file
      * @param onSuccess Called if operation completed successfully and furnishes a result
      * @param onError Called if an error occurs during operation
@@ -95,7 +150,7 @@ public interface StorageCategoryBehavior {
      */
     @NonNull
     StorageDownloadFileOperation<?> downloadFile(
-            @NonNull String key,
+            @NonNull StoragePath path,
             @NonNull File local,
             @NonNull Consumer<StorageDownloadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError);
@@ -106,6 +161,7 @@ public interface StorageCategoryBehavior {
      * you want to retrieve (you can have different objects with
      * the same name under different access levels).
      * Provide callbacks to obtain the results of the download.
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param key the unique identifier for the object in storage
      * @param local the path to a local file
      * @param options parameters specific to plugin behavior
@@ -114,9 +170,29 @@ public interface StorageCategoryBehavior {
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      */
+    @Deprecated
     @NonNull
     StorageDownloadFileOperation<?> downloadFile(
             @NonNull String key,
+            @NonNull File local,
+            @NonNull StorageDownloadFileOptions options,
+            @NonNull Consumer<StorageDownloadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError);
+
+    /**
+     * Download a remote resource and store it as a local file.
+     * Set additional options.
+     * Provide callbacks to obtain the results of the download.
+     * @param path the path of the object in storage
+     * @param local the path to a local file
+     * @param options parameters specific to plugin behavior
+     * @param onSuccess Called if operation completed successfully and furnishes a result
+     * @param onError Called if an error occurs during operation
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     */
+    StorageDownloadFileOperation<?> downloadFile(
+            @NonNull StoragePath path,
             @NonNull File local,
             @NonNull StorageDownloadFileOptions options,
             @NonNull Consumer<StorageDownloadFileResult> onSuccess,
@@ -129,6 +205,7 @@ public interface StorageCategoryBehavior {
      * the same name under different access levels).
      * Provide callbacks to obtain the results of the download, as
      * well as intermediary progress updates.
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param key the unique identifier for the object in storage
      * @param local the path to a local file
      * @param options parameters specific to plugin behavior
@@ -138,6 +215,7 @@ public interface StorageCategoryBehavior {
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      */
+    @Deprecated
     @NonNull
     StorageDownloadFileOperation<?> downloadFile(
         @NonNull String key,
@@ -148,8 +226,31 @@ public interface StorageCategoryBehavior {
         @NonNull Consumer<StorageException> onError);
 
     /**
+     * Download a remote resource and store it as a local file.
+     * Set additional options.
+     * Provide callbacks to obtain the results of the download, as
+     * well as intermediary progress updates.
+     * @param path the path of the object in storage
+     * @param local the path to a local file
+     * @param options parameters specific to plugin behavior
+     * @param onProgress Called periodically to provides updates on download progress
+     * @param onSuccess Called if operation completed successfully and furnishes a result
+     * @param onError Called if an error occurs during operation
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     */
+    StorageDownloadFileOperation<?> downloadFile(
+            @NonNull StoragePath path,
+            @NonNull File local,
+            @NonNull StorageDownloadFileOptions options,
+            @NonNull Consumer<StorageTransferProgress> onProgress,
+            @NonNull Consumer<StorageDownloadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError);
+
+    /**
      * Upload a local File, storing it as a remote resource.
      * Register consumers to obtain the results of the upload.
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param key the unique identifier of the object in storage
      * @param local the local file
      * @param onSuccess Called if operation completed successfully and furnishes a result
@@ -157,6 +258,7 @@ public interface StorageCategoryBehavior {
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      */
+    @Deprecated
     @NonNull
     StorageUploadFileOperation<?> uploadFile(
             @NonNull String key,
@@ -166,8 +268,27 @@ public interface StorageCategoryBehavior {
 
     /**
      * Upload a local File, storing it as a remote resource.
+     * Register consumers to obtain the results of the upload.
+     * @param path the path of the object in storage
+     * @param local the local file
+     * @param onSuccess Called if operation completed successfully and furnishes a result
+     * @param onError Called if an error occurs during operation
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     */
+    @NonNull
+    StorageUploadFileOperation<?> uploadFile(
+            @NonNull StoragePath path,
+            @NonNull File local,
+            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError);
+
+
+    /**
+     * Upload a local File, storing it as a remote resource.
      * Specify options such as the access level the file should have.
      * Register consumers to observe results of upload request.
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param key the unique identifier of the object in storage
      * @param local the local file
      * @param options parameters specific to plugin behavior
@@ -177,6 +298,7 @@ public interface StorageCategoryBehavior {
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      */
+    @Deprecated
     @NonNull
     StorageUploadFileOperation<?> uploadFile(
             @NonNull String key,
@@ -188,9 +310,31 @@ public interface StorageCategoryBehavior {
 
     /**
      * Upload a local File, storing it as a remote resource.
+     * Specify additional options.
+     * @param path the path of the object in storage
+     * @param local the local file
+     * @param options parameters specific to plugin behavior
+     * @param onProgress Called periodically to provides updates on upload progress
+     * @param onSuccess Called if operation completed successfully and furnishes a result
+     * @param onError Called if an error occurs during operation
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     */
+    @NonNull
+    StorageUploadFileOperation<?> uploadFile(
+            @NonNull StoragePath path,
+            @NonNull File local,
+            @NonNull StorageUploadFileOptions options,
+            @NonNull Consumer<StorageTransferProgress> onProgress,
+            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError);
+
+    /**
+     * Upload a local File, storing it as a remote resource.
      * Specify options such as the access level the file should have.
      * Register consumers to observe results of upload request,
      * as well as intermediary progress updates.
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param key the unique identifier of the object in storage
      * @param local the local file
      * @param options parameters specific to plugin behavior
@@ -199,6 +343,7 @@ public interface StorageCategoryBehavior {
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      */
+    @Deprecated
     @NonNull
     StorageUploadFileOperation<?> uploadFile(
         @NonNull String key,
@@ -208,8 +353,30 @@ public interface StorageCategoryBehavior {
         @NonNull Consumer<StorageException> onError);
 
     /**
+     * Upload a local File, storing it as a remote resource.
+     * Specify additional options.
+     * Register consumers to observe results of upload request,
+     * as well as intermediary progress updates.
+     * @param path the path of the object in storage
+     * @param local the local file
+     * @param options parameters specific to plugin behavior
+     * @param onSuccess Called if operation completed successfully and furnishes a result
+     * @param onError Called if an error occurs during operation
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     */
+    @NonNull
+    StorageUploadFileOperation<?> uploadFile(
+            @NonNull StoragePath path,
+            @NonNull File local,
+            @NonNull StorageUploadFileOptions options,
+            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError);
+
+    /**
      * Upload a local InputStream, storing it as a remote resource.
      * Register consumers to obtain the results of the upload.
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param key the unique identifier of the object in storage
      * @param local the local InputStream
      * @param onSuccess Called if operation completed successfully and furnishes a result
@@ -217,6 +384,7 @@ public interface StorageCategoryBehavior {
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      */
+    @Deprecated
     @NonNull
     StorageUploadInputStreamOperation<?> uploadInputStream(
         @NonNull String key,
@@ -226,9 +394,27 @@ public interface StorageCategoryBehavior {
 
     /**
      * Upload a local InputStream, storing it as a remote resource.
+     * Register consumers to obtain the results of the upload.
+     * @param path the path of the object in storage
+     * @param local the local InputStream
+     * @param onSuccess Called if operation completed successfully and furnishes a result
+     * @param onError Called if an error occurs during operation
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     */
+    @NonNull
+    StorageUploadInputStreamOperation<?> uploadInputStream(
+            @NonNull StoragePath path,
+            @NonNull InputStream local,
+            @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
+            @NonNull Consumer<StorageException> onError);
+
+    /**
+     * Upload a local InputStream, storing it as a remote resource.
      * Specify options such as the access level the file should have.
      * Register consumers to observe results of upload request,
      * as well as intermediary progress updates.
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param key the unique identifier of the object in storage
      * @param local the local InputStream
      * @param options parameters specific to plugin behavior
@@ -237,6 +423,7 @@ public interface StorageCategoryBehavior {
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      */
+    @Deprecated
     StorageUploadInputStreamOperation<?> uploadInputStream(
         @NonNull String key,
         @NonNull InputStream local,
@@ -246,9 +433,53 @@ public interface StorageCategoryBehavior {
 
     /**
      * Upload a local InputStream, storing it as a remote resource.
+     * Specify additional options.
+     * Register consumers to observe results of upload request,
+     * as well as intermediary progress updates.
+     * @param path the path of the object in storage
+     * @param local the local InputStream
+     * @param options parameters specific to plugin behavior
+     * @param onSuccess Called if operation completed successfully and furnishes a result
+     * @param onError Called if an error occurs during operation
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     */
+    StorageUploadInputStreamOperation<?> uploadInputStream(
+            @NonNull StoragePath path,
+            @NonNull InputStream local,
+            @NonNull StorageUploadInputStreamOptions options,
+            @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
+            @NonNull Consumer<StorageException> onError);
+
+    /**
+     * Upload a local InputStream, storing it as a remote resource.
      * Specify options such as the access level the file should have.
      * Register consumers to observe results of upload request.
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param key the unique identifier of the object in storage
+     * @param local the local InputStream
+     * @param options parameters specific to plugin behavior
+     * @param onProgress Called periodically to provides updates on upload progress
+     * @param onSuccess Called if operation completed successfully and furnishes a result
+     * @param onError Called if an error occurs during operation
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     */
+    @Deprecated
+    @NonNull
+    StorageUploadInputStreamOperation<?> uploadInputStream(
+            @NonNull String key,
+            @NonNull InputStream local,
+            @NonNull StorageUploadInputStreamOptions options,
+            @NonNull Consumer<StorageTransferProgress> onProgress,
+            @NonNull Consumer<StorageUploadInputStreamResult> onSuccess,
+            @NonNull Consumer<StorageException> onError);
+
+    /**
+     * Upload a local InputStream, storing it as a remote resource.
+     * Specify additional options.
+     * Register consumers to observe results of upload request.
+     * @param path the path of the object in storage
      * @param local the local InputStream
      * @param options parameters specific to plugin behavior
      * @param onProgress Called periodically to provides updates on upload progress
@@ -259,7 +490,7 @@ public interface StorageCategoryBehavior {
      */
     @NonNull
     StorageUploadInputStreamOperation<?> uploadInputStream(
-            @NonNull String key,
+            @NonNull StoragePath path,
             @NonNull InputStream local,
             @NonNull StorageUploadInputStreamOptions options,
             @NonNull Consumer<StorageTransferProgress> onProgress,
@@ -281,12 +512,14 @@ public interface StorageCategoryBehavior {
 
     /**
      * Delete object from storage.
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param key the unique identifier of the object in storage
      * @param onSuccess Called if operation completed successfully and furnishes a result
      * @param onError Called if an error occurs during operation
      * @return an operation object that provides notifications and
      *        actions related to the execution of the work
      */
+    @Deprecated
     @NonNull
     StorageRemoveOperation<?> remove(
             @NonNull String key,
@@ -295,7 +528,22 @@ public interface StorageCategoryBehavior {
 
     /**
      * Delete object from storage.
+     * @param path the path of the object in storage
+     * @param onSuccess Called if operation completed successfully and furnishes a result
+     * @param onError Called if an error occurs during operation
+     * @return an operation object that provides notifications and
+     *        actions related to the execution of the work
+     */
+    @NonNull
+    StorageRemoveOperation<?> remove(
+            @NonNull StoragePath path,
+            @NonNull Consumer<StorageRemoveResult> onSuccess,
+            @NonNull Consumer<StorageException> onError);
+
+    /**
+     * Delete object from storage.
      * Register consumers to get results of remove operation.
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param key the unique identifier of the object in storage
      * @param options parameters specific to plugin behavior
      * @param onSuccess Called if operation completed successfully and furnishes a result
@@ -303,6 +551,7 @@ public interface StorageCategoryBehavior {
      * @return an operation object that provides notifications and
      *        actions related to the execution of the work
      */
+    @Deprecated
     @NonNull
     StorageRemoveOperation<?> remove(
             @NonNull String key,
@@ -311,14 +560,31 @@ public interface StorageCategoryBehavior {
             @NonNull Consumer<StorageException> onError);
 
     /**
+     * Delete object from storage.
+     * Register consumers to get results of remove operation.
+     * @param path the path of the object in storage
+     * @param options parameters specific to plugin behavior
+     * @param onSuccess Called if operation completed successfully and furnishes a result
+     * @param onError Called if an error occurs during operation
+     * @return an operation object that provides notifications and
+     *        actions related to the execution of the work
+     */
+    @NonNull
+    StorageRemoveOperation<?> remove(
+            @NonNull StoragePath path,
+            @NonNull StorageRemoveOptions options,
+            @NonNull Consumer<StorageRemoveResult> onSuccess,
+            @NonNull Consumer<StorageException> onError);
+
+    /**
      * List the object identifiers under the hierarchy specified
      * by the path, relative to access level, from storage.
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param path The path in storage to list items from
      * @param onSuccess Called if operation completed successfully and furnishes a result
      * @param onError Called if an error occurs during operation
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
-     * @deprecated use the {@link #list(String, StoragePagedListOptions, Consumer, Consumer)} api instead.
      */
     @Deprecated
     @NonNull
@@ -331,13 +597,13 @@ public interface StorageCategoryBehavior {
      * List the object identifiers under the hierarchy specified
      * by the path, relative to access level, from storage.
      * Register consumers to observe progress.
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param path The path in storage to list items from
      * @param options parameters specific to plugin behavior
      * @param onSuccess Called if operation completed successfully and furnishes a result
      * @param onError Called if an error occurs during operation
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
-     * @deprecated use the {@link #list(String, StoragePagedListOptions, Consumer, Consumer)} api instead.
      */
     @Deprecated
     @NonNull
@@ -351,6 +617,7 @@ public interface StorageCategoryBehavior {
      * List the object identifiers under the hierarchy specified
      * by the path, relative to access level, from storage.
      * Register consumers to observe progress.
+     * @deprecated Use overload with {@link StoragePath} instead
      * @param path The path in storage to list items from
      * @param options parameters specific to plugin behavior
      * @param onSuccess Called if operation completed successfully and furnishes a result
@@ -358,11 +625,29 @@ public interface StorageCategoryBehavior {
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      */
+    @Deprecated
     StorageListOperation<?> list(
         @NonNull String path,
         @NonNull StoragePagedListOptions options,
         @NonNull Consumer<StorageListResult> onSuccess,
         @NonNull Consumer<StorageException> onError);
 
+    /**
+     * List the object identifiers under the hierarchy specified
+     * by the path, relative to access level, from storage.
+     * Register consumers to observe progress.
+     * @param path The path in storage to list items from
+     * @param options parameters specific to plugin behavior
+     * @param onSuccess Called if operation completed successfully and furnishes a result
+     * @param onError Called if an error occurs during operation
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     */
+    @NonNull
+    StorageListOperation<?> list(
+            @NonNull StoragePath path,
+            @NonNull StoragePagedListOptions options,
+            @NonNull Consumer<StorageListResult> onSuccess,
+            @NonNull Consumer<StorageException> onError);
 }
 

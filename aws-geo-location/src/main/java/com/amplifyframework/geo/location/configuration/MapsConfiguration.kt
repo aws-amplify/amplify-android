@@ -15,6 +15,8 @@
 
 package com.amplifyframework.geo.location.configuration
 
+import com.amplifyframework.core.configuration.AmplifyOutputsData
+import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.models.MapStyle
 import org.json.JSONObject
 
@@ -41,6 +43,23 @@ data class MapsConfiguration internal constructor(
          */
         internal fun fromJson(configJson: JSONObject): Builder {
             return Builder(configJson)
+        }
+
+        internal fun from(outputs: AmplifyOutputsData.Geo.Maps): MapsConfiguration {
+            val styles = outputs.items.map { MapStyle(it.key, it.value.style) }
+
+            val default = styles.find {
+                it.mapName == outputs.default
+            } ?: throw GeoException(
+                "Missing default map",
+                "Default map must match an item in the items dictionary for Geo.Maps. " +
+                    "Verify that your amplify_outputs configuration is correct."
+            )
+
+            return Builder()
+                .items(styles)
+                .default(default)
+                .build()
         }
     }
 
