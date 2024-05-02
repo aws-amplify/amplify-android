@@ -38,6 +38,8 @@ kotest = "5.9.0"
 kotlin = "2.2.0"
 kotlin-serialization = "1.6.0"
 kover = "0.9.1"
+ktlint = "12.2.0"
+licensee = "1.7.0"
 litert = "1.4.0"
 maplibre = "11.12.1"
 maplibre-annotations = "3.0.2"
@@ -143,11 +145,29 @@ test-robolectric = { module = "org.robolectric:robolectric", version.ref="robole
 test-totp = { module = "dev.robinohs:totp-kt", version.ref="totp" }
 test-turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine"}
 
+# Dependencies for convention plugins
+plugin-android-gradle = { module = "com.android.tools.build:gradle", version.ref = "agp" }
+plugin-binary-compatibility = { module = "org.jetbrains.kotlinx:binary-compatibility-validator", version.ref = "binary-compatibility-validator" }
+plugin-kotlin-android = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+plugin-kover = { module = "org.jetbrains.kotlinx:kover-gradle-plugin", version.ref = "kover" }
+plugin-ktlint = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "ktlint" }
+plugin-licensee = { module = "app.cash.licensee:app.cash.licensee.gradle.plugin", version.ref = "licensee" }
+
 [plugins]
 android-library = { id = "com.android.library", version.ref = "agp" }
 apollo = { id = "com.apollographql.apollo", version.ref = "apollo" }
 binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binary-compatibility-validator" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
+licensee = { id = "app.cash.licensee", version.ref = "licensee" }
+
+# Internal convention plugins
+amplify-android-library = { id = "amplify.android.library" }
+amplify-api = { id = "amplify.api" }
+amplify-ktlint = { id = "amplify.ktlint" }
+amplify-licenses = { id = "amplify.licenses" }
+amplify-kover = { id = "amplify.kover" }
