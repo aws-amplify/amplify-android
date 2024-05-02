@@ -679,33 +679,34 @@ class MergerTest {
     @Throws(DataStoreException::class, InterruptedException::class)
     fun testBatchMergerReconciliation() {
         // Random UUID following RFC 4122 version 4 spec
-        val sameRandomId = UUID.randomUUID().toString()
+        val sameRandomId1 = UUID.randomUUID().toString()
+        val sameRandomId2 = UUID.randomUUID().toString()
 
         // Models to merge
         val blogFirstPost1ToBeDisregarded =
             ModelWithMetadata(
                 Blog.builder().name("Hideo K.").id("DS1").build(),
-                ModelMetadata(sameRandomId, false, 1, Temporal.Timestamp.now()),
+                ModelMetadata(sameRandomId1, false, 1, Temporal.Timestamp.now()),
             )
         val blogFirstPost2LatestVer =
             ModelWithMetadata(
                 Blog.builder().name("Hideo K.").id("DS1").build(),
-                ModelMetadata(sameRandomId, true, 3, Temporal.Timestamp.now()),
+                ModelMetadata(sameRandomId1, true, 3, Temporal.Timestamp.now()),
             )
         val blogFirstPost3LatestVerDuplicate =
             ModelWithMetadata(
                 Blog.builder().name("Hideo K.").id("DS1").build(),
-                ModelMetadata(sameRandomId, false, 3, Temporal.Timestamp.now()),
+                ModelMetadata(sameRandomId1, false, 3, Temporal.Timestamp.now()),
             )
         val blogFirstPost4ToBeDisregarded =
             ModelWithMetadata(
                 Blog.builder().name("Hideo K.").id("DS1").build(),
-                ModelMetadata(sameRandomId, false, 2, Temporal.Timestamp.now()),
+                ModelMetadata(sameRandomId1, false, 2, Temporal.Timestamp.now()),
             )
         val blogSecondPost1ToSurvive =
             ModelWithMetadata(
                 Blog.builder().name("Hideo K.").id("DS2").build(),
-                ModelMetadata(sameRandomId, false, 11, Temporal.Timestamp.now()),
+                ModelMetadata(sameRandomId2, false, 11, Temporal.Timestamp.now()),
             )
 
         // Input list of blog posts on remote storage
