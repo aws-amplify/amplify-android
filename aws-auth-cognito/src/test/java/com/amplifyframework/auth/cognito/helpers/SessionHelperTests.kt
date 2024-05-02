@@ -36,9 +36,6 @@ class SessionHelperTests {
         expiration = 0
     )
 
-    // Encoded Date Time: April 30, 2024 02:00AM
-    private val currentInstant = Instant.ofEpochSecond(1714467600)
-
     @Test
     fun testGetExpiration() {
         val expiry = SessionHelper.getExpiration(dummyToken)
