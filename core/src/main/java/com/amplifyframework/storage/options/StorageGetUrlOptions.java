@@ -30,6 +30,7 @@ public class StorageGetUrlOptions extends StorageOptions {
      * attributes from builder instance.
      * @param builder the builder with configured attributes
      */
+    @SuppressWarnings("deprecation")
     protected StorageGetUrlOptions(final Builder<?> builder) {
         super(builder.getAccessLevel(), builder.getTargetIdentityId());
         this.expires = builder.getExpires();
@@ -65,6 +66,7 @@ public class StorageGetUrlOptions extends StorageOptions {
      *         values in the provided options
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public static Builder<?> from(@NonNull StorageGetUrlOptions options) {
         return builder()
             .accessLevel(options.getAccessLevel())
@@ -85,6 +87,7 @@ public class StorageGetUrlOptions extends StorageOptions {
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("deprecation")
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -102,6 +105,7 @@ public class StorageGetUrlOptions extends StorageOptions {
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("deprecation")
     public int hashCode() {
         return ObjectsCompat.hash(
                 getAccessLevel(),
@@ -115,6 +119,7 @@ public class StorageGetUrlOptions extends StorageOptions {
      */
     @NonNull
     @Override
+    @SuppressWarnings("deprecation")
     public String toString() {
         return "StorageGetUrlOptions {" +
                 "accessLevel=" + getAccessLevel() +

@@ -18,7 +18,9 @@ package com.amplifyframework.storage;
 /**
  * An enum of permission levels on storage operations.
  * This information should be passed in API options.
+ * @deprecated Will be unused when using {@link StoragePath}
  */
+@Deprecated
 public enum StorageAccessLevel {
 
     /**

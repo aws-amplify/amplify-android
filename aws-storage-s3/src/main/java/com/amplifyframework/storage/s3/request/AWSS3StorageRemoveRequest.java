@@ -22,9 +22,12 @@ import com.amplifyframework.storage.StorageAccessLevel;
 
 /**
  * Parameters to provide to S3 that describe a request to remove a file.
+ * @deprecated  this class is only constructed internally through deprecated transfer methods.
  */
+@Deprecated
 public final class AWSS3StorageRemoveRequest {
     private final String key;
+    @SuppressWarnings("deprecation")
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
 
@@ -38,6 +41,7 @@ public final class AWSS3StorageRemoveRequest {
      * @param targetIdentityId If set, this should override the current user's identity ID.
      *                         If null, the operation will fetch the current identity ID.
      */
+    @SuppressWarnings("deprecation")
     public AWSS3StorageRemoveRequest(
             @NonNull String key,
             @NonNull StorageAccessLevel accessLevel,
@@ -53,6 +57,7 @@ public final class AWSS3StorageRemoveRequest {
      * @return Access level
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public StorageAccessLevel getAccessLevel() {
         return accessLevel;
     }

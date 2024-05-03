@@ -51,6 +51,7 @@ dependencies {
     testImplementation(libs.test.mockk)
     testImplementation(libs.test.androidx.workmanager)
     testImplementation(libs.test.kotlin.coroutines)
+    testImplementation(libs.test.kotest.assertions)
     testImplementation(project(":aws-storage-s3"))
 
     androidTestImplementation(project(":testutils"))

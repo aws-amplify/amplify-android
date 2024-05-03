@@ -26,6 +26,11 @@ data class IdentityPoolConfiguration internal constructor(
     val region: String?,
     val poolId: String?
 ) {
+    internal fun toGen1Json() = JSONObject().apply {
+        region?.let { put(Config.REGION.key, it) }
+        poolId?.let { put(Config.POOL_ID.key, it) }
+    }
+
     internal companion object {
         private const val DEFAULT_REGION = "us-east-1"
 
@@ -82,6 +87,6 @@ data class IdentityPoolConfiguration internal constructor(
         /**
          * Contains identity pool identifier.
          */
-        POOL_ID("PoolId"),
+        POOL_ID("PoolId")
     }
 }

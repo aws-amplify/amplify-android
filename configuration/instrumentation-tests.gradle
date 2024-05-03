@@ -14,13 +14,13 @@ def module_backends = [
 ]
 
 def canaryTests = [
-        'aws-datastore'   : ['com.amplifyframework.datastore.DatastoreCanaryTest'],
-        'aws-auth-cognito': ['com.amplifyframework.auth.cognito.AuthCanaryTest'],
+        'aws-datastore'   : ['com.amplifyframework.datastore.DatastoreCanaryTest', 'com.amplifyframework.datastore.DatastoreCanaryTestGen2'],
+        'aws-auth-cognito': ['com.amplifyframework.auth.cognito.AuthCanaryTest', 'com.amplifyframework.auth.cognito.AuthCanaryTestGen2'],
         'aws-analytics-pinpoint': ['com.amplifyframework.analytics.pinpoint.PinpointAnalyticsCanaryTest'],
-        'aws-geo-location': ['com.amplifyframework.geo.location.GeoCanaryTest'],
+        'aws-geo-location': ['com.amplifyframework.geo.location.GeoCanaryTest', 'com.amplifyframework.geo.location.GeoCanaryTestGen2'],
         'aws-predictions': ['com.amplifyframework.predictions.aws.PredictionsCanaryTest'],
 //      'aws-push-notifications-pinpoint': ['com.amplifyframework.pushnotifications.pinpoint.NotificationsCanaryTest'],
-        'aws-storage-s3': ['com.amplifyframework.storage.s3.StorageCanaryTest']
+        'aws-storage-s3': ['com.amplifyframework.storage.s3.StorageCanaryTest', 'com.amplifyframework.storage.s3.StorageCanaryTestGen2']
 ]
 
 subprojects {

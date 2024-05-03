@@ -16,6 +16,7 @@ readonly config_files=(
     "aws-analytics-pinpoint/src/androidTest/res/raw/amplifyconfiguration.json"
     "aws-analytics-pinpoint/src/androidTest/res/raw/awsconfiguration.json"
     "aws-analytics-pinpoint/src/androidTest/res/raw/credentials.json"
+    "aws-analytics-pinpoint/src/androidTest/res/raw/amplify_outputs.json"
 
     # API
     "aws-api/src/androidTest/res/raw/amplifyconfiguration.json"
@@ -29,6 +30,7 @@ readonly config_files=(
     "aws-datastore/src/androidTest/res/raw/credentials.json"
     "aws-datastore/src/androidTest/res/raw/google_client_creds.json"
     "aws-datastore/src/androidTest/res/raw/amplifyconfigurationupdated.json"
+    "aws-datastore/src/androidTest/res/raw/amplify_outputs.json"
 
     # DataStore V2
     "aws-datastore/src/androidTest/res/raw/amplifyconfiguration_v2.json"
@@ -41,11 +43,13 @@ readonly config_files=(
     "aws-storage-s3/src/androidTest/res/raw/amplifyconfiguration.json"
     "aws-storage-s3/src/androidTest/res/raw/awsconfiguration.json"
     "aws-storage-s3/src/androidTest/res/raw/credentials.json"
+    "aws-storage-s3/src/androidTest/res/raw/amplify_outputs.json"
 
     # Geo
     "aws-geo-location/src/androidTest/res/raw/amplifyconfiguration.json"
     "aws-geo-location/src/androidTest/res/raw/awsconfiguration.json"
     "aws-geo-location/src/androidTest/res/raw/credentials.json"
+    "aws-geo-location/src/androidTest/res/raw/amplify_outputs.json"
 
     # Maplibre Adapter
     "maplibre-adapter/src/androidTest/res/raw/amplifyconfiguration.json"
@@ -57,6 +61,7 @@ readonly config_files=(
     "aws-auth-cognito/src/androidTest/res/raw/amplifyconfiguration_totp.json"
     "aws-auth-cognito/src/androidTest/res/raw/awsconfiguration.json"
     "aws-auth-cognito/src/androidTest/res/raw/credentials.json"
+    "aws-auth-cognito/src/androidTest/res/raw/amplify_outputs.json"
 )
 
 # Set up output path

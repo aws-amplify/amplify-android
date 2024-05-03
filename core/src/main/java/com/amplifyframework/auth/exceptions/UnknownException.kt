@@ -31,6 +31,6 @@ open class UnknownException(
 ) {
     companion object {
         const val RECOVERY_SUGGESTION_WITH_THROWABLE = "See the attached exception for more details"
-        const val RECOVERY_SUGGESTION_WITHOUT_THROWABLE = "Sorry, we don't have a suggested fix for this error yet."
+        const val RECOVERY_SUGGESTION_WITHOUT_THROWABLE = "Sorry, we don’t have a recovery suggestion for this error."
     }
 }

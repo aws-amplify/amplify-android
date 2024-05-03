@@ -1195,6 +1195,7 @@ public final class com/amplifyframework/core/Amplify {
 	public static fun addPlugin (Lcom/amplifyframework/core/plugin/Plugin;)V
 	public static fun configure (Landroid/content/Context;)V
 	public static fun configure (Lcom/amplifyframework/core/AmplifyConfiguration;Landroid/content/Context;)V
+	public static fun configure (Lcom/amplifyframework/core/configuration/AmplifyOutputs;Landroid/content/Context;)V
 	public static fun getCategoriesMap ()Ljava/util/Map;
 	public static fun removePlugin (Lcom/amplifyframework/core/plugin/Plugin;)V
 }
@@ -1365,6 +1366,34 @@ public final class com/amplifyframework/core/category/SubCategoryType : java/lan
 	public fun toString ()Ljava/lang/String;
 	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/core/category/SubCategoryType;
 	public static fun values ()[Lcom/amplifyframework/core/category/SubCategoryType;
+}
+
+public abstract interface class com/amplifyframework/core/configuration/AmplifyOutputs {
+	public static final field Companion Lcom/amplifyframework/core/configuration/AmplifyOutputs$Companion;
+	public static fun fromResource (I)Lcom/amplifyframework/core/configuration/AmplifyOutputs;
+	public static fun fromString (Ljava/lang/String;)Lcom/amplifyframework/core/configuration/AmplifyOutputs;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputs$Companion {
+	public final fun fromResource (I)Lcom/amplifyframework/core/configuration/AmplifyOutputs;
+	public final fun fromString (Ljava/lang/String;)Lcom/amplifyframework/core/configuration/AmplifyOutputs;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth$ResponseType$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Auth$UserVerificationTypes$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Auth$UsernameAttributes$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsKt {
+	public static final synthetic fun AmplifyOutputs (I)Lcom/amplifyframework/core/configuration/AmplifyOutputs;
+	public static final synthetic fun AmplifyOutputs (Ljava/lang/String;)Lcom/amplifyframework/core/configuration/AmplifyOutputs;
 }
 
 public final class com/amplifyframework/core/model/AuthRule {
@@ -3894,6 +3923,14 @@ public final class com/amplifyframework/predictions/result/TranslateTextResult$B
 	public fun translatedText (Ljava/lang/String;)Lcom/amplifyframework/predictions/result/TranslateTextResult$Builder;
 }
 
+public final class com/amplifyframework/storage/IdentityIdProvidedStoragePath : com/amplifyframework/storage/StoragePath {
+	public final fun copy (Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/storage/IdentityIdProvidedStoragePath;
+	public static synthetic fun copy$default (Lcom/amplifyframework/storage/IdentityIdProvidedStoragePath;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/amplifyframework/storage/IdentityIdProvidedStoragePath;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class com/amplifyframework/storage/ObjectMetadata {
 	public static final field CACHE_CONTROL Ljava/lang/String;
 	public static final field CONTENT_DISPOSITION Ljava/lang/String;
@@ -3957,41 +3994,69 @@ public final class com/amplifyframework/storage/StorageAccessLevel : java/lang/E
 
 public final class com/amplifyframework/storage/StorageCategory : com/amplifyframework/core/category/Category, com/amplifyframework/storage/StorageCategoryBehavior {
 	public fun <init> ()V
+	public fun downloadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageDownloadFileOperation;
+	public fun downloadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageDownloadFileOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageDownloadFileOperation;
+	public fun downloadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageDownloadFileOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageDownloadFileOperation;
 	public fun downloadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageDownloadFileOperation;
 	public fun downloadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageDownloadFileOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageDownloadFileOperation;
 	public fun downloadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageDownloadFileOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageDownloadFileOperation;
 	public fun getCategoryType ()Lcom/amplifyframework/core/category/CategoryType;
 	public fun getTransfer (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun getUrl (Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageGetUrlOperation;
+	public fun getUrl (Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/storage/options/StorageGetUrlOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageGetUrlOperation;
 	public fun getUrl (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageGetUrlOperation;
 	public fun getUrl (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageGetUrlOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageGetUrlOperation;
+	public fun list (Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/storage/options/StoragePagedListOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageListOperation;
 	public fun list (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageListOperation;
 	public fun list (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageListOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageListOperation;
 	public fun list (Ljava/lang/String;Lcom/amplifyframework/storage/options/StoragePagedListOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageListOperation;
+	public fun remove (Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageRemoveOperation;
+	public fun remove (Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/storage/options/StorageRemoveOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageRemoveOperation;
 	public fun remove (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageRemoveOperation;
 	public fun remove (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageRemoveOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageRemoveOperation;
+	public fun uploadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageUploadFileOperation;
+	public fun uploadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageUploadFileOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageUploadFileOperation;
+	public fun uploadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageUploadFileOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageUploadFileOperation;
 	public fun uploadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageUploadFileOperation;
 	public fun uploadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageUploadFileOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageUploadFileOperation;
 	public fun uploadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageUploadFileOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageUploadFileOperation;
+	public fun uploadInputStream (Lcom/amplifyframework/storage/StoragePath;Ljava/io/InputStream;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageUploadInputStreamOperation;
+	public fun uploadInputStream (Lcom/amplifyframework/storage/StoragePath;Ljava/io/InputStream;Lcom/amplifyframework/storage/options/StorageUploadInputStreamOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageUploadInputStreamOperation;
+	public fun uploadInputStream (Lcom/amplifyframework/storage/StoragePath;Ljava/io/InputStream;Lcom/amplifyframework/storage/options/StorageUploadInputStreamOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageUploadInputStreamOperation;
 	public fun uploadInputStream (Ljava/lang/String;Ljava/io/InputStream;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageUploadInputStreamOperation;
 	public fun uploadInputStream (Ljava/lang/String;Ljava/io/InputStream;Lcom/amplifyframework/storage/options/StorageUploadInputStreamOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageUploadInputStreamOperation;
 	public fun uploadInputStream (Ljava/lang/String;Ljava/io/InputStream;Lcom/amplifyframework/storage/options/StorageUploadInputStreamOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageUploadInputStreamOperation;
 }
 
 public abstract interface class com/amplifyframework/storage/StorageCategoryBehavior {
+	public abstract fun downloadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageDownloadFileOperation;
+	public abstract fun downloadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageDownloadFileOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageDownloadFileOperation;
+	public abstract fun downloadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageDownloadFileOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageDownloadFileOperation;
 	public abstract fun downloadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageDownloadFileOperation;
 	public abstract fun downloadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageDownloadFileOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageDownloadFileOperation;
 	public abstract fun downloadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageDownloadFileOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageDownloadFileOperation;
 	public abstract fun getTransfer (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public abstract fun getUrl (Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageGetUrlOperation;
+	public abstract fun getUrl (Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/storage/options/StorageGetUrlOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageGetUrlOperation;
 	public abstract fun getUrl (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageGetUrlOperation;
 	public abstract fun getUrl (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageGetUrlOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageGetUrlOperation;
+	public abstract fun list (Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/storage/options/StoragePagedListOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageListOperation;
 	public abstract fun list (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageListOperation;
 	public abstract fun list (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageListOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageListOperation;
 	public abstract fun list (Ljava/lang/String;Lcom/amplifyframework/storage/options/StoragePagedListOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageListOperation;
+	public abstract fun remove (Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageRemoveOperation;
+	public abstract fun remove (Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/storage/options/StorageRemoveOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageRemoveOperation;
 	public abstract fun remove (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageRemoveOperation;
 	public abstract fun remove (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageRemoveOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageRemoveOperation;
+	public abstract fun uploadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageUploadFileOperation;
+	public abstract fun uploadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageUploadFileOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageUploadFileOperation;
+	public abstract fun uploadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageUploadFileOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageUploadFileOperation;
 	public abstract fun uploadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageUploadFileOperation;
 	public abstract fun uploadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageUploadFileOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageUploadFileOperation;
 	public abstract fun uploadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageUploadFileOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageUploadFileOperation;
+	public abstract fun uploadInputStream (Lcom/amplifyframework/storage/StoragePath;Ljava/io/InputStream;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageUploadInputStreamOperation;
+	public abstract fun uploadInputStream (Lcom/amplifyframework/storage/StoragePath;Ljava/io/InputStream;Lcom/amplifyframework/storage/options/StorageUploadInputStreamOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageUploadInputStreamOperation;
+	public abstract fun uploadInputStream (Lcom/amplifyframework/storage/StoragePath;Ljava/io/InputStream;Lcom/amplifyframework/storage/options/StorageUploadInputStreamOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageUploadInputStreamOperation;
 	public abstract fun uploadInputStream (Ljava/lang/String;Ljava/io/InputStream;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageUploadInputStreamOperation;
 	public abstract fun uploadInputStream (Ljava/lang/String;Ljava/io/InputStream;Lcom/amplifyframework/storage/options/StorageUploadInputStreamOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageUploadInputStreamOperation;
 	public abstract fun uploadInputStream (Ljava/lang/String;Ljava/io/InputStream;Lcom/amplifyframework/storage/options/StorageUploadInputStreamOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/storage/operation/StorageUploadInputStreamOperation;
@@ -4020,20 +4085,52 @@ public final class com/amplifyframework/storage/StorageException : com/amplifyfr
 
 public final class com/amplifyframework/storage/StorageItem {
 	public fun <init> (Ljava/lang/String;JLjava/util/Date;Ljava/lang/String;Ljava/lang/Object;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()J
+	public final fun component4 ()Ljava/util/Date;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun component6 ()Ljava/lang/Object;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;JLjava/util/Date;Ljava/lang/String;Ljava/lang/Object;)Lcom/amplifyframework/storage/StorageItem;
+	public static synthetic fun copy$default (Lcom/amplifyframework/storage/StorageItem;Ljava/lang/String;Ljava/lang/String;JLjava/util/Date;Ljava/lang/String;Ljava/lang/Object;ILjava/lang/Object;)Lcom/amplifyframework/storage/StorageItem;
 	public fun equals (Ljava/lang/Object;)Z
-	public fun getETag ()Ljava/lang/String;
-	public fun getKey ()Ljava/lang/String;
-	public fun getLastModified ()Ljava/util/Date;
-	public fun getPluginResults ()Ljava/lang/Object;
-	public fun getSize ()J
+	public final fun getETag ()Ljava/lang/String;
+	public final fun getKey ()Ljava/lang/String;
+	public final fun getLastModified ()Ljava/util/Date;
+	public final fun getPath ()Ljava/lang/String;
+	public final fun getPluginResults ()Ljava/lang/Object;
+	public final fun getSize ()J
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class com/amplifyframework/storage/StoragePath {
+	public static final field Companion Lcom/amplifyframework/storage/StoragePath$Companion;
+	public fun <init> ()V
+	public static final fun fromIdentityId (Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/storage/StoragePath;
+	public static final fun fromString (Ljava/lang/String;)Lcom/amplifyframework/storage/StoragePath;
+}
+
+public final class com/amplifyframework/storage/StoragePath$Companion {
+	public final fun fromIdentityId (Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/storage/StoragePath;
+	public final fun fromString (Ljava/lang/String;)Lcom/amplifyframework/storage/StoragePath;
+}
+
+public final class com/amplifyframework/storage/StoragePathValidationException : com/amplifyframework/AmplifyException {
 }
 
 public abstract class com/amplifyframework/storage/StoragePlugin : com/amplifyframework/core/plugin/Plugin, com/amplifyframework/storage/StorageCategoryBehavior {
 	public fun <init> ()V
 	public final fun getCategoryType ()Lcom/amplifyframework/core/category/CategoryType;
 	public fun initialize (Landroid/content/Context;)V
+}
+
+public final class com/amplifyframework/storage/StringStoragePath : com/amplifyframework/storage/StoragePath {
+	public final fun copy (Ljava/lang/String;)Lcom/amplifyframework/storage/StringStoragePath;
+	public static synthetic fun copy$default (Lcom/amplifyframework/storage/StringStoragePath;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/storage/StringStoragePath;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class com/amplifyframework/storage/TransferState : java/lang/Enum {
@@ -4270,6 +4367,7 @@ public final class com/amplifyframework/storage/result/StorageRemoveResult {
 	public fun equals (Ljava/lang/Object;)Z
 	public static fun fromKey (Ljava/lang/String;)Lcom/amplifyframework/storage/result/StorageRemoveResult;
 	public fun getKey ()Ljava/lang/String;
+	public fun getPath ()Ljava/lang/String;
 	public fun hashCode ()I
 }
 
@@ -4303,6 +4401,7 @@ public class com/amplifyframework/storage/result/StorageUploadResult : com/ampli
 	public fun equals (Ljava/lang/Object;)Z
 	public static fun fromKey (Ljava/lang/String;)Lcom/amplifyframework/storage/result/StorageUploadResult;
 	public fun getKey ()Ljava/lang/String;
+	public fun getPath ()Ljava/lang/String;
 	public fun hashCode ()I
 }
 
