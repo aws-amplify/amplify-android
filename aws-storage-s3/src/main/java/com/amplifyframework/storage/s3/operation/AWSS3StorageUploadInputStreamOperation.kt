@@ -220,15 +220,6 @@ class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
                     onSuccess?.accept(StorageUploadInputStreamResult.fromKey(key))
                     return
                 }
-                TransferState.FAILED -> {
-                    onError?.accept(
-                        StorageException(
-                            "Storage upload operation was interrupted.",
-                            "Please verify that you have a stable internet connection."
-                        )
-                    )
-                    return
-                }
                 else -> {}
             }
         }

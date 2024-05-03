@@ -55,7 +55,6 @@ internal class Merger(
     fun <T : Model> merge(modelWithMetadata: ModelWithMetadata<T>): Completable {
         return merge(listOf(modelWithMetadata), NoOpConsumer.create())
     }
-
     fun <T : Model> merge(
         modelsWithMetadata: List<ModelWithMetadata<T>>,
         changeTypeConsumer: Consumer<StorageItemChange.Type>
@@ -66,8 +65,16 @@ internal class Merger(
                 return@rxCompletable
             }
 
+            // Keep the models with the highest version for each ids, abandon the rest
+            val modelsWithUniqueId = modelsWithMetadata.groupBy { modelWithMetadata ->
+                modelWithMetadata.model.primaryKeyString
+            }
+                .map { group ->
+                    group.value.maxBy { dupModels -> dupModels.syncMetadata.version ?: 0 }
+                }
+
             // create (key, model metadata) map for quick lookup to re-associate
-            val modelMetadataMap = modelsWithMetadata.associateBy { it.syncMetadata.primaryKeyString }
+            val modelMetadataMap = modelsWithUniqueId.associateBy { it.syncMetadata.primaryKeyString }
 
             // Consumer to announce Model merges
             val mergedConsumer = Consumer<ModelWithMetadata<T>> {
@@ -85,7 +92,7 @@ internal class Merger(
             }
 
             // fetch a Map of all model versions from Metadata table
-            val localModelVersions = versionRepository.fetchModelVersions(modelsWithMetadata)
+            val localModelVersions = versionRepository.fetchModelVersions(modelsWithUniqueId)
 
             /*
             Fetch a Set of all pending mutation ids for type T
@@ -94,13 +101,13 @@ internal class Merger(
             whichever comes first
              */
             val pendingMutations = mutationOutbox.fetchPendingMutations(
-                models = modelsWithMetadata.map { it.model },
-                modelClass = modelsWithMetadata.first().model.javaClass.name,
+                models = modelsWithUniqueId.map { it.model },
+                modelClass = modelsWithUniqueId.first().model.javaClass.name,
                 excludeInFlight = true
             )
 
             // Construct a batch of operations to be executed in a single transactions
-            val operations = modelsWithMetadata.mapNotNull {
+            val operations = modelsWithUniqueId.mapNotNull {
                 val incomingVersion = it.syncMetadata.version ?: -1
                 val localVersion = localModelVersions.getOrDefault(
                     it.model.getMetadataSQLitePrimaryKey(),
