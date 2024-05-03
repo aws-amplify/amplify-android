@@ -18,8 +18,10 @@ package com.amplifyframework.auth.cognito.helpers
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import org.junit.Test
 
 class SessionHelperTests {
@@ -60,5 +62,48 @@ class SessionHelperTests {
     @Test
     fun testsIsInvalidSession() {
         assertFalse(SessionHelper.isValidSession(AWSCredentials.empty))
+    }
+
+    @Test
+    fun `Pulling a V1 credential should fail isValidSession check`() {
+        // Expiration is encoded in ms to simulate v1 > v2 migration issue
+        assertFalse(
+            SessionHelper.isValidSession(
+                AWSCredentials(
+                    accessKeyId = dummyToken,
+                    secretAccessKey = dummyToken,
+                    sessionToken = dummyToken,
+                    expiration = Instant.now().plus(30, ChronoUnit.MINUTES).toEpochMilli()
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `Session with an expiration in the past should fail isValidSession check`() {
+        assertFalse(
+            SessionHelper.isValidSession(
+                AWSCredentials(
+                    accessKeyId = dummyToken,
+                    secretAccessKey = dummyToken,
+                    sessionToken = dummyToken,
+                    expiration = Instant.now().minus(1, ChronoUnit.MINUTES).epochSecond
+                )
+            )
+        )
+    }
+
+    @Test
+    fun `Session with an expiration in the future should pass isValidSession check`() {
+        assertTrue(
+            SessionHelper.isValidSession(
+                AWSCredentials(
+                    accessKeyId = dummyToken,
+                    secretAccessKey = dummyToken,
+                    sessionToken = dummyToken,
+                    expiration = Instant.now().plus(1, ChronoUnit.MINUTES).epochSecond
+                )
+            )
+        )
     }
 }
