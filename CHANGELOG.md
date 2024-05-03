@@ -1,3 +1,15 @@
+## [Release 2.16.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.16.1)
+
+### Bug Fixes
+- **logging:** Fix unexpected behavior of bulkDelete action ([#2772](https://github.com/aws-amplify/amplify-android/issues/2772)) ([#2776](https://github.com/aws-amplify/amplify-android/issues/2776))
+- **auth:** Fix timestamp issue with v1 to v2 migration ([#2799](https://github.com/aws-amplify/amplify-android/issues/2799))
+- **datastore:** Reconcile batch process optimization bug [#2727](https://github.com/aws-amplify/amplify-android/issues/2727) ([#2749](https://github.com/aws-amplify/amplify-android/issues/2749))
+- **Storage:** Prevent InputStream errors from calling back more than once ([#2742](https://github.com/aws-amplify/amplify-android/issues/2742))
+- **datastore:** Prevent datastore error with single auth rule when Mu… ([#2760](https://github.com/aws-amplify/amplify-android/issues/2760))
+- **datastore:** List errors that are returned from AppSync ([#2801](https://github.com/aws-amplify/amplify-android/issues/2801))
+
+[See all changes between 2.16.0 and 2.16.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.16.0...release_v2.16.1)
+
 ## [Release 2.16.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.16.0)
 
 ### Features
