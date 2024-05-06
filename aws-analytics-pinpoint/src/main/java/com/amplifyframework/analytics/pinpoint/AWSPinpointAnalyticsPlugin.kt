@@ -191,7 +191,7 @@ class AWSPinpointAnalyticsPlugin @JvmOverloads constructor(
              */
             fun trackLifecycleEvents(value: Boolean) = apply { trackLifecycleEvents = value }
 
-            internal fun build() = Options(
+            fun build() = Options(
                 autoFlushEventsInterval = autoFlushEventsInterval,
                 trackLifecycleEvents = trackLifecycleEvents
             )

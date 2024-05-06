@@ -33,6 +33,7 @@ public final class com/amplifyframework/analytics/pinpoint/AWSPinpointAnalyticsP
 
 public final class com/amplifyframework/analytics/pinpoint/AWSPinpointAnalyticsPlugin$Options$Builder {
 	public final fun autoFlushEventsInterval (J)Lcom/amplifyframework/analytics/pinpoint/AWSPinpointAnalyticsPlugin$Options$Builder;
+	public final fun build ()Lcom/amplifyframework/analytics/pinpoint/AWSPinpointAnalyticsPlugin$Options;
 	public final fun getAutoFlushEventsInterval ()J
 	public final fun getTrackLifecycleEvents ()Z
 	public final synthetic fun setAutoFlushEventsInterval (J)V
