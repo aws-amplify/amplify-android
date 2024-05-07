@@ -562,7 +562,10 @@ public final class DataStoreConfiguration {
             syncPageSize = getValueOrDefault(userProvidedConfiguration.getSyncPageSize(), syncPageSize);
             syncExpressions = userProvidedConfiguration.getSyncExpressions();
             doSyncRetry = getValueOrDefault(userProvidedConfiguration.getDoSyncRetry(), doSyncRetry);
-            syncConcurrencyLimit = getValueOrDefault(userProvidedConfiguration.getSyncConcurrencyLimit(), syncConcurrencyLimit);
+            syncConcurrencyLimit = getValueOrDefault(
+                    userProvidedConfiguration.getSyncConcurrencyLimit(),
+                    syncConcurrencyLimit
+            );
             observeQueryMaxRecords = getValueOrDefault(userProvidedConfiguration.getObserveQueryMaxRecords(),
                     observeQueryMaxRecords);
             maxTimeLapseForObserveQuery = userProvidedConfiguration.getMaxTimeLapseForObserveQuery()
