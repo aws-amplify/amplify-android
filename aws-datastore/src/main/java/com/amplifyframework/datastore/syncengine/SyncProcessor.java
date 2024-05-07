@@ -139,9 +139,21 @@ final class SyncProcessor {
             }
         }
 
+        int syncConcurrencyLimit;
+        try {
+            syncConcurrencyLimit = dataStoreConfigurationProvider
+                    .getConfiguration()
+                    .getSyncConcurrencyLimit();
+        } catch (DataStoreException exception) {
+            syncConcurrencyLimit = 1;
+        }
+
         Completable syncCompletable;
-        if (syncInParallel) {
-            syncCompletable = Completable.mergeDelayError(hydrationTasks);
+        if (syncInParallel && syncConcurrencyLimit > 1) {
+            syncCompletable = Completable.mergeDelayError(
+                    Flowable.fromIterable(hydrationTasks),
+                    syncConcurrencyLimit
+            );
         } else {
             syncCompletable = Completable.concat(hydrationTasks);
         }
