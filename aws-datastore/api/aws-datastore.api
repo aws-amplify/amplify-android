@@ -61,6 +61,7 @@ public final class com/amplifyframework/datastore/DataStoreConfiguration {
 	public fun getErrorHandler ()Lcom/amplifyframework/datastore/DataStoreErrorHandler;
 	public fun getMaxTimeLapseForObserveQuery ()Ljava/lang/Long;
 	public fun getObserveQueryMaxRecords ()Ljava/lang/Integer;
+	public fun getSyncConcurrencyLimit ()Ljava/lang/Integer;
 	public fun getSyncExpressions ()Ljava/util/Map;
 	public fun getSyncIntervalInMinutes ()Ljava/lang/Long;
 	public fun getSyncIntervalMs ()Ljava/lang/Long;
@@ -77,6 +78,7 @@ public final class com/amplifyframework/datastore/DataStoreConfiguration$Builder
 	public fun errorHandler (Lcom/amplifyframework/datastore/DataStoreErrorHandler;)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
 	public fun observeQueryMaxRecords (Ljava/lang/Integer;)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
 	public fun observeQueryMaxTime (J)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
+	public fun syncConcurrencyLimit (Ljava/lang/Integer;)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
 	public fun syncExpression (Ljava/lang/Class;Lcom/amplifyframework/datastore/DataStoreSyncExpression;)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
 	public fun syncExpression (Ljava/lang/String;Lcom/amplifyframework/datastore/DataStoreSyncExpression;)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
 	public fun syncInterval (JLjava/util/concurrent/TimeUnit;)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
