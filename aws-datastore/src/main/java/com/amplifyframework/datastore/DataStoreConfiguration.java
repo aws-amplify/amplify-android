@@ -74,7 +74,8 @@ public final class DataStoreConfiguration {
         this.syncIntervalInMinutes = builder.syncIntervalInMinutes;
         this.syncExpressions = builder.syncExpressions;
         this.doSyncRetry = builder.doSyncRetry;
-        this.syncConcurrencyLimit = builder.syncConcurrencyLimit;
+        this.syncConcurrencyLimit = builder.syncConcurrencyLimit != null ?
+                builder.syncConcurrencyLimit : DEFAULT_SYNC_CONCURRENCY_LIMIT;
         this.maxTimeLapseForObserveQuery = builder.maxTimeLapseForObserveQuery;
         this.observeQueryMaxRecords = builder.observeQueryMaxRecords;
     }
