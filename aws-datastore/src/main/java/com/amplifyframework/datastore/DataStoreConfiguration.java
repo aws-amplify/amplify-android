@@ -210,6 +210,11 @@ public final class DataStoreConfiguration {
      * Gets the number of models that are allowed to concurrently sync.
      * NOTE: This value will not be used if any models have associations, instead, the default (1)
      * will be used.
+     * Setting this number to a high value requires that the developer ensure app memory is not a
+     * concern. If the expected sync data contains a large number of models, with a large number
+     * of records per model, the concurrency limit should be set to a conservative value. However,
+     * if the expected sync data contains a large number of models, with a small amount of data in
+     * each model, setting this limit to a high value will greatly improve sync speeds.
      * @return Limit to the number of models that can sync concurrently
      */
     public Integer getSyncConcurrencyLimit() {
@@ -454,6 +459,11 @@ public final class DataStoreConfiguration {
          * Sets the concurrency limit for model syncing. Default is 1
          * NOTE: If any sync models have associations, this value will be unused and the default (1)
          * will be used.
+         * Setting this number to a high value requires that the developer ensure app memory is not a
+         * concern. If the expected sync data contains a large number of models, with a large number
+         * of records per model, the concurrency limit should be set to a conservative value. However,
+         * if the expected sync data contains a large number of models, with a small amount of data in
+         * each model, setting this limit to a high value will greatly improve sync speeds.
          * @param syncConcurrencyLimit Number of models that can sync concurrently
          * @return Current builder
          */
