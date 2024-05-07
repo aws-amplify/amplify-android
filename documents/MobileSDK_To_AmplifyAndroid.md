@@ -108,5 +108,11 @@ When migrating from the AWS SDK for Android to Amplify, you'll need to adjust yo
 * Amplify Analytics events have default configuration to flush out to the network every 30 seconds. This interval can be configured in `amplifyconfiguration.json.` Refer [Flush Events](https://docs.amplify.aws/android/build-a-backend/more-features/analytics/record-events/#flush-events) section in Amplify Documentation for more details.
 * Limits applicable to ingestion of events for Amazon Pinpoint can be found [here](https://docs.aws.amazon.com/pinpoint/latest/developerguide/quotas.html#limits-events).
 
+### [AWS IoT](https://docs.amplify.aws/gen1/android/sdk/pubsub/getting-started/#aws-iot)
+
+Notes:
+
+* For AWS IoT, we recommend using [AWS SDK for JAVA](https://github.com/aws/aws-iot-device-sdk-java)
+
 # <Stop Reading>
 
