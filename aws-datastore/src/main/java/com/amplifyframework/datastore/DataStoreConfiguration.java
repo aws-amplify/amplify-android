@@ -218,6 +218,8 @@ public final class DataStoreConfiguration {
      * each model, setting this limit to a high value will greatly improve sync speeds.
      * @return Limit to the number of models that can sync concurrently
      */
+    @IntRange(from = 1)
+    @NonNull
     public Integer getSyncConcurrencyLimit() {
         return syncConcurrencyLimit;
     }
@@ -469,7 +471,7 @@ public final class DataStoreConfiguration {
          * @return Current builder
          */
         @NonNull
-        public Builder syncConcurrencyLimit(@IntRange(from = 0) Integer syncConcurrencyLimit) {
+        public Builder syncConcurrencyLimit(@IntRange(from = 1) Integer syncConcurrencyLimit) {
             this.syncConcurrencyLimit = syncConcurrencyLimit;
             return Builder.this;
         }
