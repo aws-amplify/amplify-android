@@ -126,16 +126,27 @@ final class SyncProcessor {
             TopologicalOrdering.forRegisteredModels(schemaRegistry, modelProvider);
         Collections.sort(modelSchemas, ordering::compare);
         ArrayList<String> toBeSyncedModelArray = new ArrayList<>();
+        boolean syncInParallel = true;
         for (ModelSchema schema : modelSchemas) {
             //Check to see if query predicate for this schema is not equal to none. This means customer does
             // not want to sync the data for this model.
             if (!QueryPredicates.none().equals(queryPredicateProvider.getPredicate(schema.getName()))) {
                 hydrationTasks.add(createHydrationTask(schema));
                 toBeSyncedModelArray.add(schema.getName());
+                if (schema.getAssociations().size() > 0) {
+                    syncInParallel = false;
+                }
             }
         }
 
-        return Completable.concat(hydrationTasks)
+        Completable syncCompletable;
+        if (syncInParallel) {
+            syncCompletable = Completable.mergeDelayError(hydrationTasks);
+        } else {
+            syncCompletable = Completable.concat(hydrationTasks);
+        }
+
+        return syncCompletable
             .doOnSubscribe(ignore -> {
                 // This is where we trigger the syncQueriesStarted event since
                 // doOnSubscribe means that all upstream hydration tasks
