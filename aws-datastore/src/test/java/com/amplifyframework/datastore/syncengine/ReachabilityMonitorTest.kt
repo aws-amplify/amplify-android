@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.syncengine
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
+import android.net.NetworkCapabilities
 import com.amplifyframework.datastore.DataStoreException
 import io.reactivex.rxjava3.core.BackpressureStrategy
 import io.reactivex.rxjava3.schedulers.TestScheduler
@@ -26,6 +27,7 @@ import java.util.concurrent.TimeUnit
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.mockito.Mockito
 import org.mockito.Mockito.mock
 
 class ReachabilityMonitorTest {
@@ -70,6 +72,10 @@ class ReachabilityMonitorTest {
             .subscribe(testSubscriber)
 
         val network = mock(Network::class.java)
+        val networkCapabilities = mock(NetworkCapabilities::class.java)
+        Mockito.`when`(networkCapabilities.hasCapability(NetworkCapabilities.TRANSPORT_WIFI))
+            .thenReturn(true)
+
         // Should provide initial network state (true) upon subscription (after debounce)
         testScheduler.advanceTimeBy(251, TimeUnit.MILLISECONDS)
         callback!!.onAvailable(network)

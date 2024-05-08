@@ -15,7 +15,6 @@
 
 package com.amplifyframework.datastore.syncengine
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.ConnectivityManager.NetworkCallback
@@ -25,12 +24,10 @@ import android.net.NetworkCapabilities
 import android.os.Build
 import androidx.annotation.VisibleForTesting
 import com.amplifyframework.datastore.DataStoreException
-import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.ObservableEmitter
 import io.reactivex.rxjava3.subjects.BehaviorSubject
 import java.util.concurrent.TimeUnit
-
 
 /**
  * The ReachabilityMonitor is responsible for watching the network status as provided by the OS.
@@ -94,11 +91,10 @@ private class ReachabilityMonitorImpl constructor(val schedulerProvider: Schedul
     private inner class ConnectivityNetworkCallback(private val emitter: ObservableEmitter<Boolean>) : NetworkCallback() {
         private var currentNetwork: Network? = null
         private var currentCapabilities: NetworkCapabilities? = null
-        private val DELAY_MS: Long = 250
 
         override fun onAvailable(network: Network) {
             currentNetwork = network
-            asyncUpdateAndSend()
+            updateAndSend()
         }
 
         override fun onLosing(network: Network, maxMsToLive: Int) {
@@ -125,24 +121,12 @@ private class ReachabilityMonitorImpl constructor(val schedulerProvider: Schedul
         }
 
         override fun onLinkPropertiesChanged(network: Network, linkProperties: LinkProperties) {
-            if (currentNetwork != null) {
-                currentNetwork = network
-            }
-            asyncUpdateAndSend()
+            currentNetwork = network
+            updateAndSend()
         }
 
         private fun updateAndSend() {
-            emitter.onNext(DefaultConnectivityProvider.isInternetReachable(currentCapabilities))
-        }
-
-        @SuppressLint("CheckResult")
-        private fun asyncUpdateAndSend() {
-            Completable.timer(DELAY_MS, TimeUnit.MILLISECONDS, schedulerProvider.computation()).subscribe {
-                currentCapabilities = DefaultConnectivityProvider.getNetworkCapabilities(connectivityProvider?.connectivityNetworkManager)
-                if (currentCapabilities != null) {
-                    updateAndSend()
-                }
-            }
+            emitter.onNext(NetworkCapabilitiesUtil.isInternetReachable(currentCapabilities))
         }
     }
 }
@@ -154,20 +138,22 @@ private class ReachabilityMonitorImpl constructor(val schedulerProvider: Schedul
  */
 interface ConnectivityProvider {
     val hasActiveNetwork: Boolean
-    val connectivityNetworkManager: ConnectivityManager?
     fun registerDefaultNetworkCallback(context: Context, callback: NetworkCallback)
 }
 
 private class DefaultConnectivityProvider : ConnectivityProvider {
     private var connectivityManager: ConnectivityManager? = null
 
-    override val connectivityNetworkManager: ConnectivityManager?
-        get() = connectivityManager
-
     override val hasActiveNetwork: Boolean
-        get() = connectivityManager?.let {
-            val networkCapabilities: NetworkCapabilities? = getNetworkCapabilities(it)
-            isInternetReachable(networkCapabilities)
+        get() = connectivityManager?.let { manager ->
+            // the same logic as https://github.com/aws-amplify/amplify-android/blob/main/aws-storage-s3/src/main/java/com/amplifyframework/storage/s3/transfer/worker/BaseTransferWorker.kt#L176
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val networkCapabilities: NetworkCapabilities? = NetworkCapabilitiesUtil.getNetworkCapabilities(manager)
+                NetworkCapabilitiesUtil.isInternetReachable(networkCapabilities)
+            } else {
+                val activeNetworkInfo = manager.activeNetworkInfo
+                activeNetworkInfo != null && activeNetworkInfo.isConnected
+            }
         } ?: run {
             throw DataStoreException(
                 "ReachabilityMonitor has not been configured.",
@@ -184,42 +170,5 @@ private class DefaultConnectivityProvider : ConnectivityProvider {
                     "No recovery suggestion is available"
                 )
             }
-    }
-
-    companion object {
-        fun getNetworkCapabilities(connectivityManager: ConnectivityManager?): NetworkCapabilities? {
-            try {
-                return connectivityManager?.let {
-                    it.getNetworkCapabilities(it.activeNetwork)
-                }
-            } catch (ignored: SecurityException) {
-                // Android 11 may throw a 'package does not belong' security exception here.
-                // Google fixed Android 14, 13 and 12 with the issue where Chaland Jean patched those versions.
-                // Android 11 is too old, so that's why we have to catch this exception here to be safe.
-                //  https://android.googlesource.com/platform/frameworks/base/+/249be21013e389837f5b2beb7d36890b25ecfaaf%5E%21/
-                // We need to catch this to prevent app crash.
-            }
-            return null
-        }
-
-        fun isInternetReachable(capabilities: NetworkCapabilities?): Boolean {
-            var isInternetReachable = false
-            if (capabilities != null) {
-                // Check to see if the network is temporarily unavailable or if airplane mode is toggled on
-                val isInternetSuspended = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_SUSPENDED)
-                } else {
-                    // TODO: for SDK < 28, add extra check to evaluate airplane mode
-                    false
-                }
-                isInternetReachable = (capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-                    && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-                    && !isInternetSuspended)
-                if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) {
-                    isInternetReachable = isInternetReachable && capabilities.linkDownstreamBandwidthKbps != 0
-                }
-            }
-            return isInternetReachable
-        }
     }
 }
