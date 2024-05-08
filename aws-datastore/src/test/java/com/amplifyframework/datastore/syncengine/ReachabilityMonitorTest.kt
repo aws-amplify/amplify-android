@@ -29,6 +29,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.Mockito
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 
 class ReachabilityMonitorTest {
 
@@ -73,20 +74,28 @@ class ReachabilityMonitorTest {
 
         val network = mock(Network::class.java)
         val networkCapabilities = mock(NetworkCapabilities::class.java)
+<<<<<<< HEAD
         Mockito.`when`(networkCapabilities.hasCapability(NetworkCapabilities.TRANSPORT_WIFI))
+=======
+        `when`(networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
+>>>>>>> ad4c66a8 (Move NetworkCapabilitiesUtil to a new util class and add unit test)
             .thenReturn(true)
 
         // Should provide initial network state (true) upon subscription (after debounce)
         testScheduler.advanceTimeBy(251, TimeUnit.MILLISECONDS)
         callback!!.onAvailable(network)
+        callback!!.onCapabilitiesChanged(network, networkCapabilities)
         callback!!.onAvailable(network)
+        callback!!.onCapabilitiesChanged(network, networkCapabilities)
         callback!!.onLost(network)
         // Should provide false after debounce
         testScheduler.advanceTimeBy(251, TimeUnit.MILLISECONDS)
         callback!!.onAvailable(network)
+        callback!!.onCapabilitiesChanged(network, networkCapabilities)
         // Should provide true after debounce
         testScheduler.advanceTimeBy(251, TimeUnit.MILLISECONDS)
         callback!!.onAvailable(network)
+        callback!!.onCapabilitiesChanged(network, networkCapabilities)
         // Should provide true after debounce
         testScheduler.advanceTimeBy(251, TimeUnit.MILLISECONDS)
 
@@ -128,9 +137,13 @@ class ReachabilityMonitorTest {
             .subscribe(testSubscriber)
 
         val network = mock(Network::class.java)
+        val networkCapabilities = mock(NetworkCapabilities::class.java)
+        `when`(networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
+            .thenReturn(true)
 
         // Assert that the first value is returned
         callback!!.onAvailable(network)
+        callback!!.onCapabilitiesChanged(network, networkCapabilities)
         testScheduler.advanceTimeBy(251, TimeUnit.MILLISECONDS)
         var result1: Boolean? = null
         val disposable1 = reachabilityMonitor.getObservable().subscribeOn(testScheduler).subscribe { result1 = it }
@@ -152,10 +165,12 @@ class ReachabilityMonitorTest {
 
         // Assert that if debouncer keeps getting restarted, value doesn't change
         callback!!.onAvailable(network)
+        callback!!.onCapabilitiesChanged(network, networkCapabilities)
         testScheduler.advanceTimeBy(100, TimeUnit.MILLISECONDS)
         callback!!.onLost(network)
         testScheduler.advanceTimeBy(100, TimeUnit.MILLISECONDS)
         callback!!.onAvailable(network)
+        callback!!.onCapabilitiesChanged(network, networkCapabilities)
         testScheduler.advanceTimeBy(100, TimeUnit.MILLISECONDS)
 
         var result4: Boolean? = null
