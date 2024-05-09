@@ -47,7 +47,8 @@ public interface Logger {
     void error(@Nullable String message);
 
     /**
-     * Logs a message at the {@link LogLevel#ERROR} level.
+     * Logs a message at the {@link LogLevel#ERROR} level. The supplier is only invoked if the log level threshold
+     * is at ERROR or below.
      * @param messageSupplier A function that returns an error message
      */
     default void error(@NonNull Supplier<String> messageSupplier) {
@@ -64,7 +65,8 @@ public interface Logger {
     void error(@Nullable String message, @Nullable Throwable error);
 
     /**
-     * Logs a message and thrown error at {@link LogLevel#ERROR} level.
+     * Logs a message and thrown error at {@link LogLevel#ERROR} level. The supplier is only invoked if the log level
+     * threshold is at ERROR or below.
      * @param error A thrown error
      * @param messageSupplier A function that returns an error message
      */
@@ -81,7 +83,8 @@ public interface Logger {
     void warn(@Nullable String message);
 
     /**
-     * Log a message at the {@link LogLevel#WARN} level.
+     * Log a message at the {@link LogLevel#WARN} level. The supplier is only invoked if the log level threshold
+     * is at WARN or below.
      * @param messageSupplier A function that returns a warning message
      */
     default void warn(@NonNull Supplier<String> messageSupplier) {
@@ -98,7 +101,8 @@ public interface Logger {
     void warn(@Nullable String message, @Nullable Throwable issue);
 
     /**
-     * Log a message and a throwable issue at the {@link LogLevel#WARN} level.
+     * Log a message and a throwable issue at the {@link LogLevel#WARN} level. The supplier is only invoked if the
+     * log level threshold is at WARN or below.
      * @param issue An issue that caused this warning
      * @param messageSupplier A function that returns a warning message
      */
@@ -115,7 +119,8 @@ public interface Logger {
     void info(@Nullable String message);
 
     /**
-     * Logs a message at {@link LogLevel#INFO} level.
+     * Logs a message at {@link LogLevel#INFO} level. The supplier is only invoked if the log level threshold
+     * is at INFO or below.
      * @param messageSupplier A function that returns an info message
      */
     default void info(@NonNull Supplier<String> messageSupplier) {
@@ -131,7 +136,8 @@ public interface Logger {
     void debug(@Nullable String message);
 
     /**
-     * Logs a message at the {@link LogLevel#DEBUG} level.
+     * Logs a message at the {@link LogLevel#DEBUG} level. The supplier is only invoked if the log level threshold
+     * is at DEBUG or below.
      * @param messageSupplier A function that returns a debugging message
      */
     default void debug(@NonNull Supplier<String> messageSupplier) {
@@ -147,7 +153,8 @@ public interface Logger {
     void verbose(@Nullable String message);
 
     /**
-     * Logs a message at the {@link LogLevel#VERBOSE} level.
+     * Logs a message at the {@link LogLevel#VERBOSE} level. The supplier is only invoked if the log level threshold
+     * is at VERBOSE.
      * @param messageSupplier A function that returns a verbose message
      */
     default void verbose(@NonNull Supplier<String> messageSupplier) {
