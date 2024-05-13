@@ -16,10 +16,10 @@
 package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
+import com.amplifyframework.auth.cognito.AuthConfiguration
 import com.amplifyframework.core.store.KeyValueRepository
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.AuthCredentialStore
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
@@ -93,6 +93,9 @@ class AWSCognitoLegacyCredentialStoreTest {
 
         private const val userDeviceDetailsCacheKey = "$deviceCachePrefix.$USER_POOL_ID.%s"
         private val deviceDetailsCacheKey = String.format(userDeviceDetailsCacheKey, userId)
+
+        private const val expirationTimestampInSec: Long = 1714431706
+        private const val expirationTimestampInMs: Long = 1714431706486
     }
 
     @Mock
@@ -115,7 +118,7 @@ class AWSCognitoLegacyCredentialStoreTest {
             mockFactory.create(
                 mockContext,
                 AWSCognitoLegacyCredentialStore.AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER,
-                true,
+                true
             )
         ).thenReturn(mockKeyValue)
 
@@ -123,7 +126,7 @@ class AWSCognitoLegacyCredentialStoreTest {
             mockFactory.create(
                 mockContext,
                 AWSCognitoLegacyCredentialStore.APP_TOKENS_INFO_CACHE,
-                true,
+                true
             )
         ).thenReturn(mockKeyValue)
 
@@ -131,7 +134,7 @@ class AWSCognitoLegacyCredentialStoreTest {
             mockFactory.create(
                 mockContext,
                 AWSCognitoLegacyCredentialStore.AWS_MOBILE_CLIENT_PROVIDER,
-                true,
+                true
             )
         ).thenReturn(mockKeyValue)
 
@@ -181,7 +184,7 @@ class AWSCognitoLegacyCredentialStoreTest {
         `when`(mockKeyValue.get(cachedIdTokenKey)).thenReturn("idToken")
         `when`(mockKeyValue.get(cachedAccessTokenKey)).thenReturn(dummyToken)
         `when`(mockKeyValue.get(cachedRefreshTokenKey)).thenReturn("refreshToken")
-        `when`(mockKeyValue.get(cachedTokenExpirationKey)).thenReturn("123123")
+        `when`(mockKeyValue.get(cachedTokenExpirationKey)).thenReturn(expirationTimestampInMs.toString())
 
         // Device Metadata
         `when`(mockKeyValue.get("DeviceKey")).thenReturn("someDeviceKey")
@@ -192,7 +195,7 @@ class AWSCognitoLegacyCredentialStoreTest {
         `when`(mockKeyValue.get("$IDENTITY_POOL_ID.${"accessKey"}")).thenReturn("accessKeyId")
         `when`(mockKeyValue.get("$IDENTITY_POOL_ID.${"secretKey"}")).thenReturn("secretAccessKey")
         `when`(mockKeyValue.get("$IDENTITY_POOL_ID.${"sessionToken"}")).thenReturn("sessionToken")
-        `when`(mockKeyValue.get("$IDENTITY_POOL_ID.${"expirationDate"}")).thenReturn("123123")
+        `when`(mockKeyValue.get("$IDENTITY_POOL_ID.${"expirationDate"}")).thenReturn(expirationTimestampInMs.toString())
 
         // Identity ID
         `when`(mockKeyValue.get("$IDENTITY_POOL_ID.${"identityId"}")).thenReturn("identityPool")
@@ -225,10 +228,10 @@ class AWSCognitoLegacyCredentialStoreTest {
                 "amplify_user",
                 Date(0),
                 SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
-                CognitoUserPoolTokens("idToken", dummyToken, "refreshToken", 123123)
+                CognitoUserPoolTokens("idToken", dummyToken, "refreshToken", expirationTimestampInSec)
             ),
             "identityPool",
-            AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", 123123)
+            AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", expirationTimestampInSec)
         )
     }
 
@@ -249,10 +252,10 @@ class AWSCognitoLegacyCredentialStoreTest {
                 "amplify_user",
                 Date(0),
                 SignInMethod.HostedUI(),
-                CognitoUserPoolTokens("idToken", dummyToken, "refreshToken", 123123)
+                CognitoUserPoolTokens("idToken", dummyToken, "refreshToken", expirationTimestampInSec)
             ),
             "identityPool",
-            AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", 123123)
+            AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", expirationTimestampInSec)
         )
     }
 }

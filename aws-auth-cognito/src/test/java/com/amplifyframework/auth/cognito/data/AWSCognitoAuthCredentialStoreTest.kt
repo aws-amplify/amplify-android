@@ -16,10 +16,10 @@
 package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
+import com.amplifyframework.auth.cognito.AuthConfiguration
 import com.amplifyframework.core.store.KeyValueRepository
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.IdentityPoolConfiguration
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
@@ -73,7 +73,7 @@ class AWSCognitoAuthCredentialStoreTest {
             mockFactory.create(
                 mockContext,
                 keyValueRepoID,
-                true,
+                true
             )
         ).thenReturn(mockKeyValue)
 
@@ -203,7 +203,7 @@ class AWSCognitoAuthCredentialStoreTest {
                 "username",
                 Date(0),
                 SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
-                CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", expiration),
+                CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", expiration)
             ),
             "identityPool",
             AWSCredentials(

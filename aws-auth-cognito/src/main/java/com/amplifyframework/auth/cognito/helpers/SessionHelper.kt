@@ -18,6 +18,7 @@ package com.amplifyframework.auth.cognito.helpers
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 internal object SessionHelper {
     /**
@@ -68,6 +69,14 @@ internal object SessionHelper {
      */
     fun isValidSession(awsCredentials: AWSCredentials): Boolean {
         val currentTimeStamp = Instant.now()
-        return currentTimeStamp < awsCredentials.expiration?.let { Instant.ofEpochSecond(it) }
+        val credentialsExpirationInSecond = awsCredentials.expiration?.let { Instant.ofEpochSecond(it) }
+
+        // Check if current timestamp is BEFORE expiration && next year is AFTER expiration
+        // The latter check is to fix v1 > v2 migration issues as found in:
+        // https://github.com/aws-amplify/amplify-android/issues/2789
+        return (
+            currentTimeStamp < credentialsExpirationInSecond &&
+                currentTimeStamp.plus(365, ChronoUnit.DAYS) > credentialsExpirationInSecond
+            )
     }
 }

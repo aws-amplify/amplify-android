@@ -18,6 +18,8 @@ package com.amplifyframework.storage.result;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.annotations.InternalAmplifyApi;
+
 import java.util.Objects;
 
 /**
@@ -25,21 +27,36 @@ import java.util.Objects;
  */
 public final class StorageUploadInputStreamResult extends StorageUploadResult {
 
-    private StorageUploadInputStreamResult(String key) {
-        super(key);
+    /**
+     * Creates a new StorageUploadFileResult from a storage item path.
+     * Although this has public access, it is intended for internal use and should not be used directly by host
+     * applications. The behavior of this may change without warning.
+     * @param path Path for an item that was uploaded successfully
+     * @param key Key for an item that was uploaded successfully
+     */
+    @InternalAmplifyApi
+    public StorageUploadInputStreamResult(String path, String key) {
+        super(path, key);
     }
 
     /**
      * Creates a new StorageUploadFileResult from a storage item key.
+     * @deprecated This method should not be used and will result in an incorrect path that
+     * shows the key value instead of the full path.
      * @param key Key for an item that was uploaded successfully
      * @return A storage upload result containing the item key
      */
+    @Deprecated
     @NonNull
     public static StorageUploadInputStreamResult fromKey(@NonNull String key) {
-        return new StorageUploadInputStreamResult(Objects.requireNonNull(key));
+        return new StorageUploadInputStreamResult(
+                Objects.requireNonNull(key),
+                Objects.requireNonNull(key)
+        );
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public boolean equals(Object thatObject) {
         if (this == thatObject) {
             return true;
@@ -50,7 +67,8 @@ public final class StorageUploadInputStreamResult extends StorageUploadResult {
 
         StorageUploadInputStreamResult that = (StorageUploadInputStreamResult) thatObject;
 
-        return ObjectsCompat.equals(super.getKey(), that.getKey());
+        return ObjectsCompat.equals(super.getKey(), that.getKey()) &&
+                ObjectsCompat.equals(super.getPath(), this.getPath());
     }
 
     @Override

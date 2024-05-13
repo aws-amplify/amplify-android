@@ -20,9 +20,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.annotations.InternalAmplifyApi;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.InitializationResult;
 import com.amplifyframework.core.InitializationStatus;
+import com.amplifyframework.core.configuration.AmplifyOutputsData;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
@@ -90,6 +92,39 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
                         String pluginKey = plugin.getPluginKey();
                         JSONObject pluginConfig = configuration.getPluginConfig(pluginKey);
                         plugin.configure(pluginConfig != null ? pluginConfig : new JSONObject(), context);
+                    }
+                }
+                state.set(State.CONFIGURED);
+            } catch (Throwable anyError) {
+                state.set(State.CONFIGURATION_FAILED);
+                throw anyError;
+            }
+        }
+    }
+
+    /**
+     * Configure category with provided AmplifyOutputs object.
+     * @param configuration AmplifyOutputs configuration information
+     * @param context An Android Context
+     * @throws AmplifyException if already configured
+     */
+    @InternalAmplifyApi
+    public synchronized void configure(
+        @NonNull AmplifyOutputsData configuration,
+        @NonNull Context context
+    ) throws AmplifyException {
+        synchronized (state) {
+            if (!State.NOT_CONFIGURED.equals(state.get())) {
+                throw new AmplifyException(
+                    "Category " + getCategoryType() + " has already been configured or is currently configuring.",
+                    "Ensure that you are only attempting configuration once."
+                );
+            }
+            state.set(State.CONFIGURING);
+            try {
+                for (P plugin : getPlugins()) {
+                    if (configureFromDefaultConfigFile()) {
+                        plugin.configure(configuration, context);
                     }
                 }
                 state.set(State.CONFIGURED);
