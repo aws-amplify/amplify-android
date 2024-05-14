@@ -15,6 +15,7 @@
 package com.amplifyframework.api.graphql.model
 
 import com.amplifyframework.api.aws.AppSyncGraphQLRequestFactory.buildSubscription
+import com.amplifyframework.api.aws.AuthorizationType
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.SubscriptionType
 import com.amplifyframework.core.model.Model
@@ -30,16 +31,17 @@ object ModelSubscription {
      * Builds a subscriptions request of a given `type` for a `modelType`.
      * @param modelType the model class.
      * @param type the subscription type.
+     * @param authMode The [AuthorizationType] to use for making the request
      * @param <M> the concrete type of the model.
      * @return a valid [GraphQLRequest] instance.
-     </M> */
+     */
     @JvmStatic
+    @JvmOverloads
     fun <M : Model> of(
         modelType: Class<M>,
         type: SubscriptionType,
-    ): GraphQLRequest<M> {
-        return buildSubscription(modelType, type)
-    }
+        authMode: AuthorizationType? = null
+    ): GraphQLRequest<M> = buildSubscription(modelType, type, authMode)
 
     /**
      * Builds a subscriptions request of a given `type` for a `modelType`.
@@ -49,27 +51,46 @@ object ModelSubscription {
      * @param <M> the concrete type of the model.
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
-     </M> */
+     */
     @JvmStatic
     fun <M : Model, P : ModelPath<M>> of(
         modelType: Class<M>,
         type: SubscriptionType,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<M> {
-        return buildSubscription(modelType, type, includes)
-    }
+    ): GraphQLRequest<M> = buildSubscription(modelType, type, includes)
+
+    /**
+     * Builds a subscriptions request of a given `type` for a `modelType`.
+     * @param modelType the model class.
+     * @param type the subscription type.
+     * @param authMode The [AuthorizationType] to use for making the request
+     * @param includes lambda returning list of relationships that should be included in the selection set
+     * @param <M> the concrete type of the model.
+     * @param <P> the concrete model path for the M model type
+     * @return a valid [GraphQLRequest] instance.
+     */
+    @JvmStatic
+    fun <M : Model, P : ModelPath<M>> of(
+        modelType: Class<M>,
+        type: SubscriptionType,
+        authMode: AuthorizationType,
+        includes: ((P) -> List<PropertyContainerPath>)
+    ): GraphQLRequest<M> = buildSubscription(modelType, type, authMode, includes)
 
     /**
      * Creates a subscription request of type [SubscriptionType.ON_CREATE].
      * @param modelType the model class.
+     * @param authMode The [AuthorizationType] to use for making the request
      * @param <M> the concrete type of the model.
      * @return a valid [GraphQLRequest] instance.
      * @see .of
-     </M> */
+     */
     @JvmStatic
-    fun <M : Model> onCreate(modelType: Class<M>): GraphQLRequest<M> {
-        return of(modelType, SubscriptionType.ON_CREATE)
-    }
+    @JvmOverloads
+    fun <M : Model> onCreate(
+        modelType: Class<M>,
+        authMode: AuthorizationType? = null
+    ): GraphQLRequest<M> = of(modelType, SubscriptionType.ON_CREATE, authMode)
 
     /**
      * Creates a subscription request of type [SubscriptionType.ON_CREATE].
@@ -79,26 +100,44 @@ object ModelSubscription {
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
      * @see .of
-     </M> */
+     */
     @JvmStatic
     fun <M : Model, P : ModelPath<M>> onCreate(
         modelType: Class<M>,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<M> {
-        return of(modelType, SubscriptionType.ON_CREATE, includes)
-    }
+    ): GraphQLRequest<M> = of(modelType, SubscriptionType.ON_CREATE, includes)
+
+    /**
+     * Creates a subscription request of type [SubscriptionType.ON_CREATE].
+     * @param modelType the model class.
+     * @param authMode The [AuthorizationType] to use for making the request
+     * @param includes lambda returning list of relationships that should be included in the selection set
+     * @param <M> the concrete type of the model.
+     * @param <P> the concrete model path for the M model type
+     * @return a valid [GraphQLRequest] instance.
+     * @see .of
+     */
+    @JvmStatic
+    fun <M : Model, P : ModelPath<M>> onCreate(
+        modelType: Class<M>,
+        authMode: AuthorizationType,
+        includes: ((P) -> List<PropertyContainerPath>)
+    ): GraphQLRequest<M> = of(modelType, SubscriptionType.ON_CREATE, authMode, includes)
 
     /**
      * Creates a subscription request of type [SubscriptionType.ON_DELETE].
      * @param modelType the model class.
+     * @param authMode The [AuthorizationType] to use for making the request
      * @param <M> the concrete type of the model.
      * @return a valid [GraphQLRequest] instance.
      * @see .of
-     </M> */
+     */
     @JvmStatic
-    fun <M : Model> onDelete(modelType: Class<M>): GraphQLRequest<M> {
-        return of(modelType, SubscriptionType.ON_DELETE)
-    }
+    @JvmOverloads
+    fun <M : Model> onDelete(
+        modelType: Class<M>,
+        authMode: AuthorizationType? = null
+    ): GraphQLRequest<M> = of(modelType, SubscriptionType.ON_DELETE, authMode)
 
     /**
      * Creates a subscription request of type [SubscriptionType.ON_DELETE].
@@ -108,26 +147,44 @@ object ModelSubscription {
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
      * @see .of
-     </M> */
+     */
     @JvmStatic
     fun <M : Model, P : ModelPath<M>> onDelete(
         modelType: Class<M>,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<M> {
-        return of(modelType, SubscriptionType.ON_DELETE, includes)
-    }
+    ): GraphQLRequest<M> = of(modelType, SubscriptionType.ON_DELETE, includes)
+
+    /**
+     * Creates a subscription request of type [SubscriptionType.ON_DELETE].
+     * @param modelType the model class.
+     * @param authMode The [AuthorizationType] to use for making the request
+     * @param includes lambda returning list of relationships that should be included in the selection set
+     * @param <M> the concrete type of the model.
+     * @param <P> the concrete model path for the M model type
+     * @return a valid [GraphQLRequest] instance.
+     * @see .of
+     */
+    @JvmStatic
+    fun <M : Model, P : ModelPath<M>> onDelete(
+        modelType: Class<M>,
+        authMode: AuthorizationType,
+        includes: ((P) -> List<PropertyContainerPath>)
+    ): GraphQLRequest<M> = of(modelType, SubscriptionType.ON_DELETE, authMode, includes)
 
     /**
      * Creates a subscription request of type [SubscriptionType.ON_UPDATE].
      * @param modelType the model class.
+     * @param authMode The [AuthorizationType] to use for making the request
      * @param <M> the concrete type of the model.
      * @return a valid [GraphQLRequest] instance.
      * @see .of
-     </M> */
+     */
     @JvmStatic
-    fun <M : Model> onUpdate(modelType: Class<M>): GraphQLRequest<M> {
-        return of(modelType, SubscriptionType.ON_UPDATE)
-    }
+    @JvmOverloads
+    fun <M : Model> onUpdate(
+        modelType: Class<M>,
+        authMode: AuthorizationType? = null
+    ): GraphQLRequest<M> = of(modelType, SubscriptionType.ON_UPDATE, authMode)
 
     /**
      * Creates a subscription request of type [SubscriptionType.ON_UPDATE].
@@ -137,12 +194,27 @@ object ModelSubscription {
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
      * @see .of
-     </M> */
+     */
     @JvmStatic
     fun <M : Model, P : ModelPath<M>> onUpdate(
         modelType: Class<M>,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<M> {
-        return of(modelType, SubscriptionType.ON_UPDATE, includes)
-    }
+    ): GraphQLRequest<M> = of(modelType, SubscriptionType.ON_UPDATE, includes)
+
+    /**
+     * Creates a subscription request of type [SubscriptionType.ON_UPDATE].
+     * @param modelType the model class.
+     * @param authMode The [AuthorizationType] to use for making the request
+     * @param includes lambda returning list of relationships that should be included in the selection set
+     * @param <M> the concrete type of the model.
+     * @param <P> the concrete model path for the M model type
+     * @return a valid [GraphQLRequest] instance.
+     * @see .of
+     */
+    @JvmStatic
+    fun <M : Model, P : ModelPath<M>> onUpdate(
+        modelType: Class<M>,
+        authMode: AuthorizationType,
+        includes: ((P) -> List<PropertyContainerPath>)
+    ): GraphQLRequest<M> = of(modelType, SubscriptionType.ON_UPDATE, authMode, includes)
 }
