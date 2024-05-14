@@ -125,6 +125,10 @@ Applications that use a `when` expression to evaluate all members of an enumerat
 type can add an `else` branch to prevent new cases from causing compile warnings
  or errors.
 
+#### Semantic versioning and dependencies update
+
+We follow [semantic versioning for updating our dependencies](https://semver.org/#what-should-i-do-if-i-update-my-own-dependencies-without-changing-the-public-api). This includes updating the Kotlin language version.
+
 ## License
 
 This library is licensed under the [Apache 2.0 License](./LICENSE).
