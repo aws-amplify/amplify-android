@@ -108,7 +108,8 @@ class KotlinApiFacade(private val delegate: Delegate = Amplify.API) : Api {
                 { subscription.completions.tryEmit(Unit) }
             )
         }
-        subscription.cancelable = operation as Cancelable
+        // If subscribe fails it does not return an operation, and instead invokes the onSubscriptionFailure callback
+        operation?.let { subscription.cancelable = operation }
         return subscription.awaitStart()
     }
 
