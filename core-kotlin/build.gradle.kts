@@ -33,6 +33,7 @@ dependencies {
     testImplementation(libs.test.mockk)
     testImplementation(libs.test.kotlin.coroutines)
     testImplementation(project(":testmodels"))
+    testImplementation(libs.test.kotest.assertions)
 }
 
 android.kotlinOptions {
