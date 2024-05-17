@@ -10,9 +10,6 @@
 - **auth:** Prevent Rare Deadlock Scenario ([#2822](https://github.com/aws-amplify/amplify-android/issues/2822))
 - **api:** Add missing JvmStatic annotations ([#2823](https://github.com/aws-amplify/amplify-android/issues/2823))
 
-### Miscellaneous
-- Pull migration doc for mobile sdk to Amplify Android repo ([#2810](https://github.com/aws-amplify/amplify-android/issues/2810))
-
 [See all changes between 2.16.1 and 2.17.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.16.1...release_v2.17.0)
 
 ## [Release 2.16.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.16.1)
