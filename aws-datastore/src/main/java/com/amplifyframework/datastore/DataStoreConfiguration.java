@@ -60,7 +60,7 @@ public final class DataStoreConfiguration {
     private final Integer syncMaxRecords;
     private final Integer syncPageSize;
     private final boolean doSyncRetry;
-    private final Integer syncConcurrencyLimit;
+    private final Integer syncMaxConcurrentModels;
     private final Map<String, DataStoreSyncExpression> syncExpressions;
     private final Long syncIntervalInMinutes;
     private final Long maxTimeLapseForObserveQuery;
@@ -74,8 +74,8 @@ public final class DataStoreConfiguration {
         this.syncIntervalInMinutes = builder.syncIntervalInMinutes;
         this.syncExpressions = builder.syncExpressions;
         this.doSyncRetry = builder.doSyncRetry;
-        this.syncConcurrencyLimit = builder.syncConcurrencyLimit != null ?
-                builder.syncConcurrencyLimit : DEFAULT_SYNC_CONCURRENCY_LIMIT;
+        this.syncMaxConcurrentModels = builder.syncMaxConcurrentModels != null ?
+                builder.syncMaxConcurrentModels : DEFAULT_SYNC_CONCURRENCY_LIMIT;
         this.maxTimeLapseForObserveQuery = builder.maxTimeLapseForObserveQuery;
         this.observeQueryMaxRecords = builder.observeQueryMaxRecords;
     }
@@ -134,7 +134,7 @@ public final class DataStoreConfiguration {
             .doSyncRetry(DEFAULT_DO_SYNC_RETRY)
             .observeQueryMaxTime(MAX_TIME_SEC)
             .observeQueryMaxRecords(MAX_RECORDS)
-            .syncConcurrencyLimit(DEFAULT_SYNC_CONCURRENCY_LIMIT)
+            .syncMaxConcurrentModels(DEFAULT_SYNC_CONCURRENCY_LIMIT)
             .build();
     }
 
@@ -220,8 +220,8 @@ public final class DataStoreConfiguration {
      */
     @IntRange(from = 1)
     @NonNull
-    public Integer getSyncConcurrencyLimit() {
-        return syncConcurrencyLimit;
+    public Integer getSyncMaxConcurrentModels() {
+        return syncMaxConcurrentModels;
     }
 
     /**
@@ -270,7 +270,7 @@ public final class DataStoreConfiguration {
         if (!ObjectsCompat.equals(getObserveQueryMaxRecords(), that.getObserveQueryMaxRecords())) {
             return false;
         }
-        if (!ObjectsCompat.equals(getSyncConcurrencyLimit(), that.getSyncConcurrencyLimit())) {
+        if (!ObjectsCompat.equals(getSyncMaxConcurrentModels(), that.getSyncMaxConcurrentModels())) {
             return false;
         }
         return true;
@@ -287,7 +287,7 @@ public final class DataStoreConfiguration {
         result = 31 * result + getDoSyncRetry().hashCode();
         result = 31 * result + (getObserveQueryMaxRecords() != null ? getObserveQueryMaxRecords().hashCode() : 0);
         result = 31 * result + getMaxTimeLapseForObserveQuery().hashCode();
-        result = 31 * result + getSyncConcurrencyLimit().hashCode();
+        result = 31 * result + getSyncMaxConcurrentModels().hashCode();
         return result;
     }
 
@@ -303,7 +303,7 @@ public final class DataStoreConfiguration {
             ", doSyncRetry=" + doSyncRetry +
             ", maxTimeRelapseForObserveQuery=" + maxTimeLapseForObserveQuery +
             ", observeQueryMaxRecords=" + observeQueryMaxRecords +
-            ", syncConcurrencyLimit=" + syncConcurrencyLimit +
+            ", syncMaxConcurrentModels=" + syncMaxConcurrentModels +
             '}';
     }
 
@@ -337,7 +337,7 @@ public final class DataStoreConfiguration {
         private Integer syncMaxRecords;
         private Integer syncPageSize;
         private boolean doSyncRetry;
-        private Integer syncConcurrencyLimit;
+        private Integer syncMaxConcurrentModels;
         private Map<String, DataStoreSyncExpression> syncExpressions;
         private boolean ensureDefaults;
         private JSONObject pluginJson;
@@ -459,7 +459,7 @@ public final class DataStoreConfiguration {
         }
 
         /**
-         * Sets the concurrency limit for model syncing. Default is 1
+         * Sets the max concurrency limit for model syncing. Default is 1
          * NOTE: If any sync models have associations, this value will be unused and the default (1)
          * will be used.
          * Setting this number to a high value requires that the developer ensure app memory is not a
@@ -467,12 +467,12 @@ public final class DataStoreConfiguration {
          * of records per model, the concurrency limit should be set to a conservative value. However,
          * if the expected sync data contains a large number of models, with a small amount of data in
          * each model, setting this limit to a high value will greatly improve sync speeds.
-         * @param syncConcurrencyLimit Number of models that can sync concurrently
+         * @param syncMaxConcurrentModels Number of models that can sync concurrently
          * @return Current builder
          */
         @NonNull
-        public Builder syncConcurrencyLimit(@IntRange(from = 1) Integer syncConcurrencyLimit) {
-            this.syncConcurrencyLimit = syncConcurrencyLimit;
+        public Builder syncMaxConcurrentModels(@IntRange(from = 1) Integer syncMaxConcurrentModels) {
+            this.syncMaxConcurrentModels = syncMaxConcurrentModels;
             return Builder.this;
         }
 
@@ -565,9 +565,9 @@ public final class DataStoreConfiguration {
             syncPageSize = getValueOrDefault(userProvidedConfiguration.getSyncPageSize(), syncPageSize);
             syncExpressions = userProvidedConfiguration.getSyncExpressions();
             doSyncRetry = getValueOrDefault(userProvidedConfiguration.getDoSyncRetry(), doSyncRetry);
-            syncConcurrencyLimit = getValueOrDefault(
-                    userProvidedConfiguration.getSyncConcurrencyLimit(),
-                    syncConcurrencyLimit
+            syncMaxConcurrentModels = getValueOrDefault(
+                    userProvidedConfiguration.getSyncMaxConcurrentModels(),
+                    syncMaxConcurrentModels
             );
             observeQueryMaxRecords = getValueOrDefault(userProvidedConfiguration.getObserveQueryMaxRecords(),
                     observeQueryMaxRecords);
@@ -599,7 +599,7 @@ public final class DataStoreConfiguration {
                 syncIntervalInMinutes = getValueOrDefault(syncIntervalInMinutes, DEFAULT_SYNC_INTERVAL_MINUTES);
                 syncMaxRecords = getValueOrDefault(syncMaxRecords, DEFAULT_SYNC_MAX_RECORDS);
                 syncPageSize = getValueOrDefault(syncPageSize, DEFAULT_SYNC_PAGE_SIZE);
-                syncConcurrencyLimit = getValueOrDefault(syncConcurrencyLimit, DEFAULT_SYNC_CONCURRENCY_LIMIT);
+                syncMaxConcurrentModels = getValueOrDefault(syncMaxConcurrentModels, DEFAULT_SYNC_CONCURRENCY_LIMIT);
                 observeQueryMaxRecords = getValueOrDefault(observeQueryMaxRecords, MAX_RECORDS);
                 maxTimeLapseForObserveQuery = maxTimeLapseForObserveQuery == 0 ? MAX_TIME_SEC :
                         maxTimeLapseForObserveQuery;
