@@ -1,3 +1,17 @@
+## [Release 2.17.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.17.0)
+
+### Features
+- **core:** Add APIs to lazily evaluate log statements ([#2811](https://github.com/aws-amplify/amplify-android/issues/2811))
+
+### Bug Fixes
+- **analytics:** Make Analytics Options Builder build function public for Java to call ([#2804](https://github.com/aws-amplify/amplify-android/issues/2804))
+- **predictions:** Ignore unknown events from liveness websocket ([#2736](https://github.com/aws-amplify/amplify-android/issues/2736))
+- **api:** Fix the handling of exceptions when subscribing with Kotlin Facade ([#2821](https://github.com/aws-amplify/amplify-android/issues/2821))
+- **auth:** Prevent Rare Deadlock Scenario ([#2822](https://github.com/aws-amplify/amplify-android/issues/2822))
+- **api:** Add missing JvmStatic annotations ([#2823](https://github.com/aws-amplify/amplify-android/issues/2823))
+
+[See all changes between 2.16.1 and 2.17.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.16.1...release_v2.17.0)
+
 ## [Release 2.16.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.16.1)
 
 ### Bug Fixes

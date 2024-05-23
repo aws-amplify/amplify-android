@@ -23,6 +23,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.rest.RestOptions
 import com.amplifyframework.api.rest.RestResponse
 import com.amplifyframework.core.Consumer
+import io.kotest.assertions.throwables.shouldThrow
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -32,6 +33,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -172,6 +174,25 @@ class KotlinApiFacadeTest {
 
         // Wait for data that never comes, instead an error is thrown
         api.subscribe(request).first()
+    }
+
+    @Test
+    fun `subscribe throws when exception occurs during subscription establishment`() = runTest {
+        val request = mockk<GraphQLRequest<String>>()
+        val expectedFailure = ApiException("uh", "oh")
+
+        every {
+            delegate.subscribe(eq(request), any(), any(), any(), any())
+        } answers {
+            val indexOfErrorConsumer = 3
+            val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<ApiException>
+            GlobalScope.launch(Dispatchers.IO) { onError.accept(expectedFailure) }
+            null
+        }
+
+        shouldThrow<ApiException> {
+            api.subscribe(request).first()
+        }
     }
 
     /**

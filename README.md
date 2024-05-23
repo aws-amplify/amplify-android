@@ -71,14 +71,14 @@ dependencies section:
 ```groovy
 dependencies {
     // Only specify modules that provide functionality your app will use
-    implementation 'com.amplifyframework:aws-analytics-pinpoint:2.16.1'
-    implementation 'com.amplifyframework:aws-api:2.16.1'
-    implementation 'com.amplifyframework:aws-auth-cognito:2.16.1'
-    implementation 'com.amplifyframework:aws-datastore:2.16.1'
-    implementation 'com.amplifyframework:aws-predictions:2.16.1'
-    implementation 'com.amplifyframework:aws-storage-s3:2.16.1'
-    implementation 'com.amplifyframework:aws-geo-location:2.16.1'
-    implementation 'com.amplifyframework:aws-push-notifications-pinpoint:2.16.1'
+    implementation 'com.amplifyframework:aws-analytics-pinpoint:2.17.0'
+    implementation 'com.amplifyframework:aws-api:2.17.0'
+    implementation 'com.amplifyframework:aws-auth-cognito:2.17.0'
+    implementation 'com.amplifyframework:aws-datastore:2.17.0'
+    implementation 'com.amplifyframework:aws-predictions:2.17.0'
+    implementation 'com.amplifyframework:aws-storage-s3:2.17.0'
+    implementation 'com.amplifyframework:aws-geo-location:2.17.0'
+    implementation 'com.amplifyframework:aws-push-notifications-pinpoint:2.17.0'
 }
 ```
 
@@ -124,6 +124,10 @@ will publish a new **minor** version of the library.
 Applications that use a `when` expression to evaluate all members of an enumerated
 type can add an `else` branch to prevent new cases from causing compile warnings
  or errors.
+
+#### Semantic versioning and dependencies update
+
+We follow [semantic versioning for updating our dependencies](https://semver.org/#what-should-i-do-if-i-update-my-own-dependencies-without-changing-the-public-api). This includes updating the Kotlin language version.
 
 ## License
 

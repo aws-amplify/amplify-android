@@ -180,6 +180,12 @@ fun Project.configureAndroid() {
                 )
             )
         }
+
+        publishing {
+            singleVariant("release") {
+                withSourcesJar()
+            }
+        }
     }
 
     dependencies {
