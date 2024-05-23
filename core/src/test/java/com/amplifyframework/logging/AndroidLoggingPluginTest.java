@@ -99,7 +99,7 @@ public class AndroidLoggingPluginTest {
 
         logger.verbose("This logs");
         logger.debug("This too");
-        logger.info(null);
+        logger.info((String) null);
         logger.warn("Getting serious...");
         logger.error("It. Got. Serious.");
 
@@ -125,7 +125,7 @@ public class AndroidLoggingPluginTest {
         Logger logger = plugin.logger("logging-test");
 
         logger.error("An error happened!");
-        logger.info(null);
+        logger.info((String) null);
         logger.warn("Uh oh, not great...");
 
         assertTrue(systemLog.getLines().isEmpty());

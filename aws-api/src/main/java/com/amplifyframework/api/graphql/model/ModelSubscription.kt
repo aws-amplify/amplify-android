@@ -33,6 +33,7 @@ object ModelSubscription {
      * @param <M> the concrete type of the model.
      * @return a valid [GraphQLRequest] instance.
      </M> */
+    @JvmStatic
     fun <M : Model> of(
         modelType: Class<M>,
         type: SubscriptionType,
@@ -49,6 +50,7 @@ object ModelSubscription {
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
      </M> */
+    @JvmStatic
     fun <M : Model, P : ModelPath<M>> of(
         modelType: Class<M>,
         type: SubscriptionType,
@@ -93,6 +95,7 @@ object ModelSubscription {
      * @return a valid [GraphQLRequest] instance.
      * @see .of
      </M> */
+    @JvmStatic
     fun <M : Model> onDelete(modelType: Class<M>): GraphQLRequest<M> {
         return of(modelType, SubscriptionType.ON_DELETE)
     }
@@ -121,6 +124,7 @@ object ModelSubscription {
      * @return a valid [GraphQLRequest] instance.
      * @see .of
      </M> */
+    @JvmStatic
     fun <M : Model> onUpdate(modelType: Class<M>): GraphQLRequest<M> {
         return of(modelType, SubscriptionType.ON_UPDATE)
     }
