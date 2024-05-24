@@ -15,6 +15,7 @@
 package com.amplifyframework.api.graphql.model
 
 import com.amplifyframework.api.aws.AppSyncGraphQLRequestFactory.buildMutation
+import com.amplifyframework.api.aws.AuthorizationType
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.MutationType
 import com.amplifyframework.core.model.Model
@@ -30,14 +31,17 @@ object ModelMutation {
     /**
      * Creates a [GraphQLRequest] that represents a create mutation for a given `model` instance.
      * @param model the model instance populated with values.
+     * @param authMode The [AuthorizationType] to use for making the request
      * @param <M> the model concrete type.
      * @return a valid `GraphQLRequest` instance.
      * @see MutationType.CREATE
-     </M> */
+     */
     @JvmStatic
-    fun <M : Model> create(model: M): GraphQLRequest<M> {
-        return buildMutation(model, QueryPredicates.all(), MutationType.CREATE)
-    }
+    @JvmOverloads
+    fun <M : Model> create(
+        model: M,
+        authMode: AuthorizationType? = null
+    ): GraphQLRequest<M> = buildMutation(model, QueryPredicates.all(), MutationType.CREATE, authMode)
 
     /**
      * Creates a [GraphQLRequest] that represents a create mutation for a given `model` instance.
@@ -47,30 +51,46 @@ object ModelMutation {
      * @param <P> the concrete model path for the M model type
      * @return a valid `GraphQLRequest` instance.
      * @see MutationType.CREATE
-     </M> */
+     */
     @JvmStatic
     fun <M : Model, P : ModelPath<M>> create(
         model: M,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<M> {
-        return buildMutation(model, QueryPredicates.all(), MutationType.CREATE, includes)
-    }
+    ): GraphQLRequest<M> = buildMutation(model, QueryPredicates.all(), MutationType.CREATE, includes)
+
+    /**
+     * Creates a [GraphQLRequest] that represents a create mutation for a given `model` instance.
+     * @param model the model instance populated with values.
+     * @param authMode The [AuthorizationType] to use for making the request
+     * @param includes lambda returning list of relationships that should be included in the selection set
+     * @param <M> the model concrete type.
+     * @param <P> the concrete model path for the M model type
+     * @return a valid `GraphQLRequest` instance.
+     * @see MutationType.CREATE
+     */
+    @JvmStatic
+    fun <M : Model, P : ModelPath<M>> create(
+        model: M,
+        authMode: AuthorizationType,
+        includes: ((P) -> List<PropertyContainerPath>)
+    ): GraphQLRequest<M> = buildMutation(model, QueryPredicates.all(), MutationType.CREATE, authMode, includes)
 
     /**
      * Creates a [GraphQLRequest] that represents an update mutation for a given `model` instance.
      * @param model the model instance populated with values.
      * @param predicate a predicate passed as the condition to apply the mutation.
+     * @param authMode The [AuthorizationType] to use for making the request
      * @param <M> the model concrete type.
      * @return a valid `GraphQLRequest` instance.
      * @see MutationType.UPDATE
-     </M> */
+     */
     @JvmStatic
+    @JvmOverloads
     fun <M : Model> update(
         model: M,
-        predicate: QueryPredicate
-    ): GraphQLRequest<M> {
-        return buildMutation(model, predicate, MutationType.UPDATE)
-    }
+        predicate: QueryPredicate = QueryPredicates.all(),
+        authMode: AuthorizationType? = null
+    ): GraphQLRequest<M> = buildMutation(model, predicate, MutationType.UPDATE, authMode)
 
     /**
      * Creates a [GraphQLRequest] that represents an update mutation for a given `model` instance.
@@ -81,7 +101,7 @@ object ModelMutation {
      * @param <P> the concrete model path for the M model type
      * @return a valid `GraphQLRequest` instance.
      * @see MutationType.UPDATE
-     </M> */
+     */
     @JvmStatic
     fun <M : Model, P : ModelPath<M>> update(
         model: M,
@@ -91,18 +111,14 @@ object ModelMutation {
         return buildMutation(model, predicate, MutationType.UPDATE, includes)
     }
 
-    /**
-     * Creates a [GraphQLRequest] that represents an update mutation for a given `model` instance.
-     * @param model the model instance populated with values.
-     * @param <M> the model concrete type.
-     * @return a valid `GraphQLRequest` instance.
-     * @see MutationType.UPDATE
-     *
-     * @see .update
-     </M> */
     @JvmStatic
-    fun <M : Model> update(model: M): GraphQLRequest<M> {
-        return buildMutation(model, QueryPredicates.all(), MutationType.UPDATE)
+    fun <M : Model, P : ModelPath<M>> update(
+        model: M,
+        predicate: QueryPredicate,
+        authMode: AuthorizationType,
+        includes: ((P) -> List<PropertyContainerPath>)
+    ): GraphQLRequest<M> {
+        return buildMutation(model, predicate, MutationType.UPDATE, authMode, includes)
     }
 
     /**
@@ -113,7 +129,7 @@ object ModelMutation {
      * @param <P> the concrete model path for the M model type
      * @return a valid `GraphQLRequest` instance.
      * @see MutationType.UPDATE
-     </M> */
+     */
     @JvmStatic
     fun <M : Model, P : ModelPath<M>> update(
         model: M,
@@ -123,20 +139,38 @@ object ModelMutation {
     }
 
     /**
+     * Creates a [GraphQLRequest] that represents an update mutation for a given `model` instance.
+     * @param model the model instance populated with values.
+     * @param includes lambda returning list of relationships that should be included in the selection set
+     * @param <M> the model concrete type.
+     * @param <P> the concrete model path for the M model type
+     * @return a valid `GraphQLRequest` instance.
+     * @see MutationType.UPDATE
+     */
+    @JvmStatic
+    fun <M : Model, P : ModelPath<M>> update(
+        model: M,
+        authMode: AuthorizationType,
+        includes: ((P) -> List<PropertyContainerPath>)
+    ): GraphQLRequest<M> {
+        return buildMutation(model, QueryPredicates.all(), MutationType.UPDATE, authMode, includes)
+    }
+
+    /**
      * Creates a [GraphQLRequest] that represents a delete mutation for a given `model` instance.
      * @param model the model instance populated with values.
      * @param predicate a predicate passed as the condition to apply the mutation.
      * @param <M> the model concrete type.
      * @return a valid `GraphQLRequest` instance.
      * @see MutationType.DELETE
-     </M> */
+     */
     @JvmStatic
+    @JvmOverloads
     fun <M : Model> delete(
         model: M,
-        predicate: QueryPredicate
-    ): GraphQLRequest<M> {
-        return buildMutation(model, predicate, MutationType.DELETE)
-    }
+        predicate: QueryPredicate = QueryPredicates.all(),
+        authMode: AuthorizationType? = null
+    ): GraphQLRequest<M> = buildMutation(model, predicate, MutationType.DELETE, authMode)
 
     /**
      * Creates a [GraphQLRequest] that represents a delete mutation for a given `model` instance.
@@ -147,29 +181,31 @@ object ModelMutation {
      * @param <P> the concrete model path for the M model type
      * @return a valid `GraphQLRequest` instance.
      * @see MutationType.DELETE
-     </M> */
+     */
     @JvmStatic
     fun <M : Model, P : ModelPath<M>> delete(
         model: M,
         predicate: QueryPredicate,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<M> {
-        return buildMutation(model, predicate, MutationType.DELETE, includes)
-    }
+    ): GraphQLRequest<M> = buildMutation(model, predicate, MutationType.DELETE, includes)
 
     /**
      * Creates a [GraphQLRequest] that represents a delete mutation for a given `model` instance.
      * @param model the model instance populated with values.
+     * @param predicate a predicate passed as the condition to apply the mutation.
+     * @param includes lambda returning list of relationships that should be included in the selection set
      * @param <M> the model concrete type.
+     * @param <P> the concrete model path for the M model type
      * @return a valid `GraphQLRequest` instance.
      * @see MutationType.DELETE
-     *
-     * @see .delete
-     </M> */
+     */
     @JvmStatic
-    fun <M : Model> delete(model: M): GraphQLRequest<M> {
-        return buildMutation(model, QueryPredicates.all(), MutationType.DELETE)
-    }
+    fun <M : Model, P : ModelPath<M>> delete(
+        model: M,
+        predicate: QueryPredicate,
+        authMode: AuthorizationType,
+        includes: ((P) -> List<PropertyContainerPath>)
+    ): GraphQLRequest<M> = buildMutation(model, predicate, MutationType.DELETE, authMode, includes)
 
     /**
      * Creates a [GraphQLRequest] that represents a delete mutation for a given `model` instance.
@@ -179,12 +215,26 @@ object ModelMutation {
      * @param <P> the concrete model path for the M model type
      * @return a valid `GraphQLRequest` instance.
      * @see MutationType.DELETE
-     </M> */
+     */
     @JvmStatic
     fun <M : Model, P : ModelPath<M>> delete(
         model: M,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<M> {
-        return buildMutation(model, QueryPredicates.all(), MutationType.DELETE, includes)
-    }
+    ): GraphQLRequest<M> = buildMutation(model, QueryPredicates.all(), MutationType.DELETE, includes)
+
+    /**
+     * Creates a [GraphQLRequest] that represents a delete mutation for a given `model` instance.
+     * @param model the model instance populated with values.
+     * @param includes lambda returning list of relationships that should be included in the selection set
+     * @param <M> the model concrete type.
+     * @param <P> the concrete model path for the M model type
+     * @return a valid `GraphQLRequest` instance.
+     * @see MutationType.DELETE
+     */
+    @JvmStatic
+    fun <M : Model, P : ModelPath<M>> delete(
+        model: M,
+        authMode: AuthorizationType,
+        includes: ((P) -> List<PropertyContainerPath>)
+    ): GraphQLRequest<M> = buildMutation(model, QueryPredicates.all(), MutationType.DELETE, authMode, includes)
 }
