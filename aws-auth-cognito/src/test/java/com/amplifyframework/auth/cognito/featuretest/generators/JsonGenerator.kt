@@ -29,6 +29,8 @@ import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerato
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.SignOutTestCaseGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.SignUpTestCaseGenerator
 import com.amplifyframework.statemachine.codegen.states.AuthState
+import org.junit.Ignore
+import org.junit.Test
 
 interface SerializableProvider {
     val serializables: List<Any>
@@ -37,7 +39,7 @@ interface SerializableProvider {
 /**
  * Top level generator for generating Json and writing to the destination directory
  */
-object JsonGenerator {
+class JsonGenerator {
     private val providers: List<SerializableProvider> = listOf(
         AuthStateJsonGenerator,
         ResetPasswordTestCaseGenerator,
@@ -53,7 +55,26 @@ object JsonGenerator {
         FetchUserAttributesTestCaseGenerator,
     )
 
+    @Ignore("Uncomment and run to clean feature test directory")
+    @Test
+    fun clean() {
+        cleanDirectory()
+    }
+
+    @Ignore("Uncomment and run to clean feature test directory as well as generate json for feature tests")
+    @Test
+    fun cleanAndGenerate() {
+        cleanDirectory()
+        generateJson()
+    }
+
+    @Ignore("Uncomment and run to generate json for feature tests")
+    @Test
     fun generate() {
+        generateJson()
+    }
+
+    private fun generateJson() {
         providers.forEach { provider ->
             provider.serializables.forEach {
                 when (it) {
@@ -66,9 +87,4 @@ object JsonGenerator {
             }
         }
     }
-}
-
-fun main() {
-    // cleanDirectory()
-    JsonGenerator.generate()
 }
