@@ -16,12 +16,14 @@
 package com.amplifyframework.graphql.model
 
 import com.amplifyframework.api.aws.AppSyncGraphQLRequestFactory
+import com.amplifyframework.api.aws.AuthorizationType
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.SubscriptionType
 import com.amplifyframework.api.graphql.model.ModelSubscription
 import com.amplifyframework.core.model.includes
 import com.amplifyframework.testmodels.lazy.Post
 import com.amplifyframework.testmodels.lazy.PostPath
+import io.kotest.matchers.shouldBe
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -40,6 +42,23 @@ class ModelSubscriptionTest {
         val actualRequest = ModelSubscription.of(expectedClass, expectedType)
 
         assertEquals(expectedRequest, actualRequest)
+    }
+
+    @Test
+    fun `of with authMode`() {
+        val expectedClass = Post::class.java
+        val expectedType = SubscriptionType.ON_CREATE
+        val expectedAuthMode = AuthorizationType.OPENID_CONNECT
+
+        val expectedRequest: GraphQLRequest<Post> = AppSyncGraphQLRequestFactory.buildSubscription(
+            expectedClass,
+            expectedType,
+            expectedAuthMode
+        )
+
+        val actualRequest = ModelSubscription.of(expectedClass, expectedType, expectedAuthMode)
+
+        actualRequest shouldBe expectedRequest
     }
 
     @Test
@@ -63,19 +82,57 @@ class ModelSubscriptionTest {
     }
 
     @Test
+    fun `of with includes and authMode`() {
+        val expectedClass = Post::class.java
+        val expectedType = SubscriptionType.ON_CREATE
+        val expectedAuthMode = AuthorizationType.OPENID_CONNECT
+
+        val expectedRequest: GraphQLRequest<Post> = AppSyncGraphQLRequestFactory
+            .buildSubscription<Post, Post, PostPath>(
+                expectedClass,
+                expectedType,
+                expectedAuthMode
+            ) {
+                includes(it.comments, it.blog)
+            }
+
+        val actualRequest = ModelSubscription.of<Post, PostPath>(expectedClass, expectedType, expectedAuthMode) {
+            includes(it.comments, it.blog)
+        }
+
+        actualRequest shouldBe expectedRequest
+    }
+
+    @Test
     fun create() {
         val expectedClass = Post::class.java
         val expectedType = SubscriptionType.ON_CREATE
 
-        val expectedRequest: GraphQLRequest<Post> = AppSyncGraphQLRequestFactory
-            .buildSubscription(
-                expectedClass,
-                expectedType
-            )
+        val expectedRequest: GraphQLRequest<Post> = AppSyncGraphQLRequestFactory.buildSubscription(
+            expectedClass,
+            expectedType
+        )
 
         val actualRequest = ModelSubscription.onCreate(expectedClass)
 
         assertEquals(expectedRequest, actualRequest)
+    }
+
+    @Test
+    fun `create with authMode`() {
+        val expectedClass = Post::class.java
+        val expectedType = SubscriptionType.ON_CREATE
+        val expectedAuthMode = AuthorizationType.OPENID_CONNECT
+
+        val expectedRequest: GraphQLRequest<Post> = AppSyncGraphQLRequestFactory.buildSubscription(
+            expectedClass,
+            expectedType,
+            expectedAuthMode
+        )
+
+        val actualRequest = ModelSubscription.onCreate(expectedClass, expectedAuthMode)
+
+        actualRequest shouldBe expectedRequest
     }
 
     @Test
@@ -99,19 +156,57 @@ class ModelSubscriptionTest {
     }
 
     @Test
+    fun `create with includes and authMode`() {
+        val expectedClass = Post::class.java
+        val expectedType = SubscriptionType.ON_CREATE
+        val expectedAuthMode = AuthorizationType.OPENID_CONNECT
+
+        val expectedRequest: GraphQLRequest<Post> = AppSyncGraphQLRequestFactory
+            .buildSubscription<Post, Post, PostPath>(
+                expectedClass,
+                expectedType,
+                expectedAuthMode
+            ) {
+                includes(it.comments, it.blog)
+            }
+
+        val actualRequest = ModelSubscription.onCreate<Post, PostPath>(expectedClass, expectedAuthMode) {
+            includes(it.comments, it.blog)
+        }
+
+        actualRequest shouldBe expectedRequest
+    }
+
+    @Test
     fun delete() {
         val expectedClass = Post::class.java
         val expectedType = SubscriptionType.ON_DELETE
 
-        val expectedRequest: GraphQLRequest<Post> = AppSyncGraphQLRequestFactory
-            .buildSubscription(
-                expectedClass,
-                expectedType
-            )
+        val expectedRequest: GraphQLRequest<Post> = AppSyncGraphQLRequestFactory.buildSubscription(
+            expectedClass,
+            expectedType
+        )
 
         val actualRequest = ModelSubscription.onDelete(expectedClass)
 
         assertEquals(expectedRequest, actualRequest)
+    }
+
+    @Test
+    fun `delete with authMode`() {
+        val expectedClass = Post::class.java
+        val expectedType = SubscriptionType.ON_DELETE
+        val expectedAuthMode = AuthorizationType.OPENID_CONNECT
+
+        val expectedRequest: GraphQLRequest<Post> = AppSyncGraphQLRequestFactory.buildSubscription(
+            expectedClass,
+            expectedType,
+            expectedAuthMode
+        )
+
+        val actualRequest = ModelSubscription.onDelete(expectedClass, expectedAuthMode)
+
+        actualRequest shouldBe expectedRequest
     }
 
     @Test
@@ -135,19 +230,57 @@ class ModelSubscriptionTest {
     }
 
     @Test
+    fun `delete with includes and authMode`() {
+        val expectedClass = Post::class.java
+        val expectedType = SubscriptionType.ON_DELETE
+        val expectedAuthMode = AuthorizationType.OPENID_CONNECT
+
+        val expectedRequest: GraphQLRequest<Post> = AppSyncGraphQLRequestFactory
+            .buildSubscription<Post, Post, PostPath>(
+                expectedClass,
+                expectedType,
+                expectedAuthMode
+            ) {
+                includes(it.comments, it.blog)
+            }
+
+        val actualRequest = ModelSubscription.onDelete<Post, PostPath>(expectedClass, expectedAuthMode) {
+            includes(it.comments, it.blog)
+        }
+
+        actualRequest shouldBe expectedRequest
+    }
+
+    @Test
     fun update() {
         val expectedClass = Post::class.java
         val expectedType = SubscriptionType.ON_UPDATE
 
-        val expectedRequest: GraphQLRequest<Post> = AppSyncGraphQLRequestFactory
-            .buildSubscription(
-                expectedClass,
-                expectedType
-            )
+        val expectedRequest: GraphQLRequest<Post> = AppSyncGraphQLRequestFactory.buildSubscription(
+            expectedClass,
+            expectedType
+        )
 
         val actualRequest = ModelSubscription.onUpdate(expectedClass)
 
         assertEquals(expectedRequest, actualRequest)
+    }
+
+    @Test
+    fun `update with authMode`() {
+        val expectedClass = Post::class.java
+        val expectedType = SubscriptionType.ON_UPDATE
+        val expectedAuthMode = AuthorizationType.OPENID_CONNECT
+
+        val expectedRequest: GraphQLRequest<Post> = AppSyncGraphQLRequestFactory.buildSubscription(
+            expectedClass,
+            expectedType,
+            expectedAuthMode
+        )
+
+        val actualRequest = ModelSubscription.onUpdate(expectedClass, authMode = expectedAuthMode)
+
+        actualRequest shouldBe expectedRequest
     }
 
     @Test
@@ -168,5 +301,27 @@ class ModelSubscriptionTest {
         }
 
         assertEquals(expectedRequest, actualRequest)
+    }
+
+    @Test
+    fun `update with includes and authMode`() {
+        val expectedClass = Post::class.java
+        val expectedType = SubscriptionType.ON_UPDATE
+        val expectedAuthMode = AuthorizationType.OPENID_CONNECT
+
+        val expectedRequest: GraphQLRequest<Post> = AppSyncGraphQLRequestFactory
+            .buildSubscription<Post, Post, PostPath>(
+                expectedClass,
+                expectedType,
+                expectedAuthMode
+            ) {
+                includes(it.comments, it.blog)
+            }
+
+        val actualRequest = ModelSubscription.onUpdate<Post, PostPath>(expectedClass, expectedAuthMode) {
+            includes(it.comments, it.blog)
+        }
+
+        actualRequest shouldBe expectedRequest
     }
 }

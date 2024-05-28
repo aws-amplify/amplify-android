@@ -482,18 +482,19 @@ object AppSyncGraphQLRequestFactory {
      * Creates a [GraphQLRequest] that represents a subscription of a given type.
      * @param modelClass the model type.
      * @param subscriptionType the subscription type.
+     * @param authMode The [AuthorizationType] to use for making the request
      * @param <R> the response type.
      * @param <T> the concrete model type.
      * @return a valid [GraphQLRequest] instance.
      * @throws IllegalStateException when the model schema does not contain the expected information.
-     </T></R> */
+     */
     @JvmStatic
+    @JvmOverloads
     fun <R, T : Model> buildSubscription(
         modelClass: Class<T>,
-        subscriptionType: SubscriptionType
-    ): GraphQLRequest<R> {
-        return buildSubscriptionInternal(modelClass, subscriptionType, null)
-    }
+        subscriptionType: SubscriptionType,
+        authMode: AuthorizationType? = null
+    ) = buildSubscriptionInternal<R, T, ModelPath<T>>(modelClass, subscriptionType, authMode, null)
 
     /**
      * Creates a [GraphQLRequest] that represents a subscription of a given type.
@@ -505,19 +506,38 @@ object AppSyncGraphQLRequestFactory {
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
      * @throws IllegalStateException when the model schema does not contain the expected information.
-     </T></R> */
+     */
     @JvmStatic
     fun <R, T : Model, P : ModelPath<T>> buildSubscription(
         modelClass: Class<T>,
         subscriptionType: SubscriptionType,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<R> {
-        return buildSubscriptionInternal(modelClass, subscriptionType, includes)
-    }
+    ) = buildSubscriptionInternal<R, T, P>(modelClass, subscriptionType, null, includes)
+
+    /**
+     * Creates a [GraphQLRequest] that represents a subscription of a given type.
+     * @param modelClass the model type.
+     * @param subscriptionType the subscription type.
+     * @param authMode The [AuthorizationType] to use for making the request
+     * @param includes lambda returning list of relationships that should be included in the selection set
+     * @param <R> the response type.
+     * @param <T> the concrete model type.
+     * @param <P> the concrete model path for the M model type
+     * @return a valid [GraphQLRequest] instance.
+     * @throws IllegalStateException when the model schema does not contain the expected information.
+     */
+    @JvmStatic
+    fun <R, T : Model, P : ModelPath<T>> buildSubscription(
+        modelClass: Class<T>,
+        subscriptionType: SubscriptionType,
+        authMode: AuthorizationType,
+        includes: ((P) -> List<PropertyContainerPath>)
+    ) = buildSubscriptionInternal<R, T, P>(modelClass, subscriptionType, authMode, includes)
 
     private fun <R, T : Model, P : ModelPath<T>> buildSubscriptionInternal(
         modelClass: Class<T>,
         subscriptionType: SubscriptionType,
+        authMode: AuthorizationType?,
         includes: ((P) -> List<PropertyContainerPath>)?
     ): GraphQLRequest<R> {
         return try {
@@ -527,8 +547,12 @@ object AppSyncGraphQLRequestFactory {
                 .requestOptions(ApiGraphQLRequestOptions())
                 .responseType(modelClass)
 
-            val customSelectionSet = includes?.let { createApiSelectionSet(modelClass, subscriptionType, it) }
-            customSelectionSet?.let { builder.selectionSet(it) }
+            authMode?.let { builder.authorizationType(it) }
+
+            includes?.let {
+                val customSelectionSet = createApiSelectionSet(modelClass, subscriptionType, it)
+                builder.selectionSet(customSelectionSet)
+            }
 
             builder.build()
         } catch (exception: AmplifyException) {

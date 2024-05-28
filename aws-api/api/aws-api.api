@@ -83,7 +83,10 @@ public final class com/amplifyframework/api/aws/AppSyncGraphQLRequestFactory {
 	public static final fun buildQuery (Ljava/lang/Class;Ljava/lang/String;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
 	public static final fun buildQuery (Ljava/lang/Class;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
 	public static final fun buildSubscription (Ljava/lang/Class;Lcom/amplifyframework/api/graphql/SubscriptionType;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun buildSubscription (Ljava/lang/Class;Lcom/amplifyframework/api/graphql/SubscriptionType;Lcom/amplifyframework/api/aws/AuthorizationType;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun buildSubscription (Ljava/lang/Class;Lcom/amplifyframework/api/graphql/SubscriptionType;Lcom/amplifyframework/api/aws/AuthorizationType;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
 	public static final fun buildSubscription (Ljava/lang/Class;Lcom/amplifyframework/api/graphql/SubscriptionType;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static synthetic fun buildSubscription$default (Ljava/lang/Class;Lcom/amplifyframework/api/graphql/SubscriptionType;Lcom/amplifyframework/api/aws/AuthorizationType;ILjava/lang/Object;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
 }
 
 public final class com/amplifyframework/api/aws/BuildConfig {
@@ -263,12 +266,24 @@ public final class com/amplifyframework/api/graphql/model/ModelQuery {
 public final class com/amplifyframework/api/graphql/model/ModelSubscription {
 	public static final field INSTANCE Lcom/amplifyframework/api/graphql/model/ModelSubscription;
 	public static final fun of (Ljava/lang/Class;Lcom/amplifyframework/api/graphql/SubscriptionType;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun of (Ljava/lang/Class;Lcom/amplifyframework/api/graphql/SubscriptionType;Lcom/amplifyframework/api/aws/AuthorizationType;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun of (Ljava/lang/Class;Lcom/amplifyframework/api/graphql/SubscriptionType;Lcom/amplifyframework/api/aws/AuthorizationType;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
 	public static final fun of (Ljava/lang/Class;Lcom/amplifyframework/api/graphql/SubscriptionType;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static synthetic fun of$default (Ljava/lang/Class;Lcom/amplifyframework/api/graphql/SubscriptionType;Lcom/amplifyframework/api/aws/AuthorizationType;ILjava/lang/Object;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
 	public static final fun onCreate (Ljava/lang/Class;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun onCreate (Ljava/lang/Class;Lcom/amplifyframework/api/aws/AuthorizationType;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun onCreate (Ljava/lang/Class;Lcom/amplifyframework/api/aws/AuthorizationType;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
 	public static final fun onCreate (Ljava/lang/Class;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static synthetic fun onCreate$default (Ljava/lang/Class;Lcom/amplifyframework/api/aws/AuthorizationType;ILjava/lang/Object;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
 	public static final fun onDelete (Ljava/lang/Class;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun onDelete (Ljava/lang/Class;Lcom/amplifyframework/api/aws/AuthorizationType;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun onDelete (Ljava/lang/Class;Lcom/amplifyframework/api/aws/AuthorizationType;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
 	public static final fun onDelete (Ljava/lang/Class;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static synthetic fun onDelete$default (Ljava/lang/Class;Lcom/amplifyframework/api/aws/AuthorizationType;ILjava/lang/Object;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
 	public static final fun onUpdate (Ljava/lang/Class;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun onUpdate (Ljava/lang/Class;Lcom/amplifyframework/api/aws/AuthorizationType;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun onUpdate (Ljava/lang/Class;Lcom/amplifyframework/api/aws/AuthorizationType;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
 	public static final fun onUpdate (Ljava/lang/Class;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static synthetic fun onUpdate$default (Ljava/lang/Class;Lcom/amplifyframework/api/aws/AuthorizationType;ILjava/lang/Object;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
 }
 
