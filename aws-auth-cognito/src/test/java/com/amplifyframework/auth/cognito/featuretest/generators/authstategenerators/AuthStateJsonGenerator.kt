@@ -64,20 +64,20 @@ object AuthStateJsonGenerator : SerializableProvider {
         )
     )
 
+    internal val signedInAmplifyCredential = AmplifyCredential.UserAndIdentityPool(
+        signedInData,
+        identityId = identityId,
+        AWSCredentials(
+            accessKeyId = accessKeyId,
+            secretAccessKey = secretAccessKey,
+            sessionToken = dummyToken,
+            expiration = expiration
+        )
+    )
+
     private val signedInState = AuthState.Configured(
         AuthenticationState.SignedIn(signedInData, DeviceMetadata.Empty),
-        AuthorizationState.SessionEstablished(
-            AmplifyCredential.UserAndIdentityPool(
-                signedInData,
-                identityId = identityId,
-                AWSCredentials(
-                    accessKeyId = accessKeyId,
-                    secretAccessKey = secretAccessKey,
-                    sessionToken = dummyToken,
-                    expiration = expiration
-                )
-            )
-        )
+        AuthorizationState.SessionEstablished(signedInAmplifyCredential)
     )
 
     private val signedOutState = AuthState.Configured(

@@ -34,6 +34,7 @@ import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.auth.result.AuthSessionResult
+import com.amplifyframework.statemachine.codegen.errors.SessionError
 import kotlinx.serialization.json.JsonObject
 
 object FetchAuthSessionTestCaseGenerator : SerializableProvider {
@@ -46,8 +47,29 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
             "authenticationResult" to mapOf(
                 "idToken" to AuthStateJsonGenerator.dummyToken2,
                 "accessToken" to AuthStateJsonGenerator.dummyToken2,
-                "refreshToken" to AuthStateJsonGenerator.dummyToken2,
+                "refreshToken" to AuthStateJsonGenerator.dummyToken,
                 "expiresIn" to 300
+            )
+        ).toJsonElement()
+    )
+
+    private val mockedRefreshGetIdResponse = MockResponse(
+        CognitoType.CognitoIdentity,
+        "getId",
+        ResponseType.Success,
+        mapOf("identityId" to "someIdentityId").toJsonElement()
+    )
+
+    private val mockedRefreshGetAWSCredentialsResponse = MockResponse(
+        CognitoType.CognitoIdentity,
+        "getCredentialsForIdentity",
+        ResponseType.Success,
+        mapOf(
+            "credentials" to mapOf(
+                "accessKeyId" to "someAccessKey",
+                "secretKey" to "someSecretKey",
+                "sessionToken" to AuthStateJsonGenerator.dummyToken2,
+                "expiration" to 2342134
             )
         ).toJsonElement()
     )
@@ -96,12 +118,18 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
             AWSCognitoUserPoolTokens(
                 accessToken = AuthStateJsonGenerator.dummyToken2,
                 idToken = AuthStateJsonGenerator.dummyToken2,
-                refreshToken = AuthStateJsonGenerator.dummyToken2
+                refreshToken = AuthStateJsonGenerator.dummyToken
             )
         )
     ).toJsonElement()
 
-    private val unknownRefreshException = UnknownException(message = "Fetch auth session failed.")
+    private val unknownRefreshException = UnknownException(
+        message = "Fetch auth session failed.",
+        cause = SessionError(
+            exception = ResourceNotFoundException.invoke {  },
+            amplifyCredential = AuthStateJsonGenerator.signedInAmplifyCredential
+        )
+    )
 
     private val expectedRefreshFailure = AWSCognitoAuthSession(
         isSignedIn = true,
@@ -125,7 +153,7 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
 
     private val apiRefreshFailureReturnValidation = ExpectationShapes.Amplify(
         AuthAPI.fetchAuthSession,
-        ResponseType.Failure,
+        ResponseType.Success,
         expectedRefreshFailure,
     )
 
@@ -149,7 +177,11 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
         preConditions = PreConditions(
             "authconfiguration.json",
             "SignedIn_SessionEstablished.json",
-            mockedResponses = listOf(mockedRefreshInitiateAuthResponse)
+            mockedResponses = listOf(
+                mockedRefreshInitiateAuthResponse,
+                mockedRefreshGetIdResponse,
+                mockedRefreshGetAWSCredentialsResponse
+            )
         ),
         api = API(
             name = AuthAPI.fetchAuthSession,

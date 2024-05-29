@@ -42,17 +42,17 @@ interface SerializableProvider {
 class JsonGenerator {
     private val providers: List<SerializableProvider> = listOf(
         AuthStateJsonGenerator,
-        ResetPasswordTestCaseGenerator,
-        SignUpTestCaseGenerator,
-        SignInTestCaseGenerator,
-        SignOutTestCaseGenerator,
-        ConfirmSignInTestCaseGenerator,
-        DeleteUserTestCaseGenerator,
+//        ResetPasswordTestCaseGenerator,
+//        SignUpTestCaseGenerator,
+//        SignInTestCaseGenerator,
+//        SignOutTestCaseGenerator,
+//        ConfirmSignInTestCaseGenerator,
+//        DeleteUserTestCaseGenerator,
         FetchAuthSessionTestCaseGenerator,
-        RememberDeviceTestCaseGenerator,
-        ForgetDeviceTestCaseGenerator,
-        FetchDevicesTestCaseGenerator,
-        FetchUserAttributesTestCaseGenerator,
+//        RememberDeviceTestCaseGenerator,
+//        ForgetDeviceTestCaseGenerator,
+//        FetchDevicesTestCaseGenerator,
+//        FetchUserAttributesTestCaseGenerator,
     )
 
     @Ignore("Uncomment and run to clean feature test directory")
@@ -68,7 +68,7 @@ class JsonGenerator {
         generateJson()
     }
 
-    @Ignore("Uncomment and run to generate json for feature tests")
+    //@Ignore("Uncomment and run to generate json for feature tests")
     @Test
     fun generate() {
         generateJson()

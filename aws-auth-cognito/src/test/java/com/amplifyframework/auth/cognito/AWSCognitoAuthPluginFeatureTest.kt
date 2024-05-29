@@ -214,7 +214,7 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
 
         coVerify {
             when (validation) {
-                is CognitoIdentity -> mockCognitoIdClient to mockCognitoIPClient::class
+                is CognitoIdentity -> mockCognitoIdClient to mockCognitoIdClient::class
                 is CognitoIdentityProvider -> mockCognitoIPClient to mockCognitoIPClient::class
             }.apply {
                 second.declaredFunctions.first {
