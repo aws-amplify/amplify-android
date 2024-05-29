@@ -21,6 +21,7 @@ import aws.sdk.kotlin.services.cognitoidentity.model.CognitoIdentityException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeMismatchException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResourceNotFoundException
 import com.amplifyframework.auth.exceptions.UnknownException
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -36,6 +37,9 @@ private data class CognitoExceptionSurrogate(
     fun <T> toRealException(): T {
         val exception = when (errorType) {
             NotAuthorizedException::class.java.simpleName -> NotAuthorizedException.invoke {
+                message = errorMessage
+            } as T
+            ResourceNotFoundException::class.java.simpleName -> ResourceNotFoundException.invoke {
                 message = errorMessage
             } as T
             UnknownException::class.java.simpleName -> UnknownException(message = errorMessage ?: "") as T

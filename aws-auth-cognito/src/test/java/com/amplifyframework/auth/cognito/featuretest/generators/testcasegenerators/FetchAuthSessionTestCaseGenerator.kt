@@ -15,6 +15,7 @@
 
 package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators
 
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResourceNotFoundException
 import com.amplifyframework.auth.AWSCognitoUserPoolTokens
 import com.amplifyframework.auth.AWSCredentials
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
@@ -31,44 +32,31 @@ import com.amplifyframework.auth.cognito.featuretest.generators.authstategenerat
 import com.amplifyframework.auth.cognito.featuretest.generators.toJsonElement
 import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.auth.exceptions.SignedOutException
+import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.auth.result.AuthSessionResult
 import kotlinx.serialization.json.JsonObject
 
 object FetchAuthSessionTestCaseGenerator : SerializableProvider {
 
-    private val mockedInitiateAuthResponse = MockResponse(
+    private val mockedRefreshInitiateAuthResponse = MockResponse(
         CognitoType.CognitoIdentityProvider,
         "initiateAuth",
         ResponseType.Success,
         mapOf(
             "authenticationResult" to mapOf(
-                "idToken" to AuthStateJsonGenerator.dummyToken,
-                "accessToken" to AuthStateJsonGenerator.dummyToken,
-                "refreshToken" to AuthStateJsonGenerator.dummyToken,
+                "idToken" to AuthStateJsonGenerator.dummyToken2,
+                "accessToken" to AuthStateJsonGenerator.dummyToken2,
+                "refreshToken" to AuthStateJsonGenerator.dummyToken2,
                 "expiresIn" to 300
             )
         ).toJsonElement()
     )
 
-    private val mockedIdentityIdResponse = MockResponse(
-        CognitoType.CognitoIdentity,
-        "getId",
-        ResponseType.Success,
-        mapOf("identityId" to "someIdentityId").toJsonElement()
-    )
-
-    private val mockedAWSCredentialsResponse = MockResponse(
-        CognitoType.CognitoIdentity,
-        "getCredentialsForIdentity",
-        ResponseType.Success,
-        mapOf(
-            "credentials" to mapOf(
-                "accessKeyId" to "someAccessKey",
-                "secretKey" to "someSecretKey",
-                "sessionToken" to AuthStateJsonGenerator.dummyToken,
-                "expiration" to 2342134
-            )
-        ).toJsonElement()
+    private val mockedRefreshInitiateAuthFailureResponse = MockResponse(
+        CognitoType.CognitoIdentityProvider,
+        "initiateAuth",
+        ResponseType.Failure,
+        ResourceNotFoundException.invoke {}.toJsonElement()
     )
 
     private val expectedSuccess = AWSCognitoAuthSession(
@@ -92,10 +80,53 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
         )
     ).toJsonElement()
 
+    private val expectedRefreshSuccess = AWSCognitoAuthSession(
+        isSignedIn = true,
+        identityIdResult = AuthSessionResult.success("someIdentityId"),
+        awsCredentialsResult = AuthSessionResult.success(
+            AWSCredentials.createAWSCredentials(
+                AuthStateJsonGenerator.accessKeyId,
+                AuthStateJsonGenerator.secretAccessKey,
+                AuthStateJsonGenerator.dummyToken2,
+                AuthStateJsonGenerator.expiration
+            )
+        ),
+        userSubResult = AuthSessionResult.success(AuthStateJsonGenerator.userId),
+        userPoolTokensResult = AuthSessionResult.success(
+            AWSCognitoUserPoolTokens(
+                accessToken = AuthStateJsonGenerator.dummyToken2,
+                idToken = AuthStateJsonGenerator.dummyToken2,
+                refreshToken = AuthStateJsonGenerator.dummyToken2
+            )
+        )
+    ).toJsonElement()
+
+    private val unknownRefreshException = UnknownException(message = "Fetch auth session failed.")
+
+    private val expectedRefreshFailure = AWSCognitoAuthSession(
+        isSignedIn = true,
+        identityIdResult = AuthSessionResult.failure(unknownRefreshException),
+        awsCredentialsResult = AuthSessionResult.failure(unknownRefreshException),
+        userSubResult = AuthSessionResult.failure(unknownRefreshException),
+        userPoolTokensResult =  AuthSessionResult.failure(unknownRefreshException)
+    ).toJsonElement()
+
     private val apiReturnValidation = ExpectationShapes.Amplify(
         AuthAPI.fetchAuthSession,
         ResponseType.Success,
         expectedSuccess,
+    )
+
+    private val apiRefreshReturnValidation = ExpectationShapes.Amplify(
+        AuthAPI.fetchAuthSession,
+        ResponseType.Success,
+        expectedRefreshSuccess,
+    )
+
+    private val apiRefreshFailureReturnValidation = ExpectationShapes.Amplify(
+        AuthAPI.fetchAuthSession,
+        ResponseType.Failure,
+        expectedRefreshFailure,
     )
 
     private val baseCase = FeatureTestCase(
@@ -118,14 +149,29 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
         preConditions = PreConditions(
             "authconfiguration.json",
             "SignedIn_SessionEstablished.json",
-            mockedResponses = listOf(mockedInitiateAuthResponse)
+            mockedResponses = listOf(mockedRefreshInitiateAuthResponse)
         ),
         api = API(
             name = AuthAPI.fetchAuthSession,
             params = JsonObject(emptyMap()),
-            JsonObject(emptyMap())
+            options = mapOf("forceRefresh" to true).toJsonElement()
         ),
-        validations = listOf(apiReturnValidation)
+        validations = listOf(apiRefreshReturnValidation)
+    )
+
+    private val refreshFailureCase: FeatureTestCase = baseCase.copy(
+        description = "AuthSession object is successfully returned after failed refresh",
+        preConditions = PreConditions(
+            "authconfiguration.json",
+            "SignedIn_SessionEstablished.json",
+            mockedResponses = listOf(mockedRefreshInitiateAuthFailureResponse)
+        ),
+        api = API(
+            name = AuthAPI.fetchAuthSession,
+            params = JsonObject(emptyMap()),
+            options = mapOf("forceRefresh" to true).toJsonElement()
+        ),
+        validations = listOf(apiRefreshFailureReturnValidation)
     )
 
     private val identityPoolCase: FeatureTestCase = baseCase.copy(
@@ -193,5 +239,5 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
         )
     )
 
-    override val serializables: List<Any> = listOf(baseCase, refreshSuccessCase, identityPoolCase, userPoolCase)
+    override val serializables: List<Any> = listOf(baseCase, refreshSuccessCase, refreshFailureCase, identityPoolCase, userPoolCase)
 }

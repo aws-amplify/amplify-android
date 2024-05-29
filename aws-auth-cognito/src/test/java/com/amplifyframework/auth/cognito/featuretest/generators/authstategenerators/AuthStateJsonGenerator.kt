@@ -40,6 +40,9 @@ object AuthStateJsonGenerator : SerializableProvider {
     const val dummyToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1l" +
         "IiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU"
 
+    const val dummyToken2 = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1l" +
+            "IiwiZXhwIjoxNTE2MjM5MDI0LCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.po__hnGh2KF0ibpp--a2YZA9oBAKXc9BkX1IwdhvJp8"
+
     const val accessKeyId = "someAccessKey"
     const val secretAccessKey = "someSecretKey"
     const val identityId = "someIdentityId"

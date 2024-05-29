@@ -1,0 +1,61 @@
+{
+    "description": "AuthSession object is successfully returned after failed refresh",
+    "preConditions": {
+        "amplify-configuration": "authconfiguration.json",
+        "state": "SignedIn_SessionEstablished.json",
+        "mockedResponses": [
+            {
+                "type": "cognitoIdentityProvider",
+                "apiName": "initiateAuth",
+                "responseType": "failure",
+                "response": {
+                    "errorType": "ResourceNotFoundException",
+                    "errorMessage": null
+                }
+            }
+        ]
+    },
+    "api": {
+        "name": "fetchAuthSession",
+        "params": {
+        },
+        "options": {
+            "forceRefresh": true
+        }
+    },
+    "validations": [
+        {
+            "type": "amplify",
+            "apiName": "fetchAuthSession",
+            "responseType": "failure",
+            "response": {
+                "accessToken": null,
+                "awsCredentialsResult": {
+                    "errorType": "UnknownException",
+                    "errorMessage": "Fetch auth session failed.",
+                    "recoverySuggestion": "See the attached exception for more details",
+                    "cause": null
+                },
+                "identityIdResult": {
+                    "errorType": "UnknownException",
+                    "errorMessage": "Fetch auth session failed.",
+                    "recoverySuggestion": "See the attached exception for more details",
+                    "cause": null
+                },
+                "isSignedIn": true,
+                "userPoolTokensResult": {
+                    "errorType": "UnknownException",
+                    "errorMessage": "Fetch auth session failed.",
+                    "recoverySuggestion": "See the attached exception for more details",
+                    "cause": null
+                },
+                "userSubResult": {
+                    "errorType": "UnknownException",
+                    "errorMessage": "Fetch auth session failed.",
+                    "recoverySuggestion": "See the attached exception for more details",
+                    "cause": null
+                }
+            }
+        }
+    ]
+}
