@@ -126,7 +126,7 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
     private val unknownRefreshException = UnknownException(
         message = "Fetch auth session failed.",
         cause = SessionError(
-            exception = ResourceNotFoundException.invoke {  },
+            exception = ResourceNotFoundException.invoke { },
             amplifyCredential = AuthStateJsonGenerator.signedInAmplifyCredential
         )
     )
@@ -136,7 +136,7 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
         identityIdResult = AuthSessionResult.failure(unknownRefreshException),
         awsCredentialsResult = AuthSessionResult.failure(unknownRefreshException),
         userSubResult = AuthSessionResult.failure(unknownRefreshException),
-        userPoolTokensResult =  AuthSessionResult.failure(unknownRefreshException)
+        userPoolTokensResult = AuthSessionResult.failure(unknownRefreshException)
     ).toJsonElement()
 
     private val apiReturnValidation = ExpectationShapes.Amplify(
@@ -271,5 +271,11 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
         )
     )
 
-    override val serializables: List<Any> = listOf(baseCase, refreshSuccessCase, refreshFailureCase, identityPoolCase, userPoolCase)
+    override val serializables: List<Any> = listOf(
+        baseCase,
+        refreshSuccessCase,
+        refreshFailureCase,
+        identityPoolCase,
+        userPoolCase
+    )
 }
