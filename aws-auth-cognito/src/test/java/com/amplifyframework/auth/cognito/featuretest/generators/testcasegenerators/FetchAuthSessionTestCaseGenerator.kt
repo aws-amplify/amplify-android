@@ -78,7 +78,9 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
         CognitoType.CognitoIdentityProvider,
         "initiateAuth",
         ResponseType.Failure,
-        ResourceNotFoundException.invoke {}.toJsonElement()
+        ResourceNotFoundException.invoke {
+            message = "Error type: Client, Protocol response: (empty response)"
+        }.toJsonElement()
     )
 
     private val expectedSuccess = AWSCognitoAuthSession(

@@ -10,7 +10,7 @@
                 "responseType": "failure",
                 "response": {
                     "errorType": "ResourceNotFoundException",
-                    "errorMessage": null
+                    "errorMessage": "Error type: Client, Protocol response: (empty response)"
                 }
             }
         ]
@@ -60,7 +60,7 @@
                         },
                         "exception": {
                             "errorType": "ResourceNotFoundException",
-                            "errorMessage": null
+                            "errorMessage": "Error type: Client, Protocol response: (empty response)"
                         }
                     }
                 },
@@ -94,7 +94,7 @@
                         },
                         "exception": {
                             "errorType": "ResourceNotFoundException",
-                            "errorMessage": null
+                            "errorMessage": "Error type: Client, Protocol response: (empty response)"
                         }
                     }
                 },
@@ -129,7 +129,7 @@
                         },
                         "exception": {
                             "errorType": "ResourceNotFoundException",
-                            "errorMessage": null
+                            "errorMessage": "Error type: Client, Protocol response: (empty response)"
                         }
                     }
                 },
@@ -163,7 +163,7 @@
                         },
                         "exception": {
                             "errorType": "ResourceNotFoundException",
-                            "errorMessage": null
+                            "errorMessage": "Error type: Client, Protocol response: (empty response)"
                         }
                     }
                 }
