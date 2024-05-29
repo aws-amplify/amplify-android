@@ -390,19 +390,20 @@ object AppSyncGraphQLRequestFactory {
      * @param model the model instance.
      * @param predicate the model predicate.
      * @param type the mutation type.
+     * @param authMode The [AuthorizationType] to use for making the request
      * @param <R> the response type.
      * @param <T> the concrete model type.
      * @return a valid [GraphQLRequest] instance.
      * @throws IllegalStateException when the model schema does not contain the expected information.
-     </T></R> */
+     */
     @JvmStatic
+    @JvmOverloads
     fun <R, T : Model> buildMutation(
         model: T,
         predicate: QueryPredicate,
-        type: MutationType
-    ): GraphQLRequest<R> {
-        return buildMutationInternal(model, predicate, type, null)
-    }
+        type: MutationType,
+        authMode: AuthorizationType? = null
+    ): GraphQLRequest<R> = buildMutationInternal(model, predicate, type, authMode, null)
 
     /**
      * Creates a [GraphQLRequest] that represents a mutation of a given type.
@@ -415,21 +416,42 @@ object AppSyncGraphQLRequestFactory {
      * @param <P> the concrete model path for the M model type
      * @return a valid [GraphQLRequest] instance.
      * @throws IllegalStateException when the model schema does not contain the expected information.
-     </T></R> */
+     */
     @JvmStatic
     fun <R, T : Model, P : ModelPath<T>> buildMutation(
         model: T,
         predicate: QueryPredicate,
         type: MutationType,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<R> {
-        return buildMutationInternal(model, predicate, type, includes)
-    }
+    ): GraphQLRequest<R> = buildMutationInternal(model, predicate, type, null, includes)
+
+    /**
+     * Creates a [GraphQLRequest] that represents a mutation of a given type.
+     * @param model the model instance.
+     * @param predicate the model predicate.
+     * @param type the mutation type.
+     * @param authMode The [AuthorizationType] to use for making the request
+     * @param includes lambda returning list of relationships that should be included in the selection set
+     * @param <R> the response type.
+     * @param <T> the concrete model type.
+     * @param <P> the concrete model path for the M model type
+     * @return a valid [GraphQLRequest] instance.
+     * @throws IllegalStateException when the model schema does not contain the expected information.
+     */
+    @JvmStatic
+    fun <R, T : Model, P : ModelPath<T>> buildMutation(
+        model: T,
+        predicate: QueryPredicate,
+        type: MutationType,
+        authMode: AuthorizationType,
+        includes: ((P) -> List<PropertyContainerPath>)
+    ): GraphQLRequest<R> = buildMutationInternal(model, predicate, type, authMode, includes)
 
     private fun <R, T : Model, P : ModelPath<T>> buildMutationInternal(
         model: T,
         predicate: QueryPredicate,
         type: MutationType,
+        authMode: AuthorizationType?,
         includes: ((P) -> List<PropertyContainerPath>)?
     ): GraphQLRequest<R> {
         return try {
@@ -457,17 +479,24 @@ object AppSyncGraphQLRequestFactory {
                     GraphQLRequestHelper.getMapOfFieldNameAndValues(schema, model, type)
                 )
             }
+
+            authMode?.let { builder.authorizationType(it) }
+
             if (QueryPredicates.all() != predicate) {
                 val conditionType = "Model" +
                     Casing.capitalizeFirst(graphQlTypeName) +
                     "ConditionInput"
                 builder.variable(
-                    "condition", conditionType, GraphQLRequestHelper.parsePredicate(predicate)
+                    "condition",
+                    conditionType,
+                    GraphQLRequestHelper.parsePredicate(predicate)
                 )
             }
 
-            val customSelectionSet = includes?.let { createApiSelectionSet(modelClass, type, it) }
-            customSelectionSet?.let { builder.selectionSet(it) }
+            includes?.let {
+                val customSelectionSet = createApiSelectionSet(modelClass, type, it)
+                builder.selectionSet(customSelectionSet)
+            }
 
             builder.build()
         } catch (exception: AmplifyException) {

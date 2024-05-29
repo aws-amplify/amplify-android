@@ -16,6 +16,7 @@
 package com.amplifyframework.graphql.model
 
 import com.amplifyframework.api.aws.AppSyncGraphQLRequestFactory
+import com.amplifyframework.api.aws.AuthorizationType
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.MutationType
 import com.amplifyframework.api.graphql.model.ModelMutation
@@ -24,7 +25,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicates
 import com.amplifyframework.testmodels.lazy.Blog
 import com.amplifyframework.testmodels.lazy.Post
 import com.amplifyframework.testmodels.lazy.PostPath
-import org.junit.Assert.assertEquals
+import io.kotest.matchers.shouldBe
 import org.junit.Test
 
 class ModelMutationTest {
@@ -43,7 +44,26 @@ class ModelMutationTest {
 
         val actualRequest = ModelMutation.create(expectedClass)
 
-        assertEquals(expectedRequest, actualRequest)
+        actualRequest shouldBe expectedRequest
+    }
+
+    @Test
+    fun `create with auth mode`() {
+        val expectedClass = Post.builder().name("Post").blog(Blog.builder().name("Blog").build()).build()
+        val expectedType = MutationType.CREATE
+        val expectedAuthMode = AuthorizationType.OPENID_CONNECT
+
+        val expectedRequest: GraphQLRequest<Post> = AppSyncGraphQLRequestFactory
+            .buildMutation(
+                expectedClass,
+                QueryPredicates.all(),
+                expectedType,
+                expectedAuthMode
+            )
+
+        val actualRequest = ModelMutation.create(expectedClass, expectedAuthMode)
+
+        actualRequest shouldBe expectedRequest
     }
 
     @Test
@@ -64,7 +84,30 @@ class ModelMutationTest {
             includes(it.comments, it.blog)
         }
 
-        assertEquals(expectedRequest, actualRequest)
+        actualRequest shouldBe expectedRequest
+    }
+
+    @Test
+    fun `create with includes and authMode`() {
+        val expectedClass = Post.builder().name("Post").blog(Blog.builder().name("Blog").build()).build()
+        val expectedType = MutationType.CREATE
+        val expectedAuthMode = AuthorizationType.OPENID_CONNECT
+
+        val expectedRequest: GraphQLRequest<Post> = AppSyncGraphQLRequestFactory
+            .buildMutation<Post, Post, PostPath>(
+                expectedClass,
+                QueryPredicates.all(),
+                expectedType,
+                expectedAuthMode
+            ) {
+                includes(it.comments, it.blog)
+            }
+
+        val actualRequest = ModelMutation.create<Post, PostPath>(expectedClass, expectedAuthMode) {
+            includes(it.comments, it.blog)
+        }
+
+        actualRequest shouldBe expectedRequest
     }
 
     @Test
@@ -81,7 +124,26 @@ class ModelMutationTest {
 
         val actualRequest = ModelMutation.delete(expectedClass)
 
-        assertEquals(expectedRequest, actualRequest)
+        actualRequest shouldBe expectedRequest
+    }
+
+    @Test
+    fun `delete with authMode`() {
+        val expectedClass = Post.builder().name("Post").blog(Blog.builder().name("Blog").build()).build()
+        val expectedType = MutationType.DELETE
+        val expectedAuthMode = AuthorizationType.OPENID_CONNECT
+
+        val expectedRequest: GraphQLRequest<Post> = AppSyncGraphQLRequestFactory
+            .buildMutation(
+                expectedClass,
+                QueryPredicates.all(),
+                expectedType,
+                expectedAuthMode
+            )
+
+        val actualRequest = ModelMutation.delete(expectedClass, authMode = expectedAuthMode)
+
+        actualRequest shouldBe expectedRequest
     }
 
     @Test
@@ -98,7 +160,26 @@ class ModelMutationTest {
 
         val actualRequest = ModelMutation.delete(expectedClass, QueryPredicates.all())
 
-        assertEquals(expectedRequest, actualRequest)
+        actualRequest shouldBe expectedRequest
+    }
+
+    @Test
+    fun `delete with predicate and authMode`() {
+        val expectedClass = Post.builder().name("Post").blog(Blog.builder().name("Blog").build()).build()
+        val expectedType = MutationType.DELETE
+        val expectedAuthMode = AuthorizationType.OPENID_CONNECT
+
+        val expectedRequest: GraphQLRequest<Post> = AppSyncGraphQLRequestFactory
+            .buildMutation(
+                expectedClass,
+                QueryPredicates.all(),
+                expectedType,
+                expectedAuthMode
+            )
+
+        val actualRequest = ModelMutation.delete(expectedClass, QueryPredicates.all(), expectedAuthMode)
+
+        actualRequest shouldBe expectedRequest
     }
 
     @Test
@@ -119,7 +200,30 @@ class ModelMutationTest {
             includes(it.comments, it.blog)
         }
 
-        assertEquals(expectedRequest, actualRequest)
+        actualRequest shouldBe expectedRequest
+    }
+
+    @Test
+    fun `delete with includes and authMode`() {
+        val expectedClass = Post.builder().name("Post").blog(Blog.builder().name("Blog").build()).build()
+        val expectedType = MutationType.DELETE
+        val expectedAuthMode = AuthorizationType.OPENID_CONNECT
+
+        val expectedRequest: GraphQLRequest<Post> = AppSyncGraphQLRequestFactory
+            .buildMutation<Post, Post, PostPath>(
+                expectedClass,
+                QueryPredicates.all(),
+                expectedType,
+                expectedAuthMode
+            ) {
+                includes(it.comments, it.blog)
+            }
+
+        val actualRequest = ModelMutation.delete<Post, PostPath>(expectedClass, expectedAuthMode) {
+            includes(it.comments, it.blog)
+        }
+
+        actualRequest shouldBe expectedRequest
     }
 
     @Test
@@ -140,7 +244,34 @@ class ModelMutationTest {
             includes(it.comments, it.blog)
         }
 
-        assertEquals(expectedRequest, actualRequest)
+        actualRequest shouldBe expectedRequest
+    }
+
+    @Test
+    fun `delete with predicates with includes and authMode`() {
+        val expectedClass = Post.builder().name("Post").blog(Blog.builder().name("Blog").build()).build()
+        val expectedType = MutationType.DELETE
+        val expectedAuthMode = AuthorizationType.OPENID_CONNECT
+
+        val expectedRequest: GraphQLRequest<Post> = AppSyncGraphQLRequestFactory
+            .buildMutation<Post, Post, PostPath>(
+                expectedClass,
+                QueryPredicates.all(),
+                expectedType,
+                expectedAuthMode
+            ) {
+                includes(it.comments, it.blog)
+            }
+
+        val actualRequest = ModelMutation.delete<Post, PostPath>(
+            expectedClass,
+            QueryPredicates.all(),
+            expectedAuthMode
+        ) {
+            includes(it.comments, it.blog)
+        }
+
+        actualRequest shouldBe expectedRequest
     }
 
     @Test
@@ -157,7 +288,26 @@ class ModelMutationTest {
 
         val actualRequest = ModelMutation.update(expectedClass)
 
-        assertEquals(expectedRequest, actualRequest)
+        actualRequest shouldBe expectedRequest
+    }
+
+    @Test
+    fun `update with authMode`() {
+        val expectedClass = Post.builder().name("Post").blog(Blog.builder().name("Blog").build()).build()
+        val expectedType = MutationType.UPDATE
+        val expectedAuthMode = AuthorizationType.OPENID_CONNECT
+
+        val expectedRequest: GraphQLRequest<Post> = AppSyncGraphQLRequestFactory
+            .buildMutation(
+                expectedClass,
+                QueryPredicates.all(),
+                expectedType,
+                expectedAuthMode
+            )
+
+        val actualRequest = ModelMutation.update(expectedClass, authMode = expectedAuthMode)
+
+        actualRequest shouldBe expectedRequest
     }
 
     @Test
@@ -174,7 +324,26 @@ class ModelMutationTest {
 
         val actualRequest = ModelMutation.update(expectedClass, QueryPredicates.all())
 
-        assertEquals(expectedRequest, actualRequest)
+        actualRequest shouldBe expectedRequest
+    }
+
+    @Test
+    fun `update with predicate with authMode`() {
+        val expectedClass = Post.builder().name("Post").blog(Blog.builder().name("Blog").build()).build()
+        val expectedType = MutationType.UPDATE
+        val expectedAuthMode = AuthorizationType.OPENID_CONNECT
+
+        val expectedRequest: GraphQLRequest<Post> = AppSyncGraphQLRequestFactory
+            .buildMutation(
+                expectedClass,
+                QueryPredicates.all(),
+                expectedType,
+                expectedAuthMode
+            )
+
+        val actualRequest = ModelMutation.update(expectedClass, QueryPredicates.all(), expectedAuthMode)
+
+        actualRequest shouldBe expectedRequest
     }
 
     @Test
@@ -195,7 +364,30 @@ class ModelMutationTest {
             includes(it.comments, it.blog)
         }
 
-        assertEquals(expectedRequest, actualRequest)
+        actualRequest shouldBe expectedRequest
+    }
+
+    @Test
+    fun `update with includes with authMode`() {
+        val expectedClass = Post.builder().name("Post").blog(Blog.builder().name("Blog").build()).build()
+        val expectedType = MutationType.UPDATE
+        val expectedAuthMode = AuthorizationType.OPENID_CONNECT
+
+        val expectedRequest: GraphQLRequest<Post> = AppSyncGraphQLRequestFactory
+            .buildMutation<Post, Post, PostPath>(
+                expectedClass,
+                QueryPredicates.all(),
+                expectedType,
+                expectedAuthMode
+            ) {
+                includes(it.comments, it.blog)
+            }
+
+        val actualRequest = ModelMutation.update<Post, PostPath>(expectedClass, expectedAuthMode) {
+            includes(it.comments, it.blog)
+        }
+
+        actualRequest shouldBe expectedRequest
     }
 
     @Test
@@ -216,6 +408,33 @@ class ModelMutationTest {
             includes(it.comments, it.blog)
         }
 
-        assertEquals(expectedRequest, actualRequest)
+        actualRequest shouldBe expectedRequest
+    }
+
+    @Test
+    fun `update with includes with predicate with authMode`() {
+        val expectedClass = Post.builder().name("Post").blog(Blog.builder().name("Blog").build()).build()
+        val expectedType = MutationType.UPDATE
+        val expectedAuthMode = AuthorizationType.OPENID_CONNECT
+
+        val expectedRequest: GraphQLRequest<Post> = AppSyncGraphQLRequestFactory
+            .buildMutation<Post, Post, PostPath>(
+                expectedClass,
+                QueryPredicates.all(),
+                expectedType,
+                expectedAuthMode
+            ) {
+                includes(it.comments, it.blog)
+            }
+
+        val actualRequest = ModelMutation.update<Post, PostPath>(
+            expectedClass,
+            QueryPredicates.all(),
+            expectedAuthMode
+        ) {
+            includes(it.comments, it.blog)
+        }
+
+        actualRequest shouldBe expectedRequest
     }
 }
