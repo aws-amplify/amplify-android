@@ -121,7 +121,7 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
     @Before
     fun setUp() {
         // set timezone to be same as generated json from JsonGenerator
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+        TimeZone.setDefault(TimeZone.getTimeZone("US/Pacific"))
         Dispatchers.setMain(mainThreadSurrogate)
         feature = testCase
         sut.realPlugin = readConfiguration(feature.preConditions.`amplify-configuration`)

@@ -60,7 +60,7 @@ class JsonGenerator {
     @Before
     fun setUp() {
         // set timezone to be the same as feature test runner
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+        TimeZone.setDefault(TimeZone.getTimeZone("US/Pacific"))
     }
 
     @Ignore("Uncomment and run to clean feature test directory")
@@ -69,14 +69,20 @@ class JsonGenerator {
         cleanDirectory()
     }
 
-    @Ignore("Uncomment and run to clean feature test directory as well as generate json for feature tests")
+    @Ignore(
+        "Uncomment and run to clean feature test directory as well as generate json for feature tests." +
+        "Manually set timezone to PDT to ensure match for feature test results"
+    )
     @Test
     fun cleanAndGenerate() {
         cleanDirectory()
         generateJson()
     }
 
-    @Ignore("Uncomment and run to generate json for feature tests")
+    @Ignore(
+        "Uncomment and run to generate json for feature tests. " +
+        "Manually set timezone to PDT to ensure match for feature test results"
+    )
     @Test
     fun generate() {
         generateJson()
