@@ -29,8 +29,6 @@ import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerato
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.SignOutTestCaseGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.SignUpTestCaseGenerator
 import com.amplifyframework.statemachine.codegen.states.AuthState
-import java.util.TimeZone
-import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 
