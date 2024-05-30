@@ -39,7 +39,7 @@
                             "signedInData": {
                                 "userId": "userId",
                                 "username": "username",
-                                "signedInDate": "Mar 4, 3924, 12:00:00 AM",
+                                "signedInDate": "Feb 3, 2024, 9:00:00 PM",
                                 "signInMethod": {
                                     "authType": "USER_SRP_AUTH"
                                 },
@@ -73,7 +73,7 @@
                             "signedInData": {
                                 "userId": "userId",
                                 "username": "username",
-                                "signedInDate": "Mar 4, 3924, 12:00:00 AM",
+                                "signedInDate": "Feb 3, 2024, 9:00:00 PM",
                                 "signInMethod": {
                                     "authType": "USER_SRP_AUTH"
                                 },
@@ -108,7 +108,7 @@
                             "signedInData": {
                                 "userId": "userId",
                                 "username": "username",
-                                "signedInDate": "Mar 4, 3924, 12:00:00 AM",
+                                "signedInDate": "Feb 3, 2024, 9:00:00 PM",
                                 "signInMethod": {
                                     "authType": "USER_SRP_AUTH"
                                 },
@@ -142,7 +142,7 @@
                             "signedInData": {
                                 "userId": "userId",
                                 "username": "username",
-                                "signedInDate": "Mar 4, 3924, 12:00:00 AM",
+                                "signedInDate": "Feb 3, 2024, 9:00:00 PM",
                                 "signInMethod": {
                                     "authType": "USER_SRP_AUTH"
                                 },

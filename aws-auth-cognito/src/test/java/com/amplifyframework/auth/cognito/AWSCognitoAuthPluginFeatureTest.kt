@@ -43,6 +43,7 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
 import java.io.File
+import java.util.TimeZone
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.full.callSuspend
@@ -119,6 +120,8 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
 
     @Before
     fun setUp() {
+        // set timezone to be same as generated json from JsonGenerator
+        TimeZone.setDefault(TimeZone.getTimeZone("America/Seattle"))
         Dispatchers.setMain(mainThreadSurrogate)
         feature = testCase
         sut.realPlugin = readConfiguration(feature.preConditions.`amplify-configuration`)

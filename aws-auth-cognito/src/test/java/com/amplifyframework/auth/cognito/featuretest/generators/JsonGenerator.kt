@@ -17,8 +17,20 @@ package com.amplifyframework.auth.cognito.featuretest.generators
 
 import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
 import com.amplifyframework.auth.cognito.featuretest.generators.authstategenerators.AuthStateJsonGenerator
+import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.ConfirmSignInTestCaseGenerator
+import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.DeleteUserTestCaseGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.FetchAuthSessionTestCaseGenerator
+import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.FetchDevicesTestCaseGenerator
+import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.FetchUserAttributesTestCaseGenerator
+import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.ForgetDeviceTestCaseGenerator
+import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.RememberDeviceTestCaseGenerator
+import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.ResetPasswordTestCaseGenerator
+import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.SignInTestCaseGenerator
+import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.SignOutTestCaseGenerator
+import com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators.SignUpTestCaseGenerator
 import com.amplifyframework.statemachine.codegen.states.AuthState
+import java.util.TimeZone
+import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 
@@ -32,18 +44,24 @@ interface SerializableProvider {
 class JsonGenerator {
     private val providers: List<SerializableProvider> = listOf(
         AuthStateJsonGenerator,
-//        ResetPasswordTestCaseGenerator,
-//        SignUpTestCaseGenerator,
-//        SignInTestCaseGenerator,
-//        SignOutTestCaseGenerator,
-//        ConfirmSignInTestCaseGenerator,
-//        DeleteUserTestCaseGenerator,
+        ResetPasswordTestCaseGenerator,
+        SignUpTestCaseGenerator,
+        SignInTestCaseGenerator,
+        SignOutTestCaseGenerator,
+        ConfirmSignInTestCaseGenerator,
+        DeleteUserTestCaseGenerator,
         FetchAuthSessionTestCaseGenerator,
-//        RememberDeviceTestCaseGenerator,
-//        ForgetDeviceTestCaseGenerator,
-//        FetchDevicesTestCaseGenerator,
-//        FetchUserAttributesTestCaseGenerator,
+        RememberDeviceTestCaseGenerator,
+        ForgetDeviceTestCaseGenerator,
+        FetchDevicesTestCaseGenerator,
+        FetchUserAttributesTestCaseGenerator,
     )
+
+    @Before
+    fun setUp() {
+        // set timezone to be the same as feature test runner
+        TimeZone.setDefault(TimeZone.getTimeZone("America/Seattle"))
+    }
 
     @Ignore("Uncomment and run to clean feature test directory")
     @Test
