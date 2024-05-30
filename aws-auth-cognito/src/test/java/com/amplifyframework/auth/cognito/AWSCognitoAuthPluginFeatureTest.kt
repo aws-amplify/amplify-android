@@ -194,15 +194,15 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
             is Cognito -> verifyCognito(validation)
 
             is ExpectationShapes.Amplify -> {
-                when(val response = validation.response) {
+                when (val response = validation.response) {
                     is JsonObject -> {
                         val expectedResponse = JSONObject(response.toString())
-                        val actualResponse =  JSONObject(apiExecutionResult.toJsonElement().toString())
+                        val actualResponse = JSONObject(apiExecutionResult.toJsonElement().toString())
                         JSONAssert.assertEquals(expectedResponse, actualResponse, true)
                     }
                     is JsonArray -> {
                         val expectedResponse = JSONArray(response.toString())
-                        val actualResponse =  JSONArray(apiExecutionResult.toJsonElement().toString())
+                        val actualResponse = JSONArray(apiExecutionResult.toJsonElement().toString())
                         JSONAssert.assertEquals(expectedResponse, actualResponse, true)
                     }
                     else -> fail("Not prepared for json type")
