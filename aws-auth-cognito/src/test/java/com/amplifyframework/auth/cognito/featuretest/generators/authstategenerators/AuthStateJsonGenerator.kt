@@ -54,7 +54,7 @@ object AuthStateJsonGenerator : SerializableProvider {
     private val signedInData = SignedInData(
         userId = userId,
         username = username,
-        signedInDate = Date.from(Instant.ofEpochSecond(0)),
+        signedInDate = Date(2024, 2, 4),
         signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
         cognitoUserPoolTokens = CognitoUserPoolTokens(
             idToken = dummyToken,

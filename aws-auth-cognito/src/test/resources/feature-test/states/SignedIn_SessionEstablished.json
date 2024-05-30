@@ -5,7 +5,7 @@
         "signedInData": {
             "userId": "userId",
             "username": "username",
-            "signedInDate": 0,
+            "signedInDate": 61667672400000,
             "signInMethod": {
                 "type": "SignInMethod.ApiBased",
                 "authType": "USER_SRP_AUTH"
@@ -25,7 +25,7 @@
             "signedInData": {
                 "userId": "userId",
                 "username": "username",
-                "signedInDate": 0,
+                "signedInDate": 61667672400000,
                 "signInMethod": {
                     "type": "SignInMethod.ApiBased",
                     "authType": "USER_SRP_AUTH"
