@@ -35,9 +35,15 @@ import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.auth.result.AuthSessionResult
 import com.amplifyframework.statemachine.codegen.errors.SessionError
+import java.util.TimeZone
 import kotlinx.serialization.json.JsonObject
 
 object FetchAuthSessionTestCaseGenerator : SerializableProvider {
+
+    init {
+        // sets the timezone to match the timezone used in feature test assertions
+        TimeZone.setDefault(TimeZone.getTimeZone("US/Pacific"))
+    }
 
     private val mockedRefreshInitiateAuthResponse = MockResponse(
         CognitoType.CognitoIdentityProvider,
