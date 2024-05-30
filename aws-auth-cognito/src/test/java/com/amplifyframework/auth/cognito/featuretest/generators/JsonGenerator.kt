@@ -60,7 +60,7 @@ class JsonGenerator {
     @Before
     fun setUp() {
         // set timezone to be the same as feature test runner
-        TimeZone.setDefault(TimeZone.getTimeZone("America/Seattle"))
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
     }
 
     @Ignore("Uncomment and run to clean feature test directory")
