@@ -35,6 +35,7 @@ import featureTest.utilities.CognitoMockFactory
 import featureTest.utilities.CognitoRequestFactory
 import featureTest.utilities.TimeZoneRule
 import featureTest.utilities.apiExecutor
+import io.kotest.assertions.json.shouldEqualJson
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -58,11 +59,10 @@ import kotlinx.serialization.json.Json
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import io.kotest.assertions.json.shouldEqualJson
-import org.junit.Rule
 
 @RunWith(Parameterized::class)
 class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
