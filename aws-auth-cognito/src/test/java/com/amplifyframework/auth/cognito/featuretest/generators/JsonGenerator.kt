@@ -73,7 +73,7 @@ class JsonGenerator {
         generateJson()
     }
 
-    //@Ignore("Uncomment and run to generate json for feature tests.")
+    @Ignore("Uncomment and run to generate json for feature tests.")
     @Test
     fun generate() {
         generateJson()
