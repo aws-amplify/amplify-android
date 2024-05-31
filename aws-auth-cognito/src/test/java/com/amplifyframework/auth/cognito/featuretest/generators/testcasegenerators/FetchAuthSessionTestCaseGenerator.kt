@@ -40,9 +40,14 @@ import kotlinx.serialization.json.JsonObject
 
 object FetchAuthSessionTestCaseGenerator : SerializableProvider {
 
+    private val initialTimeZone = TimeZone.getDefault()
+
     init {
-        // sets the timezone to match the timezone used in feature test assertions
         TimeZone.setDefault(TimeZone.getTimeZone("US/Pacific"))
+    }
+
+    override fun tearDown() {
+        TimeZone.setDefault(initialTimeZone)
     }
 
     private val mockedRefreshInitiateAuthResponse = MockResponse(

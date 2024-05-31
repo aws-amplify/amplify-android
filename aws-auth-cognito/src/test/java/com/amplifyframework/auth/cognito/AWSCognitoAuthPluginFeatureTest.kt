@@ -33,6 +33,7 @@ import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import featureTest.utilities.CognitoMockFactory
 import featureTest.utilities.CognitoRequestFactory
+import featureTest.utilities.TimeZoneRule
 import featureTest.utilities.apiExecutor
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
@@ -49,7 +50,6 @@ import java.util.concurrent.TimeUnit
 import kotlin.reflect.full.callSuspend
 import kotlin.reflect.full.declaredFunctions
 import kotlin.test.assertEquals
-import kotlin.test.fail
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.test.resetMain
@@ -62,9 +62,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import io.kotest.assertions.json.shouldEqualJson
+import org.junit.Rule
 
 @RunWith(Parameterized::class)
 class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
+
+    @Rule @JvmField val timeZoneRule = TimeZoneRule(TimeZone.getTimeZone("US/Pacific"))
 
     lateinit var feature: FeatureTestCase
     private var apiExecutionResult: Any? = null
@@ -118,7 +121,6 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
     @Before
     fun setUp() {
         // set timezone to be same as generated json from JsonGenerator
-        TimeZone.setDefault(TimeZone.getTimeZone("US/Pacific"))
         Dispatchers.setMain(mainThreadSurrogate)
         feature = testCase
         sut.realPlugin = readConfiguration(feature.preConditions.`amplify-configuration`)

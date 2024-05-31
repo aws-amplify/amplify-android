@@ -34,6 +34,11 @@ import org.junit.Test
 
 interface SerializableProvider {
     val serializables: List<Any>
+
+    // used to reset any global state changes during generation
+    fun tearDown() {
+        // default no op
+    }
 }
 
 /**
@@ -68,7 +73,7 @@ class JsonGenerator {
         generateJson()
     }
 
-    @Ignore("Uncomment and run to generate json for feature tests.")
+    //@Ignore("Uncomment and run to generate json for feature tests.")
     @Test
     fun generate() {
         generateJson()
@@ -85,6 +90,7 @@ class JsonGenerator {
                     }
                 }
             }
+            provider.tearDown()
         }
     }
 }
