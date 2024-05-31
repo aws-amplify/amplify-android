@@ -35,6 +35,7 @@ import com.amplifyframework.predictions.aws.models.liveness.ClientChallenge
 import com.amplifyframework.predictions.aws.models.liveness.ClientSessionInformationEvent
 import com.amplifyframework.predictions.aws.models.liveness.ColorDisplayed
 import com.amplifyframework.predictions.aws.models.liveness.FaceMovementAndLightClientChallenge
+import com.amplifyframework.predictions.aws.models.liveness.FaceMovementClientChallenge
 import com.amplifyframework.predictions.aws.models.liveness.FreshnessColor
 import com.amplifyframework.predictions.aws.models.liveness.InitialFace
 import com.amplifyframework.predictions.aws.models.liveness.InvalidSignatureException
@@ -42,6 +43,7 @@ import com.amplifyframework.predictions.aws.models.liveness.LivenessResponseStre
 import com.amplifyframework.predictions.aws.models.liveness.SessionInformation
 import com.amplifyframework.predictions.aws.models.liveness.TargetFace
 import com.amplifyframework.predictions.aws.models.liveness.VideoEvent
+import com.amplifyframework.predictions.models.ChallengeType
 import com.amplifyframework.predictions.models.FaceLivenessSessionInformation
 import com.amplifyframework.util.UserAgent
 import java.net.URI
@@ -73,7 +75,7 @@ internal class LivenessWebSocket(
     val credentialsProvider: CredentialsProvider,
     val endpoint: String,
     val region: String,
-    val sessionInformation: FaceLivenessSessionInformation,
+    val clientSessionInformation: FaceLivenessSessionInformation,
     val livenessVersion: String?,
     val onSessionInformationReceived: Consumer<SessionInformation>,
     val onErrorReceived: Consumer<PredictionsException>,
@@ -94,6 +96,7 @@ internal class LivenessWebSocket(
     @VisibleForTesting
     internal var webSocket: WebSocket? = null
     internal val challengeId = UUID.randomUUID().toString()
+    var challengeType: ChallengeType? = null
     private var initialDetectedFace: BoundingBox? = null
     private var faceDetectedStart = 0L
     private var videoStartTimestamp = 0L
@@ -145,7 +148,9 @@ internal class LivenessWebSocket(
             try {
                 when (val response = LivenessEventStream.decode(bytes, json)) {
                     is LivenessResponseStream.Event -> {
-                        if (response.serverSessionInformationEvent != null) {
+                        if (response.challengeEvent != null) {
+                            challengeType = response.challengeEvent.challengeType
+                        } else if (response.serverSessionInformationEvent != null) {
                             onSessionInformationReceived.accept(
                                 response.serverSessionInformationEvent.sessionInformation
                             )
@@ -358,23 +363,22 @@ internal class LivenessWebSocket(
         // Send initial ClientSessionInformationEvent
         videoStartTimestamp = adjustedDate(videoStartTime)
         initialDetectedFace = BoundingBox(
-            left = initialFaceRect.left / sessionInformation.videoWidth,
-            top = initialFaceRect.top / sessionInformation.videoHeight,
-            height = initialFaceRect.height() / sessionInformation.videoHeight,
-            width = initialFaceRect.width() / sessionInformation.videoWidth
+            left = initialFaceRect.left / clientSessionInformation.videoWidth,
+            top = initialFaceRect.top / clientSessionInformation.videoHeight,
+            height = initialFaceRect.height() / clientSessionInformation.videoHeight,
+            width = initialFaceRect.width() / clientSessionInformation.videoWidth
         )
         faceDetectedStart = adjustedDate(videoStartTime)
         val clientInfoEvent =
             ClientSessionInformationEvent(
-                challenge = ClientChallenge(
-                    faceMovementAndLightChallenge = FaceMovementAndLightClientChallenge(
-                        challengeId = challengeId,
-                        initialFace = InitialFace(
-                            boundingBox = initialDetectedFace!!,
-                            initialFaceDetectedTimestamp = faceDetectedStart
-                        ),
-                        videoStartTimestamp = videoStartTimestamp
-                    )
+                challenge = buildClientChallenge(
+                    challengeType = challengeType,
+                    challengeId = challengeId,
+                    initialFace = InitialFace(
+                        boundingBox = initialDetectedFace!!,
+                        initialFaceDetectedTimestamp = faceDetectedStart
+                    ),
+                    videoStartTimestamp = videoStartTimestamp
                 )
             )
         sendClientInfoEvent(clientInfoEvent)
@@ -382,23 +386,22 @@ internal class LivenessWebSocket(
 
     fun sendFinalEvent(targetFaceRect: RectF, faceMatchedStart: Long, faceMatchedEnd: Long) {
         val finalClientInfoEvent = ClientSessionInformationEvent(
-            challenge = ClientChallenge(
-                FaceMovementAndLightClientChallenge(
-                    challengeId = challengeId,
-                    videoEndTimestamp = videoEndTimestamp,
-                    initialFace = InitialFace(
-                        boundingBox = initialDetectedFace!!,
-                        initialFaceDetectedTimestamp = faceDetectedStart
-                    ),
-                    targetFace = TargetFace(
-                        faceDetectedInTargetPositionStartTimestamp = adjustedDate(faceMatchedStart),
-                        faceDetectedInTargetPositionEndTimestamp = adjustedDate(faceMatchedEnd),
-                        boundingBox = BoundingBox(
-                            left = targetFaceRect.left / sessionInformation.videoWidth,
-                            top = targetFaceRect.top / sessionInformation.videoHeight,
-                            height = targetFaceRect.height() / sessionInformation.videoHeight,
-                            width = targetFaceRect.width() / sessionInformation.videoWidth
-                        )
+            challenge = buildClientChallenge(
+                challengeType = challengeType,
+                challengeId = challengeId,
+                videoEndTimestamp = videoEndTimestamp,
+                initialFace = InitialFace(
+                    boundingBox = initialDetectedFace!!,
+                    initialFaceDetectedTimestamp = faceDetectedStart
+                ),
+                targetFace = TargetFace(
+                    faceDetectedInTargetPositionStartTimestamp = adjustedDate(faceMatchedStart),
+                    faceDetectedInTargetPositionEndTimestamp = adjustedDate(faceMatchedEnd),
+                    boundingBox = BoundingBox(
+                        left = targetFaceRect.left / clientSessionInformation.videoWidth,
+                        top = targetFaceRect.top / clientSessionInformation.videoHeight,
+                        height = targetFaceRect.height() / clientSessionInformation.videoHeight,
+                        width = targetFaceRect.width() / clientSessionInformation.videoWidth
                     )
                 )
             )
@@ -522,6 +525,57 @@ internal class LivenessWebSocket(
     }
 
     private fun isTimeDiffSafe(diffInMillis: Long) = kotlin.math.abs(diffInMillis) < FOUR_MINUTES
+
+    private fun buildClientChallenge(
+        challengeType: ChallengeType?,
+        challengeId: String,
+        videoStartTimestamp: Long? = null,
+        videoEndTimestamp: Long? = null,
+        initialFace: InitialFace? = null,
+        targetFace: TargetFace? = null,
+        colorDisplayed: ColorDisplayed? = null
+    ): ClientChallenge = when (challengeType) {
+        ChallengeType.FaceMovementAndLightChallenge -> {
+            ClientChallenge(
+                faceMovementAndLightChallenge = FaceMovementAndLightClientChallenge(
+                    challengeId = challengeId,
+                    videoStartTimestamp = videoStartTimestamp,
+                    videoEndTimestamp = videoEndTimestamp,
+                    initialFace = initialFace,
+                    targetFace = targetFace,
+                    colorDisplayed = colorDisplayed
+                ),
+                faceMovementChallenge = null
+            )
+        }
+        ChallengeType.FaceMovementChallenge -> {
+            ClientChallenge(
+                faceMovementAndLightChallenge = null,
+                faceMovementChallenge = FaceMovementClientChallenge(
+                    challengeId = challengeId,
+                    videoStartTimestamp = videoStartTimestamp,
+                    videoEndTimestamp = videoEndTimestamp,
+                    initialFace = initialFace,
+                    targetFace = targetFace
+                )
+            )
+        }
+        null -> {
+            // A ChallengeType event is not returned when the v1 version of FaceMovementAndLightChallenge
+            // so we assume that the client challenge to send is of FaceMovementAndLight type
+            ClientChallenge(
+                faceMovementAndLightChallenge = FaceMovementAndLightClientChallenge(
+                    challengeId = challengeId,
+                    videoStartTimestamp = videoStartTimestamp,
+                    videoEndTimestamp = videoEndTimestamp,
+                    initialFace = initialFace,
+                    targetFace = targetFace,
+                    colorDisplayed = colorDisplayed
+                ),
+                faceMovementChallenge = null
+            )
+        }
+    }
 
     companion object {
         private const val NORMAL_SOCKET_CLOSURE_STATUS_CODE = 1000

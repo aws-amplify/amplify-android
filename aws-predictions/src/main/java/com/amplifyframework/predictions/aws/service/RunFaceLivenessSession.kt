@@ -15,6 +15,7 @@
 
 package com.amplifyframework.predictions.aws.service
 
+import android.net.Uri
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
@@ -29,17 +30,22 @@ import com.amplifyframework.predictions.aws.models.FaceTargetChallengeResponse
 import com.amplifyframework.predictions.aws.models.FaceTargetMatchingParameters
 import com.amplifyframework.predictions.aws.models.InitialFaceDetected
 import com.amplifyframework.predictions.aws.models.RgbColor
+import com.amplifyframework.predictions.aws.models.liveness.ChallengeConfig
 import com.amplifyframework.predictions.aws.models.liveness.FreshnessColor
+import com.amplifyframework.predictions.aws.models.liveness.OvalParameters
 import com.amplifyframework.predictions.aws.models.liveness.SessionInformation
+import com.amplifyframework.predictions.models.Challenge
 import com.amplifyframework.predictions.models.ChallengeResponseEvent
+import com.amplifyframework.predictions.models.ChallengeType
+import com.amplifyframework.predictions.models.FaceLivenessChallengeType
 import com.amplifyframework.predictions.models.FaceLivenessSession
 import com.amplifyframework.predictions.models.FaceLivenessSessionChallenge
 import com.amplifyframework.predictions.models.FaceLivenessSessionInformation
 import com.amplifyframework.predictions.models.VideoEvent
 
 internal class RunFaceLivenessSession(
-    sessionId: String,
-    sessionInformation: FaceLivenessSessionInformation,
+    private val sessionId: String,
+    private val clientSessionInformation: FaceLivenessSessionInformation,
     val credentialsProvider: CredentialsProvider,
     livenessVersion: String?,
     onSessionStarted: Consumer<FaceLivenessSession>,
@@ -47,23 +53,22 @@ internal class RunFaceLivenessSession(
     onError: Consumer<PredictionsException>
 ) {
 
-    private val livenessEndpoint = "wss://streaming-rekognition.${sessionInformation.region}.amazonaws.com:443"
-
     private val livenessWebSocket = LivenessWebSocket(
         credentialsProvider = credentialsProvider,
-        endpoint = "$livenessEndpoint/start-face-liveness-session-websocket?session-id=$sessionId" +
-            "&challenge-versions=${sessionInformation.challengeVersions}&video-width=" +
-            "${sessionInformation.videoWidth.toInt()}&video-height=${sessionInformation.videoHeight.toInt()}",
-        region = sessionInformation.region,
-        sessionInformation = sessionInformation,
+        endpoint = buildWebSocketEndpoint(),
+        region = clientSessionInformation.region,
+        clientSessionInformation = clientSessionInformation,
         livenessVersion = livenessVersion,
-        onSessionInformationReceived = { sessionInformation ->
-            val challenges = processSessionInformation(sessionInformation)
+        onSessionInformationReceived = { serverSessionInformation ->
+            val challenges = processSessionInformation(serverSessionInformation)
+            val challengeType = processChallengeType()
             val faceLivenessSession = FaceLivenessSession(
-                challenges,
-                this@RunFaceLivenessSession::processVideoEvent,
-                this@RunFaceLivenessSession::processChallengeResponseEvent,
-                this@RunFaceLivenessSession::stopLivenessSession
+                challengeId = getChallengeId(),
+                challengeType = challengeType,
+                challenges = challenges,
+                onVideoEvent = this@RunFaceLivenessSession::processVideoEvent,
+                onChallengeResponseEvent = this@RunFaceLivenessSession::processChallengeResponseEvent,
+                stopLivenessSession = this@RunFaceLivenessSession::stopLivenessSession
             )
             onSessionStarted.accept(faceLivenessSession)
         },
@@ -78,12 +83,75 @@ internal class RunFaceLivenessSession(
     }
 
     private fun processSessionInformation(sessionInformation: SessionInformation): List<FaceLivenessSessionChallenge> {
-        val challenge = sessionInformation.challenge.faceMovementAndLightChallenge
         val sessionChallenges = mutableListOf<FaceLivenessSessionChallenge>()
 
-        // Face target challenge
-        val ovalParameters = challenge.ovalParameters
-        val challengeConfig = challenge.challengeConfig
+        if (sessionInformation.challenge.faceMovementAndLightChallenge != null) {
+            val challenge = sessionInformation.challenge.faceMovementAndLightChallenge
+
+            // Face target challenge
+            sessionChallenges.add(getFaceTargetChallenge(challenge.ovalParameters, challenge.challengeConfig))
+
+            // Freshness color challenge
+            val colorChallengeType = ColorChallengeType.SEQUENTIAL
+            val challengeColors = mutableListOf<ColorDisplayInformation>()
+            challenge.colorSequences.forEachIndexed { _, colorSequence ->
+                val currentColor = colorSequence.freshnessColor.rGB
+                val rgbColor = RgbColor(currentColor[0], currentColor[1], currentColor[2])
+                var duration = colorSequence.flatDisplayDuration
+                var shouldScroll = false
+                if (colorSequence.flatDisplayDuration == 0f) {
+                    duration = colorSequence.downscrollDuration
+                    shouldScroll = true
+                }
+                challengeColors.add(
+                    ColorDisplayInformation(
+                        rgbColor,
+                        duration,
+                        shouldScroll
+                    )
+                )
+            }
+            val colorChallenge = ColorChallenge(
+                livenessWebSocket.challengeId,
+                colorChallengeType,
+                challengeColors.toList()
+            )
+            sessionChallenges.add(colorChallenge)
+        } else if (sessionInformation.challenge.faceMovementChallenge != null) {
+            val challenge = sessionInformation.challenge.faceMovementChallenge
+
+            // Face target challenge
+            sessionChallenges.add(getFaceTargetChallenge(challenge.ovalParameters, challenge.challengeConfig))
+        }
+
+        return sessionChallenges.toList()
+    }
+
+    private fun getChallengeId(): String = livenessWebSocket.challengeId
+
+    private fun processChallengeType(): FaceLivenessChallengeType =
+        when (livenessWebSocket.challengeType) {
+            ChallengeType.FaceMovementChallenge -> FaceLivenessChallengeType.FaceMovementChallenge
+            ChallengeType.FaceMovementAndLightChallenge -> FaceLivenessChallengeType.FaceMovementAndLightChallenge
+            null -> {
+                // A ChallengeType event is not returned when the v1 version of FaceMovementAndLightChallenge
+                // is requested so we'll check here for backwards compat
+                if (clientSessionInformation.challengeVersions != null &&
+                    clientSessionInformation.challengeVersions!!.contains(
+                            Challenge(ChallengeType.FaceMovementAndLightChallenge, "1.0.0")
+                        )
+                ) {
+                    FaceLivenessChallengeType.FaceMovementAndLightChallenge
+                } else {
+                    FaceLivenessChallengeType.Unknown
+                }
+            }
+        }
+
+    private fun getFaceTargetChallenge(
+        ovalParameters: OvalParameters,
+        challengeConfig: ChallengeConfig
+    ): FaceTargetChallenge {
         val faceTargetMatching = FaceTargetMatchingParameters(
             challengeConfig.ovalIouThreshold,
             challengeConfig.ovalIouWidthThreshold,
@@ -92,43 +160,13 @@ internal class RunFaceLivenessSession(
             challengeConfig.faceIouHeightThreshold,
             challengeConfig.ovalFitTimeout
         )
-        val faceTargetChallenge = FaceTargetChallenge(
+        return FaceTargetChallenge(
             ovalParameters.width,
             ovalParameters.height,
             ovalParameters.centerX,
             ovalParameters.centerY,
             faceTargetMatching
         )
-        sessionChallenges.add(faceTargetChallenge)
-
-        // Freshness color challenge
-        val colorChallengeType = ColorChallengeType.SEQUENTIAL
-        val challengeColors = mutableListOf<ColorDisplayInformation>()
-        challenge.colorSequences.forEachIndexed { index, colorSequence ->
-            val currentColor = colorSequence.freshnessColor.rGB
-            val rgbColor = RgbColor(currentColor[0], currentColor[1], currentColor[2])
-            var duration = colorSequence.flatDisplayDuration
-            var shouldScroll = false
-            if (colorSequence.flatDisplayDuration == 0f) {
-                duration = colorSequence.downscrollDuration
-                shouldScroll = true
-            }
-            challengeColors.add(
-                ColorDisplayInformation(
-                    rgbColor,
-                    duration,
-                    shouldScroll
-                )
-            )
-        }
-        val colorChallenge = ColorChallenge(
-            livenessWebSocket.challengeId,
-            colorChallengeType,
-            challengeColors.toList()
-        )
-        sessionChallenges.add(colorChallenge)
-
-        return sessionChallenges.toList()
     }
 
     private fun processVideoEvent(videoEvent: VideoEvent) {
@@ -182,5 +220,40 @@ internal class RunFaceLivenessSession(
     private fun stopLivenessSession(reasonCode: Int?) {
         livenessWebSocket.clientStoppedSession = true
         reasonCode?.let { livenessWebSocket.destroy(it) } ?: livenessWebSocket.destroy()
+    }
+
+    private fun buildWebSocketEndpoint(): String {
+        val challengeVersionString = clientSessionInformation.challenge
+            ?: clientSessionInformation.challengeVersions?.joinToString(",") {
+                it.toQueryParamString()
+            }
+
+        val uriBuilder = Uri.Builder()
+            .scheme("wss")
+            .encodedAuthority("streaming-rekognition.${clientSessionInformation.region}.amazonaws.com:443")
+            .appendPath("start-face-liveness-session-websocket")
+            .appendQueryParameter("session-id", sessionId)
+            .appendQueryParameter("video-width", clientSessionInformation.videoWidth.toInt().toString())
+            .appendQueryParameter("video-height", clientSessionInformation.videoHeight.toInt().toString())
+            .appendQueryParameter(
+                "challenge-versions",
+                challengeVersionString
+            )
+
+        if (clientSessionInformation.preCheckViewEnabled != null) {
+            uriBuilder.appendQueryParameter(
+                "precheck-view-enabled",
+                if (clientSessionInformation.preCheckViewEnabled!!) "1" else "0"
+            )
+        }
+
+        if (clientSessionInformation.attemptCount != null) {
+            uriBuilder.appendQueryParameter(
+                "attempt-count",
+                clientSessionInformation.attemptCount.toString()
+            )
+        }
+
+        return uriBuilder.build().toString()
     }
 }
