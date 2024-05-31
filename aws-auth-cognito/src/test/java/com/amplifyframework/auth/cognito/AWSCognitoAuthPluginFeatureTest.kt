@@ -55,16 +55,13 @@ import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
-import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import org.skyscreamer.jsonassert.JSONAssert
+import io.kotest.assertions.json.shouldEqualJson
 
 @RunWith(Parameterized::class)
 class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
@@ -197,19 +194,9 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
             is Cognito -> verifyCognito(validation)
 
             is ExpectationShapes.Amplify -> {
-                when (val response = validation.response) {
-                    is JsonObject -> {
-                        val expectedResponse = JSONObject(response.toString())
-                        val actualResponse = JSONObject(apiExecutionResult.toJsonElement().toString())
-                        JSONAssert.assertEquals(expectedResponse, actualResponse, true)
-                    }
-                    is JsonArray -> {
-                        val expectedResponse = JSONArray(response.toString())
-                        val actualResponse = JSONArray(apiExecutionResult.toJsonElement().toString())
-                        JSONAssert.assertEquals(expectedResponse, actualResponse, true)
-                    }
-                    else -> fail("Not prepared for json type")
-                }
+                val expected = validation.response.toString()
+                val actual = apiExecutionResult.toJsonElement().toString()
+                actual shouldEqualJson expected
             }
             is ExpectationShapes.State -> {
                 val getStateLatch = CountDownLatch(1)

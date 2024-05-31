@@ -43,7 +43,6 @@ dependencies {
     testImplementation(project(":aws-core"))
     //noinspection GradleDependency
     testImplementation(libs.test.json)
-    testImplementation(libs.test.jsonassert)
 
     testImplementation(libs.test.kotlin.junit)
     testImplementation(libs.test.kotlin.kotlinTest)
@@ -57,6 +56,7 @@ dependencies {
     testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.kotlin.reflection)
     testImplementation(libs.test.kotest.assertions)
+    testImplementation(libs.test.kotest.assertions.json)
 
     androidTestImplementation(libs.gson)
     //noinspection GradleDependency
