@@ -202,16 +202,16 @@ data class AuthConfiguration internal constructor(
                 length = passwordLength,
                 requiresNumber = passwordRequirements.contains("REQUIRES_NUMBERS"),
                 requiresSpecial = passwordRequirements.contains("REQUIRES_SYMBOLS"),
-                requiresLower = passwordRequirements.contains("REQUIRES_LOWER"),
-                requiresUpper = passwordRequirements.contains("REQUIRES_UPPER")
+                requiresLower = passwordRequirements.contains("REQUIRES_LOWERCASE"),
+                requiresUpper = passwordRequirements.contains("REQUIRES_UPPERCASE")
             )
         }
 
         private fun PasswordProtectionSettings.toGen1Json() = JSONObject().apply {
             put("passwordPolicyMinLength", length)
             val characters = JSONArray().apply {
-                if (requiresLower) put("REQUIRES_LOWER")
-                if (requiresUpper) put("REQUIRES_UPPER")
+                if (requiresLower) put("REQUIRES_LOWERCASE")
+                if (requiresUpper) put("REQUIRES_UPPERCASE")
                 if (requiresNumber) put("REQUIRES_NUMBERS")
                 if (requiresSpecial) put("REQUIRES_SYMBOLS")
             }
