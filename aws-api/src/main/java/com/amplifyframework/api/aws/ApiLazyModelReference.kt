@@ -107,6 +107,7 @@ internal class ApiLazyModelReference<M : Model> internal constructor(
                 val request: GraphQLRequest<M?> = AppSyncGraphQLRequestFactory.buildQueryInternal(
                     clazz,
                     null,
+                    null,
                     *variables.toTypedArray()
                 )
 
