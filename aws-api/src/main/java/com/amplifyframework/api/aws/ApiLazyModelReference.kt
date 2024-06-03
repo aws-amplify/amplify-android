@@ -35,9 +35,7 @@ import kotlinx.coroutines.sync.withLock
 internal class ApiLazyModelReference<M : Model> internal constructor(
     private val clazz: Class<M>,
     private val keyMap: Map<String, Any>,
-    // API name is important to provide to future query calls. If a custom API name was used for the original call,
-    // the apiName must be provided to the following lazy call to fetch the value.
-    private val apiName: String? = null,
+    private val lazyContext: LazyLoadingContext,
     private val apiCategory: ApiCategory = Amplify.API
 ) : LazyModelReference<M> {
     private val cachedValue = AtomicReference<LoadedValue<M>?>(null)
@@ -106,15 +104,15 @@ internal class ApiLazyModelReference<M : Model> internal constructor(
 
                 val request: GraphQLRequest<M?> = AppSyncGraphQLRequestFactory.buildQueryInternal(
                     clazz,
-                    null,
-                    null,
+                    authMode = lazyContext.authMode,
+                    includes = null,
                     *variables.toTypedArray()
                 )
 
                 val value = query(
                     apiCategory,
                     request,
-                    apiName
+                    apiName = lazyContext.apiName
                 ).data
                 cachedValue.set(LoadedValue(value))
                 value

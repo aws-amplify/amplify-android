@@ -332,10 +332,11 @@ object AppSyncGraphQLRequestFactory {
     internal fun <R, T : Model> buildModelPageQuery(
         modelClass: Class<T>,
         predicate: QueryPredicate,
-        pageToken: String?
+        pageToken: String?,
+        authMode: AuthorizationType?
     ): GraphQLRequest<R> {
         val dataType = TypeMaker.getParameterizedType(ApiModelPage::class.java, modelClass)
-        return buildListQueryInternal(modelClass, predicate, DEFAULT_QUERY_LIMIT, dataType, null, null, pageToken)
+        return buildListQueryInternal(modelClass, predicate, DEFAULT_QUERY_LIMIT, dataType, authMode, null, pageToken)
     }
 
     /**

@@ -43,12 +43,10 @@ internal class ApiModelPage<out M : Model>(
 
 internal class ApiPaginationToken(val nextToken: String) : PaginationToken
 
-internal class ApiLazyModelList<out M : Model> constructor(
+internal class ApiLazyModelList<out M : Model>(
     private val clazz: Class<M>,
     keyMap: Map<String, Any>,
-    // API name is important to provide to future query calls. If a custom API name was used for the original call,
-    // the apiName must be provided to the following lazy calls to fetch the lazy list
-    private val apiName: String?,
+    private val lazyLoadingContext: LazyLoadingContext,
     private val apiCategory: ApiCategory = Amplify.API
 ) : LazyModelList<M> {
 
@@ -57,7 +55,11 @@ internal class ApiLazyModelList<out M : Model> constructor(
 
     override suspend fun fetchPage(paginationToken: PaginationToken?): ModelPage<M> {
         try {
-            val response = query(apiCategory, createRequest(paginationToken), apiName)
+            val response = query(
+                apiCategory,
+                createRequest(paginationToken, lazyLoadingContext.authMode),
+                lazyLoadingContext.apiName
+            )
             return response.data
         } catch (error: AmplifyException) {
             throw createLazyException(error)
@@ -90,11 +92,15 @@ internal class ApiLazyModelList<out M : Model> constructor(
         }
     }
 
-    private fun createRequest(paginationToken: PaginationToken? = null): GraphQLRequest<ModelPage<M>> {
+    private fun createRequest(
+        paginationToken: PaginationToken?,
+        authMode: AuthorizationType?
+    ): GraphQLRequest<ModelPage<M>> {
         return AppSyncGraphQLRequestFactory.buildModelPageQuery(
             clazz,
             queryPredicate,
-            (paginationToken as? ApiPaginationToken)?.nextToken
+            (paginationToken as? ApiPaginationToken)?.nextToken,
+            authMode
         )
     }
 
