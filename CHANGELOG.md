@@ -1,3 +1,14 @@
+## [Release 2.18.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.18.0)
+
+### Features
+- **all:** Update to Kotlin SDK 1.2.8 (includes OkHttp Update) ([#2813](https://github.com/aws-amplify/amplify-android/issues/2813))
+
+### Bug Fixes
+- **auth:** Fix HostedUI signout cancellation issue ([#2834](https://github.com/aws-amplify/amplify-android/issues/2834))
+- **auth:** Fix parsing of REQUIRES_UPPERCASE/REQUIRES_LOWERCASE password settings in Gen1 ([#2836](https://github.com/aws-amplify/amplify-android/issues/2836))
+
+[See all changes between 2.17.0 and 2.18.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.17.0...release_v2.18.0)
+
 ## [Release 2.17.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.17.0)
 
 ### Features
