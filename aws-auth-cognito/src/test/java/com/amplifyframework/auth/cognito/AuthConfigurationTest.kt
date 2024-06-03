@@ -73,7 +73,7 @@ class AuthConfigurationTest {
                         ],
                         "passwordProtectionSettings": {
                             "passwordPolicyMinLength": 10,
-                            "passwordPolicyCharacters": ["REQUIRES_NUMBERS", "REQUIRES_LOWER"]
+                            "passwordPolicyCharacters": ["REQUIRES_NUMBERS", "REQUIRES_LOWERCASE"]
                         },
                         "mfaConfiguration": "OFF",
                         "mfaTypes": [
