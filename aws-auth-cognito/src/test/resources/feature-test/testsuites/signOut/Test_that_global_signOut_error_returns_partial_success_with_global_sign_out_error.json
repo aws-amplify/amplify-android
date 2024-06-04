@@ -37,7 +37,7 @@
                         "recoverySuggestion": "See attached exception for more details. GlobalSignOut can be retried using the CognitoIdentityProviderClient accessible from the escape hatch.",
                         "cause": {
                             "errorType": "NotAuthorizedException",
-                            "errorMessage": null
+                            "errorMessage": "Error type: Client, Protocol response: (empty response)"
                         }
                     }
                 },
