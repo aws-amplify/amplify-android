@@ -24,9 +24,11 @@ import com.amplifyframework.core.BuildConfig
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.predictions.PredictionsException
 import com.amplifyframework.predictions.aws.models.liveness.ChallengeConfig
+import com.amplifyframework.predictions.aws.models.liveness.ChallengeEvent
 import com.amplifyframework.predictions.aws.models.liveness.ColorSequence
 import com.amplifyframework.predictions.aws.models.liveness.DisconnectionEvent
 import com.amplifyframework.predictions.aws.models.liveness.FaceMovementAndLightServerChallenge
+import com.amplifyframework.predictions.aws.models.liveness.FaceMovementServerChallenge
 import com.amplifyframework.predictions.aws.models.liveness.FreshnessColor
 import com.amplifyframework.predictions.aws.models.liveness.InvalidSignatureException
 import com.amplifyframework.predictions.aws.models.liveness.LightChallengeType
@@ -35,6 +37,7 @@ import com.amplifyframework.predictions.aws.models.liveness.ServerChallenge
 import com.amplifyframework.predictions.aws.models.liveness.ServerSessionInformationEvent
 import com.amplifyframework.predictions.aws.models.liveness.SessionInformation
 import com.amplifyframework.predictions.aws.models.liveness.ValidationException
+import com.amplifyframework.predictions.models.ChallengeType
 import com.amplifyframework.predictions.models.FaceLivenessSessionInformation
 import io.mockk.every
 import io.mockk.mockk
@@ -207,7 +210,55 @@ internal class LivenessWebSocketTest {
     }
 
     @Test
-    fun `server session event tracked`() {
+    fun `server facemovementandlight challenge event tracked`() {
+        val livenessWebSocket = createLivenessWebSocket()
+        assertEquals(null, livenessWebSocket.challengeType)
+
+        val event = ChallengeEvent(
+            challengeType = ChallengeType.FaceMovementAndLightChallenge,
+            version = "2.0.0"
+        )
+
+        val headers = mapOf(
+            ":event-type" to "ChallengeEvent",
+            ":content-type" to "application/json",
+            ":message-type" to "event"
+        )
+
+        val data = json.encodeToString(event)
+        val encodedByteString = LivenessEventStream.encode(data.toByteArray(), headers).array().toByteString()
+
+        livenessWebSocket.webSocketListener.onMessage(mockk(), encodedByteString)
+
+        assertEquals(ChallengeType.FaceMovementAndLightChallenge, livenessWebSocket.challengeType)
+    }
+
+    @Test
+    fun `server facemovement challenge event tracked`() {
+        val livenessWebSocket = createLivenessWebSocket()
+        assertEquals(null, livenessWebSocket.challengeType)
+
+        val event = ChallengeEvent(
+            challengeType = ChallengeType.FaceMovementChallenge,
+            version = "1.0.0"
+        )
+
+        val headers = mapOf(
+            ":event-type" to "ChallengeEvent",
+            ":content-type" to "application/json",
+            ":message-type" to "event"
+        )
+
+        val data = json.encodeToString(event)
+        val encodedByteString = LivenessEventStream.encode(data.toByteArray(), headers).array().toByteString()
+
+        livenessWebSocket.webSocketListener.onMessage(mockk(), encodedByteString)
+
+        assertEquals(ChallengeType.FaceMovementChallenge, livenessWebSocket.challengeType)
+    }
+
+    @Test
+    fun `server facemovementandlight session event tracked`() {
         val livenessWebSocket = createLivenessWebSocket()
         val event = ServerSessionInformationEvent(
             sessionInformation = SessionInformation(
@@ -230,6 +281,45 @@ internal class LivenessWebSocketTest {
                         ),
                         colorSequences = listOf(
                             ColorSequence(FreshnessColor(listOf(0, 1, 2)), 4.0f, 5.0f)
+                        )
+                    )
+                )
+            )
+        )
+        val headers = mapOf(
+            ":event-type" to "ServerSessionInformationEvent",
+            ":content-type" to "application/json",
+            ":message-type" to "event"
+        )
+
+        val data = json.encodeToString(event)
+        val encodedByteString = LivenessEventStream.encode(data.toByteArray(), headers).array().toByteString()
+
+        livenessWebSocket.webSocketListener.onMessage(mockk(), encodedByteString)
+
+        verify { onSessionInformationReceived.accept(event.sessionInformation) }
+    }
+
+    @Test
+    fun `server facemovement session event tracked`() {
+        val livenessWebSocket = createLivenessWebSocket()
+        val event = ServerSessionInformationEvent(
+            sessionInformation = SessionInformation(
+                challenge = ServerChallenge(
+                    faceMovementChallenge = FaceMovementServerChallenge(
+                        ovalParameters = OvalParameters(1.0f, 2.0f, .5f, .7f),
+                        challengeConfig = ChallengeConfig(
+                            1.0f,
+                            1.1f,
+                            1.2f,
+                            1.3f,
+                            1.4f,
+                            1.5f,
+                            1.6f,
+                            1.7f,
+                            1.8f,
+                            1.9f,
+                            10
                         )
                     )
                 )
