@@ -49,7 +49,7 @@ public final class DataStoreConfiguration {
     @VisibleForTesting
     static final boolean DEFAULT_DO_SYNC_RETRY = false;
     @VisibleForTesting
-    static final int DEFAULT_SYNC_CONCURRENCY_LIMIT = 1;
+    static final int DEFAULT_SYNC_MAX_CONCURRENT_MODELS = 1;
     static final int MAX_RECORDS = 1000;
     static final long MAX_TIME_SEC = 2;
 
@@ -75,7 +75,7 @@ public final class DataStoreConfiguration {
         this.syncExpressions = builder.syncExpressions;
         this.doSyncRetry = builder.doSyncRetry;
         this.syncMaxConcurrentModels = builder.syncMaxConcurrentModels != null ?
-                builder.syncMaxConcurrentModels : DEFAULT_SYNC_CONCURRENCY_LIMIT;
+                builder.syncMaxConcurrentModels : DEFAULT_SYNC_MAX_CONCURRENT_MODELS;
         this.maxTimeLapseForObserveQuery = builder.maxTimeLapseForObserveQuery;
         this.observeQueryMaxRecords = builder.observeQueryMaxRecords;
     }
@@ -134,7 +134,7 @@ public final class DataStoreConfiguration {
             .doSyncRetry(DEFAULT_DO_SYNC_RETRY)
             .observeQueryMaxTime(MAX_TIME_SEC)
             .observeQueryMaxRecords(MAX_RECORDS)
-            .syncMaxConcurrentModels(DEFAULT_SYNC_CONCURRENCY_LIMIT)
+            .syncMaxConcurrentModels(DEFAULT_SYNC_MAX_CONCURRENT_MODELS)
             .build();
     }
 
@@ -599,7 +599,10 @@ public final class DataStoreConfiguration {
                 syncIntervalInMinutes = getValueOrDefault(syncIntervalInMinutes, DEFAULT_SYNC_INTERVAL_MINUTES);
                 syncMaxRecords = getValueOrDefault(syncMaxRecords, DEFAULT_SYNC_MAX_RECORDS);
                 syncPageSize = getValueOrDefault(syncPageSize, DEFAULT_SYNC_PAGE_SIZE);
-                syncMaxConcurrentModels = getValueOrDefault(syncMaxConcurrentModels, DEFAULT_SYNC_CONCURRENCY_LIMIT);
+                syncMaxConcurrentModels = getValueOrDefault(
+                    syncMaxConcurrentModels,
+                    DEFAULT_SYNC_MAX_CONCURRENT_MODELS
+                );
                 observeQueryMaxRecords = getValueOrDefault(observeQueryMaxRecords, MAX_RECORDS);
                 maxTimeLapseForObserveQuery = maxTimeLapseForObserveQuery == 0 ? MAX_TIME_SEC :
                         maxTimeLapseForObserveQuery;
