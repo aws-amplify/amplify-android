@@ -133,7 +133,7 @@ final class SyncProcessor {
             if (!QueryPredicates.none().equals(queryPredicateProvider.getPredicate(schema.getName()))) {
                 hydrationTasks.add(createHydrationTask(schema));
                 toBeSyncedModelArray.add(schema.getName());
-                if (schema.getAssociations().size() > 0) {
+                if (!schema.getAssociations().isEmpty()) {
                     syncInParallel = false;
                 }
             }
