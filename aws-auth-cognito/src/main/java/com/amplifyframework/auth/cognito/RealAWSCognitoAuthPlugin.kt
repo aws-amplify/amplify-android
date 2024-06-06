@@ -1879,6 +1879,7 @@ internal class RealAWSCognitoAuthPlugin(
 
     private fun _signOut(sendHubEvent: Boolean = true, onComplete: Consumer<AuthSignOutResult>) {
         val token = StateChangeListenerToken()
+        var cancellationException: UserCancelledException? = null
         authStateMachine.listen(
             token,
             { authState ->
@@ -1919,6 +1920,18 @@ internal class RealAWSCognitoAuthPlugin(
                                     CognitoAuthExceptionConverter.lookup(authNState.exception, "Sign out failed.")
                                 )
                             )
+                        }
+                        authNState is AuthenticationState.SigningOut -> {
+                            val state = authNState.signOutState
+                            if (state is SignOutState.Error && state.exception is UserCancelledException) {
+                                cancellationException = state.exception
+                            }
+                        }
+                        authNState is AuthenticationState.SignedIn && cancellationException != null -> {
+                            authStateMachine.cancel(token)
+                            cancellationException?.let {
+                                onComplete.accept(AWSCognitoAuthSignOutResult.FailedSignOut(it))
+                            }
                         }
                         else -> {
                             // No - op
