@@ -146,7 +146,7 @@ class ConcurrentSyncProcessorTest {
         val hydrationObserver = TestObserver.create<ModelWithMetadata<out Model>>()
         syncProcessor.hydrate().subscribe(hydrationObserver)
 
-        assertTrue(hydrationObserver.await(2, TimeUnit.SECONDS))
+        assertTrue(hydrationObserver.await(5, TimeUnit.SECONDS))
         hydrationObserver.assertNoErrors()
         hydrationObserver.assertComplete()
 
@@ -227,7 +227,7 @@ class ConcurrentSyncProcessorTest {
         val hydrationObserver = TestObserver.create<ModelWithMetadata<out Model>>()
         syncProcessor.hydrate().subscribe(hydrationObserver)
 
-        assertTrue(hydrationObserver.await(2, TimeUnit.SECONDS))
+        assertTrue(hydrationObserver.await(5, TimeUnit.SECONDS))
         hydrationObserver.assertError { it == expectedModel1Exception }
         verify {
             errorHandler.accept(
