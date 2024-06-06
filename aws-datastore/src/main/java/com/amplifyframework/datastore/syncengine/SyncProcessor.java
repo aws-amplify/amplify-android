@@ -126,7 +126,7 @@ final class SyncProcessor {
             TopologicalOrdering.forRegisteredModels(schemaRegistry, modelProvider);
         Collections.sort(modelSchemas, ordering::compare);
         ArrayList<String> toBeSyncedModelArray = new ArrayList<>();
-        boolean syncInParallel = true;
+        boolean canSyncConcurrently = true;
         for (ModelSchema schema : modelSchemas) {
             //Check to see if query predicate for this schema is not equal to none. This means customer does
             // not want to sync the data for this model.
@@ -134,7 +134,7 @@ final class SyncProcessor {
                 hydrationTasks.add(createHydrationTask(schema));
                 toBeSyncedModelArray.add(schema.getName());
                 if (!schema.getAssociations().isEmpty()) {
-                    syncInParallel = false;
+                    canSyncConcurrently = false;
                 }
             }
         }
@@ -149,12 +149,16 @@ final class SyncProcessor {
         }
 
         Completable syncCompletable;
-        if (syncInParallel && syncMaxConcurrentModels > 1) {
+        if (canSyncConcurrently && syncMaxConcurrentModels > 1) {
             syncCompletable = Completable.mergeDelayError(
                     Flowable.fromIterable(hydrationTasks),
                     syncMaxConcurrentModels
             );
         } else {
+            // The reason we don't do mergeDelayError here with maxConcurrency = 1 is because it would create a
+            // behavioral difference. If a failure is encountered in concat, sync immediately stops. This would be
+            // the wrong behavior when concurrency is enabled, but in the single concurrency use case, this matches
+            // previous behavior
             syncCompletable = Completable.concat(hydrationTasks);
         }
 
