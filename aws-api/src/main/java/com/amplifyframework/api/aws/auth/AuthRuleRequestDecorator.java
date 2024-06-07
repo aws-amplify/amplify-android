@@ -91,7 +91,10 @@ public final class AuthRuleRequestDecorator {
         // and it's not clear what a good solution would be until AppSync supports real time filters.
         for (AuthRule authRule : appSyncRequest.getModelSchema().getAuthRules()) {
             if (doesRuleAllowNonOwnerSubscribe(authRule, authType)) {
+                // This rule allows subscribing with the current authMode without adding the owner field, so there
+                // is no need to continue checking the other rules.
                 subscribeAllowedForNonOwner = true;
+                break;
             } else if (isReadRestrictingOwner(authRule)) {
                 if (ownerRuleWithReadRestriction == null) {
                     ownerRuleWithReadRestriction = authRule;
