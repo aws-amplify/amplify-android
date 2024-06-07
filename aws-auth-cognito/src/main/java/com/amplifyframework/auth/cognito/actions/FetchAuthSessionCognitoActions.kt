@@ -26,7 +26,6 @@ import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.exceptions.NotAuthorizedException
 import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.SignedOutException
-import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
@@ -137,8 +136,7 @@ internal object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                 )
                 AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(exception))
             } catch (e: Exception) {
-                val exception = UnknownException(cause = e)
-                AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(exception))
+                AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
             }
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
@@ -171,8 +169,7 @@ internal object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                 )
                 AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(exception))
             } catch (e: Exception) {
-                val exception = UnknownException(cause = e)
-                AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(exception))
+                AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
             }
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
