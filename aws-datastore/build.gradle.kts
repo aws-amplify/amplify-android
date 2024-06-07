@@ -24,6 +24,8 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 group = properties["POM_GROUP"].toString()
 
 dependencies {
+    compileOnly(libs.rxlint)
+
     implementation(project(":core"))
     implementation(project(":aws-core"))
     implementation(project(":aws-api-appsync"))
