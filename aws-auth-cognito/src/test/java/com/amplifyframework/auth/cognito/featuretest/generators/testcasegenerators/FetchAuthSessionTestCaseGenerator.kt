@@ -35,7 +35,6 @@ import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.auth.result.AuthSessionResult
-import com.amplifyframework.statemachine.codegen.errors.SessionError
 import java.util.TimeZone
 import kotlinx.serialization.json.JsonObject
 
@@ -157,18 +156,12 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
 
     private val unknownRefreshException = UnknownException(
         message = "Fetch auth session failed.",
-        cause = SessionError(
-            exception = ResourceNotFoundException.invoke { },
-            amplifyCredential = AuthStateJsonGenerator.signedInAmplifyCredential
-        )
+        cause = ResourceNotFoundException.invoke { }
     )
 
     private val identityRefreshException = UnknownException(
         message = "Fetch auth session failed.",
-        cause = SessionError(
-            exception = TooManyRequestsException.invoke { },
-            amplifyCredential = AuthStateJsonGenerator.signedInAmplifyCredential
-        )
+        cause = TooManyRequestsException.invoke { }
     )
 
     private val expectedRefreshFailure = AWSCognitoAuthSession(

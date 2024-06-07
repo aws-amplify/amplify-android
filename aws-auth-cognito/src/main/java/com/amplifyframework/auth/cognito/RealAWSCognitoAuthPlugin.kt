@@ -1197,22 +1197,22 @@ internal class RealAWSCognitoAuthPlugin(
                         authStateMachine.cancel(token)
                         when (val error = authZState.exception) {
                             is SessionError -> {
-                                when (error.exception) {
+                                when (val innerException = error.exception) {
                                     is SignedOutException -> {
-                                        onSuccess.accept(error.amplifyCredential.getCognitoSession(error.exception))
+                                        onSuccess.accept(error.amplifyCredential.getCognitoSession(innerException))
                                     }
                                     is SessionExpiredException -> {
-                                        onSuccess.accept(error.amplifyCredential.getCognitoSession(error.exception))
+                                        onSuccess.accept(error.amplifyCredential.getCognitoSession(innerException))
                                         sendHubEvent(AuthChannelEventName.SESSION_EXPIRED.toString())
                                     }
                                     is ServiceException -> {
-                                        onSuccess.accept(error.amplifyCredential.getCognitoSession(error.exception))
+                                        onSuccess.accept(error.amplifyCredential.getCognitoSession(innerException))
                                     }
                                     is NotAuthorizedException -> {
-                                        onSuccess.accept(error.amplifyCredential.getCognitoSession(error.exception))
+                                        onSuccess.accept(error.amplifyCredential.getCognitoSession(innerException))
                                     }
                                     else -> {
-                                        val errorResult = UnknownException("Fetch auth session failed.", error)
+                                        val errorResult = UnknownException("Fetch auth session failed.", innerException)
                                         onSuccess.accept(error.amplifyCredential.getCognitoSession(errorResult))
                                     }
                                 }

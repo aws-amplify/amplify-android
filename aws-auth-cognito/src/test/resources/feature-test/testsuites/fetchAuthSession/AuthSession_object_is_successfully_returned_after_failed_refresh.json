@@ -35,33 +35,8 @@
                     "errorMessage": "Fetch auth session failed.",
                     "recoverySuggestion": "See the attached exception for more details",
                     "cause": {
-                        "amplifyCredential": {
-                            "signedInData": {
-                                "userId": "userId",
-                                "username": "username",
-                                "signedInDate": "Feb 3, 2024, 9:00:00 PM",
-                                "signInMethod": {
-                                    "authType": "USER_SRP_AUTH"
-                                },
-                                "cognitoUserPoolTokens": {
-                                    "idToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
-                                    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
-                                    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
-                                    "expiration": 300.0
-                                }
-                            },
-                            "identityId": "someIdentityId",
-                            "credentials": {
-                                "accessKeyId": "someAccessKey",
-                                "secretAccessKey": "someSecretKey",
-                                "sessionToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
-                                "expiration": 2342134.0
-                            }
-                        },
-                        "exception": {
-                            "errorType": "ResourceNotFoundException",
-                            "errorMessage": "Error type: Client, Protocol response: (empty response)"
-                        }
+                        "errorType": "ResourceNotFoundException",
+                        "errorMessage": "Error type: Client, Protocol response: (empty response)"
                     }
                 },
                 "identityIdResult": {
@@ -69,33 +44,8 @@
                     "errorMessage": "Fetch auth session failed.",
                     "recoverySuggestion": "See the attached exception for more details",
                     "cause": {
-                        "amplifyCredential": {
-                            "signedInData": {
-                                "userId": "userId",
-                                "username": "username",
-                                "signedInDate": "Feb 3, 2024, 9:00:00 PM",
-                                "signInMethod": {
-                                    "authType": "USER_SRP_AUTH"
-                                },
-                                "cognitoUserPoolTokens": {
-                                    "idToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
-                                    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
-                                    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
-                                    "expiration": 300.0
-                                }
-                            },
-                            "identityId": "someIdentityId",
-                            "credentials": {
-                                "accessKeyId": "someAccessKey",
-                                "secretAccessKey": "someSecretKey",
-                                "sessionToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
-                                "expiration": 2342134.0
-                            }
-                        },
-                        "exception": {
-                            "errorType": "ResourceNotFoundException",
-                            "errorMessage": "Error type: Client, Protocol response: (empty response)"
-                        }
+                        "errorType": "ResourceNotFoundException",
+                        "errorMessage": "Error type: Client, Protocol response: (empty response)"
                     }
                 },
                 "isSignedIn": true,
@@ -104,33 +54,8 @@
                     "errorMessage": "Fetch auth session failed.",
                     "recoverySuggestion": "See the attached exception for more details",
                     "cause": {
-                        "amplifyCredential": {
-                            "signedInData": {
-                                "userId": "userId",
-                                "username": "username",
-                                "signedInDate": "Feb 3, 2024, 9:00:00 PM",
-                                "signInMethod": {
-                                    "authType": "USER_SRP_AUTH"
-                                },
-                                "cognitoUserPoolTokens": {
-                                    "idToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
-                                    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
-                                    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
-                                    "expiration": 300.0
-                                }
-                            },
-                            "identityId": "someIdentityId",
-                            "credentials": {
-                                "accessKeyId": "someAccessKey",
-                                "secretAccessKey": "someSecretKey",
-                                "sessionToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
-                                "expiration": 2342134.0
-                            }
-                        },
-                        "exception": {
-                            "errorType": "ResourceNotFoundException",
-                            "errorMessage": "Error type: Client, Protocol response: (empty response)"
-                        }
+                        "errorType": "ResourceNotFoundException",
+                        "errorMessage": "Error type: Client, Protocol response: (empty response)"
                     }
                 },
                 "userSubResult": {
@@ -138,33 +63,8 @@
                     "errorMessage": "Fetch auth session failed.",
                     "recoverySuggestion": "See the attached exception for more details",
                     "cause": {
-                        "amplifyCredential": {
-                            "signedInData": {
-                                "userId": "userId",
-                                "username": "username",
-                                "signedInDate": "Feb 3, 2024, 9:00:00 PM",
-                                "signInMethod": {
-                                    "authType": "USER_SRP_AUTH"
-                                },
-                                "cognitoUserPoolTokens": {
-                                    "idToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
-                                    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
-                                    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
-                                    "expiration": 300.0
-                                }
-                            },
-                            "identityId": "someIdentityId",
-                            "credentials": {
-                                "accessKeyId": "someAccessKey",
-                                "secretAccessKey": "someSecretKey",
-                                "sessionToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
-                                "expiration": 2342134.0
-                            }
-                        },
-                        "exception": {
-                            "errorType": "ResourceNotFoundException",
-                            "errorMessage": "Error type: Client, Protocol response: (empty response)"
-                        }
+                        "errorType": "ResourceNotFoundException",
+                        "errorMessage": "Error type: Client, Protocol response: (empty response)"
                     }
                 }
             }
