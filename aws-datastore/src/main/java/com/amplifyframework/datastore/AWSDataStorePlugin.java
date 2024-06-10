@@ -73,7 +73,6 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 /**
  * An AWS implementation of the {@link DataStorePlugin}.
  */
-@SuppressLint("RxLeakedSubscription")
 public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
     private static final long LIFECYCLE_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
