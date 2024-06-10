@@ -404,9 +404,12 @@ public final class Orchestrator {
             return;
         }
         LOG.warn("API sync failed - transitioning to LOCAL_ONLY.", exception);
-        Completable.fromAction(this::transitionToLocalOnly)
-            .doOnError(error -> LOG.warn("Transition to LOCAL_ONLY failed.", error))
-            .subscribe();
+        Disposable subscription = Completable.fromAction(this::transitionToLocalOnly)
+            .subscribe(
+                () -> { /* no-op */ },
+                error -> LOG.warn("Transition to LOCAL_ONLY failed.", error)
+            );
+        disposables.add(subscription);
     }
 
     private void disposeNetworkChanges() {
@@ -422,13 +425,16 @@ public final class Orchestrator {
         monitorNetworkChangesDisposable = reachabilityMonitor.getObservable()
             .skip(1) // We skip the current online state, we only care about transitions
             .filter(ignore -> !State.STOPPED.equals(currentState.get()))
-            .subscribe(isOnline -> {
-                if (isOnline) {
-                    transitionToApiSync();
-                } else {
-                    transitionToLocalOnly();
-                }
-            });
+            .subscribe(
+                isOnline -> {
+                    if (isOnline) {
+                        transitionToApiSync();
+                    } else {
+                        transitionToLocalOnly();
+                    }
+                },
+                error -> LOG.warn("Error observing network changes", error)
+            );
     }
 
     /**
