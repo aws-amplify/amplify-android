@@ -404,12 +404,11 @@ public final class Orchestrator {
             return;
         }
         LOG.warn("API sync failed - transitioning to LOCAL_ONLY.", exception);
-        Disposable subscription = Completable.fromAction(this::transitionToLocalOnly)
-            .subscribe(
-                () -> { /* no-op */ },
-                error -> LOG.warn("Transition to LOCAL_ONLY failed.", error)
-            );
-        disposables.add(subscription);
+        try {
+            transitionToLocalOnly();
+        } catch (Exception error) {
+            LOG.warn("Transition to LOCAL_ONLY failed.", error);
+        }
     }
 
     private void disposeNetworkChanges() {
