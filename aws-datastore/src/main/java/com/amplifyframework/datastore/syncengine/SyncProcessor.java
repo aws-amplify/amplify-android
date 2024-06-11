@@ -53,6 +53,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
@@ -169,9 +170,7 @@ final class SyncProcessor {
                         !(ErrorInspector.contains(notification.getError(), ApiAuthException.class))
                     )
                     .dematerialize(notification -> notification)
-                    // Flatten to a stream of ModelWithMetadata objects
-                    .concatMap(Flowable::fromIterable)
-                    .concatMapCompletable(item -> merger.merge(item, metricsAccumulator::increment))
+                    .concatMapCompletable(items -> merger.merge(items, metricsAccumulator::increment))
                     .toSingle(() -> lastSyncTime.exists() ? SyncType.DELTA : SyncType.BASE);
             })
             .flatMapCompletable(syncType -> {
@@ -322,8 +321,13 @@ final class SyncProcessor {
         return Single.create(emitter -> {
             Cancelable cancelable = appSync.sync(request, result -> {
                 if (!result.hasData()) {
+                    List<String> errorStrings = result.getErrors().stream()
+                                                    .map(GraphQLResponse.Error::toString)
+                                                    .collect(Collectors.toList());
+                    String errors = String.join(",\n", errorStrings);
+
                     emitter.onError(new DataStoreException.IrRecoverableException(
-                            "Empty response from AppSync.", "Report to AWS team."
+                            "Received errors from AppSync: " + errors, "Report to AWS team."
                     ));
                 } else {
                     if (result.hasErrors()) {

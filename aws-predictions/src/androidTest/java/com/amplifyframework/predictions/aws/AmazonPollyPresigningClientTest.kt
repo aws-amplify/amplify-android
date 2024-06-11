@@ -21,8 +21,8 @@ import aws.sdk.kotlin.services.polly.model.LanguageCode
 import aws.sdk.kotlin.services.polly.model.SynthesizeSpeechRequest
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
-import aws.smithy.kotlin.runtime.util.Attributes
-import aws.smithy.kotlin.runtime.util.emptyAttributes
+import aws.smithy.kotlin.runtime.collections.Attributes
+import aws.smithy.kotlin.runtime.collections.emptyAttributes
 import com.amplifyframework.predictions.aws.service.AmazonPollyPresigningClient
 import com.amplifyframework.predictions.aws.service.PresignedSynthesizeSpeechUrlOptions
 import io.mockk.coVerify

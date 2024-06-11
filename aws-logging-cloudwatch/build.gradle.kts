@@ -45,7 +45,18 @@ dependencies {
     testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.kotlin.coroutines)
     testImplementation(libs.test.androidx.workmanager)
-    testImplementation(project(":aws-logging-cloudwatch"))
+
+    androidTestImplementation(libs.test.robolectric)
+    androidTestImplementation(libs.androidx.annotation)
+    androidTestImplementation(libs.test.androidx.core)
+    androidTestImplementation(libs.test.androidx.runner)
+    androidTestImplementation(libs.test.androidx.junit)
+    androidTestImplementation(libs.test.kotlin.coroutines)
+    androidTestImplementation(libs.test.mockk)
+    androidTestImplementation(libs.test.kotest.assertions)
+
+    androidTestImplementation(project(":aws-logging-cloudwatch"))
+    androidTestImplementation(project(":testutils"))
 }
 
 android.kotlinOptions {

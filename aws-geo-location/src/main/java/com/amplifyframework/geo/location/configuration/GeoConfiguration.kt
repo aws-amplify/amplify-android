@@ -15,6 +15,8 @@
 
 package com.amplifyframework.geo.location.configuration
 
+import com.amplifyframework.core.configuration.AmplifyOutputsData
+import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.location.AWSLocationGeoPlugin
 import org.json.JSONObject
 
@@ -44,6 +46,18 @@ data class GeoConfiguration internal constructor(
          */
         internal fun fromJson(pluginJson: JSONObject): Builder {
             return Builder(pluginJson)
+        }
+
+        internal fun from(outputs: AmplifyOutputsData): GeoConfiguration {
+            val geo = outputs.geo ?: throw GeoException(
+                "Missing Geo Configuration",
+                "Ensure Geo category is enabled and exists in your configuration"
+            )
+            val builder = Builder().region(geo.awsRegion)
+            geo.maps?.let { builder.maps(MapsConfiguration.from(it)) }
+            geo.searchIndices?.let { builder.searchIndices(SearchIndicesConfiguration.from(it)) }
+            // Android does not support geofence collections
+            return builder.build()
         }
     }
 

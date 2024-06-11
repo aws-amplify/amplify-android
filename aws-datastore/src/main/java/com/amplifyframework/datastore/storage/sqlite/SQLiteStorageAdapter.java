@@ -17,12 +17,14 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.annotations.InternalApiWarning;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
@@ -51,9 +53,12 @@ import com.amplifyframework.datastore.model.CompoundModelProvider;
 import com.amplifyframework.datastore.model.SystemModelsProviderFactory;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.storage.StorageOperation;
+import com.amplifyframework.datastore.storage.StorageResult;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.datastore.storage.sqlite.migrations.ModelMigrations;
+import com.amplifyframework.datastore.utils.ErrorInspector;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.GsonFactory;
 import com.amplifyframework.util.Immutable;
@@ -74,7 +79,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.core.Completable;
-import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.subjects.PublishSubject;
@@ -82,7 +86,11 @@ import io.reactivex.rxjava3.subjects.Subject;
 
 /**
  * An implementation of {@link LocalStorageAdapter} using {@link android.database.sqlite.SQLiteDatabase}.
+ *
+ * Although this has public access, it is intended for internal use and should not be used directly by host
+ * applications. The behavior of this may change without warning.
  */
+@InternalApiWarning
 public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
     private static final long THREAD_POOL_TERMINATE_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
@@ -315,6 +323,93 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      * {@inheritDoc}
      */
     @Override
+    public <T extends Model> void batchSyncOperations(
+            @NonNull List<StorageOperation<T>> operations,
+            @NonNull Action onComplete,
+            @NonNull Consumer<DataStoreException> onError) {
+        if (operations.size() == 0) {
+            onComplete.call();
+            return;
+        }
+
+        TransactionBlock block = () -> {
+            for (StorageOperation<T> operation : operations) {
+                StorageResult<T> result = null;
+                if (operation instanceof StorageOperation.Create) {
+                    result = saveInternal(
+                            operation.getModel(),
+                            StorageItemChange.Initiator.SYNC_ENGINE,
+                            QueryPredicates.all()
+                    );
+                } else if (operation instanceof StorageOperation.Delete) {
+                    result = deleteInternal(
+                            operation.getModel(),
+                            StorageItemChange.Initiator.SYNC_ENGINE,
+                            QueryPredicates.all()
+                    );
+                }
+
+                if (result instanceof StorageResult.Success) {
+                    // If operation was successful, notify storage item change
+                    operation.getOnItemChange().accept(
+                            ((StorageResult.Success<T>) result).getStorageItemChange()
+                    );
+                } else if (result instanceof StorageResult.Failure && operation instanceof StorageOperation.Delete) {
+                    // If delete operation failed, assume record already deleted,
+                    // so attempt publish storage item change
+                    try {
+                        final ModelSchema modelSchema =
+                                schemaRegistry.getModelSchemaForModelClass(operation.getModel().getModelName());
+                        StorageItemChange<T> change = StorageItemChange.<T>builder()
+                                .item(operation.getModel())
+                                .patchItem(SerializedModel.create(operation.getModel(), modelSchema))
+                                .modelSchema(modelSchema)
+                                .type(StorageItemChange.Type.DELETE)
+                                .predicate(QueryPredicates.all())
+                                .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
+                                .build();
+                        operation.getOnItemChange().accept(change);
+                    } catch (Exception exception) {
+                        // do nothing
+                    }
+                } else if (result instanceof StorageResult.Failure) {
+                    DataStoreException exception = ((StorageResult.Failure<T>) result).getException();
+                    if (!ErrorInspector.contains(exception, SQLiteConstraintException.class)) {
+                        // If not a SQLiteConstraintException, we encountered an unrecoverable error
+                        // throw the exception and don't proceed
+                        LOG.warn(
+                                "Failed to sync remote model into local storage: $modelWithMetadata",
+                                exception
+                        );
+                        throw exception;
+                    } else {
+                        // LOG constraint violation errors and proceed
+                        LOG.warn(
+                                "Sync failed: foreign key constraint violation: $modelWithMetadata",
+                                exception
+                        );
+                    }
+                }
+            }
+        };
+
+        threadPool.submit(() -> {
+            try {
+                // We always want the transaction to succeed, even if an exception is thrown.
+                sqlCommandProcessor.runInTransactionAndSucceedOnDatastoreException(block);
+                // If no exception is thrown, we call onComplete Action.
+                onComplete.call();
+            } catch (DataStoreException exception) {
+                // If the transaction block encountered an uncaught exception, we call onError Consumer.
+                onError.accept(exception);
+            }
+        });
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public <T extends Model> void save(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
@@ -327,66 +422,80 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(onSuccess);
         Objects.requireNonNull(onError);
         threadPool.submit(() -> {
-            try {
-                final ModelSchema modelSchema = schemaRegistry.getModelSchemaForModelClass(item.getModelName());
-
-                final StorageItemChange.Type writeType;
-                SerializedModel patchItem = null;
-
-                if (sqlQueryProcessor.modelExists(item, QueryPredicates.all())) {
-                    // if data exists already, then UPDATE the row
-                    writeType = StorageItemChange.Type.UPDATE;
-
-                    // Check if existing data meets the condition, only if a condition other than all() was provided.
-                    if (!QueryPredicates.all().equals(predicate) && !sqlQueryProcessor.modelExists(item, predicate)) {
-                        throw new DataStoreException(
-                            "Save failed because condition did not match existing model instance.",
-                            "The save will continue to fail until the model instance is updated."
-                        );
-                    }
-                    if (initiator == StorageItemChange.Initiator.DATA_STORE_API) {
-                        // When saving items via the DataStore API, compute a SerializedModel of the changed model.
-                        // This is not necessary when save
-                        // is initiated by the sync engine, so skip it for optimization to avoid the extra SQL query.
-                        patchItem = SerializedModel.create(item, modelSchema);
-                    }
-                } else if (!QueryPredicates.all().equals(predicate)) {
-                    // insert not permitted with a condition
-                    throw new DataStoreException(
-                        "Conditional update must be performed against an already existing data. " +
-                            "Insertion is not permitted while using a predicate.",
-                        "Please save without specifying a predicate."
-                    );
-                } else {
-                    // if data doesn't exist yet, then INSERT a new row
-                    writeType = StorageItemChange.Type.CREATE;
-                }
-
-                // execute local save
-                writeData(item, writeType);
-
-                // publish successful save
-                StorageItemChange<T> change = StorageItemChange.<T>builder()
-                        .item(item)
-                        .patchItem(patchItem != null ? patchItem : SerializedModel.create(item, modelSchema))
-                        .modelSchema(modelSchema)
-                        .type(writeType)
-                        .predicate(predicate)
-                        .initiator(initiator)
-                        .build();
-                itemChangeSubject.onNext(change);
-                onSuccess.accept(change);
-            } catch (DataStoreException dataStoreException) {
-                onError.accept(dataStoreException);
-            } catch (Exception someOtherTypeOfException) {
-                String modelToString = item.getModelName() + "[primaryKey =" + item.getPrimaryKeyString() + "]";
-                DataStoreException dataStoreException = new DataStoreException(
-                    "Error in saving the model: " + modelToString,
-                    someOtherTypeOfException, "See attached exception for details."
-                );
-                onError.accept(dataStoreException);
+            StorageResult<T> result = saveInternal(item, initiator, predicate);
+            if (result instanceof StorageResult.Success) {
+                StorageResult.Success<T> success = (StorageResult.Success<T>) result;
+                onSuccess.accept(success.getStorageItemChange());
+            } else if (result instanceof StorageResult.Failure) {
+                StorageResult.Failure<T> failure = (StorageResult.Failure<T>) result;
+                onError.accept(failure.getException());
             }
         });
+    }
+
+    private <T extends Model> StorageResult<T> saveInternal(
+            @NonNull T item,
+            @NonNull StorageItemChange.Initiator initiator,
+            @NonNull QueryPredicate predicate) {
+        try {
+            final ModelSchema modelSchema = schemaRegistry.getModelSchemaForModelClass(item.getModelName());
+
+            final StorageItemChange.Type writeType;
+            SerializedModel patchItem = null;
+
+            if (sqlQueryProcessor.modelExists(item, QueryPredicates.all())) {
+                // if data exists already, then UPDATE the row
+                writeType = StorageItemChange.Type.UPDATE;
+
+                // Check if existing data meets the condition, only if a condition other than all() was provided.
+                if (!QueryPredicates.all().equals(predicate) && !sqlQueryProcessor.modelExists(item, predicate)) {
+                    throw new DataStoreException(
+                            "Save failed because condition did not match existing model instance.",
+                            "The save will continue to fail until the model instance is updated."
+                    );
+                }
+                if (initiator == StorageItemChange.Initiator.DATA_STORE_API) {
+                    // When saving items via the DataStore API, compute a SerializedModel of the changed model.
+                    // This is not necessary when save
+                    // is initiated by the sync engine, so skip it for optimization to avoid the extra SQL query.
+                    patchItem = SerializedModel.create(item, modelSchema);
+                }
+            } else if (!QueryPredicates.all().equals(predicate)) {
+                // insert not permitted with a condition
+                throw new DataStoreException(
+                        "Conditional update must be performed against an already existing data. " +
+                                "Insertion is not permitted while using a predicate.",
+                        "Please save without specifying a predicate."
+                );
+            } else {
+                // if data doesn't exist yet, then INSERT a new row
+                writeType = StorageItemChange.Type.CREATE;
+            }
+
+            // execute local save
+            writeData(item, writeType);
+
+            // publish successful save
+            StorageItemChange<T> change = StorageItemChange.<T>builder()
+                    .item(item)
+                    .patchItem(patchItem != null ? patchItem : SerializedModel.create(item, modelSchema))
+                    .modelSchema(modelSchema)
+                    .type(writeType)
+                    .predicate(predicate)
+                    .initiator(initiator)
+                    .build();
+            itemChangeSubject.onNext(change);
+            return new StorageResult.Success<>(change);
+        } catch (DataStoreException dataStoreException) {
+            return new StorageResult.Failure<>(dataStoreException);
+        } catch (Exception someOtherTypeOfException) {
+            String modelToString = item.getModelName() + "[primaryKey =" + item.getPrimaryKeyString() + "]";
+            DataStoreException dataStoreException = new DataStoreException(
+                    "Error in saving the model: " + modelToString,
+                    someOtherTypeOfException, "See attached exception for details."
+            );
+            return new StorageResult.Failure<>(dataStoreException);
+        }
     }
 
     /**
@@ -473,15 +582,31 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(onSuccess);
         Objects.requireNonNull(onError);
         threadPool.submit(() -> {
-            try {
-                final String modelName = item.getModelName();
-                final ModelSchema modelSchema = schemaRegistry.getModelSchemaForModelClass(modelName);
+            StorageResult<T> result = deleteInternal(item, initiator, predicate);
+            if (result instanceof StorageResult.Success) {
+                StorageResult.Success<T> success = (StorageResult.Success<T>) result;
+                onSuccess.accept(success.getStorageItemChange());
+            } else if (result instanceof StorageResult.Failure) {
+                StorageResult.Failure<T> failure = (StorageResult.Failure<T>) result;
+                onError.accept(failure.getException());
+            }
+        });
+    }
 
-                // Check if data being deleted exists; "Succeed" deletion in that case.
-                if (!sqlQueryProcessor.modelExists(item, QueryPredicates.all())) {
-                    LOG.verbose(modelName + " model with id = " + item.getPrimaryKeyString() + " does not exist.");
-                    // Pass back item change instance without publishing it.
-                    onSuccess.accept(StorageItemChange.<T>builder()
+    private <T extends Model> StorageResult<T> deleteInternal(
+            @NonNull T item,
+            @NonNull StorageItemChange.Initiator initiator,
+            @NonNull QueryPredicate predicate
+    ) {
+        try {
+            final String modelName = item.getModelName();
+            final ModelSchema modelSchema = schemaRegistry.getModelSchemaForModelClass(modelName);
+
+            // Check if data being deleted exists; "Succeed" deletion in that case.
+            if (!sqlQueryProcessor.modelExists(item, QueryPredicates.all())) {
+                LOG.verbose(modelName + " model with id = " + item.getPrimaryKeyString() + " does not exist.");
+                // Pass back item change instance without publishing it.
+                return new StorageResult.Success<>(StorageItemChange.<T>builder()
                         .item(item)
                         .patchItem(SerializedModel.create(item, modelSchema))
                         .modelSchema(modelSchema)
@@ -489,27 +614,26 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         .predicate(predicate)
                         .initiator(initiator)
                         .build());
-                    return;
-                }
+            }
 
-                // Check if existing data meets the condition, only if a condition other than all() was provided.
-                if (!QueryPredicates.all().equals(predicate) && !sqlQueryProcessor.modelExists(item, predicate)) {
-                    throw new DataStoreException(
+            // Check if existing data meets the condition, only if a condition other than all() was provided.
+            if (!QueryPredicates.all().equals(predicate) && !sqlQueryProcessor.modelExists(item, predicate)) {
+                throw new DataStoreException(
                         "Deletion failed because condition did not match existing model instance.",
                         "The deletion will continue to fail until the model instance is updated."
-                    );
-                }
+                );
+            }
 
-                // identify items affected by cascading delete before deleting them
-                List<Model> cascadedModels = sqliteModelTree.descendantsOf(Collections.singleton(item));
+            // identify items affected by cascading delete before deleting them
+            List<Model> cascadedModels = sqliteModelTree.descendantsOf(Collections.singleton(item));
 
-                // execute local deletion
-                writeData(item, StorageItemChange.Type.DELETE);
+            // execute local deletion
+            writeData(item, StorageItemChange.Type.DELETE);
 
-                // publish cascaded deletions
-                for (Model cascadedModel : cascadedModels) {
-                    ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(cascadedModel.getModelName());
-                    itemChangeSubject.onNext(StorageItemChange.builder()
+            // publish cascaded deletions
+            for (Model cascadedModel : cascadedModels) {
+                ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(cascadedModel.getModelName());
+                itemChangeSubject.onNext(StorageItemChange.builder()
                         .item(cascadedModel)
                         .patchItem(SerializedModel.create(cascadedModel, schema))
                         .modelSchema(schema)
@@ -517,29 +641,28 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         .predicate(QueryPredicates.all())
                         .initiator(initiator)
                         .build());
-                }
+            }
 
-                // publish successful deletion of top-level item
-                StorageItemChange<T> change = StorageItemChange.<T>builder()
-                        .item(item)
-                        .patchItem(SerializedModel.create(item, modelSchema))
-                        .modelSchema(modelSchema)
-                        .type(StorageItemChange.Type.DELETE)
-                        .predicate(predicate)
-                        .initiator(initiator)
-                        .build();
-                itemChangeSubject.onNext(change);
-                onSuccess.accept(change);
-            } catch (DataStoreException dataStoreException) {
-                onError.accept(dataStoreException);
-            } catch (Exception someOtherTypeOfException) {
-                DataStoreException dataStoreException = new DataStoreException(
+            // publish successful deletion of top-level item
+            StorageItemChange<T> change = StorageItemChange.<T>builder()
+                    .item(item)
+                    .patchItem(SerializedModel.create(item, modelSchema))
+                    .modelSchema(modelSchema)
+                    .type(StorageItemChange.Type.DELETE)
+                    .predicate(predicate)
+                    .initiator(initiator)
+                    .build();
+            itemChangeSubject.onNext(change);
+            return new StorageResult.Success<>(change);
+        } catch (DataStoreException dataStoreException) {
+            return new StorageResult.Failure<>(dataStoreException);
+        } catch (Exception someOtherTypeOfException) {
+            DataStoreException dataStoreException = new DataStoreException(
                     "Error in deleting the model.", someOtherTypeOfException,
                     "See attached exception for details."
-                );
-                onError.accept(dataStoreException);
-            }
-        });
+            );
+            return new StorageResult.Failure<>(dataStoreException);
+        }
     }
 
     /**
@@ -790,40 +913,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     "Valid storage changes are CREATE, UPDATE, and DELETE."
                 );
         }
-    }
-
-    private boolean modelExists(Model model, QueryPredicate predicate) throws DataStoreException {
-        final String modelName = model.getModelName();
-        final ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(modelName);
-        final SQLiteTable table = SQLiteTable.fromSchema(schema);
-        final String tableName = table.getName();
-        final String primaryKeyName = table.getPrimaryKey().getName();
-        final QueryPredicate matchId = QueryField.field(tableName, primaryKeyName).eq(model.getPrimaryKeyString());
-        final QueryPredicate condition = predicate.and(matchId);
-        return sqlCommandProcessor.executeExists(sqlCommandFactory.existsFor(schema, condition));
-    }
-
-    /**
-     * Helper method to synchronously query for a single model instance.  Used before any save initiated by
-     * DATASTORE_API in order to determine which fields have changed.
-     * @param model a Model that we want to query for the same type and id in SQLite.
-     * @return the Model instance from SQLite, if it exists, otherwise null.
-     */
-    private Model query(Model model) {
-        final String modelName = model.getModelName();
-        final ModelSchema schema = schemaRegistry.getModelSchemaForModelClass(modelName);
-        final SQLiteTable table = SQLiteTable.fromSchema(schema);
-        final String primaryKeyName = table.getPrimaryKey().getName();
-        final QueryPredicate matchId = QueryField.field(modelName, primaryKeyName).eq(model.getPrimaryKeyString());
-
-        Iterator<? extends Model> result = Single.<Iterator<? extends Model>>create(emitter -> {
-            if (model instanceof SerializedModel) {
-                query(model.getModelName(), Where.matches(matchId), emitter::onSuccess, emitter::onError);
-            } else {
-                query(model.getClass(), Where.matches(matchId), emitter::onSuccess, emitter::onError);
-            }
-        }).blockingGet();
-        return result.hasNext() ? result.next() : null;
     }
 
     /*

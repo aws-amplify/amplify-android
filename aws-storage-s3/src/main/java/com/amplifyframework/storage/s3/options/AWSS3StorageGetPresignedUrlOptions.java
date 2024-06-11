@@ -54,6 +54,7 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
      *         values in the provided options
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public static Builder from(@NonNull AWSS3StorageGetPresignedUrlOptions options) {
         return builder()
             .accessLevel(options.getAccessLevel())
@@ -80,6 +81,7 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -94,6 +96,7 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public int hashCode() {
         return ObjectsCompat.hash(
                 getAccessLevel(),
@@ -104,6 +107,7 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
 
     @NonNull
     @Override
+    @SuppressWarnings("deprecation")
     public String toString() {
         return "AWSS3StorageGetPresignedUrlOptions {" +
                 "accessLevel=" + getAccessLevel() +

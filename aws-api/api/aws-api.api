@@ -1,0 +1,274 @@
+public final class com/amplifyframework/api/aws/AWSApiPlugin : com/amplifyframework/api/ApiPlugin {
+	public static final field DEFAULT_GRAPHQL_API Ljava/lang/String;
+	public fun <init> ()V
+	public fun <init> (Lcom/amplifyframework/api/aws/ApiAuthProviders;)V
+	public static fun builder ()Lcom/amplifyframework/api/aws/AWSApiPlugin$Builder;
+	public fun configure (Lorg/json/JSONObject;Landroid/content/Context;)V
+	public fun delete (Lcom/amplifyframework/api/rest/RestOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/api/rest/RestOperation;
+	public fun delete (Ljava/lang/String;Lcom/amplifyframework/api/rest/RestOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/api/rest/RestOperation;
+	public fun get (Lcom/amplifyframework/api/rest/RestOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/api/rest/RestOperation;
+	public fun get (Ljava/lang/String;Lcom/amplifyframework/api/rest/RestOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/api/rest/RestOperation;
+	public synthetic fun getEscapeHatch ()Ljava/lang/Object;
+	public fun getEscapeHatch ()Ljava/util/Map;
+	public fun getPluginKey ()Ljava/lang/String;
+	public fun getVersion ()Ljava/lang/String;
+	public fun head (Lcom/amplifyframework/api/rest/RestOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/api/rest/RestOperation;
+	public fun head (Ljava/lang/String;Lcom/amplifyframework/api/rest/RestOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/api/rest/RestOperation;
+	public fun mutate (Lcom/amplifyframework/api/graphql/GraphQLRequest;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/api/graphql/GraphQLOperation;
+	public fun mutate (Ljava/lang/String;Lcom/amplifyframework/api/graphql/GraphQLRequest;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/api/graphql/GraphQLOperation;
+	public fun patch (Lcom/amplifyframework/api/rest/RestOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/api/rest/RestOperation;
+	public fun patch (Ljava/lang/String;Lcom/amplifyframework/api/rest/RestOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/api/rest/RestOperation;
+	public fun post (Lcom/amplifyframework/api/rest/RestOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/api/rest/RestOperation;
+	public fun post (Ljava/lang/String;Lcom/amplifyframework/api/rest/RestOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/api/rest/RestOperation;
+	public fun put (Lcom/amplifyframework/api/rest/RestOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/api/rest/RestOperation;
+	public fun put (Ljava/lang/String;Lcom/amplifyframework/api/rest/RestOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/api/rest/RestOperation;
+	public fun query (Lcom/amplifyframework/api/graphql/GraphQLRequest;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/api/graphql/GraphQLOperation;
+	public fun query (Ljava/lang/String;Lcom/amplifyframework/api/graphql/GraphQLRequest;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/api/graphql/GraphQLOperation;
+	public fun subscribe (Lcom/amplifyframework/api/graphql/GraphQLRequest;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Action;)Lcom/amplifyframework/api/graphql/GraphQLOperation;
+	public fun subscribe (Ljava/lang/String;Lcom/amplifyframework/api/graphql/GraphQLRequest;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Action;)Lcom/amplifyframework/api/graphql/GraphQLOperation;
+}
+
+public final class com/amplifyframework/api/aws/AWSApiPlugin$Builder {
+	public fun apiAuthProviders (Lcom/amplifyframework/api/aws/ApiAuthProviders;)Lcom/amplifyframework/api/aws/AWSApiPlugin$Builder;
+	public fun build ()Lcom/amplifyframework/api/aws/AWSApiPlugin;
+	public fun configureClient (Ljava/lang/String;Lcom/amplifyframework/api/aws/OkHttpConfigurator;)Lcom/amplifyframework/api/aws/AWSApiPlugin$Builder;
+	public fun configureWebSocketUpgradeClient (Ljava/lang/String;Lcom/amplifyframework/api/aws/OkHttpConfigurator;)Lcom/amplifyframework/api/aws/AWSApiPlugin$Builder;
+}
+
+public final class com/amplifyframework/api/aws/AWSApiPluginConfiguration {
+	public static fun builder ()Lcom/amplifyframework/api/aws/AWSApiPluginConfiguration$Builder;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+}
+
+public final class com/amplifyframework/api/aws/AWSApiPluginConfiguration$Builder {
+	public fun build ()Lcom/amplifyframework/api/aws/AWSApiPluginConfiguration;
+}
+
+public final class com/amplifyframework/api/aws/ApiAuthProviders {
+	public static fun builder ()Lcom/amplifyframework/api/aws/ApiAuthProviders$Builder;
+	public fun getAWSCredentialsProvider ()Laws/smithy/kotlin/runtime/auth/awscredentials/CredentialsProvider;
+	public fun getApiKeyAuthProvider ()Lcom/amplifyframework/api/aws/sigv4/ApiKeyAuthProvider;
+	public fun getCognitoUserPoolsAuthProvider ()Lcom/amplifyframework/api/aws/sigv4/CognitoUserPoolsAuthProvider;
+	public fun getFunctionAuthProvider ()Lcom/amplifyframework/api/aws/sigv4/FunctionAuthProvider;
+	public fun getOidcAuthProvider ()Lcom/amplifyframework/api/aws/sigv4/OidcAuthProvider;
+	public static fun noProviderOverrides ()Lcom/amplifyframework/api/aws/ApiAuthProviders;
+}
+
+public final class com/amplifyframework/api/aws/ApiAuthProviders$Builder {
+	public fun <init> ()V
+	public fun apiKeyAuthProvider (Lcom/amplifyframework/api/aws/sigv4/ApiKeyAuthProvider;)Lcom/amplifyframework/api/aws/ApiAuthProviders$Builder;
+	public fun awsCredentialsProvider (Laws/smithy/kotlin/runtime/auth/awscredentials/CredentialsProvider;)Lcom/amplifyframework/api/aws/ApiAuthProviders$Builder;
+	public fun build ()Lcom/amplifyframework/api/aws/ApiAuthProviders;
+	public fun cognitoUserPoolsAuthProvider (Lcom/amplifyframework/api/aws/sigv4/CognitoUserPoolsAuthProvider;)Lcom/amplifyframework/api/aws/ApiAuthProviders$Builder;
+	public fun functionAuthProvider (Lcom/amplifyframework/api/aws/sigv4/FunctionAuthProvider;)Lcom/amplifyframework/api/aws/ApiAuthProviders$Builder;
+	public fun oidcAuthProvider (Lcom/amplifyframework/api/aws/sigv4/OidcAuthProvider;)Lcom/amplifyframework/api/aws/ApiAuthProviders$Builder;
+}
+
+public final class com/amplifyframework/api/aws/AppSyncGraphQLOperation : com/amplifyframework/api/aws/AWSGraphQLOperation {
+	public fun cancel ()V
+	public fun start ()V
+}
+
+public final class com/amplifyframework/api/aws/AppSyncGraphQLRequestFactory {
+	public static final field INSTANCE Lcom/amplifyframework/api/aws/AppSyncGraphQLRequestFactory;
+	public static final fun buildMutation (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lcom/amplifyframework/api/graphql/MutationType;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun buildMutation (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lcom/amplifyframework/api/graphql/MutationType;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun buildPaginatedResultQuery (Ljava/lang/Class;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;I)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun buildPaginatedResultQuery (Ljava/lang/Class;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;ILkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun buildQuery (Ljava/lang/Class;Lcom/amplifyframework/core/model/ModelIdentifier;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun buildQuery (Ljava/lang/Class;Lcom/amplifyframework/core/model/ModelIdentifier;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun buildQuery (Ljava/lang/Class;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun buildQuery (Ljava/lang/Class;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun buildQuery (Ljava/lang/Class;Ljava/lang/String;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun buildQuery (Ljava/lang/Class;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun buildSubscription (Ljava/lang/Class;Lcom/amplifyframework/api/graphql/SubscriptionType;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun buildSubscription (Ljava/lang/Class;Lcom/amplifyframework/api/graphql/SubscriptionType;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+}
+
+public final class com/amplifyframework/api/aws/BuildConfig {
+	public static final field BUILD_TYPE Ljava/lang/String;
+	public static final field DEBUG Z
+	public static final field LIBRARY_PACKAGE_NAME Ljava/lang/String;
+	public static final field VERSION_NAME Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public final class com/amplifyframework/api/aws/DomainType : java/lang/Enum {
+	public static final field CUSTOM Lcom/amplifyframework/api/aws/DomainType;
+	public static final field STANDARD Lcom/amplifyframework/api/aws/DomainType;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/api/aws/DomainType;
+	public static fun values ()[Lcom/amplifyframework/api/aws/DomainType;
+}
+
+public final class com/amplifyframework/api/aws/EndpointType : java/lang/Enum {
+	public static final field GRAPHQL Lcom/amplifyframework/api/aws/EndpointType;
+	public static final field REST Lcom/amplifyframework/api/aws/EndpointType;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/api/aws/EndpointType;
+	public static fun values ()[Lcom/amplifyframework/api/aws/EndpointType;
+}
+
+public final class com/amplifyframework/api/aws/LazyTypeDeserializersKt {
+	public static final field ITEMS_KEY Ljava/lang/String;
+	public static final field NEXT_TOKEN_KEY Ljava/lang/String;
+}
+
+public final class com/amplifyframework/api/aws/MultiAuthAppSyncGraphQLOperation : com/amplifyframework/api/aws/AWSGraphQLOperation {
+	public fun cancel ()V
+	public fun start ()V
+}
+
+public abstract interface class com/amplifyframework/api/aws/OkHttpConfigurator {
+	public abstract fun applyConfiguration (Lokhttp3/OkHttpClient$Builder;)V
+}
+
+public final class com/amplifyframework/api/aws/auth/ApiKeyRequestDecorator : com/amplifyframework/api/aws/auth/RequestDecorator {
+	public fun <init> (Lcom/amplifyframework/api/aws/sigv4/ApiKeyAuthProvider;)V
+	public fun decorate (Lokhttp3/Request;)Lokhttp3/Request;
+}
+
+public final class com/amplifyframework/api/aws/auth/ApiRequestDecoratorFactory {
+	public fun <init> (Lcom/amplifyframework/api/aws/ApiAuthProviders;Lcom/amplifyframework/api/aws/AuthorizationType;Ljava/lang/String;Lcom/amplifyframework/api/aws/EndpointType;Ljava/lang/String;)V
+	public fun forAuthType (Lcom/amplifyframework/api/aws/AuthorizationType;)Lcom/amplifyframework/api/aws/auth/RequestDecorator;
+	public fun fromGraphQLRequest (Lcom/amplifyframework/api/graphql/GraphQLRequest;)Lcom/amplifyframework/api/aws/auth/RequestDecorator;
+}
+
+public final class com/amplifyframework/api/aws/auth/AuthRuleRequestDecorator {
+	public fun <init> (Lcom/amplifyframework/api/aws/ApiAuthProviders;)V
+	public fun decorate (Lcom/amplifyframework/api/graphql/GraphQLRequest;Lcom/amplifyframework/api/aws/AuthorizationType;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+}
+
+public final class com/amplifyframework/api/aws/auth/CognitoJWTParser {
+	public static final field Companion Lcom/amplifyframework/api/aws/auth/CognitoJWTParser$Companion;
+	public fun <init> ()V
+}
+
+public final class com/amplifyframework/api/aws/auth/CognitoJWTParser$Companion {
+	public final fun getClaim (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+	public final fun getPayload (Ljava/lang/String;)Lorg/json/JSONObject;
+}
+
+public final class com/amplifyframework/api/aws/auth/CognitoParameterInvalidException : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public class com/amplifyframework/api/aws/auth/IamRequestDecorator : com/amplifyframework/api/aws/auth/RequestDecorator {
+	public fun <init> (Lcom/amplifyframework/api/aws/sigv4/AWS4Signer;Laws/smithy/kotlin/runtime/auth/awscredentials/CredentialsProvider;Ljava/lang/String;)V
+	public final fun decorate (Lokhttp3/Request;)Lokhttp3/Request;
+}
+
+public abstract interface class com/amplifyframework/api/aws/auth/RequestDecorator {
+	public abstract fun decorate (Lokhttp3/Request;)Lokhttp3/Request;
+}
+
+public class com/amplifyframework/api/aws/auth/TokenRequestDecorator : com/amplifyframework/api/aws/auth/RequestDecorator {
+	public fun <init> (Lcom/amplifyframework/api/aws/auth/TokenRequestDecorator$TokenSupplier;)V
+	public final fun decorate (Lokhttp3/Request;)Lokhttp3/Request;
+}
+
+public abstract interface class com/amplifyframework/api/aws/auth/TokenRequestDecorator$TokenSupplier {
+	public abstract fun get ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/api/aws/operation/AWSRestOperation : com/amplifyframework/api/rest/RestOperation {
+	public fun <init> (Lcom/amplifyframework/api/rest/RestOperationRequest;Ljava/lang/String;Lokhttp3/OkHttpClient;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun cancel ()V
+	public fun start ()V
+}
+
+public abstract class com/amplifyframework/api/aws/sigv4/AWS4Signer {
+	public fun <init> (Ljava/lang/String;)V
+	protected final fun getAwsSignedBodyHeaderType ()Laws/smithy/kotlin/runtime/auth/awssigning/AwsSignedBodyHeader;
+	protected final fun setAwsSignedBodyHeaderType (Laws/smithy/kotlin/runtime/auth/awssigning/AwsSignedBodyHeader;)V
+	public final fun sign (Laws/smithy/kotlin/runtime/http/request/HttpRequest;Laws/smithy/kotlin/runtime/auth/awscredentials/CredentialsProvider;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun signBlocking (Laws/smithy/kotlin/runtime/http/request/HttpRequest;Laws/smithy/kotlin/runtime/auth/awscredentials/CredentialsProvider;Ljava/lang/String;)Laws/smithy/kotlin/runtime/auth/awssigning/AwsSigningResult;
+}
+
+public final class com/amplifyframework/api/aws/sigv4/ApiGatewayIamSigner : com/amplifyframework/api/aws/sigv4/AWS4Signer {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public abstract interface class com/amplifyframework/api/aws/sigv4/ApiKeyAuthProvider {
+	public abstract fun getAPIKey ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/api/aws/sigv4/AppSyncV4Signer : com/amplifyframework/api/aws/sigv4/AWS4Signer {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public abstract interface class com/amplifyframework/api/aws/sigv4/AuthProvider {
+	public abstract fun getLatestAuthToken ()Ljava/lang/String;
+}
+
+public abstract interface class com/amplifyframework/api/aws/sigv4/CognitoUserPoolsAuthProvider {
+	public abstract fun getLatestAuthToken ()Ljava/lang/String;
+	public abstract fun getUsername ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/api/aws/sigv4/DefaultCognitoUserPoolsAuthProvider : com/amplifyframework/api/aws/sigv4/CognitoUserPoolsAuthProvider {
+	public fun <init> ()V
+	public fun getLatestAuthToken ()Ljava/lang/String;
+	public fun getUsername ()Ljava/lang/String;
+}
+
+public abstract interface class com/amplifyframework/api/aws/sigv4/FunctionAuthProvider : com/amplifyframework/api/aws/sigv4/AuthProvider {
+}
+
+public abstract interface class com/amplifyframework/api/aws/sigv4/OidcAuthProvider : com/amplifyframework/api/aws/sigv4/AuthProvider {
+}
+
+public final class com/amplifyframework/api/aws/utils/RestRequestFactory {
+	public static fun createRequest (Ljava/net/URL;[BLjava/util/Map;Lcom/amplifyframework/api/rest/HttpMethod;)Lokhttp3/Request;
+	public static fun createURL (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)Ljava/net/URL;
+}
+
+public final class com/amplifyframework/api/graphql/model/ModelMutation {
+	public static final field INSTANCE Lcom/amplifyframework/api/graphql/model/ModelMutation;
+	public static final fun create (Lcom/amplifyframework/core/model/Model;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun create (Lcom/amplifyframework/core/model/Model;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun delete (Lcom/amplifyframework/core/model/Model;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun delete (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun delete (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun delete (Lcom/amplifyframework/core/model/Model;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun update (Lcom/amplifyframework/core/model/Model;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun update (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun update (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun update (Lcom/amplifyframework/core/model/Model;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+}
+
+public final class com/amplifyframework/api/graphql/model/ModelPagination {
+	public static fun firstPage ()Lcom/amplifyframework/api/graphql/model/ModelPagination;
+	public fun getLimit ()I
+	public static fun limit (I)Lcom/amplifyframework/api/graphql/model/ModelPagination;
+	public fun withLimit (I)Lcom/amplifyframework/api/graphql/model/ModelPagination;
+}
+
+public final class com/amplifyframework/api/graphql/model/ModelQuery {
+	public static final field INSTANCE Lcom/amplifyframework/api/graphql/model/ModelQuery;
+	public static final fun get (Ljava/lang/Class;Lcom/amplifyframework/core/model/ModelIdentifier;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun get (Ljava/lang/Class;Lcom/amplifyframework/core/model/ModelIdentifier;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun get (Ljava/lang/Class;Ljava/lang/String;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun get (Ljava/lang/Class;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun list (Ljava/lang/Class;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun list (Ljava/lang/Class;Lcom/amplifyframework/api/graphql/model/ModelPagination;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun list (Ljava/lang/Class;Lcom/amplifyframework/api/graphql/model/ModelPagination;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun list (Ljava/lang/Class;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun list (Ljava/lang/Class;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lcom/amplifyframework/api/graphql/model/ModelPagination;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun list (Ljava/lang/Class;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lcom/amplifyframework/api/graphql/model/ModelPagination;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun list (Ljava/lang/Class;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun list (Ljava/lang/Class;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+}
+
+public final class com/amplifyframework/api/graphql/model/ModelSubscription {
+	public static final field INSTANCE Lcom/amplifyframework/api/graphql/model/ModelSubscription;
+	public static final fun of (Ljava/lang/Class;Lcom/amplifyframework/api/graphql/SubscriptionType;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun of (Ljava/lang/Class;Lcom/amplifyframework/api/graphql/SubscriptionType;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun onCreate (Ljava/lang/Class;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun onCreate (Ljava/lang/Class;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun onDelete (Ljava/lang/Class;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun onDelete (Ljava/lang/Class;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun onUpdate (Ljava/lang/Class;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun onUpdate (Ljava/lang/Class;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+}
+

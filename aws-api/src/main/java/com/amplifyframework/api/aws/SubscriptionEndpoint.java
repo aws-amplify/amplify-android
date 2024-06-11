@@ -103,21 +103,7 @@ final class SubscriptionEndpoint {
         this.okHttpClient = okHttpClientBuilder.build();
     }
 
-    synchronized <T> void requestSubscription(
-        @NonNull GraphQLRequest<T> request,
-        @NonNull Consumer<String> onSubscriptionStarted,
-        @NonNull Consumer<GraphQLResponse<T>> onNextItem,
-        @NonNull Consumer<ApiException> onSubscriptionError,
-        @NonNull Action onSubscriptionComplete) {
-        requestSubscription(request,
-                            apiConfiguration.getAuthorizationType(),
-                            onSubscriptionStarted,
-                            onNextItem,
-                            onSubscriptionError,
-                            onSubscriptionComplete);
-    }
-
-    synchronized <T> void requestSubscription(
+    <T> void requestSubscription(
             @NonNull GraphQLRequest<T> request,
             @NonNull AuthorizationType authType,
             @NonNull Consumer<String> onSubscriptionStarted,
@@ -155,17 +141,17 @@ final class SubscriptionEndpoint {
             pendingSubscriptionIds.add(subscriptionId);
             socketListener = webSocketListener;
             socket = webSocket;
-        }
 
-        // Every request waits here for the connection to be ready.
-        Connection connection = socketListener.waitForConnectionReady();
-        if (connection.hasFailure()) {
-            // If the latch didn't count all the way down
-            if (pendingSubscriptionIds.remove(subscriptionId)) {
-                // The subscription was pending, so we need to emit an error.
-                onSubscriptionError.accept(
-                    new ApiException(connection.getFailureReason(), AmplifyException.TODO_RECOVERY_SUGGESTION));
-                return;
+            // Every request waits here for the connection to be ready.
+            Connection connection = socketListener.waitForConnectionReady();
+            if (connection.hasFailure()) {
+                // If the latch didn't count all the way down
+                if (pendingSubscriptionIds.remove(subscriptionId)) {
+                    // The subscription was pending, so we need to emit an error.
+                    onSubscriptionError.accept(
+                        new ApiException(connection.getFailureReason(), AmplifyException.TODO_RECOVERY_SUGGESTION));
+                    return;
+                }
             }
         }
 
@@ -271,7 +257,7 @@ final class SubscriptionEndpoint {
         dispatcher.dispatchNextMessage(data);
     }
 
-    synchronized void releaseSubscription(String subscriptionId) throws ApiException {
+    void releaseSubscription(String subscriptionId) throws ApiException {
         // First thing we should do is remove it from the pending subscription collection so
         // the other methods can't grab a hold of the subscription.
         final Subscription<?> subscription = subscriptions.get(subscriptionId);

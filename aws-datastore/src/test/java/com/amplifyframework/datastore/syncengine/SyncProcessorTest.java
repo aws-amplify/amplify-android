@@ -16,6 +16,7 @@
 package com.amplifyframework.datastore.syncengine;
 
 import android.util.Range;
+import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
@@ -38,11 +39,10 @@ import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.events.ModelSyncedEvent;
 import com.amplifyframework.datastore.events.SyncQueriesStartedEvent;
-import com.amplifyframework.datastore.model.SimpleModelProvider;
 import com.amplifyframework.datastore.model.SystemModelsProviderFactory;
-import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
+import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.hub.HubEventFilter;
@@ -56,6 +56,7 @@ import com.amplifyframework.util.ForEach;
 import com.amplifyframework.util.Time;
 
 import com.google.common.collect.Lists;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -66,14 +67,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.core.Completable;
@@ -93,6 +92,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -102,11 +102,8 @@ import static org.mockito.Mockito.when;
  */
 @RunWith(RobolectricTestRunner.class)
 public final class SyncProcessorTest {
-    private static final long OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
+    private static final long OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
     private static final long BASE_SYNC_INTERVAL_MINUTES = TimeUnit.DAYS.toMinutes(1);
-    private static final List<String> SYSTEM_MODEL_NAMES =
-            ForEach.inCollection(SystemModelsProviderFactory.create().models(), Class::getSimpleName);
-
     private AppSync appSync;
     private ModelProvider modelProvider;
     private SynchronousStorageAdapter storageAdapter;
@@ -124,10 +121,10 @@ public final class SyncProcessorTest {
      */
     @Before
     public void setup() throws AmplifyException {
-        final LinkedHashSet<Class<? extends Model>> modelClasses = new LinkedHashSet<>();
-        modelClasses.addAll(SystemModelsProviderFactory.create().models());
-        modelClasses.addAll(AmplifyModelProvider.getInstance().models());
-        this.modelProvider = SimpleModelProvider.instance(UUID.randomUUID().toString(), modelClasses);
+        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
+        schemaRegistry.clear();
+        modelProvider = AmplifyModelProvider.getInstance();
+        schemaRegistry.register(modelProvider.models());
         modelCount = modelProvider.models().size();
 
         this.appSync = mock(AppSync.class);
@@ -137,18 +134,30 @@ public final class SyncProcessorTest {
         initSyncProcessor(10_000);
     }
 
+    /**
+     * Test Cleanup.
+     * @throws DataStoreException On storage adapter terminate failure
+     */
+    @After
+    public void tearDown() throws DataStoreException {
+        storageAdapter.terminate();
+    }
+
     private void initSyncProcessor(int syncMaxRecords) throws AmplifyException {
-        SchemaRegistry schemaRegistry = SchemaRegistry.instance();
-        schemaRegistry.clear();
-        schemaRegistry.register(modelProvider.models());
+        SQLiteStorageAdapter sqliteStorageAdapter = SQLiteStorageAdapter.forModels(
+                SchemaRegistry.instance(),
+                AmplifyModelProvider.getInstance()
+        );
+        this.storageAdapter = SynchronousStorageAdapter.delegatingTo(sqliteStorageAdapter);
+        storageAdapter.initialize(
+                ApplicationProvider.getApplicationContext(),
+                DataStoreConfiguration.defaults()
+        );
 
-        InMemoryStorageAdapter inMemoryStorageAdapter = InMemoryStorageAdapter.create();
-        this.storageAdapter = SynchronousStorageAdapter.delegatingTo(inMemoryStorageAdapter);
-
-        final SyncTimeRegistry syncTimeRegistry = new SyncTimeRegistry(inMemoryStorageAdapter);
-        final MutationOutbox mutationOutbox = new PersistentMutationOutbox(inMemoryStorageAdapter);
-        final VersionRepository versionRepository = new VersionRepository(inMemoryStorageAdapter);
-        final Merger merger = new Merger(mutationOutbox, versionRepository, inMemoryStorageAdapter);
+        final SyncTimeRegistry syncTimeRegistry = new SyncTimeRegistry(sqliteStorageAdapter);
+        final MutationOutbox mutationOutbox = new PersistentMutationOutbox(sqliteStorageAdapter);
+        final VersionRepository versionRepository = new VersionRepository(sqliteStorageAdapter);
+        final Merger merger = new Merger(mutationOutbox, versionRepository, sqliteStorageAdapter);
 
         DataStoreConfigurationProvider dataStoreConfigurationProvider = () -> DataStoreConfiguration
                 .builder()
@@ -165,7 +174,7 @@ public final class SyncProcessorTest {
 
         this.syncProcessor = SyncProcessor.builder()
             .modelProvider(modelProvider)
-            .schemaRegistry(schemaRegistry)
+            .schemaRegistry(SchemaRegistry.instance())
             .syncTimeRegistry(syncTimeRegistry)
             .appSync(appSync)
             .merger(merger)
@@ -254,11 +263,8 @@ public final class SyncProcessorTest {
                     assertEquals(expectedPostCounts, eventData);
                     break;
                 default:
-                    // Exclude system models
-                    if (!SYSTEM_MODEL_NAMES.contains(eventModel)) {
-                        ModelSyncedEvent otherCounts = new ModelSyncedEvent(eventModel, true, 0, 0, 0);
-                        assertEquals(otherCounts, eventData);
-                    }
+                    ModelSyncedEvent otherCounts = new ModelSyncedEvent(eventModel, true, 0, 0, 0);
+                    assertEquals(otherCounts, eventData);
             }
         }
         // Check - END
@@ -320,31 +326,46 @@ public final class SyncProcessorTest {
         );
 
         // Lastly: validate the current contents of the storage adapter.
-        // There should be 2 BlogOwners, 0 Posts, and 3 MetaData records:
-        //   - two for the BlogOwner,
-        //   - and 1 for the deleted drum post
         List<? extends Model> itemsInStorage = storageAdapter.query(modelProvider);
+        List<? extends Model> systemItemsInStorage = storageAdapter.query(SystemModelsProviderFactory.create());
         //The count should be one less than total model count because Author model has sync expression =
         // QueryPredicates.none()
         assertEquals(
             itemsInStorage.toString(),
-            2 + 3 + modelProvider.models().size() - 1,
+            2,
             itemsInStorage.size()
         );
+        //3 MetaData records:
+        //   - two for the BlogOwner,
+        //   - and 1 for the deleted drum post
+        // - 1 for ignored Author, +1 for PersistentStorageRecord
         assertEquals(
-            // Expect the 4 items for the bloggers (2 models and their metadata)
+                systemItemsInStorage.toString(),
+                3 + (modelProvider.models().size() - 1) + 1,
+                systemItemsInStorage.size()
+        );
+        assertContentEquals(
+            // Expect the 2 model items for the bloggers
             Observable.fromArray(BLOGGER_ISLA, BLOGGER_JAMESON)
-                .flatMap(blogger -> Observable.fromArray(blogger.getModel(), blogger.getSyncMetadata()))
-                // And also the one metadata record for a deleted post
-                .startWithItem(DELETED_DRUM_POST.getSyncMetadata())
+                .flatMap(blogger -> Observable.fromArray(blogger.getModel()))
                 .toList()
-                .map(HashSet::new)
                 .blockingGet(),
-            Observable.fromIterable(storageAdapter.query(modelProvider))
-                .filter(item -> !LastSyncMetadata.class.isAssignableFrom(item.getClass()))
+            Observable.fromIterable(itemsInStorage)
                 .toList()
-                .map(HashSet::new)
                 .blockingGet()
+        );
+
+        assertContentEquals(
+                // Expect the 2 metadata items for the bloggers + 1 for deleted drum post
+                Observable.fromArray(BLOGGER_ISLA, BLOGGER_JAMESON)
+                        .flatMap(blogger -> Observable.fromArray(blogger.getSyncMetadata()))
+                        .startWithItem(DELETED_DRUM_POST.getSyncMetadata())
+                        .toList()
+                        .blockingGet(),
+                Observable.fromIterable(systemItemsInStorage)
+                        .filter(item -> ModelMetadata.class.isAssignableFrom(item.getClass()))
+                        .toList()
+                        .blockingGet()
         );
 
         //The models to be synced should be one less than total model because Author model has sync expression =
@@ -359,18 +380,16 @@ public final class SyncProcessorTest {
         }
 
         // Assert that there is a list sync time for every model managed by the system.
-        assertEquals(
+        assertContentEquals(
             Observable.fromIterable(modelsToBeSynced)
                 .map(Class::getSimpleName)
                 .toList()
-                .map(HashSet::new)
                 .blockingGet(),
-            Observable.fromIterable(storageAdapter.query(modelProvider))
+            Observable.fromIterable(systemItemsInStorage)
                 .filter(item -> LastSyncMetadata.class.isAssignableFrom(item.getClass()))
                 .map(item -> (LastSyncMetadata) item)
                 .map(LastSyncMetadata::getModelClassName)
                 .toList()
-                .map(HashSet::new)
                 .blockingGet()
         );
 
@@ -408,12 +427,13 @@ public final class SyncProcessorTest {
         // There should be an entry and a metadata for Jameson the BlogOwner. +2.
         // Plus an entry for last sync time for every model type.
         List<? extends Model> storageItems = storageAdapter.query(modelProvider);
+        List<? extends Model> systemStorageItems = storageAdapter.query(SystemModelsProviderFactory.create());
 
         //The count should be one less than total model count because Author model has sync expression =
         // QueryPredicates.none()
         assertEquals(
             storageItems.toString(),
-            1 + 2 + (modelProvider.models().size() - 1),
+            1,
             storageItems.size()
         );
 
@@ -421,21 +441,19 @@ public final class SyncProcessorTest {
         assertEquals(
             // Expect a metadata for Jameson & deleted drum post, and an entry for Jameson
             Observable.just(BLOGGER_JAMESON)
-                .flatMap(blogger -> Observable.fromArray(blogger.getModel(), blogger.getSyncMetadata()))
-                .startWithItem(DELETED_DRUM_POST.getSyncMetadata())
+                .flatMap(blogger -> Observable.fromArray(blogger.getModel()))
                 .toList()
                 .map(HashSet::new)
                 .blockingGet(),
             Observable.fromIterable(storageItems)
                 // Ignore the sync time records, for this check.
-                .filter(item -> !LastSyncMetadata.class.isAssignableFrom(item.getClass()))
                 .toList()
                 .map(HashSet::new)
                 .blockingGet()
         );
 
         // Now, find the sync time records.
-        Observable<LastSyncMetadata> actualSyncTimeRecords = Observable.fromIterable(storageItems)
+        Observable<LastSyncMetadata> actualSyncTimeRecords = Observable.fromIterable(systemStorageItems)
             .filter(item -> LastSyncMetadata.class.isAssignableFrom(item.getClass()))
             .map(model -> (LastSyncMetadata) model)
             .sorted(SortByModelId::compare)
@@ -474,7 +492,8 @@ public final class SyncProcessorTest {
         );
 
         actualSyncTimeRecords.blockingForEach(record ->
-            assertTrue(RecentTimeWindow.contains(record.getLastSyncTime()))
+            assertTrue("Time window of " + (Time.now() - record.getLastSyncTime()) +
+                    " exceeded maximum", RecentTimeWindow.contains(record.getLastSyncTime()))
         );
 
         // Cleanup!
@@ -678,17 +697,18 @@ public final class SyncProcessorTest {
         syncProcessor.hydrate()
                 .test(false)
                 .assertNotComplete();
-        verify(requestRetry, times(1)).retry(any(), any());
 
+        verify(requestRetry, timeout(5000).times(1)).retry(any(), any());
     }
 
     /**
      * Verify that retry is called on appsync failure when syncRetry is set to true.
      *
      * @throws AmplifyException On failure to build GraphQLRequest for sync query.
+     * @throws InterruptedException if await is interrupted.
      */
     @Test
-    public void shouldNotRetryOnAppSyncFailureWhenSynRetryIsSetToFalse() throws AmplifyException {
+    public void shouldNotRetryOnAppSyncFailureWhenSynRetryIsSetToFalse() throws AmplifyException, InterruptedException {
         // Arrange: mock failure when invoking hydrate on the mock object.
         requestRetry = mock(RetryHandler.class);
         isSyncRetryEnabled = false;
@@ -702,6 +722,7 @@ public final class SyncProcessorTest {
         // Act: call hydrate.
         syncProcessor.hydrate()
                 .test(false)
+                .await()
                 .assertNotComplete();
         verify(requestRetry, times(0)).retry(any(), any());
 
@@ -729,7 +750,7 @@ public final class SyncProcessorTest {
                 testObserver.dispose();
             }
         }, 10000);
-        verify(requestRetry, times(1)).retry(any(), any());
+        verify(requestRetry, timeout(5000).times(1)).retry(any(), any());
     }
 
     /**
@@ -801,16 +822,17 @@ public final class SyncProcessorTest {
 
         // Wait 2 seconds, or 1 second per 100 pages, whichever is greater
         long timeoutMs = Math.max(OP_TIMEOUT_MS, TimeUnit.SECONDS.toMillis(numPages / 100));
-        assertTrue(hydrationObserver.await(timeoutMs, TimeUnit.MILLISECONDS));
+        assertTrue(hydrationObserver.await(timeoutMs * 3, TimeUnit.MILLISECONDS));
         hydrationObserver.assertNoErrors();
         hydrationObserver.assertComplete();
 
         // Since hydrate() completed, the storage adapter observer should see some values.
-        // There should be a total of four changes on storage adapter
-        // A model and a metadata save for each of the two BlogOwner-type items
-        // Additionally, there should be 4 last sync time records, one for each of the
-        // models managed by the system.
-        adapterObserver.awaitCount(expectedResponseItems.size() * 2 + 4);
+        // The number should match expectedResponseItems * 2 (1 for model, 1 for metadata)
+        // Additionally, there should be 1 LastSyncMetadata record for each model in the provider
+        adapterObserver.awaitCount(
+                expectedResponseItems.size() * 2 +
+                        AmplifyModelProvider.getInstance().models().size()
+        );
 
         // Validate the changes emitted from the storage adapter's observe().
         assertEquals(
@@ -833,28 +855,50 @@ public final class SyncProcessorTest {
         );
 
         // Lastly: validate the current contents of the storage adapter.
-        // There should be 2 BlogOwners, and 2 MetaData records.
         List<? extends Model> itemsInStorage = storageAdapter.query(modelProvider);
         //The class count should be one less than total model count because Author model has sync expression =
         // QueryPredicates.none()
         assertEquals(
                 itemsInStorage.toString(),
-                expectedResponseItems.size() * 2 + (modelProvider.models().size() - 1),
+                expectedResponseItems.size(),
                 itemsInStorage.size()
         );
-        assertEquals(
-                // Expect the 4 items for the bloggers (2 models and their metadata)
-                Observable.fromIterable(expectedResponseItems)
-                        .flatMap(blogger -> Observable.fromArray(blogger.getModel(), blogger.getSyncMetadata()))
-                        .toList()
-                        .map(HashSet::new)
-                        .blockingGet(),
+
+        List<? extends Model> expectedModels = Observable.fromIterable(expectedResponseItems)
+                .flatMap(blogger -> Observable.fromArray(blogger.getModel()))
+                .toList()
+                .blockingGet();
+
+        List<? extends Model> expectedMetadata = Observable.fromIterable(expectedResponseItems)
+                .flatMap(blogger -> Observable.fromArray(blogger.getSyncMetadata()))
+                .toList()
+                .blockingGet();
+
+        List<? extends Model> actualModels =
                 Observable.fromIterable(storageAdapter.query(modelProvider))
-                        .filter(item -> !LastSyncMetadata.class.isAssignableFrom(item.getClass()))
-                        .toList()
-                        .map(HashSet::new)
-                        .blockingGet()
-        );
+                .filter(item -> !LastSyncMetadata.class.isAssignableFrom(item.getClass()))
+                .toList()
+                .blockingGet();
+
+        List<? extends Model> actualMetadata =
+                Observable.fromIterable(storageAdapter.query(SystemModelsProviderFactory.create()))
+                    .filter(item -> ModelMetadata.class.isAssignableFrom(item.getClass()))
+                    .toList()
+                    .blockingGet();
+
+        List<? extends Model> additionalSystemModels =
+                Observable.fromIterable(storageAdapter.query(SystemModelsProviderFactory.create()))
+                    .filter(item -> !ModelMetadata.class.isAssignableFrom(item.getClass()))
+                    .toList()
+                    .blockingGet();
+
+        assertContentEquals(actualModels, expectedModels);
+        assertContentEquals(actualMetadata, expectedMetadata);
+        // system model size excluding metadata should = number of models and
+        // - 1 for excluded author model
+        // + 1 (LastSyncMetadata for each + PersistentModelVersion)
+        assertEquals(AmplifyModelProvider.getInstance().models().size(), additionalSystemModels.size());
+
         adapterObserver.dispose();
         hydrationObserver.dispose();
     }
@@ -900,8 +944,20 @@ public final class SyncProcessorTest {
         };
     }
 
+    private void assertContentEquals(
+            List<? extends Object> expected,
+            List<? extends Object> actual) {
+        assertEquals(expected.size(), actual.size());
+        actual.forEach(model ->
+            assertTrue(
+                    "Model Assertion Failed: " + model.toString(),
+                    expected.contains(model)
+            )
+        );
+    }
+
     static final class RecentTimeWindow {
-        private static final long ACCEPTABLE_DRIFT_MS = TimeUnit.SECONDS.toMillis(1);
+        private static final long ACCEPTABLE_DRIFT_MS = TimeUnit.SECONDS.toMillis(2);
 
         private RecentTimeWindow() {}
 

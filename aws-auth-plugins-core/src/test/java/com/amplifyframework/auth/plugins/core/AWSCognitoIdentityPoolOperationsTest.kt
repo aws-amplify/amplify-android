@@ -38,7 +38,10 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
+@RunWith(RobolectricTestRunner::class)
 class AWSCognitoIdentityPoolOperationsTest {
     private val config = AWSCognitoIdentityPoolConfiguration("poolId")
     private val KEY_LOGINS_PROVIDER = "amplify.${config.poolId}.session.loginsProvider"

@@ -15,24 +15,31 @@
 
 package com.amplifyframework.analytics.pinpoint;
 
+import androidx.annotation.NonNull;
+
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.analytics.AnalyticsException;
+import com.amplifyframework.annotations.InternalAmplifyApi;
+import com.amplifyframework.core.configuration.AmplifyOutputsData;
+
 /**
  * Configuration options for Amplify Analytics Pinpoint plugin.
  */
 final class AWSPinpointAnalyticsPluginConfiguration {
 
-    private static final long DEFAULT_AUTO_FLUSH_INTERVAL = 30000L;
+    static final long DEFAULT_AUTO_FLUSH_INTERVAL = 30000L;
 
     // Pinpoint plugin configuration options
     private final String appId;
-    private final boolean trackAppLifecycleEvents;
     private final String region;
     private final long autoFlushEventsInterval;
+    private final boolean trackAppLifecycleEvents;
 
     private AWSPinpointAnalyticsPluginConfiguration(Builder builder) {
         this.appId = builder.appId;
         this.region = builder.region;
-        this.trackAppLifecycleEvents = builder.trackAppLifecycleEvents;
         this.autoFlushEventsInterval = builder.autoFlushEventsInterval;
+        this.trackAppLifecycleEvents = builder.trackAppLifecycleEvents;
     }
 
     /**
@@ -73,10 +80,33 @@ final class AWSPinpointAnalyticsPluginConfiguration {
     /**
      * Return a builder that can be used to construct a new instance of
      * {@link AWSPinpointAnalyticsPluginConfiguration}.
-     * @return An {@link PinpointProperties.Builder} instance
+     * @return An {@link AWSPinpointAnalyticsPluginConfiguration.Builder} instance
      */
     static Builder builder() {
         return new Builder();
+    }
+
+    @InternalAmplifyApi
+    static AWSPinpointAnalyticsPluginConfiguration from(
+        @NonNull AmplifyOutputsData outputs,
+        @NonNull AWSPinpointAnalyticsPlugin.Options options
+    ) throws AmplifyException {
+        AmplifyOutputsData.Analytics analytics = outputs.getAnalytics();
+        if (analytics == null || analytics.getAmazonPinpoint() == null) {
+            throw new AnalyticsException(
+                "Missing Analytics configuration",
+                "Ensure that analytics is enabled and exists in your configuration file"
+            );
+        }
+
+        // Note: autoFlushEventsInterval is not supported in Gen2 config.
+        // Customers should use the programmatic plugin options API instead.
+        return builder()
+                   .withAppId(analytics.getAmazonPinpoint().getAppId())
+                   .withRegion(analytics.getAmazonPinpoint().getAwsRegion())
+                   .withAutoFlushEventsInterval(options.getAutoFlushEventsInterval())
+                   .withTrackAppLifecycleEvents(options.getTrackLifecycleEvents())
+                   .build();
     }
 
     /**
@@ -84,9 +114,9 @@ final class AWSPinpointAnalyticsPluginConfiguration {
      */
     static final class Builder {
         private String appId;
-        private boolean trackAppLifecycleEvents = false;
         private String region;
         private long autoFlushEventsInterval = DEFAULT_AUTO_FLUSH_INTERVAL;
+        private boolean trackAppLifecycleEvents = true;
 
         Builder withAppId(final String appId) {
             this.appId = appId;
@@ -98,13 +128,13 @@ final class AWSPinpointAnalyticsPluginConfiguration {
             return this;
         }
 
-        Builder withAutoFlushEventsInterval(final long autoFlushEventsInterval) {
-            this.autoFlushEventsInterval = autoFlushEventsInterval;
+        Builder withTrackAppLifecycleEvents(final boolean trackAppLifecycleEvents) {
+            this.trackAppLifecycleEvents = trackAppLifecycleEvents;
             return this;
         }
 
-        Builder withTrackAppLifecycleEvents(final boolean trackAppLifecycleEvents) {
-            this.trackAppLifecycleEvents = trackAppLifecycleEvents;
+        Builder withAutoFlushEventsInterval(final long autoFlushEventsInterval) {
+            this.autoFlushEventsInterval = autoFlushEventsInterval;
             return this;
         }
 

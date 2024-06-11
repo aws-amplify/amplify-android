@@ -26,6 +26,7 @@ import com.amplifyframework.rx.RxAdapters.CancelableBehaviors;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageCategoryBehavior;
 import com.amplifyframework.storage.StorageException;
+import com.amplifyframework.storage.StoragePath;
 import com.amplifyframework.storage.operation.StorageTransferOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageGetUrlOptions;
@@ -68,6 +69,7 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
 
     @NonNull
     @Override
+    @SuppressWarnings("deprecation")
     public Single<StorageGetUrlResult> getUrl(String key) {
         return toSingle((onResult, onError) -> {
             storage.getUrl(key, onResult, onError);
@@ -77,6 +79,16 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
 
     @NonNull
     @Override
+    public Single<StorageGetUrlResult> getUrl(StoragePath path) {
+        return toSingle((onResult, onError) -> {
+            storage.getUrl(path, onResult, onError);
+            return new NoOpCancelable();
+        });
+    }
+
+    @NonNull
+    @Override
+    @SuppressWarnings("deprecation")
     public Single<StorageGetUrlResult> getUrl(@NonNull String key, @NonNull StorageGetUrlOptions options) {
         return toSingle((onResult, onError) -> {
             storage.getUrl(key, options, onResult, onError);
@@ -86,6 +98,16 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
 
     @NonNull
     @Override
+    public Single<StorageGetUrlResult> getUrl(@NonNull StoragePath path, @NonNull StorageGetUrlOptions options) {
+        return toSingle((onResult, onError) -> {
+            storage.getUrl(path, options, onResult, onError);
+            return new NoOpCancelable();
+        });
+    }
+
+    @NonNull
+    @Override
+    @SuppressWarnings("deprecation")
     public RxProgressAwareSingleOperation<StorageDownloadFileResult> downloadFile(@NonNull String key,
                                                                                   @NonNull File local) {
         return downloadFile(key, local, StorageDownloadFileOptions.defaultInstance());
@@ -93,6 +115,14 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
 
     @NonNull
     @Override
+    public RxProgressAwareSingleOperation<StorageDownloadFileResult> downloadFile(@NonNull StoragePath path,
+                                                                                  @NonNull File local) {
+        return downloadFile(path, local, StorageDownloadFileOptions.defaultInstance());
+    }
+
+    @NonNull
+    @Override
+    @SuppressWarnings("deprecation")
     public RxProgressAwareSingleOperation<StorageDownloadFileResult> downloadFile(
             @NonNull String key, @NonNull File local, @NonNull StorageDownloadFileOptions options) {
         return new RxProgressAwareSingleOperation<>((onProgress, onResult, onError) ->
@@ -102,6 +132,16 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
 
     @NonNull
     @Override
+    public RxProgressAwareSingleOperation<StorageDownloadFileResult> downloadFile(
+            @NonNull StoragePath path, @NonNull File local, @NonNull StorageDownloadFileOptions options) {
+        return new RxProgressAwareSingleOperation<>((onProgress, onResult, onError) ->
+                storage.downloadFile(path, local, options, onProgress, onResult, onError)
+        );
+    }
+
+    @NonNull
+    @Override
+    @SuppressWarnings("deprecation")
     public RxProgressAwareSingleOperation<StorageUploadFileResult> uploadFile(@NonNull String key,
                                                                               @NonNull File local) {
         return uploadFile(key, local, StorageUploadFileOptions.defaultInstance());
@@ -109,6 +149,14 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
 
     @NonNull
     @Override
+    public RxProgressAwareSingleOperation<StorageUploadFileResult> uploadFile(@NonNull StoragePath path,
+                                                                              @NonNull File local) {
+        return uploadFile(path, local, StorageUploadFileOptions.defaultInstance());
+    }
+
+    @NonNull
+    @Override
+    @SuppressWarnings("deprecation")
     public RxProgressAwareSingleOperation<StorageUploadFileResult> uploadFile(
             @NonNull String key, @NonNull File local, @NonNull StorageUploadFileOptions options) {
         return new RxProgressAwareSingleOperation<>((onProgress, onResult, onError) ->
@@ -118,6 +166,16 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
 
     @NonNull
     @Override
+    public RxProgressAwareSingleOperation<StorageUploadFileResult> uploadFile(
+            @NonNull StoragePath path, @NonNull File local, @NonNull StorageUploadFileOptions options) {
+        return new RxProgressAwareSingleOperation<>((onProgress, onResult, onError) ->
+                storage.uploadFile(path, local, options, onProgress, onResult, onError)
+        );
+    }
+
+    @NonNull
+    @Override
+    @SuppressWarnings("deprecation")
     public RxProgressAwareSingleOperation<StorageUploadInputStreamResult> uploadInputStream(
             @NonNull String key, @NonNull InputStream local) {
         return uploadInputStream(key, local, StorageUploadInputStreamOptions.defaultInstance());
@@ -125,6 +183,14 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
 
     @NonNull
     @Override
+    public RxProgressAwareSingleOperation<StorageUploadInputStreamResult> uploadInputStream(
+            @NonNull StoragePath path, @NonNull InputStream local) {
+        return uploadInputStream(path, local, StorageUploadInputStreamOptions.defaultInstance());
+    }
+
+    @NonNull
+    @Override
+    @SuppressWarnings("deprecation")
     public RxProgressAwareSingleOperation<StorageUploadInputStreamResult> uploadInputStream(
             @NonNull String key, @NonNull InputStream local, @NonNull StorageUploadInputStreamOptions options) {
         return new RxProgressAwareSingleOperation<>((onProgress, onResult, onError) ->
@@ -134,6 +200,16 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
 
     @NonNull
     @Override
+    public RxProgressAwareSingleOperation<StorageUploadInputStreamResult> uploadInputStream(
+            @NonNull StoragePath path, @NonNull InputStream local, @NonNull StorageUploadInputStreamOptions options) {
+        return new RxProgressAwareSingleOperation<>((onProgress, onResult, onError) ->
+                storage.uploadInputStream(path, local, options, onProgress, onResult, onError)
+        );
+    }
+
+    @NonNull
+    @Override
+    @SuppressWarnings("deprecation")
     public Single<StorageRemoveResult> remove(@NonNull String key) {
         return toSingle((onResult, onError) -> {
             storage.remove(key, onResult, onError);
@@ -143,9 +219,28 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
 
     @NonNull
     @Override
+    public Single<StorageRemoveResult> remove(@NonNull StoragePath path) {
+        return toSingle((onResult, onError) -> {
+            storage.remove(path, onResult, onError);
+            return new NoOpCancelable(); // StorageRemoveOperation (above) is not Cancelable right now!
+        });
+    }
+
+    @NonNull
+    @Override
+    @SuppressWarnings("deprecation")
     public Single<StorageRemoveResult> remove(@NonNull String key, @NonNull StorageRemoveOptions options) {
         return toSingle((onResult, onError) -> {
             storage.remove(key, options, onResult, onError);
+            return new NoOpCancelable(); // StorageRemoveOperation is not Cancelable at the moment!
+        });
+    }
+
+    @NonNull
+    @Override
+    public Single<StorageRemoveResult> remove(@NonNull StoragePath path, @NonNull StorageRemoveOptions options) {
+        return toSingle((onResult, onError) -> {
+            storage.remove(path, options, onResult, onError);
             return new NoOpCancelable(); // StorageRemoveOperation is not Cancelable at the moment!
         });
     }
@@ -172,7 +267,17 @@ public final class RxStorageBinding implements RxStorageCategoryBehavior {
 
     @NonNull
     @Override
+    @SuppressWarnings("deprecation")
     public Single<StorageListResult> list(@NonNull String path, @NonNull StoragePagedListOptions options) {
+        return toSingle((onResult, onError) -> {
+            storage.list(path, options, onResult, onError);
+            return new NoOpCancelable(); // StorageListOperation is not Cancelable at the moment!
+        });
+    }
+
+    @NonNull
+    @Override
+    public Single<StorageListResult> list(@NonNull StoragePath path, @NonNull StoragePagedListOptions options) {
         return toSingle((onResult, onError) -> {
             storage.list(path, options, onResult, onError);
             return new NoOpCancelable(); // StorageListOperation is not Cancelable at the moment!

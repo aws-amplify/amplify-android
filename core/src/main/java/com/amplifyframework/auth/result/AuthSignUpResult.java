@@ -65,8 +65,8 @@ public final class AuthSignUpResult {
     }
 
     /**
-     * If {@link #isSignUpComplete} is true, this returns the newly registered user's id. Otherwise, null.
-     * @return the newly registered user's id if {@link #isSignUpComplete} is true. Otherwise, null.
+     * Returns the newly registered user's id if available. Otherwise, null.
+     * @return the newly registered user's id if available. Otherwise, null.
      */
     @Nullable
     public String getUserId() {

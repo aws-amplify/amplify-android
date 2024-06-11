@@ -64,7 +64,7 @@ open class TransferDBTest {
         getInsertedRecord(uri)?.run {
             Assert.assertEquals(transferId, this.transferId)
             Assert.assertEquals(TransferType.UPLOAD, this.type)
-            Assert.assertEquals(tempFile, File(this.file!!))
+            Assert.assertEquals(tempFile, File(this.file))
             Assert.assertEquals(fileKey, this.key)
             Assert.assertEquals(bucketName, this.bucketName)
         } ?: Assert.fail("InsertedRecord is null")
@@ -87,7 +87,7 @@ open class TransferDBTest {
 
         getInsertedRecord(uri)?.run {
             Assert.assertEquals(TransferType.UPLOAD, this.type)
-            Assert.assertEquals(tempFile, File(this.file!!))
+            Assert.assertEquals(tempFile, File(this.file))
             Assert.assertEquals(fileKey, this.key)
             Assert.assertEquals(bucketName, this.bucketName)
             Assert.assertEquals(uploadID, this.multipartId)

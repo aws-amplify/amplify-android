@@ -18,6 +18,8 @@ package com.amplifyframework.logging;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.function.Supplier;
+
 /**
  * A component which can emit logs.
  */
@@ -45,6 +47,17 @@ public interface Logger {
     void error(@Nullable String message);
 
     /**
+     * Logs a message at the {@link LogLevel#ERROR} level. The supplier is only invoked if the log level threshold
+     * is at ERROR or below.
+     * @param messageSupplier A function that returns an error message
+     */
+    default void error(@NonNull Supplier<String> messageSupplier) {
+        if (!getThresholdLevel().above(LogLevel.ERROR)) {
+            error(messageSupplier.get());
+        }
+    }
+
+    /**
      * Logs a message and thrown error at {@link LogLevel#ERROR} level.
      * @param message An error message
      * @param error A thrown error
@@ -52,10 +65,33 @@ public interface Logger {
     void error(@Nullable String message, @Nullable Throwable error);
 
     /**
+     * Logs a message and thrown error at {@link LogLevel#ERROR} level. The supplier is only invoked if the log level
+     * threshold is at ERROR or below.
+     * @param error A thrown error
+     * @param messageSupplier A function that returns an error message
+     */
+    default void error(@Nullable Throwable error, @NonNull Supplier<String> messageSupplier) {
+        if (!getThresholdLevel().above(LogLevel.ERROR)) {
+            error(messageSupplier.get(), error);
+        }
+    }
+
+    /**
      * Log a message at the {@link LogLevel#WARN} level.
      * @param message A warning message
      */
     void warn(@Nullable String message);
+
+    /**
+     * Log a message at the {@link LogLevel#WARN} level. The supplier is only invoked if the log level threshold
+     * is at WARN or below.
+     * @param messageSupplier A function that returns a warning message
+     */
+    default void warn(@NonNull Supplier<String> messageSupplier) {
+        if (!getThresholdLevel().above(LogLevel.WARN)) {
+            warn(messageSupplier.get());
+        }
+    }
 
     /**
      * Log a message and a throwable issue at the {@link LogLevel#WARN} level.
@@ -65,10 +101,33 @@ public interface Logger {
     void warn(@Nullable String message, @Nullable Throwable issue);
 
     /**
+     * Log a message and a throwable issue at the {@link LogLevel#WARN} level. The supplier is only invoked if the
+     * log level threshold is at WARN or below.
+     * @param issue An issue that caused this warning
+     * @param messageSupplier A function that returns a warning message
+     */
+    default void warn(@Nullable Throwable issue, @NonNull Supplier<String> messageSupplier) {
+        if (!getThresholdLevel().above(LogLevel.WARN)) {
+            warn(messageSupplier.get(), issue);
+        }
+    }
+
+    /**
      * Logs a message at {@link LogLevel#INFO} level.
      * @param message An informational message
      */
     void info(@Nullable String message);
+
+    /**
+     * Logs a message at {@link LogLevel#INFO} level. The supplier is only invoked if the log level threshold
+     * is at INFO or below.
+     * @param messageSupplier A function that returns an info message
+     */
+    default void info(@NonNull Supplier<String> messageSupplier) {
+        if (!getThresholdLevel().above(LogLevel.INFO)) {
+            info(messageSupplier.get());
+        }
+    }
 
     /**
      * Logs a message at the {@link LogLevel#DEBUG} level.
@@ -77,8 +136,30 @@ public interface Logger {
     void debug(@Nullable String message);
 
     /**
+     * Logs a message at the {@link LogLevel#DEBUG} level. The supplier is only invoked if the log level threshold
+     * is at DEBUG or below.
+     * @param messageSupplier A function that returns a debugging message
+     */
+    default void debug(@NonNull Supplier<String> messageSupplier) {
+        if (!getThresholdLevel().above(LogLevel.DEBUG)) {
+            debug(messageSupplier.get());
+        }
+    }
+
+    /**
      * Logs a message at the {@link LogLevel#VERBOSE} level.
      * @param message A verbose message
      */
     void verbose(@Nullable String message);
+
+    /**
+     * Logs a message at the {@link LogLevel#VERBOSE} level. The supplier is only invoked if the log level threshold
+     * is at VERBOSE.
+     * @param messageSupplier A function that returns a verbose message
+     */
+    default void verbose(@NonNull Supplier<String> messageSupplier) {
+        if (!getThresholdLevel().above(LogLevel.VERBOSE)) {
+            verbose(messageSupplier.get());
+        }
+    }
 }

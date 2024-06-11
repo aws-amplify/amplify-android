@@ -28,6 +28,7 @@ import com.amplifyframework.auth.AWSCredentialsProviderKt;
 import com.amplifyframework.auth.CognitoCredentialsProvider;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.configuration.AmplifyOutputsData;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.PredictionsPlugin;
 import com.amplifyframework.predictions.aws.models.AWSVoiceType;
@@ -103,7 +104,24 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
 
     @Override
     public void configure(JSONObject pluginConfiguration, @NonNull Context context) throws PredictionsException {
-        this.configuration = AWSPredictionsPluginConfiguration.fromJson(pluginConfiguration);
+        AWSPredictionsPluginConfiguration config = AWSPredictionsPluginConfiguration.fromJson(pluginConfiguration);
+        configure(config);
+    }
+
+    @Override
+    @InternalAmplifyApi
+    public void configure(
+        @NonNull AmplifyOutputsData configuration,
+        @NonNull Context context
+    ) throws PredictionsException {
+        throw new PredictionsException(
+           "AWSPredictionsPlugin is not supported when using Amplify Gen2",
+           "This plugin is not supported by Amplify Gen2. Remove this plugin to use Gen2."
+        );
+    }
+
+    private void configure(AWSPredictionsPluginConfiguration configuration) throws PredictionsException {
+        this.configuration = configuration;
 
         CredentialsProvider credentialsProvider;
 
@@ -114,10 +132,10 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
                 credentialsProvider = new CognitoCredentialsProvider();
             } catch (IllegalStateException exception) {
                 throw new PredictionsException(
-                        "AWSPredictionsPlugin depends on AWSCognitoAuthPlugin but it is currently missing",
-                        exception,
-                        "Before configuring Amplify, be sure to add AWSPredictionsPlugin same as you added " +
-                                "AWSPinpointAnalyticsPlugin."
+                    "AWSPredictionsPlugin depends on AWSCognitoAuthPlugin but it is currently missing",
+                    exception,
+                    "Before configuring Amplify, be sure to add AWSPredictionsPlugin same as you added " +
+                        "AWSPinpointAnalyticsPlugin."
                 );
             }
         }

@@ -50,6 +50,10 @@ final class FakeLogger implements Logger {
         return new FakeLogger(namespace, threshold);
     }
 
+    static FakeLogger instance(@NonNull LogLevel threshold) {
+        return instance("", threshold);
+    }
+
     @NonNull
     @Override
     public LogLevel getThresholdLevel() {
@@ -125,6 +129,13 @@ final class FakeLogger implements Logger {
             Objects.requireNonNull(message);
             Objects.requireNonNull(throwable);
             return new Log(level, message, throwable);
+        }
+
+        void assertEquals(
+            @Nullable LogLevel actualLevel,
+            @Nullable String actualMessage
+        ) {
+            assertEquals(actualLevel, actualMessage, null);
         }
 
         void assertEquals(

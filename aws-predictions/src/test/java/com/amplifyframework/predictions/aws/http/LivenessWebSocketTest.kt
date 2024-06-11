@@ -18,7 +18,7 @@ package com.amplifyframework.predictions.aws.http
 import android.os.Build
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
-import aws.smithy.kotlin.runtime.util.Attributes
+import aws.smithy.kotlin.runtime.collections.Attributes
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.BuildConfig
 import com.amplifyframework.core.Consumer
@@ -52,6 +52,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import mockwebserver3.MockResponse
@@ -246,6 +247,50 @@ internal class LivenessWebSocketTest {
         livenessWebSocket.webSocketListener.onMessage(mockk(), encodedByteString)
 
         verify { onSessionInformationReceived.accept(event.sessionInformation) }
+    }
+
+    @Test
+    fun `unknown event-type ignored`() {
+        val webSocket = mockk<WebSocket>(relaxed = true)
+        val livenessWebSocket = createLivenessWebSocket()
+        livenessWebSocket.webSocket = webSocket
+        val event = UnknownEvent()
+        val headers = mapOf(
+            ":event-type" to "UnknownEvent",
+            ":content-type" to "application/json",
+            ":message-type" to "event"
+        )
+
+        val data = json.encodeToString(event)
+        val encodedByteString = LivenessEventStream.encode(data.toByteArray(), headers).array().toByteString()
+
+        livenessWebSocket.webSocketListener.onMessage(mockk(), encodedByteString)
+
+        verify(exactly = 0) { onSessionInformationReceived.accept(any()) }
+        verify(exactly = 0) { onErrorReceived.accept(any()) }
+        verify(exactly = 0) { webSocket.close(any(), any()) }
+    }
+
+    @Test
+    fun `unknown exception-type closes websocket`() {
+        val webSocket = mockk<WebSocket>(relaxed = true)
+        val livenessWebSocket = createLivenessWebSocket()
+        livenessWebSocket.webSocket = webSocket
+        val event = UnknownEvent()
+        val headers = mapOf(
+            ":exception-type" to "UnknownException",
+            ":content-type" to "application/json",
+            ":message-type" to "event"
+        )
+
+        val data = json.encodeToString(event)
+        val encodedByteString = LivenessEventStream.encode(data.toByteArray(), headers).array().toByteString()
+
+        livenessWebSocket.webSocketListener.onMessage(mockk(), encodedByteString)
+
+        verify(exactly = 0) { onSessionInformationReceived.accept(any()) }
+        verify(exactly = 0) { onErrorReceived.accept(any()) }
+        verify(exactly = 1) { webSocket.close(any(), any()) }
     }
 
     @Test
@@ -449,6 +494,9 @@ class LatchingWebSocketResponseListener(
         openLatch.countDown()
     }
 }
+
+@Serializable
+internal data class UnknownEvent(val name: String = "")
 
 class ServerWebSocketListener : WebSocketListener() {
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {}
