@@ -35,7 +35,6 @@ import com.amplifyframework.storage.s3.transfer.TransferObserver
 import com.amplifyframework.storage.s3.transfer.TransferRecord
 import com.amplifyframework.storage.s3.transfer.UploadOptions
 import com.amplifyframework.storage.s3.utils.S3Keys
-import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -44,6 +43,7 @@ import java.time.Instant
 import java.util.Date
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
+import kotlinx.coroutines.runBlocking
 
 /**
  * A representation of an S3 backend service endpoint.
