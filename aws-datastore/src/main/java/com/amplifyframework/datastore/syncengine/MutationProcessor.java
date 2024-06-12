@@ -290,7 +290,7 @@ final class MutationProcessor {
             this.schemaRegistry.getModelSchemaForModelClass(updatedItem.getModelName());
         return versionRepository.findModelVersion(updatedItem).flatMap(version ->
             publishWithStrategy(mutation, (model, onSuccess, onError) ->
-                appSync.update(model, updatedItemSchema, version, mutation.getPredicate(), onSuccess, onError)
+                appSync.update(model, updatedItemSchema, version.orElse(null), mutation.getPredicate(), onSuccess, onError)
             )
         );
     }
@@ -312,7 +312,7 @@ final class MutationProcessor {
         return versionRepository.findModelVersion(deletedItem).flatMap(version ->
             publishWithStrategy(mutation, (model, onSuccess, onError) ->
                 appSync.delete(
-                    deletedItem, deletedItemSchema, version, mutation.getPredicate(), onSuccess, onError
+                    deletedItem, deletedItemSchema, version.orElse(null), mutation.getPredicate(), onSuccess, onError
                 )
             )
         );
