@@ -20,11 +20,14 @@ import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.deleteObject
 import aws.sdk.kotlin.services.s3.listObjectsV2
 import aws.sdk.kotlin.services.s3.model.GetObjectRequest
+import aws.sdk.kotlin.services.s3.model.HeadObjectRequest
+import aws.sdk.kotlin.services.s3.model.NotFound
 import aws.sdk.kotlin.services.s3.paginators.listObjectsV2Paginated
 import aws.sdk.kotlin.services.s3.presigners.presignGetObject
 import aws.sdk.kotlin.services.s3.withConfig
 import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.storage.ObjectMetadata
+import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.StorageItem
 import com.amplifyframework.storage.result.StorageListResult
 import com.amplifyframework.storage.s3.transfer.TransferManager
@@ -32,6 +35,7 @@ import com.amplifyframework.storage.s3.transfer.TransferObserver
 import com.amplifyframework.storage.s3.transfer.TransferRecord
 import com.amplifyframework.storage.s3.transfer.UploadOptions
 import com.amplifyframework.storage.s3.utils.S3Keys
+import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -40,7 +44,6 @@ import java.time.Instant
 import java.util.Date
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
-import kotlinx.coroutines.runBlocking
 
 /**
  * A representation of an S3 backend service endpoint.
@@ -83,6 +86,30 @@ internal class AWSS3StorageService(
             }
         }
         return URL(presignUrlRequest.url.toString())
+    }
+
+    /**
+     * Validate if S3 object exists for the given key.
+     * Throws StorageException if NoSuchKey S3 client exception is caught.
+     * @param serviceKey S3 service key
+     */
+    override fun validateObjectExists(serviceKey: String) {
+        try {
+            runBlocking {
+                s3Client.headObject(
+                    HeadObjectRequest {
+                        bucket = s3BucketName
+                        key = serviceKey
+                    }
+                )
+            }
+        } catch (ex: NotFound) {
+            throw StorageException(
+                "Unable to generate URL for non-existent path: $serviceKey",
+                ex,
+                "Please ensure the path is valid or the object has been uploaded"
+            )
+        }
     }
 
     /**

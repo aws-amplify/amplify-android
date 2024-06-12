@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.storage.ObjectMetadata;
+import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StorageItem;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.s3.transfer.TransferObserver;
@@ -35,6 +36,14 @@ import java.util.List;
  * Interface to manage file transfer to and from a registered S3 bucket.
  */
 public interface StorageService {
+
+    /**
+     * Validate if Storage object exists for the given key.
+     * Throws StorageException if object is not does not exist.
+     *
+     * @param serviceKey key to uniquely specify item to generate URL for
+     */
+    void validateObjectExists(@NonNull String serviceKey);
 
     /**
      * Generate pre-signed download URL for an object.

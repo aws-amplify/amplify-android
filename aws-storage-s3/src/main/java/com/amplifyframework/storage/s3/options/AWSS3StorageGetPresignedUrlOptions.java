@@ -26,10 +26,12 @@ import com.amplifyframework.storage.options.StorageGetUrlOptions;
  */
 public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptions {
     private final boolean useAccelerationMode;
+    private final boolean validateObjectExistence;
 
     private AWSS3StorageGetPresignedUrlOptions(final Builder builder) {
         super(builder);
         this.useAccelerationMode = builder.useAccelerateEndpoint;
+        this.validateObjectExistence = builder.validateObjectExistence;
     }
 
     /**
@@ -80,6 +82,16 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
         return useAccelerationMode;
     }
 
+    /**
+     * Gets the flag to determine whether to validate whether an S3 object exists.
+     * Note: Setting this to `true` will result in a latency cost since confirming the existence
+     * of the underlying S3 object will likely require a round-trip network call.
+     * @return boolean flag
+     */
+    public boolean validateObjectExistence() {
+        return validateObjectExistence;
+    }
+
     @Override
     @SuppressWarnings("deprecation")
     public boolean equals(Object obj) {
@@ -123,6 +135,7 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
      */
     public static final class Builder extends StorageGetUrlOptions.Builder<Builder> {
         private boolean useAccelerateEndpoint;
+        private boolean validateObjectExistence;
 
         /**
          * Configure to use acceleration mode on new StorageGetPresignedUrlOptions instances.
@@ -131,6 +144,16 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
          */
         public Builder setUseAccelerateEndpoint(boolean useAccelerateEndpoint) {
             this.useAccelerateEndpoint = useAccelerateEndpoint;
+            return this;
+        }
+
+        /**
+         * Configure to validate object existence flag on new StorageGetPresignedUrlOptions instances.
+         * @param validateObjectExistence flag to represent flag to validate object existence for new GetPresignedUrlOptions instance
+         * @return Current Builder instance for fluent chaining
+         */
+        public Builder setValidateObjectExistence(boolean validateObjectExistence) {
+            this.validateObjectExistence = validateObjectExistence;
             return this;
         }
 

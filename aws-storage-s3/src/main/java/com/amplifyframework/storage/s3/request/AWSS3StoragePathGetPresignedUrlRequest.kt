@@ -22,5 +22,6 @@ import com.amplifyframework.storage.StoragePath
 internal data class AWSS3StoragePathGetPresignedUrlRequest(
     val path: StoragePath,
     val expires: Int,
-    val useAccelerateEndpoint: Boolean
+    val useAccelerateEndpoint: Boolean,
+    val validateObjectExistence: Boolean
 )
