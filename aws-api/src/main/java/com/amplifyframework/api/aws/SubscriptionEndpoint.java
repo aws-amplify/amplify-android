@@ -184,9 +184,13 @@ final class SubscriptionEndpoint {
             return;
         }
 
+        AuthorizationType authMode = (request instanceof AppSyncGraphQLRequest) ?
+                                         ((AppSyncGraphQLRequest) request).getAuthorizationType() : null;
+        LazyLoadingContext lazyLoadingContext = new LazyLoadingContext(apiName, authMode);
+
         Subscription<T> subscription = new Subscription<>(
             onNextItem, onSubscriptionError, onSubscriptionComplete,
-            responseFactory, request.getResponseType(), request, apiName
+            responseFactory, request.getResponseType(), request, lazyLoadingContext
         );
         subscriptions.put(subscriptionId, subscription);
         if (subscription.awaitSubscriptionReady()) {
@@ -361,7 +365,7 @@ final class SubscriptionEndpoint {
         private final CountDownLatch subscriptionReadyAcknowledgment;
         private final CountDownLatch subscriptionCompletionAcknowledgement;
         private boolean failed;
-        private String apiName;
+        private LazyLoadingContext lazyLoadingContext;
 
         Subscription(
                 Consumer<GraphQLResponse<T>> onNextItem,
@@ -370,7 +374,7 @@ final class SubscriptionEndpoint {
                 GraphQLResponse.Factory responseFactory,
                 Type responseType,
                 GraphQLRequest<T> request,
-                String apiName
+                LazyLoadingContext lazyLoadingContext
         ) {
             this.onNextItem = onNextItem;
             this.onSubscriptionError = onSubscriptionError;
@@ -378,7 +382,7 @@ final class SubscriptionEndpoint {
             this.responseFactory = responseFactory;
             this.responseType = responseType;
             this.request = request;
-            this.apiName = apiName;
+            this.lazyLoadingContext = lazyLoadingContext;
             this.subscriptionReadyAcknowledgment = new CountDownLatch(1);
             this.subscriptionCompletionAcknowledgement = new CountDownLatch(1);
             this.failed = false;
@@ -449,7 +453,7 @@ final class SubscriptionEndpoint {
 
             try {
                 return ((GsonGraphQLResponseFactory) responseFactory)
-                        .buildResponse(request, jsonResponse, apiName);
+                        .buildResponse(request, jsonResponse, lazyLoadingContext);
             } catch (ClassCastException cce) {
                 throw new ApiException("Amplify encountered an error while deserializing an object",
                         AmplifyException.TODO_RECOVERY_SUGGESTION);

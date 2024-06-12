@@ -59,7 +59,7 @@ class ApiLazyModelReferenceTest {
     private val expectedPost = Post.builder().name("My Post").blog(Blog.justId("b1")).build()
 
     @Test
-    fun fetch_with_provided_api_success_uses_cache_after() = runTest {
+    fun `fetch with provided api success uses cache after`() = runTest {
         // GIVEN
         val expectedApi = "myApi"
         val requestSlot = slot<GraphQLRequest<Post>>()
@@ -70,7 +70,12 @@ class ApiLazyModelReferenceTest {
             thirdArg<Consumer<GraphQLResponse<Post>>>().accept(GraphQLResponse(expectedPost, null))
             mockk()
         }
-        val postReference = ApiLazyModelReference(Post::class.java, expectedVariables, expectedApi, apiCategory)
+        val postReference = ApiLazyModelReference(
+            Post::class.java,
+            expectedVariables,
+            LazyLoadingContext(expectedApi, null),
+            apiCategory
+        )
 
         // WHEN
         val fetchedPost1 = postReference.fetchModel()
@@ -86,7 +91,7 @@ class ApiLazyModelReferenceTest {
     }
 
     @Test
-    fun fetch_default_api_success_uses_cache_after() = runTest {
+    fun `fetch default api success uses cache after`() = runTest {
         // GIVEN
         val requestSlot = slot<GraphQLRequest<Post>>()
 
@@ -94,7 +99,12 @@ class ApiLazyModelReferenceTest {
             secondArg<Consumer<GraphQLResponse<Post>>>().accept(GraphQLResponse(expectedPost, null))
             mockk()
         }
-        val postReference = ApiLazyModelReference(Post::class.java, mapOf(Pair("id", "p1")), apiCategory = apiCategory)
+        val postReference = ApiLazyModelReference(
+            Post::class.java,
+            mapOf(Pair("id", "p1")),
+            lazyContext = LazyLoadingContext.empty(),
+            apiCategory = apiCategory
+        )
 
         // WHEN
         val fetchedPost1 = postReference.fetchModel()
@@ -110,12 +120,17 @@ class ApiLazyModelReferenceTest {
     }
 
     @Test
-    fun fetch_failure_tries_again() = runTest {
+    fun `fetch failure tries again`() = runTest {
         val expectedPost = Post.builder().name("My Post").blog(Blog.justId("b1")).build()
         val expectedApi = "myApi"
         val apiException = ApiException("fail", "fail")
         val expectedException = AmplifyException("Error lazy loading the model.", apiException, "fail")
-        val postReference = ApiLazyModelReference(Post::class.java, mapOf(Pair("id", "p1")), expectedApi, apiCategory)
+        val postReference = ApiLazyModelReference(
+            Post::class.java,
+            mapOf(Pair("id", "p1")),
+            LazyLoadingContext(expectedApi, null),
+            apiCategory
+        )
 
         // fail first time
         every { apiCategory.query(any(), any(), any<Consumer<GraphQLResponse<Post>>>(), any()) } answers {
@@ -148,9 +163,84 @@ class ApiLazyModelReferenceTest {
     }
 
     @Test
-    fun empty_map_returns_null_model() = runTest {
+    fun `fetch passes expected api and auth mode`() = runTest {
+        val requestSlot = slot<GraphQLRequest<Post>>()
+        val expectedApi = "someApi"
+        val expectedAuthMode = AuthorizationType.AWS_LAMBDA
+
+        every {
+            apiCategory.query(
+                any(),
+                capture(requestSlot),
+                any<Consumer<GraphQLResponse<Post>>>(),
+                any()
+            )
+        } answers {
+            thirdArg<Consumer<GraphQLResponse<Post>>>().accept(GraphQLResponse(expectedPost, null))
+            mockk()
+        }
+
+        val postReference = ApiLazyModelReference(
+            Post::class.java,
+            mapOf(Pair("id", "p1")),
+            lazyContext = LazyLoadingContext(expectedApi, expectedAuthMode),
+            apiCategory = apiCategory
+        )
+
+        postReference.fetchModel()
+
+        verify {
+            apiCategory.query(
+                expectedApi,
+                match { (it as AppSyncGraphQLRequest).authorizationType == expectedAuthMode },
+                any<Consumer<GraphQLResponse<Post>>>(),
+                any()
+            )
+        }
+    }
+
+    @Test
+    fun `fetch with empty lazy context does not pass api or authMode`() = runTest {
+        val requestSlot = slot<GraphQLRequest<Post>>()
+
+        every {
+            apiCategory.query(
+                capture(requestSlot),
+                any<Consumer<GraphQLResponse<Post>>>(),
+                any()
+            )
+        } answers {
+            secondArg<Consumer<GraphQLResponse<Post>>>().accept(GraphQLResponse(expectedPost, null))
+            mockk()
+        }
+
+        val postReference = ApiLazyModelReference(
+            Post::class.java,
+            mapOf(Pair("id", "p1")),
+            lazyContext = LazyLoadingContext.empty(),
+            apiCategory = apiCategory
+        )
+
+        postReference.fetchModel()
+
+        verify {
+            apiCategory.query(
+                match { (it as AppSyncGraphQLRequest).authorizationType == null },
+                any<Consumer<GraphQLResponse<Post>>>(),
+                any()
+            )
+        }
+    }
+
+    @Test
+    fun `empty map returns null model`() = runTest {
         // GIVEN
-        val postReference = ApiLazyModelReference(Post::class.java, emptyMap(), apiCategory = apiCategory)
+        val postReference = ApiLazyModelReference(
+            Post::class.java,
+            emptyMap(),
+            lazyContext = LazyLoadingContext.empty(),
+            apiCategory = apiCategory
+        )
 
         // WHEN
         val fetchedPost1 = postReference.fetchModel()
@@ -161,7 +251,7 @@ class ApiLazyModelReferenceTest {
     }
 
     @Test
-    fun fetch_with_callbacks_with_provided_api_success_uses_cache_after() = runTest {
+    fun `fetch with callbacks with provided api success uses cache after`() = runTest {
         // GIVEN
         val expectedApi = "myApi"
         val requestSlot = slot<GraphQLRequest<Post>>()
@@ -172,16 +262,27 @@ class ApiLazyModelReferenceTest {
             thirdArg<Consumer<GraphQLResponse<Post>>>().accept(GraphQLResponse(expectedPost, null))
             mockk()
         }
-        val postReference = ApiLazyModelReference(Post::class.java, expectedVariables, expectedApi, apiCategory)
+        val postReference = ApiLazyModelReference(
+            Post::class.java,
+            expectedVariables,
+            LazyLoadingContext(expectedApi, null),
+            apiCategory
+        )
         var fetchedPost1: Post? = null
         var fetchedPost2: Post? = null
 
         // WHEN
         var latch = CountDownLatch(1)
-        postReference.fetchModel({ fetchedPost1 = it; latch.countDown() }, {})
+        postReference.fetchModel({
+            fetchedPost1 = it
+            latch.countDown()
+        }, {})
         latch.await(2, TimeUnit.SECONDS)
         latch = CountDownLatch(1)
-        postReference.fetchModel({ fetchedPost2 = it; latch.countDown() }, {})
+        postReference.fetchModel({
+            fetchedPost2 = it
+            latch.countDown()
+        }, {})
         latch.await(2, TimeUnit.SECONDS)
 
         // THEN
@@ -194,12 +295,17 @@ class ApiLazyModelReferenceTest {
     }
 
     @Test
-    fun fetch_with_callbacks_failure_tries_again() = runTest {
+    fun `fetch with callbacks failure tries again`() = runTest {
         val expectedPost = Post.builder().name("My Post").blog(Blog.justId("b1")).build()
         val expectedApi = "myApi"
         val apiException = ApiException("fail", "fail")
         val expectedException = AmplifyException("Error lazy loading the model.", apiException, "fail")
-        val postReference = ApiLazyModelReference(Post::class.java, mapOf(Pair("id", "p1")), expectedApi, apiCategory)
+        val postReference = ApiLazyModelReference(
+            Post::class.java,
+            mapOf(Pair("id", "p1")),
+            LazyLoadingContext(expectedApi, null),
+            apiCategory
+        )
         var latch = CountDownLatch(1)
         var fetchedPost1: Post? = null
         var fetchedPost2: Post? = null

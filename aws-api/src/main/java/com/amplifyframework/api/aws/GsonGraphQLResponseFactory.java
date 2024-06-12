@@ -62,7 +62,7 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
     public <T> GraphQLResponse<T> buildResponse(
             @NonNull GraphQLRequest<T> request,
             @Nullable String responseJson,
-            @Nullable String apiName
+            @NonNull LazyLoadingContext lazyLoadingContext
     ) throws ApiException {
         // On empty strings, Gson returns null instead of throwing JsonSyntaxException. See:
         // https://github.com/google/gson/issues/457
@@ -87,12 +87,12 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
                     )
                     .registerTypeAdapter(
                             ModelReference.class,
-                            new ModelReferenceDeserializer<Model>(apiName, schemaRegistry)
+                            new ModelReferenceDeserializer<Model>(lazyLoadingContext, schemaRegistry)
                     )
                     .registerTypeAdapterFactory(
                             // register Model post processing to inject lazy types for fields that
                             // were missing from json response
-                            new ModelPostProcessingTypeAdapter(apiName, schemaRegistry)
+                            new ModelPostProcessingTypeAdapter(lazyLoadingContext, schemaRegistry)
                     )
                     .create();
             return responseGson.fromJson(responseJson, responseType);
@@ -113,7 +113,7 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
     @Override
     public <T> GraphQLResponse<T> buildResponse(GraphQLRequest<T> request, String responseJson)
             throws ApiException {
-        return buildResponse(request, responseJson, null);
+        return buildResponse(request, responseJson, LazyLoadingContext.Companion.empty());
     }
 
     static final class IterableDeserializer<R> implements JsonDeserializer<Iterable<Object>> {

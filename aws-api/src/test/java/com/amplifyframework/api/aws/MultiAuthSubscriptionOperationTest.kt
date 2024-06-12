@@ -199,6 +199,7 @@ class MultiAuthSubscriptionOperationTest {
         graphQlRequest: AppSyncGraphQLRequest<String> = mockk {
             every { modelSchema } returns ModelSchema.fromModelClass(ModelWithTwoAuthModes::class.java)
             every { authRuleOperation } returns ModelOperation.READ
+            every { authorizationType } returns null
             every { content } returns ""
         }
     ): MultiAuthSubscriptionOperation<String> {

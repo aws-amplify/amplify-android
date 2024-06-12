@@ -24,9 +24,12 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.model.ModelPage
 import com.amplifyframework.testmodels.lazy.Blog
 import com.amplifyframework.testmodels.lazy.Post
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import io.mockk.verify
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.test.runTest
@@ -44,6 +47,7 @@ class ApiLazyModelListTest {
 
     private val apiCategory = mockk<ApiCategory>()
     private val expectedApiName = "myApi"
+    private val expectedAuthMode = AuthorizationType.AWS_LAMBDA
     private val expectedQuery = "query ListPosts(\$filter: ModelPostFilterInput, \$limit: Int) {\n" +
         "  listPosts(filter: \$filter, limit: \$limit) {\n" +
         "    items {\n" +
@@ -90,15 +94,15 @@ class ApiLazyModelListTest {
 
     private val items = listOf<Post>(
         Post.builder().name("p1").blog(Blog.justId("b1")).build(),
-        Post.builder().name("p2").blog(Blog.justId("b1")).build(),
+        Post.builder().name("p2").blog(Blog.justId("b1")).build()
     )
 
     @Test
-    fun fetch_with_provided_api_success() = runTest {
+    fun `fetch with provided api success`() = runTest {
         val lazyPostList = ApiLazyModelList(
             Post::class.java,
             mapOf(Pair("blogPostsId", "b1")),
-            expectedApiName,
+            LazyLoadingContext(expectedApiName, expectedAuthMode),
             apiCategory
         )
         val requestSlot = slot<GraphQLRequest<Post>>()
@@ -123,11 +127,11 @@ class ApiLazyModelListTest {
     }
 
     @Test
-    fun fetch_with_no_provided_api_success() = runTest {
+    fun `fetch with no provided api success`() = runTest {
         val lazyPostList = ApiLazyModelList(
             Post::class.java,
             mapOf(Pair("blogPostsId", "b1")),
-            null,
+            LazyLoadingContext.empty(),
             apiCategory
         )
         val requestSlot = slot<GraphQLRequest<Post>>()
@@ -152,11 +156,11 @@ class ApiLazyModelListTest {
     }
 
     @Test
-    fun fetch_with_provided_api_and_token_success() = runTest {
+    fun `fetch with provided api and token success`() = runTest {
         val lazyPostList = ApiLazyModelList(
             Post::class.java,
             mapOf(Pair("blogPostsId", "b1")),
-            expectedApiName,
+            LazyLoadingContext(expectedApiName, expectedAuthMode),
             apiCategory
         )
         val expectedToken = ApiPaginationToken("456")
@@ -182,11 +186,11 @@ class ApiLazyModelListTest {
     }
 
     @Test
-    fun fetch_with_provided_api_failure() = runTest {
+    fun `fetch with provided api failure`() = runTest {
         val lazyPostList = ApiLazyModelList(
             Post::class.java,
             mapOf(Pair("blogPostsId", "b1")),
-            expectedApiName,
+            LazyLoadingContext(expectedApiName, expectedAuthMode),
             apiCategory
         )
         val requestSlot = slot<GraphQLRequest<Post>>()
@@ -213,11 +217,11 @@ class ApiLazyModelListTest {
     }
 
     @Test
-    fun fetch_by_callback_with_provided_api_success() = runTest {
+    fun `fetch by callback with provided api success`() = runTest {
         val lazyPostList = ApiLazyModelList(
             Post::class.java,
             mapOf(Pair("blogPostsId", "b1")),
-            expectedApiName,
+            LazyLoadingContext(expectedApiName, expectedAuthMode),
             apiCategory
         )
         val requestSlot = slot<GraphQLRequest<Post>>()
@@ -258,11 +262,11 @@ class ApiLazyModelListTest {
     }
 
     @Test
-    fun fetch_by_callback_with_token_provided_api_success() = runTest {
+    fun `fetch by callback with token provided api success`() = runTest {
         val lazyPostList = ApiLazyModelList(
             Post::class.java,
             mapOf(Pair("blogPostsId", "b1")),
-            expectedApiName,
+            LazyLoadingContext(expectedApiName, expectedAuthMode),
             apiCategory
         )
 
@@ -305,11 +309,11 @@ class ApiLazyModelListTest {
     }
 
     @Test
-    fun fetch_by_callback_with_provided_api_failure() = runTest {
+    fun `fetch by callback with provided api failure`() = runTest {
         val lazyPostList = ApiLazyModelList(
             Post::class.java,
             mapOf(Pair("blogPostsId", "b1")),
-            expectedApiName,
+            LazyLoadingContext(expectedApiName, expectedAuthMode),
             apiCategory
         )
         val requestSlot = slot<GraphQLRequest<Post>>()
@@ -343,11 +347,11 @@ class ApiLazyModelListTest {
     }
 
     @Test
-    fun fetch_by_callback_with_no_provided_api_failure() = runTest {
+    fun `fetch by callback with no provided api failure`() = runTest {
         val lazyPostList = ApiLazyModelList(
             Post::class.java,
             mapOf(Pair("blogPostsId", "b1")),
-            null,
+            LazyLoadingContext.empty(),
             apiCategory
         )
         val requestSlot = slot<GraphQLRequest<Post>>()
@@ -378,5 +382,68 @@ class ApiLazyModelListTest {
         latch.await(2, TimeUnit.SECONDS)
         assertNull(page)
         assertEquals(expectedException, capturedException)
+    }
+
+    @Test
+    fun `fetch with lazy context provides expected api name and auth mode`() = runTest {
+        val lazyPostList = ApiLazyModelList(
+            Post::class.java,
+            mapOf(Pair("blogPostsId", "b1")),
+            LazyLoadingContext(expectedApiName, expectedAuthMode),
+            apiCategory
+        )
+
+        every {
+            apiCategory.query(any(), any<GraphQLRequest<Post>>(), any(), any())
+        } answers {
+            thirdArg<Consumer<GraphQLResponse<ModelPage<Post>>>>().accept(
+                GraphQLResponse(ApiModelPage(items, null), null)
+            )
+            mockk()
+        }
+
+        lazyPostList.fetchPage()
+
+        verify {
+            apiCategory.query(
+                expectedApiName,
+                withArg<GraphQLRequest<Post>> {
+                    (it as AppSyncGraphQLRequest).authorizationType shouldBe expectedAuthMode
+                },
+                any(),
+                any()
+            )
+        }
+    }
+
+    @Test
+    fun `fetch with empty lazy context omits api name and auth mode`() = runTest {
+        val lazyPostList = ApiLazyModelList(
+            Post::class.java,
+            mapOf(Pair("blogPostsId", "b1")),
+            LazyLoadingContext.empty(),
+            apiCategory
+        )
+
+        every {
+            apiCategory.query(any<GraphQLRequest<Post>>(), any(), any())
+        } answers {
+            secondArg<Consumer<GraphQLResponse<ModelPage<Post>>>>().accept(
+                GraphQLResponse(ApiModelPage(items, null), null)
+            )
+            mockk()
+        }
+
+        lazyPostList.fetchPage()
+
+        verify {
+            apiCategory.query(
+                withArg<GraphQLRequest<Post>> {
+                    (it as AppSyncGraphQLRequest).authorizationType.shouldBeNull()
+                },
+                any(),
+                any()
+            )
+        }
     }
 }
