@@ -62,6 +62,8 @@ public final class DataStoreConfigurationTest {
             dataStoreConfiguration.getSyncMaxRecords().intValue());
         assertEquals(DataStoreConfiguration.DEFAULT_SYNC_PAGE_SIZE,
             dataStoreConfiguration.getSyncPageSize().intValue());
+        assertEquals(DataStoreConfiguration.DEFAULT_SYNC_MAX_CONCURRENT_MODELS,
+            dataStoreConfiguration.getSyncMaxConcurrentModels().intValue());
 
         assertTrue(dataStoreConfiguration.getConflictHandler() instanceof AlwaysApplyRemoteHandler);
         assertTrue(dataStoreConfiguration.getErrorHandler() instanceof DefaultDataStoreErrorHandler);
@@ -107,6 +109,7 @@ public final class DataStoreConfigurationTest {
         long expectedSyncIntervalMinutes = 6L;
         Long expectedSyncIntervalMs = TimeUnit.MINUTES.toMillis(expectedSyncIntervalMinutes);
         Integer expectedSyncMaxRecords = 3;
+        Integer expectedSyncMaxConcurrentModels = 5;
         DummyConflictHandler dummyConflictHandler = new DummyConflictHandler();
         DataStoreErrorHandler errorHandler = DefaultDataStoreErrorHandler.instance();
 
@@ -121,7 +124,8 @@ public final class DataStoreConfigurationTest {
             .errorHandler(errorHandler)
             .syncExpression(BlogOwner.class, ownerSyncExpression)
             .syncExpression("Post", postSyncExpression)
-                .doSyncRetry(true)
+            .doSyncRetry(true)
+            .syncMaxConcurrentModels(expectedSyncMaxConcurrentModels)
             .build();
 
         JSONObject jsonConfigFromFile = new JSONObject()
@@ -132,6 +136,7 @@ public final class DataStoreConfigurationTest {
 
         assertEquals(expectedSyncIntervalMs, dataStoreConfiguration.getSyncIntervalMs());
         assertEquals(expectedSyncMaxRecords, dataStoreConfiguration.getSyncMaxRecords());
+        assertEquals(expectedSyncMaxConcurrentModels, dataStoreConfiguration.getSyncMaxConcurrentModels());
         assertEquals(DataStoreConfiguration.DEFAULT_SYNC_PAGE_SIZE,
             dataStoreConfiguration.getSyncPageSize().longValue());
         assertTrue(dataStoreConfiguration.getDoSyncRetry());
