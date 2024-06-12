@@ -149,7 +149,7 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
 
         /**
          * Configure to validate object existence flag on new StorageGetPresignedUrlOptions instances.
-         * @param validateObjectExistence flag to represent flag to validate object existence for new GetPresignedUrlOptions instance
+         * @param validateObjectExistence boolean flag to represent flag to validate object existence.
          * @return Current Builder instance for fluent chaining
          */
         public Builder setValidateObjectExistence(boolean validateObjectExistence) {

@@ -20,7 +20,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.storage.ObjectMetadata;
-import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StorageItem;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.s3.transfer.TransferObserver;
