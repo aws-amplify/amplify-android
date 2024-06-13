@@ -1,3 +1,7 @@
+## [Release 2.19.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.19.0)
+### Features
+- **datastore:** DataStore Model Sync Parallelization ([#2808](https://github.com/aws-amplify/amplify-android/pull/2808))
+
 ## [Release 2.18.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.18.0)
 
 ### Features
