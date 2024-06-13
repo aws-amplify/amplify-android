@@ -1,3 +1,10 @@
+## [Release 2.18.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.18.1)
+
+### Miscellaneous
+- DataStore Model Sync Parallelization ([#2808](https://github.com/aws-amplify/amplify-android/issues/2808))
+
+[See all changes between 2.18.0 and 2.18.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.18.0...release_v2.18.1)
+
 ## [Release 2.18.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.18.0)
 
 ### Features
