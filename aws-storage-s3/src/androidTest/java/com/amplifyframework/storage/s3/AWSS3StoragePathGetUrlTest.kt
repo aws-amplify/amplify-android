@@ -18,9 +18,11 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.storage.StorageCategory
+import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.StoragePath
 import com.amplifyframework.storage.options.StorageGetUrlOptions
 import com.amplifyframework.storage.options.StorageUploadFileOptions
+import com.amplifyframework.storage.s3.options.AWSS3StorageGetPresignedUrlOptions
 import com.amplifyframework.storage.s3.test.R
 import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils.initializeWorkmanagerTestUtil
 import com.amplifyframework.testutils.random.RandomTempFile
@@ -28,6 +30,7 @@ import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousStorage
 import java.io.File
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.Test
@@ -78,5 +81,26 @@ class AWSS3StoragePathGetUrlTest {
 
         assertEquals("/public/$SMALL_FILE_NAME", result.url.path)
         assertTrue(result.url.query.contains("X-Amz-Expires=30"))
+    }
+
+    @Test
+    fun testGetUrlWithObjectExistenceValidationEnabled() {
+        val result = synchronousStorage.getUrl(
+            SMALL_FILE_PATH,
+            AWSS3StorageGetPresignedUrlOptions.builder().setValidateObjectExistence(true).expires(30).build()
+        )
+
+        assertEquals("/public/$SMALL_FILE_NAME", result.url.path)
+        assertTrue(result.url.query.contains("X-Amz-Expires=30"))
+    }
+
+    @Test
+    fun testGetUrlWithStorageExceptionObjectNotFoundThrown() {
+        assertThrows(StorageException::class.java) {
+            synchronousStorage.getUrl(
+                StoragePath.fromString("SOME_UNKNOWN_FILE"),
+                AWSS3StorageGetPresignedUrlOptions.builder().setValidateObjectExistence(true).expires(30).build()
+            )
+        }
     }
 }

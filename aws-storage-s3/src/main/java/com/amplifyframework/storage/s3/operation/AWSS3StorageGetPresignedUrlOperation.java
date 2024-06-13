@@ -85,10 +85,20 @@ public final class AWSS3StorageGetPresignedUrlOperation
                         prefix -> {
                             try {
                                 String serviceKey = prefix.concat(getRequest().getKey());
+
+                                if (getRequest().validateObjectExistence()) {
+                                    try {
+                                        storageService.validateObjectExists(serviceKey);
+                                    } catch (StorageException exception) {
+                                        onError.accept(exception);
+                                        return;
+                                    }
+                                }
+
                                 URL url = storageService.getPresignedUrl(
-                                    serviceKey,
-                                    getRequest().getExpires(),
-                                    getRequest().useAccelerateEndpoint());
+                                        serviceKey,
+                                        getRequest().getExpires(),
+                                        getRequest().useAccelerateEndpoint());
                                 onSuccess.accept(StorageGetUrlResult.fromUrl(url));
                             } catch (Exception exception) {
                                 onError.accept(new StorageException(

@@ -61,6 +61,8 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
         return builder()
             .accessLevel(options.getAccessLevel())
             .targetIdentityId(options.getTargetIdentityId())
+            .expires(options.getExpires())
+            .setValidateObjectExistence(options.getValidateObjectExistence())
             .expires(options.getExpires());
     }
 
@@ -88,7 +90,7 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
      * of the underlying S3 object will likely require a round-trip network call.
      * @return boolean flag
      */
-    public boolean validateObjectExistence() {
+    public boolean getValidateObjectExistence() {
         return validateObjectExistence;
     }
 
@@ -103,7 +105,8 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
             AWSS3StorageGetPresignedUrlOptions that = (AWSS3StorageGetPresignedUrlOptions) obj;
             return ObjectsCompat.equals(getAccessLevel(), that.getAccessLevel()) &&
                     ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId()) &&
-                    ObjectsCompat.equals(getExpires(), that.getExpires());
+                    ObjectsCompat.equals(getExpires(), that.getExpires()) &&
+                    ObjectsCompat.equals(getValidateObjectExistence(), that.getValidateObjectExistence());
         }
     }
 
@@ -113,7 +116,8 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
         return ObjectsCompat.hash(
                 getAccessLevel(),
                 getTargetIdentityId(),
-                getExpires()
+                getExpires(),
+                getValidateObjectExistence()
         );
     }
 
@@ -125,6 +129,7 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
                 "accessLevel=" + getAccessLevel() +
                 ", targetIdentityId=" + getTargetIdentityId() +
                 ", expires=" + getExpires() +
+                ", validateObjectExistence=" + getValidateObjectExistence() +
                 '}';
     }
 
