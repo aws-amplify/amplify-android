@@ -98,7 +98,7 @@ class AWSS3StoragePathGetUrlTest {
     fun testGetUrlWithStorageExceptionObjectNotFoundThrown() {
         assertThrows(StorageException::class.java) {
             synchronousStorage.getUrl(
-                StoragePath.fromString("/public/SOME_UNKNOWN_FILE"),
+                StoragePath.fromString("public/SOME_UNKNOWN_FILE"),
                 AWSS3StorageGetPresignedUrlOptions.builder().setValidateObjectExistence(true).expires(30).build()
             )
         }
