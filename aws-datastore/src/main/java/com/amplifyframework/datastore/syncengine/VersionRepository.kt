@@ -138,16 +138,14 @@ internal class VersionRepository(private val localStorageAdapter: LocalStorageAd
         metadataIterator: Iterator<ModelMetadata>
     ): Optional<Int> {
         val results: MutableList<ModelMetadata> =
-                ArrayList()
+            ArrayList()
         while (metadataIterator.hasNext()) {
             results.add(metadataIterator.next())
         }
         // There should be only one metadata for the model....
         if (results.size != 1) {
             LOG.warn(
-                    "Wanted exactly 1 metadata for item with id = " + model.primaryKeyString + ", but had " + results.size +
-                            "." +
-                    "This is likely a bug. please report to AWS."
+                "Wanted 1 metadata for item with id = " + model.primaryKeyString + ", but had " + results.size + "."
             )
             return Optional.empty()
         } else {

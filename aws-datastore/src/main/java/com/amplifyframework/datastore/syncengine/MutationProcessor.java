@@ -290,7 +290,8 @@ final class MutationProcessor {
             this.schemaRegistry.getModelSchemaForModelClass(updatedItem.getModelName());
         return versionRepository.findModelVersion(updatedItem).flatMap(version ->
             publishWithStrategy(mutation, (model, onSuccess, onError) ->
-                appSync.update(model, updatedItemSchema, version.orElse(null), mutation.getPredicate(), onSuccess, onError)
+                appSync.update(
+                    model, updatedItemSchema, version.orElse(null), mutation.getPredicate(), onSuccess, onError)
             )
         );
     }

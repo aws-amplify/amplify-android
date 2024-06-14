@@ -21,7 +21,6 @@ import com.amplifyframework.datastore.appsync.ModelWithMetadata
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter
 import com.amplifyframework.testmodels.commentsblog.BlogOwner
-import java.util.Locale
 import java.util.Optional
 import java.util.Random
 import java.util.concurrent.TimeUnit
@@ -76,9 +75,9 @@ class VersionRepositoryTest {
 
         // Assert: we got a empty version
         observer
-                .assertNoErrors()
-                .assertComplete()
-                .assertValue(Optional.empty())
+            .assertNoErrors()
+            .assertComplete()
+            .assertValue(Optional.empty())
     }
 
     /**
@@ -106,9 +105,9 @@ class VersionRepositoryTest {
 
         // Assert: we got a empty version
         observer
-                .assertNoErrors()
-                .assertComplete()
-                .assertValue(Optional.empty())
+            .assertNoErrors()
+            .assertComplete()
+            .assertValue(Optional.empty())
     }
 
     /**
