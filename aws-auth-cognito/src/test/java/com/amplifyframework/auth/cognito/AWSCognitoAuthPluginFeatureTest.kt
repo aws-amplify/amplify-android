@@ -33,7 +33,9 @@ import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import featureTest.utilities.CognitoMockFactory
 import featureTest.utilities.CognitoRequestFactory
+import featureTest.utilities.TimeZoneRule
 import featureTest.utilities.apiExecutor
+import io.kotest.assertions.json.shouldEqualJson
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -43,6 +45,7 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
 import java.io.File
+import java.util.TimeZone
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.reflect.full.callSuspend
@@ -56,12 +59,15 @@ import kotlinx.serialization.json.Json
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
 @RunWith(Parameterized::class)
 class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
+
+    @Rule @JvmField val timeZoneRule = TimeZoneRule(TimeZone.getTimeZone("US/Pacific"))
 
     lateinit var feature: FeatureTestCase
     private var apiExecutionResult: Any? = null
@@ -114,6 +120,7 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
 
     @Before
     fun setUp() {
+        // set timezone to be same as generated json from JsonGenerator
         Dispatchers.setMain(mainThreadSurrogate)
         feature = testCase
         sut.realPlugin = readConfiguration(feature.preConditions.`amplify-configuration`)
@@ -189,9 +196,9 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
             is Cognito -> verifyCognito(validation)
 
             is ExpectationShapes.Amplify -> {
-                val expectedResponse = validation.response
-
-                assertEquals(expectedResponse, apiExecutionResult.toJsonElement())
+                val expected = validation.response.toString()
+                val actual = apiExecutionResult.toJsonElement().toString()
+                actual shouldEqualJson expected
             }
             is ExpectationShapes.State -> {
                 val getStateLatch = CountDownLatch(1)
@@ -214,7 +221,7 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
 
         coVerify {
             when (validation) {
-                is CognitoIdentity -> mockCognitoIdClient to mockCognitoIPClient::class
+                is CognitoIdentity -> mockCognitoIdClient to mockCognitoIdClient::class
                 is CognitoIdentityProvider -> mockCognitoIPClient to mockCognitoIPClient::class
             }.apply {
                 second.declaredFunctions.first {
