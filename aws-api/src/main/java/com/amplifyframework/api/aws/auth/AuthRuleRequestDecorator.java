@@ -83,17 +83,17 @@ public final class AuthRuleRequestDecorator {
         AppSyncGraphQLRequest<R> appSyncRequest = (AppSyncGraphQLRequest<R>) request;
         AuthRule ownerRuleWithReadRestriction = null;
         Map<String, Set<String>> readAuthorizedGroupsMap = new HashMap<>();
-        boolean subscribeAllowedForNonOwner = false;
+        boolean publicSubscribeAllowed = false;
 
         // Note that we are intentionally supporting only one owner rule with a READ operation at this time.
         // If there is more than one, the operation will fail because AppSync generates a parameter for each
         // one. The question then is which one do we pass. JavaScript currently doesn't support this use case
         // and it's not clear what a good solution would be until AppSync supports real time filters.
         for (AuthRule authRule : appSyncRequest.getModelSchema().getAuthRules()) {
-            if (doesRuleAllowNonOwnerSubscribe(authRule, authType)) {
+            if (doesRuleAllowPublicSubscribe(authRule, authType)) {
                 // This rule allows subscribing with the current authMode without adding the owner field, so there
                 // is no need to continue checking the other rules.
-                subscribeAllowedForNonOwner = true;
+                publicSubscribeAllowed = true;
                 break;
             } else if (isReadRestrictingOwner(authRule)) {
                 if (ownerRuleWithReadRestriction == null) {
@@ -120,7 +120,7 @@ public final class AuthRuleRequestDecorator {
         // We only add the owner parameter to the subscription if there is an owner rule with a READ restriction
         // and either there are no group auth rules with read access or there are but the user isn't in any of
         // them.
-        if (!subscribeAllowedForNonOwner &&
+        if (!publicSubscribeAllowed &&
             ownerRuleWithReadRestriction != null
                 && userNotInReadRestrictingGroups(readAuthorizedGroupsMap, authType)) {
             String idClaim = ownerRuleWithReadRestriction.getIdentityClaimOrDefault();
@@ -142,14 +142,13 @@ public final class AuthRuleRequestDecorator {
         return request;
     }
 
-    private boolean doesRuleAllowNonOwnerSubscribe(AuthRule authRule, AuthorizationType authMode) {
+    private boolean doesRuleAllowPublicSubscribe(AuthRule authRule, AuthorizationType authMode) {
         AuthorizationType typeForRule = AuthorizationType.from(authRule.getAuthProvider());
         AuthStrategy strategy = authRule.getAuthStrategy();
         List<ModelOperation> operations = authRule.getOperationsOrDefault();
-        return strategy != AuthStrategy.OWNER && strategy != AuthStrategy.GROUPS
-            && typeForRule != AuthorizationType.AMAZON_COGNITO_USER_POOLS
-            && typeForRule != AuthorizationType.OPENID_CONNECT
-            && typeForRule == authMode
+        return strategy == AuthStrategy.PUBLIC
+            && typeForRule == AuthorizationType.API_KEY
+            && authMode == AuthorizationType.API_KEY
             && (operations.contains(ModelOperation.LISTEN) || operations.contains(ModelOperation.READ));
     }
 
