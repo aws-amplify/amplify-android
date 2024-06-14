@@ -136,11 +136,7 @@ internal object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                 )
                 AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(exception))
             } catch (e: Exception) {
-                val exception = SignedOutException(
-                    recoverySuggestion = SignedOutException.RECOVERY_SUGGESTION_GUEST_ACCESS_POSSIBLE,
-                    cause = e
-                )
-                AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(exception))
+                AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
             }
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
@@ -173,11 +169,7 @@ internal object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                 )
                 AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(exception))
             } catch (e: Exception) {
-                val exception = SignedOutException(
-                    recoverySuggestion = SignedOutException.RECOVERY_SUGGESTION_GUEST_ACCESS_POSSIBLE,
-                    cause = e
-                )
-                AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(exception))
+                AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
             }
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)

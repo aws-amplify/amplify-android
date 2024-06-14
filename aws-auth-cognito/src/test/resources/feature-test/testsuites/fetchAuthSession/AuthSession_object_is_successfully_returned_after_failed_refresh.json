@@ -1,0 +1,73 @@
+{
+    "description": "AuthSession object is successfully returned after failed refresh",
+    "preConditions": {
+        "amplify-configuration": "authconfiguration.json",
+        "state": "SignedIn_SessionEstablished.json",
+        "mockedResponses": [
+            {
+                "type": "cognitoIdentityProvider",
+                "apiName": "initiateAuth",
+                "responseType": "failure",
+                "response": {
+                    "errorType": "ResourceNotFoundException",
+                    "errorMessage": "Error type: Client, Protocol response: (empty response)"
+                }
+            }
+        ]
+    },
+    "api": {
+        "name": "fetchAuthSession",
+        "params": {
+        },
+        "options": {
+            "forceRefresh": true
+        }
+    },
+    "validations": [
+        {
+            "type": "amplify",
+            "apiName": "fetchAuthSession",
+            "responseType": "success",
+            "response": {
+                "accessToken": null,
+                "awsCredentialsResult": {
+                    "errorType": "UnknownException",
+                    "errorMessage": "Fetch auth session failed.",
+                    "recoverySuggestion": "See the attached exception for more details",
+                    "cause": {
+                        "errorType": "ResourceNotFoundException",
+                        "errorMessage": "Error type: Client, Protocol response: (empty response)"
+                    }
+                },
+                "identityIdResult": {
+                    "errorType": "UnknownException",
+                    "errorMessage": "Fetch auth session failed.",
+                    "recoverySuggestion": "See the attached exception for more details",
+                    "cause": {
+                        "errorType": "ResourceNotFoundException",
+                        "errorMessage": "Error type: Client, Protocol response: (empty response)"
+                    }
+                },
+                "isSignedIn": true,
+                "userPoolTokensResult": {
+                    "errorType": "UnknownException",
+                    "errorMessage": "Fetch auth session failed.",
+                    "recoverySuggestion": "See the attached exception for more details",
+                    "cause": {
+                        "errorType": "ResourceNotFoundException",
+                        "errorMessage": "Error type: Client, Protocol response: (empty response)"
+                    }
+                },
+                "userSubResult": {
+                    "errorType": "UnknownException",
+                    "errorMessage": "Fetch auth session failed.",
+                    "recoverySuggestion": "See the attached exception for more details",
+                    "cause": {
+                        "errorType": "ResourceNotFoundException",
+                        "errorMessage": "Error type: Client, Protocol response: (empty response)"
+                    }
+                }
+            }
+        }
+    ]
+}
