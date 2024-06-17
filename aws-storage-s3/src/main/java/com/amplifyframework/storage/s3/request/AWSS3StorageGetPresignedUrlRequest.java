@@ -18,6 +18,7 @@ package com.amplifyframework.storage.s3.request;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.annotations.InternalAmplifyApi;
 import com.amplifyframework.storage.StorageAccessLevel;
 
 /**
@@ -26,6 +27,7 @@ import com.amplifyframework.storage.StorageAccessLevel;
  * @deprecated  this class is only constructed internally through deprecated transfer methods.
  */
 @Deprecated
+@InternalAmplifyApi
 public final class AWSS3StorageGetPresignedUrlRequest {
     private final String key;
     @SuppressWarnings("deprecation")
