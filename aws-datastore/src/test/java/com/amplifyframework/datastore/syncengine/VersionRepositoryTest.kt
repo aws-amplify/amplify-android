@@ -21,7 +21,7 @@ import com.amplifyframework.datastore.appsync.ModelWithMetadata
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter
 import com.amplifyframework.testmodels.commentsblog.BlogOwner
-import java.util.Locale
+import java.util.Optional
 import java.util.Random
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.seconds
@@ -55,12 +55,12 @@ class VersionRepositoryTest {
 
     /**
      * When you try to get a model version, but there's no metadata for that model,
-     * this should fail with an [DataStoreException].
+     * this should return empty.
      * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
     @Throws(InterruptedException::class)
-    fun emitsErrorForNoMetadataInRepo() {
+    fun emitsSuccessWithEmptyValueForNoMetadataInRepo() {
         // Arrange: no metadata is in the repo.
         val blogOwner = BlogOwner.builder()
             .name("Jameson Williams")
@@ -73,33 +73,22 @@ class VersionRepositoryTest {
         val observer = versionRepository.findModelVersion(blogOwner).test()
         assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
 
-        // Assert: this failed. There was no version available.
-        observer.assertError { error: Throwable ->
-            if (error !is DataStoreException) {
-                return@assertError false
-            }
-            val expectedMessage = String.format(
-                Locale.US,
-                "Wanted 1 metadata for item with id = %s, but had 0.",
-                blogOwner.id
-            )
-            expectedMessage == error.message
-        }
+        // Assert: we got a empty version
+        observer
+            .assertNoErrors()
+            .assertComplete()
+            .assertValue(Optional.empty())
     }
 
     /**
      * When you try to get the version for a model, and there is metadata for the model
      * in the DataStore, BUT the version info is not populated, this should return an
-     * [DataStoreException].
-     * @throws DataStoreException
-     * NOT EXPECTED. This happens on failure to arrange data before test action.
-     * The expected DataStoreException is communicated via callback, not thrown
-     * on the calling thread. It's a different thing than this.
+     * empty optional.
      * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
     @Throws(DataStoreException::class, InterruptedException::class)
-    fun emitsErrorWhenMetadataHasNullVersion() {
+    fun emitsSuccessWithEmptyValueWhenMetadataHasNullVersion() {
         // Arrange a model an metadata into the store, but the metadtaa doesn't contain a valid version
         val blogOwner = BlogOwner.builder()
             .name("Jameson")
@@ -114,18 +103,11 @@ class VersionRepositoryTest {
         val observer = versionRepository.findModelVersion(blogOwner).test()
         assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
 
-        // Assert: the single emitted a DataStoreException.
-        observer.assertError { error: Throwable ->
-            if (error !is DataStoreException) {
-                return@assertError false
-            }
-            val expectedMessage = String.format(
-                Locale.US,
-                "Metadata for item with id = %s had null version.",
-                blogOwner.id
-            )
-            expectedMessage == error.message
-        }
+        // Assert: we got a empty version
+        observer
+            .assertNoErrors()
+            .assertComplete()
+            .assertValue(Optional.empty())
     }
 
     /**
@@ -142,12 +124,13 @@ class VersionRepositoryTest {
             .name("Jameson")
             .build()
         val maxRandomVersion = 1000
-        val expectedVersion = Random().nextInt(maxRandomVersion)
+        val randomVersion = Random().nextInt(maxRandomVersion)
+        val expectedVersion = Optional.ofNullable(randomVersion)
         storageAdapter.save(
             ModelMetadata(
                 owner.modelName + "|" + owner.id,
                 false,
-                expectedVersion,
+                randomVersion,
                 Temporal.Timestamp.now()
             )
         )
