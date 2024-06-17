@@ -26,7 +26,7 @@ open class UnknownException(
     cause: Throwable? = null
 ) : AuthException(
     message,
-    if (cause == null) RECOVERY_SUGGESTION_WITH_THROWABLE else RECOVERY_SUGGESTION_WITHOUT_THROWABLE,
+    if (cause != null) RECOVERY_SUGGESTION_WITH_THROWABLE else RECOVERY_SUGGESTION_WITHOUT_THROWABLE,
     cause
 ) {
     companion object {
