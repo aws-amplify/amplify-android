@@ -17,7 +17,9 @@ package com.amplifyframework.storage.s3.operation;
 
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
+import androidx.annotation.OptIn;
 
+import com.amplifyframework.annotations.InternalAmplifyApi;
 import com.amplifyframework.auth.AuthCredentialsProvider;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageException;
@@ -76,6 +78,7 @@ public final class AWSS3StorageGetPresignedUrlOperation
     }
 
     @SuppressLint("SyntheticAccessor")
+    @OptIn(markerClass = InternalAmplifyApi.class)
     @Override
     public void start() {
         executorService.submit(() -> {
