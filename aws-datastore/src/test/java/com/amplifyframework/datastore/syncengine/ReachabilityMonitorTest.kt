@@ -27,7 +27,6 @@ import java.util.concurrent.TimeUnit
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.mockito.Mockito
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 
@@ -74,11 +73,7 @@ class ReachabilityMonitorTest {
 
         val network = mock(Network::class.java)
         val networkCapabilities = mock(NetworkCapabilities::class.java)
-<<<<<<< HEAD
-        Mockito.`when`(networkCapabilities.hasCapability(NetworkCapabilities.TRANSPORT_WIFI))
-=======
         `when`(networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
->>>>>>> ad4c66a8 (Move NetworkCapabilitiesUtil to a new util class and add unit test)
             .thenReturn(true)
 
         // Should provide initial network state (true) upon subscription (after debounce)

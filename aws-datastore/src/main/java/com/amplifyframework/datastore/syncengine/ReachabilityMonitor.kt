@@ -97,11 +97,6 @@ private class ReachabilityMonitorImpl constructor(val schedulerProvider: Schedul
             updateAndSend()
         }
 
-        override fun onLosing(network: Network, maxMsToLive: Int) {
-            currentNetwork = network
-            updateAndSend()
-        }
-
         override fun onLost(network: Network) {
             currentNetwork = null
             currentCapabilities = null
@@ -117,11 +112,6 @@ private class ReachabilityMonitorImpl constructor(val schedulerProvider: Schedul
         override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
             currentNetwork = network
             currentCapabilities = networkCapabilities
-            updateAndSend()
-        }
-
-        override fun onLinkPropertiesChanged(network: Network, linkProperties: LinkProperties) {
-            currentNetwork = network
             updateAndSend()
         }
 
