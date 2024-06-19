@@ -115,8 +115,6 @@ public final class SynchronousAuth {
         } catch (Exception exception) {
             Log.i("SynchronousAuth", "Amplify already called", exception);
         }
-        //TODO: make authCategory confiuration synchronous
-        Thread.sleep(AUTH_OPERATION_TIMEOUT_MS);
         return SynchronousAuth.delegatingTo(Amplify.Auth);
     }
 

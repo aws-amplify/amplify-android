@@ -55,6 +55,7 @@ public class StorageUploadFileOptions extends StorageUploadOptions {
      *         values in the provided options
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public static Builder<?> from(@NonNull final StorageUploadFileOptions options) {
         return builder()
             .accessLevel(options.getAccessLevel())
@@ -76,6 +77,7 @@ public class StorageUploadFileOptions extends StorageUploadOptions {
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("deprecation")
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -94,6 +96,7 @@ public class StorageUploadFileOptions extends StorageUploadOptions {
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("deprecation")
     public int hashCode() {
         return ObjectsCompat.hash(
                 getAccessLevel(),
@@ -108,6 +111,7 @@ public class StorageUploadFileOptions extends StorageUploadOptions {
      */
     @NonNull
     @Override
+    @SuppressWarnings("deprecation")
     public String toString() {
         return "StorageUploadFileOptions {" +
                 "accessLevel=" + getAccessLevel() +

@@ -176,8 +176,15 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends AWSGraphQLOperati
 
             try {
                 GraphQLResponse<R> graphQLResponse = wrapResponse(jsonResponse);
-                if (graphQLResponse.hasErrors() && hasAuthRelatedErrors(graphQLResponse) && authTypes.hasNext()) {
-                    executorService.submit(MultiAuthAppSyncGraphQLOperation.this::dispatchRequest);
+                if (graphQLResponse.hasErrors() && hasAuthRelatedErrors(graphQLResponse)) {
+                    if (authTypes.hasNext()) {
+                        executorService.submit(MultiAuthAppSyncGraphQLOperation.this::dispatchRequest);
+                    } else {
+                        onFailure.accept(new ApiAuthException(
+                                "Unable to successfully complete request with any of the compatible auth types.",
+                                "Check your application logs for detail."
+                        ));
+                    }
                 } else {
                     onResponse.accept(graphQLResponse);
                 }

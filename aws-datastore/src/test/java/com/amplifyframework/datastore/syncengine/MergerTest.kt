@@ -18,6 +18,7 @@ import android.database.sqlite.SQLiteConstraintException
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.core.Consumer
+import com.amplifyframework.core.NoOpConsumer
 import com.amplifyframework.core.model.ModelSchema
 import com.amplifyframework.core.model.SchemaRegistry
 import com.amplifyframework.core.model.query.Where
@@ -35,6 +36,7 @@ import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider
 import com.amplifyframework.testmodels.commentsblog.Blog
 import com.amplifyframework.testmodels.commentsblog.BlogOwner
 import com.amplifyframework.testutils.random.RandomString
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -665,6 +667,81 @@ class MergerTest {
         assertEquals(expectedBlogResult, blogResult.sortedBy { it.id })
         assertEquals(expectedMetadataResult, metadataResult.sortedBy { it.primaryKeyString })
         assertEquals(expectedStorageItemChanges, capturedStorageItemChanges)
+    }
+
+    /**
+     * When several models with the same identifier, but different versions with different flag for deleted,
+     * Only the model with the latest version should be considered as it represents the latest known state of the model
+     * @throws InterruptedException If interrupted while awaiting terminal result in test observer
+     * @throws
+     */
+    @Test
+    @Throws(DataStoreException::class, InterruptedException::class)
+    fun testBatchMergerReconciliation() {
+        // Random UUID following RFC 4122 version 4 spec
+        val sameRandomId1 = UUID.randomUUID().toString()
+        val sameRandomId2 = UUID.randomUUID().toString()
+
+        // Models to merge
+        val blogFirstPost1ToBeDisregarded =
+            ModelWithMetadata(
+                Blog.builder().name("Hideo K.").id("DS1").build(),
+                ModelMetadata(sameRandomId1, false, 1, Temporal.Timestamp.now()),
+            )
+        val blogFirstPost2LatestVer =
+            ModelWithMetadata(
+                Blog.builder().name("Hideo K.").id("DS1").build(),
+                ModelMetadata(sameRandomId1, true, 3, Temporal.Timestamp.now()),
+            )
+        val blogFirstPost3LatestVerDuplicate =
+            ModelWithMetadata(
+                Blog.builder().name("Hideo K.").id("DS1").build(),
+                ModelMetadata(sameRandomId1, false, 3, Temporal.Timestamp.now()),
+            )
+        val blogFirstPost4ToBeDisregarded =
+            ModelWithMetadata(
+                Blog.builder().name("Hideo K.").id("DS1").build(),
+                ModelMetadata(sameRandomId1, false, 2, Temporal.Timestamp.now()),
+            )
+        val blogSecondPost1ToSurvive =
+            ModelWithMetadata(
+                Blog.builder().name("Hideo K.").id("DS2").build(),
+                ModelMetadata(sameRandomId2, false, 11, Temporal.Timestamp.now()),
+            )
+
+        // Input list of blog posts on remote storage
+        val remotemodels =
+            listOf(
+                blogFirstPost1ToBeDisregarded,
+                blogFirstPost2LatestVer,
+                blogFirstPost3LatestVerDuplicate,
+                blogFirstPost4ToBeDisregarded,
+                blogSecondPost1ToSurvive,
+            )
+
+        // Expected Blog table result
+        val expectedBlogResult =
+            listOf(
+                blogSecondPost1ToSurvive.model,
+            )
+
+        // Expected Metadata result
+        val expectedMetadataResult =
+            listOf(
+                blogFirstPost2LatestVer.syncMetadata,
+                blogSecondPost1ToSurvive.syncMetadata,
+            )
+
+        val observer = merger.merge(remotemodels, NoOpConsumer.create()).test()
+        assertTrue(observer.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS))
+        observer.assertNoErrors().assertComplete()
+
+        val blogResult = storageAdapter.query(Blog::class.java)
+        val metadataResult = storageAdapter.query(ModelMetadata::class.java)
+        assertEquals(1, blogResult.size)
+        assertEquals(2, metadataResult.size)
+        assertEquals(expectedMetadataResult, metadataResult)
+        assertEquals(expectedBlogResult, blogResult)
     }
 
     companion object {

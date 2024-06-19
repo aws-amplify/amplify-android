@@ -38,6 +38,7 @@ buildscript {
 
 plugins {
     alias(libs.plugins.binary.compatibility.validator)
+    alias(libs.plugins.kotlin.serialization) apply false
 }
 
 allprojects {
@@ -67,7 +68,8 @@ tasks.register<Delete>("clean").configure {
 
 val internalApiAnnotations = listOf(
     "com.amplifyframework.annotations.InternalApiWarning",
-    "com.amplifyframework.annotations.InternalAmplifyApi"
+    "com.amplifyframework.annotations.InternalAmplifyApi",
+    "com.amplifyframework.annotations.AmplifyFlutterApi"
 )
 
 subprojects {
@@ -177,6 +179,12 @@ fun Project.configureAndroid() {
                     "META-INF/LICENSE-notice.md"
                 )
             )
+        }
+
+        publishing {
+            singleVariant("release") {
+                withSourcesJar()
+            }
         }
     }
 

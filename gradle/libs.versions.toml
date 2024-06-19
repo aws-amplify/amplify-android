@@ -15,9 +15,9 @@ androidx-test-junit = "1.1.2"
 androidx-test-orchestrator = "1.4.2"
 androidx-test-runner = "1.3.0"
 androidx-workmanager = "2.7.1"
-aws-kotlin = "1.0.44" # ensure proper aws-smithy version also set
+aws-kotlin = "1.2.8" # ensure proper aws-smithy version also set
 aws-sdk = "2.62.2"
-aws-smithy = "1.0.11" # ensure proper aws-kotlin version also set
+aws-smithy = "1.2.2" # ensure proper aws-kotlin version also set
 binary-compatibility-validator = "0.14.0"
 coroutines = "1.7.3"
 desugar = "1.2.0"
@@ -27,7 +27,7 @@ gson = "2.8.9"
 json = "20210307"
 jsonassert = "1.5.0"
 junit = "4.13.2"
-kotest = "5.6.2"
+kotest = "5.9.0"
 kotlin = "1.9.10"
 kotlin-serialization = "1.6.0"
 maplibre = "9.6.0"
@@ -111,6 +111,7 @@ test-json = { module = "org.json:json", version.ref = "json" }
 test-jsonassert = { module = "org.skyscreamer:jsonassert", version.ref="jsonassert" }
 test-junit = { module = "junit:junit", version.ref = "junit" }
 test-kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+test-kotest-assertions-json = { module = "io.kotest:kotest-assertions-json", version.ref = "kotest" }
 test-kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref="coroutines" }
 test-kotlin-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref="kotlin" }
 test-kotlin-kotlinTest = { module = "org.jetbrains.kotlin:kotlin-test", version.ref="kotlin" }
@@ -125,3 +126,4 @@ test-totp = { module = "dev.robinohs:totp-kt", version.ref="totp" }
 
 [plugins]
 binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binary-compatibility-validator" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

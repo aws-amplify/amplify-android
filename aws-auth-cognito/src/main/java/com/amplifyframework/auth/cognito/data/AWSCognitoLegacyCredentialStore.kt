@@ -17,18 +17,20 @@ package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
 import com.amplifyframework.auth.AuthProvider
+import com.amplifyframework.auth.cognito.AuthConfiguration
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.cognito.helpers.identityProviderName
 import com.amplifyframework.core.store.KeyValueRepository
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.AuthCredentialStore
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.Date
 import java.util.Locale
 
@@ -180,11 +182,23 @@ internal class AWSCognitoLegacyCredentialStore(
         val accessKey = idAndCredentialsKeyValue.get(namespace(AK_KEY))
         val secretKey = idAndCredentialsKeyValue.get(namespace(SK_KEY))
         val sessionToken = idAndCredentialsKeyValue.get(namespace(ST_KEY))
-        val expiration = idAndCredentialsKeyValue.get(namespace(EXP_KEY))?.toLongOrNull()
+
+        // V2 AWSCredential expiration is in epoch seconds whereas legacy expiration may be in epoch milliseconds
+        // Session expiration should be within 24 hours so if we see a date in the far future, we can assume the
+        // timestamp is encoded in milliseconds.
+        val expiration = idAndCredentialsKeyValue.get(namespace(EXP_KEY))?.toLongOrNull()?.let {
+            if (Instant.ofEpochSecond(it).isAfter(Instant.now().plus(365, ChronoUnit.DAYS))) {
+                it / 1000
+            } else {
+                it
+            }
+        }
 
         return if (accessKey == null && secretKey == null && sessionToken == null) {
             null
-        } else AWSCredentials(accessKey, secretKey, sessionToken, expiration)
+        } else {
+            AWSCredentials(accessKey, secretKey, sessionToken, expiration)
+        }
     }
 
     private fun retrieveIdentityId() = idAndCredentialsKeyValue.get(namespace(ID_KEY))
@@ -224,8 +238,11 @@ internal class AWSCognitoLegacyCredentialStore(
         val deviceGroupKey = deviceKeyValue.get(DEVICE_GROUP_KEY)
         val deviceSecretKey = deviceKeyValue.get(DEVICE_SECRET_KEY)
 
-        return if (deviceKey.isNullOrEmpty() && deviceGroupKey.isNullOrEmpty()) DeviceMetadata.Empty
-        else DeviceMetadata.Metadata(deviceKey ?: "", deviceGroupKey ?: "", deviceSecretKey)
+        return if (deviceKey.isNullOrEmpty() && deviceGroupKey.isNullOrEmpty()) {
+            DeviceMetadata.Empty
+        } else {
+            DeviceMetadata.Metadata(deviceKey ?: "", deviceGroupKey ?: "", deviceSecretKey)
+        }
     }
 
     private fun retrieveCognitoUserPoolTokens(keys: Map<String, String>): CognitoUserPoolTokens? {

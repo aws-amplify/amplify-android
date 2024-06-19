@@ -61,7 +61,7 @@ import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.category.CategoryType
-import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
+import com.amplifyframework.core.configuration.AmplifyOutputsData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -97,12 +97,17 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         }
     }
 
-    private lateinit var pluginConfigurationJSON: JSONObject
+    // This function is used for versions of the Authenticator component <= 1.1.0 to get the configuration values needed
+    // to configure the Authenticator UI. Starting in 1.2.0 it uses getAuthConfiguration() instead. In order to support
+    // older Authenticator versions we translate the config - whether it comes from Gen1 or Gen2 - back into Gen1 JSON
+    @InternalAmplifyApi
+    @Deprecated("Use getAuthConfiguration instead", replaceWith = ReplaceWith("getAuthConfiguration()"))
+    fun getPluginConfiguration(): JSONObject {
+        return getAuthConfiguration().toGen1Json()
+    }
 
     @InternalAmplifyApi
-    fun getPluginConfiguration(): JSONObject {
-        return pluginConfigurationJSON
-    }
+    fun getAuthConfiguration() = realPlugin.configuration
 
     @InternalAmplifyApi
     fun addToUserAgent(type: AWSCognitoAuthMetadataType, value: String) {
@@ -123,29 +128,8 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
 
     @Throws(AmplifyException::class)
     override fun configure(pluginConfiguration: JSONObject, context: Context) {
-        pluginConfigurationJSON = pluginConfiguration
         try {
-            val configuration = AuthConfiguration.fromJson(pluginConfiguration)
-            val credentialStoreClient = CredentialStoreClient(configuration, context, logger)
-            val authEnvironment = AuthEnvironment(
-                context,
-                configuration,
-                AWSCognitoAuthService.fromConfiguration(configuration),
-                credentialStoreClient,
-                configuration.userPool?.let { UserContextDataProvider(context, it.poolId!!, it.appClient!!) },
-                HostedUIClient.create(context, configuration.oauth, logger),
-                logger
-            )
-
-            val authStateMachine = AuthStateMachine(authEnvironment)
-            realPlugin = RealAWSCognitoAuthPlugin(
-                configuration,
-                authEnvironment,
-                authStateMachine,
-                logger
-            )
-
-            blockQueueChannelWhileConfiguring()
+            configure(AuthConfiguration.fromJson(pluginConfiguration), context)
         } catch (exception: Exception) {
             throw ConfigurationException(
                 "Failed to configure AWSCognitoAuthPlugin.",
@@ -153,6 +137,42 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
                 exception
             )
         }
+    }
+
+    @InternalAmplifyApi
+    override fun configure(amplifyOutputs: AmplifyOutputsData, context: Context) {
+        try {
+            configure(AuthConfiguration.from(amplifyOutputs), context)
+        } catch (exception: Exception) {
+            throw ConfigurationException(
+                "Failed to configure AWSCognitoAuthPlugin.",
+                "Make sure your amplify_outputs.json is valid.",
+                exception
+            )
+        }
+    }
+
+    private fun configure(configuration: AuthConfiguration, context: Context) {
+        val credentialStoreClient = CredentialStoreClient(configuration, context, logger)
+        val authEnvironment = AuthEnvironment(
+            context,
+            configuration,
+            AWSCognitoAuthService.fromConfiguration(configuration),
+            credentialStoreClient,
+            configuration.userPool?.let { UserContextDataProvider(context, it.poolId!!, it.appClient!!) },
+            HostedUIClient.create(context, configuration.oauth, logger),
+            logger
+        )
+
+        val authStateMachine = AuthStateMachine(authEnvironment)
+        realPlugin = RealAWSCognitoAuthPlugin(
+            configuration,
+            authEnvironment,
+            authStateMachine,
+            logger
+        )
+
+        blockQueueChannelWhileConfiguring()
     }
 
     // Auth configuration is an async process. Wait until the state machine is in a settled state before attempting
@@ -176,9 +196,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.signUp(username, password, options)
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -194,9 +214,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.confirmSignUp(username, confirmationCode)
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -213,9 +233,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.confirmSignUp(username, confirmationCode, options)
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -230,9 +250,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.resendSignUpCode(username)
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -248,9 +268,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.resendSignUpCode(username, options)
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -266,9 +286,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.signIn(username, password)
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -285,9 +305,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.signIn(username, password, options)
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -302,9 +322,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.confirmSignIn(challengeResponse)
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -320,9 +340,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.confirmSignIn(challengeResponse, options)
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -338,9 +358,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.signInWithSocialWebUI(provider, callingActivity)
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -357,9 +377,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.signInWithSocialWebUI(provider, callingActivity, options)
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -374,9 +394,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.signInWithWebUI(callingActivity)
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -392,9 +412,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.signInWithWebUI(callingActivity, options)
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -413,9 +433,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.fetchAuthSession(options)
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -426,9 +446,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.fetchAuthSession()
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -439,9 +459,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     queueFacade.rememberDevice()
-                    onSuccess.call()
+                    pluginScope.launch { onSuccess.call() }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -452,9 +472,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     queueFacade.forgetDevice()
-                    onSuccess.call()
+                    pluginScope.launch { onSuccess.call() }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -469,9 +489,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     queueFacade.forgetDevice(device)
-                    onSuccess.call()
+                    pluginScope.launch { onSuccess.call() }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -485,9 +505,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.fetchDevices()
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -503,9 +523,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.resetPassword(username, options)
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -520,9 +540,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.resetPassword(username)
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -540,9 +560,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     queueFacade.confirmResetPassword(username, newPassword, confirmationCode, options)
-                    onSuccess.call()
+                    pluginScope.launch { onSuccess.call() }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -559,9 +579,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     queueFacade.confirmResetPassword(username, newPassword, confirmationCode)
-                    onSuccess.call()
+                    pluginScope.launch { onSuccess.call() }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -577,9 +597,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     queueFacade.updatePassword(oldPassword, newPassword)
-                    onSuccess.call()
+                    pluginScope.launch { onSuccess.call() }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -593,9 +613,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.fetchUserAttributes()
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -611,9 +631,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.updateUserAttribute(attribute, options)
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -628,9 +648,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.updateUserAttribute(attribute)
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -646,9 +666,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.updateUserAttributes(attributes, options)
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -663,9 +683,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.updateUserAttributes(attributes)
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -681,9 +701,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.resendUserAttributeConfirmationCode(attributeKey, options)
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -698,9 +718,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.resendUserAttributeConfirmationCode(attributeKey)
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -716,9 +736,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     queueFacade.confirmUserAttribute(attributeKey, confirmationCode)
-                    onSuccess.call()
+                    pluginScope.launch { onSuccess.call() }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -732,9 +752,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.getCurrentUser()
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -744,7 +764,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         queueChannel.trySend(
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 val result = queueFacade.signOut()
-                onComplete.accept(result)
+                pluginScope.launch { onComplete.accept(result) }
             }
         )
     }
@@ -753,7 +773,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         queueChannel.trySend(
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 val result = queueFacade.signOut(options)
-                onComplete.accept(result)
+                pluginScope.launch { onComplete.accept(result) }
             }
         )
     }
@@ -763,9 +783,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     queueFacade.deleteUser()
-                    onSuccess.call()
+                    pluginScope.launch { onSuccess.call() }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -776,9 +796,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.setUpTOTP()
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -798,9 +818,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     queueFacade.verifyTOTPSetup(code, options)
-                    onSuccess.call()
+                    pluginScope.launch { onSuccess.call() }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -831,9 +851,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
                         authProvider,
                         FederateToIdentityPoolOptions.builder().build()
                     )
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -861,9 +881,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
                         authProvider,
                         options
                     )
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -882,9 +902,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     queueFacade.clearFederationToIdentityPool()
-                    onSuccess.call()
+                    pluginScope.launch { onSuccess.call() }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -898,9 +918,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     val result = queueFacade.fetchMFAPreference()
-                    onSuccess.accept(result)
+                    pluginScope.launch { onSuccess.accept(result) }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )
@@ -916,9 +936,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
                     queueFacade.updateMFAPreference(sms, totp)
-                    onSuccess.call()
+                    pluginScope.launch { onSuccess.call() }
                 } catch (e: Exception) {
-                    onError.accept(e.toAuthException())
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
                 }
             }
         )

@@ -1,4 +1,5 @@
 public final class com/amplifyframework/api/aws/AWSApiPlugin : com/amplifyframework/api/ApiPlugin {
+	public static final field DEFAULT_GRAPHQL_API Ljava/lang/String;
 	public fun <init> ()V
 	public fun <init> (Lcom/amplifyframework/api/aws/ApiAuthProviders;)V
 	public static fun builder ()Lcom/amplifyframework/api/aws/AWSApiPlugin$Builder;
@@ -261,13 +262,13 @@ public final class com/amplifyframework/api/graphql/model/ModelQuery {
 
 public final class com/amplifyframework/api/graphql/model/ModelSubscription {
 	public static final field INSTANCE Lcom/amplifyframework/api/graphql/model/ModelSubscription;
-	public final fun of (Ljava/lang/Class;Lcom/amplifyframework/api/graphql/SubscriptionType;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
-	public final fun of (Ljava/lang/Class;Lcom/amplifyframework/api/graphql/SubscriptionType;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun of (Ljava/lang/Class;Lcom/amplifyframework/api/graphql/SubscriptionType;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun of (Ljava/lang/Class;Lcom/amplifyframework/api/graphql/SubscriptionType;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
 	public static final fun onCreate (Ljava/lang/Class;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
 	public static final fun onCreate (Ljava/lang/Class;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
-	public final fun onDelete (Ljava/lang/Class;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun onDelete (Ljava/lang/Class;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
 	public static final fun onDelete (Ljava/lang/Class;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
-	public final fun onUpdate (Ljava/lang/Class;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static final fun onUpdate (Ljava/lang/Class;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
 	public static final fun onUpdate (Ljava/lang/Class;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
 }
 

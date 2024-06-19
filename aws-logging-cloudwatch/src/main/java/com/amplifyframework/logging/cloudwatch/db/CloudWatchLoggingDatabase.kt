@@ -19,6 +19,7 @@ import android.content.Context
 import android.content.UriMatcher
 import android.database.Cursor
 import android.net.Uri
+import androidx.annotation.VisibleForTesting
 import com.amplifyframework.core.store.EncryptedKeyValueRepository
 import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
 import java.util.UUID
@@ -81,13 +82,15 @@ internal class CloudWatchLoggingDatabase(
     }
 
     internal suspend fun bulkDelete(eventIds: List<Long>) = withContext(coroutineDispatcher) {
-        contentUri
-        val whereClause = "${LogEventTable.COLUMN_ID} in (?)"
-        database.delete(
-            LogEventTable.TABLE_LOG_EVENT,
-            whereClause,
-            arrayOf(eventIds.joinToString(","))
-        )
+        if (eventIds.isNotEmpty()) {
+            val params = List(eventIds.size) { "?" }.joinToString(",")
+            val whereClause = "${LogEventTable.COLUMN_ID} in ($params)"
+            database.delete(
+                LogEventTable.TABLE_LOG_EVENT,
+                whereClause,
+                eventIds.toTypedArray()
+            )
+        }
     }
 
     internal fun isCacheFull(cacheSizeInMB: Int): Boolean {
@@ -132,7 +135,8 @@ internal class CloudWatchLoggingDatabase(
         )
     }
 
-    private fun getDatabasePassphrase(): String {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    fun getDatabasePassphrase(): String {
         return encryptedKeyValueRepository.get(passphraseKey) ?: kotlin.run {
             val passphrase = UUID.randomUUID().toString()
             // If the database is restored from backup and the passphrase key is not present,

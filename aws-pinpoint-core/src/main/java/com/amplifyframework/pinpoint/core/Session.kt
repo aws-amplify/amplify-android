@@ -14,7 +14,6 @@
  */
 package com.amplifyframework.pinpoint.core
 
-import android.content.Context
 import com.amplifyframework.annotations.InternalAmplifyApi
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -53,11 +52,10 @@ class Session {
     }
 
     constructor(
-        context: Context,
         uniqueId: String
     ) {
-        this@Session.sessionId = generateSessionId(uniqueId)
         this@Session.startTime = System.currentTimeMillis()
+        this@Session.sessionId = generateSessionId(uniqueId)
         this@Session.stopTime = null
     }
 

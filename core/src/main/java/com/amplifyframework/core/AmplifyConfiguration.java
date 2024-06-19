@@ -280,7 +280,9 @@ public final class AmplifyConfiguration {
          * @param platform Additional platform that uses this library.
          * @param version Version number associated with the additional platform.
          * @return this builder instance.
+         * @deprecated Use Amplify.addUserAgentPlatform instead
          */
+        @Deprecated
         @NonNull
         public Builder addPlatform(@NonNull UserAgent.Platform platform, @NonNull String version) {
             // Do not allow user to specify Android platform to prevent redundancy.

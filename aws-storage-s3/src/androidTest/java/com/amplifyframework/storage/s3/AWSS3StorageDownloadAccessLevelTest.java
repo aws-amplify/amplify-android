@@ -46,6 +46,7 @@ import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
  * Instrumentation test to confirm that Storage Download behaves
  * correctly with regards to the provided storage access level.
  */
+@SuppressWarnings("deprecation")
 public final class AWSS3StorageDownloadAccessLevelTest {
     private static final long UPLOAD_SIZE = 100L;
     private static final String UPLOAD_NAME = "test-" + System.currentTimeMillis();

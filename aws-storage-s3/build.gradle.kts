@@ -23,6 +23,15 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 
 group = properties["POM_GROUP"].toString()
 
+android {
+    defaultConfig {
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+    testOptions {
+        execution = "ANDROIDX_TEST_ORCHESTRATOR"
+    }
+}
+
 dependencies {
     implementation(project(":core"))
     implementation(project(":aws-core"))
@@ -42,6 +51,7 @@ dependencies {
     testImplementation(libs.test.mockk)
     testImplementation(libs.test.androidx.workmanager)
     testImplementation(libs.test.kotlin.coroutines)
+    testImplementation(libs.test.kotest.assertions)
     testImplementation(project(":aws-storage-s3"))
 
     androidTestImplementation(project(":testutils"))
@@ -51,6 +61,8 @@ dependencies {
     androidTestImplementation(libs.test.androidx.junit)
     androidTestImplementation(libs.test.androidx.workmanager)
     androidTestImplementation(project(":aws-storage-s3"))
+
+    androidTestUtil(libs.test.androidx.orchestrator)
 }
 
 android.kotlinOptions {

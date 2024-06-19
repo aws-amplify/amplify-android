@@ -55,6 +55,8 @@ dependencies {
     testImplementation(libs.test.robolectric)
     testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.kotlin.reflection)
+    testImplementation(libs.test.kotest.assertions)
+    testImplementation(libs.test.kotest.assertions.json)
 
     androidTestImplementation(libs.gson)
     //noinspection GradleDependency
