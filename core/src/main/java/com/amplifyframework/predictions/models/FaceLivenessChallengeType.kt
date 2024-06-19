@@ -19,6 +19,5 @@ import com.amplifyframework.annotations.InternalAmplifyApi
 @InternalAmplifyApi
 enum class FaceLivenessChallengeType {
     FaceMovementChallenge,
-    FaceMovementAndLightChallenge,
-    Unknown
+    FaceMovementAndLightChallenge
 }

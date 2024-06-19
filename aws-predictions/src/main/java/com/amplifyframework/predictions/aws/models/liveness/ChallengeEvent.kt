@@ -14,12 +14,12 @@
  */
 package com.amplifyframework.predictions.aws.models.liveness
 
-import com.amplifyframework.predictions.models.ChallengeType
+import com.amplifyframework.predictions.models.FaceLivenessChallengeType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 internal data class ChallengeEvent(
-    @SerialName("Type") val challengeType: ChallengeType,
+    @SerialName("Type") val challengeType: FaceLivenessChallengeType,
     @SerialName("Version") val version: String
 )

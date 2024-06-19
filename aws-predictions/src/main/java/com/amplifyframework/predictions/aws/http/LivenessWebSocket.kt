@@ -43,7 +43,8 @@ import com.amplifyframework.predictions.aws.models.liveness.LivenessResponseStre
 import com.amplifyframework.predictions.aws.models.liveness.SessionInformation
 import com.amplifyframework.predictions.aws.models.liveness.TargetFace
 import com.amplifyframework.predictions.aws.models.liveness.VideoEvent
-import com.amplifyframework.predictions.models.ChallengeType
+import com.amplifyframework.predictions.models.Challenge
+import com.amplifyframework.predictions.models.FaceLivenessChallengeType
 import com.amplifyframework.predictions.models.FaceLivenessSessionInformation
 import com.amplifyframework.util.UserAgent
 import java.net.URI
@@ -96,7 +97,7 @@ internal class LivenessWebSocket(
     @VisibleForTesting
     internal var webSocket: WebSocket? = null
     internal val challengeId = UUID.randomUUID().toString()
-    var challengeType: ChallengeType? = null
+    lateinit var challengeType: FaceLivenessChallengeType
     private var initialDetectedFace: BoundingBox? = null
     private var faceDetectedStart = 0L
     private var videoStartTimestamp = 0L
@@ -138,6 +139,16 @@ internal class LivenessWebSocket(
             }
         }
 
+        init {
+            // If the client session is requesting a 1.0.0 FaceMovementAndLight challenge, the backend won't return a
+            // ChallengeEvent so we have to set the challengeType manually
+            clientSessionInformation.challengeVersions.forEach {
+                if (it.compareType(Challenge.FaceMovementAndLightChallenge("1.0.0"))) {
+                    challengeType = FaceLivenessChallengeType.FaceMovementAndLightChallenge
+                }
+            }
+        }
+
         override fun onMessage(webSocket: WebSocket, text: String) {
             LOG.debug("WebSocket onMessage text")
             super.onMessage(webSocket, text)
@@ -151,9 +162,21 @@ internal class LivenessWebSocket(
                         if (response.challengeEvent != null) {
                             challengeType = response.challengeEvent.challengeType
                         } else if (response.serverSessionInformationEvent != null) {
-                            onSessionInformationReceived.accept(
-                                response.serverSessionInformationEvent.sessionInformation
-                            )
+                            // If challengeType hasn't been initialized by this point it's because server sent an
+                            // unsupported challenge type so return an error to the client.
+                            if (!this@LivenessWebSocket::challengeType.isInitialized) {
+                                onErrorReceived.accept(
+                                    PredictionsException(
+                                        "Received an unsupported ChallengeType from the backend",
+                                        "Verify that the Challenges configured in your backend are supported by the " +
+                                            "frontend code (e.g. Amplify UI)"
+                                    )
+                                )
+                            } else {
+                                onSessionInformationReceived.accept(
+                                    response.serverSessionInformationEvent.sessionInformation
+                                )
+                            }
                         } else if (response.disconnectionEvent != null) {
                             this@LivenessWebSocket.webSocket?.close(
                                 NORMAL_SOCKET_CLOSURE_STATUS_CODE,
@@ -527,7 +550,7 @@ internal class LivenessWebSocket(
     private fun isTimeDiffSafe(diffInMillis: Long) = kotlin.math.abs(diffInMillis) < FOUR_MINUTES
 
     private fun buildClientChallenge(
-        challengeType: ChallengeType?,
+        challengeType: FaceLivenessChallengeType,
         challengeId: String,
         videoStartTimestamp: Long? = null,
         videoEndTimestamp: Long? = null,
@@ -535,7 +558,7 @@ internal class LivenessWebSocket(
         targetFace: TargetFace? = null,
         colorDisplayed: ColorDisplayed? = null
     ): ClientChallenge = when (challengeType) {
-        ChallengeType.FaceMovementAndLightChallenge -> {
+        FaceLivenessChallengeType.FaceMovementAndLightChallenge -> {
             ClientChallenge(
                 faceMovementAndLightChallenge = FaceMovementAndLightClientChallenge(
                     challengeId = challengeId,
@@ -548,7 +571,7 @@ internal class LivenessWebSocket(
                 faceMovementChallenge = null
             )
         }
-        ChallengeType.FaceMovementChallenge -> {
+        FaceLivenessChallengeType.FaceMovementChallenge -> {
             ClientChallenge(
                 faceMovementAndLightChallenge = null,
                 faceMovementChallenge = FaceMovementClientChallenge(
@@ -558,21 +581,6 @@ internal class LivenessWebSocket(
                     initialFace = initialFace,
                     targetFace = targetFace
                 )
-            )
-        }
-        null -> {
-            // A ChallengeType event is not returned when the v1 version of FaceMovementAndLightChallenge
-            // so we assume that the client challenge to send is of FaceMovementAndLight type
-            ClientChallenge(
-                faceMovementAndLightChallenge = FaceMovementAndLightClientChallenge(
-                    challengeId = challengeId,
-                    videoStartTimestamp = videoStartTimestamp,
-                    videoEndTimestamp = videoEndTimestamp,
-                    initialFace = initialFace,
-                    targetFace = targetFace,
-                    colorDisplayed = colorDisplayed
-                ),
-                faceMovementChallenge = null
             )
         }
     }

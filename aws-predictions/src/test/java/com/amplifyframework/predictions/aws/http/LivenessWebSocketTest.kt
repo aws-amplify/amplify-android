@@ -37,7 +37,7 @@ import com.amplifyframework.predictions.aws.models.liveness.ServerChallenge
 import com.amplifyframework.predictions.aws.models.liveness.ServerSessionInformationEvent
 import com.amplifyframework.predictions.aws.models.liveness.SessionInformation
 import com.amplifyframework.predictions.aws.models.liveness.ValidationException
-import com.amplifyframework.predictions.models.ChallengeType
+import com.amplifyframework.predictions.models.FaceLivenessChallengeType
 import com.amplifyframework.predictions.models.FaceLivenessSessionInformation
 import io.mockk.every
 import io.mockk.mockk
@@ -215,7 +215,7 @@ internal class LivenessWebSocketTest {
         assertEquals(null, livenessWebSocket.challengeType)
 
         val event = ChallengeEvent(
-            challengeType = ChallengeType.FaceMovementAndLightChallenge,
+            challengeType = FaceLivenessChallengeType.FaceMovementAndLightChallenge,
             version = "2.0.0"
         )
 
@@ -230,7 +230,7 @@ internal class LivenessWebSocketTest {
 
         livenessWebSocket.webSocketListener.onMessage(mockk(), encodedByteString)
 
-        assertEquals(ChallengeType.FaceMovementAndLightChallenge, livenessWebSocket.challengeType)
+        assertEquals(FaceLivenessChallengeType.FaceMovementAndLightChallenge, livenessWebSocket.challengeType)
     }
 
     @Test
@@ -239,7 +239,7 @@ internal class LivenessWebSocketTest {
         assertEquals(null, livenessWebSocket.challengeType)
 
         val event = ChallengeEvent(
-            challengeType = ChallengeType.FaceMovementChallenge,
+            challengeType = FaceLivenessChallengeType.FaceMovementChallenge,
             version = "1.0.0"
         )
 
@@ -254,7 +254,7 @@ internal class LivenessWebSocketTest {
 
         livenessWebSocket.webSocketListener.onMessage(mockk(), encodedByteString)
 
-        assertEquals(ChallengeType.FaceMovementChallenge, livenessWebSocket.challengeType)
+        assertEquals(FaceLivenessChallengeType.FaceMovementChallenge, livenessWebSocket.challengeType)
     }
 
     @Test

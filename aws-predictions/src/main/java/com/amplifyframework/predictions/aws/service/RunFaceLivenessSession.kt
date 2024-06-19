@@ -16,6 +16,7 @@
 package com.amplifyframework.predictions.aws.service
 
 import android.net.Uri
+import androidx.annotation.VisibleForTesting
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
@@ -34,9 +35,7 @@ import com.amplifyframework.predictions.aws.models.liveness.ChallengeConfig
 import com.amplifyframework.predictions.aws.models.liveness.FreshnessColor
 import com.amplifyframework.predictions.aws.models.liveness.OvalParameters
 import com.amplifyframework.predictions.aws.models.liveness.SessionInformation
-import com.amplifyframework.predictions.models.Challenge
 import com.amplifyframework.predictions.models.ChallengeResponseEvent
-import com.amplifyframework.predictions.models.ChallengeType
 import com.amplifyframework.predictions.models.FaceLivenessChallengeType
 import com.amplifyframework.predictions.models.FaceLivenessSession
 import com.amplifyframework.predictions.models.FaceLivenessSessionChallenge
@@ -61,7 +60,7 @@ internal class RunFaceLivenessSession(
         livenessVersion = livenessVersion,
         onSessionInformationReceived = { serverSessionInformation ->
             val challenges = processSessionInformation(serverSessionInformation)
-            val challengeType = processChallengeType()
+            val challengeType = getChallengeType()
             val faceLivenessSession = FaceLivenessSession(
                 challengeId = getChallengeId(),
                 challengeType = challengeType,
@@ -129,24 +128,7 @@ internal class RunFaceLivenessSession(
 
     private fun getChallengeId(): String = livenessWebSocket.challengeId
 
-    private fun processChallengeType(): FaceLivenessChallengeType =
-        when (livenessWebSocket.challengeType) {
-            ChallengeType.FaceMovementChallenge -> FaceLivenessChallengeType.FaceMovementChallenge
-            ChallengeType.FaceMovementAndLightChallenge -> FaceLivenessChallengeType.FaceMovementAndLightChallenge
-            null -> {
-                // A ChallengeType event is not returned when the v1 version of FaceMovementAndLightChallenge
-                // is requested so we'll check here for backwards compat
-                if (clientSessionInformation.challengeVersions != null &&
-                    clientSessionInformation.challengeVersions!!.contains(
-                            Challenge(ChallengeType.FaceMovementAndLightChallenge, "1.0.0")
-                        )
-                ) {
-                    FaceLivenessChallengeType.FaceMovementAndLightChallenge
-                } else {
-                    FaceLivenessChallengeType.Unknown
-                }
-            }
-        }
+    private fun getChallengeType(): FaceLivenessChallengeType = livenessWebSocket.challengeType
 
     private fun getFaceTargetChallenge(
         ovalParameters: OvalParameters,
@@ -222,11 +204,11 @@ internal class RunFaceLivenessSession(
         reasonCode?.let { livenessWebSocket.destroy(it) } ?: livenessWebSocket.destroy()
     }
 
-    private fun buildWebSocketEndpoint(): String {
-        val challengeVersionString = clientSessionInformation.challenge
-            ?: clientSessionInformation.challengeVersions?.joinToString(",") {
-                it.toQueryParamString()
-            }
+    @VisibleForTesting
+    fun buildWebSocketEndpoint(): String {
+        val challengeVersionString = clientSessionInformation.challengeVersions.joinToString(",") {
+            it.toQueryParamString()
+        }
 
         val uriBuilder = Uri.Builder()
             .scheme("wss")
