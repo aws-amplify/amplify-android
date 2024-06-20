@@ -43,7 +43,7 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
-const val basePath = "aws-auth-cognito/src/test/resources/feature-test"
+const val basePath = "src/test/resources/feature-test"
 
 fun writeFile(json: String, dirName: String, fileName: String) {
     val directory = File("$basePath/$dirName")
