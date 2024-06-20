@@ -70,7 +70,6 @@ import okhttp3.WebSocketListener
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
 import org.junit.After
-import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
