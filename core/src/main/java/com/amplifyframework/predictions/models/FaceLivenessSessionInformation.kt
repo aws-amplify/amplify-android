@@ -58,17 +58,14 @@ class FaceLivenessSessionInformation {
 }
 
 @InternalAmplifyApi
-sealed class Challenge private constructor(val name: String, val version: String) {
+sealed class Challenge private constructor(val name: String, open val version: String) {
 
     @InternalAmplifyApi
-    class FaceMovementChallenge(version: String) : Challenge("FaceMovementChallenge", version)
+    data class FaceMovementChallenge(override val version: String) : Challenge("FaceMovementChallenge", version)
 
     @InternalAmplifyApi
-    class FaceMovementAndLightChallenge(version: String) : Challenge("FaceMovementAndLightChallenge", version)
-
-    fun compareType(challenge: Challenge): Boolean {
-        return this.name == challenge.name && this.version == challenge.version
-    }
+    data class FaceMovementAndLightChallenge(override val version: String) :
+        Challenge("FaceMovementAndLightChallenge", version)
 
     fun toQueryParamString(): String = "${name}_$version"
 }

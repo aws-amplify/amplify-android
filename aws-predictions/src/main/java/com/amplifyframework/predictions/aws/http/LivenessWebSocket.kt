@@ -97,7 +97,7 @@ internal class LivenessWebSocket(
     @VisibleForTesting
     internal var webSocket: WebSocket? = null
     internal val challengeId = UUID.randomUUID().toString()
-    lateinit var challengeType: FaceLivenessChallengeType
+    var challengeType: FaceLivenessChallengeType? = null
     private var initialDetectedFace: BoundingBox? = null
     private var faceDetectedStart = 0L
     private var videoStartTimestamp = 0L
@@ -139,16 +139,6 @@ internal class LivenessWebSocket(
             }
         }
 
-        init {
-            // If the client session is requesting a 1.0.0 FaceMovementAndLight challenge, the backend won't return a
-            // ChallengeEvent so we have to set the challengeType manually
-            clientSessionInformation.challengeVersions.forEach {
-                if (it.compareType(Challenge.FaceMovementAndLightChallenge("1.0.0"))) {
-                    challengeType = FaceLivenessChallengeType.FaceMovementAndLightChallenge
-                }
-            }
-        }
-
         override fun onMessage(webSocket: WebSocket, text: String) {
             LOG.debug("WebSocket onMessage text")
             super.onMessage(webSocket, text)
@@ -162,9 +152,20 @@ internal class LivenessWebSocket(
                         if (response.challengeEvent != null) {
                             challengeType = response.challengeEvent.challengeType
                         } else if (response.serverSessionInformationEvent != null) {
+
+                            val clientRequestedOldLightChallenge = clientSessionInformation.challengeVersions
+                                .any { it == Challenge.FaceMovementAndLightChallenge("1.0.0") }
+
+                            if (challengeType == null && clientRequestedOldLightChallenge) {
+                                // For the  1.0.0 version of FaceMovementAndLight challenge, backend doesn't send a
+                                // ChallengeEvent so we need to manually check and set it if that specific challenge
+                                // was requested.
+                                challengeType = FaceLivenessChallengeType.FaceMovementAndLightChallenge
+                            }
+
                             // If challengeType hasn't been initialized by this point it's because server sent an
                             // unsupported challenge type so return an error to the client.
-                            if (!this@LivenessWebSocket::challengeType.isInitialized) {
+                            if (challengeType == null) {
                                 onErrorReceived.accept(
                                     PredictionsException(
                                         "Received an unsupported ChallengeType from the backend",
@@ -392,44 +393,63 @@ internal class LivenessWebSocket(
             width = initialFaceRect.width() / clientSessionInformation.videoWidth
         )
         faceDetectedStart = adjustedDate(videoStartTime)
-        val clientInfoEvent =
-            ClientSessionInformationEvent(
+
+        if (challengeType == null) {
+            onErrorReceived.accept(
+                PredictionsException(
+                    "Failed to send an initial face detected event",
+                    AmplifyException.TODO_RECOVERY_SUGGESTION
+                )
+            )
+        } else {
+            val clientInfoEvent =
+                ClientSessionInformationEvent(
+                    challenge = buildClientChallenge(
+                        challengeType = challengeType!!,
+                        challengeId = challengeId,
+                        initialFace = InitialFace(
+                            boundingBox = initialDetectedFace!!,
+                            initialFaceDetectedTimestamp = faceDetectedStart
+                        ),
+                        videoStartTimestamp = videoStartTimestamp
+                    )
+                )
+            sendClientInfoEvent(clientInfoEvent)
+        }
+    }
+
+    fun sendFinalEvent(targetFaceRect: RectF, faceMatchedStart: Long, faceMatchedEnd: Long) {
+        if (challengeType == null) {
+            onErrorReceived.accept(
+                PredictionsException(
+                    "Failed to send an initial face detected event",
+                    AmplifyException.TODO_RECOVERY_SUGGESTION
+                )
+            )
+        } else {
+            val finalClientInfoEvent = ClientSessionInformationEvent(
                 challenge = buildClientChallenge(
-                    challengeType = challengeType,
+                    challengeType = challengeType!!,
                     challengeId = challengeId,
+                    videoEndTimestamp = videoEndTimestamp,
                     initialFace = InitialFace(
                         boundingBox = initialDetectedFace!!,
                         initialFaceDetectedTimestamp = faceDetectedStart
                     ),
-                    videoStartTimestamp = videoStartTimestamp
-                )
-            )
-        sendClientInfoEvent(clientInfoEvent)
-    }
-
-    fun sendFinalEvent(targetFaceRect: RectF, faceMatchedStart: Long, faceMatchedEnd: Long) {
-        val finalClientInfoEvent = ClientSessionInformationEvent(
-            challenge = buildClientChallenge(
-                challengeType = challengeType,
-                challengeId = challengeId,
-                videoEndTimestamp = videoEndTimestamp,
-                initialFace = InitialFace(
-                    boundingBox = initialDetectedFace!!,
-                    initialFaceDetectedTimestamp = faceDetectedStart
-                ),
-                targetFace = TargetFace(
-                    faceDetectedInTargetPositionStartTimestamp = adjustedDate(faceMatchedStart),
-                    faceDetectedInTargetPositionEndTimestamp = adjustedDate(faceMatchedEnd),
-                    boundingBox = BoundingBox(
-                        left = targetFaceRect.left / clientSessionInformation.videoWidth,
-                        top = targetFaceRect.top / clientSessionInformation.videoHeight,
-                        height = targetFaceRect.height() / clientSessionInformation.videoHeight,
-                        width = targetFaceRect.width() / clientSessionInformation.videoWidth
+                    targetFace = TargetFace(
+                        faceDetectedInTargetPositionStartTimestamp = adjustedDate(faceMatchedStart),
+                        faceDetectedInTargetPositionEndTimestamp = adjustedDate(faceMatchedEnd),
+                        boundingBox = BoundingBox(
+                            left = targetFaceRect.left / clientSessionInformation.videoWidth,
+                            top = targetFaceRect.top / clientSessionInformation.videoHeight,
+                            height = targetFaceRect.height() / clientSessionInformation.videoHeight,
+                            width = targetFaceRect.width() / clientSessionInformation.videoWidth
+                        )
                     )
                 )
             )
-        )
-        sendClientInfoEvent(finalClientInfoEvent)
+            sendClientInfoEvent(finalClientInfoEvent)
+        }
     }
 
     fun sendColorDisplayedEvent(

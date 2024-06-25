@@ -128,7 +128,7 @@ internal class RunFaceLivenessSession(
 
     private fun getChallengeId(): String = livenessWebSocket.challengeId
 
-    private fun getChallengeType(): FaceLivenessChallengeType = livenessWebSocket.challengeType
+    private fun getChallengeType(): FaceLivenessChallengeType = livenessWebSocket.challengeType!!
 
     private fun getFaceTargetChallenge(
         ovalParameters: OvalParameters,

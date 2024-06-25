@@ -222,8 +222,6 @@ internal class LivenessWebSocketTest {
             "3"
         )
         val livenessWebSocket = createLivenessWebSocket(sessionInformation = sessionInfo)
-        assertEquals(FaceLivenessChallengeType.FaceMovementAndLightChallenge, livenessWebSocket.challengeType)
-
         val event = ChallengeEvent(
             challengeType = FaceLivenessChallengeType.FaceMovementAndLightChallenge,
             version = "1.0.0"
