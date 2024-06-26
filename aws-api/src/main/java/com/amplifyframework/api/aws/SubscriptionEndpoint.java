@@ -130,6 +130,7 @@ final class SubscriptionEndpoint {
                                                               .url(buildConnectionRequestUrl(authType))
                                                               .addHeader("Sec-WebSocket-Protocol", "graphql-ws")
                                                               .header("User-Agent", UserAgent.string())
+                                                              .header("Authorization", buildAuthorizationHeader(authType))
                                                               .build(), webSocketListener);
                 } catch (ApiException apiException) {
                     onSubscriptionError.accept(apiException);
@@ -309,11 +310,6 @@ final class SubscriptionEndpoint {
      * Discovered WebSocket endpoint : wss:// xxxxxxxxxxxx.appsync-realtime-api.ap-southeast-2.amazonaws.com/graphql
      */
     private String buildConnectionRequestUrl(AuthorizationType authType) throws ApiException {
-        // Construct the authorization header for connection request
-        final byte[] rawHeader = authorizer.createHeadersForConnection(authType)
-            .toString()
-            .getBytes();
-
         URL appSyncEndpoint = null;
         try {
             appSyncEndpoint = new URL(apiConfiguration.getEndpoint());
@@ -340,13 +336,21 @@ final class SubscriptionEndpoint {
         }
 
         return new Uri.Builder()
-            .scheme("wss")
-            .authority(authority)
-            .path(path)
-            .appendQueryParameter("header", Base64.encodeToString(rawHeader, Base64.DEFAULT))
-            .appendQueryParameter("payload", "e30=")
-            .build()
-            .toString();
+                .scheme("wss")
+                .authority(authority)
+                .path(path)
+                .appendQueryParameter("payload", "e30=")
+                .build()
+                .toString();
+    }
+
+    private String buildAuthorizationHeader(AuthorizationType authType) throws ApiException {
+        // Construct the authorization header for connection request
+        final byte[] rawHeader = authorizer.createHeadersForConnection(authType)
+                .toString()
+                .getBytes();
+
+        return Base64.encodeToString(rawHeader, Base64.DEFAULT);
     }
 
     static final class Subscription<T> {
