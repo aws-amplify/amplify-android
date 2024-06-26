@@ -30,7 +30,7 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.aws.pinpoint)
     implementation(libs.kotlin.serializationJson)
-    implementation("androidx.test.ext:junit-ktx:1.1.5")
+    implementation(libs.androidx.junit.ktx)
 
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockk)
