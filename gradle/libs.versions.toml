@@ -27,6 +27,7 @@ gson = "2.8.9"
 json = "20210307"
 jsonassert = "1.5.0"
 junit = "4.13.2"
+junit-ktx = "1.2.0"
 kotest = "5.9.0"
 kotlin = "1.9.10"
 kotlin-serialization = "1.6.0"
@@ -57,6 +58,7 @@ androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref="and
 androidx-browser = { module = "androidx.browser:browser", version.ref = "androidx-browser" }
 androidx-core = { module = "androidx.core:core", version.ref = "androidx-core" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
+androidx-junit-ktx = { module = "androidx.test.ext:junit-ktx", version.ref = "junit-ktx" }
 androidx-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime", version.ref = "androidx-lifecycle" }
 androidx-nav-fragment = { module = "androidx.navigation:navigation-fragment", version.ref = "navigation" }
 androidx-nav-ui = { module = "androidx.navigation:navigation-ui", version.ref = "navigation" }
