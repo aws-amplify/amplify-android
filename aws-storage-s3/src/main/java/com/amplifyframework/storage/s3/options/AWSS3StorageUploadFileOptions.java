@@ -23,16 +23,20 @@ import com.amplifyframework.storage.s3.ServerSideEncryption;
 
 import java.util.Objects;
 
+import aws.sdk.kotlin.services.s3.model.StorageClass;
+
 /**
  * Options to specify attributes of object upload operation to an AWS S3 bucket.
  */
 public final class AWSS3StorageUploadFileOptions extends StorageUploadFileOptions {
     private final ServerSideEncryption serverSideEncryption;
+    private final StorageClass storageClass;
     private final boolean useAccelerationMode;
 
     private AWSS3StorageUploadFileOptions(final Builder builder) {
         super(builder);
         this.serverSideEncryption = builder.getServerSideEncryption();
+        this.storageClass = builder.getStorageClass();
         this.useAccelerationMode = builder.useAccelerateEndpoint;
     }
 
@@ -43,6 +47,15 @@ public final class AWSS3StorageUploadFileOptions extends StorageUploadFileOption
     @NonNull
     public ServerSideEncryption getServerSideEncryption() {
         return serverSideEncryption;
+    }
+
+    /**
+     * Storage class.
+     * @return Storage class
+     */
+    @NonNull
+    public StorageClass getStorageClass() {
+        return storageClass;
     }
 
     /**
@@ -75,6 +88,7 @@ public final class AWSS3StorageUploadFileOptions extends StorageUploadFileOption
             .targetIdentityId(options.getTargetIdentityId())
             .contentType(options.getContentType())
             .serverSideEncryption(options.getServerSideEncryption())
+            .storageClass(options.getStorageClass())
             .metadata(options.getMetadata());
     }
 
@@ -109,6 +123,7 @@ public final class AWSS3StorageUploadFileOptions extends StorageUploadFileOption
                     ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId()) &&
                     ObjectsCompat.equals(getContentType(), that.getContentType()) &&
                     ObjectsCompat.equals(getServerSideEncryption(), that.getServerSideEncryption()) &&
+                    ObjectsCompat.equals(getStorageClass(), that.getStorageClass()) &&
                     ObjectsCompat.equals(getMetadata(), that.getMetadata());
         }
     }
@@ -121,6 +136,7 @@ public final class AWSS3StorageUploadFileOptions extends StorageUploadFileOption
                 getTargetIdentityId(),
                 getContentType(),
                 getServerSideEncryption(),
+                getStorageClass(),
                 getMetadata()
         );
     }
@@ -134,6 +150,7 @@ public final class AWSS3StorageUploadFileOptions extends StorageUploadFileOption
                 ", targetIdentityId=" + getTargetIdentityId() +
                 ", contentType=" + getContentType() +
                 ", serverSideEncryption=" + getServerSideEncryption().getName() +
+                ", storageClass=" + getStorageClass() +
                 ", metadata=" + getMetadata() +
                 '}';
     }
@@ -145,11 +162,13 @@ public final class AWSS3StorageUploadFileOptions extends StorageUploadFileOption
      */
     public static final class Builder extends StorageUploadFileOptions.Builder<Builder> {
         private ServerSideEncryption serverSideEncryption;
+        private StorageClass storageClass;
         private boolean useAccelerateEndpoint;
 
         private Builder() {
             super();
             this.serverSideEncryption = ServerSideEncryption.NONE;
+            this.storageClass = StorageClass.Standard.INSTANCE;
         }
 
         /**
@@ -173,9 +192,25 @@ public final class AWSS3StorageUploadFileOptions extends StorageUploadFileOption
             return this;
         }
 
+        /**
+         * Configures the storage class for a new AWSS3StorageUploadFileOptions instance.
+         * @param storageClass storage class
+         * @return Current Builder instance for fluent chaining
+         */
+        @NonNull
+        public Builder storageClass(@NonNull StorageClass storageClass) {
+            this.storageClass = Objects.requireNonNull(storageClass);
+            return this;
+        }
+
         @NonNull
         ServerSideEncryption getServerSideEncryption() {
             return serverSideEncryption;
+        }
+
+        @NonNull
+        StorageClass getStorageClass() {
+            return storageClass;
         }
 
         @Override
