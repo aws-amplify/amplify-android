@@ -116,6 +116,7 @@ class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
                                 objectMetadata.metaData[ObjectMetadata.SERVER_SIDE_ENCRYPTION] =
                                     storageServerSideEncryption.getName()
                             }
+                            objectMetadata.metaData[ObjectMetadata.STORAGE_CLASS] = uploadRequest.storageClass.value
                             transferObserver = storageService.uploadInputStream(
                                 transferId,
                                 serviceKey,
