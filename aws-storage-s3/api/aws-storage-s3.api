@@ -283,6 +283,17 @@ public final class com/amplifyframework/storage/s3/request/AWSS3StorageDownloadF
 	public fun useAccelerateEndpoint ()Z
 }
 
+public final class com/amplifyframework/storage/s3/request/AWSS3StorageGetPresignedUrlRequest {
+	public fun <init> (Ljava/lang/String;Lcom/amplifyframework/storage/StorageAccessLevel;Ljava/lang/String;IZ)V
+	public fun <init> (Ljava/lang/String;Lcom/amplifyframework/storage/StorageAccessLevel;Ljava/lang/String;IZZ)V
+	public fun getAccessLevel ()Lcom/amplifyframework/storage/StorageAccessLevel;
+	public fun getExpires ()I
+	public fun getKey ()Ljava/lang/String;
+	public fun getTargetIdentityId ()Ljava/lang/String;
+	public fun useAccelerateEndpoint ()Z
+	public fun validateObjectExistence ()Z
+}
+
 public final class com/amplifyframework/storage/s3/request/AWSS3StorageListRequest {
 	public fun <init> (Ljava/lang/String;Lcom/amplifyframework/storage/StorageAccessLevel;Ljava/lang/String;)V
 	public fun <init> (Ljava/lang/String;Lcom/amplifyframework/storage/StorageAccessLevel;Ljava/lang/String;ILjava/lang/String;)V

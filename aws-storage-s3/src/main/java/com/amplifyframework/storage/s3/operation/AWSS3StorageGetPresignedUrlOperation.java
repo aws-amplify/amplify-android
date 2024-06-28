@@ -17,9 +17,7 @@ package com.amplifyframework.storage.s3.operation;
 
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
-import androidx.annotation.OptIn;
 
-import com.amplifyframework.annotations.InternalAmplifyApi;
 import com.amplifyframework.auth.AuthCredentialsProvider;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageException;
@@ -32,14 +30,17 @@ import com.amplifyframework.storage.s3.service.StorageService;
 import java.net.URL;
 import java.util.concurrent.ExecutorService;
 
+import aws.sdk.kotlin.services.s3.model.NotFound;
+
 /**
- *  An operation to retrieve pre-signed object URL from AWS S3.
- *  @deprecated Class should not be public and explicitly cast to. Cast to StorageGetUrlOperation.
- *  Internal usages are moving to AWSS3StoragePathGetPresignedUrlOperation
+ * An operation to retrieve pre-signed object URL from AWS S3.
+ *
+ * @deprecated Class should not be public and explicitly cast to. Cast to StorageGetUrlOperation.
+ * Internal usages are moving to AWSS3StoragePathGetPresignedUrlOperation
  */
 @Deprecated
 public final class AWSS3StorageGetPresignedUrlOperation
-    extends StorageGetUrlOperation<AWSS3StorageGetPresignedUrlRequest> {
+        extends StorageGetUrlOperation<AWSS3StorageGetPresignedUrlRequest> {
     private final StorageService storageService;
     private final ExecutorService executorService;
     private final AuthCredentialsProvider authCredentialsProvider;
@@ -60,13 +61,13 @@ public final class AWSS3StorageGetPresignedUrlOperation
      * @param onError                         Notified upon URL generation error
      */
     public AWSS3StorageGetPresignedUrlOperation(
-        @NonNull StorageService storageService,
-        @NonNull ExecutorService executorService,
-        @NonNull AuthCredentialsProvider authCredentialsProvider,
-        @NonNull AWSS3StorageGetPresignedUrlRequest request,
-        @NonNull AWSS3StoragePluginConfiguration awss3StoragePluginConfiguration,
-        @NonNull Consumer<StorageGetUrlResult> onSuccess,
-        @NonNull Consumer<StorageException> onError
+            @NonNull StorageService storageService,
+            @NonNull ExecutorService executorService,
+            @NonNull AuthCredentialsProvider authCredentialsProvider,
+            @NonNull AWSS3StorageGetPresignedUrlRequest request,
+            @NonNull AWSS3StoragePluginConfiguration awss3StoragePluginConfiguration,
+            @NonNull Consumer<StorageGetUrlResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
     ) {
         super(request);
         this.storageService = storageService;
@@ -78,11 +79,10 @@ public final class AWSS3StorageGetPresignedUrlOperation
     }
 
     @SuppressLint("SyntheticAccessor")
-    @OptIn(markerClass = InternalAmplifyApi.class)
     @Override
     public void start() {
         executorService.submit(() -> {
-                awsS3StoragePluginConfiguration.getAWSS3PluginPrefixResolver(authCredentialsProvider).
+            awsS3StoragePluginConfiguration.getAWSS3PluginPrefixResolver(authCredentialsProvider).
                     resolvePrefix(getRequest().getAccessLevel(),
                         getRequest().getTargetIdentityId(),
                         prefix -> {
@@ -92,8 +92,19 @@ public final class AWSS3StorageGetPresignedUrlOperation
                                 if (getRequest().validateObjectExistence()) {
                                     try {
                                         storageService.validateObjectExists(serviceKey);
-                                    } catch (StorageException exception) {
-                                        onError.accept(exception);
+                                    } catch (NotFound nfe) {
+                                        onError.accept(new StorageException(
+                                                "Unable to generate URL for non-existent path: $serviceKey",
+                                                nfe,
+                                                "Please ensure the path is valid or the object has been uploaded."
+                                        ));
+                                        return;
+                                    } catch (Exception exception) {
+                                        onError.accept(new StorageException(
+                                                "Encountered an issue while validating the existence of object",
+                                                exception,
+                                                "See included exception for more details and suggestions to fix."
+                                        ));
                                         return;
                                     }
                                 }
@@ -105,14 +116,13 @@ public final class AWSS3StorageGetPresignedUrlOperation
                                 onSuccess.accept(StorageGetUrlResult.fromUrl(url));
                             } catch (Exception exception) {
                                 onError.accept(new StorageException(
-                                    "Encountered an issue while generating pre-signed URL",
-                                    exception,
-                                    "See included exception for more details and suggestions to fix."
+                                        "Encountered an issue while generating pre-signed URL",
+                                        exception,
+                                        "See included exception for more details and suggestions to fix."
                                 ));
                             }
 
-                        },
-                        onError);
+                        }, onError);
             }
         );
     }

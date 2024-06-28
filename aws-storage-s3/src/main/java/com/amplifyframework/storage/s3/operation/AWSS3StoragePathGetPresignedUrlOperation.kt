@@ -14,6 +14,7 @@
  */
 package com.amplifyframework.storage.s3.operation
 
+import aws.sdk.kotlin.services.s3.model.NotFound
 import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.storage.StorageException
@@ -51,13 +52,19 @@ internal class AWSS3StoragePathGetPresignedUrlOperation(
             if (request.validateObjectExistence) {
                 try {
                     storageService.validateObjectExists(serviceKey)
-                } catch (se: StorageException) {
-                    onError.accept(se)
+                } catch (nfe: NotFound) {
+                    onError.accept(
+                        StorageException(
+                            "Unable to generate URL for non-existent path: $serviceKey",
+                            nfe,
+                            "Please ensure the path is valid or the object has been uploaded."
+                        )
+                    )
                     return@submit
                 } catch (exception: Exception) {
                     onError.accept(
                         StorageException(
-                            "Encountered an issue while generating pre-signed URL",
+                            "Encountered an issue while validating the existence of object",
                             exception,
                             "See included exception for more details and suggestions to fix."
                         )

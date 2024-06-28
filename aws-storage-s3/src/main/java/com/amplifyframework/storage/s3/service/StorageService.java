@@ -20,7 +20,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.storage.ObjectMetadata;
-import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StorageItem;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.s3.transfer.TransferObserver;
@@ -42,9 +41,8 @@ public interface StorageService {
      * Throws StorageException if object is not does not exist.
      *
      * @param serviceKey key to uniquely specify item to generate URL for
-     * @throws StorageException If object does not exist in storage
      */
-    void validateObjectExists(@NonNull String serviceKey) throws StorageException;
+    void validateObjectExists(@NonNull String serviceKey);
 
     /**
      * Generate pre-signed download URL for an object.

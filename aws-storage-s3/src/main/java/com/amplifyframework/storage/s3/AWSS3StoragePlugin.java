@@ -309,7 +309,6 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         return getUrl(path, StorageGetUrlOptions.defaultInstance(), onSuccess, onError);
     }
 
-    @OptIn(markerClass = InternalAmplifyApi.class)
     @NonNull
     @Override
     @SuppressWarnings("deprecation")

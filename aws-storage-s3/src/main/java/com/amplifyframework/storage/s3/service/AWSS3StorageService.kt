@@ -21,13 +21,11 @@ import aws.sdk.kotlin.services.s3.deleteObject
 import aws.sdk.kotlin.services.s3.listObjectsV2
 import aws.sdk.kotlin.services.s3.model.GetObjectRequest
 import aws.sdk.kotlin.services.s3.model.HeadObjectRequest
-import aws.sdk.kotlin.services.s3.model.NotFound
 import aws.sdk.kotlin.services.s3.paginators.listObjectsV2Paginated
 import aws.sdk.kotlin.services.s3.presigners.presignGetObject
 import aws.sdk.kotlin.services.s3.withConfig
 import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.storage.ObjectMetadata
-import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.StorageItem
 import com.amplifyframework.storage.result.StorageListResult
 import com.amplifyframework.storage.s3.transfer.TransferManager
@@ -94,20 +92,12 @@ internal class AWSS3StorageService(
      * @param serviceKey S3 service key
      */
     override fun validateObjectExists(serviceKey: String) {
-        try {
-            runBlocking {
-                s3Client.headObject(
-                    HeadObjectRequest {
-                        bucket = s3BucketName
-                        key = serviceKey
-                    }
-                )
-            }
-        } catch (ex: NotFound) {
-            throw StorageException(
-                "Unable to generate URL for non-existent path: $serviceKey",
-                ex,
-                "Please ensure the path is valid or the object has been uploaded"
+        runBlocking {
+            s3Client.headObject(
+                HeadObjectRequest {
+                    bucket = s3BucketName
+                    key = serviceKey
+                }
             )
         }
     }

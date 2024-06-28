@@ -15,6 +15,7 @@
 
 package com.amplifyframework.storage.s3.operation
 
+import aws.sdk.kotlin.services.s3.model.NotFound
 import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.storage.StorageException
@@ -221,7 +222,7 @@ class AWSS3StoragePathGetUrlOperationTest {
     fun `getPresignedUrl fails with non existent S3 path when validateObjectExistence is enabled`() {
         // GIVEN
         val path = StoragePath.fromString("public/123")
-        val expectedException = StorageException("Test", "Test")
+        val expectedException = NotFound({})
         coEvery { storageService.validateObjectExists(any()) } throws expectedException
         val request = AWSS3StoragePathGetPresignedUrlRequest(
             path,
@@ -243,7 +244,7 @@ class AWSS3StoragePathGetUrlOperationTest {
         awsS3StorageGetPresignedUrlOperation.start()
 
         // THEN
-        verify(exactly = 1) { onError.accept(expectedException) }
+        verify(exactly = 1) { onError.accept(any()) }
         verify(exactly = 0) {
             storageService.getPresignedUrl(any(), any(), any())
         }
