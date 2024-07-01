@@ -30,8 +30,6 @@ import com.amplifyframework.storage.s3.service.StorageService;
 import java.net.URL;
 import java.util.concurrent.ExecutorService;
 
-import aws.sdk.kotlin.services.s3.model.NotFound;
-
 /**
  * An operation to retrieve pre-signed object URL from AWS S3.
  *
@@ -92,19 +90,8 @@ public final class AWSS3StorageGetPresignedUrlOperation
                                 if (getRequest().validateObjectExistence()) {
                                     try {
                                         storageService.validateObjectExists(serviceKey);
-                                    } catch (NotFound nfe) {
-                                        onError.accept(new StorageException(
-                                                "Unable to generate URL for non-existent path: $serviceKey",
-                                                nfe,
-                                                "Please ensure the path is valid or the object has been uploaded."
-                                        ));
-                                        return;
-                                    } catch (Exception exception) {
-                                        onError.accept(new StorageException(
-                                                "Encountered an issue while validating the existence of object",
-                                                exception,
-                                                "See included exception for more details and suggestions to fix."
-                                        ));
+                                    } catch (StorageException exception) {
+                                        onError.accept(exception);
                                         return;
                                     }
                                 }
@@ -116,13 +103,14 @@ public final class AWSS3StorageGetPresignedUrlOperation
                                 onSuccess.accept(StorageGetUrlResult.fromUrl(url));
                             } catch (Exception exception) {
                                 onError.accept(new StorageException(
-                                        "Encountered an issue while generating pre-signed URL",
-                                        exception,
-                                        "See included exception for more details and suggestions to fix."
+                                    "Encountered an issue while generating pre-signed URL",
+                                    exception,
+                                    "See included exception for more details and suggestions to fix."
                                 ));
                             }
 
-                        }, onError);
+                        },
+                        onError);
             }
         );
     }

@@ -15,7 +15,6 @@
 package com.amplifyframework.storage.s3.operation
 
 import android.util.Log
-import aws.sdk.kotlin.services.s3.model.NotFound
 import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.storage.StorageAccessLevel
@@ -153,7 +152,7 @@ public class AWSS3StorageGetPresignedUrlOperationTest {
             false,
             true
         )
-        val expectedException = NotFound({})
+        val expectedException = StorageException("Test", "Test")
         storageService = mockk<StorageService>(relaxed = true)
         coEvery { storageService.validateObjectExists(any()) } throws expectedException
         coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
@@ -172,7 +171,7 @@ public class AWSS3StorageGetPresignedUrlOperationTest {
         awsS3StorageGetPresignedUrlOperation.start()
 
         // THEN
-        verify(exactly = 1) { onError.accept(any()) }
+        verify(exactly = 1) { onError.accept(expectedException) }
         verify(exactly = 0) {
             storageService.getPresignedUrl(any(), any(), any())
         }
