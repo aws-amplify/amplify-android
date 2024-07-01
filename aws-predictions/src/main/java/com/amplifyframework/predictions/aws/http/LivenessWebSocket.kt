@@ -169,13 +169,12 @@ internal class LivenessWebSocket(
                             }
 
                             // If challengeType hasn't been initialized by this point it's because server sent an
-                            // unsupported challenge type so return an error to the client.
+                            // unsupported challenge type so return an error to the client and close the web socket.
                             val resolvedChallengeType = challengeType
                             if (resolvedChallengeType == null) {
                                 webSocketError = FaceLivenessUnsupportedChallengeTypeException()
                                 destroy(UNSUPPORTED_CHALLENGE_CLOSURE_STATUS_CODE)
                             } else {
-                                // send non-null challenge Type
                                 onSessionResponseReceived.accept(
                                     SessionResponse(
                                         response.serverSessionInformationEvent.sessionInformation,
