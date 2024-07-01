@@ -30,6 +30,7 @@ import com.amplifyframework.predictions.PredictionsException
 import com.amplifyframework.predictions.aws.BuildConfig
 import com.amplifyframework.predictions.aws.exceptions.AccessDeniedException
 import com.amplifyframework.predictions.aws.exceptions.FaceLivenessSessionNotFoundException
+import com.amplifyframework.predictions.aws.exceptions.FaceLivenessUnsupportedChallengeTypeException
 import com.amplifyframework.predictions.aws.models.liveness.BoundingBox
 import com.amplifyframework.predictions.aws.models.liveness.ClientChallenge
 import com.amplifyframework.predictions.aws.models.liveness.ClientSessionInformationEvent
@@ -78,10 +79,14 @@ internal class LivenessWebSocket(
     val region: String,
     val clientSessionInformation: FaceLivenessSessionInformation,
     val livenessVersion: String?,
-    val onSessionInformationReceived: Consumer<SessionInformation>,
+    val onSessionResponseReceived: Consumer<SessionResponse>,
     val onErrorReceived: Consumer<PredictionsException>,
     val onComplete: Action
 ) {
+    internal data class SessionResponse(
+        val faceLivenessSession: SessionInformation,
+        val livenessChallengeType: FaceLivenessChallengeType
+    )
 
     private val signer = AWSV4Signer()
     private var credentials: Credentials? = null
@@ -165,17 +170,17 @@ internal class LivenessWebSocket(
 
                             // If challengeType hasn't been initialized by this point it's because server sent an
                             // unsupported challenge type so return an error to the client.
-                            if (challengeType == null) {
-                                onErrorReceived.accept(
-                                    PredictionsException(
-                                        "Received an unsupported ChallengeType from the backend",
-                                        "Verify that the Challenges configured in your backend are supported by the " +
-                                            "frontend code (e.g. Amplify UI)"
-                                    )
-                                )
+                            val resolvedChallengeType = challengeType
+                            if (resolvedChallengeType == null) {
+                                webSocketError = FaceLivenessUnsupportedChallengeTypeException()
+                                destroy(UNSUPPORTED_CHALLENGE_CLOSURE_STATUS_CODE)
                             } else {
-                                onSessionInformationReceived.accept(
-                                    response.serverSessionInformationEvent.sessionInformation
+                                // send non-null challenge Type
+                                onSessionResponseReceived.accept(
+                                    SessionResponse(
+                                        response.serverSessionInformationEvent.sessionInformation,
+                                        resolvedChallengeType
+                                    )
                                 )
                             }
                         } else if (response.disconnectionEvent != null) {
@@ -394,7 +399,8 @@ internal class LivenessWebSocket(
         )
         faceDetectedStart = adjustedDate(videoStartTime)
 
-        if (challengeType == null) {
+        val resolvedChallengeType = challengeType
+        if (resolvedChallengeType == null) {
             onErrorReceived.accept(
                 PredictionsException(
                     "Failed to send an initial face detected event",
@@ -405,7 +411,7 @@ internal class LivenessWebSocket(
             val clientInfoEvent =
                 ClientSessionInformationEvent(
                     challenge = buildClientChallenge(
-                        challengeType = challengeType!!,
+                        challengeType = resolvedChallengeType,
                         challengeId = challengeId,
                         initialFace = InitialFace(
                             boundingBox = initialDetectedFace!!,
@@ -419,7 +425,8 @@ internal class LivenessWebSocket(
     }
 
     fun sendFinalEvent(targetFaceRect: RectF, faceMatchedStart: Long, faceMatchedEnd: Long) {
-        if (challengeType == null) {
+        val resolvedChallengeType = challengeType
+        if (resolvedChallengeType == null) {
             onErrorReceived.accept(
                 PredictionsException(
                     "Failed to send an initial face detected event",
@@ -429,7 +436,7 @@ internal class LivenessWebSocket(
         } else {
             val finalClientInfoEvent = ClientSessionInformationEvent(
                 challenge = buildClientChallenge(
-                    challengeType = challengeType!!,
+                    challengeType = resolvedChallengeType,
                     challengeId = challengeId,
                     videoEndTimestamp = videoEndTimestamp,
                     initialFace = InitialFace(
@@ -607,6 +614,8 @@ internal class LivenessWebSocket(
 
     companion object {
         private const val NORMAL_SOCKET_CLOSURE_STATUS_CODE = 1000
+        // This is the same as the client-provided 'runtime error' status code
+        private const val UNSUPPORTED_CHALLENGE_CLOSURE_STATUS_CODE = 4005
         private const val FOUR_MINUTES = 1000 * 60 * 4
         @VisibleForTesting val datePattern = "EEE, d MMM yyyy HH:mm:ss z"
         private val LOG = Amplify.Logging.logger(CategoryType.PREDICTIONS, "amplify:aws-predictions")

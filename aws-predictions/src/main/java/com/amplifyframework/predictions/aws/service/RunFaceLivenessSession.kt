@@ -36,7 +36,6 @@ import com.amplifyframework.predictions.aws.models.liveness.FreshnessColor
 import com.amplifyframework.predictions.aws.models.liveness.OvalParameters
 import com.amplifyframework.predictions.aws.models.liveness.SessionInformation
 import com.amplifyframework.predictions.models.ChallengeResponseEvent
-import com.amplifyframework.predictions.models.FaceLivenessChallengeType
 import com.amplifyframework.predictions.models.FaceLivenessSession
 import com.amplifyframework.predictions.models.FaceLivenessSessionChallenge
 import com.amplifyframework.predictions.models.FaceLivenessSessionInformation
@@ -58,9 +57,9 @@ internal class RunFaceLivenessSession(
         region = clientSessionInformation.region,
         clientSessionInformation = clientSessionInformation,
         livenessVersion = livenessVersion,
-        onSessionInformationReceived = { serverSessionInformation ->
-            val challenges = processSessionInformation(serverSessionInformation)
-            val challengeType = getChallengeType()
+        onSessionResponseReceived = { serverSessionResponse ->
+            val challenges = processSessionInformation(serverSessionResponse.faceLivenessSession)
+            val challengeType = serverSessionResponse.livenessChallengeType
             val faceLivenessSession = FaceLivenessSession(
                 challengeId = getChallengeId(),
                 challengeType = challengeType,
@@ -127,8 +126,6 @@ internal class RunFaceLivenessSession(
     }
 
     private fun getChallengeId(): String = livenessWebSocket.challengeId
-
-    private fun getChallengeType(): FaceLivenessChallengeType = livenessWebSocket.challengeType!!
 
     private fun getFaceTargetChallenge(
         ovalParameters: OvalParameters,
