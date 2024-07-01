@@ -215,7 +215,7 @@ internal class LivenessWebSocketTest {
     }
 
     @Test
-    fun `test unsupported challengetype`() {
+    fun `unsupported challengetype returns an exception`() {
         val clientSessionInfo = createClientSessionInformation(
             listOf(Challenge.FaceMovementAndLightChallenge("2.0.0"))
         )
