@@ -15,6 +15,7 @@
 package com.amplifyframework.storage.s3
 
 import android.content.Context
+import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import aws.sdk.kotlin.services.s3.model.NotFound
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
@@ -35,6 +36,7 @@ import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.Test
+import java.net.URL
 
 /**
  * Instrumentation test for operational work on download.
@@ -105,5 +107,20 @@ class AWSS3StoragePathGetUrlTest {
         }
 
         assertTrue(exception.cause is NotFound)
+    }
+
+    @Test
+    fun testGetUrlWithObjectExistenceValidationDisabledForNonExistentObject() {
+        val result = synchronousStorage.getUrl(
+            StoragePath.fromString("public/SOME_UNKNOWN_FILE"),
+            AWSS3StorageGetPresignedUrlOptions.builder().setValidateObjectExistence(false).expires(30).build()
+        )
+
+        assertEquals("/public/SOME_UNKNOWN_FILE", result.url.path)
+        assertTrue(result.url.query.contains("X-Amz-Expires=30"))
+
+        assertThrows(java.io.FileNotFoundException::class.java) {
+            result.url.readBytes()
+        }
     }
 }
