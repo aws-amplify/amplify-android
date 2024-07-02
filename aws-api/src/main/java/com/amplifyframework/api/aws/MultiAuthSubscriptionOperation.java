@@ -80,7 +80,7 @@ final class MultiAuthSubscriptionOperation<T> extends AWSGraphQLOperation<T> {
             ));
             return;
         }
-        subscriptionFuture = executorService.submit(this::dispatchRequest);
+        queueDispatchRequest();
     }
 
     private void dispatchRequest() {
@@ -101,7 +101,7 @@ final class MultiAuthSubscriptionOperation<T> extends AWSGraphQLOperation<T> {
                     // For ApiAuthExceptions, just queue up a dispatchRequest call. If there are no
                     // other auth types left, it will emit the error to the client's callback
                     // because authTypes.hasNext() will be false.
-                    subscriptionFuture = executorService.submit(this::dispatchRequest);
+                    queueDispatchRequest();
                     return;
                 } catch (ApiException apiException) {
                     LOG.warn("Unable to automatically add an owner to the request.", apiException);
@@ -119,7 +119,7 @@ final class MultiAuthSubscriptionOperation<T> extends AWSGraphQLOperation<T> {
                 response -> {
                     if (response.hasErrors() && hasAuthRelatedErrors(response) && authTypes.hasNext()) {
                         // If there are auth-related errors queue up a retry with the next authType
-                        executorService.submit(this::dispatchRequest);
+                        queueDispatchRequest();
                     } else {
                         // Otherwise, we just want to dispatch it as a next item and
                         // let callers deal with the errors.
@@ -129,7 +129,7 @@ final class MultiAuthSubscriptionOperation<T> extends AWSGraphQLOperation<T> {
                 apiException -> {
                     LOG.warn("A subscription error occurred.", apiException);
                     if (apiException instanceof ApiAuthException && authTypes.hasNext()) {
-                        executorService.submit(this::dispatchRequest);
+                        queueDispatchRequest();
                     } else {
                         emitErrorAndCancelSubscription(apiException);
                     }
@@ -142,7 +142,10 @@ final class MultiAuthSubscriptionOperation<T> extends AWSGraphQLOperation<T> {
                 "Check your application logs for detail."
             ));
         }
+    }
 
+    private void queueDispatchRequest() {
+        subscriptionFuture = executorService.submit(this::dispatchRequest);
     }
 
     @Override

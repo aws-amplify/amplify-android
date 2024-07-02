@@ -293,6 +293,66 @@ public final class AuthRuleRequestDecoratorTest {
         }
     }
 
+    /**
+     * Verify owner argument is NOT added if model contains both public key and owner-based authorization and the
+     * requested auth type is API_KEY.
+     * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
+     */
+    @Test
+    public void doesNotAddOwnerWhenMultiAuthWithPublicKey() throws AmplifyException {
+        final AuthorizationType mode = AuthorizationType.API_KEY;
+
+        // PublicAndOwner combines public and owner-based auth
+        for (SubscriptionType subscriptionType : SubscriptionType.values()) {
+            GraphQLRequest<PublicAndOwner> originalRequest = createRequest(PublicAndOwner.class, subscriptionType);
+            GraphQLRequest<PublicAndOwner> modifiedRequest = decorator.decorate(originalRequest, mode);
+            assertNull(getOwnerField(modifiedRequest));
+        }
+
+        // PublicAndOwnerOidc combines public and owner-based auth with an OIDC claim
+        for (SubscriptionType subscriptionType : SubscriptionType.values()) {
+            GraphQLRequest<PublicAndOwnerOidc> originalRequest =
+                createRequest(PublicAndOwnerOidc.class, subscriptionType);
+            GraphQLRequest<PublicAndOwnerOidc> modifiedRequest = decorator.decorate(originalRequest, mode);
+            assertNull(getOwnerField(modifiedRequest));
+        }
+    }
+
+    /**
+     * Verify owner argument is added if model contains both owner-based and public-key
+     * authorization and the auth mode is cognito.
+     * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
+     */
+    @Test
+    public void addsOwnerWhenMultiAuthWithCognito() throws AmplifyException {
+        final AuthorizationType mode = AuthorizationType.AMAZON_COGNITO_USER_POOLS;
+        final String expectedOwner = FakeCognitoAuthProvider.USERNAME;
+
+        for (SubscriptionType subscriptionType : SubscriptionType.values()) {
+            GraphQLRequest<PublicAndOwner> originalRequest = createRequest(PublicAndOwner.class, subscriptionType);
+            GraphQLRequest<PublicAndOwner> modifiedRequest = decorator.decorate(originalRequest, mode);
+            assertEquals(expectedOwner, getOwnerField(modifiedRequest));
+        }
+    }
+
+    /**
+     * Verify owner argument is added if model contains both owner-based and public-key
+     * authorization and the auth mode is oidc.
+     * @throws AmplifyException if a ModelSchema can't be derived from the Model class.
+     */
+    @Test
+    public void addsOwnerWhenMultiAuthWithOidc() throws AmplifyException {
+        final AuthorizationType mode = AuthorizationType.OPENID_CONNECT;
+        final String expectedOwner = FakeOidcAuthProvider.SUB;
+
+        for (SubscriptionType subscriptionType : SubscriptionType.values()) {
+            GraphQLRequest<PublicAndOwnerOidc> originalRequest =
+                createRequest(PublicAndOwnerOidc.class, subscriptionType);
+            GraphQLRequest<PublicAndOwnerOidc> modifiedRequest = decorator.decorate(originalRequest, mode);
+            assertEquals(expectedOwner, getOwnerField(modifiedRequest));
+        }
+    }
+
     private <M extends Model> String getOwnerField(GraphQLRequest<M> request) {
         if (request.getVariables().containsKey("owner")) {
             return (String) request.getVariables().get("owner");
@@ -412,4 +472,16 @@ public final class AuthRuleRequestDecoratorTest {
         )
     })
     private abstract static class OwnerNotInCustomGroup implements Model {}
+
+    @ModelConfig(authRules = {
+        @AuthRule(allow = AuthStrategy.PUBLIC, operations = ModelOperation.READ),
+        @AuthRule(allow = AuthStrategy.OWNER)
+    })
+    private abstract static class PublicAndOwner implements Model {}
+
+    @ModelConfig(authRules = {
+        @AuthRule(allow = AuthStrategy.PUBLIC, operations = ModelOperation.READ),
+        @AuthRule(allow = AuthStrategy.OWNER, identityClaim = "sub")
+    })
+    private abstract static class PublicAndOwnerOidc implements Model {}
 }
