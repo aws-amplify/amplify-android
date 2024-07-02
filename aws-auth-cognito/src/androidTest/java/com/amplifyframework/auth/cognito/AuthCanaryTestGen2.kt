@@ -202,6 +202,28 @@ class AuthCanaryTestGen2 {
     }
 
     @Test
+    fun rememberDevice() {
+        signInUser(username, password)
+        val latch = CountDownLatch(1)
+        Amplify.Auth.rememberDevice(
+            { latch.countDown() },
+            { fail("Remember device failed: $it") }
+        )
+        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+    }
+
+    @Test
+    fun forgetDevice() {
+        signInUser(username, password)
+        val latch = CountDownLatch(1)
+        Amplify.Auth.forgetDevice(
+            { latch.countDown() },
+            { fail("Forget device failed with error: $it") }
+        )
+        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+    }
+
+    @Test
     fun fetchDevices() {
         signInUser(username, password)
         val latch = CountDownLatch(1)
