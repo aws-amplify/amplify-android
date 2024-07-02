@@ -192,7 +192,8 @@ internal class TransferWorkerObserver private constructor(
                         val id = it.getInt(it.getColumnIndexOrThrow(TransferTable.COLUMN_ID))
                         attachObserver(id.toString())
                     } catch (exception: IllegalStateException) {
-                        // do nothing. Cursor is likely closed
+                        // Stop iterating over cursor. Cursor is likely closed
+                        break
                     }
                 }
             }
