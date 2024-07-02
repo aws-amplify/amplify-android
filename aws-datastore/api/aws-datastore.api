@@ -64,6 +64,7 @@ public final class com/amplifyframework/datastore/DataStoreConfiguration {
 	public fun getSyncExpressions ()Ljava/util/Map;
 	public fun getSyncIntervalInMinutes ()Ljava/lang/Long;
 	public fun getSyncIntervalMs ()Ljava/lang/Long;
+	public fun getSyncMaxConcurrentModels ()Ljava/lang/Integer;
 	public fun getSyncMaxRecords ()Ljava/lang/Integer;
 	public fun getSyncPageSize ()Ljava/lang/Integer;
 	public fun hashCode ()I
@@ -80,6 +81,7 @@ public final class com/amplifyframework/datastore/DataStoreConfiguration$Builder
 	public fun syncExpression (Ljava/lang/Class;Lcom/amplifyframework/datastore/DataStoreSyncExpression;)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
 	public fun syncExpression (Ljava/lang/String;Lcom/amplifyframework/datastore/DataStoreSyncExpression;)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
 	public fun syncInterval (JLjava/util/concurrent/TimeUnit;)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
+	public fun syncMaxConcurrentModels (Ljava/lang/Integer;)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
 	public fun syncMaxRecords (Ljava/lang/Integer;)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
 	public fun syncPageSize (Ljava/lang/Integer;)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
 }

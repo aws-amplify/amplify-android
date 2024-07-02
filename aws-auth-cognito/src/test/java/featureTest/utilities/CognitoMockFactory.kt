@@ -92,6 +92,10 @@ class CognitoMockFactory(
                         this.challengeParameters = responseObject["challengeParameters"]?.let {
                             parseChallengeParams(it as JsonObject)
                         }
+
+                        this.authenticationResult = responseObject["authenticationResult"]?.let {
+                            parseAuthenticationResult(it as JsonObject)
+                        }
                     }
                 }
             }
