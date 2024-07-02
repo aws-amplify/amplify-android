@@ -21,12 +21,9 @@ import com.amplifyframework.statemachine.state.Counter
 import com.amplifyframework.statemachine.state.CounterStateMachine
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import kotlin.test.Ignore
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -69,27 +66,6 @@ class StateMachineTests {
         testMachine.send(increment)
         testMachine.getCurrentState {
             assertEquals(1, it.value)
-            testLatch.countDown()
-        }
-        assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
-    }
-
-    @Test
-    @Ignore("Fails randomly, needs fixing")
-    fun testConcurrentReceive() {
-        val testMachine = CounterStateMachine()
-        val increment = Counter.Event("increment", Counter.Event.EventType.Increment)
-        val decrement = Counter.Event("decrement", Counter.Event.EventType.Decrement)
-        (1..1000)
-            .map { i ->
-                GlobalScope.launch {
-                    // TODO: need atomic updates
-                    if (i % 2 == 0) testMachine.send(increment) else testMachine.send(decrement)
-                }
-            }
-        val testLatch = CountDownLatch(1)
-        testMachine.getCurrentState {
-            assertEquals(0, it.value)
             testLatch.countDown()
         }
         assertTrue { testLatch.await(5, TimeUnit.SECONDS) }

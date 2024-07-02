@@ -21,7 +21,6 @@ import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.aws.AWSApiPlugin
 import com.amplifyframework.api.rest.RestOptions
-import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
@@ -47,7 +46,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.BeforeClass
-import org.junit.Ignore
 import org.junit.Test
 
 class AuthCanaryTestGen2 {
@@ -148,19 +146,6 @@ class AuthCanaryTestGen2 {
     }
 
     @Test
-    @Ignore("Sending sign up confirmation code is disabled in the user pool.")
-    fun resendSignUpCode() {
-        signUpUser(tempUsername, tempPassword)
-        val latch = CountDownLatch(1)
-        Amplify.Auth.resendSignUpCode(
-            tempUsername,
-            { latch.countDown() },
-            { fail("Failed to confirm sign up: $it") }
-        )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
-    }
-
-    @Test
     fun signIn() {
         val latch = CountDownLatch(1)
         val options = AWSCognitoAuthSignInOptions.builder().authFlowType(AuthFlowType.USER_SRP_AUTH).build()
@@ -179,14 +164,6 @@ class AuthCanaryTestGen2 {
         )
         assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
     }
-
-    @Test
-    @Ignore("Test will require UI. Implementation is TODO.")
-    fun signInWithWebUI() { }
-
-    @Test
-    @Ignore("Test will require UI. Implementation is TODO.")
-    fun signInWithSocialWebUi() { }
 
     // Test requires confirmation code, testing onError call
     @Test
@@ -225,51 +202,12 @@ class AuthCanaryTestGen2 {
     }
 
     @Test
-    @Ignore("Test fails with missing device key error. Ignoring test pending investigation.")
-    fun rememberDevice() {
-        signInUser(username, password)
-        val latch = CountDownLatch(1)
-        Amplify.Auth.rememberDevice(
-            { latch.countDown() },
-            { fail("Remember device failed: $it") }
-        )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
-    }
-
-    @Test
-    @Ignore("Test fails with missing device key error. Ignoring test pending investigation.")
-    fun forgetDevice() {
-        signInUser(username, password)
-        val latch = CountDownLatch(1)
-        Amplify.Auth.forgetDevice(
-            { latch.countDown() },
-            { fail("Forget device failed with error: $it") }
-        )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
-    }
-
-    @Test
     fun fetchDevices() {
         signInUser(username, password)
         val latch = CountDownLatch(1)
         Amplify.Auth.fetchDevices(
             { latch.countDown() },
             { fail("Fetch devices failed with error: $it") }
-        )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
-    }
-
-    @Test
-    @Ignore("Test requires a temporary user with a confirmed email.")
-    fun resetPassword() {
-        signUpUser(tempUsername, tempPassword)
-        confirmTemporaryUserSignUp(tempUsername)
-        signInUser(tempUsername, tempPassword)
-        val latch = CountDownLatch(1)
-        Amplify.Auth.resetPassword(
-            tempUsername,
-            { latch.countDown() },
-            { fail("Reset password failed: $it") }
         )
         assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
     }
@@ -356,19 +294,6 @@ class AuthCanaryTestGen2 {
     }
 
     @Test
-    @Ignore("Test fails when run too frequently due to resend confirmation code limit exceeded.")
-    fun resendUserAttributeConfirmationCode() {
-        signInUser(username, password)
-        val latch = CountDownLatch(1)
-        Amplify.Auth.resendUserAttributeConfirmationCode(
-            AuthUserAttributeKey.email(),
-            { latch.countDown() },
-            { fail("Failed to resend code: $it") }
-        )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
-    }
-
-    @Test
     fun getCurrentUser() {
         signInUser(username, password)
         val latch = CountDownLatch(1)
@@ -444,32 +369,6 @@ class AuthCanaryTestGen2 {
                 latch.countDown()
             },
             { fail("Delete user failed: $it") }
-        )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
-    }
-
-    @Test
-    @Ignore("OAuth flows not set up.")
-    fun testFederateToIdentityPool() {
-        signInUser(username, password)
-        val latch = CountDownLatch(1)
-        auth.federateToIdentityPool(
-            "YOUR_TOKEN",
-            AuthProvider.facebook(),
-            { latch.countDown() },
-            { fail("Failed to federate to Identity Pool: $it") }
-        )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
-    }
-
-    @Test
-    @Ignore("OAuth flows not set up.")
-    fun testClearFederateToIdentityPool() {
-        signInUser(username, password)
-        val latch = CountDownLatch(1)
-        auth.clearFederationToIdentityPool(
-            { latch.countDown() },
-            { fail("Failed to clear federation: $it") }
         )
         assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
     }
