@@ -23,8 +23,7 @@ internal sealed class LivenessResponseStream {
     internal data class Event(
         @SerialName("ServerSessionInformationEvent") val serverSessionInformationEvent:
             ServerSessionInformationEvent? = null,
-        @SerialName("DisconnectionEvent") val disconnectionEvent: DisconnectionEvent? = null,
-        @SerialName("ChallengeEvent") val challengeEvent: ChallengeEvent? = null
+        @SerialName("DisconnectionEvent") val disconnectionEvent: DisconnectionEvent? = null
     ) : LivenessResponseStream()
 
     @Serializable
