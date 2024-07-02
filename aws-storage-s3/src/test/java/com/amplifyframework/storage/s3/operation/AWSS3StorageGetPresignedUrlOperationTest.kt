@@ -26,6 +26,7 @@ import com.amplifyframework.storage.s3.service.StorageService
 import com.google.common.util.concurrent.MoreExecutors
 import io.mockk.coEvery
 import io.mockk.mockk
+import io.mockk.verify
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito
@@ -137,5 +138,82 @@ public class AWSS3StorageGetPresignedUrlOperationTest {
         )
         awsS3StorageGetPresignedUrlOperation.start()
         Mockito.verify(storageService).getPresignedUrl(expectedKey, 1, false)
+    }
+
+    @Test
+    fun `getPresignedUrl fails with non existent S3 path when validateObjectExistence is enabled`() {
+        val key = "123"
+        val expectedKey = "public/123"
+        val request = AWSS3StorageGetPresignedUrlRequest(
+            key,
+            StorageAccessLevel.PUBLIC,
+            "",
+            1,
+            false,
+            true
+        )
+        val expectedException = StorageException("Test", "Test")
+        storageService = mockk<StorageService>(relaxed = true)
+        coEvery { storageService.validateObjectExists(any()) } throws expectedException
+        coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
+        val onError = mockk<Consumer<StorageException>>(relaxed = true)
+        awsS3StorageGetPresignedUrlOperation = AWSS3StorageGetPresignedUrlOperation(
+            storageService,
+            MoreExecutors.newDirectExecutorService(),
+            authCredentialsProvider,
+            request,
+            AWSS3StoragePluginConfiguration {},
+            {},
+            onError
+        )
+
+        // WHEN
+        awsS3StorageGetPresignedUrlOperation.start()
+
+        // THEN
+        verify(exactly = 1) { onError.accept(expectedException) }
+        verify(exactly = 0) {
+            storageService.getPresignedUrl(any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `getPresignedUrl succeeds when validateObjectExistence is enabled`() {
+        // GIVEN
+        val key = "123"
+        val expectedKey = "public/123"
+        val request = AWSS3StorageGetPresignedUrlRequest(
+            key,
+            StorageAccessLevel.PUBLIC,
+            "",
+            1,
+            false,
+            true
+        )
+        storageService = mockk<StorageService>(relaxed = true)
+        coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
+        val onError = mockk<Consumer<StorageException>>(relaxed = true)
+        awsS3StorageGetPresignedUrlOperation = AWSS3StorageGetPresignedUrlOperation(
+            storageService,
+            MoreExecutors.newDirectExecutorService(),
+            authCredentialsProvider,
+            request,
+            AWSS3StoragePluginConfiguration {},
+            {},
+            onError
+        )
+
+        // WHEN
+        awsS3StorageGetPresignedUrlOperation.start()
+
+        // THEN
+        verify(exactly = 0) { onError.accept(any()) }
+        verify {
+            storageService.getPresignedUrl(
+                expectedKey,
+                1,
+                false
+            )
+        }
     }
 }
