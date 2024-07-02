@@ -159,7 +159,7 @@ public final class AppSyncClient implements AppSync {
     public <T extends Model> Cancelable update(
             @NonNull T model,
             @NonNull ModelSchema modelSchema,
-            @NonNull Integer version,
+            @Nullable Integer version,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {
         return update(model, modelSchema, version, QueryPredicates.all(), onResponse, onFailure);
@@ -170,7 +170,7 @@ public final class AppSyncClient implements AppSync {
     public <T extends Model> Cancelable update(
             @NonNull T model,
             @NonNull ModelSchema modelSchema,
-            @NonNull Integer version,
+            @Nullable Integer version,
             @NonNull QueryPredicate predicate,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {
@@ -207,7 +207,7 @@ public final class AppSyncClient implements AppSync {
     public <T extends Model> Cancelable delete(
             @NonNull T model,
             @NonNull ModelSchema modelSchema,
-            @NonNull Integer version,
+            @Nullable Integer version,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {
         return delete(model, modelSchema, version, QueryPredicates.all(), onResponse, onFailure);
@@ -218,7 +218,7 @@ public final class AppSyncClient implements AppSync {
     public <T extends Model> Cancelable delete(
             @NonNull T model,
             @NonNull ModelSchema modelSchema,
-            @NonNull Integer version,
+            @Nullable Integer version,
             @NonNull QueryPredicate predicate,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {

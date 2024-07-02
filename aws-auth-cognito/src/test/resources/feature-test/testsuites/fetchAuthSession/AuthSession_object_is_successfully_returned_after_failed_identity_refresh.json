@@ -1,0 +1,95 @@
+{
+    "description": "AuthSession object is successfully returned after failed identity refresh",
+    "preConditions": {
+        "amplify-configuration": "authconfiguration.json",
+        "state": "SignedIn_SessionEstablished.json",
+        "mockedResponses": [
+            {
+                "type": "cognitoIdentityProvider",
+                "apiName": "initiateAuth",
+                "responseType": "success",
+                "response": {
+                    "authenticationResult": {
+                        "idToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDI0LCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.po__hnGh2KF0ibpp--a2YZA9oBAKXc9BkX1IwdhvJp8",
+                        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDI0LCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.po__hnGh2KF0ibpp--a2YZA9oBAKXc9BkX1IwdhvJp8",
+                        "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
+                        "expiresIn": 300
+                    }
+                }
+            },
+            {
+                "type": "cognitoIdentity",
+                "apiName": "getId",
+                "responseType": "failure",
+                "response": {
+                    "errorType": "TooManyRequestsException",
+                    "errorMessage": "Error type: Client, Protocol response: (empty response)"
+                }
+            },
+            {
+                "type": "cognitoIdentity",
+                "apiName": "getCredentialsForIdentity",
+                "responseType": "failure",
+                "response": {
+                    "errorType": "TooManyRequestsException",
+                    "errorMessage": "Error type: Client, Protocol response: (empty response)"
+                }
+            }
+        ]
+    },
+    "api": {
+        "name": "fetchAuthSession",
+        "params": {
+        },
+        "options": {
+            "forceRefresh": true
+        }
+    },
+    "validations": [
+        {
+            "type": "amplify",
+            "apiName": "fetchAuthSession",
+            "responseType": "success",
+            "response": {
+                "accessToken": null,
+                "awsCredentialsResult": {
+                    "errorType": "UnknownException",
+                    "errorMessage": "Fetch auth session failed.",
+                    "recoverySuggestion": "See the attached exception for more details",
+                    "cause": {
+                        "errorType": "TooManyRequestsException",
+                        "errorMessage": "Error type: Client, Protocol response: (empty response)"
+                    }
+                },
+                "identityIdResult": {
+                    "errorType": "UnknownException",
+                    "errorMessage": "Fetch auth session failed.",
+                    "recoverySuggestion": "See the attached exception for more details",
+                    "cause": {
+                        "errorType": "TooManyRequestsException",
+                        "errorMessage": "Error type: Client, Protocol response: (empty response)"
+                    }
+                },
+                "isSignedIn": true,
+                "userPoolTokensResult": {
+                    "errorType": "UnknownException",
+                    "errorMessage": "Fetch auth session failed.",
+                    "recoverySuggestion": "See the attached exception for more details",
+                    "cause": {
+                        "errorType": "TooManyRequestsException",
+                        "errorMessage": "Error type: Client, Protocol response: (empty response)"
+                    }
+                },
+                "userSubResult": {
+                    "errorType": "UnknownException",
+                    "errorMessage": "Fetch auth session failed.",
+                    "recoverySuggestion": "See the attached exception for more details",
+                    "cause": {
+                        "errorType": "TooManyRequestsException",
+                        "errorMessage": "Error type: Client, Protocol response: (empty response)"
+                    }
+                }
+            }
+        }
+    ]
+}
