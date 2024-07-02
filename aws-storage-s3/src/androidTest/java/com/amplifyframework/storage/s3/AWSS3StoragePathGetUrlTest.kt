@@ -16,6 +16,7 @@ package com.amplifyframework.storage.s3
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import aws.sdk.kotlin.services.s3.model.NotFound
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.storage.StorageCategory
 import com.amplifyframework.storage.StorageException
@@ -96,11 +97,13 @@ class AWSS3StoragePathGetUrlTest {
 
     @Test
     fun testGetUrlWithStorageExceptionObjectNotFoundThrown() {
-        assertThrows(StorageException::class.java) {
+        val exception = assertThrows(StorageException::class.java) {
             synchronousStorage.getUrl(
                 StoragePath.fromString("public/SOME_UNKNOWN_FILE"),
                 AWSS3StorageGetPresignedUrlOptions.builder().setValidateObjectExistence(true).expires(30).build()
             )
         }
+
+        assertTrue(exception.cause is NotFound)
     }
 }
