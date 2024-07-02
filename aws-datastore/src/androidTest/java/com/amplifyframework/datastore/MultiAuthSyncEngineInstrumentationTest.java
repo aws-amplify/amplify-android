@@ -43,7 +43,6 @@ import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.storage.sqlite.TestStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.logging.Logger;
-import com.amplifyframework.testmodels.commentsblog.Author;
 import com.amplifyframework.testmodels.multiauth.GroupPrivatePublicUPIAMAPIPost;
 import com.amplifyframework.testmodels.multiauth.GroupPrivateUPIAMPost;
 import com.amplifyframework.testmodels.multiauth.GroupPublicUPAPIPost;
@@ -82,7 +81,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -142,24 +140,6 @@ public final class MultiAuthSyncEngineInstrumentationTest {
     public static void setup() throws AmplifyException, InterruptedException {
         auth = SynchronousAuth.delegatingToCognito(getApplicationContext(),
                 new AWSCognitoAuthPlugin());
-    }
-
-    /**
-     * Class name: Author.
-     * Signed in with user pools: false.
-     * Signed in with OIDC: false.
-     * Expected result: AuthorizationType.API_KEY.
-     * @throws AmplifyException Not expected.
-     * @throws IOException Not expected.
-     */
-    @Test
-    @Ignore("fix on dev-preview")
-    public void testAuthorAnonymous() throws IOException, AmplifyException {
-        verifyScenario(Author.class,
-                      false,
-                      false,
-                      AuthorizationType.API_KEY
-        );
     }
 
     /**
@@ -350,24 +330,6 @@ public final class MultiAuthSyncEngineInstrumentationTest {
     }
 
     /**
-     * Class name: GroupPrivateUPIAMPost.
-     * Signed in with user pools: false.
-     * Signed in with OIDC: false.
-     * Expected result: No matching auth types.
-     * @throws AmplifyException Not expected.
-     * @throws IOException Not expected.
-     */
-    @Test
-    @Ignore("Test is inconsistent, needs further investigation")
-    public void testGroupPrivateUPIAMPostAnonymous() throws IOException, AmplifyException {
-        verifyScenario(GroupPrivateUPIAMPost.class,
-                      false,
-                      false,
-                      null
-        );
-    }
-
-    /**
      * Class name: GroupPublicUPAPIPost.
      * Signed in with user pools: true.
      * Signed in with OIDC: false.
@@ -449,24 +411,6 @@ public final class MultiAuthSyncEngineInstrumentationTest {
                       true,
                       false,
                       AuthorizationType.AMAZON_COGNITO_USER_POOLS
-        );
-    }
-
-    /**
-     * Class name: PrivatePrivateUPIAMPost.
-     * Signed in with user pools: false.
-     * Signed in with OIDC: false.
-     * Expected result: No matching auth types.
-     * @throws AmplifyException Not expected.
-     * @throws IOException Not expected.
-     */
-    @Test
-    @Ignore("Test is inconsistent, needs further investigation")
-    public void testPrivatePrivateUPIAMPostAnonymous() throws IOException, AmplifyException {
-        verifyScenario(PrivatePrivateUPIAMPost.class,
-                      false,
-                      false,
-                      null
         );
     }
 

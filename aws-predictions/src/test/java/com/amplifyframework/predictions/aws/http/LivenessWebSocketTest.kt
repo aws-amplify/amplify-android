@@ -69,7 +69,6 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -423,31 +422,6 @@ internal class LivenessWebSocketTest {
         assertEquals("299", reconnectRequest.url.queryParameter("X-Amz-Expires"))
         assertEquals("host", reconnectRequest.url.queryParameter("X-Amz-SignedHeaders"))
         assertEquals("AWS4-HMAC-SHA256", reconnectRequest.url.queryParameter("X-Amz-Algorithm"))
-    }
-
-    @Test
-    @Ignore("Need to work on parsing the onMessage byteString from ServerWebSocketListener")
-    fun `sendInitialFaceDetectedEvent test`() {
-    }
-
-    @Test
-    @Ignore("Need to work on parsing the onMessage byteString from ServerWebSocketListener")
-    fun `sendFinalEvent test`() {
-    }
-
-    @Test
-    @Ignore("Need to work on parsing the onMessage byteString from ServerWebSocketListener")
-    fun `sendColorDisplayedEvent test`() {
-    }
-
-    @Test
-    @Ignore("Need to work on parsing the onMessage byteString from ServerWebSocketListener")
-    fun `sendClientInfoEvent test`() {
-    }
-
-    @Test
-    @Ignore("Need to work on parsing the onMessage byteString from ServerWebSocketListener")
-    fun `sendVideoEvent test`() {
     }
 
     private fun createLivenessWebSocket(

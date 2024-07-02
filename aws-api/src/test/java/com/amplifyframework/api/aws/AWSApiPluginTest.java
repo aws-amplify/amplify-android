@@ -21,8 +21,6 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.auth.DummyCredentialsProvider;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
-import com.amplifyframework.api.events.ApiChannelEventName;
-import com.amplifyframework.api.events.ApiEndpointStatusChangeEvent;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
@@ -31,11 +29,8 @@ import com.amplifyframework.api.graphql.model.ModelMutation;
 import com.amplifyframework.api.graphql.model.ModelPagination;
 import com.amplifyframework.api.graphql.model.ModelQuery;
 import com.amplifyframework.core.Consumer;
-import com.amplifyframework.hub.HubChannel;
-import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.Await;
-import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.Latch;
 import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.random.RandomString;
@@ -45,7 +40,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -231,51 +225,6 @@ public final class AWSApiPluginTest {
         );
         assertTrue(actualResponse.getData().hasNextResult());
         assertNotNull(actualResponse.getData().getRequestForNextResult());
-    }
-
-    /**
-     * It should be possible to perform a successful call to
-     * {@link AWSApiPlugin#mutate(GraphQLRequest, Consumer, Consumer)}.
-     * When the server returns a valid response, then the mutate methods should
-     * emit content via their value consumer.
-     * @throws ApiException If call to mutate(...) itself emits such an exception
-     * @throws JSONException On failure to arrange response JSON
-     */
-    @Test
-    @Ignore("fix")
-    public void graphQlMutationGetsResponse() throws JSONException, ApiException {
-        HubAccumulator networkStatusObserver =
-            HubAccumulator.create(HubChannel.API, ApiChannelEventName.API_ENDPOINT_STATUS_CHANGED, 1)
-                .start();
-        // Arrange a response from the "server"
-        String expectedName = RandomString.string();
-        webServer.enqueue(new MockResponse().setBody(new JSONObject()
-            .put("data", new JSONObject()
-                .put("createBlogOwner", new JSONObject()
-                    .put("name", expectedName)
-                )
-            )
-            .toString()
-        ));
-
-        // Try to perform a mutation.
-        BlogOwner tony = BlogOwner.builder()
-            .name(expectedName)
-            .build();
-        GraphQLResponse<BlogOwner> actualResponse =
-            Await.<GraphQLResponse<BlogOwner>, ApiException>result(((onResult, onError) ->
-                plugin.mutate(ModelMutation.create(tony), onResult, onError)
-            ));
-
-        // Assert that the expected response was received
-        assertEquals(expectedName, actualResponse.getData().getName());
-
-        // Verify that the expected hub event fired.
-        HubEvent<?> event = networkStatusObserver.awaitFirst();
-        assertNotNull(event);
-        assertTrue(event.getData() instanceof ApiEndpointStatusChangeEvent);
-        ApiEndpointStatusChangeEvent eventData = (ApiEndpointStatusChangeEvent) event.getData();
-        assertEquals(ApiEndpointStatusChangeEvent.ApiEndpointStatus.REACHABLE, eventData.getCurrentStatus());
     }
 
     /**

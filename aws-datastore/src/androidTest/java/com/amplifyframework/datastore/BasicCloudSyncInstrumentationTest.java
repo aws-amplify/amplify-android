@@ -53,7 +53,6 @@ import com.amplifyframework.testutils.sync.SynchronousDataStore;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -384,68 +383,6 @@ public final class BasicCloudSyncInstrumentationTest {
         // Verify that the updatedOwner is saved on the backend.
         BlogOwner remoteOwner = api.get(BlogOwner.class, owner.getId());
         ModelAssert.assertEqualsIgnoringTimestamps(updatedOwner, remoteOwner);
-    }
-
-    /**
-     * Verify that updating a different field of the last created shortly after creating two items succeeds.
-     * @throws DataStoreException On failure to save or query items from DataStore.
-     * @throws ApiException On failure to query the API.
-     */
-    @Ignore("Test passes locally but fails inconsistently on CI. Ignoring the test pending further investigation.")
-    @Test
-    public void create1ThenCreate2ThenUpdate2() throws DataStoreException, ApiException {
-        // Setup
-        BlogOwner owner = BlogOwner.builder()
-                .name("Jean")
-                .build();
-        BlogOwner anotherOwner = BlogOwner.builder()
-                .name("Richard")
-                .build();
-        BlogOwner updatedOwner = anotherOwner.copyOfBuilder()
-                .wea("pon")
-                .build();
-        String modelName = BlogOwner.class.getSimpleName();
-
-        // Expect two mutations to be published to AppSync.
-        HubAccumulator accumulator =
-                HubAccumulator.create(HubChannel.DATASTORE, publicationOf(modelName, anotherOwner.getId()), 2)
-                        .start();
-
-        // Create an item, then update it with different field and save it again.
-        dataStore.save(owner);
-        dataStore.save(anotherOwner);
-        dataStore.save(updatedOwner);
-
-        // Verify that 2 mutations were published.
-        accumulator.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        // Verify that the updatedOwner is saved in the DataStore.
-        BlogOwner localOwner = dataStore.get(BlogOwner.class, anotherOwner.getId());
-        ModelAssert.assertEqualsIgnoringTimestamps(updatedOwner, localOwner);
-
-        // Verify that the updatedOwner is saved on the backend.
-        BlogOwner remoteOwner = api.get(BlogOwner.class, anotherOwner.getId());
-        ModelAssert.assertEqualsIgnoringTimestamps(updatedOwner, remoteOwner);
-    }
-
-    /**
-     * Verify that creating a new item, then immediately deleting succeeds.
-     * @throws DataStoreException On failure to save or query items from DataStore.
-     * @throws ApiException On failure to query the API.
-     */
-    @Test
-    @Ignore("Inconsistent Test. Needs investigation")
-    public void createThenDelete() throws DataStoreException, ApiException {
-        // Setup
-        BlogOwner owner = BlogOwner.builder()
-                .name("Jean")
-                .build();
-
-        dataStore.save(owner);
-        dataStore.delete(owner);
-
-        // Verify that the owner is deleted from the local data store.
-        assertThrows(NoSuchElementException.class, () -> dataStore.get(BlogOwner.class, owner.getId()));
     }
 
     /**
