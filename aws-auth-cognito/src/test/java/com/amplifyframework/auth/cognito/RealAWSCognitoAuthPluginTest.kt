@@ -65,6 +65,7 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttribu
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
+import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
@@ -95,11 +96,13 @@ import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import featureTest.utilities.APICaptorFactory.Companion.onError
 import io.mockk.coEvery
+import io.mockk.coJustRun
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.invoke
 import io.mockk.justRun
 import io.mockk.mockk
+import io.mockk.mockkConstructor
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
@@ -406,6 +409,47 @@ class RealAWSCognitoAuthPluginTest {
         // THEN
         verify(exactly = 0) { onSuccess.accept(any()) }
         assertEquals(expectedAuthError.toString(), errorCaptor.captured.toString())
+    }
+    @Test
+    fun `reset password executes ResetPasswordUseCase if required params are set`() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<AuthResetPasswordResult>>()
+        val onError = mockk<Consumer<AuthException>>()
+        val options = mockk<AuthResetPasswordOptions>()
+        val username = "user"
+        val pinpointAppId = "abc"
+        val encodedData = "encodedData"
+
+        coEvery {
+            authEnvironment.getUserContextData(username)
+        } returns encodedData
+
+        every {
+            authEnvironment.getPinpointEndpointId()
+        } returns pinpointAppId
+
+        mockkConstructor(ResetPasswordUseCase::class)
+
+        every { authService.cognitoIdentityProviderClient } returns mockk()
+        every { authConfiguration.userPool } returns UserPoolConfiguration.invoke { appClientId = "app Client Id" }
+        coJustRun {
+            anyConstructed<ResetPasswordUseCase>().execute(
+                username,
+                options,
+                encodedData,
+                pinpointAppId,
+                onSuccess,
+                onError
+            )
+        }
+
+        // WHEN
+        plugin.resetPassword(username, options, onSuccess, onError)
+
+        // THEN
+        coVerify {
+            anyConstructed<ResetPasswordUseCase>().execute(username, options, any(), pinpointAppId, onSuccess, onError)
+        }
     }
 
     @Test
