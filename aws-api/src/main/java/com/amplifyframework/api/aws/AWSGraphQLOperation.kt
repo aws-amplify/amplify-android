@@ -32,8 +32,13 @@ import com.amplifyframework.api.graphql.GraphQLResponse
 abstract class AWSGraphQLOperation<R>(
     graphQLRequest: GraphQLRequest<R>,
     responseFactory: GraphQLResponse.Factory,
-    private val apiName: String?
+    apiName: String?
 ) : GraphQLOperation<R>(graphQLRequest, responseFactory) {
+
+    private val lazyLoadingContext = LazyLoadingContext(
+        apiName = apiName,
+        authMode = (graphQLRequest as? AppSyncGraphQLRequest)?.authorizationType
+    )
 
     @Throws(ApiException::class)
     override fun wrapResponse(jsonResponse: String): GraphQLResponse<R> {
@@ -46,7 +51,7 @@ abstract class AWSGraphQLOperation<R>(
     @Throws(ApiException::class)
     private fun buildResponse(jsonResponse: String): GraphQLResponse<R> {
         return try {
-            (responseFactory as? GsonGraphQLResponseFactory)?.buildResponse(request, jsonResponse, apiName)
+            (responseFactory as? GsonGraphQLResponseFactory)?.buildResponse(request, jsonResponse, lazyLoadingContext)
                 ?: throw ApiException(
                     "Amplify encountered an error while deserializing an object. " +
                         "GraphQLResponse.Factory was not of type GsonGraphQLResponseFactory",
