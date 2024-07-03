@@ -59,7 +59,7 @@ class AuthCanaryTestGen2 {
             (AuthUserAttribute(AuthUserAttributeKey.address(), "Sesame Street")),
             (AuthUserAttribute(AuthUserAttributeKey.name(), "Elmo")),
             (AuthUserAttribute(AuthUserAttributeKey.gender(), "Male")),
-            (AuthUserAttribute(AuthUserAttributeKey.birthdate(), "February 3")),
+            (AuthUserAttribute(AuthUserAttributeKey.birthdate(), "2000-02-03")),
             (AuthUserAttribute(AuthUserAttributeKey.phoneNumber(), "+16268319333")), // Elmo's phone #
             (AuthUserAttribute(AuthUserAttributeKey.updatedAt(), "${System.currentTimeMillis()}"))
         )
