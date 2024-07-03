@@ -51,8 +51,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.AfterClass;
-import org.junit.Ignore;
-import org.junit.Test;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -88,20 +86,6 @@ public final class MultiAuthSyncEngineNoAuthInstrumentationTest {
 
     private SynchronousDataStore dataStore;
     private HttpRequestInterceptor requestInterceptor;
-
-    /**
-     * Class name: Author.
-     * Signed in with user pools: false.
-     * Signed in with OIDC: false.
-     * Expected result: AuthorizationType.API_KEY.
-     * @throws AmplifyException Not expected.
-     * @throws IOException Not expected.
-     */
-    @Test
-    @Ignore("fix in dev-preview")
-    public void testAuthorAnonymous() throws IOException, AmplifyException {
-        verifyScenario();
-    }
 
     /**
      * Method used to configure each scenario.

@@ -31,7 +31,6 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.Assert
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
@@ -144,30 +143,6 @@ class AWSCognitoAuthCredentialStoreTest {
 
         store.deleteCredential()
         assertEquals(AmplifyCredential.Empty, store.retrieveCredential())
-    }
-
-    @Test
-    @Ignore("fix as per new store format")
-    fun testCognitoUserPoolTokensIsReturnedAsNullIfAllItsFieldsAreNull() {
-        val credential = getCredential()
-
-        setStoreCredentials(credential)
-
-        val actual = persistentStore.retrieveCredential()
-
-        Assert.assertEquals(AmplifyCredential.Empty, actual)
-    }
-
-    @Test
-    @Ignore("fix as per new store format")
-    fun testAWSCredentialsIsReturnedAsNullIfAllItsFieldsAreNull() {
-        val credential = getCredential()
-
-        setStoreCredentials(credential)
-
-        val actual = persistentStore.retrieveCredential()
-
-        Assert.assertEquals(AmplifyCredential.Empty, actual)
     }
 
     private fun setStoreCredentials(credential: AmplifyCredential) {

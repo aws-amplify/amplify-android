@@ -117,7 +117,6 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.json.JSONObject
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
 class RealAWSCognitoAuthPluginTest {
@@ -411,8 +410,6 @@ class RealAWSCognitoAuthPluginTest {
         verify(exactly = 0) { onSuccess.accept(any()) }
         assertEquals(expectedAuthError.toString(), errorCaptor.captured.toString())
     }
-
-    @Ignore("Test fails in build server")
     @Test
     fun `reset password executes ResetPasswordUseCase if required params are set`() {
         // GIVEN
@@ -421,13 +418,29 @@ class RealAWSCognitoAuthPluginTest {
         val options = mockk<AuthResetPasswordOptions>()
         val username = "user"
         val pinpointAppId = "abc"
+        val encodedData = "encodedData"
+
+        coEvery {
+            authEnvironment.getUserContextData(username)
+        } returns encodedData
+
+        every {
+            authEnvironment.getPinpointEndpointId()
+        } returns pinpointAppId
 
         mockkConstructor(ResetPasswordUseCase::class)
 
         every { authService.cognitoIdentityProviderClient } returns mockk()
         every { authConfiguration.userPool } returns UserPoolConfiguration.invoke { appClientId = "app Client Id" }
         coJustRun {
-            anyConstructed<ResetPasswordUseCase>().execute(username, options, any(), pinpointAppId, onSuccess, onError)
+            anyConstructed<ResetPasswordUseCase>().execute(
+                username,
+                options,
+                encodedData,
+                pinpointAppId,
+                onSuccess,
+                onError
+            )
         }
 
         // WHEN

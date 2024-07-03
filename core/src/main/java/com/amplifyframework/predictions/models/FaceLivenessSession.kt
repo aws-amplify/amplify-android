@@ -19,8 +19,6 @@ import com.amplifyframework.annotations.InternalAmplifyApi
 
 @InternalAmplifyApi
 class FaceLivenessSession(
-    val challengeId: String,
-    val challengeType: FaceLivenessChallengeType,
     val challenges: List<FaceLivenessSessionChallenge>,
     private val onVideoEvent: (VideoEvent) -> Unit,
     private val onChallengeResponseEvent: (ChallengeResponseEvent) -> Unit,
