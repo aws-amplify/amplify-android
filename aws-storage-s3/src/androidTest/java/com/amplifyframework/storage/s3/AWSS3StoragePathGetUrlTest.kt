@@ -15,7 +15,6 @@
 package com.amplifyframework.storage.s3
 
 import android.content.Context
-import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import aws.sdk.kotlin.services.s3.model.NotFound
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
@@ -36,7 +35,6 @@ import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.Test
-import java.net.URL
 
 /**
  * Instrumentation test for operational work on download.
