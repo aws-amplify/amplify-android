@@ -319,6 +319,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         @NonNull Consumer<StorageException> onError) {
         boolean useAccelerateEndpoint = options instanceof AWSS3StorageGetPresignedUrlOptions &&
             ((AWSS3StorageGetPresignedUrlOptions) options).useAccelerateEndpoint();
+        boolean validateObjectExistence = options instanceof AWSS3StorageGetPresignedUrlOptions &&
+                ((AWSS3StorageGetPresignedUrlOptions) options).getValidateObjectExistence();
         AWSS3StorageGetPresignedUrlRequest request = new AWSS3StorageGetPresignedUrlRequest(
             key,
             options.getAccessLevel() != null
@@ -328,7 +330,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             options.getExpires() != 0
                 ? options.getExpires()
                 : defaultUrlExpiration,
-            useAccelerateEndpoint
+            useAccelerateEndpoint,
+            validateObjectExistence
         );
 
         AWSS3StorageGetPresignedUrlOperation operation =
@@ -355,10 +358,15 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     ) {
         boolean useAccelerateEndpoint = options instanceof AWSS3StorageGetPresignedUrlOptions &&
                 ((AWSS3StorageGetPresignedUrlOptions) options).useAccelerateEndpoint();
+
+        boolean validateObjectExistence = options instanceof AWSS3StorageGetPresignedUrlOptions &&
+                ((AWSS3StorageGetPresignedUrlOptions) options).getValidateObjectExistence();
+
         AWSS3StoragePathGetPresignedUrlRequest request = new AWSS3StoragePathGetPresignedUrlRequest(
                 path,
                 options.getExpires() != 0 ? options.getExpires() : defaultUrlExpiration,
-                useAccelerateEndpoint
+                useAccelerateEndpoint,
+                validateObjectExistence
         );
 
         AWSS3StoragePathGetPresignedUrlOperation operation =
