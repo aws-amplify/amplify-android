@@ -135,6 +135,7 @@ class PushNotificationsUtils(
                 setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 setLargeIcon(largeImageIcon)
                 setAutoCancel(true)
+                setStyle(NotificationCompat.BigTextStyle().bigText(payload.body))
             }
 
             with(NotificationManagerCompat.from(context)) {
