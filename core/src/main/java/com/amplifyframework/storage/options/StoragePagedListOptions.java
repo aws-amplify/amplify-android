@@ -24,6 +24,7 @@ import androidx.annotation.NonNull;
 public class StoragePagedListOptions extends StorageOptions {
     private int pageSize;
     private String nextToken;
+    private SubpathStrategy subpathStrategy;
 
     /**
      * Constructs a StoragePagedListOptions instance with the
@@ -35,6 +36,7 @@ public class StoragePagedListOptions extends StorageOptions {
         super(builder.getAccessLevel(), builder.getTargetIdentityId());
         pageSize = builder.pageSize;
         nextToken = builder.nextToken;
+        subpathStrategy = builder.subpathStrategy;
     }
 
     /**
@@ -62,6 +64,8 @@ public class StoragePagedListOptions extends StorageOptions {
         return nextToken;
     }
 
+    public SubpathStrategy getSubpathStrategy() { return subpathStrategy; }
+
     /**
      * Used to construct instance of StorageListOptions via
      * fluent configuration methods.
@@ -73,6 +77,7 @@ public class StoragePagedListOptions extends StorageOptions {
 
         private int pageSize;
         private String nextToken;
+        private SubpathStrategy subpathStrategy;
 
         /**
          * Set page size for the request.
@@ -106,6 +111,11 @@ public class StoragePagedListOptions extends StorageOptions {
         @NonNull
         public StoragePagedListOptions build() {
             return new StoragePagedListOptions(this);
+        }
+
+        public B setSubpathStrategy(SubpathStrategy subpathStrategy) {
+            this.subpathStrategy = subpathStrategy;
+            return (B) this;
         }
     }
 }

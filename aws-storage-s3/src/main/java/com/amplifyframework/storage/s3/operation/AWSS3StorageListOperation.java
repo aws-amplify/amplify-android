@@ -22,6 +22,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StorageItem;
 import com.amplifyframework.storage.operation.StorageListOperation;
+import com.amplifyframework.storage.options.SubpathStrategy;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration;
 import com.amplifyframework.storage.s3.options.AWSS3StoragePagedListOptions;
@@ -86,14 +87,14 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
                         prefix -> {
                             try {
                                 String serviceKey = prefix.concat(getRequest().getPath());
+                                SubpathStrategy subpathStrategy = getRequest().getSubpathStrategy();
                                 if (getRequest().getPageSize() == AWSS3StoragePagedListOptions.ALL_PAGE_SIZE) {
                                     // fetch all the keys
-                                    List<StorageItem> listedItems = storageService.listFiles(serviceKey, prefix);
-                                    onSuccess.accept(StorageListResult.fromItems(listedItems, null));
+                                    onSuccess.accept(storageService.listFiles(serviceKey, prefix, subpathStrategy));
                                 } else {
                                     onSuccess.accept(
                                         storageService.listFiles(serviceKey, prefix, getRequest().getPageSize(),
-                                            getRequest().getNextToken()));
+                                            getRequest().getNextToken(), subpathStrategy));
                                 }
                             } catch (Exception exception) {
                                 onError.accept(new StorageException(

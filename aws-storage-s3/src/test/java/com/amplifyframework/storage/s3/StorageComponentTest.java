@@ -52,8 +52,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
@@ -442,8 +445,8 @@ public final class StorageComponentTest {
                 null
         );
 
-        when(storageService.listFiles(anyString(), anyString()))
-                .thenReturn(Collections.singletonList(item));
+        when(storageService.listFiles(anyString(), anyString(), any()))
+                .thenReturn(StorageListResult.fromItems(Collections.singletonList(item), null));
 
         StorageListResult result =
                 Await.<StorageListResult, StorageException>result((onResult, onError) ->

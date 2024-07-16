@@ -955,7 +955,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             options.getAccessLevel() != null ? options.getAccessLevel() : defaultAccessLevel,
             options.getTargetIdentityId(),
             options.getPageSize(),
-            options.getNextToken());
+            options.getNextToken(),
+            options.getSubpathStrategy());
 
         AWSS3StorageListOperation operation =
             new AWSS3StorageListOperation(
@@ -983,7 +984,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         AWSS3StoragePathListRequest request = new AWSS3StoragePathListRequest(
                 path,
                 options.getPageSize(),
-                options.getNextToken());
+                options.getNextToken(),
+                options.getSubpathStrategy());
 
         AWSS3StoragePathListOperation operation =
                 new AWSS3StoragePathListOperation(

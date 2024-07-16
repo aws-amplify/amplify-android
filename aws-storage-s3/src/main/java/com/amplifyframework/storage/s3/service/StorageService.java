@@ -22,6 +22,7 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.storage.ObjectMetadata;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StorageItem;
+import com.amplifyframework.storage.options.SubpathStrategy;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.s3.transfer.TransferObserver;
 import com.amplifyframework.storage.s3.transfer.TransferRecord;
@@ -118,7 +119,7 @@ public interface StorageService {
      * @param prefix path appended to S3 keys
      * @return A list of parsed items present inside given path
      */
-    List<StorageItem> listFiles(@NonNull String path, @NonNull String prefix);
+    StorageListResult listFiles(@NonNull String path, @NonNull String prefix, @Nullable SubpathStrategy subpathStrategy);
 
     /**
      * Returns a list of items from provided path inside the storage.
@@ -129,7 +130,7 @@ public interface StorageService {
      * @param nextToken next continuation token to be passed to s3
      * @return A list of parsed items present inside given path
      */
-    StorageListResult listFiles(@NonNull String path, @NonNull String prefix, int pageSize, @Nullable String nextToken);
+    StorageListResult listFiles(@NonNull String path, @NonNull String prefix, int pageSize, @Nullable String nextToken, @Nullable SubpathStrategy subpathStrategy);
 
     /**
      * Delete an object with specific key inside the storage.

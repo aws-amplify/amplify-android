@@ -29,6 +29,8 @@ import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.storage.ObjectMetadata
 import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.StorageItem
+import com.amplifyframework.storage.options.SubpathStrategy
+import com.amplifyframework.storage.options.SubpathStrategy.Exclude
 import com.amplifyframework.storage.result.StorageListResult
 import com.amplifyframework.storage.s3.transfer.TransferManager
 import com.amplifyframework.storage.s3.transfer.TransferObserver
@@ -182,12 +184,15 @@ internal class AWSS3StorageService(
      * @param path The path to list items from
      * @return A list of parsed items
      */
-    override fun listFiles(path: String, prefix: String): MutableList<StorageItem>? {
-        val items = mutableListOf<StorageItem>()
-        runBlocking {
+    override fun listFiles(path: String, prefix: String, subPathStrategy: SubpathStrategy?): StorageListResult {
+        return runBlocking {
+            val items = mutableListOf<StorageItem>()
+            val excludedSubPaths = mutableListOf<String>()
+            val delimiter: String? = (subPathStrategy as? Exclude)?.delimiter
             val result = s3Client.listObjectsV2Paginated {
                 this.bucket = s3BucketName
                 this.prefix = path
+                this.delimiter = delimiter
             }
             result.collect {
                 it.contents?.forEach { value ->
@@ -205,18 +210,34 @@ internal class AWSS3StorageService(
                         )
                     }
                 }
+                it.commonPrefixes?.forEach {
+                    val subpath = it.prefix
+                    if (subpath != null) {
+                        excludedSubPaths.add(subpath)
+                    }
+                }
+
             }
+
+            StorageListResult.fromItems(items, null, excludedSubPaths)
         }
-        return items
     }
 
-    override fun listFiles(path: String, prefix: String, pageSize: Int, nextToken: String?): StorageListResult {
+    override fun listFiles(
+        path: String,
+        prefix: String,
+        pageSize: Int,
+        nextToken: String?,
+        subPathStrategy: SubpathStrategy?
+    ): StorageListResult {
         return runBlocking {
+            val delimiter = (subPathStrategy as? Exclude)?.delimiter
             val result = s3Client.listObjectsV2 {
                 this.bucket = s3BucketName
                 this.prefix = path
                 this.maxKeys = pageSize
                 this.continuationToken = nextToken
+                this.delimiter = delimiter
             }
             val items = result.contents?.mapNotNull { value ->
                 val serviceKey = value.key
@@ -235,7 +256,10 @@ internal class AWSS3StorageService(
                     null
                 }
             }
-            StorageListResult.fromItems(items, result.nextContinuationToken)
+            val subPaths = result.commonPrefixes?.mapNotNull {
+                it.prefix?.removePrefix(prefix)
+            }
+            StorageListResult.fromItems(items, result.nextContinuationToken, subPaths)
         }
     }
 
@@ -243,13 +267,15 @@ internal class AWSS3StorageService(
      * This method is used to list files when StoragePath was used.
      * When StoragePath is used, we provide the full serviceKey for both StorageItem.key and StorageItem.path
      */
-    fun listFiles(path: String, pageSize: Int, nextToken: String?): StorageListResult {
+    fun listFiles(path: String, pageSize: Int, nextToken: String?, subPathStrategy: SubpathStrategy?): StorageListResult {
         return runBlocking {
+            val delimiter = (subPathStrategy as? Exclude)?.delimiter
             val result = s3Client.listObjectsV2 {
                 this.bucket = s3BucketName
                 this.prefix = path
                 this.maxKeys = pageSize
                 this.continuationToken = nextToken
+                this.delimiter = delimiter
             }
             val items = result.contents?.mapNotNull { value ->
                 val serviceKey = value.key
@@ -268,7 +294,8 @@ internal class AWSS3StorageService(
                     null
                 }
             }
-            StorageListResult.fromItems(items, result.nextContinuationToken)
+            val subPaths = result.commonPrefixes?.mapNotNull { it.prefix }
+            StorageListResult.fromItems(items, result.nextContinuationToken, subPaths)
         }
     }
 
