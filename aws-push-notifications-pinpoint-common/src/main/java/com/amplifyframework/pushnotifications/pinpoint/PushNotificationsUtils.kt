@@ -77,7 +77,9 @@ class PushNotificationsUtils(
     }
 
     private suspend fun downloadImage(url: String): Bitmap? = withContext(Dispatchers.IO) {
-        BitmapFactory.decodeStream(URL(url).openConnection().getInputStream())
+        runCatching {
+            BitmapFactory.decodeStream(URL(url).openConnection().getInputStream())
+        }.getOrNull()
     }
 
     fun isAppInForeground(): Boolean {
