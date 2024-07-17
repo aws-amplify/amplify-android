@@ -20,7 +20,6 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.auth.AuthCredentialsProvider;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageException;
-import com.amplifyframework.storage.StorageItem;
 import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.options.SubpathStrategy;
 import com.amplifyframework.storage.result.StorageListResult;
@@ -29,7 +28,6 @@ import com.amplifyframework.storage.s3.options.AWSS3StoragePagedListOptions;
 import com.amplifyframework.storage.s3.request.AWSS3StorageListRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
 
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 /**

@@ -15,37 +15,12 @@
 
 package com.amplifyframework.auth
 
-import android.app.Activity
-import android.content.Context
-import android.content.Intent
-import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
-import com.amplifyframework.auth.options.AuthConfirmSignInOptions
-import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
-import com.amplifyframework.auth.options.AuthFetchSessionOptions
-import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
-import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
-import com.amplifyframework.auth.options.AuthResetPasswordOptions
-import com.amplifyframework.auth.options.AuthSignInOptions
-import com.amplifyframework.auth.options.AuthSignOutOptions
-import com.amplifyframework.auth.options.AuthSignUpOptions
-import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions
-import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
-import com.amplifyframework.auth.options.AuthWebUISignInOptions
-import com.amplifyframework.auth.result.AuthResetPasswordResult
-import com.amplifyframework.auth.result.AuthSignInResult
-import com.amplifyframework.auth.result.AuthSignOutResult
-import com.amplifyframework.auth.result.AuthSignUpResult
-import com.amplifyframework.auth.result.AuthUpdateAttributeResult
-import com.amplifyframework.core.Action
-import com.amplifyframework.core.Consumer
 import com.amplifyframework.storage.options.SubpathStrategy
-import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
- * Test that ensures new Auth category APIs have a default implementation in the [AuthPlugin] class. This allows
- * 3rd party Auth plugins to compile against newer versions of Amplify.
+ * Test the sub-path include/exclude strategy
  */
 class SubpathStrategyTest {
 

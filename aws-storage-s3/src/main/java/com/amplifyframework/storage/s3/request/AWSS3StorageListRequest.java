@@ -163,7 +163,13 @@ public final class AWSS3StorageListRequest {
         return nextToken;
     }
 
+    /**
+     * Get SubpathStrategy to include/exclude sub-paths.
+     * @return SubpathStrategy to include/exclude sub-paths.
+     * */
     @Nullable
-    public SubpathStrategy getSubpathStrategy() { return subpathStrategy; }
+    public SubpathStrategy getSubpathStrategy() {
+        return subpathStrategy;
+    }
 }
 

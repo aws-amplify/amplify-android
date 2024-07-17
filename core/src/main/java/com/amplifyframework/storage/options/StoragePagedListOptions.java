@@ -64,7 +64,13 @@ public class StoragePagedListOptions extends StorageOptions {
         return nextToken;
     }
 
-    public SubpathStrategy getSubpathStrategy() { return subpathStrategy; }
+    /**
+     * Get the SubpathStrategy.
+     * @return the SubpathStrategy to include/exclude sub-paths.
+     */
+    public SubpathStrategy getSubpathStrategy() {
+        return subpathStrategy;
+    }
 
     /**
      * Used to construct instance of StorageListOptions via
@@ -91,7 +97,7 @@ public class StoragePagedListOptions extends StorageOptions {
 
         /**
          * Set next continuation token.
-         * @param nextToken next contiuation token to be passed to S3.
+         * @param nextToken next continuation token to be passed to S3.
          * @return Current Builder instance for fluent chaining
          */
         public B setNextToken(String nextToken) {
@@ -113,6 +119,11 @@ public class StoragePagedListOptions extends StorageOptions {
             return new StoragePagedListOptions(this);
         }
 
+        /**
+         * Set the SubpathStrategy.
+         * @param subpathStrategy strategy to include/exclude sub-paths.
+         * @return Current Builder instance for fluent chaining
+         */
         public B setSubpathStrategy(SubpathStrategy subpathStrategy) {
             this.subpathStrategy = subpathStrategy;
             return (B) this;

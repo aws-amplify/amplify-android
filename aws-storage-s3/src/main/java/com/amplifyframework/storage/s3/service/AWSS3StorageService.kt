@@ -216,7 +216,6 @@ internal class AWSS3StorageService(
                         excludedSubPaths.add(subpath)
                     }
                 }
-
             }
 
             StorageListResult.fromItems(items, null, excludedSubPaths)
@@ -267,7 +266,12 @@ internal class AWSS3StorageService(
      * This method is used to list files when StoragePath was used.
      * When StoragePath is used, we provide the full serviceKey for both StorageItem.key and StorageItem.path
      */
-    fun listFiles(path: String, pageSize: Int, nextToken: String?, subPathStrategy: SubpathStrategy?): StorageListResult {
+    fun listFiles(
+        path: String,
+        pageSize: Int,
+        nextToken: String?,
+        subPathStrategy: SubpathStrategy?
+    ): StorageListResult {
         return runBlocking {
             val delimiter = (subPathStrategy as? Exclude)?.delimiter
             val result = s3Client.listObjectsV2 {

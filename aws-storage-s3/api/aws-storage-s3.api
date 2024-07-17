@@ -297,10 +297,12 @@ public final class com/amplifyframework/storage/s3/request/AWSS3StorageGetPresig
 public final class com/amplifyframework/storage/s3/request/AWSS3StorageListRequest {
 	public fun <init> (Ljava/lang/String;Lcom/amplifyframework/storage/StorageAccessLevel;Ljava/lang/String;)V
 	public fun <init> (Ljava/lang/String;Lcom/amplifyframework/storage/StorageAccessLevel;Ljava/lang/String;ILjava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Lcom/amplifyframework/storage/StorageAccessLevel;Ljava/lang/String;ILjava/lang/String;Lcom/amplifyframework/storage/options/SubpathStrategy;)V
 	public fun getAccessLevel ()Lcom/amplifyframework/storage/StorageAccessLevel;
 	public fun getNextToken ()Ljava/lang/String;
 	public fun getPageSize ()I
 	public fun getPath ()Ljava/lang/String;
+	public fun getSubpathStrategy ()Lcom/amplifyframework/storage/options/SubpathStrategy;
 	public fun getTargetIdentityId ()Ljava/lang/String;
 }
 
@@ -329,8 +331,8 @@ public abstract interface class com/amplifyframework/storage/s3/service/StorageS
 	public abstract fun downloadToFile (Ljava/lang/String;Ljava/lang/String;Ljava/io/File;Z)Lcom/amplifyframework/storage/s3/transfer/TransferObserver;
 	public abstract fun getPresignedUrl (Ljava/lang/String;IZ)Ljava/net/URL;
 	public abstract fun getTransfer (Ljava/lang/String;)Lcom/amplifyframework/storage/s3/transfer/TransferRecord;
-	public abstract fun listFiles (Ljava/lang/String;Ljava/lang/String;)Ljava/util/List;
-	public abstract fun listFiles (Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;)Lcom/amplifyframework/storage/result/StorageListResult;
+	public abstract fun listFiles (Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Lcom/amplifyframework/storage/options/SubpathStrategy;)Lcom/amplifyframework/storage/result/StorageListResult;
+	public abstract fun listFiles (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/storage/options/SubpathStrategy;)Lcom/amplifyframework/storage/result/StorageListResult;
 	public abstract fun pauseTransfer (Lcom/amplifyframework/storage/s3/transfer/TransferObserver;)V
 	public abstract fun resumeTransfer (Lcom/amplifyframework/storage/s3/transfer/TransferObserver;)V
 	public abstract fun uploadFile (Ljava/lang/String;Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/ObjectMetadata;Z)Lcom/amplifyframework/storage/s3/transfer/TransferObserver;

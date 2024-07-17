@@ -53,6 +53,13 @@ public final class StorageListResult {
         return new StorageListResult(Collections.unmodifiableList(safeItems), nextToken, Collections.emptyList());
     }
 
+    /**
+     * Factory method to construct a storage list result from a list of items.
+     * @param items A possibly null, possibly empty list of items
+     * @param nextToken next continuation token
+     * @param excludedSubpaths sub-paths that are excluded based on the delimiter
+     * @return A new immutable instance of StorageListResult
+     */
     public static StorageListResult fromItems(
             List<StorageItem> items,
             String nextToken,
@@ -82,5 +89,11 @@ public final class StorageListResult {
         return nextToken;
     }
 
-    public List<String> getExcludedSubpaths() { return excludedSubpaths; }
+    /**
+     * Gets the excluded sub-paths.
+     * @return excluded sub-paths .
+     */
+    public List<String> getExcludedSubpaths() {
+        return excludedSubpaths;
+    }
 }
