@@ -33,6 +33,7 @@ public final class AWSS3StorageGetPresignedUrlRequest {
     private final String targetIdentityId;
     private final int expires;
     private final boolean useAccelerateEndpoint;
+    private final boolean validateObjectExistence;
 
     /**
      * Constructs a new AWSS3StorageGetUrlRequest.
@@ -58,6 +59,37 @@ public final class AWSS3StorageGetPresignedUrlRequest {
         this.targetIdentityId = targetIdentityId;
         this.expires = expires;
         this.useAccelerateEndpoint = useAccelerateEndpoint;
+        this.validateObjectExistence = false;
+    }
+
+    /**
+     * Constructs a new AWSS3StorageGetUrlRequest.
+     * Although this has public access, it is intended for internal use and should not be used directly by host
+     * applications. The behavior of this may change without warning.
+     *
+     * @param key key for item to obtain URL for
+     * @param accessLevel Storage access level
+     * @param targetIdentityId If set, this should override the current user's identity ID.
+     *                         If null, the operation will fetch the current identity ID.
+     * @param expires The number of seconds before the URL expires
+     * @param useAccelerateEndpoint Flag to enable acceleration mode
+     * @param validateObjectExistence Flag to validate if object exists in storage
+     */
+    @SuppressWarnings("deprecation")
+    public AWSS3StorageGetPresignedUrlRequest(
+            @NonNull String key,
+            @NonNull StorageAccessLevel accessLevel,
+            @Nullable String targetIdentityId,
+            int expires,
+            boolean useAccelerateEndpoint,
+            boolean validateObjectExistence
+    ) {
+        this.key = key;
+        this.accessLevel = accessLevel;
+        this.targetIdentityId = targetIdentityId;
+        this.expires = expires;
+        this.useAccelerateEndpoint = useAccelerateEndpoint;
+        this.validateObjectExistence = validateObjectExistence;
     }
 
     /**
@@ -103,6 +135,15 @@ public final class AWSS3StorageGetPresignedUrlRequest {
      */
     public boolean useAccelerateEndpoint() {
         return useAccelerateEndpoint;
+    }
+
+    /**
+     * Gets the flag to determine whether to validate for object existence.
+     *
+     * @return boolean flag
+     */
+    public boolean validateObjectExistence() {
+        return validateObjectExistence;
     }
 }
 

@@ -1,3 +1,27 @@
+## [Release 2.20.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.20.0)
+
+### Features
+- **storage:** add object existence validation option to get presigned url ([#2848](https://github.com/aws-amplify/amplify-android/issues/2848))
+
+### Bug Fixes
+- **notifications:** Prevent notifications text from being truncated ([#2856](https://github.com/aws-amplify/amplify-android/issues/2856))
+- **api:** Don't prevent subscribing with API_KEY when there is also an owner-based rule ([#2828](https://github.com/aws-amplify/amplify-android/issues/2828))
+
+### Miscellaneous
+- **analytics:** Update junit ktx dependency ([#2859](https://github.com/aws-amplify/amplify-android/issues/2859))
+- **auth:** Fix tests by using proper birthdate attribute according to Cognito ([#2865](https://github.com/aws-amplify/amplify-android/issues/2865))
+- **all:** Remove ignored tests ([#2867](https://github.com/aws-amplify/amplify-android/issues/2867))
+
+[See all changes between 2.19.1 and 2.20.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.19.1...release_v2.20.0)
+
+## [Release 2.19.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.19.1)
+
+### Bug Fixes
+- **auth:** Fix isSignedIn states ([#2830](https://github.com/aws-amplify/amplify-android/issues/2830))
+- **DataStore:** should not crash on missing version metadata ([#2849](https://github.com/aws-amplify/amplify-android/issues/2849))
+
+[See all changes between 2.19.0 and 2.19.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.19.0...release_v2.19.1)
+
 ## [Release 2.19.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.19.0)
 
 ### Miscellaneous
