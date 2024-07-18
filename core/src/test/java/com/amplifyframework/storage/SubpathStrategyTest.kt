@@ -26,14 +26,12 @@ class SubpathStrategyTest {
 
     @Test
     fun `Exclude strategy returns default delimiter`() {
-        // The purpose of this test is to ensure that TestPlugin compiles, the assertion is irrelevant
         val excludeSubpathStrategy = SubpathStrategy.Exclude()
         assertEquals("/", excludeSubpathStrategy.delimiter)
     }
 
     @Test
     fun `Exclude strategy returns overriden delimiter`() {
-        // The purpose of this test is to ensure that TestPlugin compiles, the assertion is irrelevant
         val excludeSubpathStrategy = SubpathStrategy.Exclude("$")
         assertEquals("$", excludeSubpathStrategy.delimiter)
     }
