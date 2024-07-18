@@ -255,6 +255,8 @@ internal class AWSS3StorageService(
                     null
                 }
             }
+
+            // remove prefixes in Gen1 code path (i.e. remove "public", "private", "protected" prefixes
             val subPaths = result.commonPrefixes?.mapNotNull {
                 it.prefix?.removePrefix(prefix)
             }
