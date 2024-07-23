@@ -46,6 +46,7 @@ class AWSS3StorageSubPathStrategyListTest {
         private const val THIRD_FILE_NAME = "03"
         private const val FOURTH_FILE_NAME = "04"
         private const val FIFTH_FILE_NAME = "05"
+        private const val CUSTOM_FILE_NAME = "custom"
         private const val FIRST_FILE_STRING_PATH = "public/photos/2023/$FIRST_FILE_NAME"
         private val FIRST_FILE_PATH = StoragePath.fromString(FIRST_FILE_STRING_PATH)
         private const val SECOND_FILE_STRING_PATH = "public/photos/2023/$SECOND_FILE_NAME"
@@ -56,6 +57,8 @@ class AWSS3StorageSubPathStrategyListTest {
         private val FOURTH_FILE_PATH = StoragePath.fromString(FOURTH_FILE_STRING_PATH)
         private const val FIFTH_FILE_STRING_PATH = "public/photos/$FIFTH_FILE_NAME"
         private val FIFTH_FILE_PATH = StoragePath.fromString(FIFTH_FILE_STRING_PATH)
+        private const val CUSTOM_FILE_STRING_PATH = "public/photos/202$/$CUSTOM_FILE_NAME"
+        private val CUSTOM_FILE_PATH = StoragePath.fromString(CUSTOM_FILE_STRING_PATH)
 
         lateinit var storageCategory: StorageCategory
         lateinit var synchronousStorage: SynchronousStorage
@@ -65,6 +68,7 @@ class AWSS3StorageSubPathStrategyListTest {
         private lateinit var third: File
         private lateinit var fourth: File
         private lateinit var fifth: File
+        private lateinit var customFile: File
 
         /**
          * Initialize mobile client and configure the storage.
@@ -93,6 +97,9 @@ class AWSS3StorageSubPathStrategyListTest {
             synchronousStorage.uploadFile(FOURTH_FILE_PATH, fourth, StorageUploadFileOptions.defaultInstance())
             fifth = RandomTempFile(FIFTH_FILE_NAME, SMALL_FILE_SIZE)
             synchronousStorage.uploadFile(FIFTH_FILE_PATH, fifth, StorageUploadFileOptions.defaultInstance())
+
+            customFile = RandomTempFile(CUSTOM_FILE_NAME, SMALL_FILE_SIZE)
+            synchronousStorage.uploadFile(CUSTOM_FILE_PATH, customFile, StorageUploadFileOptions.defaultInstance())
         }
     }
 
@@ -103,6 +110,7 @@ class AWSS3StorageSubPathStrategyListTest {
         synchronousStorage.remove("photos/2024/$THIRD_FILE_NAME", StorageRemoveOptions.defaultInstance())
         synchronousStorage.remove("photos/2024/$FOURTH_FILE_NAME", StorageRemoveOptions.defaultInstance())
         synchronousStorage.remove("photos/$FIFTH_FILE_NAME", StorageRemoveOptions.defaultInstance())
+        synchronousStorage.remove("photos/$CUSTOM_FILE_NAME", StorageRemoveOptions.defaultInstance())
     }
 
     @Test
@@ -116,8 +124,14 @@ class AWSS3StorageSubPathStrategyListTest {
 
         val result = synchronousStorage.list(path, options)
 
-        result.items.apply {
-            Assert.assertEquals(5, size)
+        result.items.mapNotNull { it.path }.apply {
+            Assert.assertEquals(6, size)
+            Assert.assertTrue(contains("public/photos/05"))
+            Assert.assertTrue(contains("public/photos/2023/01"))
+            Assert.assertTrue(contains("public/photos/2023/02"))
+            Assert.assertTrue(contains("public/photos/2024/03"))
+            Assert.assertTrue(contains("public/photos/2024/04"))
+            Assert.assertTrue(contains("public/photos/202$/custom"))
         }
     }
 
@@ -131,18 +145,24 @@ class AWSS3StorageSubPathStrategyListTest {
 
         var result = synchronousStorage.list(StoragePath.fromString("public/photos/"), options)
 
-        result.items.apply {
+        result.items.mapNotNull { it.path }.apply {
             Assert.assertEquals(1, size)
+            Assert.assertTrue(contains("public/photos/05"))
         }
 
         result.excludedSubpaths.apply {
-            Assert.assertEquals(2, size)
+            Assert.assertEquals(3, size)
+            Assert.assertTrue(contains("public/photos/2023/"))
+            Assert.assertTrue(contains("public/photos/2024/"))
+            Assert.assertTrue(contains("public/photos/202$/"))
         }
 
         result = synchronousStorage.list(StoragePath.fromString("public/photos/2023/"), options)
 
-        result.items.apply {
+        result.items.mapNotNull { it.path }.apply {
             Assert.assertEquals(2, size)
+            Assert.assertTrue(contains("public/photos/2023/01"))
+            Assert.assertTrue(contains("public/photos/2023/02"))
         }
 
         Assert.assertNull(result.excludedSubpaths)
@@ -158,16 +178,26 @@ class AWSS3StorageSubPathStrategyListTest {
 
         var result = synchronousStorage.list(StoragePath.fromString("public/photos/"), options)
 
-        result.items.apply {
+        result.items.mapNotNull { it.path }.apply {
             Assert.assertEquals(5, size)
+            Assert.assertTrue(contains("public/photos/05"))
+            Assert.assertTrue(contains("public/photos/2023/01"))
+            Assert.assertTrue(contains("public/photos/2023/02"))
+            Assert.assertTrue(contains("public/photos/2024/03"))
+            Assert.assertTrue(contains("public/photos/2024/04"))
         }
 
-        Assert.assertNull(result.excludedSubpaths)
+        result.excludedSubpaths.apply {
+            Assert.assertEquals(1, size)
+            Assert.assertTrue(contains("public/photos/202$"))
+        }
 
         result = synchronousStorage.list(StoragePath.fromString("public/photos/2023/"), options)
 
-        result.items.apply {
+        result.items.mapNotNull { it.path }.apply {
             Assert.assertEquals(2, size)
+            Assert.assertTrue(contains("public/photos/2023/01"))
+            Assert.assertTrue(contains("public/photos/2023/02"))
         }
 
         Assert.assertNull(result.excludedSubpaths)

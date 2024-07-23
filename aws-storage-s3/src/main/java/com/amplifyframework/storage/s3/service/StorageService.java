@@ -21,6 +21,7 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.storage.ObjectMetadata;
 import com.amplifyframework.storage.StorageException;
+import com.amplifyframework.storage.StorageItem;
 import com.amplifyframework.storage.options.SubpathStrategy;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.s3.transfer.TransferObserver;
@@ -30,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.List;
 
 /**
  * Interface to manage file transfer to and from a registered S3 bucket.
@@ -109,6 +111,26 @@ public interface StorageService {
                                        @NonNull ObjectMetadata metadata,
                                        boolean useAccelerateEndpoint)
         throws IOException;
+
+    /**
+     * Returns a list of items from provided path inside the storage.
+     *
+     * @param path path inside storage to inspect for list of items
+     * @param prefix path appended to S3 keys
+     * @return A list of parsed items present inside given path
+     */
+    List<StorageItem> listFiles(@NonNull String path, @NonNull String prefix);
+
+    /**
+     * Returns a list of items from provided path inside the storage.
+     *
+     * @param path path inside storage to inspect for list of items
+     * @param prefix path appended to S3 keys
+     * @param pageSize number of keys to be retrieved from s3
+     * @param nextToken next continuation token to be passed to s3
+     * @return A list of parsed items present inside given path
+     */
+    StorageListResult listFiles(@NonNull String path, @NonNull String prefix, int pageSize, @Nullable String nextToken);
 
     /**
      * Returns a list of items from provided path inside the storage.

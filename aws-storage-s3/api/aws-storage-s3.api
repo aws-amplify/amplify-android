@@ -331,6 +331,8 @@ public abstract interface class com/amplifyframework/storage/s3/service/StorageS
 	public abstract fun downloadToFile (Ljava/lang/String;Ljava/lang/String;Ljava/io/File;Z)Lcom/amplifyframework/storage/s3/transfer/TransferObserver;
 	public abstract fun getPresignedUrl (Ljava/lang/String;IZ)Ljava/net/URL;
 	public abstract fun getTransfer (Ljava/lang/String;)Lcom/amplifyframework/storage/s3/transfer/TransferRecord;
+	public abstract fun listFiles (Ljava/lang/String;Ljava/lang/String;)Ljava/util/List;
+	public abstract fun listFiles (Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;)Lcom/amplifyframework/storage/result/StorageListResult;
 	public abstract fun listFiles (Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Lcom/amplifyframework/storage/options/SubpathStrategy;)Lcom/amplifyframework/storage/result/StorageListResult;
 	public abstract fun listFiles (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/storage/options/SubpathStrategy;)Lcom/amplifyframework/storage/result/StorageListResult;
 	public abstract fun pauseTransfer (Lcom/amplifyframework/storage/s3/transfer/TransferObserver;)V
