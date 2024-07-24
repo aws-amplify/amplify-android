@@ -49,7 +49,7 @@ internal class AWSS3StoragePathListOperation(
 
             try {
                 onSuccess.accept(
-                    storageService.listFiles(serviceKey, request.pageSize, request.nextToken)
+                    storageService.listFiles(serviceKey, request.pageSize, request.nextToken, request.subpathStrategy)
                 )
             } catch (exception: Exception) {
                 onError.accept(

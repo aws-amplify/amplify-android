@@ -442,8 +442,8 @@ public final class StorageComponentTest {
                 null
         );
 
-        when(storageService.listFiles(anyString(), anyString()))
-                .thenReturn(Collections.singletonList(item));
+        when(storageService.listFiles(anyString(), anyString(), any()))
+                .thenReturn(StorageListResult.fromItems(Collections.singletonList(item), null));
 
         StorageListResult result =
                 Await.<StorageListResult, StorageException>result((onResult, onError) ->
