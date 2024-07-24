@@ -16,7 +16,7 @@
 package com.amplifyframework.auth
 
 import com.amplifyframework.storage.options.SubpathStrategy
-import org.junit.Assert.assertEquals
+import io.kotest.matchers.shouldBe
 import org.junit.Test
 
 /**
@@ -27,12 +27,12 @@ class SubpathStrategyTest {
     @Test
     fun `Exclude strategy returns default delimiter`() {
         val excludeSubpathStrategy = SubpathStrategy.Exclude()
-        assertEquals("/", excludeSubpathStrategy.delimiter)
+        excludeSubpathStrategy.delimiter shouldBe "/"
     }
 
     @Test
     fun `Exclude strategy returns overriden delimiter`() {
         val excludeSubpathStrategy = SubpathStrategy.Exclude("$")
-        assertEquals("$", excludeSubpathStrategy.delimiter)
+        excludeSubpathStrategy.delimiter shouldBe "$"
     }
 }
