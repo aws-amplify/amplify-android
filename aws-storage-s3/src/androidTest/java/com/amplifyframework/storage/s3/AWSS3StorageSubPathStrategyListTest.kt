@@ -29,9 +29,11 @@ import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils
 import com.amplifyframework.testutils.random.RandomTempFile
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousStorage
+import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.ints.shouldBeExactly
+import io.kotest.matchers.nulls.shouldBeNull
 import java.io.File
 import org.junit.After
-import org.junit.Assert
 import org.junit.BeforeClass
 import org.junit.Test
 
@@ -124,15 +126,15 @@ class AWSS3StorageSubPathStrategyListTest {
 
         val result = synchronousStorage.list(path, options)
 
-        result.items.mapNotNull { it.path }.apply {
-            Assert.assertEquals(6, size)
-            Assert.assertTrue(contains("public/photos/05"))
-            Assert.assertTrue(contains("public/photos/2023/01"))
-            Assert.assertTrue(contains("public/photos/2023/02"))
-            Assert.assertTrue(contains("public/photos/2024/03"))
-            Assert.assertTrue(contains("public/photos/2024/04"))
-            Assert.assertTrue(contains("public/photos/202$/custom"))
-        }
+        result.items.size shouldBeExactly(6)
+        result.items.mapNotNull { it.path } shouldContainExactly listOf(
+            "public/photos/05",
+            "public/photos/202$/custom",
+            "public/photos/2023/01",
+            "public/photos/2023/02",
+            "public/photos/2024/03",
+            "public/photos/2024/04"
+        )
     }
 
     @Test
@@ -145,27 +147,25 @@ class AWSS3StorageSubPathStrategyListTest {
 
         var result = synchronousStorage.list(StoragePath.fromString("public/photos/"), options)
 
-        result.items.mapNotNull { it.path }.apply {
-            Assert.assertEquals(1, size)
-            Assert.assertTrue(contains("public/photos/05"))
-        }
+        result.items.size shouldBeExactly(1)
+        result.items.mapNotNull { it.path } shouldContainExactly listOf("public/photos/05")
 
-        result.excludedSubpaths.apply {
-            Assert.assertEquals(3, size)
-            Assert.assertTrue(contains("public/photos/2023/"))
-            Assert.assertTrue(contains("public/photos/2024/"))
-            Assert.assertTrue(contains("public/photos/202$/"))
-        }
+        result.excludedSubpaths.size shouldBeExactly(3)
+        result.excludedSubpaths shouldContainExactly listOf(
+            "public/photos/202$/",
+            "public/photos/2023/",
+            "public/photos/2024/"
+        )
 
         result = synchronousStorage.list(StoragePath.fromString("public/photos/2023/"), options)
 
-        result.items.mapNotNull { it.path }.apply {
-            Assert.assertEquals(2, size)
-            Assert.assertTrue(contains("public/photos/2023/01"))
-            Assert.assertTrue(contains("public/photos/2023/02"))
-        }
+        result.items.size shouldBeExactly(2)
+        result.items.mapNotNull { it.path } shouldContainExactly listOf(
+            "public/photos/2023/01",
+            "public/photos/2023/02"
+        )
 
-        Assert.assertNull(result.excludedSubpaths)
+        result.excludedSubpaths.shouldBeNull()
     }
 
     @Test
@@ -178,28 +178,24 @@ class AWSS3StorageSubPathStrategyListTest {
 
         var result = synchronousStorage.list(StoragePath.fromString("public/photos/"), options)
 
-        result.items.mapNotNull { it.path }.apply {
-            Assert.assertEquals(5, size)
-            Assert.assertTrue(contains("public/photos/05"))
-            Assert.assertTrue(contains("public/photos/2023/01"))
-            Assert.assertTrue(contains("public/photos/2023/02"))
-            Assert.assertTrue(contains("public/photos/2024/03"))
-            Assert.assertTrue(contains("public/photos/2024/04"))
-        }
+        result.items.size shouldBeExactly(5)
+        result.items.mapNotNull { it.path } shouldContainExactly listOf(
+            "public/photos/05",
+            "public/photos/2023/01",
+            "public/photos/2023/02",
+            "public/photos/2024/03",
+            "public/photos/2024/04"
+        )
 
-        result.excludedSubpaths.apply {
-            Assert.assertEquals(1, size)
-            Assert.assertTrue(contains("public/photos/202$"))
-        }
+        result.excludedSubpaths.size shouldBeExactly(1)
+        result.excludedSubpaths shouldContainExactly listOf("public/photos/202$")
 
         result = synchronousStorage.list(StoragePath.fromString("public/photos/2023/"), options)
 
-        result.items.mapNotNull { it.path }.apply {
-            Assert.assertEquals(2, size)
-            Assert.assertTrue(contains("public/photos/2023/01"))
-            Assert.assertTrue(contains("public/photos/2023/02"))
-        }
-
-        Assert.assertNull(result.excludedSubpaths)
+        result.items.size shouldBeExactly(2)
+        result.items.mapNotNull { it.path } shouldContainExactly listOf(
+            "public/photos/2023/01",
+            "public/photos/2023/02",
+        )
     }
 }
