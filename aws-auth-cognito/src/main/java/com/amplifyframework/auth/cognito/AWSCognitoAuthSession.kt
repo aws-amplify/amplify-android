@@ -22,6 +22,7 @@ import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.auth.exceptions.InvalidStateException
+import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.auth.result.AuthSessionResult
@@ -140,7 +141,7 @@ internal fun AmplifyCredential.getCognitoSession(
             userPoolTokensResult = getUserPoolTokensResult(signedInData.cognitoUserPoolTokens, exception)
         )
         is AmplifyCredential.UserAndIdentityPool -> AWSCognitoAuthSession(
-            true,
+            exception != null && exception !is SignedOutException,
             identityIdResult = getIdentityIdResult(identityId, exception),
             awsCredentialsResult = getCredentialsResult(credentials, exception),
             userSubResult = getUserSubResult(signedInData.cognitoUserPoolTokens, exception),
@@ -159,7 +160,7 @@ internal fun AmplifyCredential.getCognitoSession(
                 recoverySuggestion = "To access User Pool data, you must use a Sign In method."
             )
             AWSCognitoAuthSession(
-                true,
+                exception != null && exception !is SessionExpiredException,
                 identityIdResult = getIdentityIdResult(identityId, exception),
                 awsCredentialsResult = getCredentialsResult(credentials, exception),
                 userSubResult = AuthSessionResult.failure(userPoolException),
