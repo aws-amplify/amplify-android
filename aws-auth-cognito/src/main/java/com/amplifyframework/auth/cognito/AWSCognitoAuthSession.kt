@@ -141,7 +141,7 @@ internal fun AmplifyCredential.getCognitoSession(
             userPoolTokensResult = getUserPoolTokensResult(signedInData.cognitoUserPoolTokens, exception)
         )
         is AmplifyCredential.UserAndIdentityPool -> AWSCognitoAuthSession(
-            exception != null && exception !is SignedOutException,
+            exception != null && exception !is SessionExpiredException,
             identityIdResult = getIdentityIdResult(identityId, exception),
             awsCredentialsResult = getCredentialsResult(credentials, exception),
             userSubResult = getUserSubResult(signedInData.cognitoUserPoolTokens, exception),
