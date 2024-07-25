@@ -1,3 +1,13 @@
+## [Release 2.21.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.21.0)
+
+### Features
+- **storage:** add delimiter support ([#2871](https://github.com/aws-amplify/amplify-android/issues/2871))
+
+### Bug Fixes
+- **storage:** Remove unused foreground service permission ([#2877](https://github.com/aws-amplify/amplify-android/issues/2877))
+
+[See all changes between 2.20.0 and 2.21.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.20.0...release_v2.21.0)
+
 ## [Release 2.20.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.20.0)
 
 ### Features
