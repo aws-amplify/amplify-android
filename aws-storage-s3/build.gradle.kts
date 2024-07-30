@@ -60,6 +60,7 @@ dependencies {
     androidTestImplementation(libs.test.androidx.runner)
     androidTestImplementation(libs.test.androidx.junit)
     androidTestImplementation(libs.test.androidx.workmanager)
+    androidTestImplementation(libs.test.kotest.assertions)
     androidTestImplementation(project(":aws-storage-s3"))
 
     androidTestUtil(libs.test.androidx.orchestrator)
