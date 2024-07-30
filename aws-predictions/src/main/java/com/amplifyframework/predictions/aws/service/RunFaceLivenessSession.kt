@@ -132,12 +132,16 @@ internal class RunFaceLivenessSession(
         challengeConfig: ChallengeConfig
     ): FaceTargetChallenge {
         val faceTargetMatching = FaceTargetMatchingParameters(
-            challengeConfig.ovalIouThreshold,
-            challengeConfig.ovalIouWidthThreshold,
-            challengeConfig.ovalIouHeightThreshold,
-            challengeConfig.faceIouWidthThreshold,
-            challengeConfig.faceIouHeightThreshold,
-            challengeConfig.ovalFitTimeout
+            targetIouThreshold = challengeConfig.ovalIouThreshold,
+            targetIouWidthThreshold = challengeConfig.ovalIouWidthThreshold,
+            targetIouHeightThreshold = challengeConfig.ovalIouHeightThreshold,
+            targetHeightWidthRatio = challengeConfig.ovalHeightWidthRatio,
+            faceDetectionThreshold = challengeConfig.blazeFaceDetectionThreshold,
+            faceIouWidthThreshold = challengeConfig.faceIouWidthThreshold,
+            faceIouHeightThreshold = challengeConfig.faceIouHeightThreshold,
+            faceDistanceThreshold = challengeConfig.faceDistanceThreshold,
+            faceDistanceThresholdMin = challengeConfig.faceDistanceThresholdMin,
+            ovalFitTimeout = challengeConfig.ovalFitTimeout
         )
         return FaceTargetChallenge(
             ovalParameters.width,
