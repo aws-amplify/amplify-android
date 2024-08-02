@@ -20,6 +20,7 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.StoragePath
 import com.amplifyframework.storage.StoragePathValidationException
+import com.amplifyframework.storage.options.SubpathStrategy
 import com.amplifyframework.storage.s3.extensions.invalidStoragePathException
 import com.amplifyframework.storage.s3.extensions.unsupportedStoragePathException
 import com.amplifyframework.storage.s3.request.AWSS3StoragePathListRequest
@@ -57,7 +58,8 @@ class AWSS3StoragePathListOperationTest {
         val request = AWSS3StoragePathListRequest(
             path,
             expectedPageSize,
-            expectedNextToken
+            expectedNextToken,
+            SubpathStrategy.Include
         )
         val onError = mockk<Consumer<StorageException>>(relaxed = true)
         listOperation = AWSS3StoragePathListOperation(
@@ -78,7 +80,8 @@ class AWSS3StoragePathListOperationTest {
             storageService.listFiles(
                 expectedServiceKey,
                 expectedPageSize,
-                expectedNextToken
+                expectedNextToken,
+                SubpathStrategy.Include
             )
         }
     }
@@ -92,7 +95,8 @@ class AWSS3StoragePathListOperationTest {
         val request = AWSS3StoragePathListRequest(
             path,
             expectedPageSize,
-            expectedNextToken
+            expectedNextToken,
+            SubpathStrategy.Include
         )
         val onError = mockk<Consumer<StorageException>>(relaxed = true)
         listOperation = AWSS3StoragePathListOperation(
@@ -113,7 +117,8 @@ class AWSS3StoragePathListOperationTest {
             storageService.listFiles(
                 expectedServiceKey,
                 expectedPageSize,
-                expectedNextToken
+                expectedNextToken,
+                SubpathStrategy.Include
             )
         }
     }
@@ -126,7 +131,8 @@ class AWSS3StoragePathListOperationTest {
         val request = AWSS3StoragePathListRequest(
             path,
             expectedPageSize,
-            expectedNextToken
+            expectedNextToken,
+            SubpathStrategy.Include
         )
         val onError = mockk<Consumer<StorageException>>(relaxed = true)
         listOperation = AWSS3StoragePathListOperation(
@@ -157,7 +163,8 @@ class AWSS3StoragePathListOperationTest {
         val request = AWSS3StoragePathListRequest(
             path,
             expectedPageSize,
-            expectedNextToken
+            expectedNextToken,
+            SubpathStrategy.Include
         )
         val onError = mockk<Consumer<StorageException>>(relaxed = true)
         listOperation = AWSS3StoragePathListOperation(
@@ -194,7 +201,8 @@ class AWSS3StoragePathListOperationTest {
         val request = AWSS3StoragePathListRequest(
             path,
             expectedPageSize,
-            expectedNextToken
+            expectedNextToken,
+            SubpathStrategy.Include
         )
         val onError = mockk<Consumer<StorageException>>(relaxed = true)
         listOperation = AWSS3StoragePathListOperation(
@@ -213,6 +221,79 @@ class AWSS3StoragePathListOperationTest {
         verify { onError.accept(StoragePathValidationException.unsupportedStoragePathException()) }
         verify(exactly = 0) {
             storageService.listFiles(any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `success string storage path with include subpath strategy`() {
+        // GIVEN
+        val path = StoragePath.fromString("public/123")
+        val expectedServiceKey = "public/123"
+        val request = AWSS3StoragePathListRequest(
+            path,
+            expectedPageSize,
+            expectedNextToken,
+            SubpathStrategy.Include
+        )
+        val onError = mockk<Consumer<StorageException>>(relaxed = true)
+        listOperation = AWSS3StoragePathListOperation(
+            storageService = storageService,
+            executorService = MoreExecutors.newDirectExecutorService(),
+            authCredentialsProvider = authCredentialsProvider,
+            request = request,
+            {},
+            onError
+        )
+
+        // WHEN
+        listOperation.start()
+
+        // THEN
+        verify(exactly = 0) { onError.accept(any()) }
+        verify {
+            storageService.listFiles(
+                expectedServiceKey,
+                expectedPageSize,
+                expectedNextToken,
+                SubpathStrategy.Include
+            )
+        }
+    }
+
+    @Test
+    fun `success string storage path with exclude subpath strategy`() {
+        // GIVEN
+        val path = StoragePath.fromString("public/123")
+        val expectedServiceKey = "public/123"
+        val expectedSubpathStrategy = SubpathStrategy.Exclude()
+        val request = AWSS3StoragePathListRequest(
+            path,
+            expectedPageSize,
+            expectedNextToken,
+            expectedSubpathStrategy
+        )
+        val onError = mockk<Consumer<StorageException>>(relaxed = true)
+        listOperation = AWSS3StoragePathListOperation(
+            storageService = storageService,
+            executorService = MoreExecutors.newDirectExecutorService(),
+            authCredentialsProvider = authCredentialsProvider,
+            request = request,
+            {},
+            onError
+        )
+
+        // WHEN
+        listOperation.start()
+
+        // THEN
+        verify(exactly = 0) { onError.accept(any()) }
+        verify {
+            storageService.listFiles(
+                expectedServiceKey,
+                expectedPageSize,
+                expectedNextToken,
+                expectedSubpathStrategy
+            )
         }
     }
 

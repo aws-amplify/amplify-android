@@ -7,7 +7,7 @@ on:
 jobs:
   notify:
     runs-on: ubuntu-latest
-    if: ${{ !github.event.draft }}
+    if: ${{ !github.event.pull_request.draft }}
     steps:
       - name: Run webhook curl command
         env:
