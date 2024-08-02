@@ -225,7 +225,7 @@ DEPENDENCIES
   fastlane
   fastlane-plugin-release_actions!
   fastlane-plugin-semantic_release
-  rexml (>= 3.3.3)
+  rexml (>= 3.3.4)
 
 BUNDLED WITH
    2.5.11
