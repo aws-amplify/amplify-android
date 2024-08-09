@@ -242,6 +242,7 @@ public final class com/amplifyframework/storage/s3/options/AWSS3StorageUploadFil
 	public fun equals (Ljava/lang/Object;)Z
 	public static fun from (Lcom/amplifyframework/storage/s3/options/AWSS3StorageUploadFileOptions;)Lcom/amplifyframework/storage/s3/options/AWSS3StorageUploadFileOptions$Builder;
 	public fun getServerSideEncryption ()Lcom/amplifyframework/storage/s3/ServerSideEncryption;
+	public fun getStorageClass ()Laws/sdk/kotlin/services/s3/model/StorageClass;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 	public fun useAccelerateEndpoint ()Z
@@ -253,6 +254,7 @@ public final class com/amplifyframework/storage/s3/options/AWSS3StorageUploadFil
 	public fun build ()Lcom/amplifyframework/storage/s3/options/AWSS3StorageUploadFileOptions;
 	public fun serverSideEncryption (Lcom/amplifyframework/storage/s3/ServerSideEncryption;)Lcom/amplifyframework/storage/s3/options/AWSS3StorageUploadFileOptions$Builder;
 	public fun setUseAccelerateEndpoint (Z)Lcom/amplifyframework/storage/s3/options/AWSS3StorageUploadFileOptions$Builder;
+	public fun storageClass (Laws/sdk/kotlin/services/s3/model/StorageClass;)Lcom/amplifyframework/storage/s3/options/AWSS3StorageUploadFileOptions$Builder;
 }
 
 public final class com/amplifyframework/storage/s3/options/AWSS3StorageUploadInputStreamOptions : com/amplifyframework/storage/options/StorageUploadInputStreamOptions {
@@ -261,6 +263,7 @@ public final class com/amplifyframework/storage/s3/options/AWSS3StorageUploadInp
 	public fun equals (Ljava/lang/Object;)Z
 	public static fun from (Lcom/amplifyframework/storage/s3/options/AWSS3StorageUploadInputStreamOptions;)Lcom/amplifyframework/storage/s3/options/AWSS3StorageUploadInputStreamOptions$Builder;
 	public fun getServerSideEncryption ()Lcom/amplifyframework/storage/s3/ServerSideEncryption;
+	public fun getStorageClass ()Laws/sdk/kotlin/services/s3/model/StorageClass;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 	public fun useAccelerateEndpoint ()Z
@@ -272,6 +275,7 @@ public final class com/amplifyframework/storage/s3/options/AWSS3StorageUploadInp
 	public fun build ()Lcom/amplifyframework/storage/s3/options/AWSS3StorageUploadInputStreamOptions;
 	public fun serverSideEncryption (Lcom/amplifyframework/storage/s3/ServerSideEncryption;)Lcom/amplifyframework/storage/s3/options/AWSS3StorageUploadInputStreamOptions$Builder;
 	public fun setUseAccelerateEndpoint (Z)Lcom/amplifyframework/storage/s3/options/AWSS3StorageUploadInputStreamOptions$Builder;
+	public fun storageClass (Laws/sdk/kotlin/services/s3/model/StorageClass;)Lcom/amplifyframework/storage/s3/options/AWSS3StorageUploadInputStreamOptions$Builder;
 }
 
 public final class com/amplifyframework/storage/s3/request/AWSS3StorageDownloadFileRequest {
@@ -314,13 +318,14 @@ public final class com/amplifyframework/storage/s3/request/AWSS3StorageRemoveReq
 }
 
 public final class com/amplifyframework/storage/s3/request/AWSS3StorageUploadRequest {
-	public fun <init> (Ljava/lang/String;Ljava/lang/Object;Lcom/amplifyframework/storage/StorageAccessLevel;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/storage/s3/ServerSideEncryption;Ljava/util/Map;Z)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Object;Lcom/amplifyframework/storage/StorageAccessLevel;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/storage/s3/ServerSideEncryption;Laws/sdk/kotlin/services/s3/model/StorageClass;Ljava/util/Map;Z)V
 	public fun getAccessLevel ()Lcom/amplifyframework/storage/StorageAccessLevel;
 	public fun getContentType ()Ljava/lang/String;
 	public fun getKey ()Ljava/lang/String;
 	public fun getLocal ()Ljava/lang/Object;
 	public fun getMetadata ()Ljava/util/Map;
 	public fun getServerSideEncryption ()Lcom/amplifyframework/storage/s3/ServerSideEncryption;
+	public fun getStorageClass ()Laws/sdk/kotlin/services/s3/model/StorageClass;
 	public fun getTargetIdentityId ()Ljava/lang/String;
 	public fun useAccelerateEndpoint ()Z
 }

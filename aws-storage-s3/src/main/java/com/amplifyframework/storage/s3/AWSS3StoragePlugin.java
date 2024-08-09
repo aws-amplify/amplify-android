@@ -101,6 +101,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import aws.sdk.kotlin.services.s3.S3Client;
+import aws.sdk.kotlin.services.s3.model.StorageClass;
 
 /**
  * A plugin for the storage category which uses S3 as a storage
@@ -579,6 +580,9 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             options instanceof AWSS3StorageUploadFileOptions
                 ? ((AWSS3StorageUploadFileOptions) options).getServerSideEncryption()
                 : ServerSideEncryption.NONE,
+            options instanceof AWSS3StorageUploadFileOptions
+                ? ((AWSS3StorageUploadFileOptions) options).getStorageClass()
+                : StorageClass.Standard.INSTANCE,
             options.getMetadata(),
             useAccelerateEndpoint
         );
@@ -617,6 +621,9 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                 options instanceof AWSS3StorageUploadFileOptions
                         ? ((AWSS3StorageUploadFileOptions) options).getServerSideEncryption()
                         : ServerSideEncryption.NONE,
+                options instanceof AWSS3StorageUploadFileOptions
+                        ? ((AWSS3StorageUploadFileOptions) options).getStorageClass()
+                        : StorageClass.Standard.INSTANCE,
                 options.getMetadata(),
                 useAccelerateEndpoint
         );
@@ -707,6 +714,9 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             options instanceof AWSS3StorageUploadInputStreamOptions
                 ? ((AWSS3StorageUploadInputStreamOptions) options).getServerSideEncryption()
                 : ServerSideEncryption.NONE,
+            options instanceof AWSS3StorageUploadInputStreamOptions
+                ? ((AWSS3StorageUploadInputStreamOptions) options).getStorageClass()
+                : StorageClass.Standard.INSTANCE,
             options.getMetadata(),
             useAccelerateEndpoint
         );
@@ -745,6 +755,9 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                 options instanceof AWSS3StorageUploadInputStreamOptions
                         ? ((AWSS3StorageUploadInputStreamOptions) options).getServerSideEncryption()
                         : ServerSideEncryption.NONE,
+                options instanceof AWSS3StorageUploadInputStreamOptions
+                        ? ((AWSS3StorageUploadInputStreamOptions) options).getStorageClass()
+                        : StorageClass.Standard.INSTANCE,
                 options.getMetadata(),
                 useAccelerateEndpoint
         );

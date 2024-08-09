@@ -24,6 +24,8 @@ import com.amplifyframework.storage.s3.ServerSideEncryption;
 import java.util.HashMap;
 import java.util.Map;
 
+import aws.sdk.kotlin.services.s3.model.StorageClass;
+
 /**
  * Parameters to provide to S3 that describe a request to upload.
  * @param <L> object to upload (e.g. File or InputStream)
@@ -39,6 +41,7 @@ public final class AWSS3StorageUploadRequest<L> {
     private final String targetIdentityId;
     private final String contentType;
     private final ServerSideEncryption serverSideEncryption;
+    private final StorageClass storageClass;
     private final Map<String, String> metadata;
     private final boolean useAccelerateEndpoint;
 
@@ -54,6 +57,7 @@ public final class AWSS3StorageUploadRequest<L> {
      *                         If null, the operation will fetch the current identity ID.
      * @param contentType The standard MIME type describing the format of the object to store
      * @param serverSideEncryption server side encryption type for the current storage bucket
+     * @param storageClass The storage class to use for the object to store
      * @param metadata Metadata for the object to store
      * @param useAccelerateEndpoint flag to use acceleration endpoint.
      */
@@ -65,6 +69,7 @@ public final class AWSS3StorageUploadRequest<L> {
             @Nullable String targetIdentityId,
             @Nullable String contentType,
             @NonNull ServerSideEncryption serverSideEncryption,
+            @NonNull StorageClass storageClass,
             @Nullable Map<String, String> metadata,
             boolean useAccelerateEndpoint
     ) {
@@ -74,6 +79,7 @@ public final class AWSS3StorageUploadRequest<L> {
         this.targetIdentityId = targetIdentityId;
         this.contentType = contentType;
         this.serverSideEncryption = serverSideEncryption;
+        this.storageClass = storageClass;
         this.metadata = new HashMap<>();
         if (metadata != null) {
             this.metadata.putAll(metadata);
@@ -134,6 +140,15 @@ public final class AWSS3StorageUploadRequest<L> {
     @NonNull
     public ServerSideEncryption getServerSideEncryption() {
         return serverSideEncryption;
+    }
+
+    /**
+     * Gets the storage class.
+     * @return storage class
+     */
+    @NonNull
+    public StorageClass getStorageClass() {
+        return storageClass;
     }
 
     /**
