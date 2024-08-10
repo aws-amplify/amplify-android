@@ -78,7 +78,7 @@ latestDevice=$(aws devicefarm list-devices \
                 --filters '[
                     {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
                     {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
-                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["12"]},
+                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["14"]},
                     {"attribute":"MANUFACTURER","operator":"IN","values":["Google", "Pixel"]}
                 ]' \
                 | jq -r '.devices[0].arn')

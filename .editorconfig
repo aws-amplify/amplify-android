@@ -1,3 +1,4 @@
 [*.{kt,kts}]
 #this is to match java checkstyle
 max_line_length=120
+ktlint_code_style=android_studio
