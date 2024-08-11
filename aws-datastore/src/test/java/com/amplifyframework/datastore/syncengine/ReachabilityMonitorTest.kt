@@ -20,6 +20,8 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import com.amplifyframework.datastore.DataStoreException
+import io.mockk.every
+import io.mockk.mockk
 import io.reactivex.rxjava3.core.BackpressureStrategy
 import io.reactivex.rxjava3.schedulers.TestScheduler
 import io.reactivex.rxjava3.subscribers.TestSubscriber
@@ -27,8 +29,6 @@ import java.util.concurrent.TimeUnit
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
 
 class ReachabilityMonitorTest {
 
@@ -58,7 +58,7 @@ class ReachabilityMonitorTest {
             }
         }
 
-        val mockContext = mock(Context::class.java)
+        val mockContext = mockk<Context>(relaxed = true)
         // TestScheduler allows the virtual time to be advanced by exact amounts, to allow for repeatable tests
         val testScheduler = TestScheduler()
         val reachabilityMonitor = ReachabilityMonitor.createForTesting(TestSchedulerProvider(testScheduler))
@@ -71,10 +71,9 @@ class ReachabilityMonitorTest {
             .toFlowable(BackpressureStrategy.BUFFER)
             .subscribe(testSubscriber)
 
-        val network = mock(Network::class.java)
-        val networkCapabilities = mock(NetworkCapabilities::class.java)
-        `when`(networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
-            .thenReturn(true)
+        val network = mockk<Network>(relaxed = true)
+        val networkCapabilities = mockk<NetworkCapabilities>()
+        every { networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) } returns true
 
         // Should provide initial network state (true) upon subscription (after debounce)
         testScheduler.advanceTimeBy(251, TimeUnit.MILLISECONDS)
@@ -118,7 +117,7 @@ class ReachabilityMonitorTest {
             }
         }
 
-        val mockContext = mock(Context::class.java)
+        val mockContext = mockk<Context>(relaxed = true)
         // TestScheduler allows the virtual time to be advanced by exact amounts, to allow for repeatable tests
         val testScheduler = TestScheduler()
         val reachabilityMonitor = ReachabilityMonitor.createForTesting(TestSchedulerProvider(testScheduler))
@@ -131,10 +130,9 @@ class ReachabilityMonitorTest {
             .toFlowable(BackpressureStrategy.BUFFER)
             .subscribe(testSubscriber)
 
-        val network = mock(Network::class.java)
-        val networkCapabilities = mock(NetworkCapabilities::class.java)
-        `when`(networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
-            .thenReturn(true)
+        val network = mockk<Network>(relaxed = true)
+        val networkCapabilities = mockk<NetworkCapabilities>()
+        every { networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) } returns true
 
         // Assert that the first value is returned
         callback!!.onAvailable(network)
@@ -213,11 +211,11 @@ class ReachabilityMonitorTest {
         // TestScheduler allows the virtual time to be advanced by exact amounts, to allow for repeatable tests
         val testScheduler = TestScheduler()
         val reachabilityMonitor = ReachabilityMonitor.createForTesting(TestSchedulerProvider(testScheduler))
-        val mockContext = mock(Context::class.java)
+        val mockContext = mockk<Context>(relaxed = true)
         reachabilityMonitor.configure(mockContext, connectivityProvider)
 
         reachabilityMonitor.getObservable().subscribe()
-        val network = mock(Network::class.java)
+        val network = mockk<Network>(relaxed = true)
         // Should provide initial network state (true) upon subscription (after debounce)
         testScheduler.advanceTimeBy(251, TimeUnit.MILLISECONDS)
         networkCallback!!.onAvailable(network)
