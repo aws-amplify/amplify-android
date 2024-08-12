@@ -29,7 +29,6 @@ buildscript {
         classpath(kotlin("gradle-plugin", version = "1.9.10"))
         classpath("com.google.gms:google-services:4.3.15")
         classpath("org.jlleitschuh.gradle:ktlint-gradle:11.0.0")
-        classpath("org.gradle:test-retry-gradle-plugin:1.4.1")
         classpath("org.jetbrains.kotlinx:kover:0.6.1")
         classpath("app.cash.licensee:licensee-gradle-plugin:1.7.0")
     }
@@ -39,6 +38,7 @@ plugins {
     alias(libs.plugins.binary.compatibility.validator)
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.android.library) apply false
+    alias(libs.plugins.test.retry) apply false
 }
 
 allprojects {
