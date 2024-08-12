@@ -13,6 +13,13 @@
  * permissions and limitations under the License.
  */
 
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
 dependencyResolutionManagement {
     repositories {
         maven {

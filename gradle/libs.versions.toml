@@ -1,4 +1,5 @@
 [versions]
+agp = "8.4.0"
 androidx-activity = "1.2.0"
 androidx-annotation = "1.1.0"
 androidx-appcompat = "1.2.0"
@@ -127,5 +128,6 @@ test-robolectric = { module = "org.robolectric:robolectric", version.ref="robole
 test-totp = { module = "dev.robinohs:totp-kt", version.ref="totp" }
 
 [plugins]
+android-library = { id = "com.android.library", version.ref = "agp" }
 binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binary-compatibility-validator" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
