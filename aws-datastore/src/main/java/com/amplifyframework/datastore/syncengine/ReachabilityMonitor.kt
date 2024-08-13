@@ -18,12 +18,12 @@ package com.amplifyframework.datastore.syncengine
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.ConnectivityManager.NetworkCallback
-import android.net.LinkProperties
 import android.net.Network
 import android.net.NetworkCapabilities
-import android.os.Build
 import androidx.annotation.VisibleForTesting
 import com.amplifyframework.datastore.DataStoreException
+import com.amplifyframework.datastore.extensions.isInternetReachable
+import com.amplifyframework.datastore.extensions.isNetworkAvailable
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.ObservableEmitter
 import io.reactivex.rxjava3.subjects.BehaviorSubject
@@ -116,7 +116,7 @@ private class ReachabilityMonitorImpl constructor(val schedulerProvider: Schedul
         }
 
         private fun updateAndSend() {
-            emitter.onNext(NetworkCapabilitiesUtil.isInternetReachable(currentCapabilities))
+            emitter.onNext(currentCapabilities.isInternetReachable())
         }
     }
 }
@@ -135,30 +135,17 @@ private class DefaultConnectivityProvider : ConnectivityProvider {
     private var connectivityManager: ConnectivityManager? = null
 
     override val hasActiveNetwork: Boolean
-        get() = connectivityManager?.let { manager ->
-            // the same logic as https://github.com/aws-amplify/amplify-android/blob/main/aws-storage-s3/src/main/java/com/amplifyframework/storage/s3/transfer/worker/BaseTransferWorker.kt#L176
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                val networkCapabilities: NetworkCapabilities? = NetworkCapabilitiesUtil.getNetworkCapabilities(manager)
-                NetworkCapabilitiesUtil.isInternetReachable(networkCapabilities)
-            } else {
-                val activeNetworkInfo = manager.activeNetworkInfo
-                activeNetworkInfo != null && activeNetworkInfo.isConnected
-            }
-        } ?: run {
-            throw DataStoreException(
-                "ReachabilityMonitor has not been configured.",
-                "Call ReachabilityMonitor.configure() before calling ReachabilityMonitor.getObservable()"
-            )
-        }
+        get() = connectivityManager?.isNetworkAvailable() ?: throw DataStoreException(
+            "ReachabilityMonitor has not been configured.",
+            "Call ReachabilityMonitor.configure() before calling ReachabilityMonitor.getObservable()"
+        )
 
     override fun registerDefaultNetworkCallback(context: Context, callback: NetworkCallback) {
         connectivityManager = context.getSystemService(ConnectivityManager::class.java)
         connectivityManager?.registerDefaultNetworkCallback(callback)
-            ?: run {
-                throw DataStoreException(
-                    "ConnectivityManager not available",
-                    "No recovery suggestion is available"
-                )
-            }
+            ?: throw DataStoreException(
+                "ConnectivityManager not available",
+                "No recovery suggestion is available"
+            )
     }
 }
