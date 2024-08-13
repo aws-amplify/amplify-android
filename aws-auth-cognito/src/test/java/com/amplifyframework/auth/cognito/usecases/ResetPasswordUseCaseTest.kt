@@ -46,11 +46,8 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
 @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
-@RunWith(RobolectricTestRunner::class)
 class ResetPasswordUseCaseTest {
 
     private val dummyClientId = "app client id"
