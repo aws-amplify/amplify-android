@@ -89,37 +89,20 @@ private class ReachabilityMonitorImpl constructor(val schedulerProvider: Schedul
     }
 
     private inner class ConnectivityNetworkCallback(private val emitter: ObservableEmitter<Boolean>) : NetworkCallback() {
-        private var currentCapabilities: NetworkCapabilities? = null
-
         override fun onAvailable(network: Network) {
-            // The order of callbacks between onAvailable and onCapabilitiesChanged can vary depending on Android SDK level
-            // To ensure the network capabilities are not reported incorrectly when there is insufficient information:
-            // - On Android 5 (API 21) to Android 12 (API 31), onAvailable() is called before onCapabilitiesChanged()
-            // - On Android 13 and above, onCapabilitiesChanged() may be triggered first
-            // Therefore, we need to check if currentCapabilities is null to avoid sending false values when the
-            // necessary information is not yet available
-            if (currentCapabilities !== null) {
-                updateAndSend()
-            }
+            connectivityProvider?.let { emitter.onNext(it.hasActiveNetwork) }
         }
 
         override fun onLost(network: Network) {
-            currentCapabilities = null
-            updateAndSend()
+            emitter.onNext(false)
         }
 
         override fun onUnavailable() {
-            currentCapabilities = null
-            updateAndSend()
+            emitter.onNext(false)
         }
 
         override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
-            currentCapabilities = networkCapabilities
-            updateAndSend()
-        }
-
-        private fun updateAndSend() {
-            emitter.onNext(currentCapabilities.isInternetReachable())
+            emitter.onNext(networkCapabilities.isInternetReachable())
         }
     }
 }

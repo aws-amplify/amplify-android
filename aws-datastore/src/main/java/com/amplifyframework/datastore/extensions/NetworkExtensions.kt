@@ -17,9 +17,11 @@ package com.amplifyframework.datastore.extensions
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
+import androidx.annotation.VisibleForTesting
 
 // Return network capabilities based on Connectivity Manager
-private fun ConnectivityManager.networkCapabilitiesOrNull() = try {
+@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+fun ConnectivityManager.networkCapabilitiesOrNull() = try {
     getNetworkCapabilities(activeNetwork)
 } catch (ignored: SecurityException) {
     // Android 11 may throw a 'package does not belong' security exception here.
