@@ -47,7 +47,6 @@ rxjava = "3.0.6"
 slf4j = "2.0.6"
 sqlcipher = "4.5.4"
 tensorflow = "2.0.0"
-test-retry = "1.5.10"
 uuid = "4.0.1"
 totp = "1.0.1"
 
@@ -132,4 +131,3 @@ test-totp = { module = "dev.robinohs:totp-kt", version.ref="totp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binary-compatibility-validator" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-test-retry = { id = "org.gradle.test-retry", version.ref = "test-retry" }

@@ -38,7 +38,6 @@ plugins {
     alias(libs.plugins.binary.compatibility.validator)
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.android.library) apply false
-    alias(libs.plugins.test.retry) apply false
 }
 
 allprojects {
@@ -103,16 +102,6 @@ subprojects {
     afterEvaluate {
         configureAndroid()
         apply(from = "../kover.gradle")
-    }
-
-    apply(plugin = "org.gradle.test-retry")
-
-    tasks.withType<Test>().configureEach {
-        retry {
-            maxRetries.set(1)
-            maxFailures.set(100)
-            failOnPassedAfterRetry.set(true)
-        }
     }
 
     tasks.withType<KotlinCompile> {
