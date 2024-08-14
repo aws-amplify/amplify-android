@@ -106,6 +106,7 @@ import io.mockk.mockkConstructor
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
+import io.mockk.unmockkAll
 import io.mockk.verify
 import java.util.Date
 import java.util.concurrent.CountDownLatch
@@ -116,6 +117,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.json.JSONObject
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
@@ -198,6 +200,11 @@ class RealAWSCognitoAuthPluginTest {
             ),
             authZState = AuthorizationState.SessionEstablished(credentials)
         )
+    }
+
+    @After
+    fun teardown() {
+        unmockkAll()
     }
 
     @Test

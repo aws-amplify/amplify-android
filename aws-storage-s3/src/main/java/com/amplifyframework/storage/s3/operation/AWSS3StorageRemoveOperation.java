@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
 
 import com.amplifyframework.annotations.InternalAmplifyApi;
+import com.amplifyframework.annotations.InternalApiWarning;
 import com.amplifyframework.auth.AuthCredentialsProvider;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageException;
@@ -37,6 +38,7 @@ import java.util.concurrent.ExecutorService;
  * Internal usages are moving to AWSS3StoragePathRemoveOperation
  */
 @Deprecated
+@OptIn(markerClass = InternalApiWarning.class)
 public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AWSS3StorageRemoveRequest> {
     private final StorageService storageService;
     private final ExecutorService executorService;

@@ -34,6 +34,6 @@ public final class AnalyticsDoublePropertyTest {
         AnalyticsDoubleProperty property = AnalyticsDoubleProperty.from(8675.309);
 
         // Assert: Check that the wrapped value is what was passed in the static factory method
-        assertEquals(new Double(8675.309), property.getValue());
+        assertEquals(Double.valueOf(8675.309), property.getValue());
     }
 }

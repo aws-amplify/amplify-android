@@ -24,6 +24,10 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 
 group = properties["POM_GROUP"].toString()
 
+android {
+    namespace = "com.amplifyframework.predictions.aws"
+}
+
 dependencies {
     implementation(project(":core"))
     implementation(project(":aws-core"))
