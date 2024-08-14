@@ -498,14 +498,14 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         );
 
         AWSS3StorageDownloadFileOperation operation = new AWSS3StorageDownloadFileOperation(
-                defaultStorageService,
-                executorService,
-                authCredentialsProvider,
-                request,
-                awsS3StoragePluginConfiguration,
-                onProgress,
-                onSuccess,
-                onError
+            defaultStorageService,
+            executorService,
+            authCredentialsProvider,
+            request,
+            awsS3StoragePluginConfiguration,
+            onProgress,
+            onSuccess,
+            onError
         );
         operation.start();
 
@@ -533,13 +533,13 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         );
 
         AWSS3StoragePathDownloadFileOperation operation = new AWSS3StoragePathDownloadFileOperation(
-                request,
-                defaultStorageService,
-                executorService,
-                authCredentialsProvider,
-                onProgress,
-                onSuccess,
-                onError
+            request,
+            defaultStorageService,
+            executorService,
+            authCredentialsProvider,
+            onProgress,
+            onSuccess,
+            onError
         );
         operation.start();
 
@@ -625,14 +625,14 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         );
 
         AWSS3StorageUploadFileOperation operation = new AWSS3StorageUploadFileOperation(
-                defaultStorageService,
-                executorService,
-                authCredentialsProvider,
-                request,
-                awsS3StoragePluginConfiguration,
-                onProgress,
-                onSuccess,
-                onError
+            defaultStorageService,
+            executorService,
+            authCredentialsProvider,
+            request,
+            awsS3StoragePluginConfiguration,
+            onProgress,
+            onSuccess,
+            onError
         );
         operation.start();
 
@@ -663,13 +663,13 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         );
 
         AWSS3StoragePathUploadFileOperation operation = new AWSS3StoragePathUploadFileOperation(
-                request,
-                defaultStorageService,
-                executorService,
-                authCredentialsProvider,
-                onProgress,
-                onSuccess,
-                onError
+            request,
+            defaultStorageService,
+            executorService,
+            authCredentialsProvider,
+            onProgress,
+            onSuccess,
+            onError
         );
         operation.start();
 
@@ -753,14 +753,14 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         );
 
         AWSS3StorageUploadInputStreamOperation operation = new AWSS3StorageUploadInputStreamOperation(
-                defaultStorageService,
-                executorService,
-                authCredentialsProvider,
-                awsS3StoragePluginConfiguration,
-                request,
-                onProgress,
-                onSuccess,
-                onError
+            defaultStorageService,
+            executorService,
+            authCredentialsProvider,
+            awsS3StoragePluginConfiguration,
+            request,
+            onProgress,
+            onSuccess,
+            onError
         );
         operation.start();
 
@@ -845,13 +845,13 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
         AWSS3StorageRemoveOperation operation =
             new AWSS3StorageRemoveOperation(
-                    defaultStorageService,
-                    executorService,
-                    authCredentialsProvider,
-                    request,
-                    awsS3StoragePluginConfiguration,
-                    onSuccess,
-                    onError);
+                defaultStorageService,
+                executorService,
+                authCredentialsProvider,
+                request,
+                awsS3StoragePluginConfiguration,
+                onSuccess,
+                onError);
 
         operation.start();
 
@@ -870,12 +870,12 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
         AWSS3StoragePathRemoveOperation operation =
                 new AWSS3StoragePathRemoveOperation(
-                        defaultStorageService,
-                        executorService,
-                        authCredentialsProvider,
-                        request,
-                        onSuccess,
-                        onError);
+                    defaultStorageService,
+                    executorService,
+                    authCredentialsProvider,
+                    request,
+                    onSuccess,
+                    onError);
 
         operation.start();
 
@@ -895,36 +895,36 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                     TransferObserver transferObserver =
                         new TransferObserver(
                             transferRecord.getId(),
-                                defaultStorageService.getTransferManager().getTransferStatusUpdater(),
-                                transferRecord.getBucketName(),
-                                transferRecord.getKey(),
-                                transferRecord.getFile(),
-                                null,
-                                transferRecord.getState() != null ? transferRecord.getState() : TransferState.UNKNOWN);
+                            defaultStorageService.getTransferManager().getTransferStatusUpdater(),
+                            transferRecord.getBucketName(),
+                            transferRecord.getKey(),
+                            transferRecord.getFile(),
+                            null,
+                            transferRecord.getState() != null ? transferRecord.getState() : TransferState.UNKNOWN);
                     TransferType transferType = transferRecord.getType();
                     switch (Objects.requireNonNull(transferType)) {
                         case UPLOAD:
                             if (transferRecord.getFile().startsWith(TransferStatusUpdater.TEMP_FILE_PREFIX)) {
                                 AWSS3StorageUploadInputStreamOperation operation =
                                     new AWSS3StorageUploadInputStreamOperation(
-                                            transferId,
-                                            defaultStorageService,
-                                            executorService,
-                                            authCredentialsProvider,
-                                            awsS3StoragePluginConfiguration,
-                                            null,
-                                            transferObserver);
+                                        transferId,
+                                        defaultStorageService,
+                                        executorService,
+                                        authCredentialsProvider,
+                                        awsS3StoragePluginConfiguration,
+                                        null,
+                                        transferObserver);
                                 onReceived.accept(operation);
                             } else {
                                 AWSS3StorageUploadFileOperation operation =
                                     new AWSS3StorageUploadFileOperation(
-                                            transferId,
-                                            defaultStorageService,
-                                            executorService,
-                                            authCredentialsProvider,
-                                            awsS3StoragePluginConfiguration,
-                                            null,
-                                            transferObserver);
+                                        transferId,
+                                        defaultStorageService,
+                                        executorService,
+                                        authCredentialsProvider,
+                                        awsS3StoragePluginConfiguration,
+                                        null,
+                                        transferObserver);
                                 onReceived.accept(operation);
                             }
                             break;
@@ -1001,13 +1001,13 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
         AWSS3StorageListOperation operation =
             new AWSS3StorageListOperation(
-                    defaultStorageService,
-                    executorService,
-                    authCredentialsProvider,
-                    request,
-                    awsS3StoragePluginConfiguration,
-                    onSuccess,
-                    onError);
+                defaultStorageService,
+                executorService,
+                authCredentialsProvider,
+                request,
+                awsS3StoragePluginConfiguration,
+                onSuccess,
+                onError);
 
         operation.start();
 
@@ -1030,12 +1030,12 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
         AWSS3StoragePathListOperation operation =
                 new AWSS3StoragePathListOperation(
-                        defaultStorageService,
-                        executorService,
-                        authCredentialsProvider,
-                        request,
-                        onSuccess,
-                        onError);
+                    defaultStorageService,
+                    executorService,
+                    authCredentialsProvider,
+                    request,
+                    onSuccess,
+                    onError);
 
         operation.start();
 

@@ -3952,6 +3952,7 @@ public final class com/amplifyframework/storage/IdentityIdProvidedStoragePath : 
 }
 
 public final class com/amplifyframework/storage/InvalidStorageBucketException : com/amplifyframework/AmplifyException {
+	public fun <init> ()V
 }
 
 public final class com/amplifyframework/storage/ObjectMetadata {
@@ -4005,26 +4006,6 @@ public final class com/amplifyframework/storage/ObjectMetadata {
 }
 
 public final class com/amplifyframework/storage/ObjectMetadata$Companion {
-}
-
-public final class com/amplifyframework/storage/OutputsStorageBucket : com/amplifyframework/storage/StorageBucket {
-	public final fun component1 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;)Lcom/amplifyframework/storage/OutputsStorageBucket;
-	public static synthetic fun copy$default (Lcom/amplifyframework/storage/OutputsStorageBucket;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/storage/OutputsStorageBucket;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getName ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class com/amplifyframework/storage/ResolvedStorageBucket : com/amplifyframework/storage/StorageBucket {
-	public final fun component1 ()Lcom/amplifyframework/storage/BucketInfo;
-	public final fun copy (Lcom/amplifyframework/storage/BucketInfo;)Lcom/amplifyframework/storage/ResolvedStorageBucket;
-	public static synthetic fun copy$default (Lcom/amplifyframework/storage/ResolvedStorageBucket;Lcom/amplifyframework/storage/BucketInfo;ILjava/lang/Object;)Lcom/amplifyframework/storage/ResolvedStorageBucket;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getBucketInfo ()Lcom/amplifyframework/storage/BucketInfo;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
 }
 
 public final class com/amplifyframework/storage/StorageAccessLevel : java/lang/Enum {

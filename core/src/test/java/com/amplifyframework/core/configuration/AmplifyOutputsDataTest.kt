@@ -285,12 +285,17 @@ class AmplifyOutputsDataTest {
             awsRegion shouldBe "us-east-1"
             bucketName shouldBe "myBucket"
             buckets.size shouldBe 2
-            buckets[0].name shouldBe "name1"
-            buckets[0].awsRegion shouldBe "us-east-1"
-            buckets[0].bucketName shouldBe "myBucket"
-            buckets[1].name shouldBe "name2"
-            buckets[1].awsRegion shouldBe "us-east-2"
-            buckets[1].bucketName shouldBe "myBucket2"
+            buckets[0].apply {
+                name shouldBe "name1"
+                awsRegion shouldBe "us-east-1"
+                bucketName shouldBe "myBucket"
+            }
+
+            buckets[1].apply {
+                name shouldBe "name2"
+                awsRegion shouldBe "us-east-2"
+                bucketName shouldBe "myBucket2"
+            }
         }
     }
 

@@ -14,6 +14,8 @@
  */
 package com.amplifyframework.storage
 
+import com.amplifyframework.annotations.InternalAmplifyApi
+
 abstract class StorageBucket {
     companion object {
         @JvmStatic
@@ -23,10 +25,8 @@ abstract class StorageBucket {
     }
 }
 
-// While class may be technically public, the constructor is internal,
-// Customer is never expected to see or attempt to use this extended class
+@InternalAmplifyApi
 data class OutputsStorageBucket internal constructor(val name: String) : StorageBucket()
 
-// While class may be technically public, the constructor is internal,
-// Customer is never expected to see or attempt to use this extended class
+@InternalAmplifyApi
 data class ResolvedStorageBucket internal constructor(val bucketInfo: BucketInfo) : StorageBucket()
