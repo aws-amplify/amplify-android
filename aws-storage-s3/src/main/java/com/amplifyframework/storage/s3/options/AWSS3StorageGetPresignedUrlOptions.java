@@ -59,12 +59,12 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
     @SuppressWarnings("deprecation")
     public static Builder from(@NonNull AWSS3StorageGetPresignedUrlOptions options) {
         return builder()
-                .accessLevel(options.getAccessLevel())
-                .targetIdentityId(options.getTargetIdentityId())
-                .expires(options.getExpires())
-                .setValidateObjectExistence(options.getValidateObjectExistence())
-                .expires(options.getExpires())
-                .bucket(options.getBucket());
+            .accessLevel(options.getAccessLevel())
+            .targetIdentityId(options.getTargetIdentityId())
+            .expires(options.getExpires())
+            .setValidateObjectExistence(options.getValidateObjectExistence())
+            .expires(options.getExpires())
+            .bucket(options.getBucket());
     }
 
     /**

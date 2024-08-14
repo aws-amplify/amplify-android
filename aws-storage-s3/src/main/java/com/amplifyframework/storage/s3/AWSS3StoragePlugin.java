@@ -533,13 +533,13 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         );
 
         AWSS3StoragePathDownloadFileOperation operation = new AWSS3StoragePathDownloadFileOperation(
-            request,
-            defaultStorageService,
-            executorService,
-            authCredentialsProvider,
-            onProgress,
-            onSuccess,
-            onError
+                request,
+                defaultStorageService,
+                executorService,
+                authCredentialsProvider,
+                onProgress,
+                onSuccess,
+                onError
         );
         operation.start();
 
@@ -663,13 +663,13 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         );
 
         AWSS3StoragePathUploadFileOperation operation = new AWSS3StoragePathUploadFileOperation(
-            request,
-            defaultStorageService,
-            executorService,
-            authCredentialsProvider,
-            onProgress,
-            onSuccess,
-            onError
+                request,
+                defaultStorageService,
+                executorService,
+                authCredentialsProvider,
+                onProgress,
+                onSuccess,
+                onError
         );
         operation.start();
 
@@ -870,12 +870,12 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
         AWSS3StoragePathRemoveOperation operation =
                 new AWSS3StoragePathRemoveOperation(
-                    defaultStorageService,
-                    executorService,
-                    authCredentialsProvider,
-                    request,
-                    onSuccess,
-                    onError);
+                        defaultStorageService,
+                        executorService,
+                        authCredentialsProvider,
+                        request,
+                        onSuccess,
+                        onError);
 
         operation.start();
 
@@ -931,14 +931,14 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                         case DOWNLOAD:
                             AWSS3StorageDownloadFileOperation
                                 downloadFileOperation = new AWSS3StorageDownloadFileOperation(
-                                    transferId,
-                                    new File(transferRecord.getFile()),
-                                    defaultStorageService,
-                                    executorService,
-                                    authCredentialsProvider,
-                                    awsS3StoragePluginConfiguration,
-                                    null,
-                                    transferObserver);
+                                transferId,
+                                new File(transferRecord.getFile()),
+                                defaultStorageService,
+                                executorService,
+                                authCredentialsProvider,
+                                awsS3StoragePluginConfiguration,
+                                null,
+                                transferObserver);
                             onReceived.accept(downloadFileOperation);
                             break;
                         default:
@@ -1030,12 +1030,12 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
         AWSS3StoragePathListOperation operation =
                 new AWSS3StoragePathListOperation(
-                    defaultStorageService,
-                    executorService,
-                    authCredentialsProvider,
-                    request,
-                    onSuccess,
-                    onError);
+                        defaultStorageService,
+                        executorService,
+                        authCredentialsProvider,
+                        request,
+                        onSuccess,
+                        onError);
 
         operation.start();
 
