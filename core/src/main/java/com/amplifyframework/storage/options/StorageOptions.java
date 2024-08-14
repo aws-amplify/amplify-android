@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.storage.StorageAccessLevel;
+import com.amplifyframework.storage.StorageBucket;
 import com.amplifyframework.storage.StoragePath;
 
 /**
@@ -31,11 +32,23 @@ abstract class StorageOptions {
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
 
+    private final StorageBucket bucket;
+
     @SuppressWarnings("deprecation")
     StorageOptions(StorageAccessLevel accessLevel,
                    String targetIdentityId) {
         this.accessLevel = accessLevel;
         this.targetIdentityId = targetIdentityId;
+        this.bucket = null;
+    }
+
+    @SuppressWarnings("deprecation")
+    StorageOptions(StorageAccessLevel accessLevel,
+                   String targetIdentityId,
+                   StorageBucket bucket) {
+        this.accessLevel = accessLevel;
+        this.targetIdentityId = targetIdentityId;
+        this.bucket = bucket;
     }
 
     /**
@@ -61,6 +74,11 @@ abstract class StorageOptions {
         return targetIdentityId;
     }
 
+    @Nullable
+    public final StorageBucket getBucket() {
+        return bucket;
+    }
+
     /**
      * Builds storage options.
      */
@@ -69,6 +87,7 @@ abstract class StorageOptions {
         @SuppressWarnings("deprecation")
         private StorageAccessLevel accessLevel;
         private String targetIdentityId;
+        private StorageBucket bucket;
 
         /**
          * Configures the storage access level to set on new
@@ -99,6 +118,11 @@ abstract class StorageOptions {
             return (B) this;
         }
 
+        public final B bucket(StorageBucket bucket) {
+            this.bucket = bucket;
+            return (B) this;
+        }
+
         @SuppressWarnings("deprecation")
         @Deprecated
         @Nullable
@@ -110,6 +134,11 @@ abstract class StorageOptions {
         @Nullable
         public final String getTargetIdentityId() {
             return targetIdentityId;
+        }
+
+        @Nullable
+        public final StorageBucket getBucket() {
+            return bucket;
         }
 
         /**
