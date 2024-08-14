@@ -362,13 +362,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         AWSS3StorageService storageService = defaultStorageService;
         try {
             storageService = getStorageService(options.getBucket());
-        } catch (InvalidStorageBucketException exception) {
-            onError.accept(
-                    new StorageException(
-                            "Unable to find bucket from name in Amplify Outputs.",
-                            exception,
-                            "Ensure the bucket name used is available in Amplify Outputs.")
-            );
+        } catch (StorageException exception) {
+            onError.accept(exception);
         }
 
         AWSS3StorageGetPresignedUrlOperation operation =
@@ -409,13 +404,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         AWSS3StorageService storageService = defaultStorageService;
         try {
             storageService = getStorageService(options.getBucket());
-        } catch (InvalidStorageBucketException exception) {
-            onError.accept(
-                    new StorageException(
-                            "Unable to find bucket from name in Amplify Outputs.",
-                            exception,
-                            "Ensure the bucket name used is available in Amplify Outputs.")
-            );
+        } catch (StorageException exception) {
+            onError.accept(exception);
         }
 
         AWSS3StoragePathGetPresignedUrlOperation operation =
@@ -505,8 +495,15 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             useAccelerateEndpoint
         );
 
+        AWSS3StorageService storageService = defaultStorageService;
+        try {
+            storageService = getStorageService(options.getBucket());
+        } catch (StorageException exception) {
+            onError.accept(exception);
+        }
+
         AWSS3StorageDownloadFileOperation operation = new AWSS3StorageDownloadFileOperation(
-            defaultStorageService,
+            storageService,
             executorService,
             authCredentialsProvider,
             request,
@@ -540,9 +537,16 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                 useAccelerateEndpoint
         );
 
+        AWSS3StorageService storageService = defaultStorageService;
+        try {
+            storageService = getStorageService(options.getBucket());
+        } catch (StorageException exception) {
+            onError.accept(exception);
+        }
+
         AWSS3StoragePathDownloadFileOperation operation = new AWSS3StoragePathDownloadFileOperation(
                 request,
-                defaultStorageService,
+                storageService,
                 executorService,
                 authCredentialsProvider,
                 onProgress,
@@ -632,8 +636,15 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             useAccelerateEndpoint
         );
 
+        AWSS3StorageService storageService = defaultStorageService;
+        try {
+            storageService = getStorageService(options.getBucket());
+        } catch (StorageException exception) {
+            onError.accept(exception);
+        }
+
         AWSS3StorageUploadFileOperation operation = new AWSS3StorageUploadFileOperation(
-            defaultStorageService,
+            storageService,
             executorService,
             authCredentialsProvider,
             request,
@@ -670,9 +681,16 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                 useAccelerateEndpoint
         );
 
+        AWSS3StorageService storageService = defaultStorageService;
+        try {
+            storageService = getStorageService(options.getBucket());
+        } catch (StorageException exception) {
+            onError.accept(exception);
+        }
+
         AWSS3StoragePathUploadFileOperation operation = new AWSS3StoragePathUploadFileOperation(
                 request,
-                defaultStorageService,
+                storageService,
                 executorService,
                 authCredentialsProvider,
                 onProgress,
@@ -760,8 +778,15 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             useAccelerateEndpoint
         );
 
+        AWSS3StorageService storageService = defaultStorageService;
+        try {
+            storageService = getStorageService(options.getBucket());
+        } catch (StorageException exception) {
+            onError.accept(exception);
+        }
+
         AWSS3StorageUploadInputStreamOperation operation = new AWSS3StorageUploadInputStreamOperation(
-            defaultStorageService,
+            storageService,
             executorService,
             authCredentialsProvider,
             awsS3StoragePluginConfiguration,
@@ -798,10 +823,17 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                 useAccelerateEndpoint
         );
 
+        AWSS3StorageService storageService = defaultStorageService;
+        try {
+            storageService = getStorageService(options.getBucket());
+        } catch (StorageException exception) {
+            onError.accept(exception);
+        }
+
         AWSS3StoragePathUploadInputStreamOperation operation =
                 new AWSS3StoragePathUploadInputStreamOperation(
                         request,
-                        defaultStorageService,
+                        storageService,
                         executorService,
                         authCredentialsProvider,
                         onProgress,
@@ -851,9 +883,16 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             options.getTargetIdentityId()
         );
 
+        AWSS3StorageService storageService = defaultStorageService;
+        try {
+            storageService = getStorageService(options.getBucket());
+        } catch (StorageException exception) {
+            onError.accept(exception);
+        }
+
         AWSS3StorageRemoveOperation operation =
             new AWSS3StorageRemoveOperation(
-                defaultStorageService,
+                storageService,
                 executorService,
                 authCredentialsProvider,
                 request,
@@ -876,9 +915,16 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     ) {
         AWSS3StoragePathRemoveRequest request = new AWSS3StoragePathRemoveRequest(path);
 
+        AWSS3StorageService storageService = defaultStorageService;
+        try {
+            storageService = getStorageService(options.getBucket());
+        } catch (StorageException exception) {
+            onError.accept(exception);
+        }
+
         AWSS3StoragePathRemoveOperation operation =
                 new AWSS3StoragePathRemoveOperation(
-                        defaultStorageService,
+                        storageService,
                         executorService,
                         authCredentialsProvider,
                         request,
@@ -1053,7 +1099,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     @SuppressLint("UnsafeOptInUsageError")
     @VisibleForTesting
     @NonNull
-    AWSS3StorageService getStorageService(@Nullable StorageBucket bucket) throws InvalidStorageBucketException {
+    AWSS3StorageService getStorageService(@Nullable StorageBucket bucket) throws StorageException {
         if (bucket == null) {
             return defaultStorageService;
         }
@@ -1061,7 +1107,10 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         if (bucket instanceof OutputsStorageBucket) {
             AWSS3StorageService service = getAWSS3StorageService((OutputsStorageBucket) bucket);
             if (service == null) {
-                throw new InvalidStorageBucketException();
+                throw new StorageException(
+                        "Unable to find bucket from name in Amplify Outputs.",
+                        new InvalidStorageBucketException(),
+                        "Ensure the bucket name used is available in Amplify Outputs.");
             } else {
                 return service;
             }

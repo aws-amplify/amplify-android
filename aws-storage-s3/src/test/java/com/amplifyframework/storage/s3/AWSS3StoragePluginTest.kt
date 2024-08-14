@@ -16,7 +16,6 @@
 package com.amplifyframework.storage.s3
 
 import com.amplifyframework.storage.BucketInfo
-import com.amplifyframework.storage.InvalidStorageBucketException
 import com.amplifyframework.storage.StorageBucket
 import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.s3.service.AWSS3StorageService
@@ -129,7 +128,7 @@ class AWSS3StoragePluginTest {
     }
 
     @Test
-    fun `getStorageService throws InvalidStorageBucketException`() {
+    fun `getStorageService throws StorageException`() {
         val data = amplifyOutputsData {
             storage {
                 awsRegion = "test-region"
@@ -144,7 +143,7 @@ class AWSS3StoragePluginTest {
 
         plugin.configure(data, mockk())
         val bucket = StorageBucket.fromOutputs("myBucket")
-        shouldThrow<InvalidStorageBucketException> {
+        shouldThrow<StorageException> {
             plugin.getStorageService(bucket)
         }
     }
