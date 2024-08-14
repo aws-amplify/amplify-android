@@ -29,6 +29,7 @@ import com.amplifyframework.auth.CognitoCredentialsProvider;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.core.configuration.AmplifyOutputsData;
+import com.amplifyframework.storage.BucketInfo;
 import com.amplifyframework.storage.InvalidStorageBucketException;
 import com.amplifyframework.storage.OutputsStorageBucket;
 import com.amplifyframework.storage.ResolvedStorageBucket;
@@ -134,7 +135,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     private StorageAccessLevel defaultAccessLevel;
     private int defaultUrlExpiration;
 
-    private Map<String, AWSS3StorageService> awsS3StorageServicesByBucketName;
+    private Map<String, AWSS3StorageService> awsS3StorageServicesByBucketName = new HashMap<>();
     private Context context;
     @SuppressLint("UnsafeOptInUsageError")
     private List<AmplifyOutputsData.StorageBucket> configuredBuckets;
@@ -207,6 +208,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         return AWS_S3_STORAGE_PLUGIN_KEY;
     }
 
+    @SuppressLint("UnsafeOptInUsageError")
     @Override
     @SuppressWarnings("deprecation")
     public void configure(
@@ -250,7 +252,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             );
         }
 
-        configure(context, region, bucket);
+        BucketInfo bucketInfo = new BucketInfo(bucket, region);
+        configure(context, region, (ResolvedStorageBucket) StorageBucket.fromBucketInfo(bucketInfo));
     }
 
     @Override
@@ -266,20 +269,25 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         }
 
         this.configuredBuckets = storage.getBuckets();
-        configure(context, storage.getAwsRegion(), storage.getBucketName());
+        BucketInfo bucketInfo = new BucketInfo(storage.getBucketName(), storage.getAwsRegion());
+        configure(context, storage.getAwsRegion(), (ResolvedStorageBucket) StorageBucket.fromBucketInfo(bucketInfo));
     }
 
     @SuppressWarnings("deprecation")
+    @SuppressLint("UnsafeOptInUsageError")
     private void configure(
-        @NonNull Context context,
-        @NonNull String region,
-        @NonNull String bucket
+            @NonNull Context context,
+            @NonNull String region,
+            @NonNull ResolvedStorageBucket bucket
     ) throws StorageException {
         try {
             this.context = context;
-            this.defaultStorageService = (AWSS3StorageService) storageServiceFactory.create(context, region, bucket);
-            this.awsS3StorageServicesByBucketName = new HashMap<String, AWSS3StorageService>();
-            this.awsS3StorageServicesByBucketName.put(bucket, this.defaultStorageService);
+            this.defaultStorageService = (AWSS3StorageService) storageServiceFactory.create(
+                    context,
+                    region,
+                    bucket.getBucketInfo().getName());
+            this.awsS3StorageServicesByBucketName.clear();
+            this.awsS3StorageServicesByBucketName.put(bucket.getBucketInfo().getName(), this.defaultStorageService);
         } catch (RuntimeException exception) {
             throw new StorageException(
                 "Failed to create storage service.",
