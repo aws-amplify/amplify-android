@@ -47,7 +47,7 @@ fun View.fadeOut() {
         .alpha(0f)
         .setListener(
             object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator?) {
+                override fun onAnimationEnd(animation: Animator) {
                     visibility = FrameLayout.GONE
                 }
             }

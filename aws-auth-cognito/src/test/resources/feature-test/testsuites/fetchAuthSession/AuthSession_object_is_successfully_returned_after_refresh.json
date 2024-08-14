@@ -42,8 +42,7 @@
     },
     "api": {
         "name": "fetchAuthSession",
-        "params": {
-        },
+        "params": {},
         "options": {
             "forceRefresh": true
         }
@@ -58,10 +57,7 @@
                 "awsCredentialsResult": {
                     "accessKeyId": "someAccessKey",
                     "expiration": 2342134,
-                    "expiresAt": {
-                        "seconds": 2342134.0,
-                        "nanos": 0.0
-                    },
+                    "expiresAt": {},
                     "secretAccessKey": "someSecretKey",
                     "sessionToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDI0LCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.po__hnGh2KF0ibpp--a2YZA9oBAKXc9BkX1IwdhvJp8"
                 },
