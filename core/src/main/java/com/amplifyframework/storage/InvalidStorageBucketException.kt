@@ -17,6 +17,9 @@ package com.amplifyframework.storage
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.annotations.InternalAmplifyApi
 
+/**
+ * Exception thrown when an invalid StorageBucket is specified.
+ */
 class InvalidStorageBucketException @InternalAmplifyApi constructor(
     message: String = "Unable to find bucket from name in Amplify Outputs.",
     recoverySuggestion: String = "Ensure the bucket name used is available in Amplify Outputs."

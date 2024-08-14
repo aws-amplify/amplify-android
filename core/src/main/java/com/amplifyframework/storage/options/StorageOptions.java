@@ -74,6 +74,10 @@ abstract class StorageOptions {
         return targetIdentityId;
     }
 
+    /**
+     * Gets the storage bucket.
+     * @return storage bucket
+     */
     @Nullable
     public final StorageBucket getBucket() {
         return bucket;
@@ -118,6 +122,11 @@ abstract class StorageOptions {
             return (B) this;
         }
 
+        /**
+         * Configure the storage bucket that will be used on newly built StorageOptions.
+         * @param bucket Storage bucket for new StorageOptions instances
+         * @return Current Builder instance, for fluent method chaining
+         */
         public final B bucket(StorageBucket bucket) {
             this.bucket = bucket;
             return (B) this;
@@ -136,6 +145,10 @@ abstract class StorageOptions {
             return targetIdentityId;
         }
 
+        /**
+         * Gets the storage bucket.
+         * @return storage bucket
+         */
         @Nullable
         public final StorageBucket getBucket() {
             return bucket;
