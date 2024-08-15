@@ -3930,12 +3930,29 @@ public final class com/amplifyframework/predictions/result/TranslateTextResult$B
 	public fun translatedText (Ljava/lang/String;)Lcom/amplifyframework/predictions/result/TranslateTextResult$Builder;
 }
 
+public final class com/amplifyframework/storage/BucketInfo {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lcom/amplifyframework/storage/BucketInfo;
+	public static synthetic fun copy$default (Lcom/amplifyframework/storage/BucketInfo;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/storage/BucketInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public final fun getRegion ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class com/amplifyframework/storage/IdentityIdProvidedStoragePath : com/amplifyframework/storage/StoragePath {
 	public final fun copy (Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/storage/IdentityIdProvidedStoragePath;
 	public static synthetic fun copy$default (Lcom/amplifyframework/storage/IdentityIdProvidedStoragePath;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/amplifyframework/storage/IdentityIdProvidedStoragePath;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/storage/InvalidStorageBucketException : com/amplifyframework/AmplifyException {
+	public fun <init> ()V
 }
 
 public final class com/amplifyframework/storage/ObjectMetadata {
@@ -3997,6 +4014,18 @@ public final class com/amplifyframework/storage/StorageAccessLevel : java/lang/E
 	public static final field PUBLIC Lcom/amplifyframework/storage/StorageAccessLevel;
 	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/storage/StorageAccessLevel;
 	public static fun values ()[Lcom/amplifyframework/storage/StorageAccessLevel;
+}
+
+public abstract class com/amplifyframework/storage/StorageBucket {
+	public static final field Companion Lcom/amplifyframework/storage/StorageBucket$Companion;
+	public fun <init> ()V
+	public static final fun fromBucketInfo (Lcom/amplifyframework/storage/BucketInfo;)Lcom/amplifyframework/storage/StorageBucket;
+	public static final fun fromOutputs (Ljava/lang/String;)Lcom/amplifyframework/storage/StorageBucket;
+}
+
+public final class com/amplifyframework/storage/StorageBucket$Companion {
+	public final fun fromBucketInfo (Lcom/amplifyframework/storage/BucketInfo;)Lcom/amplifyframework/storage/StorageBucket;
+	public final fun fromOutputs (Ljava/lang/String;)Lcom/amplifyframework/storage/StorageBucket;
 }
 
 public final class com/amplifyframework/storage/StorageCategory : com/amplifyframework/core/category/Category, com/amplifyframework/storage/StorageCategoryBehavior {

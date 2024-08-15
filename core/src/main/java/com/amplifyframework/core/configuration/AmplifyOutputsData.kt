@@ -187,6 +187,14 @@ interface AmplifyOutputsData {
     interface Storage {
         val awsRegion: String
         val bucketName: String
+        val buckets: List<StorageBucket>
+    }
+
+    @InternalAmplifyApi
+    interface StorageBucket {
+        val name: String
+        val awsRegion: String
+        val bucketName: String
     }
 
     @InternalAmplifyApi
@@ -353,8 +361,16 @@ internal data class AmplifyOutputsDataImpl(
     @Serializable
     data class Storage(
         override val awsRegion: String,
-        override val bucketName: String
+        override val bucketName: String,
+        override val buckets: List<StorageBucket> = emptyList()
     ) : AmplifyOutputsData.Storage
+
+    @Serializable
+    data class StorageBucket(
+        override val name: String,
+        override val awsRegion: String,
+        override val bucketName: String
+    ) : AmplifyOutputsData.StorageBucket
 
     @Serializable
     data class AmazonLocationServiceConfig(

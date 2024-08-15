@@ -15,11 +15,15 @@
 
 package com.amplifyframework.storage.s3
 
+import com.amplifyframework.storage.BucketInfo
+import com.amplifyframework.storage.InvalidStorageBucketException
+import com.amplifyframework.storage.StorageBucket
 import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.s3.service.AWSS3StorageService
 import com.amplifyframework.storage.s3.service.StorageService
 import com.amplifyframework.testutils.configuration.amplifyOutputsData
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldNotBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -61,6 +65,87 @@ class AWSS3StoragePluginTest {
 
         shouldThrow<StorageException> {
             plugin.configure(data, mockk())
+        }
+    }
+
+    @Test
+    fun `getStorageService returns default storage service if bucket is null`() {
+        val data = amplifyOutputsData {
+            storage {
+                awsRegion = "test-region"
+                bucketName = "test-bucket"
+                buckets {
+                    awsRegion = "test-region"
+                    bucketName = "test-bucket"
+                    name = "test=name"
+                }
+            }
+        }
+
+        plugin.configure(data, mockk())
+        val service = plugin.getStorageService(null)
+        service shouldNotBe null
+    }
+
+    @Test
+    fun `get AWSS3StorageService from BucketInfo`() {
+        val data = amplifyOutputsData {
+            storage {
+                awsRegion = "test-region"
+                bucketName = "test-bucket"
+                buckets {
+                    awsRegion = "test-region"
+                    bucketName = "test-bucket"
+                    name = "test=name"
+                }
+            }
+        }
+
+        plugin.configure(data, mockk())
+        val bucketInfo = BucketInfo("test-bucket", "test-region")
+        val bucket = StorageBucket.fromBucketInfo(bucketInfo)
+        val service = plugin.getStorageService(bucket)
+        service shouldNotBe null
+    }
+
+    @Test
+    fun `get AWSS3StorageService from AmplifyOutputs`() {
+        val data = amplifyOutputsData {
+            storage {
+                awsRegion = "test-region"
+                bucketName = "test-bucket"
+                buckets {
+                    awsRegion = "test-region"
+                    bucketName = "test-bucket"
+                    name = "test=name"
+                }
+            }
+        }
+
+        plugin.configure(data, mockk())
+        val bucket = StorageBucket.fromOutputs("test=name")
+        val service = plugin.getStorageService(bucket)
+        service shouldNotBe null
+    }
+
+    @Test
+    fun `getStorageService throws InvalidStorageBucketException`() {
+        val data = amplifyOutputsData {
+            storage {
+                awsRegion = "test-region"
+                bucketName = "test-bucket"
+                buckets {
+                    awsRegion = "test-region"
+                    bucketName = "test-bucket"
+                    name = "test=name"
+                }
+            }
+        }
+
+        plugin.configure(data, mockk())
+        val bucket = StorageBucket.fromOutputs("myBucket")
+        shouldThrow<InvalidStorageBucketException> {
+            plugin.getStorageService(bucket)
         }
     }
 }
