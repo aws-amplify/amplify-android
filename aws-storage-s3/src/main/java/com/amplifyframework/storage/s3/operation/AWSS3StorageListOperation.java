@@ -16,7 +16,9 @@
 package com.amplifyframework.storage.s3.operation;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.OptIn;
 
+import com.amplifyframework.annotations.InternalApiWarning;
 import com.amplifyframework.auth.AuthCredentialsProvider;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageException;
@@ -36,6 +38,7 @@ import java.util.concurrent.ExecutorService;
  *  @deprecated Class should not be public and explicitly cast to. Cast to StorageListOperation
  */
 @Deprecated
+@OptIn(markerClass = InternalApiWarning.class)
 public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3StorageListRequest> {
     private final StorageService storageService;
     private final ExecutorService executorService;

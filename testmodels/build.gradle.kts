@@ -18,6 +18,10 @@ plugins {
     id("kotlin-android")
 }
 
+android {
+    namespace = "com.amplifyframework.testmodels"
+}
+
 dependencies {
     implementation(project(":core"))
     implementation(project(":aws-api-appsync"))

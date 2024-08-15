@@ -1541,10 +1541,12 @@ internal class RealAWSCognitoAuthPlugin(
                                 getUserRequest
                             )
                             val userAttributes = buildList {
-                                user?.userAttributes?.mapTo(this) {
-                                    AuthUserAttribute(
-                                        AuthUserAttributeKey.custom(it.name),
-                                        it.value
+                                user?.userAttributes?.forEach {
+                                    add(
+                                        AuthUserAttribute(
+                                            AuthUserAttributeKey.custom(it.name),
+                                            it.value
+                                        )
                                     )
                                 }
                             }
