@@ -26,11 +26,11 @@ open class UnknownException(
     cause: Throwable? = null
 ) : AuthException(
     message,
-    if (cause == null) RECOVERY_SUGGESTION_WITH_THROWABLE else RECOVERY_SUGGESTION_WITHOUT_THROWABLE,
+    if (cause != null) RECOVERY_SUGGESTION_WITH_THROWABLE else RECOVERY_SUGGESTION_WITHOUT_THROWABLE,
     cause
 ) {
     companion object {
         const val RECOVERY_SUGGESTION_WITH_THROWABLE = "See the attached exception for more details"
-        const val RECOVERY_SUGGESTION_WITHOUT_THROWABLE = "Sorry, we don't have a suggested fix for this error yet."
+        const val RECOVERY_SUGGESTION_WITHOUT_THROWABLE = "Sorry, we don’t have a recovery suggestion for this error."
     }
 }

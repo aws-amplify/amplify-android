@@ -23,6 +23,10 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 
 group = properties["POM_GROUP"].toString()
 
+android {
+    namespace = "com.amplifyframework.datastore"
+}
+
 dependencies {
     implementation(project(":core"))
     implementation(project(":aws-core"))
@@ -30,6 +34,7 @@ dependencies {
 
     implementation(libs.androidx.appcompat)
     implementation(libs.gson)
+    implementation(libs.kotlin.coroutines.rx3)
     implementation(libs.rxjava)
     implementation(libs.uuidgen)
 
@@ -41,6 +46,7 @@ dependencies {
     testImplementation(libs.test.robolectric)
     testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.mockk)
+    testImplementation(libs.test.kotlin.coroutines)
 
     androidTestImplementation(libs.test.mockito.core)
     androidTestImplementation(project(":testmodels"))

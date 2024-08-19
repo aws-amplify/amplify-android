@@ -29,6 +29,7 @@ public final class S3KeysTest {
     /**
      * A public service key should just be the amplify key, prefixed by the path "public/".
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void createdPublicServiceKey() {
         StorageAccessLevel accessLevel = StorageAccessLevel.PUBLIC;
@@ -42,6 +43,7 @@ public final class S3KeysTest {
     /**
      * Validates construction of a protected service key as "protected/identity_id/key".
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void createdProtectedServiceKey() {
         StorageAccessLevel accessLevel = StorageAccessLevel.PROTECTED;
@@ -55,6 +57,7 @@ public final class S3KeysTest {
     /**
      * Validates construction of a private service key as "private/identity_id/key".
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void createPrivateServiceKey() {
         StorageAccessLevel accessLevel = StorageAccessLevel.PRIVATE;

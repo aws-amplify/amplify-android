@@ -121,6 +121,7 @@ public final class StorageComponentTest {
      * @throws StorageException when an error is encountered while generating
      *                          URL from storage service
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void testGenerateUrlGetsPresignedUrl() throws StorageException {
         final String fromRemoteKey = RandomString.string();
@@ -163,6 +164,7 @@ public final class StorageComponentTest {
      *
      * @throws Exception when an error is encountered while downloading
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void testDownloadToFileGetsFile() throws Exception {
         final String fromRemoteKey = RandomString.string();
@@ -204,6 +206,7 @@ public final class StorageComponentTest {
      *
      * @throws IOException when the temporary file cannot be created
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void testDownloadError() throws IOException {
         final StorageException testError = new StorageException(
@@ -245,6 +248,7 @@ public final class StorageComponentTest {
      *
      * @throws Exception when an error is encountered while uploading
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void testUploadFileGetsKey() throws Exception {
         final String toRemoteKey = RandomString.string();
@@ -288,6 +292,7 @@ public final class StorageComponentTest {
      *
      * @throws Exception when an error is encountered while uploading
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void testUploadInputStreamGetsKey() throws Exception {
         final String toRemoteKey = RandomString.string();
@@ -329,6 +334,7 @@ public final class StorageComponentTest {
      *
      * @throws IOException when the upload file cannot be created
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void testUploadFileError() throws IOException {
         final StorageException testError = new StorageException(
@@ -376,6 +382,7 @@ public final class StorageComponentTest {
      *
      * @throws IOException when the upload file cannot be created
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void testInputStreamError() throws IOException {
         final StorageException testError = new StorageException(
@@ -427,15 +434,16 @@ public final class StorageComponentTest {
     public void testListObject() throws StorageException {
         final String path = RandomString.string();
         final StorageItem item = new StorageItem(
-                RandomString.string(),
+                path,
+                path,
                 0L,
                 new Date(),
                 RandomString.string(),
                 null
         );
 
-        when(storageService.listFiles(anyString(), anyString()))
-                .thenReturn(Collections.singletonList(item));
+        when(storageService.listFiles(anyString(), anyString(), any()))
+                .thenReturn(StorageListResult.fromItems(Collections.singletonList(item), null));
 
         StorageListResult result =
                 Await.<StorageListResult, StorageException>result((onResult, onError) ->
@@ -457,6 +465,7 @@ public final class StorageComponentTest {
      * @throws StorageException when an error is encountered while deleting
      *                          file from storage
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void testRemoveObjectGetsKey() throws StorageException {
         final String remoteKey = RandomString.string();

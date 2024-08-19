@@ -30,10 +30,12 @@ import java.util.List;
 public final class StorageListResult {
     private final List<StorageItem> items;
     private final String nextToken;
+    private final List<String> excludedSubpaths;
 
-    private StorageListResult(List<StorageItem> items, String nextToken) {
+    private StorageListResult(List<StorageItem> items, String nextToken, List<String> excludedSubpaths) {
         this.items = items;
         this.nextToken = nextToken;
+        this.excludedSubpaths = excludedSubpaths;
     }
 
     /**
@@ -48,7 +50,26 @@ public final class StorageListResult {
         if (items != null) {
             safeItems.addAll(items);
         }
-        return new StorageListResult(Collections.unmodifiableList(safeItems), nextToken);
+        return new StorageListResult(Collections.unmodifiableList(safeItems), nextToken, Collections.emptyList());
+    }
+
+    /**
+     * Factory method to construct a storage list result from a list of items.
+     * @param items A possibly null, possibly empty list of items
+     * @param nextToken next continuation token
+     * @param excludedSubpaths sub-paths that are excluded based on the delimiter
+     * @return A new immutable instance of StorageListResult
+     */
+    public static StorageListResult fromItems(
+            List<StorageItem> items,
+            String nextToken,
+            List<String> excludedSubpaths
+    ) {
+        final List<StorageItem> safeItems = new ArrayList<>();
+        if (items != null) {
+            safeItems.addAll(items);
+        }
+        return new StorageListResult(Collections.unmodifiableList(safeItems), nextToken, excludedSubpaths);
     }
 
     /**
@@ -66,5 +87,13 @@ public final class StorageListResult {
      */
     public String getNextToken() {
         return nextToken;
+    }
+
+    /**
+     * Gets the excluded sub-paths.
+     * @return excluded sub-paths .
+     */
+    public List<String> getExcludedSubpaths() {
+        return excludedSubpaths;
     }
 }

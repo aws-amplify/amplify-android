@@ -24,6 +24,10 @@ apply(from = rootProject.file("configuration/checkstyle.gradle"))
 
 group = properties["POM_GROUP"].toString()
 
+android {
+    namespace = "com.amplifyframework.auth.cognito"
+}
+
 dependencies {
     implementation(project(":core"))
     implementation(project(":aws-core"))
@@ -55,6 +59,8 @@ dependencies {
     testImplementation(libs.test.robolectric)
     testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.kotlin.reflection)
+    testImplementation(libs.test.kotest.assertions)
+    testImplementation(libs.test.kotest.assertions.json)
 
     androidTestImplementation(libs.gson)
     //noinspection GradleDependency

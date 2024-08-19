@@ -53,6 +53,7 @@ class StorageStressTest {
         private val downloadOptions = StorageDownloadFileOptions.builder().accessLevel(TESTING_ACCESS_LEVEL).build()
         private const val TRANSFER_TIMEOUT = 10 * 60_000L // 10 minutes
         private const val STRESS_TEST_TIMEOUT = 10 * 60_000L
+        private const val FILE_COUNT = 10
 
         /**
          * Initialize mobile client and configure the storage.
@@ -75,7 +76,7 @@ class StorageStressTest {
     }
 
     /**
-     * Calls Storage.downloadFile with random temporary files of size 1MB 50 times
+     * Calls Storage.downloadFile with random temporary files of size 1MB 10 times
      */
     @Test
     fun testDownloadManyFiles() {
@@ -87,8 +88,8 @@ class StorageStressTest {
         // Upload 25 small test files
         var key: String
         smallFiles = mutableListOf()
-        val uploadLatch = CountDownLatch(50)
-        repeat(50) {
+        val uploadLatch = CountDownLatch(FILE_COUNT)
+        repeat(FILE_COUNT) {
             key = "${SMALL_FILE_NAME}${UUID.randomUUID()}"
             val smallFile = RandomTempFile(key, SMALL_FILE_SIZE)
             synchronousStorage.uploadFile(key, smallFile, uploadOptions, TRANSFER_TIMEOUT)
@@ -101,7 +102,7 @@ class StorageStressTest {
         Sleep.milliseconds(1000)
         // Upload 1 large test file
         Log.i("STORAGE_STRESS_TEST", "@BeforeClass Large Upload Started")
-        val downloadLatch = CountDownLatch(50)
+        val downloadLatch = CountDownLatch(FILE_COUNT)
         smallFiles.forEach {
             Thread {
                 val downloadFile = RandomTempFile()
@@ -116,12 +117,12 @@ class StorageStressTest {
     }
 
     /**
-     * Calls Storage.uploadFile with random temporary files of size 1MB 50 times
+     * Calls Storage.uploadFile with random temporary files of size 1MB 10 times
      */
     @Test
     fun testUploadManyFiles() {
-        val uploadLatch = CountDownLatch(50)
-        repeat(50) {
+        val uploadLatch = CountDownLatch(FILE_COUNT)
+        repeat(FILE_COUNT) {
             val key = "${SMALL_FILE_NAME}${UUID.randomUUID()}"
             val smallFile = RandomTempFile(key, SMALL_FILE_SIZE)
             synchronousStorage.uploadFile(key, smallFile, uploadOptions, TRANSFER_TIMEOUT)

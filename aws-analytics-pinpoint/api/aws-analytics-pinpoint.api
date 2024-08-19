@@ -1,0 +1,80 @@
+public final class com/amplifyframework/analytics/pinpoint/AWSPinpointAnalyticsPlugin : com/amplifyframework/analytics/AnalyticsPlugin {
+	public fun <init> ()V
+	public fun <init> (Lcom/amplifyframework/analytics/pinpoint/AWSPinpointAnalyticsPlugin$Options;)V
+	public synthetic fun <init> (Lcom/amplifyframework/analytics/pinpoint/AWSPinpointAnalyticsPlugin$Options;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun configure (Lorg/json/JSONObject;Landroid/content/Context;)V
+	public fun disable ()V
+	public fun enable ()V
+	public fun flushEvents ()V
+	public fun getEscapeHatch ()Laws/sdk/kotlin/services/pinpoint/PinpointClient;
+	public synthetic fun getEscapeHatch ()Ljava/lang/Object;
+	public fun getPluginKey ()Ljava/lang/String;
+	public fun getVersion ()Ljava/lang/String;
+	public fun identifyUser (Ljava/lang/String;Lcom/amplifyframework/analytics/UserProfile;)V
+	public fun recordEvent (Lcom/amplifyframework/analytics/AnalyticsEventBehavior;)V
+	public fun recordEvent (Ljava/lang/String;)V
+	public fun registerGlobalProperties (Lcom/amplifyframework/analytics/AnalyticsProperties;)V
+	public fun unregisterGlobalProperties ([Ljava/lang/String;)V
+}
+
+public final class com/amplifyframework/analytics/pinpoint/AWSPinpointAnalyticsPlugin$Options {
+	public static final field Companion Lcom/amplifyframework/analytics/pinpoint/AWSPinpointAnalyticsPlugin$Options$Companion;
+	public static final fun builder ()Lcom/amplifyframework/analytics/pinpoint/AWSPinpointAnalyticsPlugin$Options$Builder;
+	public final fun component1 ()J
+	public final fun component2 ()Z
+	public final fun copy (JZ)Lcom/amplifyframework/analytics/pinpoint/AWSPinpointAnalyticsPlugin$Options;
+	public static synthetic fun copy$default (Lcom/amplifyframework/analytics/pinpoint/AWSPinpointAnalyticsPlugin$Options;JZILjava/lang/Object;)Lcom/amplifyframework/analytics/pinpoint/AWSPinpointAnalyticsPlugin$Options;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAutoFlushEventsInterval ()J
+	public final fun getTrackLifecycleEvents ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/analytics/pinpoint/AWSPinpointAnalyticsPlugin$Options$Builder {
+	public final fun autoFlushEventsInterval (J)Lcom/amplifyframework/analytics/pinpoint/AWSPinpointAnalyticsPlugin$Options$Builder;
+	public final fun build ()Lcom/amplifyframework/analytics/pinpoint/AWSPinpointAnalyticsPlugin$Options;
+	public final fun getAutoFlushEventsInterval ()J
+	public final fun getTrackLifecycleEvents ()Z
+	public final synthetic fun setAutoFlushEventsInterval (J)V
+	public final synthetic fun setTrackLifecycleEvents (Z)V
+	public final fun trackLifecycleEvents (Z)Lcom/amplifyframework/analytics/pinpoint/AWSPinpointAnalyticsPlugin$Options$Builder;
+}
+
+public final class com/amplifyframework/analytics/pinpoint/AWSPinpointAnalyticsPlugin$Options$Companion {
+	public final fun builder ()Lcom/amplifyframework/analytics/pinpoint/AWSPinpointAnalyticsPlugin$Options$Builder;
+	public final synthetic fun invoke (Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/analytics/pinpoint/AWSPinpointAnalyticsPlugin$Options;
+}
+
+public final class com/amplifyframework/analytics/pinpoint/AnalyticsChannelEventName : java/lang/Enum {
+	public static final field FLUSH_EVENTS Lcom/amplifyframework/analytics/pinpoint/AnalyticsChannelEventName;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getEventName ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/analytics/pinpoint/AnalyticsChannelEventName;
+	public static fun values ()[Lcom/amplifyframework/analytics/pinpoint/AnalyticsChannelEventName;
+}
+
+public final class com/amplifyframework/analytics/pinpoint/BuildConfig {
+	public static final field BUILD_TYPE Ljava/lang/String;
+	public static final field DEBUG Z
+	public static final field LIBRARY_PACKAGE_NAME Ljava/lang/String;
+	public static final field VERSION_NAME Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public final class com/amplifyframework/analytics/pinpoint/models/AWSPinpointUserProfile : com/amplifyframework/analytics/UserProfile, com/amplifyframework/pinpoint/core/models/AWSPinpointUserProfileBehavior {
+	public static fun builder ()Lcom/amplifyframework/analytics/pinpoint/models/AWSPinpointUserProfile$Builder;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getUserAttributes ()Lcom/amplifyframework/analytics/AnalyticsProperties;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/analytics/pinpoint/models/AWSPinpointUserProfile$Builder : com/amplifyframework/analytics/UserProfile$Builder {
+	public fun <init> ()V
+	public synthetic fun build ()Lcom/amplifyframework/analytics/UserProfile;
+	public fun build ()Lcom/amplifyframework/analytics/pinpoint/models/AWSPinpointUserProfile;
+	public fun userAttributes (Lcom/amplifyframework/analytics/AnalyticsProperties;)Lcom/amplifyframework/analytics/pinpoint/models/AWSPinpointUserProfile$Builder;
+}
+

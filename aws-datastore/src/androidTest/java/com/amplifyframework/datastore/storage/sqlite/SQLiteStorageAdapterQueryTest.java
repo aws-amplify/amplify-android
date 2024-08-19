@@ -25,10 +25,16 @@ import com.amplifyframework.datastore.StrictMode;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.Blog;
+import com.amplifyframework.testmodels.commentsblog.Blog3;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testmodels.commentsblog.BlogOwner3;
 import com.amplifyframework.testmodels.commentsblog.Comment;
 import com.amplifyframework.testmodels.commentsblog.Post;
+import com.amplifyframework.testmodels.commentsblog.Post2;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
+import com.amplifyframework.testmodels.cpk.BlogCPK;
+import com.amplifyframework.testmodels.cpk.BlogOwnerCPK;
+import com.amplifyframework.testmodels.cpk.PostCPK;
 import com.amplifyframework.testmodels.phonecall.Call;
 import com.amplifyframework.testmodels.phonecall.Person;
 import com.amplifyframework.testmodels.phonecall.Phone;
@@ -44,6 +50,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.UUID;
 
 import io.reactivex.rxjava3.core.Observable;
 
@@ -86,6 +93,17 @@ public final class SQLiteStorageAdapterQueryTest {
         teardown();
         this.adapter = TestStorageAdapter.create(
                 com.amplifyframework.testmodels.phonecall.AmplifyModelProvider.getInstance()
+        );
+    }
+
+    /**
+     * Remove any old database files, and then re-provision a new storage adapter,
+     * that is able to store the Blog CPK family of models.
+     */
+    public void setupForBlogCPKModel() {
+        teardown();
+        this.adapter = TestStorageAdapter.create(
+                com.amplifyframework.testmodels.cpk.AmplifyModelProvider.getInstance()
         );
     }
 
@@ -223,6 +241,346 @@ public final class SQLiteStorageAdapterQueryTest {
 
         final List<Call> phoneCalls = adapter.query(Call.class);
         assertTrue(phoneCalls.contains(phoneCall));
+    }
+
+    /**
+     * Test that querying the saved item with multiple paths for foreign keys to the same
+     * model correctly forms the where clause and returns expected data.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore.
+     */
+    @Test
+    public void querySavedDataWithMultipleJoinPaths() throws DataStoreException {
+
+        final String blogOwnerId = UUID.randomUUID().toString();
+        final String blogId = UUID.randomUUID().toString();
+        final String postId = UUID.randomUUID().toString();
+
+        final BlogOwner3 blogOwner = BlogOwner3.builder()
+                .name("Sample Blog")
+                .id(blogOwnerId)
+                .build();
+
+        final Blog3 blog = Blog3.builder()
+                .name("Sample Blog")
+                .id(blogId)
+                .owner(blogOwner)
+                .build();
+
+        final Post2 post = Post2.builder()
+                .title("Placeholder title")
+                .status(PostStatus.ACTIVE)
+                .rating(5)
+                .id(postId)
+                .blog(blog)
+                .blogOwner(blogOwner)
+                .build();
+
+        adapter.save(blogOwner);
+        adapter.save(blog);
+        adapter.save(post);
+
+        final List<Post2> posts = adapter.query(Post2.class,
+                Where.matches(Post2.BLOG_OWNER.eq(blogOwnerId)));
+        assertTrue(posts.contains(post));
+    }
+
+    /**
+     * Test that querying the saved item with multiple paths for foreign keys to the same
+     * model with missing data for intermediate model in join path correctly forms
+     * the where clause and returns expected data.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
+     */
+    @Test
+    public void querySavedDataWithMultipleJoinWithMissingDataForIntermediateJoinPath()
+            throws DataStoreException {
+
+        final String blogOwnerAlphaId = UUID.randomUUID().toString();
+        final String blogOwnerBetaId = UUID.randomUUID().toString();
+        final String blogOwnerGammaId = UUID.randomUUID().toString();
+
+        final String alphaPostId = UUID.randomUUID().toString();
+        final String betaPostId = UUID.randomUUID().toString();
+        final String gammaPostId = UUID.randomUUID().toString();
+
+        final BlogOwner3 blogOwnerAlpha = BlogOwner3.builder()
+                .name("Alpha")
+                .id(blogOwnerAlphaId)
+                .build();
+
+        final BlogOwner3 blogOwnerBeta = BlogOwner3.builder()
+                .name("Beta")
+                .id(blogOwnerBetaId)
+                .build();
+
+        final BlogOwner3 blogOwnerGamma = BlogOwner3.builder()
+                .name("Gamma")
+                .id(blogOwnerGammaId)
+                .build();
+
+        final Post2 postByAlpha = Post2.builder()
+                .title("Alpha Post")
+                .status(PostStatus.ACTIVE)
+                .rating(5)
+                .id(alphaPostId)
+                .blogOwner(blogOwnerAlpha)
+                .build();
+
+        final Post2 postByBeta = Post2.builder()
+                .title("Beta Post")
+                .status(PostStatus.ACTIVE)
+                .rating(5)
+                .id(betaPostId)
+                .blogOwner(blogOwnerBeta)
+                .build();
+
+        final Post2 postByGamma = Post2.builder()
+                .title("Gamma Post")
+                .status(PostStatus.ACTIVE)
+                .rating(5)
+                .id(gammaPostId)
+                .blogOwner(blogOwnerGamma)
+                .build();
+
+        adapter.save(blogOwnerAlpha);
+        adapter.save(blogOwnerBeta);
+        adapter.save(blogOwnerGamma);
+        adapter.save(postByAlpha);
+        adapter.save(postByBeta);
+        adapter.save(postByGamma);
+
+        List<Post2> posts = adapter.query(Post2.class,
+                Where.matches(Post2.BLOG_OWNER.eq(blogOwnerAlphaId)));
+        assertEquals(1, posts.size());
+        assertTrue(posts.contains(postByAlpha));
+
+        posts = adapter.query(Post2.class,
+                Where.matches(Post2.BLOG_OWNER.eq(blogOwnerBetaId)));
+        assertEquals(1, posts.size());
+        assertTrue(posts.contains(postByBeta));
+
+        posts = adapter.query(Post2.class,
+                Where.matches(Post2.BLOG_OWNER.eq(blogOwnerGammaId)));
+        assertEquals(1, posts.size());
+        assertTrue(posts.contains(postByGamma));
+
+    }
+
+    /**
+     * Test that querying the saved item with multiple paths for foreign keys to the same
+     * model along with Multiple conditions correctly forms the where clause and returns expected
+     * data.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore.
+     */
+    @Test
+    public void querySavedDataWithMultipleJoinPathsWithMultipleConditions() throws DataStoreException {
+
+        final String blogOwnerId = UUID.randomUUID().toString();
+        final String blogId = UUID.randomUUID().toString();
+        final String postId = UUID.randomUUID().toString();
+
+        final BlogOwner3 blogOwner = BlogOwner3.builder()
+                .name("Sample BlogOwner")
+                .id(blogOwnerId)
+                .build();
+
+        final Blog3 blog = Blog3.builder()
+                .name("Sample Blog")
+                .id(blogId)
+                .owner(blogOwner)
+                .build();
+
+        final Post2 post = Post2.builder()
+                .title("Placeholder title")
+                .status(PostStatus.ACTIVE)
+                .rating(5)
+                .id(postId)
+                .blog(blog)
+                .blogOwner(blogOwner)
+                .build();
+
+        adapter.save(blogOwner);
+        adapter.save(blog);
+        adapter.save(post);
+
+        final List<Post2> posts = adapter.query(Post2.class,
+                Where.matches(Post2.BLOG_OWNER.eq(blogOwnerId).and(Post2.RATING.gt(4).
+                        and(Post2.STATUS.eq(PostStatus.ACTIVE)))));
+        assertTrue(posts.contains(post));
+    }
+
+    /**
+     * Test that querying the saved item with multiple paths for foreign keys to the same
+     * model with Custom Primary Key correctly forms the where clause
+     * and returns expected data.
+     * @throws AmplifyException On unexpected failure manipulating items in/out of DataStore.
+     */
+    @Test
+    public void querySavedDataWithCPK() throws AmplifyException {
+        setupForBlogCPKModel();
+        final String blogOwnerId = UUID.randomUUID().toString();
+        final String blogId = UUID.randomUUID().toString();
+        final String postId = UUID.randomUUID().toString();
+
+        final BlogOwnerCPK blogOwner = BlogOwnerCPK.builder()
+                .id(blogOwnerId)
+                .name("Sample BlogOwner")
+                .build();
+
+        final BlogCPK blog = BlogCPK.builder()
+                .id(blogId)
+                .name("Sample Blog")
+                .owner(blogOwner)
+                .build();
+
+        final PostCPK post = PostCPK.builder()
+                .id(postId)
+                .title("Placeholder title")
+                .rating(5)
+                .blogOwner(blogOwner)
+                 .blog(blog)
+                .build();
+
+        adapter.save(blogOwner);
+        adapter.save(blog);
+        adapter.save(post);
+
+        // Basic CPK Query
+        final List<PostCPK> posts = adapter.query(PostCPK.class,
+                Where.identifier(PostCPK.class, new PostCPK.PostCPKIdentifier(postId, "Placeholder title")));
+        assertTrue(posts.contains(post));
+    }
+
+    /**
+     * Tests the retrieval of {@link PostCPK} objects through a query operation without the presence
+     * of intermediate {@link Blog} records in a complex relationship chain. The relationship chain
+     * tested here is {@link BlogOwnerCPK} -> {@link Blog} -> {@link PostCPK} and
+     * {@link BlogOwnerCPK} -> {@link PostCPK}. The test ensures that {@link PostCPK} objects
+     * associated directly with a {@link BlogOwnerCPK} can be successfully retrieved even when
+     * the {@link Blog} records, which are typically part of the path in the relationship, are not
+     * present in the database.
+     * <p>
+     * This test is important for scenarios where the data model allows for direct associations
+     * between {@link BlogOwnerCPK} and {@link PostCPK} without the necessity of linking through
+     * a {@link Blog} record, ensuring data integrity and query capabilities in partial data states.
+     *
+     * @throws AmplifyException if an error occurs during the setup or execution of the query
+     *                         operation, indicating a failure in the data layer or the query
+     *                         construction.
+     */
+    @Test
+    public void querySavedDataWithMultipleJoinPathsWithMultipleConditionsAndCPK() throws AmplifyException {
+        setupForBlogCPKModel();
+        final String blogOwnerId = UUID.randomUUID().toString();
+        final String blogId = UUID.randomUUID().toString();
+        final String postId = UUID.randomUUID().toString();
+
+        final BlogOwnerCPK blogOwner = BlogOwnerCPK.builder()
+                .id(blogOwnerId)
+                .name("Sample BlogOwner")
+                .build();
+
+        final PostCPK post = PostCPK.builder()
+                .id(postId)
+                .title("Placeholder title")
+                .rating(5)
+                .blogOwner(blogOwner)
+                .build();
+        adapter.save(blogOwner);
+        adapter.save(post);
+        String expectedBlogOwnerCPK = "\"" + blogOwnerId + "\"#\"Sample BlogOwner\"";
+        final List<PostCPK> postsByBlogOwner = adapter.query(PostCPK.class,
+                Where.identifier(PostCPK.class, new PostCPK.PostCPKIdentifier(postId, "Placeholder title"))
+                .matches(PostCPK.BLOG_OWNER.eq(expectedBlogOwnerCPK).and(PostCPK.RATING.gt(4)
+                        .and(PostCPK.TITLE.eq("Placeholder title")))));
+        assertTrue(postsByBlogOwner.contains(post));
+    }
+
+    /**
+     * Test that querying the saved item with multiple paths for foreign keys to the same
+     * model with missing data for intermediate model in join path and Custom Primary Key
+     * correctly forms the where clause and returns expected data.
+     * @throws AmplifyException On unexpected failure manipulating items in/out of DataStore
+     */
+    @Test
+    public void queryMultipleJoinWithMultipleRecordsWithMultipleConditionsAndCPK()
+            throws AmplifyException {
+        setupForBlogCPKModel();
+        final String blogOwnerAlphaId = UUID.randomUUID().toString();
+        final String blogOwnerBetaId = UUID.randomUUID().toString();
+        final String blogOwnerGammaId = UUID.randomUUID().toString();
+
+        final String alphaPostId = UUID.randomUUID().toString();
+        final String betaPostId = UUID.randomUUID().toString();
+        final String gammaPostId = UUID.randomUUID().toString();
+
+        final BlogOwnerCPK blogOwnerAlpha = BlogOwnerCPK.builder()
+                .id(blogOwnerAlphaId)
+                .name("Alpha")
+                .build();
+
+        final BlogOwnerCPK blogOwnerBeta = BlogOwnerCPK.builder()
+                .id(blogOwnerBetaId)
+                .name("Beta")
+                .build();
+
+        final BlogOwnerCPK blogOwnerGamma = BlogOwnerCPK.builder()
+                .id(blogOwnerGammaId)
+                .name("Gamma")
+                .build();
+
+        final PostCPK postByAlpha = PostCPK.builder()
+                .id(alphaPostId)
+                .title("Alpha Post")
+                .rating(5)
+                .blogOwner(blogOwnerAlpha)
+                .build();
+
+        final PostCPK postByBeta = PostCPK.builder()
+                .id(betaPostId)
+                .title("Beta Post")
+                .rating(5)
+                .blogOwner(blogOwnerBeta)
+                .build();
+
+        final PostCPK postByGamma = PostCPK.builder()
+                .id(gammaPostId)
+                .title("Gamma Post")
+                .rating(5)
+                .blogOwner(blogOwnerGamma)
+                .build();
+
+        adapter.save(blogOwnerAlpha);
+        adapter.save(blogOwnerBeta);
+        adapter.save(blogOwnerGamma);
+        adapter.save(postByAlpha);
+        adapter.save(postByBeta);
+        adapter.save(postByGamma);
+
+        String expectedAlphaBlogOwnerCPK = "\"" + blogOwnerAlphaId + "\"#\"Alpha\"";
+        String expectedBetaBlogOwnerCPK = "\"" + blogOwnerBetaId + "\"#\"Beta\"";
+        String expectedGammaBlogOwnerCPK = "\"" + blogOwnerGammaId + "\"#\"Gamma\"";
+
+        List<PostCPK> posts = adapter.query(PostCPK.class,
+                Where.identifier(PostCPK.class, new PostCPK.PostCPKIdentifier(alphaPostId, "Alpha Post"))
+                        .matches(PostCPK.BLOG_OWNER.eq(expectedAlphaBlogOwnerCPK).and(PostCPK.RATING.gt(4)
+                        .and(PostCPK.TITLE.eq("Alpha Post")))));
+        assertEquals(1, posts.size());
+        assertTrue(posts.contains(postByAlpha));
+
+        posts = adapter.query(PostCPK.class,
+                Where.identifier(PostCPK.class, new PostCPK.PostCPKIdentifier(betaPostId, "Beta Post"))
+                        .matches(PostCPK.BLOG_OWNER.eq(expectedBetaBlogOwnerCPK).and(PostCPK.RATING.gt(4)
+                        .and(PostCPK.TITLE.eq("Beta Post")))));
+        assertEquals(1, posts.size());
+        assertTrue(posts.contains(postByBeta));
+
+        posts = adapter.query(PostCPK.class,
+                Where.identifier(PostCPK.class, new PostCPK.PostCPKIdentifier(gammaPostId, "Gamma Post"))
+                        .matches(PostCPK.BLOG_OWNER.eq(expectedGammaBlogOwnerCPK).and(PostCPK.RATING.gt(4)
+                        .and(PostCPK.TITLE.eq("Gamma Post")))));
+        assertEquals(1, posts.size());
+        assertTrue(posts.contains(postByGamma));
+
     }
 
     /**

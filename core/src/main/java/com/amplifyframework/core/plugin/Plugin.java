@@ -21,8 +21,10 @@ import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.annotations.InternalAmplifyApi;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.category.CategoryTypeable;
+import com.amplifyframework.core.configuration.AmplifyOutputsData;
 
 import org.json.JSONObject;
 
@@ -65,6 +67,28 @@ public interface Plugin<E> extends CategoryTypeable {
      * @throws AmplifyException an error is encountered during configuration.
      */
     void configure(JSONObject pluginConfiguration, @NonNull Context context) throws AmplifyException;
+
+    /**
+     * Configure the plugin with parsed AmplifyOutputs object. A
+     * plugin may or may not require plugin configuration, so see
+     * the documentation for details.
+     *
+     * This hook provides a good opportunity to instantiate resources.
+     * Any long-lived initialization should take place in {@link #initialize(Context)}, instead.
+     * @param configuration The AmplifyOutputs object
+     * @param context An Android Context
+     * @throws AmplifyException an error is encountered during configuration.
+     */
+    @InternalAmplifyApi
+    default void configure(
+        @NonNull AmplifyOutputsData configuration,
+        @NonNull Context context
+    ) throws AmplifyException {
+        throw new AmplifyException(
+            "This plugin version does not support the Gen2 configuration format",
+            "Use a newer version of this plugin that has support for the Amplify Gen2 configuration format"
+        );
+    }
 
     /**
      * Initializes the plugin.

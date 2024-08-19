@@ -1,0 +1,126 @@
+public final class com/amplifyframework/predictions/tensorflow/BuildConfig {
+	public static final field BUILD_TYPE Ljava/lang/String;
+	public static final field DEBUG Z
+	public static final field LIBRARY_PACKAGE_NAME Ljava/lang/String;
+	public static final field VERSION_NAME Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public final class com/amplifyframework/predictions/tensorflow/TensorFlowPredictionsEscapeHatch {
+	public fun getInterpreters ()Ljava/util/Map;
+}
+
+public final class com/amplifyframework/predictions/tensorflow/TensorFlowPredictionsPlugin : com/amplifyframework/predictions/PredictionsPlugin {
+	public fun <init> ()V
+	public fun configure (Lorg/json/JSONObject;Landroid/content/Context;)V
+	public fun convertTextToSpeech (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/operation/TextToSpeechOperation;
+	public fun convertTextToSpeech (Ljava/lang/String;Lcom/amplifyframework/predictions/options/TextToSpeechOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/operation/TextToSpeechOperation;
+	public fun getEscapeHatch ()Lcom/amplifyframework/predictions/tensorflow/TensorFlowPredictionsEscapeHatch;
+	public synthetic fun getEscapeHatch ()Ljava/lang/Object;
+	public fun getPluginKey ()Ljava/lang/String;
+	public fun getVersion ()Ljava/lang/String;
+	public fun identify (Lcom/amplifyframework/predictions/models/IdentifyAction;Landroid/graphics/Bitmap;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/operation/IdentifyOperation;
+	public fun identify (Lcom/amplifyframework/predictions/models/IdentifyAction;Landroid/graphics/Bitmap;Lcom/amplifyframework/predictions/options/IdentifyOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/operation/IdentifyOperation;
+	public fun initialize (Landroid/content/Context;)V
+	public fun interpret (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/operation/InterpretOperation;
+	public fun interpret (Ljava/lang/String;Lcom/amplifyframework/predictions/options/InterpretOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/operation/InterpretOperation;
+	public fun translateText (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/operation/TranslateTextOperation;
+	public fun translateText (Ljava/lang/String;Lcom/amplifyframework/predictions/models/LanguageType;Lcom/amplifyframework/predictions/models/LanguageType;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/operation/TranslateTextOperation;
+	public fun translateText (Ljava/lang/String;Lcom/amplifyframework/predictions/models/LanguageType;Lcom/amplifyframework/predictions/models/LanguageType;Lcom/amplifyframework/predictions/options/TranslateTextOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/operation/TranslateTextOperation;
+	public fun translateText (Ljava/lang/String;Lcom/amplifyframework/predictions/options/TranslateTextOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/operation/TranslateTextOperation;
+}
+
+public final class com/amplifyframework/predictions/tensorflow/adapter/SentimentTypeAdapter {
+	public static fun fromTensorFlow (Ljava/lang/String;)Lcom/amplifyframework/predictions/models/SentimentType;
+}
+
+public abstract interface class com/amplifyframework/predictions/tensorflow/asset/Loadable {
+	public abstract fun getValue ()Ljava/lang/Object;
+	public abstract fun isLoaded ()Z
+	public abstract fun load ()V
+	public abstract fun onLoaded (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/tensorflow/asset/Loadable;
+	public abstract fun onUnloaded (Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/tensorflow/asset/Loadable;
+	public abstract fun unload ()V
+}
+
+public class com/amplifyframework/predictions/tensorflow/asset/TextClassificationDictionary : com/amplifyframework/predictions/tensorflow/asset/Loadable {
+	public fun <init> (Landroid/content/Context;)V
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/util/Map;
+	public fun isLoaded ()Z
+	public fun load ()V
+	public synthetic fun onLoaded (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/tensorflow/asset/Loadable;
+	public fun onLoaded (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/tensorflow/asset/TextClassificationDictionary;
+	public synthetic fun onUnloaded (Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/tensorflow/asset/Loadable;
+	public fun onUnloaded (Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/tensorflow/asset/TextClassificationDictionary;
+	public fun tokenizeInputText (Ljava/lang/String;)[[F
+	public fun unload ()V
+}
+
+public class com/amplifyframework/predictions/tensorflow/asset/TextClassificationLabels : com/amplifyframework/predictions/tensorflow/asset/Loadable {
+	public fun <init> (Landroid/content/Context;)V
+	public fun get (I)Ljava/lang/String;
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Ljava/util/List;
+	public fun isLoaded ()Z
+	public fun load ()V
+	public synthetic fun onLoaded (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/tensorflow/asset/Loadable;
+	public fun onLoaded (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/tensorflow/asset/TextClassificationLabels;
+	public synthetic fun onUnloaded (Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/tensorflow/asset/Loadable;
+	public fun onUnloaded (Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/tensorflow/asset/TextClassificationLabels;
+	public fun size ()I
+	public fun unload ()V
+}
+
+public class com/amplifyframework/predictions/tensorflow/asset/TextClassificationModel : com/amplifyframework/predictions/tensorflow/asset/Loadable {
+	public fun <init> (Landroid/content/Context;)V
+	public synthetic fun getValue ()Ljava/lang/Object;
+	public fun getValue ()Lorg/tensorflow/lite/Interpreter;
+	public fun isLoaded ()Z
+	public fun load ()V
+	public synthetic fun onLoaded (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/tensorflow/asset/Loadable;
+	public fun onLoaded (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/tensorflow/asset/TextClassificationModel;
+	public synthetic fun onUnloaded (Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/tensorflow/asset/Loadable;
+	public fun onUnloaded (Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)Lcom/amplifyframework/predictions/tensorflow/asset/TextClassificationModel;
+	public fun run (Ljava/lang/Object;Ljava/lang/Object;)V
+	public fun unload ()V
+}
+
+public final class com/amplifyframework/predictions/tensorflow/operation/TensorFlowIdentifyOperation : com/amplifyframework/predictions/operation/IdentifyOperation {
+	public fun <init> (Lcom/amplifyframework/predictions/models/IdentifyAction;Lcom/amplifyframework/core/Consumer;)V
+	public fun start ()V
+}
+
+public final class com/amplifyframework/predictions/tensorflow/operation/TensorFlowInterpretOperation : com/amplifyframework/predictions/operation/InterpretOperation {
+	public fun <init> (Lcom/amplifyframework/predictions/tensorflow/service/TensorFlowPredictionsService;Ljava/util/concurrent/ExecutorService;Lcom/amplifyframework/predictions/tensorflow/request/TensorFlowTextClassificationRequest;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun start ()V
+}
+
+public final class com/amplifyframework/predictions/tensorflow/operation/TensorFlowTextToSpeechOperation : com/amplifyframework/predictions/operation/TextToSpeechOperation {
+	public fun <init> (Lcom/amplifyframework/core/Consumer;)V
+	public fun start ()V
+}
+
+public final class com/amplifyframework/predictions/tensorflow/operation/TensorFlowTranslateTextOperation : com/amplifyframework/predictions/operation/TranslateTextOperation {
+	public fun <init> (Lcom/amplifyframework/core/Consumer;)V
+	public fun start ()V
+}
+
+public final class com/amplifyframework/predictions/tensorflow/request/TensorFlowTextClassificationRequest {
+	public fun <init> (Ljava/lang/String;)V
+	public fun getText ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/predictions/tensorflow/request/TensorFlowUnsupportedRequest {
+	public fun <init> ()V
+	public fun getError ()Lcom/amplifyframework/predictions/PredictionsException;
+}
+
+public final class com/amplifyframework/predictions/tensorflow/service/TensorFlowPredictionsService {
+	public fun <init> (Landroid/content/Context;)V
+	public fun classify (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun getInterpreters ()Ljava/util/Map;
+	public fun loadAssets ()V
+	public fun terminate ()V
+}
+

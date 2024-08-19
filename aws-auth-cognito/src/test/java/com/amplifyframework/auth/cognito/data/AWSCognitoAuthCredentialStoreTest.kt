@@ -16,10 +16,10 @@
 package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
+import com.amplifyframework.auth.cognito.AuthConfiguration
 import com.amplifyframework.core.store.KeyValueRepository
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.IdentityPoolConfiguration
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
@@ -31,7 +31,6 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.Assert
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
@@ -73,7 +72,7 @@ class AWSCognitoAuthCredentialStoreTest {
             mockFactory.create(
                 mockContext,
                 keyValueRepoID,
-                true,
+                true
             )
         ).thenReturn(mockKeyValue)
 
@@ -146,30 +145,6 @@ class AWSCognitoAuthCredentialStoreTest {
         assertEquals(AmplifyCredential.Empty, store.retrieveCredential())
     }
 
-    @Test
-    @Ignore("fix as per new store format")
-    fun testCognitoUserPoolTokensIsReturnedAsNullIfAllItsFieldsAreNull() {
-        val credential = getCredential()
-
-        setStoreCredentials(credential)
-
-        val actual = persistentStore.retrieveCredential()
-
-        Assert.assertEquals(AmplifyCredential.Empty, actual)
-    }
-
-    @Test
-    @Ignore("fix as per new store format")
-    fun testAWSCredentialsIsReturnedAsNullIfAllItsFieldsAreNull() {
-        val credential = getCredential()
-
-        setStoreCredentials(credential)
-
-        val actual = persistentStore.retrieveCredential()
-
-        Assert.assertEquals(AmplifyCredential.Empty, actual)
-    }
-
     private fun setStoreCredentials(credential: AmplifyCredential) {
         Mockito.`when`(mockKeyValue.get(Mockito.anyString())).thenReturn(serialized(credential))
 
@@ -203,7 +178,7 @@ class AWSCognitoAuthCredentialStoreTest {
                 "username",
                 Date(0),
                 SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
-                CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", expiration),
+                CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", expiration)
             ),
             "identityPool",
             AWSCredentials(

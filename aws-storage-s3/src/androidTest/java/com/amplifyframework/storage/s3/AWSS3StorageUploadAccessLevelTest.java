@@ -47,6 +47,7 @@ import static com.amplifyframework.storage.s3.UserCredentials.IdentityIdSource;
  * Instrumentation test to confirm that Storage Upload behaves
  * correctly with regards to the provided storage access level.
  */
+@SuppressWarnings("deprecation")
 public final class AWSS3StorageUploadAccessLevelTest {
     private static final long UPLOAD_SIZE = 100L;
 

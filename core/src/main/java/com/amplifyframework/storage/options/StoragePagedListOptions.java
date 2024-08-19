@@ -24,16 +24,19 @@ import androidx.annotation.NonNull;
 public class StoragePagedListOptions extends StorageOptions {
     private int pageSize;
     private String nextToken;
+    private SubpathStrategy subpathStrategy;
 
     /**
      * Constructs a StoragePagedListOptions instance with the
      * attributes from builder instance.
      * @param builder the builder with configured attributes
      */
+    @SuppressWarnings("deprecation")
     protected StoragePagedListOptions(Builder<?> builder) {
         super(builder.getAccessLevel(), builder.getTargetIdentityId());
         pageSize = builder.pageSize;
         nextToken = builder.nextToken;
+        subpathStrategy = builder.subpathStrategy;
     }
 
     /**
@@ -62,6 +65,14 @@ public class StoragePagedListOptions extends StorageOptions {
     }
 
     /**
+     * Get the SubpathStrategy.
+     * @return the SubpathStrategy to include/exclude sub-paths.
+     */
+    public SubpathStrategy getSubpathStrategy() {
+        return subpathStrategy;
+    }
+
+    /**
      * Used to construct instance of StorageListOptions via
      * fluent configuration methods.
      * @param <B> the type of builder to chain with
@@ -72,6 +83,7 @@ public class StoragePagedListOptions extends StorageOptions {
 
         private int pageSize;
         private String nextToken;
+        private SubpathStrategy subpathStrategy;
 
         /**
          * Set page size for the request.
@@ -85,7 +97,7 @@ public class StoragePagedListOptions extends StorageOptions {
 
         /**
          * Set next continuation token.
-         * @param nextToken next contiuation token to be passed to S3.
+         * @param nextToken next continuation token to be passed to S3.
          * @return Current Builder instance for fluent chaining
          */
         public B setNextToken(String nextToken) {
@@ -105,6 +117,16 @@ public class StoragePagedListOptions extends StorageOptions {
         @NonNull
         public StoragePagedListOptions build() {
             return new StoragePagedListOptions(this);
+        }
+
+        /**
+         * Set the SubpathStrategy.
+         * @param subpathStrategy strategy to include/exclude sub-paths.
+         * @return Current Builder instance for fluent chaining
+         */
+        public B setSubpathStrategy(SubpathStrategy subpathStrategy) {
+            this.subpathStrategy = subpathStrategy;
+            return (B) this;
         }
     }
 }

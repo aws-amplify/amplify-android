@@ -20,12 +20,17 @@ import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.deleteObject
 import aws.sdk.kotlin.services.s3.listObjectsV2
 import aws.sdk.kotlin.services.s3.model.GetObjectRequest
+import aws.sdk.kotlin.services.s3.model.HeadObjectRequest
+import aws.sdk.kotlin.services.s3.model.NotFound
 import aws.sdk.kotlin.services.s3.paginators.listObjectsV2Paginated
 import aws.sdk.kotlin.services.s3.presigners.presignGetObject
 import aws.sdk.kotlin.services.s3.withConfig
 import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.storage.ObjectMetadata
+import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.StorageItem
+import com.amplifyframework.storage.options.SubpathStrategy
+import com.amplifyframework.storage.options.SubpathStrategy.Exclude
 import com.amplifyframework.storage.result.StorageListResult
 import com.amplifyframework.storage.s3.transfer.TransferManager
 import com.amplifyframework.storage.s3.transfer.TransferObserver
@@ -83,6 +88,30 @@ internal class AWSS3StorageService(
             }
         }
         return URL(presignUrlRequest.url.toString())
+    }
+
+    /**
+     * Validate if S3 object exists for the given key.
+     * Throws StorageException if NoSuchKey S3 client exception is caught.
+     * @param serviceKey S3 service key
+     */
+    override fun validateObjectExists(serviceKey: String) {
+        try {
+            runBlocking {
+                s3Client.headObject(
+                    HeadObjectRequest {
+                        bucket = s3BucketName
+                        key = serviceKey
+                    }
+                )
+            }
+        } catch (ex: NotFound) {
+            throw StorageException(
+                "Unable to generate URL for non-existent path: $serviceKey",
+                ex,
+                "Please ensure the path is valid or the object has been uploaded"
+            )
+        }
     }
 
     /**
@@ -164,13 +193,14 @@ internal class AWSS3StorageService(
             }
             result.collect {
                 it.contents?.forEach { value ->
-                    val key = value.key
+                    val serviceKey = value.key
                     val lastModified = value.lastModified
                     val eTag = value.eTag
-                    if (key != null && lastModified != null && eTag != null) {
+                    if (serviceKey != null && lastModified != null && eTag != null) {
                         items += StorageItem(
-                            S3Keys.extractAmplifyKey(key, prefix),
-                            value.size,
+                            serviceKey,
+                            S3Keys.extractAmplifyKey(serviceKey, prefix),
+                            value.size ?: 0,
                             Date.from(Instant.ofEpochMilli(lastModified.epochSeconds)),
                             eTag,
                             null
@@ -191,13 +221,14 @@ internal class AWSS3StorageService(
                 this.continuationToken = nextToken
             }
             val items = result.contents?.mapNotNull { value ->
-                val key = value.key
+                val serviceKey = value.key
                 val lastModified = value.lastModified
                 val eTag = value.eTag
-                if (key != null && lastModified != null && eTag != null) {
+                if (serviceKey != null && lastModified != null && eTag != null) {
                     StorageItem(
-                        S3Keys.extractAmplifyKey(key, prefix),
-                        value.size,
+                        serviceKey,
+                        S3Keys.extractAmplifyKey(serviceKey, prefix),
+                        value.size ?: 0,
                         Date.from(Instant.ofEpochMilli(lastModified.epochSeconds)),
                         eTag,
                         null
@@ -207,6 +238,131 @@ internal class AWSS3StorageService(
                 }
             }
             StorageListResult.fromItems(items, result.nextContinuationToken)
+        }
+    }
+
+    /**
+     * List items inside an S3 path.
+     * @param path The path to list items from
+     * @param prefix The prefix to the path
+     * @param subPathStrategy The SubpathStrategy to include/exclude sub-paths
+     * @return A list of parsed items
+     */
+    override fun listFiles(path: String, prefix: String, subPathStrategy: SubpathStrategy?): StorageListResult {
+        return runBlocking {
+            val items = mutableListOf<StorageItem>()
+            val excludedSubPaths = mutableListOf<String>()
+            val delimiter: String? = (subPathStrategy as? Exclude)?.delimiter
+            val result = s3Client.listObjectsV2Paginated {
+                this.bucket = s3BucketName
+                this.prefix = path
+                this.delimiter = delimiter
+            }
+            result.collect {
+                it.contents?.forEach { value ->
+                    val serviceKey = value.key
+                    val lastModified = value.lastModified
+                    val eTag = value.eTag
+                    if (serviceKey != null && lastModified != null && eTag != null) {
+                        items += StorageItem(
+                            serviceKey,
+                            S3Keys.extractAmplifyKey(serviceKey, prefix),
+                            value.size ?: 0,
+                            Date.from(Instant.ofEpochMilli(lastModified.epochSeconds)),
+                            eTag,
+                            null
+                        )
+                    }
+                }
+                it.commonPrefixes?.forEach {
+                    val subpath = it.prefix
+                    if (subpath != null) {
+                        excludedSubPaths.add(subpath)
+                    }
+                }
+            }
+
+            StorageListResult.fromItems(items, null, excludedSubPaths)
+        }
+    }
+
+    override fun listFiles(
+        path: String,
+        prefix: String,
+        pageSize: Int,
+        nextToken: String?,
+        subPathStrategy: SubpathStrategy?
+    ): StorageListResult {
+        return runBlocking {
+            val delimiter = (subPathStrategy as? Exclude)?.delimiter
+            val result = s3Client.listObjectsV2 {
+                this.bucket = s3BucketName
+                this.prefix = path
+                this.maxKeys = pageSize
+                this.continuationToken = nextToken
+                this.delimiter = delimiter
+            }
+            val items = result.contents?.mapNotNull { value ->
+                val serviceKey = value.key
+                val lastModified = value.lastModified
+                val eTag = value.eTag
+                if (serviceKey != null && lastModified != null && eTag != null) {
+                    StorageItem(
+                        serviceKey,
+                        S3Keys.extractAmplifyKey(serviceKey, prefix),
+                        value.size ?: 0,
+                        Date.from(Instant.ofEpochMilli(lastModified.epochSeconds)),
+                        eTag,
+                        null
+                    )
+                } else {
+                    null
+                }
+            }
+
+            val subPaths = result.commonPrefixes?.mapNotNull { it.prefix }
+            StorageListResult.fromItems(items, result.nextContinuationToken, subPaths)
+        }
+    }
+
+    /**
+     * This method is used to list files when StoragePath was used.
+     * When StoragePath is used, we provide the full serviceKey for both StorageItem.key and StorageItem.path
+     */
+    fun listFiles(
+        path: String,
+        pageSize: Int,
+        nextToken: String?,
+        subPathStrategy: SubpathStrategy?
+    ): StorageListResult {
+        return runBlocking {
+            val delimiter = (subPathStrategy as? Exclude)?.delimiter
+            val result = s3Client.listObjectsV2 {
+                this.bucket = s3BucketName
+                this.prefix = path
+                this.maxKeys = pageSize
+                this.continuationToken = nextToken
+                this.delimiter = delimiter
+            }
+            val items = result.contents?.mapNotNull { value ->
+                val serviceKey = value.key
+                val lastModified = value.lastModified
+                val eTag = value.eTag
+                if (serviceKey != null && lastModified != null && eTag != null) {
+                    StorageItem(
+                        serviceKey,
+                        serviceKey,
+                        value.size ?: 0,
+                        Date.from(Instant.ofEpochMilli(lastModified.epochSeconds)),
+                        eTag,
+                        null
+                    )
+                } else {
+                    null
+                }
+            }
+            val subPaths = result.commonPrefixes?.mapNotNull { it.prefix }
+            StorageListResult.fromItems(items, result.nextContinuationToken, subPaths)
         }
     }
 

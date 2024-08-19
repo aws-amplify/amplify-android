@@ -15,6 +15,7 @@
 
 package com.amplifyframework.statemachine.codegen.states
 
+import com.amplifyframework.auth.cognito.exceptions.service.UserCancelledException
 import com.amplifyframework.auth.cognito.isAuthEvent
 import com.amplifyframework.auth.cognito.isSignOutEvent
 import com.amplifyframework.statemachine.State
@@ -86,7 +87,15 @@ internal sealed class SignOutState : State {
                     }
                     is SignOutEvent.EventType.UserCancelled -> {
                         val action = signOutActions.userCancelledAction(signOutEvent)
-                        StateResolution(Error(Exception("User Cancelled")), listOf(action))
+                        StateResolution(
+                            Error(
+                                UserCancelledException(
+                                    "The user cancelled the sign-out attempt, so it did not complete.",
+                                    "To recover: catch this error, and attempt the sign out again."
+                                )
+                            ),
+                            listOf(action)
+                        )
                     }
                     else -> defaultResolution
                 }

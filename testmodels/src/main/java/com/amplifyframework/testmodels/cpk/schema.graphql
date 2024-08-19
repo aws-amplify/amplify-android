@@ -42,3 +42,33 @@ type IntModelWithIdentifier @model {
 type StringModelWithIdentifier @model {
   customKey: String! @primaryKey
 }
+
+type BlogOwnerCPK @model
+{
+  id: ID!  @primaryKey(sortKeyFields: ["name"])
+  name: String!
+  blogs: [BlogCPK] @hasMany(indexName: "byBlogOwner3", fields: ["id"])
+  posts: [PostCPK] @hasMany(indexName: "byBlogOwner3", fields: ["id"])
+  createdAt: AWSDateTime
+}
+
+type BlogCPK @model {
+  id: ID! @primaryKey(sortKeyFields: ["name"])
+  blogOwnerID: ID! @index(name: "byBlogOwner3")
+  name: String!
+  createdAt: AWSDateTime
+  posts: [PostCPK] @hasMany(indexName: "byBlog3", fields: ["id"])
+  owner: BlogOwnerCPK @belongsTo(fields: ["blogOwnerID"])
+}
+
+type PostCPK @model {
+  id: ID! @primaryKey(sortKeyFields: ["title"])
+  blogID: ID! @index(name: "byBlog3")
+  blogOwnerID: ID! @index(name: "byBlogOwner3")
+  title: String!
+  rating: Int!
+  createdAt: AWSDateTime
+  blog: BlogCPK @belongsTo(fields: ["blogID"])
+  blogOwner: BlogOwnerCPK @belongsTo(fields: ["blogOwnerID"])
+}
+

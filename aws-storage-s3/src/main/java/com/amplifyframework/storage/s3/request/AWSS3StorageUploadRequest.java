@@ -27,10 +27,14 @@ import java.util.Map;
 /**
  * Parameters to provide to S3 that describe a request to upload.
  * @param <L> object to upload (e.g. File or InputStream)
+ * @deprecated  this class is only constructed internally through deprecated transfer methods.
  */
+@Deprecated
 public final class AWSS3StorageUploadRequest<L> {
     private final String key;
     private final L local;
+
+    @SuppressWarnings("deprecation")
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
     private final String contentType;
@@ -53,6 +57,7 @@ public final class AWSS3StorageUploadRequest<L> {
      * @param metadata Metadata for the object to store
      * @param useAccelerateEndpoint flag to use acceleration endpoint.
      */
+    @SuppressWarnings("deprecation")
     public AWSS3StorageUploadRequest(
             @NonNull String key,
             @NonNull L local,
@@ -99,6 +104,7 @@ public final class AWSS3StorageUploadRequest<L> {
      * @return Access level
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public StorageAccessLevel getAccessLevel() {
         return accessLevel;
     }

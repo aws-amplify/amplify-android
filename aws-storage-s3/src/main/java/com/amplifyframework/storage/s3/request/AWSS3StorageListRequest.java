@@ -19,17 +19,22 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.storage.StorageAccessLevel;
+import com.amplifyframework.storage.options.SubpathStrategy;
 import com.amplifyframework.storage.s3.options.AWSS3StoragePagedListOptions;
 
 /**
  * Parameters to provide to S3 that describe a request to list files.
+ * @deprecated  this class is only constructed internally through deprecated transfer methods.
  */
+@Deprecated
 public final class AWSS3StorageListRequest {
     private final String path;
+    @SuppressWarnings("deprecation")
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
     private final int pageSize;
     private final String nextToken;
+    private final SubpathStrategy subpathStrategy;
 
     /**
      * Constructs a new AWSS3StorageListRequest.
@@ -52,6 +57,7 @@ public final class AWSS3StorageListRequest {
         this.targetIdentityId = targetIdentityId;
         this.pageSize = AWSS3StoragePagedListOptions.ALL_PAGE_SIZE;
         this.nextToken = null;
+        this.subpathStrategy = null;
     }
 
     /**
@@ -66,6 +72,7 @@ public final class AWSS3StorageListRequest {
      * @param pageSize number of keys to be retrieved from s3
      * @param nextToken next continuation token to be passed to s3
      */
+    @SuppressWarnings("deprecation")
     public AWSS3StorageListRequest(
         @NonNull String path,
         @NonNull StorageAccessLevel accessLevel,
@@ -78,6 +85,37 @@ public final class AWSS3StorageListRequest {
         this.targetIdentityId = targetIdentityId;
         this.pageSize = pageSize;
         this.nextToken = nextToken;
+        this.subpathStrategy = null;
+    }
+
+    /**
+     * Constructs a new AWSS3StorageListRequest.
+     * Although this has public access, it is intended for internal use and should not be used directly by host
+     * applications. The behavior of this may change without warning.
+     *
+     * @param path the path in S3 to list items from
+     * @param accessLevel Storage access level
+     * @param targetIdentityId If set, this should override the current user's identity ID.
+     *                         If null, the operation will fetch the current identity ID.
+     * @param pageSize number of keys to be retrieved from s3
+     * @param nextToken next continuation token to be passed to s3
+     * @param subpathStrategy strategy to include or exclude sub-paths in s3 path
+     */
+    @SuppressWarnings("deprecation")
+    public AWSS3StorageListRequest(
+            @NonNull String path,
+            @NonNull StorageAccessLevel accessLevel,
+            @Nullable String targetIdentityId,
+            int pageSize,
+            @Nullable String nextToken,
+            @Nullable SubpathStrategy subpathStrategy
+    ) {
+        this.path = path;
+        this.accessLevel = accessLevel;
+        this.targetIdentityId = targetIdentityId;
+        this.pageSize = pageSize;
+        this.nextToken = nextToken;
+        this.subpathStrategy = subpathStrategy;
     }
 
     /**
@@ -85,6 +123,7 @@ public final class AWSS3StorageListRequest {
      * @return Access level
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public StorageAccessLevel getAccessLevel() {
         return accessLevel;
     }
@@ -122,6 +161,15 @@ public final class AWSS3StorageListRequest {
     @Nullable
     public String getNextToken() {
         return nextToken;
+    }
+
+    /**
+     * Get SubpathStrategy to include/exclude sub-paths.
+     * @return SubpathStrategy to include/exclude sub-paths.
+     * */
+    @Nullable
+    public SubpathStrategy getSubpathStrategy() {
+        return subpathStrategy;
     }
 }
 

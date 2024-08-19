@@ -53,6 +53,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
@@ -125,16 +126,43 @@ final class SyncProcessor {
             TopologicalOrdering.forRegisteredModels(schemaRegistry, modelProvider);
         Collections.sort(modelSchemas, ordering::compare);
         ArrayList<String> toBeSyncedModelArray = new ArrayList<>();
+        boolean canSyncConcurrently = true;
         for (ModelSchema schema : modelSchemas) {
             //Check to see if query predicate for this schema is not equal to none. This means customer does
             // not want to sync the data for this model.
             if (!QueryPredicates.none().equals(queryPredicateProvider.getPredicate(schema.getName()))) {
                 hydrationTasks.add(createHydrationTask(schema));
                 toBeSyncedModelArray.add(schema.getName());
+                if (!schema.getAssociations().isEmpty()) {
+                    canSyncConcurrently = false;
+                }
             }
         }
 
-        return Completable.concat(hydrationTasks)
+        int syncMaxConcurrentModels;
+        try {
+            syncMaxConcurrentModels = dataStoreConfigurationProvider
+                    .getConfiguration()
+                    .getSyncMaxConcurrentModels();
+        } catch (DataStoreException exception) {
+            syncMaxConcurrentModels = 1;
+        }
+
+        Completable syncCompletable;
+        if (canSyncConcurrently && syncMaxConcurrentModels > 1) {
+            syncCompletable = Completable.mergeDelayError(
+                    Flowable.fromIterable(hydrationTasks),
+                    syncMaxConcurrentModels
+            );
+        } else {
+            // The reason we don't do mergeDelayError here with maxConcurrency = 1 is because it would create a
+            // behavioral difference. If a failure is encountered in concat, sync immediately stops. This would be
+            // the wrong behavior when concurrency is enabled, but in the single concurrency use case, this matches
+            // previous behavior
+            syncCompletable = Completable.concat(hydrationTasks);
+        }
+
+        return syncCompletable
             .doOnSubscribe(ignore -> {
                 // This is where we trigger the syncQueriesStarted event since
                 // doOnSubscribe means that all upstream hydration tasks
@@ -169,9 +197,7 @@ final class SyncProcessor {
                         !(ErrorInspector.contains(notification.getError(), ApiAuthException.class))
                     )
                     .dematerialize(notification -> notification)
-                    // Flatten to a stream of ModelWithMetadata objects
-                    .concatMap(Flowable::fromIterable)
-                    .concatMapCompletable(item -> merger.merge(item, metricsAccumulator::increment))
+                    .concatMapCompletable(items -> merger.merge(items, metricsAccumulator::increment))
                     .toSingle(() -> lastSyncTime.exists() ? SyncType.DELTA : SyncType.BASE);
             })
             .flatMapCompletable(syncType -> {
@@ -322,8 +348,13 @@ final class SyncProcessor {
         return Single.create(emitter -> {
             Cancelable cancelable = appSync.sync(request, result -> {
                 if (!result.hasData()) {
+                    List<String> errorStrings = result.getErrors().stream()
+                                                    .map(GraphQLResponse.Error::toString)
+                                                    .collect(Collectors.toList());
+                    String errors = String.join(",\n", errorStrings);
+
                     emitter.onError(new DataStoreException.IrRecoverableException(
-                            "Empty response from AppSync.", "Report to AWS team."
+                            "Received errors from AppSync: " + errors, "Report to AWS team."
                     ));
                 } else {
                     if (result.hasErrors()) {

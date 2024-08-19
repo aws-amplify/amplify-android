@@ -33,7 +33,7 @@
                 "recoverySuggestion": "Check whether the given values are correct and the user is authorized to perform the operation.",
                 "cause": {
                     "errorType": "NotAuthorizedException",
-                    "errorMessage": null
+                    "errorMessage": "Error type: Client, Protocol response: (empty response)"
                 }
             }
         }

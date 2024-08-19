@@ -24,6 +24,10 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 
 group = properties["POM_GROUP"].toString()
 
+android {
+    namespace = "com.amplifyframework.analytics.pinpoint"
+}
+
 dependencies {
     implementation(project(":core"))
     implementation(project(":aws-core"))
@@ -41,6 +45,8 @@ dependencies {
     testImplementation(libs.test.androidx.junit)
     testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.kotlin.coroutines)
+    testImplementation(libs.test.kotest.assertions)
+    testImplementation(project(":testutils"))
     testImplementation(project(":aws-analytics-pinpoint"))
 
     androidTestImplementation(project(":testutils"))

@@ -18,7 +18,7 @@ package com.amplifyframework.predictions.aws.http
 import android.os.Build
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
-import aws.smithy.kotlin.runtime.util.Attributes
+import aws.smithy.kotlin.runtime.collections.Attributes
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.BuildConfig
 import com.amplifyframework.core.Consumer
@@ -52,6 +52,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import mockwebserver3.MockResponse
@@ -68,7 +69,6 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -249,6 +249,50 @@ internal class LivenessWebSocketTest {
     }
 
     @Test
+    fun `unknown event-type ignored`() {
+        val webSocket = mockk<WebSocket>(relaxed = true)
+        val livenessWebSocket = createLivenessWebSocket()
+        livenessWebSocket.webSocket = webSocket
+        val event = UnknownEvent()
+        val headers = mapOf(
+            ":event-type" to "UnknownEvent",
+            ":content-type" to "application/json",
+            ":message-type" to "event"
+        )
+
+        val data = json.encodeToString(event)
+        val encodedByteString = LivenessEventStream.encode(data.toByteArray(), headers).array().toByteString()
+
+        livenessWebSocket.webSocketListener.onMessage(mockk(), encodedByteString)
+
+        verify(exactly = 0) { onSessionInformationReceived.accept(any()) }
+        verify(exactly = 0) { onErrorReceived.accept(any()) }
+        verify(exactly = 0) { webSocket.close(any(), any()) }
+    }
+
+    @Test
+    fun `unknown exception-type closes websocket`() {
+        val webSocket = mockk<WebSocket>(relaxed = true)
+        val livenessWebSocket = createLivenessWebSocket()
+        livenessWebSocket.webSocket = webSocket
+        val event = UnknownEvent()
+        val headers = mapOf(
+            ":exception-type" to "UnknownException",
+            ":content-type" to "application/json",
+            ":message-type" to "event"
+        )
+
+        val data = json.encodeToString(event)
+        val encodedByteString = LivenessEventStream.encode(data.toByteArray(), headers).array().toByteString()
+
+        livenessWebSocket.webSocketListener.onMessage(mockk(), encodedByteString)
+
+        verify(exactly = 0) { onSessionInformationReceived.accept(any()) }
+        verify(exactly = 0) { onErrorReceived.accept(any()) }
+        verify(exactly = 1) { webSocket.close(any(), any()) }
+    }
+
+    @Test
     fun `disconnect event stops websocket`() {
         val livenessWebSocket = createLivenessWebSocket()
         livenessWebSocket.webSocket = mockk()
@@ -380,31 +424,6 @@ internal class LivenessWebSocketTest {
         assertEquals("AWS4-HMAC-SHA256", reconnectRequest.url.queryParameter("X-Amz-Algorithm"))
     }
 
-    @Test
-    @Ignore("Need to work on parsing the onMessage byteString from ServerWebSocketListener")
-    fun `sendInitialFaceDetectedEvent test`() {
-    }
-
-    @Test
-    @Ignore("Need to work on parsing the onMessage byteString from ServerWebSocketListener")
-    fun `sendFinalEvent test`() {
-    }
-
-    @Test
-    @Ignore("Need to work on parsing the onMessage byteString from ServerWebSocketListener")
-    fun `sendColorDisplayedEvent test`() {
-    }
-
-    @Test
-    @Ignore("Need to work on parsing the onMessage byteString from ServerWebSocketListener")
-    fun `sendClientInfoEvent test`() {
-    }
-
-    @Test
-    @Ignore("Need to work on parsing the onMessage byteString from ServerWebSocketListener")
-    fun `sendVideoEvent test`() {
-    }
-
     private fun createLivenessWebSocket(
         livenessVersion: String? = null
     ) = LivenessWebSocket(
@@ -449,6 +468,9 @@ class LatchingWebSocketResponseListener(
         openLatch.countDown()
     }
 }
+
+@Serializable
+internal data class UnknownEvent(val name: String = "")
 
 class ServerWebSocketListener : WebSocketListener() {
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {}

@@ -20,7 +20,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.storage.ObjectMetadata;
+import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StorageItem;
+import com.amplifyframework.storage.options.SubpathStrategy;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.s3.transfer.TransferObserver;
 import com.amplifyframework.storage.s3.transfer.TransferRecord;
@@ -35,6 +37,15 @@ import java.util.List;
  * Interface to manage file transfer to and from a registered S3 bucket.
  */
 public interface StorageService {
+
+    /**
+     * Validate if Storage object exists for the given key.
+     * Throws StorageException if object is not does not exist.
+     *
+     * @param serviceKey key to uniquely specify item to generate URL for
+     * @throws StorageException If object does not exist in storage
+     */
+    void validateObjectExists(@NonNull String serviceKey) throws StorageException;
 
     /**
      * Generate pre-signed download URL for an object.
@@ -120,6 +131,38 @@ public interface StorageService {
      * @return A list of parsed items present inside given path
      */
     StorageListResult listFiles(@NonNull String path, @NonNull String prefix, int pageSize, @Nullable String nextToken);
+
+    /**
+     * Returns a list of items from provided path inside the storage.
+     *
+     * @param path path inside storage to inspect for list of items
+     * @param prefix path appended to S3 keys
+     * @param subpathStrategy SubpathStrategy to include/exclude sub-paths
+     * @return A list of parsed items present inside given path
+     */
+    StorageListResult listFiles(
+            @NonNull String path,
+            @NonNull String prefix,
+            @Nullable SubpathStrategy subpathStrategy
+    );
+
+    /**
+     * Returns a list of items from provided path inside the storage.
+     *
+     * @param path path inside storage to inspect for list of items
+     * @param prefix path appended to S3 keys
+     * @param pageSize number of keys to be retrieved from s3
+     * @param nextToken next continuation token to be passed to s3
+     * @param subpathStrategy SubpathStrategy to include/exclude sub-paths
+     * @return A list of parsed items present inside given path
+     */
+    StorageListResult listFiles(
+            @NonNull String path,
+            @NonNull String prefix,
+            int pageSize,
+            @Nullable String nextToken,
+            @Nullable SubpathStrategy subpathStrategy
+    );
 
     /**
      * Delete an object with specific key inside the storage.

@@ -17,6 +17,7 @@ package com.amplifyframework.geo.location
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.amplifyframework.auth.AuthCategory
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.geo.GeoCategory
 import com.amplifyframework.geo.GeoException
@@ -29,24 +30,25 @@ import org.junit.After
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.BeforeClass
 import org.junit.Test
 
 /**
  * Tests various functionalities related to Maps API in [AWSLocationGeoPlugin].
  */
 class MapsApiTest {
-    private var geo: SynchronousGeo? = null
+    private lateinit var geo: SynchronousGeo
+    private lateinit var auth: SynchronousAuth
 
     /**
      * Set up test categories to be used for testing.
      */
     @Before
     fun setUpBeforeTest() {
-        // Auth plugin uses default configuration
-        // Geo plugin uses above auth category to authenticate users
-        val geoPlugin = AWSLocationGeoPlugin()
+        val authPlugin = AWSCognitoAuthPlugin()
+        val authCategory = TestCategory.forPlugin(authPlugin) as AuthCategory
+        val geoPlugin = AWSLocationGeoPlugin(authCategory = authCategory)
         val geoCategory = TestCategory.forPlugin(geoPlugin) as GeoCategory
+        auth = SynchronousAuth.delegatingTo(authPlugin)
         geo = SynchronousGeo.delegatingTo(geoCategory)
     }
 
@@ -66,7 +68,7 @@ class MapsApiTest {
     @Test
     fun styleDescriptorLoadsProperly() {
         signInWithCognito()
-        val style = geo?.getMapStyleDescriptor(GetMapStyleDescriptorOptions.defaults())
+        val style = geo.getMapStyleDescriptor(GetMapStyleDescriptorOptions.defaults())
         assertNotNull(style)
         assertNotNull(style?.json)
 
@@ -86,31 +88,17 @@ class MapsApiTest {
     @Test(expected = GeoException::class)
     fun cannotFetchStyleWithoutAuth() {
         // should not be authorized to fetch map resource from Amazon Location Service
-        geo?.getMapStyleDescriptor(GetMapStyleDescriptorOptions.defaults())
+        geo.getMapStyleDescriptor(GetMapStyleDescriptorOptions.defaults())
     }
 
     private fun signInWithCognito() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val (username, password) = Credentials.load(context)
-        auth?.signIn(username, password)
+        signOutFromCognito() // this ensures a previous test failure doesn't impact current test
+        auth.signIn(username, password)
     }
 
     private fun signOutFromCognito() {
-        auth?.signOut()
-    }
-
-    companion object {
-        lateinit var auth: SynchronousAuth
-
-        /**
-         * Set up test categories to be used for testing.
-         */
-        @BeforeClass
-        @JvmStatic
-        fun setUp() {
-            // Auth plugin uses default configuration
-            auth =
-                SynchronousAuth.delegatingToCognito(ApplicationProvider.getApplicationContext(), AWSCognitoAuthPlugin())
-        }
+        auth.signOut()
     }
 }

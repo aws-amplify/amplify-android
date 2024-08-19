@@ -21,13 +21,16 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageCategoryBehavior;
 import com.amplifyframework.storage.StorageException;
+import com.amplifyframework.storage.StoragePath;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
+import com.amplifyframework.storage.options.StorageGetUrlOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
 import com.amplifyframework.storage.options.StoragePagedListOptions;
 import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
+import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
@@ -105,6 +108,7 @@ public final class SynchronousStorage {
      * @throws StorageException if download fails or times out
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public StorageDownloadFileResult downloadFile(
             @NonNull String key,
             @NonNull File local,
@@ -113,6 +117,47 @@ public final class SynchronousStorage {
     ) throws StorageException {
         return Await.<StorageDownloadFileResult, StorageException>result(timeoutMs, (onResult, onError) ->
                 asyncDelegate.downloadFile(key, local, options, onResult, onError)
+        );
+    }
+
+    /**
+     * Download a file synchronously and return the result of operation.
+     *
+     * @param path      Path of file to download
+     * @param local     File to save downloaded object to
+     * @param options   Download options
+     * @return Download operation result containing downloaded file
+     * @throws StorageException if download fails or times out
+     */
+    @NonNull
+    public StorageDownloadFileResult downloadFile(
+            @NonNull StoragePath path,
+            @NonNull File local,
+            @NonNull StorageDownloadFileOptions options
+    ) throws StorageException {
+        return downloadFile(path, local, options, STORAGE_OPERATION_TIMEOUT_MS);
+    }
+
+    /**
+     * Download a file synchronously and return the result of operation.
+     *
+     * @param path      Path of file to download
+     * @param local     File to save downloaded object to
+     * @param options   Download options
+     * @param timeoutMs Custom time-out duration in milliseconds
+     * @return Download operation result containing downloaded file
+     * @throws StorageException if download fails or times out
+     */
+    @NonNull
+    @SuppressWarnings("deprecation")
+    public StorageDownloadFileResult downloadFile(
+            @NonNull StoragePath path,
+            @NonNull File local,
+            @NonNull StorageDownloadFileOptions options,
+            long timeoutMs
+    ) throws StorageException {
+        return Await.<StorageDownloadFileResult, StorageException>result(timeoutMs, (onResult, onError) ->
+                asyncDelegate.downloadFile(path, local, options, onResult, onError)
         );
     }
 
@@ -126,6 +171,7 @@ public final class SynchronousStorage {
      * @throws StorageException if upload fails or times out
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public StorageUploadFileResult uploadFile(
             @NonNull String key,
             @NonNull File local,
@@ -145,6 +191,7 @@ public final class SynchronousStorage {
      * @throws StorageException if upload fails or times out
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public StorageUploadFileResult uploadFile(
             @NonNull String key,
             @NonNull File local,
@@ -154,6 +201,65 @@ public final class SynchronousStorage {
         return Await.<StorageUploadFileResult, StorageException>result(timeoutMs, (onResult, onError) ->
                 asyncDelegate.uploadFile(key, local, options, onResult, onError)
         );
+    }
+
+    /**
+     * Upload a file synchronously and return the result of operation.
+     *
+     * @param path      Path of file on service
+     * @param local   File to upload
+     * @param options Upload options
+     * @return Upload operation result
+     * @throws StorageException if upload fails or times out
+     */
+    @NonNull
+    @SuppressWarnings("deprecation")
+    public StorageUploadFileResult uploadFile(
+            @NonNull StoragePath path,
+            @NonNull File local,
+            @NonNull StorageUploadFileOptions options
+    ) throws StorageException {
+        return uploadFile(path, local, options, STORAGE_OPERATION_TIMEOUT_MS);
+    }
+
+    /**
+     * Upload a file synchronously and return the result of operation.
+     *
+     * @param path      Path of file on service
+     * @param local     File to upload
+     * @param options   Upload options
+     * @param timeoutMs Custom time-out duration in milliseconds
+     * @return Upload operation result
+     * @throws StorageException if upload fails or times out
+     */
+    @NonNull
+    public StorageUploadFileResult uploadFile(
+            @NonNull StoragePath path,
+            @NonNull File local,
+            @NonNull StorageUploadFileOptions options,
+            long timeoutMs
+    ) throws StorageException {
+        return Await.<StorageUploadFileResult, StorageException>result(timeoutMs, (onResult, onError) ->
+                asyncDelegate.uploadFile(path, local, options, onResult, onError)
+        );
+    }
+
+    /**
+     * Upload an InputStream synchronously and return the result of operation.
+     *
+     * @param path    Path of file on service
+     * @param local   InputStream to upload
+     * @param options Upload options
+     * @return Upload operation result
+     * @throws StorageException if upload fails or times out
+     */
+    @NonNull
+    public StorageUploadInputStreamResult uploadInputStream(
+            @NonNull StoragePath path,
+            @NonNull InputStream local,
+            @NonNull StorageUploadInputStreamOptions options
+    ) throws StorageException {
+        return uploadInputStream(path, local, options, STORAGE_OPERATION_TIMEOUT_MS);
     }
 
     /**
@@ -185,6 +291,7 @@ public final class SynchronousStorage {
      * @throws StorageException if upload fails or times out
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public StorageUploadInputStreamResult uploadInputStream(
             @NonNull String key,
             @NonNull InputStream local,
@@ -193,6 +300,28 @@ public final class SynchronousStorage {
     ) throws StorageException {
         return Await.<StorageUploadInputStreamResult, StorageException>result(timeoutMs, (onResult, onError) ->
                 asyncDelegate.uploadInputStream(key, local, options, onResult, onError)
+        );
+    }
+
+    /**
+     * Upload an InputStream synchronously and return the result of operation.
+     *
+     * @param path    Path of file on service
+     * @param local     InputStream to upload
+     * @param options   Upload options
+     * @param timeoutMs Custom time-out duration in milliseconds
+     * @return Upload operation result
+     * @throws StorageException if upload fails or times out
+     */
+    @NonNull
+    public StorageUploadInputStreamResult uploadInputStream(
+            @NonNull StoragePath path,
+            @NonNull InputStream local,
+            @NonNull StorageUploadInputStreamOptions options,
+            long timeoutMs
+    ) throws StorageException {
+        return Await.<StorageUploadInputStreamResult, StorageException>result(timeoutMs, (onResult, onError) ->
+                asyncDelegate.uploadInputStream(path, local, options, onResult, onError)
         );
     }
 
@@ -212,6 +341,23 @@ public final class SynchronousStorage {
         return remove(key, options, STORAGE_OPERATION_TIMEOUT_MS);
     }
 
+
+    /**
+     * Remove a file from S3 bucket synchronously.
+     *
+     * @param path    Path inside S3 bucket to list files from
+     * @param options Remove options
+     * @return Remove operation result containing name of the removed file
+     * @throws StorageException if removal fails or times out
+     */
+    @NonNull
+    public StorageRemoveResult remove(
+            @NonNull StoragePath path,
+            @NonNull StorageRemoveOptions options
+    ) throws StorageException {
+        return remove(path, options, STORAGE_OPERATION_TIMEOUT_MS);
+    }
+
     /**
      * Remove a file from S3 bucket synchronously.
      *
@@ -222,6 +368,7 @@ public final class SynchronousStorage {
      * @throws StorageException if removal fails or times out
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public StorageRemoveResult remove(
             @NonNull String key,
             @NonNull StorageRemoveOptions options,
@@ -229,6 +376,44 @@ public final class SynchronousStorage {
     ) throws StorageException {
         return Await.<StorageRemoveResult, StorageException>result(timeoutMs, (onResult, onError) ->
                 asyncDelegate.remove(key, options, onResult, onError)
+        );
+    }
+
+    /**
+     * Remove a file from S3 bucket synchronously.
+     *
+     * @param path    Path inside S3 bucket to list files from
+     * @param options   Remove options
+     * @param timeoutMs Custom time-out duration in milliseconds
+     * @return Remove operation result containing name of the removed file
+     * @throws StorageException if removal fails or times out
+     */
+    @NonNull
+    public StorageRemoveResult remove(
+            @NonNull StoragePath path,
+            @NonNull StorageRemoveOptions options,
+            long timeoutMs
+    ) throws StorageException {
+        return Await.<StorageRemoveResult, StorageException>result(timeoutMs, (onResult, onError) ->
+                asyncDelegate.remove(path, options, onResult, onError)
+        );
+    }
+
+    /**
+     * Get Url for a file from S3 bucket synchronously.
+     *
+     * @param path    Path inside S3 bucket to getUrl
+     * @param options   GetUrl options
+     * @return GetUrl operation result containing name url
+     * @throws StorageException if get url fails or times out
+     */
+    @NonNull
+    public StorageGetUrlResult getUrl(
+            @NonNull StoragePath path,
+            @NonNull StorageGetUrlOptions options
+    ) throws StorageException {
+        return Await.<StorageGetUrlResult, StorageException>result(STORAGE_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.getUrl(path, options, onResult, onError)
         );
     }
 
@@ -279,6 +464,7 @@ public final class SynchronousStorage {
      * @throws StorageException if list fails or times out
      */
     @NonNull
+    @SuppressWarnings("deprecation")
     public StorageListResult list(
         @NonNull String path,
         @NonNull StoragePagedListOptions options,
@@ -286,6 +472,24 @@ public final class SynchronousStorage {
     ) throws StorageException {
         return Await.<StorageListResult, StorageException>result(timeoutMs, (onResult, onError) ->
             asyncDelegate.list(path, options, onResult, onError)
+        );
+    }
+
+    /**
+     * List the files in S3 bucket synchronously.
+     *
+     * @param path      Path inside S3 bucket to list files from
+     * @param options   Paged list options
+     * @return List operation result containing list of stored objects
+     * @throws StorageException if list fails or times out
+     */
+    @NonNull
+    public StorageListResult list(
+            @NonNull StoragePath path,
+            @NonNull StoragePagedListOptions options
+    ) throws StorageException {
+        return Await.<StorageListResult, StorageException>result(STORAGE_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.list(path, options, onResult, onError)
         );
     }
 }

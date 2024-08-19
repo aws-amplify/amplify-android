@@ -15,6 +15,7 @@
 
 package com.amplifyframework.testutils;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.RawRes;
@@ -83,6 +84,7 @@ public final class Resources {
      * @throws RuntimeException if the specified raw resource does not exist
      */
     @RawRes
+    @SuppressLint("DiscouragedApi")
     public static int getRawResourceId(Context context, String identifier) {
         try {
             return context.getResources().getIdentifier(identifier, "raw", context.getPackageName());

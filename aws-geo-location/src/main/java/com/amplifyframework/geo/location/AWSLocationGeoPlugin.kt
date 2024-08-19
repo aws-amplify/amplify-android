@@ -19,11 +19,13 @@ import android.content.Context
 import aws.sdk.kotlin.services.location.LocationClient
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.annotations.InternalApiWarning
 import com.amplifyframework.auth.AuthCategory
 import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
+import com.amplifyframework.core.configuration.AmplifyOutputsData
 import com.amplifyframework.geo.GeoCategoryPlugin
 import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.location.configuration.GeoConfiguration
@@ -67,7 +69,7 @@ class AWSLocationGeoPlugin(
 
     @InternalApiWarning
     val credentialsProvider: CredentialsProvider by lazy {
-        CognitoCredentialsProvider()
+        CognitoCredentialsProvider(authCategory)
     }
 
     override fun getPluginKey(): String {
@@ -77,9 +79,7 @@ class AWSLocationGeoPlugin(
     @Throws(AmplifyException::class)
     override fun configure(pluginConfiguration: JSONObject, context: Context) {
         try {
-            this.configuration =
-                userConfiguration ?: GeoConfiguration.fromJson(pluginConfiguration).build()
-            this.geoService = AmazonLocationService(credentialsProvider, configuration.region)
+            configure(userConfiguration ?: GeoConfiguration.fromJson(pluginConfiguration).build())
         } catch (error: Exception) {
             throw GeoException(
                 "Failed to configure AWSLocationGeoPlugin.",
@@ -87,6 +87,17 @@ class AWSLocationGeoPlugin(
                 "Make sure your amplifyconfiguration.json is valid."
             )
         }
+    }
+
+    @Throws(AmplifyException::class)
+    @InternalAmplifyApi
+    override fun configure(configuration: AmplifyOutputsData, context: Context) {
+        configure(userConfiguration ?: GeoConfiguration.from(configuration))
+    }
+
+    private fun configure(configuration: GeoConfiguration) {
+        this.configuration = configuration
+        this.geoService = AmazonLocationService(credentialsProvider, configuration.region)
     }
 
     override fun getEscapeHatch(): LocationClient {
@@ -163,7 +174,9 @@ class AWSLocationGeoPlugin(
             {
                 val searchIndex = if (options is AmazonLocationSearchByTextOptions) {
                     options.searchIndex ?: defaultSearchIndexName
-                } else defaultSearchIndexName
+                } else {
+                    defaultSearchIndexName
+                }
                 val places = geoService.geocode(
                     searchIndex,
                     query,
@@ -198,7 +211,9 @@ class AWSLocationGeoPlugin(
             {
                 val searchIndex = if (options is AmazonLocationSearchByCoordinatesOptions) {
                     options.searchIndex ?: defaultSearchIndexName
-                } else defaultSearchIndexName
+                } else {
+                    defaultSearchIndexName
+                }
                 val places = geoService.reverseGeocode(
                     searchIndex,
                     position,

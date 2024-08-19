@@ -19,6 +19,7 @@ import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.storage.StorageAccessLevel
 import com.amplifyframework.storage.StorageException
+import com.amplifyframework.storage.options.SubpathStrategy
 import com.amplifyframework.storage.s3.configuration.AWSS3PluginPrefixResolver
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration
 import com.amplifyframework.storage.s3.request.AWSS3StorageListRequest
@@ -32,6 +33,7 @@ import org.mockito.Mockito
 
 public class AWSS3StorageListOperationTest {
 
+    @Suppress("deprecation")
     private lateinit var awsS3StorageListOperation: AWSS3StorageListOperation
     private lateinit var storageService: StorageService
     private lateinit var authCredentialsProvider: AuthCredentialsProvider
@@ -43,13 +45,14 @@ public class AWSS3StorageListOperationTest {
     }
 
     @Test
+    @Suppress("deprecation")
     fun defaultPrefixResolverAWSS3PluginConfigTest() {
         val path = ""
         val expectedKey = "public/"
         val request = AWSS3StorageListRequest(
             path,
             StorageAccessLevel.PUBLIC,
-            "",
+            ""
         )
         coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
         awsS3StorageListOperation = AWSS3StorageListOperation(
@@ -62,17 +65,18 @@ public class AWSS3StorageListOperationTest {
             {}
         )
         awsS3StorageListOperation.start()
-        Mockito.verify(storageService).listFiles(expectedKey, "public/")
+        Mockito.verify(storageService).listFiles(expectedKey, "public/", null)
     }
 
     @Test
+    @Suppress("deprecation")
     fun customEmptyResolverAWSS3PluginConfigTest() {
         val path = ""
         val expectedKey = ""
         val request = AWSS3StorageListRequest(
             path,
             StorageAccessLevel.PUBLIC,
-            "",
+            ""
         )
         coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
         awsS3StorageListOperation = AWSS3StorageListOperation(
@@ -96,17 +100,18 @@ public class AWSS3StorageListOperationTest {
             {}
         )
         awsS3StorageListOperation.start()
-        Mockito.verify(storageService).listFiles(expectedKey, "")
+        Mockito.verify(storageService).listFiles(expectedKey, "", null)
     }
 
     @Test
+    @Suppress("deprecation")
     fun customResolverAWSS3PluginConfigTest() {
         val path = ""
         val expectedKey = "publicCustom/"
         val request = AWSS3StorageListRequest(
             path,
             StorageAccessLevel.PUBLIC,
-            "",
+            ""
         )
         coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
         awsS3StorageListOperation = AWSS3StorageListOperation(
@@ -130,6 +135,61 @@ public class AWSS3StorageListOperationTest {
             {}
         )
         awsS3StorageListOperation.start()
-        Mockito.verify(storageService).listFiles(expectedKey, "publicCustom/")
+        Mockito.verify(storageService).listFiles(expectedKey, "publicCustom/", null)
+    }
+
+    @Test
+    @Suppress("deprecation")
+    fun SubpathStrategyIncludeOperationTest() {
+        val path = ""
+        val expectedKey = "public/"
+        val request = AWSS3StorageListRequest(
+            path,
+            StorageAccessLevel.PUBLIC,
+            "",
+            1000,
+            null,
+            SubpathStrategy.Include
+        )
+        coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
+        awsS3StorageListOperation = AWSS3StorageListOperation(
+            storageService,
+            MoreExecutors.newDirectExecutorService(),
+            authCredentialsProvider,
+            request,
+            AWSS3StoragePluginConfiguration {},
+            {},
+            {}
+        )
+        awsS3StorageListOperation.start()
+        Mockito.verify(storageService).listFiles(expectedKey, "public/", 1000, null, SubpathStrategy.Include)
+    }
+
+    @Test
+    @Suppress("deprecation")
+    fun SubpathStrategyExcludeOperationTest() {
+        val path = ""
+        val expectedKey = "public/"
+        val expectedSubpathStrategy = SubpathStrategy.Exclude()
+        val request = AWSS3StorageListRequest(
+            path,
+            StorageAccessLevel.PUBLIC,
+            "",
+            1000,
+            null,
+            expectedSubpathStrategy
+        )
+        coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
+        awsS3StorageListOperation = AWSS3StorageListOperation(
+            storageService,
+            MoreExecutors.newDirectExecutorService(),
+            authCredentialsProvider,
+            request,
+            AWSS3StoragePluginConfiguration {},
+            {},
+            {}
+        )
+        awsS3StorageListOperation.start()
+        Mockito.verify(storageService).listFiles(expectedKey, "public/", 1000, null, expectedSubpathStrategy)
     }
 }

@@ -25,11 +25,13 @@ import aws.smithy.kotlin.runtime.client.RequestInterceptorContext
 import aws.smithy.kotlin.runtime.http.interceptors.HttpInterceptor
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.analytics.UserProfile
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.category.CategoryType
+import com.amplifyframework.core.configuration.AmplifyOutputsData
 import com.amplifyframework.core.store.EncryptedKeyValueRepository
 import com.amplifyframework.core.store.KeyValueRepository
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
@@ -55,6 +57,7 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
 
         private const val DATABASE_NAME = "awspushnotifications.db"
         private const val DEFAULT_AUTO_FLUSH_INTERVAL = 30000L
+        private const val DEFAULT_TRACK_LIFECYCLE_EVENTS = true
         private const val AWS_PINPOINT_PUSHNOTIFICATIONS_PREFERENCES_SUFFIX = "515d6767-01b7-49e5-8273-c8d11b0f331d"
         private const val AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_LEGACY_KEY = "AWSPINPOINT.GCMTOKEN"
     }
@@ -82,18 +85,7 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     @Throws(AmplifyException::class)
     override fun configure(pluginConfiguration: JSONObject?, context: Context) {
         try {
-            this.context = context
-            configuration = AWSPinpointPushNotificationsConfiguration.fromJson(pluginConfiguration)
-            pushNotificationsUtils = PushNotificationsUtils(context)
-
-            val androidAppDetails = AndroidAppDetails(context, configuration.appId)
-            val androidDeviceDetails = AndroidDeviceDetails(context)
-
-            createAndMigrateStore()
-            pinpointClient = createPinpointClient()
-            targetingClient = createTargetingClient(androidAppDetails, androidDeviceDetails)
-            analyticsClient = createAnalyticsClient(androidAppDetails, androidDeviceDetails)
-            fetchFCMDeviceToken()
+            configure(context, AWSPinpointPushNotificationsConfiguration.fromJson(pluginConfiguration))
         } catch (exception: Exception) {
             throw PushNotificationsException(
                 "Failed to configure AWSPinpointPushNotificationsPlugin.",
@@ -101,6 +93,26 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
                 exception
             )
         }
+    }
+
+    @InternalAmplifyApi
+    override fun configure(configuration: AmplifyOutputsData, context: Context) {
+        configure(context, AWSPinpointPushNotificationsConfiguration.from(configuration))
+    }
+
+    private fun configure(context: Context, configuration: AWSPinpointPushNotificationsConfiguration) {
+        this.context = context
+        this.configuration = configuration
+        pushNotificationsUtils = PushNotificationsUtils(context)
+
+        val androidAppDetails = AndroidAppDetails(context, configuration.appId)
+        val androidDeviceDetails = AndroidDeviceDetails(context)
+
+        createAndMigrateStore()
+        pinpointClient = createPinpointClient()
+        targetingClient = createTargetingClient(androidAppDetails, androidDeviceDetails)
+        analyticsClient = createAnalyticsClient(androidAppDetails, androidDeviceDetails)
+        fetchFCMDeviceToken()
     }
 
     private fun createAndMigrateStore() {
@@ -153,6 +165,7 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         return AnalyticsClient(
             context,
             DEFAULT_AUTO_FLUSH_INTERVAL,
+            DEFAULT_TRACK_LIFECYCLE_EVENTS,
             pinpointClient,
             targetingClient,
             pinpointDatabase,

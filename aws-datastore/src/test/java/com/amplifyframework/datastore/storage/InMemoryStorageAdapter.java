@@ -19,6 +19,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.annotations.InternalApiWarning;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
@@ -40,10 +41,16 @@ import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.subjects.PublishSubject;
 import io.reactivex.rxjava3.subjects.Subject;
 
+import static org.junit.Assert.fail;
+
 /**
  * A simple in-memory implementation of the LocalStorageAdapter
  * contract. This intended for use as a stub in test code.
+ *
+ * Although this has public access, it is intended for internal use and should not be used directly by host
+ * applications. The behavior of this may change without warning.
  */
+@InternalApiWarning
 public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     private final List<Model> items;
     private final Subject<StorageItemChange<? extends Model>> itemChangeStream;
@@ -266,7 +273,16 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
                                                @NonNull Consumer<DataStoreQuerySnapshot<T>> onQuerySnapshot,
                                                @NonNull Consumer<DataStoreException> onObservationError,
                                                @NonNull Action onObservationComplete) {
-    //TODOPM: to be implemented for tests.
+        //TODOPM: to be implemented for tests.
+    }
+
+    @Override
+    public <T extends Model> void batchSyncOperations(
+        @NonNull List<StorageOperation<T>> storageOperations,
+        @NonNull Action onComplete,
+        @NonNull Consumer<DataStoreException> onError
+    ) {
+        fail("Due to the complexity of this operation, Use SQLiteStorageAdapter instead");
     }
 
     @Override

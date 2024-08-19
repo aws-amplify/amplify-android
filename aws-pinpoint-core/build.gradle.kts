@@ -24,13 +24,17 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 
 group = properties["POM_GROUP"].toString()
 
+android {
+    namespace = "com.amplifyframework.pinpoint.core"
+}
+
 dependencies {
     implementation(project(":core"))
 
     implementation(libs.androidx.appcompat)
     implementation(libs.aws.pinpoint)
     implementation(libs.kotlin.serializationJson)
-    implementation("androidx.test.ext:junit-ktx:1.1.5")
+    implementation(libs.androidx.junit.ktx)
 
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockk)
@@ -39,6 +43,7 @@ dependencies {
     testImplementation(libs.test.robolectric)
     testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.kotlin.coroutines)
+    testImplementation(libs.test.kotest.assertions)
 
     androidTestImplementation(libs.test.androidx.core)
     androidTestImplementation(libs.test.androidx.runner)

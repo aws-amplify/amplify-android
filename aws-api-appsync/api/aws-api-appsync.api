@@ -1,0 +1,406 @@
+public final class com/amplifyframework/api/aws/ApiGraphQLRequestOptions : com/amplifyframework/api/aws/GraphQLRequestOptions {
+	public fun <init> ()V
+	public fun leafSerializationBehavior ()Lcom/amplifyframework/api/aws/LeafSerializationBehavior;
+	public fun listField ()Ljava/lang/String;
+	public fun maxDepth ()I
+	public fun modelMetaFields ()Ljava/util/List;
+	public fun paginationFields ()Ljava/util/List;
+}
+
+public final class com/amplifyframework/api/aws/AppSyncGraphQLRequest : com/amplifyframework/api/graphql/GraphQLRequest {
+	public static fun builder ()Lcom/amplifyframework/api/aws/AppSyncGraphQLRequest$Builder;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAuthModeStrategyType ()Lcom/amplifyframework/api/aws/AuthModeStrategyType;
+	public fun getAuthRuleOperation ()Lcom/amplifyframework/core/model/ModelOperation;
+	public fun getAuthorizationType ()Lcom/amplifyframework/api/aws/AuthorizationType;
+	public fun getModelSchema ()Lcom/amplifyframework/core/model/ModelSchema;
+	public fun getOperation ()Lcom/amplifyframework/api/graphql/Operation;
+	public fun getQuery ()Ljava/lang/String;
+	public fun getVariables ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun newBuilder ()Lcom/amplifyframework/api/aws/AppSyncGraphQLRequest$Builder;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/api/aws/AppSyncGraphQLRequest$Builder {
+	public fun authorizationType (Lcom/amplifyframework/api/aws/AuthorizationType;)Lcom/amplifyframework/api/aws/AppSyncGraphQLRequest$Builder;
+	public fun build ()Lcom/amplifyframework/api/aws/AppSyncGraphQLRequest;
+	public fun modelClass (Ljava/lang/Class;)Lcom/amplifyframework/api/aws/AppSyncGraphQLRequest$Builder;
+	public fun modelSchema (Lcom/amplifyframework/core/model/ModelSchema;)Lcom/amplifyframework/api/aws/AppSyncGraphQLRequest$Builder;
+	public fun operation (Lcom/amplifyframework/api/graphql/Operation;)Lcom/amplifyframework/api/aws/AppSyncGraphQLRequest$Builder;
+	public fun requestAuthorizationStrategyType (Lcom/amplifyframework/api/aws/AuthModeStrategyType;)Lcom/amplifyframework/api/aws/AppSyncGraphQLRequest$Builder;
+	public fun requestOptions (Lcom/amplifyframework/api/aws/GraphQLRequestOptions;)Lcom/amplifyframework/api/aws/AppSyncGraphQLRequest$Builder;
+	public fun responseType (Ljava/lang/reflect/Type;)Lcom/amplifyframework/api/aws/AppSyncGraphQLRequest$Builder;
+	public fun selectionSet (Lcom/amplifyframework/api/aws/SelectionSet;)Lcom/amplifyframework/api/aws/AppSyncGraphQLRequest$Builder;
+	public fun variable (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)Lcom/amplifyframework/api/aws/AppSyncGraphQLRequest$Builder;
+}
+
+public final class com/amplifyframework/api/aws/AuthModeStrategyType : java/lang/Enum {
+	public static final field DEFAULT Lcom/amplifyframework/api/aws/AuthModeStrategyType;
+	public static final field MULTIAUTH Lcom/amplifyframework/api/aws/AuthModeStrategyType;
+	public fun from (Ljava/lang/String;)Lcom/amplifyframework/api/aws/AuthModeStrategyType;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/api/aws/AuthModeStrategyType;
+	public static fun values ()[Lcom/amplifyframework/api/aws/AuthModeStrategyType;
+}
+
+public final class com/amplifyframework/api/aws/AuthorizationType : java/lang/Enum {
+	public static final field AMAZON_COGNITO_USER_POOLS Lcom/amplifyframework/api/aws/AuthorizationType;
+	public static final field API_KEY Lcom/amplifyframework/api/aws/AuthorizationType;
+	public static final field AWS_IAM Lcom/amplifyframework/api/aws/AuthorizationType;
+	public static final field AWS_LAMBDA Lcom/amplifyframework/api/aws/AuthorizationType;
+	public static final field NONE Lcom/amplifyframework/api/aws/AuthorizationType;
+	public static final field OPENID_CONNECT Lcom/amplifyframework/api/aws/AuthorizationType;
+	public static fun from (Lcom/amplifyframework/core/model/AuthStrategy$Provider;)Lcom/amplifyframework/api/aws/AuthorizationType;
+	public static fun from (Lcom/amplifyframework/core/model/annotations/AuthRule;)Lcom/amplifyframework/api/aws/AuthorizationType;
+	public static fun from (Ljava/lang/String;)Lcom/amplifyframework/api/aws/AuthorizationType;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/api/aws/AuthorizationType;
+	public static fun values ()[Lcom/amplifyframework/api/aws/AuthorizationType;
+}
+
+public abstract interface class com/amplifyframework/api/aws/GraphQLRequestOptions {
+	public abstract fun leafSerializationBehavior ()Lcom/amplifyframework/api/aws/LeafSerializationBehavior;
+	public abstract fun listField ()Ljava/lang/String;
+	public abstract fun maxDepth ()I
+	public abstract fun modelMetaFields ()Ljava/util/List;
+	public abstract fun paginationFields ()Ljava/util/List;
+}
+
+public final class com/amplifyframework/api/aws/GsonVariablesSerializer : com/amplifyframework/api/graphql/GraphQLRequest$VariablesSerializer {
+	public fun <init> ()V
+	public fun <init> (Lcom/google/gson/Gson;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun serialize (Ljava/util/Map;)Ljava/lang/String;
+}
+
+public final class com/amplifyframework/api/aws/LeafSerializationBehavior : java/lang/Enum {
+	public static final field ALL_FIELDS Lcom/amplifyframework/api/aws/LeafSerializationBehavior;
+	public static final field JUST_ID Lcom/amplifyframework/api/aws/LeafSerializationBehavior;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/api/aws/LeafSerializationBehavior;
+	public static fun values ()[Lcom/amplifyframework/api/aws/LeafSerializationBehavior;
+}
+
+public final class com/amplifyframework/api/aws/MultiAuthModeStrategy : com/amplifyframework/api/aws/AuthModeStrategy {
+	public fun authTypesFor (Lcom/amplifyframework/core/model/ModelSchema;Lcom/amplifyframework/core/model/ModelOperation;)Lcom/amplifyframework/core/model/auth/AuthorizationTypeIterator;
+	public static fun getInstance ()Lcom/amplifyframework/api/aws/MultiAuthModeStrategy;
+}
+
+public final class com/amplifyframework/api/aws/SelectionSet {
+	public fun <init> (Lcom/amplifyframework/api/aws/SelectionSet;)V
+	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/util/Set;)V
+	public static fun builder ()Lcom/amplifyframework/api/aws/SelectionSet$Builder;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getNodes ()Ljava/util/Set;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public fun toString (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class com/amplifyframework/api/graphql/GsonResponseAdapters {
+	public static fun register (Lcom/google/gson/GsonBuilder;)V
+}
+
+public final class com/amplifyframework/api/graphql/GsonResponseAdapters$ErrorDeserializer : com/google/gson/JsonDeserializer {
+	public fun <init> ()V
+	public fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Lcom/amplifyframework/api/graphql/GraphQLResponse$Error;
+	public synthetic fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Ljava/lang/Object;
+}
+
+public final class com/amplifyframework/api/graphql/GsonResponseAdapters$ResponseDeserializer : com/google/gson/JsonDeserializer {
+	public fun <init> ()V
+	public fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Lcom/amplifyframework/api/graphql/GraphQLResponse;
+	public synthetic fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Ljava/lang/Object;
+}
+
+public final class com/amplifyframework/api/graphql/MutationType : java/lang/Enum, com/amplifyframework/api/graphql/Operation {
+	public static final field CREATE Lcom/amplifyframework/api/graphql/MutationType;
+	public static final field DELETE Lcom/amplifyframework/api/graphql/MutationType;
+	public static final field UPDATE Lcom/amplifyframework/api/graphql/MutationType;
+	public fun getOperationType ()Lcom/amplifyframework/api/graphql/OperationType;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/api/graphql/MutationType;
+	public static fun values ()[Lcom/amplifyframework/api/graphql/MutationType;
+}
+
+public final class com/amplifyframework/api/graphql/QueryType : java/lang/Enum, com/amplifyframework/api/graphql/Operation {
+	public static final field GET Lcom/amplifyframework/api/graphql/QueryType;
+	public static final field LIST Lcom/amplifyframework/api/graphql/QueryType;
+	public static final field SYNC Lcom/amplifyframework/api/graphql/QueryType;
+	public fun getOperationType ()Lcom/amplifyframework/api/graphql/OperationType;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/api/graphql/QueryType;
+	public static fun values ()[Lcom/amplifyframework/api/graphql/QueryType;
+}
+
+public final class com/amplifyframework/api/graphql/SubscriptionType : java/lang/Enum, com/amplifyframework/api/graphql/Operation {
+	public static final field ON_CREATE Lcom/amplifyframework/api/graphql/SubscriptionType;
+	public static final field ON_DELETE Lcom/amplifyframework/api/graphql/SubscriptionType;
+	public static final field ON_UPDATE Lcom/amplifyframework/api/graphql/SubscriptionType;
+	public fun getOperationType ()Lcom/amplifyframework/api/graphql/OperationType;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/api/graphql/SubscriptionType;
+	public static fun values ()[Lcom/amplifyframework/api/graphql/SubscriptionType;
+}
+
+public final class com/amplifyframework/appsync/BuildConfig {
+	public static final field BUILD_TYPE Ljava/lang/String;
+	public static final field DEBUG Z
+	public static final field LIBRARY_PACKAGE_NAME Ljava/lang/String;
+	public static final field VERSION_NAME Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public abstract interface class com/amplifyframework/core/model/auth/AuthorizationTypeIterator : java/util/Iterator {
+	public abstract fun isOwnerBasedRule ()Z
+}
+
+public final class com/amplifyframework/core/model/auth/MultiAuthorizationTypeIterator : com/amplifyframework/core/model/auth/AuthorizationTypeIterator {
+	public fun <init> (Ljava/util/List;)V
+	public fun <init> (Ljava/util/List;Ljava/util/Comparator;)V
+	public fun getAuthRuleStrategy ()Lcom/amplifyframework/core/model/AuthStrategy;
+	public fun hasNext ()Z
+	public fun isOwnerBasedRule ()Z
+	public fun next ()Lcom/amplifyframework/api/aws/AuthorizationType;
+	public synthetic fun next ()Ljava/lang/Object;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/core/model/query/predicate/GsonPredicateAdapters {
+	public static fun register (Lcom/google/gson/GsonBuilder;)V
+}
+
+public final class com/amplifyframework/core/model/query/predicate/GsonPredicateAdapters$QueryOperatorAdapter : com/google/gson/JsonDeserializer, com/google/gson/JsonSerializer {
+	public fun <init> ()V
+	public fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Lcom/amplifyframework/core/model/query/predicate/QueryOperator;
+	public synthetic fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Ljava/lang/Object;
+	public fun serialize (Lcom/amplifyframework/core/model/query/predicate/QueryOperator;Ljava/lang/reflect/Type;Lcom/google/gson/JsonSerializationContext;)Lcom/google/gson/JsonElement;
+	public synthetic fun serialize (Ljava/lang/Object;Ljava/lang/reflect/Type;Lcom/google/gson/JsonSerializationContext;)Lcom/google/gson/JsonElement;
+}
+
+public final class com/amplifyframework/core/model/query/predicate/GsonPredicateAdapters$QueryPredicateAdapter : com/google/gson/JsonDeserializer, com/google/gson/JsonSerializer {
+	public fun <init> ()V
+	public fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;
+	public synthetic fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Ljava/lang/Object;
+	public fun serialize (Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Ljava/lang/reflect/Type;Lcom/google/gson/JsonSerializationContext;)Lcom/google/gson/JsonElement;
+	public synthetic fun serialize (Ljava/lang/Object;Ljava/lang/reflect/Type;Lcom/google/gson/JsonSerializationContext;)Lcom/google/gson/JsonElement;
+}
+
+public final class com/amplifyframework/core/model/temporal/GsonTemporalAdapters {
+	public static fun register (Lcom/google/gson/GsonBuilder;)V
+}
+
+public final class com/amplifyframework/core/model/temporal/GsonTemporalAdapters$DateAdapter : com/google/gson/JsonDeserializer, com/google/gson/JsonSerializer {
+	public fun <init> ()V
+	public fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Lcom/amplifyframework/core/model/temporal/Temporal$Date;
+	public synthetic fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Ljava/lang/Object;
+	public fun serialize (Lcom/amplifyframework/core/model/temporal/Temporal$Date;Ljava/lang/reflect/Type;Lcom/google/gson/JsonSerializationContext;)Lcom/google/gson/JsonElement;
+	public synthetic fun serialize (Ljava/lang/Object;Ljava/lang/reflect/Type;Lcom/google/gson/JsonSerializationContext;)Lcom/google/gson/JsonElement;
+}
+
+public final class com/amplifyframework/core/model/temporal/GsonTemporalAdapters$DateTimeAdapter : com/google/gson/JsonDeserializer, com/google/gson/JsonSerializer {
+	public fun <init> ()V
+	public fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Lcom/amplifyframework/core/model/temporal/Temporal$DateTime;
+	public synthetic fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Ljava/lang/Object;
+	public fun serialize (Lcom/amplifyframework/core/model/temporal/Temporal$DateTime;Ljava/lang/reflect/Type;Lcom/google/gson/JsonSerializationContext;)Lcom/google/gson/JsonElement;
+	public synthetic fun serialize (Ljava/lang/Object;Ljava/lang/reflect/Type;Lcom/google/gson/JsonSerializationContext;)Lcom/google/gson/JsonElement;
+}
+
+public final class com/amplifyframework/core/model/temporal/GsonTemporalAdapters$JavaDateAdapter : com/google/gson/JsonSerializer {
+	public fun <init> ()V
+	public synthetic fun serialize (Ljava/lang/Object;Ljava/lang/reflect/Type;Lcom/google/gson/JsonSerializationContext;)Lcom/google/gson/JsonElement;
+	public fun serialize (Ljava/util/Date;Ljava/lang/reflect/Type;Lcom/google/gson/JsonSerializationContext;)Lcom/google/gson/JsonElement;
+}
+
+public final class com/amplifyframework/core/model/temporal/GsonTemporalAdapters$TimeAdapter : com/google/gson/JsonDeserializer, com/google/gson/JsonSerializer {
+	public fun <init> ()V
+	public fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Lcom/amplifyframework/core/model/temporal/Temporal$Time;
+	public synthetic fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Ljava/lang/Object;
+	public fun serialize (Lcom/amplifyframework/core/model/temporal/Temporal$Time;Ljava/lang/reflect/Type;Lcom/google/gson/JsonSerializationContext;)Lcom/google/gson/JsonElement;
+	public synthetic fun serialize (Ljava/lang/Object;Ljava/lang/reflect/Type;Lcom/google/gson/JsonSerializationContext;)Lcom/google/gson/JsonElement;
+}
+
+public final class com/amplifyframework/core/model/temporal/GsonTemporalAdapters$TimestampAdapter : com/google/gson/JsonDeserializer, com/google/gson/JsonSerializer {
+	public fun <init> ()V
+	public fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Lcom/amplifyframework/core/model/temporal/Temporal$Timestamp;
+	public synthetic fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Ljava/lang/Object;
+	public fun serialize (Lcom/amplifyframework/core/model/temporal/Temporal$Timestamp;Ljava/lang/reflect/Type;Lcom/google/gson/JsonSerializationContext;)Lcom/google/gson/JsonElement;
+	public synthetic fun serialize (Ljava/lang/Object;Ljava/lang/reflect/Type;Lcom/google/gson/JsonSerializationContext;)Lcom/google/gson/JsonElement;
+}
+
+public final class com/amplifyframework/core/model/temporal/Temporal {
+}
+
+public final class com/amplifyframework/core/model/temporal/Temporal$Date : java/io/Serializable, java/lang/Comparable {
+	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Ljava/util/Date;)V
+	public fun <init> (Ljava/util/Date;I)V
+	public fun compareTo (Lcom/amplifyframework/core/model/temporal/Temporal$Date;)I
+	public synthetic fun compareTo (Ljava/lang/Object;)I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun format ()Ljava/lang/String;
+	public fun getOffsetTotalSeconds ()I
+	public fun hashCode ()I
+	public fun toDate ()Ljava/util/Date;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/core/model/temporal/Temporal$DateTime : java/io/Serializable, java/lang/Comparable {
+	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Ljava/util/Date;I)V
+	public fun compareTo (Lcom/amplifyframework/core/model/temporal/Temporal$DateTime;)I
+	public synthetic fun compareTo (Ljava/lang/Object;)I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun format ()Ljava/lang/String;
+	public fun getOffsetTotalSeconds ()I
+	public fun hashCode ()I
+	public fun toDate ()Ljava/util/Date;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/core/model/temporal/Temporal$Time : java/io/Serializable, java/lang/Comparable {
+	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Ljava/util/Date;)V
+	public fun <init> (Ljava/util/Date;I)V
+	public fun compareTo (Lcom/amplifyframework/core/model/temporal/Temporal$Time;)I
+	public synthetic fun compareTo (Ljava/lang/Object;)I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun format ()Ljava/lang/String;
+	public fun getOffsetTotalSeconds ()I
+	public fun hashCode ()I
+	public fun toDate ()Ljava/util/Date;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/core/model/temporal/Temporal$Timestamp : java/io/Serializable, java/lang/Comparable {
+	public fun <init> ()V
+	public fun <init> (JLjava/util/concurrent/TimeUnit;)V
+	public fun <init> (Ljava/util/Date;)V
+	public fun compareTo (Lcom/amplifyframework/core/model/temporal/Temporal$Timestamp;)I
+	public synthetic fun compareTo (Ljava/lang/Object;)I
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getSecondsSinceEpoch ()J
+	public fun hashCode ()I
+	public static fun now ()Lcom/amplifyframework/core/model/temporal/Temporal$Timestamp;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/core/model/types/GsonJavaTypeAdapters {
+	public static fun register (Lcom/google/gson/GsonBuilder;)V
+}
+
+public final class com/amplifyframework/core/model/types/GsonJavaTypeAdapters$ClassTypeAdapterFactory : com/google/gson/TypeAdapterFactory {
+	public fun <init> ()V
+	public fun create (Lcom/google/gson/Gson;Lcom/google/gson/reflect/TypeToken;)Lcom/google/gson/TypeAdapter;
+}
+
+public final class com/amplifyframework/core/model/types/GsonJavaTypeAdapters$StringDeserializer : com/google/gson/JsonDeserializer {
+	public fun <init> ()V
+	public synthetic fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Ljava/lang/Object;
+	public fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Ljava/lang/String;
+}
+
+public final class com/amplifyframework/core/model/types/JavaFieldType : java/lang/Enum {
+	public static final field BOOLEAN Lcom/amplifyframework/core/model/types/JavaFieldType;
+	public static final field CUSTOM_TYPE Lcom/amplifyframework/core/model/types/JavaFieldType;
+	public static final field DATE Lcom/amplifyframework/core/model/types/JavaFieldType;
+	public static final field DATE_TIME Lcom/amplifyframework/core/model/types/JavaFieldType;
+	public static final field DOUBLE Lcom/amplifyframework/core/model/types/JavaFieldType;
+	public static final field ENUM Lcom/amplifyframework/core/model/types/JavaFieldType;
+	public static final field FLOAT Lcom/amplifyframework/core/model/types/JavaFieldType;
+	public static final field INTEGER Lcom/amplifyframework/core/model/types/JavaFieldType;
+	public static final field LONG Lcom/amplifyframework/core/model/types/JavaFieldType;
+	public static final field MODEL Lcom/amplifyframework/core/model/types/JavaFieldType;
+	public static final field STRING Lcom/amplifyframework/core/model/types/JavaFieldType;
+	public static final field TIME Lcom/amplifyframework/core/model/types/JavaFieldType;
+	public static final field TIMESTAMP Lcom/amplifyframework/core/model/types/JavaFieldType;
+	public static fun from (Ljava/lang/Class;)Lcom/amplifyframework/core/model/types/JavaFieldType;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/core/model/types/JavaFieldType;
+	public static fun values ()[Lcom/amplifyframework/core/model/types/JavaFieldType;
+}
+
+public final class com/amplifyframework/datastore/appsync/AppSyncExtensions {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;)V
+	public fun <init> (Ljava/util/Map;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getData ()Ljava/util/Map;
+	public fun getErrorInfo ()Ljava/lang/String;
+	public fun getErrorType ()Lcom/amplifyframework/datastore/appsync/AppSyncExtensions$AppSyncErrorType;
+	public fun hashCode ()I
+	public fun isUnauthorizedErrorType ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/datastore/appsync/AppSyncExtensions$AppSyncErrorType : java/lang/Enum {
+	public static final field CONFLICT_UNHANDLED Lcom/amplifyframework/datastore/appsync/AppSyncExtensions$AppSyncErrorType;
+	public static final field OPERATION_DISABLED Lcom/amplifyframework/datastore/appsync/AppSyncExtensions$AppSyncErrorType;
+	public static final field UNAUTHORIZED Lcom/amplifyframework/datastore/appsync/AppSyncExtensions$AppSyncErrorType;
+	public static final field UNAUTHORIZED_EXCEPTION Lcom/amplifyframework/datastore/appsync/AppSyncExtensions$AppSyncErrorType;
+	public static fun enumerate (Ljava/lang/String;)Lcom/amplifyframework/datastore/appsync/AppSyncExtensions$AppSyncErrorType;
+	public fun getValue ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/datastore/appsync/AppSyncExtensions$AppSyncErrorType;
+	public static fun values ()[Lcom/amplifyframework/datastore/appsync/AppSyncExtensions$AppSyncErrorType;
+}
+
+public final class com/amplifyframework/datastore/appsync/ModelMetadata : com/amplifyframework/core/model/Model {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Boolean;Ljava/lang/Integer;Lcom/amplifyframework/core/model/temporal/Temporal$Timestamp;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getLastChangedAt ()Lcom/amplifyframework/core/model/temporal/Temporal$Timestamp;
+	public fun getTypename ()Ljava/lang/String;
+	public fun getVersion ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun isDeleted ()Ljava/lang/Boolean;
+	public synthetic fun resolveIdentifier ()Ljava/io/Serializable;
+	public fun resolveIdentifier ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/datastore/appsync/ModelWithMetadata {
+	public fun <init> (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/datastore/appsync/ModelMetadata;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getModel ()Lcom/amplifyframework/core/model/Model;
+	public fun getSyncMetadata ()Lcom/amplifyframework/datastore/appsync/ModelMetadata;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/datastore/appsync/ModelWithMetadataAdapter : com/google/gson/JsonDeserializer, com/google/gson/JsonSerializer {
+	public static final field DELETED_KEY Ljava/lang/String;
+	public static final field LAST_CHANGED_AT_KEY Ljava/lang/String;
+	public static final field TYPE_NAME Ljava/lang/String;
+	public static final field VERSION_KEY Ljava/lang/String;
+	public fun <init> ()V
+	public fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Lcom/amplifyframework/datastore/appsync/ModelWithMetadata;
+	public synthetic fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Ljava/lang/Object;
+	public static fun register (Lcom/google/gson/GsonBuilder;)V
+	public fun serialize (Lcom/amplifyframework/datastore/appsync/ModelWithMetadata;Ljava/lang/reflect/Type;Lcom/google/gson/JsonSerializationContext;)Lcom/google/gson/JsonElement;
+	public synthetic fun serialize (Ljava/lang/Object;Ljava/lang/reflect/Type;Lcom/google/gson/JsonSerializationContext;)Lcom/google/gson/JsonElement;
+}
+
+public final class com/amplifyframework/datastore/appsync/SerializedCustomTypeAdapter : com/google/gson/JsonDeserializer, com/google/gson/JsonSerializer {
+	public fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Lcom/amplifyframework/core/model/SerializedCustomType;
+	public synthetic fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Ljava/lang/Object;
+	public static fun register (Lcom/google/gson/GsonBuilder;)V
+	public fun serialize (Lcom/amplifyframework/core/model/SerializedCustomType;Ljava/lang/reflect/Type;Lcom/google/gson/JsonSerializationContext;)Lcom/google/gson/JsonElement;
+	public synthetic fun serialize (Ljava/lang/Object;Ljava/lang/reflect/Type;Lcom/google/gson/JsonSerializationContext;)Lcom/google/gson/JsonElement;
+}
+
+public final class com/amplifyframework/datastore/appsync/SerializedModelAdapter : com/google/gson/JsonDeserializer, com/google/gson/JsonSerializer {
+	public fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Lcom/amplifyframework/core/model/SerializedModel;
+	public synthetic fun deserialize (Lcom/google/gson/JsonElement;Ljava/lang/reflect/Type;Lcom/google/gson/JsonDeserializationContext;)Ljava/lang/Object;
+	public static fun register (Lcom/google/gson/GsonBuilder;)V
+	public fun serialize (Lcom/amplifyframework/core/model/SerializedModel;Ljava/lang/reflect/Type;Lcom/google/gson/JsonSerializationContext;)Lcom/google/gson/JsonElement;
+	public synthetic fun serialize (Ljava/lang/Object;Ljava/lang/reflect/Type;Lcom/google/gson/JsonSerializationContext;)Lcom/google/gson/JsonElement;
+}
+
+public final class com/amplifyframework/util/GsonFactory {
+	public static fun instance ()Lcom/google/gson/Gson;
+}
+
+public final class com/amplifyframework/util/GsonObjectConverter {
+	public static fun toList (Lcom/google/gson/JsonArray;)Ljava/util/List;
+	public static fun toMap (Lcom/google/gson/JsonObject;)Ljava/util/Map;
+}
+
+public final class com/amplifyframework/util/TypeMaker {
+	public static fun getParameterizedType ([Ljava/lang/reflect/Type;)Ljava/lang/reflect/Type;
+}
+

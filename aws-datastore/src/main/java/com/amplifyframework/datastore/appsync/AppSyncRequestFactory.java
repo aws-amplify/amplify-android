@@ -167,7 +167,9 @@ final class AppSyncRequestFactory {
             throws DataStoreException {
         try {
             Map<String, Object> inputMap = new HashMap<>();
-            inputMap.put("_version", version);
+            if (version != null) {
+                inputMap.put("_version", version);
+            }
             inputMap.putAll(GraphQLRequestHelper.getDeleteMutationInputMap(schema, model));
             return buildMutation(schema, inputMap, predicate, MutationType.DELETE, strategyType);
         } catch (AmplifyException amplifyException) {
@@ -184,7 +186,9 @@ final class AppSyncRequestFactory {
             AuthModeStrategyType strategyType) throws DataStoreException {
         try {
             Map<String, Object> inputMap = new HashMap<>();
-            inputMap.put("_version", version);
+            if (version != null) {
+                inputMap.put("_version", version);
+            }
             inputMap.putAll(GraphQLRequestHelper.getMapOfFieldNameAndValues(schema, model, MutationType.UPDATE));
             return buildMutation(schema, inputMap, predicate, MutationType.UPDATE, strategyType);
         } catch (AmplifyException amplifyException) {

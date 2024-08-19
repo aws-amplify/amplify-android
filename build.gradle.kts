@@ -13,7 +13,9 @@
  * permissions and limitations under the License.
  */
 
+import app.cash.licensee.LicenseeExtension
 import com.android.build.gradle.LibraryExtension
+import kotlinx.validation.ApiValidationExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
@@ -24,14 +26,18 @@ buildscript {
     }
 
     dependencies {
-        classpath("com.android.tools.build:gradle:7.3.1")
         classpath(kotlin("gradle-plugin", version = "1.9.10"))
         classpath("com.google.gms:google-services:4.3.15")
         classpath("org.jlleitschuh.gradle:ktlint-gradle:11.0.0")
-        classpath("org.gradle:test-retry-gradle-plugin:1.4.1")
         classpath("org.jetbrains.kotlinx:kover:0.6.1")
         classpath("app.cash.licensee:licensee-gradle-plugin:1.7.0")
     }
+}
+
+plugins {
+    alias(libs.plugins.binary.compatibility.validator)
+    alias(libs.plugins.kotlin.serialization) apply false
+    alias(libs.plugins.android.library) apply false
 }
 
 allprojects {
@@ -59,9 +65,10 @@ tasks.register<Delete>("clean").configure {
     delete(rootProject.buildDir)
 }
 
-val optInAnnotations = listOf(
+val internalApiAnnotations = listOf(
     "com.amplifyframework.annotations.InternalApiWarning",
-    "com.amplifyframework.annotations.InternalAmplifyApi"
+    "com.amplifyframework.annotations.InternalAmplifyApi",
+    "com.amplifyframework.annotations.AmplifyFlutterApi"
 )
 
 subprojects {
@@ -72,23 +79,23 @@ subprojects {
     }
 
     apply(plugin = "app.cash.licensee")
-    configure<app.cash.licensee.LicenseeExtension> {
+    configure<LicenseeExtension> {
         allow("Apache-2.0")
         allow("MIT")
         allow("BSD-2-Clause")
         allow("CC0-1.0")
         allowUrl("https://developer.android.com/studio/terms.html")
         allowDependency("net.zetetic", "android-database-sqlcipher", "4.5.4") {
-            "BSD style License"
+            because("BSD style License")
         }
         allowDependency("org.jetbrains", "annotations", "16.0.1") {
-            "Apache-2.0, but typo in license URL fixed in newer versions"
+            because("Apache-2.0, but typo in license URL fixed in newer versions")
         }
         allowDependency("org.mockito", "mockito-core", "3.9.0") {
-            "MIT license"
+            because("MIT license")
         }
         allowDependency("junit", "junit", "4.13.2") {
-            "Test Dependency"
+            because("Test Dependency")
         }
     }
 
@@ -97,19 +104,9 @@ subprojects {
         apply(from = "../kover.gradle")
     }
 
-    apply(plugin = "org.gradle.test-retry")
-
-    tasks.withType<Test>().configureEach {
-        retry {
-            maxRetries.set(1)
-            maxFailures.set(100)
-            failOnPassedAfterRetry.set(true)
-        }
-    }
-
     tasks.withType<KotlinCompile> {
         kotlinOptions {
-            optInAnnotations.forEach {
+            internalApiAnnotations.forEach {
                 freeCompilerArgs += "-opt-in=$it"
             }
         }
@@ -129,7 +126,12 @@ fun Project.configureAndroid() {
 
     configure<LibraryExtension> {
         buildToolsVersion = "30.0.3"
-        compileSdk = 32
+        compileSdk = 34
+
+        buildFeatures {
+            // Allow specifying custom buildConfig fields
+            buildConfig = true
+        }
 
         defaultConfig {
             minSdk = 24
@@ -160,11 +162,29 @@ fun Project.configureAndroid() {
             targetCompatibility = JavaVersion.VERSION_11
         }
 
+        tasks.withType<KotlinCompile>().configureEach {
+            kotlinOptions {
+                jvmTarget = JavaVersion.VERSION_11.toString()
+            }
+        }
+
         // Needed when running integration tests. The oauth2 library uses relies on two
         // dependencies (Apache's httpcore and httpclient), both of which include
         // META-INF/DEPENDENCIES. Tried a couple other options to no avail.
         packagingOptions {
-            resources.excludes.add("META-INF/*")
+            resources.excludes.addAll(
+                listOf(
+                    "META-INF/DEPENDENCIES",
+                    "META-INF/LICENSE.md",
+                    "META-INF/LICENSE-notice.md"
+                )
+            )
+        }
+
+        publishing {
+            singleVariant("release") {
+                withSourcesJar()
+            }
         }
     }
 
@@ -174,3 +194,11 @@ fun Project.configureAndroid() {
 }
 
 apply(from = rootProject.file("configuration/instrumentation-tests.gradle"))
+
+configure<ApiValidationExtension> {
+    // Interfaces marked with an internal API annotation are not part of the public API
+    nonPublicMarkers.addAll(internalApiAnnotations)
+    nonPublicMarkers.add("androidx.annotation.VisibleForTesting")
+
+    ignoredProjects.addAll(setOf("testutils", "testmodels", "annotations"))
+}

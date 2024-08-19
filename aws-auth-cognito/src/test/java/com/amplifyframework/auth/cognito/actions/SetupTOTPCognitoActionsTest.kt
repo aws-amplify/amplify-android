@@ -24,12 +24,12 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareToken
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareTokenResponseType
 import aws.sdk.kotlin.services.cognitoidentityprovider.verifySoftwareToken
 import com.amplifyframework.auth.cognito.AWSCognitoAuthService
+import com.amplifyframework.auth.cognito.AuthConfiguration
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.StoreClientBehavior
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.EventDispatcher
 import com.amplifyframework.statemachine.StateMachineEvent
-import com.amplifyframework.statemachine.codegen.data.AuthConfiguration
 import com.amplifyframework.statemachine.codegen.data.SignInTOTPSetupData
 import com.amplifyframework.statemachine.codegen.events.SetupTOTPEvent
 import io.mockk.coEvery
@@ -37,7 +37,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import kotlin.test.assertEquals
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
@@ -45,13 +44,12 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-@OptIn(ExperimentalCoroutinesApi::class)
 class SetupTOTPCognitoActionsTest {
 
     private val configuration = mockk<AuthConfiguration>()
     private val cognitoAuthService = mockk<AWSCognitoAuthService>()
     private val credentialStoreClient = mockk<StoreClientBehavior>()
-    private val logger = mockk<Logger>()
+    private val logger = mockk<Logger>(relaxed = true)
     private val cognitoIdentityProviderClientMock = mockk<CognitoIdentityProviderClient>()
     private val dispatcher = mockk<EventDispatcher>()
 
@@ -61,7 +59,6 @@ class SetupTOTPCognitoActionsTest {
 
     @Before
     fun setup() {
-        every { logger.verbose(any()) }.answers {}
         every { dispatcher.send(capture(capturedEvent)) }.answers { }
         every { cognitoAuthService.cognitoIdentityProviderClient }.answers { cognitoIdentityProviderClientMock }
         authEnvironment = AuthEnvironment(

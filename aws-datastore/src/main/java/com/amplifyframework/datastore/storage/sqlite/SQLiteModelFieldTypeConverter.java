@@ -206,7 +206,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
             // Skip if there is no equivalent column for field in object
             final SQLiteColumn column = columns.get(field.getName());
             if (column == null) {
-                LOGGER.verbose(String.format("Column with name %s does not exist", field.getName()));
+                LOGGER.verbose(() -> "Column with name " + field.getName() + " does not exist");
                 return null;
             }
 
@@ -235,10 +235,8 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
             }
 
             final String valueAsString = cursor.getString(columnIndex);
-            LOGGER.verbose(String.format(
-                    "Attempt to convert value \"%s\" from field %s of type %s in model %s",
-                    valueAsString, field.getName(), field.getTargetType(), parentSchema.getName()
-            ));
+            LOGGER.verbose(() -> "Attempt to convert value \"" + valueAsString + "\" from field " + field.getName()
+                                     + " of type " + field.getTargetType() + " in model " + parentSchema.getName());
 
             switch (javaFieldType) {
                 case STRING:

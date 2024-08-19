@@ -10,15 +10,14 @@
                 "responseType": "failure",
                 "response": {
                     "errorType": "NotAuthorizedException",
-                    "errorMessage": null
+                    "errorMessage": "Error type: Client, Protocol response: (empty response)"
                 }
             }
         ]
     },
     "api": {
         "name": "signOut",
-        "params": {
-        },
+        "params": {},
         "options": {
             "globalSignOut": true
         }
@@ -37,28 +36,19 @@
                         "recoverySuggestion": "See attached exception for more details. GlobalSignOut can be retried using the CognitoIdentityProviderClient accessible from the escape hatch.",
                         "cause": {
                             "errorType": "NotAuthorizedException",
-                            "errorMessage": null
+                            "errorMessage": "Error type: Client, Protocol response: (empty response)"
                         }
                     }
                 },
                 "hostedUIError": null,
                 "revokeTokenError": {
-                    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
                     "exception": {
+                        "errorType": "RevokeTokenException",
+                        "errorMessage": "Failed to revoke token",
                         "recoverySuggestion": "See attached exception for more details. RevokeToken can be retried using the CognitoIdentityProviderClient accessible from the escape hatch.",
-                        "detailMessage": "Failed to revoke token",
-                        "cause": {
-                            "detailMessage": "RevokeToken not attempted because GlobalSignOut failed.",
-                            "stackTrace": [
-                            ],
-                            "suppressedExceptions": [
-                            ]
-                        },
-                        "stackTrace": [
-                        ],
-                        "suppressedExceptions": [
-                        ]
-                    }
+                        "cause": {}
+                    },
+                    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU"
                 },
                 "signedOutLocally": true
             }

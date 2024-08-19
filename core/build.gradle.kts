@@ -14,6 +14,7 @@
  */
 
 plugins {
+    id("org.jetbrains.kotlin.plugin.serialization")
     id("com.android.library")
     id("kotlin-android")
 }
@@ -24,6 +25,7 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 group = properties["POM_GROUP"].toString()
 
 android {
+    namespace = "com.amplifyframework.core"
     kotlinOptions {
         moduleName = "com.amplifyframework.core"
     }
@@ -53,6 +55,7 @@ dependencies {
     testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.jsonassert)
     testImplementation(libs.gson)
+    testImplementation(libs.test.kotest.assertions)
 
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(libs.androidx.annotation)
