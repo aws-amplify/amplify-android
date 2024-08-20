@@ -153,7 +153,6 @@ internal class TransferTable {
             "$COLUMN_TYPE  text not null, " +
             "$COLUMN_STATE text not null, " +
             "$COLUMN_BUCKET_NAME text not null, " +
-            "$COLUMN_REGION text, " +
             "$COLUMN_KEY text not null," +
             "$COLUMN_VERSION_ID text, " +
             "$COLUMN_BYTES_TOTAL bigint, " +
