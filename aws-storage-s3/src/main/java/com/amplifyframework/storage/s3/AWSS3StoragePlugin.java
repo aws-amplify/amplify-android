@@ -145,7 +145,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     private StorageTransferClientProvider clientProvider
             = new S3StorageTransferClientProvider((region, bucketName) -> {
                 if (region != null && bucketName != null) {
-                    StorageBucket bucket = StorageBucket.fromBucketInfo(new BucketInfo(region, bucketName));
+                    StorageBucket bucket = StorageBucket.fromBucketInfo(new BucketInfo(bucketName, region));
                     return getAWSS3StorageService((ResolvedStorageBucket) bucket).getClient();
                 }
 
