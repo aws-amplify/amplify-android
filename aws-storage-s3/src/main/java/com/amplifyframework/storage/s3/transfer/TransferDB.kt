@@ -617,7 +617,7 @@ internal class TransferDB private constructor(context: Context) {
         isLastPart: Int,
         metadata: ObjectMetadata?,
         cannedAcl: ObjectCannedAcl?,
-        useAccelerateEndpoint: Boolean,
+        useAccelerateEndpoint: Boolean
     ): ContentValues {
         val values = ContentValues()
         values.put(TransferTable.COLUMN_TRANSFER_ID, transferId)

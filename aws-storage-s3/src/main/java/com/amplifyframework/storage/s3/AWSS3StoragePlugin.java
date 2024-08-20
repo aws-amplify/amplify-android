@@ -142,17 +142,20 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     private List<AmplifyOutputsData.StorageBucket> configuredBuckets;
 
     @SuppressLint("UnsafeOptInUsageError")
-    private StorageTransferClientProvider clientProvider = new S3StorageTransferClientProvider((region, bucketName) -> {
-        if (region != null && bucketName != null) {
-            StorageBucket bucket = StorageBucket.fromBucketInfo(new BucketInfo(region, bucketName));
-            return getAWSS3StorageService((ResolvedStorageBucket) bucket).getClient();
-        }
+    private StorageTransferClientProvider clientProvider
+            = new S3StorageTransferClientProvider((region, bucketName) -> {
+                if (region != null && bucketName != null) {
+                    StorageBucket bucket = StorageBucket.fromBucketInfo(new BucketInfo(region, bucketName));
+                    return getAWSS3StorageService((ResolvedStorageBucket) bucket).getClient();
+                }
 
-        if (region != null) {
-            return AWSS3StorageService.getS3Client(region, authCredentialsProvider);
-        }
-        return defaultStorageService.getClient();
-    });
+                if (region != null) {
+                    // unable to create a new S3Client from java code,
+                    // redirecting to AWSS3Service to create S3 Client from kotlin
+                    return AWSS3StorageService.getS3Client(region, authCredentialsProvider);
+                }
+                return defaultStorageService.getClient();
+            });
 
     /**
      * Constructs the AWS S3 Storage Plugin initializing the executor service.
