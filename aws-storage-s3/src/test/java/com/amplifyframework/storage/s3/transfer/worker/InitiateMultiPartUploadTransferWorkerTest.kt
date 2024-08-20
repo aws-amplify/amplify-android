@@ -23,6 +23,8 @@ import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.model.CreateMultipartUploadResponse
 import aws.sdk.kotlin.services.s3.withConfig
 import com.amplifyframework.storage.TransferState
+import com.amplifyframework.storage.s3.transfer.S3StorageTransferClientProvider
+import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferRecord
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
@@ -51,12 +53,14 @@ internal class InitiateMultiPartUploadTransferWorkerTest {
     private lateinit var transferDB: TransferDB
     private lateinit var transferStatusUpdater: TransferStatusUpdater
     private lateinit var workerParameters: WorkerParameters
+    private lateinit var clientProvider: StorageTransferClientProvider
 
     @Before
     fun setup() {
         context = ApplicationProvider.getApplicationContext()
         workerParameters = mockk(WorkerParameters::class.java.name)
         s3Client = mockk<S3Client>(relaxed = true)
+        clientProvider = mockk(S3StorageTransferClientProvider::class.java.name)
         mockkStatic(S3Client::withConfig)
         transferDB = mockk(TransferDB::class.java.name)
         transferStatusUpdater = mockk(TransferStatusUpdater::class.java.name)
@@ -64,6 +68,7 @@ internal class InitiateMultiPartUploadTransferWorkerTest {
         every { workerParameters.runAttemptCount }.answers { 1 }
         every { workerParameters.taskExecutor }.answers { ImmediateTaskExecutor() }
         every { s3Client.withConfig(any()) } returns s3Client
+        every { clientProvider.getStorageTransferClient(any(), any())}.answers { s3Client }
     }
 
     @After
@@ -89,7 +94,7 @@ internal class InitiateMultiPartUploadTransferWorkerTest {
         every { transferStatusUpdater.updateMultipartId(1, "upload_id") }.answers { }
         every { transferStatusUpdater.updateTransferState(any(), TransferState.IN_PROGRESS) }.answers { }
         val worker = InitiateMultiPartUploadTransferWorker(
-            s3Client,
+            clientProvider,
             transferDB,
             transferStatusUpdater,
             context,
@@ -97,6 +102,7 @@ internal class InitiateMultiPartUploadTransferWorkerTest {
         )
         val result = worker.doWork()
         verify(exactly = 1) { transferStatusUpdater.updateMultipartId(1, "upload_id") }
+        verify(exactly = 1) { clientProvider.getStorageTransferClient(any(), any()) }
         val output = workDataOf(
             BaseTransferWorker.MULTI_PART_UPLOAD_ID to "upload_id",
             BaseTransferWorker.TRANSFER_RECORD_ID to 1
@@ -124,7 +130,7 @@ internal class InitiateMultiPartUploadTransferWorkerTest {
         every { transferStatusUpdater.updateTransferState(any(), any()) }.answers { }
 
         val worker = InitiateMultiPartUploadTransferWorker(
-            s3Client,
+            clientProvider,
             transferDB,
             transferStatusUpdater,
             context,

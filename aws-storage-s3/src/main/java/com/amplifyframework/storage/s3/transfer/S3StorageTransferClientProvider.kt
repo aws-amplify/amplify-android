@@ -12,20 +12,16 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package com.amplifyframework.storage.s3.transfer
 
-import aws.sdk.kotlin.services.s3.model.ObjectCannedAcl
-import com.amplifyframework.storage.ObjectMetadata
+import aws.sdk.kotlin.services.s3.S3Client
+import com.amplifyframework.auth.AuthCredentialsProvider
+import com.amplifyframework.storage.StorageException
 
-/**
- * Options used to configure the upload of an object using {@link TransferManager}.
- */
-
-internal data class UploadOptions @JvmOverloads constructor(
-    val bucket: String,
-    val region: String,
-    val objectMetadata: ObjectMetadata = ObjectMetadata(),
-    val cannedAcl: ObjectCannedAcl? = null,
-    val transferListener: TransferListener? = null
-)
+internal class S3StorageTransferClientProvider(
+    private val createS3Client: (region: String?, bucketName: String?) -> S3Client
+) : StorageTransferClientProvider {
+    override fun getStorageTransferClient(region: String?, bucketName: String?): S3Client {
+        return createS3Client(region, bucketName)
+    }
+}

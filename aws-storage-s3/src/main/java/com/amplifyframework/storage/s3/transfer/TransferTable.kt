@@ -134,6 +134,8 @@ internal class TransferTable {
 
         const val COLUMN_USE_ACCELERATE_ENDPOINT = "useAccelerateEndpoint"
 
+        const val COLUMN_REGION = "region"
+
         private const val TABLE_VERSION_2 = 2
         private const val TABLE_VERSION_3 = 3
         private const val TABLE_VERSION_4 = 4
@@ -142,6 +144,7 @@ internal class TransferTable {
         private const val TABLE_VERSION_7 = 7
         private const val TABLE_VERSION_8 = 8
         private const val TABLE_VERSION_9 = 9
+        private const val TABLE_VERSION_10 = 10
 
         // Database creation SQL statement
         const val DATABASE_CREATE = "create table $TABLE_TRANSFER (" +
@@ -150,6 +153,7 @@ internal class TransferTable {
             "$COLUMN_TYPE  text not null, " +
             "$COLUMN_STATE text not null, " +
             "$COLUMN_BUCKET_NAME text not null, " +
+            "$COLUMN_REGION text, " +
             "$COLUMN_KEY text not null," +
             "$COLUMN_VERSION_ID text, " +
             "$COLUMN_BYTES_TOTAL bigint, " +
@@ -218,6 +222,9 @@ internal class TransferTable {
             }
             if (TABLE_VERSION_9 in (oldVersion + 1)..newVersion) {
                 addVersion9Columns(database)
+            }
+            if (TABLE_VERSION_10 in (oldVersion + 1)..newVersion) {
+                addVersion10Columns(database)
             }
             database.setTransactionSuccessful()
             database.endTransaction()
@@ -295,6 +302,12 @@ internal class TransferTable {
             val addConnectionType = "ALTER TABLE $TABLE_TRANSFER ADD COLUMN $COLUMN_USE_ACCELERATE_ENDPOINT int " +
                 "DEFAULT 0;"
             database.execSQL(addConnectionType)
+        }
+
+        private fun addVersion10Columns(database: SQLiteDatabase) {
+            val addRegion = "ALTER TABLE $TABLE_TRANSFER ADD COLUMN $COLUMN_REGION text " +
+                    "DEFAULT null;"
+            database.execSQL(addRegion)
         }
     }
 }

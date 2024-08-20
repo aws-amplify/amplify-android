@@ -90,7 +90,8 @@ import com.amplifyframework.storage.s3.request.AWSS3StoragePathUploadRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadRequest;
 import com.amplifyframework.storage.s3.service.AWSS3StorageService;
-import com.amplifyframework.storage.s3.service.StorageService;
+import com.amplifyframework.storage.s3.transfer.S3StorageTransferClientProvider;
+import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider;
 import com.amplifyframework.storage.s3.transfer.TransferObserver;
 import com.amplifyframework.storage.s3.transfer.TransferRecord;
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater;
@@ -126,19 +127,32 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
     private static final int DEFAULT_URL_EXPIRATION_DAYS = 7;
 
-    private final StorageService.Factory storageServiceFactory;
+    private final AWSS3StorageService.Factory storageServiceFactory;
     private final ExecutorService executorService;
-    private final AuthCredentialsProvider authCredentialsProvider;
+    private AuthCredentialsProvider authCredentialsProvider;
     private final AWSS3StoragePluginConfiguration awsS3StoragePluginConfiguration;
     private AWSS3StorageService defaultStorageService;
     @SuppressWarnings("deprecation")
     private StorageAccessLevel defaultAccessLevel;
     private int defaultUrlExpiration;
 
-    private Map<String, AWSS3StorageService> awsS3StorageServicesByBucketName = new HashMap<>();
+    private final Map<String, AWSS3StorageService> awsS3StorageServicesByBucketName = new HashMap<>();
     private Context context;
     @SuppressLint("UnsafeOptInUsageError")
     private List<AmplifyOutputsData.StorageBucket> configuredBuckets;
+
+    @SuppressLint("UnsafeOptInUsageError")
+    private StorageTransferClientProvider clientProvider = new S3StorageTransferClientProvider((region, bucketName) -> {
+        if (region != null && bucketName != null) {
+            StorageBucket bucket = StorageBucket.fromBucketInfo(new BucketInfo(region, bucketName));
+            return getAWSS3StorageService((ResolvedStorageBucket) bucket).getClient();
+        }
+
+        if (region != null) {
+            return AWSS3StorageService.getS3Client(region, authCredentialsProvider);
+        }
+        return defaultStorageService.getClient();
+    });
 
     /**
      * Constructs the AWS S3 Storage Plugin initializing the executor service.
@@ -162,13 +176,14 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
     @VisibleForTesting
     AWSS3StoragePlugin(AuthCredentialsProvider authCredentialsProvider) {
-        this((context, region, bucket) ->
+        this((context, region, bucket, clientProvider) ->
                 new AWSS3StorageService(
                     context,
                     region,
                     bucket,
                     authCredentialsProvider,
-                    AWS_S3_STORAGE_PLUGIN_KEY
+                    AWS_S3_STORAGE_PLUGIN_KEY,
+                    clientProvider
                 ),
             authCredentialsProvider,
             new AWSS3StoragePluginConfiguration.Builder().build());
@@ -177,13 +192,14 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     @VisibleForTesting
     AWSS3StoragePlugin(AuthCredentialsProvider authCredentialsProvider,
                        AWSS3StoragePluginConfiguration awss3StoragePluginConfiguration) {
-        this((context, region, bucket) ->
+        this((context, region, bucket, clientProvider) ->
                 new AWSS3StorageService(
                     context,
                     region,
                     bucket,
                     authCredentialsProvider,
-                    AWS_S3_STORAGE_PLUGIN_KEY
+                    AWS_S3_STORAGE_PLUGIN_KEY,
+                    clientProvider
                 ),
             authCredentialsProvider,
             awss3StoragePluginConfiguration);
@@ -191,7 +207,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
     @VisibleForTesting
     AWSS3StoragePlugin(
-        StorageService.Factory storageServiceFactory,
+        AWSS3StorageService.Factory storageServiceFactory,
         AuthCredentialsProvider authCredentialsProvider,
         AWSS3StoragePluginConfiguration awss3StoragePluginConfiguration
     ) {
@@ -282,10 +298,11 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     ) throws StorageException {
         try {
             this.context = context;
-            this.defaultStorageService = (AWSS3StorageService) storageServiceFactory.create(
+            this.defaultStorageService = storageServiceFactory.create(
                     context,
                     region,
-                    bucket.getBucketInfo().getName());
+                    bucket.getBucketInfo().getName(),
+                    clientProvider);
             this.awsS3StorageServicesByBucketName.clear();
             this.awsS3StorageServicesByBucketName.put(bucket.getBucketInfo().getName(), this.defaultStorageService);
         } catch (RuntimeException exception) {
@@ -935,7 +952,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
         return operation;
     }
-
+    
+    @SuppressLint("UnsafeOptInUsageError")
     @Override
     @SuppressWarnings("deprecation")
     public void getTransfer(
@@ -951,18 +969,23 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                             transferRecord.getId(),
                             defaultStorageService.getTransferManager().getTransferStatusUpdater(),
                             transferRecord.getBucketName(),
+                            transferRecord.getRegion(),
                             transferRecord.getKey(),
                             transferRecord.getFile(),
                             null,
                             transferRecord.getState() != null ? transferRecord.getState() : TransferState.UNKNOWN);
                     TransferType transferType = transferRecord.getType();
+
+                    AWSS3StorageService storageService
+                            = getAwss3StorageServiceFromTransferRecord(onError, transferRecord);
+
                     switch (Objects.requireNonNull(transferType)) {
                         case UPLOAD:
                             if (transferRecord.getFile().startsWith(TransferStatusUpdater.TEMP_FILE_PREFIX)) {
                                 AWSS3StorageUploadInputStreamOperation operation =
                                     new AWSS3StorageUploadInputStreamOperation(
                                         transferId,
-                                        defaultStorageService,
+                                        storageService,
                                         executorService,
                                         authCredentialsProvider,
                                         awsS3StoragePluginConfiguration,
@@ -973,7 +996,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                                 AWSS3StorageUploadFileOperation operation =
                                     new AWSS3StorageUploadFileOperation(
                                         transferId,
-                                        defaultStorageService,
+                                        storageService,
                                         executorService,
                                         authCredentialsProvider,
                                         awsS3StoragePluginConfiguration,
@@ -987,7 +1010,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                                 downloadFileOperation = new AWSS3StorageDownloadFileOperation(
                                 transferId,
                                 new File(transferRecord.getFile()),
-                                defaultStorageService,
+                                storageService,
                                 executorService,
                                 authCredentialsProvider,
                                 awsS3StoragePluginConfiguration,
@@ -1007,6 +1030,25 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                     "Please verify that the transfer id is valid and the transfer is not completed"));
             }
         });
+    }
+
+    private AWSS3StorageService getAwss3StorageServiceFromTransferRecord(
+            @NonNull Consumer<StorageException> onError,
+            TransferRecord transferRecord
+    ) {
+        AWSS3StorageService storageService = defaultStorageService;
+        if (transferRecord.getRegion() != null && transferRecord.getBucketName() != null) {
+            try {
+                BucketInfo bucketInfo = new BucketInfo(
+                        transferRecord.getBucketName(),
+                        transferRecord.getRegion());
+                StorageBucket bucket = StorageBucket.fromBucketInfo(bucketInfo);
+                storageService = getStorageService(bucket);
+            } catch (StorageException exception) {
+                onError.accept(exception);
+            }
+        }
+        return storageService;
     }
 
     @NonNull
@@ -1133,7 +1175,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                     AWSS3StorageService service = awsS3StorageServicesByBucketName.get(bucketName);
                     if (service == null) {
                         String region = configuredBucket.getAwsRegion();
-                        service = (AWSS3StorageService) storageServiceFactory.create(context, region, bucketName);
+                        service = storageServiceFactory.create(context, region, bucketName, clientProvider);
                         awsS3StorageServicesByBucketName.put(bucketName, service);
                     }
 
@@ -1150,7 +1192,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         AWSS3StorageService service = awsS3StorageServicesByBucketName.get(bucketName);
         if (service == null) {
             String region = resolvedStorageBucket.getBucketInfo().getRegion();
-            service = (AWSS3StorageService) storageServiceFactory.create(context, region, bucketName);
+            service = storageServiceFactory.create(context, region, bucketName, clientProvider);
             awsS3StorageServicesByBucketName.put(bucketName, service);
         }
         return service;

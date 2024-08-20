@@ -32,6 +32,7 @@ import com.amplifyframework.storage.StorageItem
 import com.amplifyframework.storage.options.SubpathStrategy
 import com.amplifyframework.storage.options.SubpathStrategy.Exclude
 import com.amplifyframework.storage.result.StorageListResult
+import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.TransferManager
 import com.amplifyframework.storage.s3.transfer.TransferObserver
 import com.amplifyframework.storage.s3.transfer.TransferRecord
@@ -46,7 +47,6 @@ import java.util.Date
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.runBlocking
-
 /**
  * A representation of an S3 backend service endpoint.
  */
@@ -55,8 +55,19 @@ internal class AWSS3StorageService(
     private val awsRegion: String,
     private val s3BucketName: String,
     private val authCredentialsProvider: AuthCredentialsProvider,
-    private val awsS3StoragePluginKey: String
+    private val awsS3StoragePluginKey: String,
+    private val clientProvider: StorageTransferClientProvider
 ) : StorageService {
+
+    companion object {
+        @JvmStatic
+        fun getS3Client(region: String, authCredentialsProvider: AuthCredentialsProvider): S3Client {
+            return S3Client {
+                this.region = region
+                this.credentialsProvider = authCredentialsProvider
+            }
+        }
+    }
 
     private var s3Client: S3Client = S3Client {
         region = awsRegion
@@ -64,7 +75,7 @@ internal class AWSS3StorageService(
     }
 
     val transferManager: TransferManager =
-        TransferManager(context, s3Client, awsS3StoragePluginKey)
+        TransferManager(context, clientProvider, awsS3StoragePluginKey)
 
     /**
      * Generate pre-signed URL for an object.
@@ -130,6 +141,7 @@ internal class AWSS3StorageService(
         return transferManager.download(
             transferId,
             s3BucketName,
+            awsRegion,
             serviceKey,
             file,
             useAccelerateEndpoint = useAccelerateEndpoint
@@ -153,6 +165,7 @@ internal class AWSS3StorageService(
         return transferManager.upload(
             transferId,
             s3BucketName,
+            awsRegion,
             serviceKey,
             file,
             metadata,
@@ -175,7 +188,7 @@ internal class AWSS3StorageService(
         metadata: ObjectMetadata,
         useAccelerateEndpoint: Boolean
     ): TransferObserver {
-        val uploadOptions = UploadOptions(s3BucketName, metadata)
+        val uploadOptions = UploadOptions(s3BucketName, awsRegion, metadata)
         return transferManager.upload(transferId, serviceKey, inputStream, uploadOptions, useAccelerateEndpoint)
     }
 
@@ -419,5 +432,22 @@ internal class AWSS3StorageService(
      */
     fun getClient(): S3Client {
         return s3Client
+    }
+
+    interface Factory {
+        /**
+         * Factory interface to instantiate [StorageService] object.
+         *
+         * @param context    Android context
+         * @param region     S3 bucket region
+         * @param bucketName Name of the bucket where the items are stored
+         * @return An instantiated storage service instance
+         */
+        fun create(
+            context: Context,
+            region: String,
+            bucketName: String,
+            clientProvider: StorageTransferClientProvider
+        ): AWSS3StorageService
     }
 }
