@@ -980,7 +980,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                     TransferType transferType = transferRecord.getType();
 
                     AWSS3StorageService storageService
-                            = getAwss3StorageServiceFromTransferRecord(onError, transferRecord);
+                            = getAwsS3StorageServiceFromTransferRecord(onError, transferRecord);
 
                     switch (Objects.requireNonNull(transferType)) {
                         case UPLOAD:
@@ -1035,7 +1035,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         });
     }
 
-    private AWSS3StorageService getAwss3StorageServiceFromTransferRecord(
+    private AWSS3StorageService getAwsS3StorageServiceFromTransferRecord(
             @NonNull Consumer<StorageException> onError,
             TransferRecord transferRecord
     ) {
@@ -1079,6 +1079,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                 accessLevel(options.getAccessLevel())
                 .targetIdentityId(options.getTargetIdentityId())
                 .setPageSize(AWSS3StoragePagedListOptions.ALL_PAGE_SIZE)
+                .bucket(options.getBucket())
                 .build();
         return list(path, storagePagedListOptions, onSuccess, onError);
     }
@@ -1098,9 +1099,16 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             options.getNextToken(),
             options.getSubpathStrategy());
 
+        AWSS3StorageService storageService = defaultStorageService;
+        try {
+            storageService = getStorageService(options.getBucket());
+        } catch (StorageException exception) {
+            onError.accept(exception);
+        }
+
         AWSS3StorageListOperation operation =
             new AWSS3StorageListOperation(
-                defaultStorageService,
+                storageService,
                 executorService,
                 authCredentialsProvider,
                 request,
@@ -1127,9 +1135,16 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                 options.getNextToken(),
                 options.getSubpathStrategy());
 
+        AWSS3StorageService storageService = defaultStorageService;
+        try {
+            storageService = getStorageService(options.getBucket());
+        } catch (StorageException exception) {
+            onError.accept(exception);
+        }
+
         AWSS3StoragePathListOperation operation =
                 new AWSS3StoragePathListOperation(
-                        defaultStorageService,
+                        storageService,
                         executorService,
                         authCredentialsProvider,
                         request,

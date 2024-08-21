@@ -304,8 +304,7 @@ internal class TransferTable {
         }
 
         private fun addVersion10Columns(database: SQLiteDatabase) {
-            val addRegion = "ALTER TABLE $TABLE_TRANSFER ADD COLUMN $COLUMN_REGION text " +
-                    "DEFAULT null;"
+            val addRegion = "ALTER TABLE $TABLE_TRANSFER ADD COLUMN $COLUMN_REGION text " + "DEFAULT null;"
             database.execSQL(addRegion)
         }
     }

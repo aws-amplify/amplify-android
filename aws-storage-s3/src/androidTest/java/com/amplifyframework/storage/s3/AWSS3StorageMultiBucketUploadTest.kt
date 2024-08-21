@@ -23,6 +23,8 @@ import com.amplifyframework.core.async.Resumable
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.hub.SubscriptionToken
+import com.amplifyframework.storage.BucketInfo
+import com.amplifyframework.storage.StorageBucket
 import com.amplifyframework.storage.StorageCategory
 import com.amplifyframework.storage.StorageChannelEventName
 import com.amplifyframework.storage.StorageException
@@ -30,25 +32,20 @@ import com.amplifyframework.storage.StoragePath
 import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.TransferState.Companion.getState
 import com.amplifyframework.storage.operation.StorageUploadFileOperation
-import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation
-import com.amplifyframework.storage.operation.StorageUploadOperation
 import com.amplifyframework.storage.options.StorageRemoveOptions
 import com.amplifyframework.storage.options.StorageUploadFileOptions
-import com.amplifyframework.storage.options.StorageUploadInputStreamOptions
-import com.amplifyframework.storage.s3.UserCredentials.Credential
 import com.amplifyframework.storage.s3.options.AWSS3StorageUploadFileOptions
 import com.amplifyframework.storage.s3.test.R
 import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils.initializeWorkmanagerTestUtil
 import com.amplifyframework.testutils.random.RandomTempFile
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousStorage
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
 import org.junit.After
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.Test
 import java.io.File
-import java.io.FileInputStream
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
@@ -56,9 +53,11 @@ import java.util.concurrent.atomic.AtomicReference
 /**
  * Instrumentation test for operational work on upload.
  */
-class AWSS3StoragePathUploadTest {
-    private val defaultFileOptions = StorageUploadFileOptions.defaultInstance()
-    private val defaultInputStreamOptions = StorageUploadInputStreamOptions.defaultInstance()
+class AWSS3StorageMultiBucketUploadTest {
+    private val defaultFileOptions = StorageUploadFileOptions
+        .builder()
+        .bucket(TestStorageCategory.getStorageBucket())
+        .build()
 
     // Create a set to remember all the subscriptions
     private val subscriptions = mutableSetOf<SubscriptionToken>()
@@ -71,8 +70,6 @@ class AWSS3StoragePathUploadTest {
         lateinit var storageCategory: StorageCategory
         lateinit var synchronousStorage: SynchronousStorage
         lateinit var synchronousAuth: SynchronousAuth
-        internal lateinit var userOne: Credential
-        internal lateinit var userTwo: Credential
 
         /**
          * Initialize mobile client and configure the storage.
@@ -84,11 +81,6 @@ class AWSS3StoragePathUploadTest {
             val context = ApplicationProvider.getApplicationContext<Context>()
             initializeWorkmanagerTestUtil(context)
             synchronousAuth = SynchronousAuth.delegatingToCognito(context, AWSCognitoAuthPlugin())
-            val identityIdSource = MobileClientIdentityIdSource.create(synchronousAuth)
-            val userCredentials = UserCredentials.create(context, identityIdSource)
-            val iterator = userCredentials.iterator()
-            userOne = iterator.next()
-            userTwo = iterator.next()
 
             // Get a handle to storage
             storageCategory = TestStorageCategory.create(context, R.raw.amplifyconfiguration)
@@ -111,7 +103,6 @@ class AWSS3StoragePathUploadTest {
         } catch (ex: StorageException) {
             // in some cases, access denied exception made occur here
         }
-        synchronousAuth.signOut()
     }
 
     @Test
@@ -119,13 +110,6 @@ class AWSS3StoragePathUploadTest {
         val uploadFile: File = RandomTempFile(SMALL_FILE_SIZE)
         storagePath = StoragePath.fromString("public/${uploadFile.name}")
         synchronousStorage.uploadFile(storagePath, uploadFile, defaultFileOptions)
-    }
-
-    @Test
-    fun testUploadSmallFileStream() {
-        val uploadFile: File = RandomTempFile(SMALL_FILE_SIZE)
-        storagePath = StoragePath.fromString("public/${uploadFile.name}")
-        synchronousStorage.uploadInputStream(storagePath, FileInputStream(uploadFile), defaultInputStreamOptions)
     }
 
     @Test
@@ -174,8 +158,8 @@ class AWSS3StoragePathUploadTest {
         opContainer.set(op)
 
         // Assert that the required conditions have been met
-        assertTrue(canceled.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-        assertNull(errorContainer.get())
+        canceled.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS) shouldBe true
+        errorContainer.get() shouldBe null
     }
 
     @Test
@@ -218,9 +202,9 @@ class AWSS3StoragePathUploadTest {
         opContainer.set(op)
 
         // Assert that all the required conditions have been met
-        assertTrue(resumed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-        assertTrue(completed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-        assertNull(errorContainer.get())
+        resumed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS) shouldBe true
+        completed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS) shouldBe true
+        errorContainer.get()shouldBe null
     }
 
     @Test
@@ -274,187 +258,23 @@ class AWSS3StoragePathUploadTest {
         transferId.set(op.transferId)
 
         // Assert that all the required conditions have been met
-        assertTrue(resumed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-        assertTrue(completed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-        assertNull(errorContainer.get())
+        resumed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS) shouldBe true
+        completed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS) shouldBe true
+        errorContainer.get() shouldBe null
     }
 
     @Test
-    fun testUploadInputStreamGetTransferOnPause() {
-        val completed = CountDownLatch(1)
-        val resumed = CountDownLatch(1)
-        val transferId = AtomicReference<String>()
-        val opContainer = AtomicReference<StorageUploadInputStreamOperation<*>>()
-        val errorContainer = AtomicReference<Throwable>()
-
-        // Create a file large enough that transfer won't finish before being paused
-        val uploadFile: File = RandomTempFile(LARGE_FILE_SIZE)
+    fun testUploadFromInvalidBucket() {
+        val bucketName = "amplify-android-storage-integration-test-123xyz"
+        val region = "us-east-1"
+        val bucketInfo = BucketInfo(bucketName, region)
+        val storageBucket = StorageBucket.fromBucketInfo(bucketInfo)
+        val option = StorageUploadFileOptions.builder().bucket(storageBucket).build()
+        val uploadFile: File = RandomTempFile(SMALL_FILE_SIZE)
         storagePath = StoragePath.fromString("public/${uploadFile.name}")
 
-        // Listen to Hub events to resume when operation has been paused
-        val resumeToken = Amplify.Hub.subscribe(HubChannel.STORAGE) { hubEvent: HubEvent<*> ->
-            if (StorageChannelEventName.UPLOAD_STATE.toString() == hubEvent.name) {
-                val state = getState(hubEvent.data as String)
-                if (TransferState.PAUSED == state) {
-                    opContainer.get().clearAllListeners()
-                    storageCategory.getTransfer(
-                        transferId.get(),
-                        {
-                            val getOp = it as StorageUploadOperation
-                            getOp.resume()
-                            resumed.countDown()
-                            getOp.setOnSuccess { completed.countDown() }
-                        },
-                        { newValue: StorageException -> errorContainer.set(newValue) }
-                    )
-                }
-            }
+        shouldThrow<StorageException> {
+            synchronousStorage.uploadFile(storagePath, uploadFile, option)
         }
-        subscriptions.add(resumeToken)
-
-        // Begin uploading a large file
-        val op = storageCategory.uploadInputStream(
-            storagePath,
-            FileInputStream(uploadFile),
-            defaultInputStreamOptions,
-            {
-                if (it.currentBytes > 0 && resumed.count > 0) {
-                    opContainer.get().pause()
-                }
-            },
-            {},
-            { errorContainer.set(it) }
-        )
-
-        opContainer.set(op)
-        transferId.set(op.transferId)
-
-        // Assert that all the required conditions have been met
-        assertTrue(resumed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-        assertTrue(completed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-        assertNull(errorContainer.get())
-    }
-
-    @Test
-    fun testUploadSmallFileWithAccelerationEnabled() {
-        val uploadFile: File = RandomTempFile(SMALL_FILE_SIZE)
-        storagePath = StoragePath.fromString("public/${uploadFile.name}")
-        val awss3StorageUploadFileOptions =
-            AWSS3StorageUploadFileOptions.builder().setUseAccelerateEndpoint(true).build()
-
-        synchronousStorage.uploadFile(
-            storagePath,
-            uploadFile,
-            awss3StorageUploadFileOptions
-        )
-    }
-
-    @Test
-    fun testUploadLargeFileWithAccelerationEnabled() {
-        val uploadFile: File = RandomTempFile(LARGE_FILE_SIZE)
-        storagePath = StoragePath.fromString("public/${uploadFile.name}")
-        val awss3StorageUploadFileOptions =
-            AWSS3StorageUploadFileOptions.builder().setUseAccelerateEndpoint(true).build()
-        synchronousStorage.uploadFile(
-            storagePath,
-            uploadFile,
-            awss3StorageUploadFileOptions
-        )
-    }
-
-    @Test(expected = StorageException::class)
-    fun testUploadUnauthenticatedProtectedAccess() {
-        val uploadFile: File = RandomTempFile(SMALL_FILE_SIZE)
-        storagePath = StoragePath.fromString("protected/${userOne.identityId}/${uploadFile.name}")
-
-        synchronousStorage.uploadFile(storagePath, uploadFile, defaultFileOptions)
-    }
-
-    @Test(expected = StorageException::class)
-    fun testUploadInputStreamUnauthenticatedProtectedAccess() {
-        val uploadFile: File = RandomTempFile(SMALL_FILE_SIZE)
-        storagePath = StoragePath.fromString("protected/${userOne.identityId}/${uploadFile.name}")
-
-        synchronousStorage.uploadInputStream(storagePath, FileInputStream(uploadFile), defaultInputStreamOptions)
-    }
-
-    @Test
-    fun testUploadWithProtectedAccess() {
-        synchronousAuth.signIn(userOne.username, userOne.password)
-
-        val uploadFile: File = RandomTempFile(SMALL_FILE_SIZE)
-        storagePath = StoragePath.fromString("protected/${userOne.identityId}/${uploadFile.name}")
-
-        synchronousStorage.uploadFile(storagePath, uploadFile, defaultFileOptions)
-    }
-
-    @Test
-    fun testUploadInputStreamWithProtectedAccess() {
-        synchronousAuth.signIn(userOne.username, userOne.password)
-
-        val uploadFile: File = RandomTempFile(SMALL_FILE_SIZE)
-        storagePath = StoragePath.fromString("protected/${userOne.identityId}/${uploadFile.name}")
-
-        synchronousStorage.uploadInputStream(storagePath, FileInputStream(uploadFile), defaultInputStreamOptions)
-    }
-
-    @Test
-    fun testUploadWithPrivateAccess() {
-        synchronousAuth.signIn(userOne.username, userOne.password)
-
-        val uploadFile: File = RandomTempFile(SMALL_FILE_SIZE)
-        storagePath = StoragePath.fromString("private/${userOne.identityId}/${uploadFile.name}")
-
-        synchronousStorage.uploadFile(storagePath, uploadFile, defaultFileOptions)
-    }
-
-    @Test
-    fun testUploadInputStreamWithPrivateAccess() {
-        synchronousAuth.signIn(userOne.username, userOne.password)
-
-        val uploadFile: File = RandomTempFile(SMALL_FILE_SIZE)
-        storagePath = StoragePath.fromString("private/${userOne.identityId}/${uploadFile.name}")
-
-        synchronousStorage.uploadInputStream(storagePath, FileInputStream(uploadFile), defaultInputStreamOptions)
-    }
-
-    @Test(expected = StorageException::class)
-    fun testUploadWithProtectedAccessWrongUser() {
-        synchronousAuth.signIn(userOne.username, userOne.password)
-
-        val uploadFile: File = RandomTempFile(SMALL_FILE_SIZE)
-        storagePath = StoragePath.fromString("protected/${userTwo.identityId}/${uploadFile.name}")
-
-        synchronousStorage.uploadFile(storagePath, uploadFile, defaultFileOptions)
-    }
-
-    @Test(expected = StorageException::class)
-    fun testUploadInputStreamWithProtectedAccessWrongUser() {
-        synchronousAuth.signIn(userOne.username, userOne.password)
-
-        val uploadFile: File = RandomTempFile(SMALL_FILE_SIZE)
-        storagePath = StoragePath.fromString("protected/${userTwo.identityId}/${uploadFile.name}")
-
-        synchronousStorage.uploadInputStream(storagePath, FileInputStream(uploadFile), defaultInputStreamOptions)
-    }
-
-    @Test(expected = StorageException::class)
-    fun testUploadWithPrivateAccessWrongUser() {
-        synchronousAuth.signIn(userOne.username, userOne.password)
-
-        val uploadFile: File = RandomTempFile(SMALL_FILE_SIZE)
-        storagePath = StoragePath.fromString("private/${userTwo.identityId}/${uploadFile.name}")
-
-        synchronousStorage.uploadFile(storagePath, uploadFile, defaultFileOptions)
-    }
-
-    @Test(expected = StorageException::class)
-    fun testUploadInputStreamWithPrivateAccessWrongUser() {
-        synchronousAuth.signIn(userOne.username, userOne.password)
-
-        val uploadFile: File = RandomTempFile(SMALL_FILE_SIZE)
-        storagePath = StoragePath.fromString("private/${userTwo.identityId}/${uploadFile.name}")
-
-        synchronousStorage.uploadInputStream(storagePath, FileInputStream(uploadFile), defaultInputStreamOptions)
     }
 }

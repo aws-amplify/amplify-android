@@ -17,30 +17,31 @@ package com.amplifyframework.storage.s3
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
+import com.amplifyframework.storage.BucketInfo
+import com.amplifyframework.storage.StorageBucket
 import com.amplifyframework.storage.StorageCategory
 import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.StoragePath
+import com.amplifyframework.storage.options.StoragePagedListOptions
 import com.amplifyframework.storage.options.StorageRemoveOptions
 import com.amplifyframework.storage.options.StorageUploadFileOptions
-import com.amplifyframework.storage.s3.options.AWSS3StoragePagedListOptions
 import com.amplifyframework.storage.s3.test.R
 import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils.initializeWorkmanagerTestUtil
 import com.amplifyframework.testutils.random.RandomTempFile
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousStorage
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
 import java.io.File
 import java.util.concurrent.TimeUnit
-import org.junit.After
 import org.junit.AfterClass
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.Test
 
 /**
  * Instrumentation test for operational work on download.
  */
-class AWSS3StoragePathListTest {
+class AWSS3StorageMultiBucketListTest {
     companion object {
         private val EXTENDED_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(60)
         private const val LARGE_FILE_SIZE = 10 * 1024 * 1024L // 10 MB
@@ -52,18 +53,12 @@ class AWSS3StoragePathListTest {
         private val SMALL_FILE_NAME = "small-${System.currentTimeMillis()}"
         private val SMALL_FILE_STRING_PATH = "public/$TEST_DIR_NAME/$SMALL_FILE_NAME"
         private val SMALL_FILE_PATH = StoragePath.fromString(SMALL_FILE_STRING_PATH)
-        private val USER_ONE_PRIVATE_FILE_NAME = "user1Private-${System.currentTimeMillis()}"
 
         lateinit var storageCategory: StorageCategory
         lateinit var synchronousStorage: SynchronousStorage
         lateinit var synchronousAuth: SynchronousAuth
         lateinit var largeFile: File
         lateinit var smallFile: File
-        lateinit var userOnePrivateFile: File
-        lateinit var userOnePrivateFileStringPath: String
-        lateinit var userOnePrivateFileStoragePath: StoragePath
-        internal lateinit var userOne: UserCredentials.Credential
-        internal lateinit var userTwo: UserCredentials.Credential
 
         /**
          * Initialize mobile client and configure the storage.
@@ -75,18 +70,12 @@ class AWSS3StoragePathListTest {
             val context = ApplicationProvider.getApplicationContext<Context>()
             initializeWorkmanagerTestUtil(context)
             synchronousAuth = SynchronousAuth.delegatingToCognito(context, AWSCognitoAuthPlugin())
-            val identityIdSource = MobileClientIdentityIdSource.create(synchronousAuth)
-            val userCredentials = UserCredentials.create(context, identityIdSource)
-            val iterator = userCredentials.iterator()
-            userOne = iterator.next()
 
             // Get a handle to storage
             storageCategory = TestStorageCategory.create(context, R.raw.amplifyconfiguration)
             synchronousStorage = SynchronousStorage.delegatingTo(storageCategory)
 
             val uploadOptions = StorageUploadFileOptions.defaultInstance()
-
-            synchronousAuth.signOut()
 
             // Upload large test file
             largeFile = RandomTempFile(LARGE_FILE_NAME, LARGE_FILE_SIZE)
@@ -95,90 +84,56 @@ class AWSS3StoragePathListTest {
             // Upload small test file
             smallFile = RandomTempFile(SMALL_FILE_NAME, SMALL_FILE_SIZE)
             synchronousStorage.uploadFile(SMALL_FILE_PATH, smallFile, uploadOptions)
-
-            synchronousAuth.signIn(userOne.username, userOne.password)
-
-            userOnePrivateFile = RandomTempFile(USER_ONE_PRIVATE_FILE_NAME, SMALL_FILE_SIZE)
-            userOnePrivateFileStringPath = "private/${userOne.identityId}/$USER_ONE_PRIVATE_FILE_NAME"
-            userOnePrivateFileStoragePath = StoragePath.fromString(userOnePrivateFileStringPath)
-            synchronousStorage.uploadFile(
-                userOnePrivateFileStoragePath,
-                userOnePrivateFile,
-                uploadOptions
-            )
-
-            synchronousAuth.signOut()
         }
 
         @JvmStatic
         @AfterClass
         fun tearDownOnce() {
-            synchronousAuth.signIn(userOne.username, userOne.password)
             synchronousStorage.remove(SMALL_FILE_PATH, StorageRemoveOptions.defaultInstance())
             synchronousStorage.remove(LARGE_FILE_PATH, StorageRemoveOptions.defaultInstance())
-            synchronousStorage.remove(userOnePrivateFileStoragePath, StorageRemoveOptions.defaultInstance())
-            synchronousAuth.signOut()
         }
     }
 
-    /**
-     * Unsubscribe from everything after each test.
-     */
-    @After
-    fun tearDown() {
-        synchronousAuth.signOut()
-    }
-
     @Test
-    fun testListPublic() {
+    fun testListFromBucket() {
         val public = StoragePath.fromString("public/$TEST_DIR_NAME")
 
-        val result = synchronousStorage.list(public, AWSS3StoragePagedListOptions.defaultInstance())
+        val option = StoragePagedListOptions
+            .builder()
+            .bucket(TestStorageCategory.getStorageBucket())
+            .setPageSize(10)
+            .build()
+
+        val result = synchronousStorage.list(public, option)
 
         result.items.apply {
-            assertEquals(2, size)
+            size shouldBe 2
             first { it.path == LARGE_FILE_STRING_PATH }.apply {
-                assertEquals(LARGE_FILE_STRING_PATH, key)
-                assertEquals(LARGE_FILE_STRING_PATH, path)
-                assertEquals(LARGE_FILE_SIZE, size)
+                path shouldBe LARGE_FILE_STRING_PATH
+                size shouldBe LARGE_FILE_SIZE
             }
             first { it.path == SMALL_FILE_STRING_PATH }.apply {
-                assertEquals(SMALL_FILE_STRING_PATH, key)
-                assertEquals(SMALL_FILE_STRING_PATH, path)
-                assertEquals(SMALL_FILE_SIZE, size)
+                path shouldBe SMALL_FILE_STRING_PATH
+                size shouldBe SMALL_FILE_SIZE
             }
         }
     }
 
     @Test
-    fun testListPageSize() {
+    fun testListFromInvalidBucket() {
+        val bucketName = "amplify-android-storage-integration-test-123xyz"
+        val region = "us-east-1"
+        val bucketInfo = BucketInfo(bucketName, region)
         val public = StoragePath.fromString("public/$TEST_DIR_NAME")
+        val storageBucket = StorageBucket.fromBucketInfo(bucketInfo)
+        val option = StoragePagedListOptions
+            .builder()
+            .bucket(storageBucket)
+            .setPageSize(10)
+            .build()
 
-        val result = synchronousStorage.list(public, AWSS3StoragePagedListOptions.builder().setPageSize(1).build())
-
-        result.items.apply {
-            assertEquals(1, size)
-            assertEquals(
-                1,
-                filter { it.path == LARGE_FILE_STRING_PATH || it.path == SMALL_FILE_STRING_PATH }.size
-            )
+        shouldThrow<StorageException> {
+            synchronousStorage.list(public, option)
         }
-    }
-
-    @Test(expected = StorageException::class)
-    fun testListFailsAccessDenied() {
-        val public = StoragePath.fromString("private/${userOne.identityId}/")
-
-        synchronousStorage.list(public, AWSS3StoragePagedListOptions.defaultInstance())
-    }
-
-    @Test
-    fun testListSucceedsWhenAuthenticated() {
-        synchronousAuth.signIn(userOne.username, userOne.password)
-        val path = StoragePath.fromString("private/${userOne.identityId}/")
-
-        val result = synchronousStorage.list(path, AWSS3StoragePagedListOptions.defaultInstance())
-
-        assertTrue(result.items.size > 0)
     }
 }
