@@ -1,3 +1,10 @@
+## [Release 2.21.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.21.1)
+
+### Bug Fixes
+- **notifications:** Catch Exception when download icon image of pinpoint notification ([#2873](https://github.com/aws-amplify/amplify-android/issues/2873))
+
+[See all changes between 2.21.0 and 2.21.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.21.0...release_v2.21.1)
+
 ## [Release 2.21.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.21.0)
 
 ### Features
