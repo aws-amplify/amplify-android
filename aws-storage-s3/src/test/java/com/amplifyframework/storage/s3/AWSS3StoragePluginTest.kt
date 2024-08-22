@@ -24,6 +24,7 @@ import com.amplifyframework.storage.s3.service.StorageService
 import com.amplifyframework.testutils.configuration.amplifyOutputsData
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.throwable.shouldHaveCauseOfType
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -129,7 +130,7 @@ class AWSS3StoragePluginTest {
     }
 
     @Test
-    fun `getStorageService throws InvalidStorageBucketException`() {
+    fun `getStorageService throws StorageException`() {
         val data = amplifyOutputsData {
             storage {
                 awsRegion = "test-region"
@@ -144,8 +145,9 @@ class AWSS3StoragePluginTest {
 
         plugin.configure(data, mockk())
         val bucket = StorageBucket.fromOutputs("myBucket")
-        shouldThrow<InvalidStorageBucketException> {
+        val exception = shouldThrow<StorageException> {
             plugin.getStorageService(bucket)
         }
+        exception.shouldHaveCauseOfType<InvalidStorageBucketException>()
     }
 }

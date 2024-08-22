@@ -71,11 +71,12 @@ public final class AWSS3StorageUploadFileOptions extends StorageUploadFileOption
     @SuppressWarnings("deprecation")
     public static Builder from(@NonNull final AWSS3StorageUploadFileOptions options) {
         return builder()
-            .accessLevel(options.getAccessLevel())
-            .targetIdentityId(options.getTargetIdentityId())
-            .contentType(options.getContentType())
-            .serverSideEncryption(options.getServerSideEncryption())
-            .metadata(options.getMetadata());
+                .accessLevel(options.getAccessLevel())
+                .targetIdentityId(options.getTargetIdentityId())
+                .contentType(options.getContentType())
+                .serverSideEncryption(options.getServerSideEncryption())
+                .metadata(options.getMetadata())
+                .bucket(options.getBucket());
     }
 
     /**
@@ -109,7 +110,8 @@ public final class AWSS3StorageUploadFileOptions extends StorageUploadFileOption
                     ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId()) &&
                     ObjectsCompat.equals(getContentType(), that.getContentType()) &&
                     ObjectsCompat.equals(getServerSideEncryption(), that.getServerSideEncryption()) &&
-                    ObjectsCompat.equals(getMetadata(), that.getMetadata());
+                    ObjectsCompat.equals(getMetadata(), that.getMetadata()) &&
+                    ObjectsCompat.equals(getBucket(), that.getBucket());
         }
     }
 
@@ -121,7 +123,8 @@ public final class AWSS3StorageUploadFileOptions extends StorageUploadFileOption
                 getTargetIdentityId(),
                 getContentType(),
                 getServerSideEncryption(),
-                getMetadata()
+                getMetadata(),
+                getBucket()
         );
     }
 
@@ -135,6 +138,7 @@ public final class AWSS3StorageUploadFileOptions extends StorageUploadFileOption
                 ", contentType=" + getContentType() +
                 ", serverSideEncryption=" + getServerSideEncryption().getName() +
                 ", metadata=" + getMetadata() +
+                ", bucket=" + getBucket() +
                 '}';
     }
 
