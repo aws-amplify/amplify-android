@@ -89,7 +89,7 @@ class AWSS3StorageMultiBucketGetUrlTest {
 
     @Test
     fun testGetUrlFromInvalidBucket() {
-        val bucketName = "AmplifyStorageIntegrationTest123xyz"
+        val bucketName = "amplify-android-storage-integration-test-123xyz"
         val region = "us-east-1"
         val bucketInfo = BucketInfo(bucketName, region)
         val invalidBucket = StorageBucket.fromBucketInfo(bucketInfo)
