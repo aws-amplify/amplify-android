@@ -117,6 +117,7 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
             is ChallengeNameType.NewPasswordRequired -> "NEW_PASSWORD"
             is ChallengeNameType.CustomChallenge, ChallengeNameType.SelectMfaType -> "ANSWER"
             is ChallengeNameType.SoftwareTokenMfa -> "SOFTWARE_TOKEN_MFA_CODE"
+            is ChallengeNameType.EmailMfa -> "EMAIL_OTP_CODE"
             else -> null
         }
     }

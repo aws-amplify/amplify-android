@@ -926,6 +926,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         )
     }
 
+    @Deprecated("Use updateMFAPreference(sms, totp, email, onSuccess, onError) instead")
     fun updateMFAPreference(
         sms: MFAPreference?,
         totp: MFAPreference?,
@@ -935,7 +936,26 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         queueChannel.trySend(
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
-                    queueFacade.updateMFAPreference(sms, totp)
+                    queueFacade.updateMFAPreference(sms, totp, null)
+                    pluginScope.launch { onSuccess.call() }
+                } catch (e: Exception) {
+                    pluginScope.launch { onError.accept(e.toAuthException()) }
+                }
+            }
+        )
+    }
+
+    fun updateMFAPreference(
+        sms: MFAPreference? = null,
+        totp: MFAPreference? = null,
+        email: MFAPreference? = null,
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) {
+        queueChannel.trySend(
+            pluginScope.launch(start = CoroutineStart.LAZY) {
+                try {
+                    queueFacade.updateMFAPreference(sms, totp, email)
                     pluginScope.launch { onSuccess.call() }
                 } catch (e: Exception) {
                     pluginScope.launch { onError.accept(e.toAuthException()) }

@@ -83,6 +83,7 @@ internal object SignInChallengeHelper {
                 challengeNameType is ChallengeNameType.CustomChallenge ||
                 challengeNameType is ChallengeNameType.NewPasswordRequired ||
                 challengeNameType is ChallengeNameType.SoftwareTokenMfa ||
+                challengeNameType is ChallengeNameType.EmailMfa ||
                 challengeNameType is ChallengeNameType.SelectMfaType -> {
                 val challenge =
                     AuthChallenge(challengeNameType.value, username, session, challengeParameters)
@@ -205,6 +206,20 @@ internal object SignInChallengeHelper {
                 )
                 onSuccess.accept(authSignInResult)
             }
+            // Change to ChallengeNameType.EMAIL_MFA when available
+            is ChallengeNameType.EmailMfa -> {
+                val authSignInResult = AuthSignInResult(
+                    false,
+                    AuthNextSignInStep(
+                        AuthSignInStep.CONFIRM_SIGN_IN_WITH_EMAIL_MFA_CODE,
+                        mapOf(),
+                        null,
+                        null,
+                        null
+                    )
+                )
+                onSuccess.accept(authSignInResult)
+            }
             else -> onError.accept(UnknownException(cause = Exception("Challenge type not supported.")))
         }
     }
@@ -215,6 +230,7 @@ internal object SignInChallengeHelper {
             when (it) {
                 "SMS_MFA" -> result.add(MFAType.SMS)
                 "SOFTWARE_TOKEN_MFA" -> result.add(MFAType.TOTP)
+                "EMAIL_MFA" -> result.add(MFAType.TOTP)
                 else -> throw UnknownException(cause = Exception("MFA type not supported."))
             }
         }

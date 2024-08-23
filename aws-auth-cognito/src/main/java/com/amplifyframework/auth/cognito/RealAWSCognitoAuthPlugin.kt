@@ -2270,6 +2270,7 @@ internal class RealAWSCognitoAuthPlugin(
     fun updateMFAPreference(
         sms: MFAPreference?,
         totp: MFAPreference?,
+        email: MFAPreference?,
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
@@ -2278,7 +2279,8 @@ internal class RealAWSCognitoAuthPlugin(
             return
         }
         // If either of the params have preferred setting set then ignore fetched preference preferred property
-        val overridePreferredSetting: Boolean = !(sms?.mfaPreferred == true || totp?.mfaPreferred == true)
+        val overridePreferredSetting =
+            !(sms?.mfaPreferred == true || totp?.mfaPreferred == true || email?.mfaPreferred == true)
         fetchMFAPreference({ userPreference ->
             authStateMachine.getCurrentState { authState ->
                 when (authState.authNState) {
@@ -2312,6 +2314,18 @@ internal class RealAWSCognitoAuthPlugin(
                                                             it.mfaEnabled
                                                         )
                                                 SoftwareTokenMfaSettingsType.invoke {
+                                                    enabled = it.mfaEnabled
+                                                    preferredMfa = preferredMFASetting
+                                                }
+                                            }
+                                            this.emailMfaSettings = email?.let { it ->
+                                                val preferredMFASetting = it.mfaPreferred
+                                                    ?: (
+                                                            overridePreferredSetting &&
+                                                                    userPreference.preferred == MFAType.EMAIL &&
+                                                                    it.mfaEnabled
+                                                            )
+                                                EmailMfaSettingsType.invoke {
                                                     enabled = it.mfaEnabled
                                                     preferredMfa = preferredMFASetting
                                                 }
