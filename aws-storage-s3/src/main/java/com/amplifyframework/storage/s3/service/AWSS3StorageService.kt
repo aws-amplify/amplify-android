@@ -32,6 +32,7 @@ import com.amplifyframework.storage.StorageItem
 import com.amplifyframework.storage.options.SubpathStrategy
 import com.amplifyframework.storage.options.SubpathStrategy.Exclude
 import com.amplifyframework.storage.result.StorageListResult
+import com.amplifyframework.storage.s3.transfer.S3StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.TransferManager
 import com.amplifyframework.storage.s3.transfer.TransferObserver
@@ -59,20 +60,7 @@ internal class AWSS3StorageService(
     private val clientProvider: StorageTransferClientProvider
 ) : StorageService {
 
-    companion object {
-        @JvmStatic
-        fun getS3Client(region: String, authCredentialsProvider: AuthCredentialsProvider): S3Client {
-            return S3Client {
-                this.region = region
-                this.credentialsProvider = authCredentialsProvider
-            }
-        }
-    }
-
-    private var s3Client: S3Client = S3Client {
-        region = awsRegion
-        credentialsProvider = authCredentialsProvider
-    }
+    private var s3Client: S3Client = S3StorageTransferClientProvider.getS3Client(awsRegion, authCredentialsProvider)
 
     val transferManager: TransferManager =
         TransferManager(context, clientProvider, awsS3StoragePluginKey)

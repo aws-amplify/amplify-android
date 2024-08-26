@@ -90,6 +90,7 @@ import com.amplifyframework.storage.s3.request.AWSS3StoragePathUploadRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadRequest;
 import com.amplifyframework.storage.s3.service.AWSS3StorageService;
+import com.amplifyframework.storage.s3.service.AWSS3StorageServiceContainer;
 import com.amplifyframework.storage.s3.transfer.S3StorageTransferClientProvider;
 import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider;
 import com.amplifyframework.storage.s3.transfer.TransferObserver;
@@ -102,9 +103,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -136,8 +135,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     private StorageAccessLevel defaultAccessLevel;
     private int defaultUrlExpiration;
 
-    private final Map<String, AWSS3StorageService> awsS3StorageServicesByBucketName = new HashMap<>();
-    private Context context;
+    private AWSS3StorageServiceContainer awss3StorageServiceContainer;
     @SuppressLint("UnsafeOptInUsageError")
     private List<AmplifyOutputsData.StorageBucket> configuredBuckets;
 
@@ -146,13 +144,11 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             = new S3StorageTransferClientProvider((region, bucketName) -> {
                 if (region != null && bucketName != null) {
                     StorageBucket bucket = StorageBucket.fromBucketInfo(new BucketInfo(bucketName, region));
-                    return getAWSS3StorageService((ResolvedStorageBucket) bucket).getClient();
+                    return awss3StorageServiceContainer.get((ResolvedStorageBucket) bucket).getClient();
                 }
 
                 if (region != null) {
-                    // unable to create a new S3Client from java code,
-                    // redirecting to AWSS3Service to create S3 Client from kotlin
-                    return AWSS3StorageService.getS3Client(region, authCredentialsProvider);
+                    return S3StorageTransferClientProvider.getS3Client(region, authCredentialsProvider);
                 }
                 return defaultStorageService.getClient();
             });
@@ -195,6 +191,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     @VisibleForTesting
     AWSS3StoragePlugin(AuthCredentialsProvider authCredentialsProvider,
                        AWSS3StoragePluginConfiguration awss3StoragePluginConfiguration) {
+
         this((context, region, bucket, clientProvider) ->
                 new AWSS3StorageService(
                     context,
@@ -300,14 +297,15 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             @NonNull ResolvedStorageBucket bucket
     ) throws StorageException {
         try {
-            this.context = context;
             this.defaultStorageService = storageServiceFactory.create(
                     context,
                     region,
                     bucket.getBucketInfo().getName(),
                     clientProvider);
-            this.awsS3StorageServicesByBucketName.clear();
-            this.awsS3StorageServicesByBucketName.put(bucket.getBucketInfo().getName(), this.defaultStorageService);
+            this.awss3StorageServiceContainer = new AWSS3StorageServiceContainer(
+                    context, storageServiceFactory,
+                    (S3StorageTransferClientProvider) clientProvider);
+            this.awss3StorageServiceContainer.put(bucket.getBucketInfo().getName(), this.defaultStorageService);
         } catch (RuntimeException exception) {
             throw new StorageException(
                 "Failed to create storage service.",
@@ -1150,55 +1148,27 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         }
 
         if (bucket instanceof OutputsStorageBucket) {
-            AWSS3StorageService service = getAWSS3StorageService((OutputsStorageBucket) bucket);
-            if (service == null) {
-                throw new StorageException(
-                        "Unable to find bucket from name in Amplify Outputs.",
-                        new InvalidStorageBucketException(),
-                        "Ensure the bucket name used is available in Amplify Outputs.");
-            } else {
-                return service;
+            if (configuredBuckets != null && !configuredBuckets.isEmpty()) {
+                String name = ((OutputsStorageBucket) bucket).getName();
+                for (AmplifyOutputsData.StorageBucket configuredBucket : configuredBuckets) {
+                    if (configuredBucket.getName().equals(name)) {
+                        String bucketName = configuredBucket.getBucketName();
+                        String region = configuredBucket.getAwsRegion();
+                        return awss3StorageServiceContainer.get(bucketName, region);
+                    }
+                }
             }
+            throw new StorageException(
+                    "Unable to find bucket from name in Amplify Outputs.",
+                    new InvalidStorageBucketException(),
+                    "Ensure the bucket name used is available in Amplify Outputs.");
         }
 
         if (bucket instanceof ResolvedStorageBucket) {
-            return getAWSS3StorageService((ResolvedStorageBucket) bucket);
+            return awss3StorageServiceContainer.get((ResolvedStorageBucket) bucket);
         }
 
         return defaultStorageService;
-    }
-
-    @SuppressLint("UnsafeOptInUsageError")
-    private AWSS3StorageService getAWSS3StorageService(OutputsStorageBucket outputsStorageBucket) {
-        if (configuredBuckets != null && !configuredBuckets.isEmpty()) {
-            String name = outputsStorageBucket.getName();
-            for (AmplifyOutputsData.StorageBucket configuredBucket : configuredBuckets) {
-                if (configuredBucket.getName().equals(name)) {
-                    String bucketName = configuredBucket.getBucketName();
-                    AWSS3StorageService service = awsS3StorageServicesByBucketName.get(bucketName);
-                    if (service == null) {
-                        String region = configuredBucket.getAwsRegion();
-                        service = storageServiceFactory.create(context, region, bucketName, clientProvider);
-                        awsS3StorageServicesByBucketName.put(bucketName, service);
-                    }
-
-                    return service;
-                }
-            }
-        }
-        return null;
-    }
-
-    @SuppressLint("UnsafeOptInUsageError")
-    private AWSS3StorageService getAWSS3StorageService(ResolvedStorageBucket resolvedStorageBucket) {
-        String bucketName = resolvedStorageBucket.getBucketInfo().getName();
-        AWSS3StorageService service = awsS3StorageServicesByBucketName.get(bucketName);
-        if (service == null) {
-            String region = resolvedStorageBucket.getBucketInfo().getRegion();
-            service = storageServiceFactory.create(context, region, bucketName, clientProvider);
-            awsS3StorageServicesByBucketName.put(bucketName, service);
-        }
-        return service;
     }
 
     /**

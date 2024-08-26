@@ -16,11 +16,19 @@ package com.amplifyframework.storage.s3.transfer
 
 import aws.sdk.kotlin.services.s3.S3Client
 import com.amplifyframework.auth.AuthCredentialsProvider
-import com.amplifyframework.storage.StorageException
 
 internal class S3StorageTransferClientProvider(
     private val createS3Client: (region: String?, bucketName: String?) -> S3Client
 ) : StorageTransferClientProvider {
+    companion object {
+        @JvmStatic
+        fun getS3Client(region: String, authCredentialsProvider: AuthCredentialsProvider): S3Client {
+            return S3Client {
+                this.region = region
+                this.credentialsProvider = authCredentialsProvider
+            }
+        }
+    }
     override fun getStorageTransferClient(region: String?, bucketName: String?): S3Client {
         return createS3Client(region, bucketName)
     }
