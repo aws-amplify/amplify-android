@@ -20,7 +20,6 @@ import com.amplifyframework.storage.InvalidStorageBucketException
 import com.amplifyframework.storage.StorageBucket
 import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.s3.service.AWSS3StorageService
-import com.amplifyframework.storage.s3.service.StorageService
 import com.amplifyframework.testutils.configuration.amplifyOutputsData
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldNotBe
@@ -32,8 +31,8 @@ import org.junit.Test
 
 class AWSS3StoragePluginTest {
 
-    private val storageServiceFactory = mockk<StorageService.Factory> {
-        every { create(any(), any(), any()) } returns mockk<AWSS3StorageService>()
+    private val storageServiceFactory = mockk<AWSS3StorageService.Factory> {
+        every { create(any(), any(), any(), any()) } returns mockk<AWSS3StorageService>()
     }
 
     private val plugin = AWSS3StoragePlugin(
@@ -54,7 +53,7 @@ class AWSS3StoragePluginTest {
         plugin.configure(data, mockk())
 
         verify {
-            storageServiceFactory.create(any(), "test-region", "test-bucket")
+            storageServiceFactory.create(any(), "test-region", "test-bucket", any())
         }
     }
 

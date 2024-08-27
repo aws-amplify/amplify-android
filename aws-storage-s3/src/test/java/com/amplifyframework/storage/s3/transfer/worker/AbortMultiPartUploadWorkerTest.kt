@@ -24,6 +24,8 @@ import aws.sdk.kotlin.services.s3.model.AbortMultipartUploadRequest
 import aws.sdk.kotlin.services.s3.model.AbortMultipartUploadResponse
 import aws.sdk.kotlin.services.s3.withConfig
 import com.amplifyframework.storage.TransferState
+import com.amplifyframework.storage.s3.transfer.S3StorageTransferClientProvider
+import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferRecord
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
@@ -52,6 +54,7 @@ internal class AbortMultiPartUploadWorkerTest {
     private lateinit var transferDB: TransferDB
     private lateinit var transferStatusUpdater: TransferStatusUpdater
     private lateinit var workerParameters: WorkerParameters
+    private lateinit var clientProvider: StorageTransferClientProvider
 
     @Before
     fun setup() {
@@ -59,6 +62,7 @@ internal class AbortMultiPartUploadWorkerTest {
         context = ApplicationProvider.getApplicationContext()
         workerParameters = mockk(WorkerParameters::class.java.name)
         s3Client = spyk<S3Client>(recordPrivateCalls = true)
+        clientProvider = mockk(S3StorageTransferClientProvider::class.java.name)
         mockkStatic(S3Client::withConfig)
         transferDB = mockk(TransferDB::class.java.name)
         transferStatusUpdater = mockk(TransferStatusUpdater::class.java.name)
@@ -66,6 +70,7 @@ internal class AbortMultiPartUploadWorkerTest {
         every { workerParameters.runAttemptCount }.answers { 1 }
         every { workerParameters.taskExecutor }.answers { ImmediateTaskExecutor() }
         every { any<S3Client>().withConfig(any()) }.answers { s3Client }
+        every { clientProvider.getStorageTransferClient(any(), any()) }.answers { s3Client }
     }
 
     @After
@@ -95,13 +100,20 @@ internal class AbortMultiPartUploadWorkerTest {
         every { transferDB.getTransferRecordById(any()) }.answers { transferRecord }
         every { transferStatusUpdater.updateTransferState(any(), any()) }.answers { }
 
-        val worker = AbortMultiPartUploadWorker(s3Client, transferDB, transferStatusUpdater, context, workerParameters)
+        val worker = AbortMultiPartUploadWorker(
+            clientProvider,
+            transferDB,
+            transferStatusUpdater,
+            context,
+            workerParameters
+        )
         val result = worker.doWork()
 
         val expectedResult =
             ListenableWorker.Result.success(workDataOf(BaseTransferWorker.OUTPUT_TRANSFER_RECORD_ID to 1))
         verify(exactly = 1) { transferStatusUpdater.updateTransferState(1, TransferState.FAILED) }
         verify(exactly = 1) { any<S3Client>().withConfig(any()) }
+        verify(exactly = 1) { clientProvider.getStorageTransferClient(any(), any()) }
         assertEquals(expectedResult, result)
     }
 
@@ -128,7 +140,13 @@ internal class AbortMultiPartUploadWorkerTest {
         every { transferDB.getTransferRecordById(any()) }.answers { transferRecord }
         every { transferStatusUpdater.updateTransferState(any(), any()) }.answers { }
 
-        val worker = AbortMultiPartUploadWorker(s3Client, transferDB, transferStatusUpdater, context, workerParameters)
+        val worker = AbortMultiPartUploadWorker(
+            clientProvider,
+            transferDB,
+            transferStatusUpdater,
+            context,
+            workerParameters
+        )
         val result = worker.doWork()
 
         val expectedResult =
@@ -157,7 +175,13 @@ internal class AbortMultiPartUploadWorkerTest {
         every { transferStatusUpdater.updateTransferState(any(), any()) }.answers { }
         every { transferStatusUpdater.updateOnError(any(), any()) }.answers { }
 
-        val worker = AbortMultiPartUploadWorker(s3Client, transferDB, transferStatusUpdater, context, workerParameters)
+        val worker = AbortMultiPartUploadWorker(
+            clientProvider,
+            transferDB,
+            transferStatusUpdater,
+            context,
+            workerParameters
+        )
         val result = worker.doWork()
 
         val expectedResult =
