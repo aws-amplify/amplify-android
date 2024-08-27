@@ -42,13 +42,13 @@ import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousStorage
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import org.junit.After
-import org.junit.BeforeClass
-import org.junit.Test
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
+import org.junit.After
+import org.junit.BeforeClass
+import org.junit.Test
 
 /**
  * Instrumentation test for operational work on upload.

@@ -42,16 +42,16 @@ import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils.initializeWorkm
 import com.amplifyframework.testutils.random.RandomTempFile
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousStorage
-import org.junit.After
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.BeforeClass
-import org.junit.Test
 import java.io.File
 import java.io.FileInputStream
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
+import org.junit.After
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.BeforeClass
+import org.junit.Test
 
 /**
  * Instrumentation test for operational work on upload.

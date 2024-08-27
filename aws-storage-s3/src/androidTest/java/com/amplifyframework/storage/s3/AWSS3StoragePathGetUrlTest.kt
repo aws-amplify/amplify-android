@@ -30,8 +30,8 @@ import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils.initializeWorkm
 import com.amplifyframework.testutils.random.RandomTempFile
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousStorage
-import org.junit.AfterClass
 import java.io.File
+import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
