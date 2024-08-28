@@ -24,6 +24,7 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 group = properties["POM_GROUP"].toString()
 
 android {
+    namespace = "com.amplifyframework.storage.s3"
     defaultConfig {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

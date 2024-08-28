@@ -17,7 +17,9 @@ package com.amplifyframework.storage.s3.operation;
 
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
+import androidx.annotation.OptIn;
 
+import com.amplifyframework.annotations.InternalApiWarning;
 import com.amplifyframework.auth.AuthCredentialsProvider;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageException;
@@ -37,6 +39,7 @@ import java.util.concurrent.ExecutorService;
  * Internal usages are moving to AWSS3StoragePathGetPresignedUrlOperation
  */
 @Deprecated
+@OptIn(markerClass = InternalApiWarning.class)
 public final class AWSS3StorageGetPresignedUrlOperation
         extends StorageGetUrlOperation<AWSS3StorageGetPresignedUrlRequest> {
     private final StorageService storageService;

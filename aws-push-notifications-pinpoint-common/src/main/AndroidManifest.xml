@@ -14,8 +14,7 @@
    permissions and limitations under the License.
 -->
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.amplifyframework.pushnotifications.pinpoint.common">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application>
         <activity
             android:name="com.amplifyframework.pushnotifications.pinpoint.permissions.PermissionsRequestActivity"

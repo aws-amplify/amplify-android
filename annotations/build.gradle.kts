@@ -24,6 +24,7 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 group = properties["POM_GROUP"].toString()
 
 android {
+    namespace = "com.amplifyframework.annotations"
     kotlinOptions {
         moduleName = "com.amplifyframework.annotations"
     }
