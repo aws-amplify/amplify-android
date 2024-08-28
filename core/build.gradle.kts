@@ -25,6 +25,7 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 group = properties["POM_GROUP"].toString()
 
 android {
+    namespace = "com.amplifyframework.core"
     kotlinOptions {
         moduleName = "com.amplifyframework.core"
     }

@@ -45,12 +45,13 @@ public final class DevMenuMainViewInstrumentationTest {
      */
     @Before
     public void resetView() {
-        navHostController = new TestNavHostController(ApplicationProvider.getApplicationContext());
-        navHostController.setGraph(R.navigation.dev_menu_nav_graph);
         FragmentScenario<DevMenuMainFragment> mainMenuScenario =
                 FragmentScenario.launchInContainer(DevMenuMainFragment.class);
-        mainMenuScenario.onFragment(fragment ->
-                Navigation.setViewNavController(fragment.requireView(), navHostController));
+        mainMenuScenario.onFragment(fragment -> {
+            navHostController = new TestNavHostController(ApplicationProvider.getApplicationContext());
+            navHostController.setGraph(R.navigation.dev_menu_nav_graph);
+            Navigation.setViewNavController(fragment.requireView(), navHostController);
+        });
     }
 
 
