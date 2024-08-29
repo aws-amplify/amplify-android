@@ -89,19 +89,32 @@ private class ReachabilityMonitorImpl constructor(val schedulerProvider: Schedul
     }
 
     private inner class ConnectivityNetworkCallback(private val emitter: ObservableEmitter<Boolean>) : NetworkCallback() {
+        private var currentNetworkCapabilities: NetworkCapabilities? = null
+
         override fun onAvailable(network: Network) {
-            connectivityProvider?.let { emitter.onNext(it.hasActiveNetwork) }
+            // in recent Android SDK version, onCapabilitiesChanged is triggered before onAvailable
+            // we should make use of network capabilities if it was updated before
+            currentNetworkCapabilities?.let {
+                emitter.onNext(it.isInternetReachable())
+            } ?: run {
+                connectivityProvider?.let {
+                    emitter.onNext(it.hasActiveNetwork)
+                }
+            }
         }
 
         override fun onLost(network: Network) {
+            currentNetworkCapabilities = null
             emitter.onNext(false)
         }
 
         override fun onUnavailable() {
+            currentNetworkCapabilities = null
             emitter.onNext(false)
         }
 
         override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
+            currentNetworkCapabilities = networkCapabilities
             emitter.onNext(networkCapabilities.isInternetReachable())
         }
     }
