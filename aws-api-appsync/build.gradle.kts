@@ -23,6 +23,10 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 
 group = properties["POM_GROUP"].toString()
 
+android {
+    namespace = "com.amplifyframework.appsync"
+}
+
 dependencies {
     implementation(project(":core"))
     implementation(project(":aws-core"))

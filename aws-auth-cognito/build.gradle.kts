@@ -24,6 +24,10 @@ apply(from = rootProject.file("configuration/checkstyle.gradle"))
 
 group = properties["POM_GROUP"].toString()
 
+android {
+    namespace = "com.amplifyframework.auth.cognito"
+}
+
 dependencies {
     implementation(project(":core"))
     implementation(project(":aws-core"))
