@@ -238,6 +238,14 @@ public final class AuthRule {
                 '}';
     }
 
+    public ModelField ownerField(ModelSchema schema) {
+        if (ownerField == null) {
+            return null;
+
+        }
+        return schema.getFields().get(this.ownerField);
+
+    }
     /**
      * Builder class for {@link AuthRule}.
      */

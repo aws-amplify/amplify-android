@@ -46,6 +46,11 @@ import java.util.Objects;
 public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
     private final ModelSchema modelSchema;
     private final Operation operation;
+
+    public SelectionSet getSelectionSet() {
+        return selectionSet;
+    }
+
     private final SelectionSet selectionSet;
     private final Map<String, Object> variables;
     private final Map<String, String> variableTypes;
