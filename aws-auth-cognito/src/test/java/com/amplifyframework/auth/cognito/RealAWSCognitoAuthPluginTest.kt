@@ -52,6 +52,7 @@ import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthSession
+import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.MFAType
@@ -59,6 +60,7 @@ import com.amplifyframework.auth.TOTPSetupDetails
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
+import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
@@ -67,6 +69,7 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthVerifyTOTPSetupOp
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.exceptions.InvalidStateException
+import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -91,6 +94,7 @@ import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
+import com.amplifyframework.statemachine.codegen.errors.SessionError
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
@@ -240,6 +244,100 @@ class RealAWSCognitoAuthPluginTest {
 
         // THEN
         verify(exactly = 0) { onSuccess.accept(any()) }
+    }
+
+    @Test
+    fun testGetCurrentUserSucceedsIfSignedIn() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<AuthUser>>()
+        val onError = mockk<Consumer<AuthException>>()
+        mockkObject(SessionHelper)
+        every { SessionHelper.getUsername(any()) } returns "username"
+        every { SessionHelper.getUserSub(any()) } returns "sub"
+        // WHEN
+        plugin.getCurrentUser(onSuccess, onError)
+
+        // THEN
+        verify { onSuccess.accept(any()) }
+        verify(exactly = 0) { onError.accept(any()) }
+    }
+
+    @Test
+    fun testGetCurrentUserFailsWithInvalidStateException() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<AuthUser>>()
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+
+        setupCurrentAuthState(authNState = AuthenticationState.NotConfigured())
+
+        // WHEN
+        plugin.getCurrentUser(onSuccess, onError)
+
+        // THEN
+        verify(exactly = 0) { onSuccess.accept(any()) }
+        verify { onError.accept(InvalidStateException()) }
+    }
+
+    @Test
+    fun testGetCurrentUserFailsWithSignedOutException() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<AuthUser>>()
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+
+        setupCurrentAuthState(
+            authNState = AuthenticationState.SignedOut(mockk()),
+            authZState = AuthorizationState.Configured()
+        )
+        // WHEN
+        plugin.getCurrentUser(onSuccess, onError)
+
+        // THEN
+        verify(exactly = 0) { onSuccess.accept(any()) }
+        verify { onError.accept(SignedOutException()) }
+    }
+
+    @Test
+    fun testGetCurrentUserFailsWithExpiredSessionException() {
+        // GIVEN
+        val onGetCurrentUserSuccess = mockk<Consumer<AuthUser>>()
+        val onGetCurrentUserError = mockk<Consumer<AuthException>>(relaxed = true)
+        val sessionExpiredException = SessionExpiredException()
+        val sessionError = SessionError(sessionExpiredException, credentials)
+        val authNState = AuthenticationState.SignedIn(
+            mockk {
+                every { username } returns "username"
+            },
+            mockk()
+        )
+        val authZState = AuthorizationState.Error(sessionError)
+
+        setupCurrentAuthState(
+            authNState = authNState,
+            authZState = authZState
+        )
+
+        val sessionErrorState = mockk<AuthState> {
+            every { this@mockk.authNState } returns AuthenticationState.SignedIn(
+                mockk {
+                    every { username } returns "username"
+                },
+                mockk()
+            )
+            every { this@mockk.authZState } returns AuthorizationState.Error(sessionError)
+        }
+
+        every {
+            authStateMachine.listen(any(), captureLambda(), null)
+        } answers {
+            lambda<(AuthState) -> Unit>().invoke(sessionErrorState)
+        }
+
+        // WHEN
+        plugin.getCurrentUser(onGetCurrentUserSuccess, onGetCurrentUserError)
+
+        // THEN
+        verify(exactly = 0) { onGetCurrentUserSuccess.accept(any()) }
+        verify(timeout = 1000L) { onGetCurrentUserError.accept(sessionExpiredException) }
     }
 
     @Test
