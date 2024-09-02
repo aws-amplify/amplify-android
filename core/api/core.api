@@ -1409,6 +1409,7 @@ public final class com/amplifyframework/core/model/AuthRule {
 	public fun getOperationsOrDefault ()Ljava/util/List;
 	public fun getOwnerFieldOrDefault ()Ljava/lang/String;
 	public fun hashCode ()I
+	public fun ownerField (Lcom/amplifyframework/core/model/ModelSchema;)Lcom/amplifyframework/core/model/ModelField;
 	public fun toString ()Ljava/lang/String;
 }
 

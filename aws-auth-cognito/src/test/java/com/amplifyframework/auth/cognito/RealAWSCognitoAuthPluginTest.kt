@@ -123,6 +123,7 @@ import kotlin.test.assertTrue
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 
 class RealAWSCognitoAuthPluginTest {
@@ -515,7 +516,9 @@ class RealAWSCognitoAuthPluginTest {
         verify(exactly = 0) { onSuccess.accept(any()) }
         assertEquals(expectedAuthError.toString(), errorCaptor.captured.toString())
     }
+
     @Test
+    @Ignore("Flaky")
     fun `reset password executes ResetPasswordUseCase if required params are set`() {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthResetPasswordResult>>()

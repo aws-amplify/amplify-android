@@ -136,6 +136,7 @@ public final class com/amplifyframework/api/aws/auth/ApiRequestDecoratorFactory 
 public final class com/amplifyframework/api/aws/auth/AuthRuleRequestDecorator {
 	public fun <init> (Lcom/amplifyframework/api/aws/ApiAuthProviders;)V
 	public fun decorate (Lcom/amplifyframework/api/graphql/GraphQLRequest;Lcom/amplifyframework/api/aws/AuthorizationType;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+	public static fun filterAuthRules (Ljava/util/List;Lcom/amplifyframework/core/model/ModelSchema;)Ljava/util/List;
 }
 
 public final class com/amplifyframework/api/aws/auth/CognitoJWTParser {
