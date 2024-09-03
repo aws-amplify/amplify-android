@@ -57,7 +57,7 @@ internal class AWSS3StorageServiceContainer(
      */
     fun get(resolvedStorageBucket: ResolvedStorageBucket): AWSS3StorageService {
         synchronized(lock) {
-            val bucketName: String = resolvedStorageBucket.bucketInfo.name
+            val bucketName: String = resolvedStorageBucket.bucketInfo.bucketName
             var service = awsS3StorageServicesByBucketName.get(bucketName)
             if (service == null) {
                 val region: String = resolvedStorageBucket.bucketInfo.region
