@@ -16,35 +16,31 @@ package com.amplifyframework.storage.s3
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import aws.sdk.kotlin.services.s3.model.NotFound
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
+import com.amplifyframework.storage.BucketInfo
+import com.amplifyframework.storage.StorageBucket
 import com.amplifyframework.storage.StorageCategory
-import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.StoragePath
 import com.amplifyframework.storage.options.StorageGetUrlOptions
 import com.amplifyframework.storage.options.StorageRemoveOptions
 import com.amplifyframework.storage.options.StorageUploadFileOptions
-import com.amplifyframework.storage.s3.options.AWSS3StorageGetPresignedUrlOptions
 import com.amplifyframework.storage.s3.test.R
 import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils.initializeWorkmanagerTestUtil
 import com.amplifyframework.testutils.random.RandomTempFile
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousStorage
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
 import java.io.File
 import org.junit.AfterClass
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertThrows
-import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.Test
 
 /**
  * Instrumentation test for operational work on download.
  */
-class AWSS3StoragePathGetUrlTest {
-    // Create a file to download to
-    private val downloadFile: File = RandomTempFile()
-
+class AWSS3StorageMultiBucketGetUrlTest {
     private companion object {
         const val SMALL_FILE_SIZE = 100L
         val SMALL_FILE_NAME = "small-${System.currentTimeMillis()}"
@@ -73,7 +69,6 @@ class AWSS3StoragePathGetUrlTest {
             smallFile = RandomTempFile(SMALL_FILE_NAME, SMALL_FILE_SIZE)
             synchronousStorage.uploadFile(SMALL_FILE_PATH, smallFile, StorageUploadFileOptions.defaultInstance())
         }
-
         @JvmStatic
         @AfterClass
         fun tearDownOnce() {
@@ -85,48 +80,26 @@ class AWSS3StoragePathGetUrlTest {
     fun testGetUrl() {
         val result = synchronousStorage.getUrl(
             SMALL_FILE_PATH,
-            StorageGetUrlOptions.builder().expires(30).build()
+            StorageGetUrlOptions.builder().expires(30).bucket(TestStorageCategory.getStorageBucket()).build()
         )
 
-        assertEquals("/public/$SMALL_FILE_NAME", result.url.path)
-        assertTrue(result.url.query.contains("X-Amz-Expires=30"))
+        result.url.path shouldBe "/public/$SMALL_FILE_NAME"
+        result.url.query shouldContain "X-Amz-Expires=30"
     }
 
     @Test
-    fun testGetUrlWithObjectExistenceValidationEnabled() {
+    fun testGetUrlFromInvalidBucket() {
+        val bucketName = "amplify-android-storage-integration-test-123xyz"
+        val region = "us-east-1"
+        val bucketInfo = BucketInfo(bucketName, region)
+        val invalidBucket = StorageBucket.fromBucketInfo(bucketInfo)
         val result = synchronousStorage.getUrl(
             SMALL_FILE_PATH,
-            AWSS3StorageGetPresignedUrlOptions.builder().setValidateObjectExistence(true).expires(30).build()
+            StorageGetUrlOptions.builder().expires(30).bucket(invalidBucket).build()
         )
 
-        assertEquals("/public/$SMALL_FILE_NAME", result.url.path)
-        assertTrue(result.url.query.contains("X-Amz-Expires=30"))
-    }
-
-    @Test
-    fun testGetUrlWithStorageExceptionObjectNotFoundThrown() {
-        val exception = assertThrows(StorageException::class.java) {
-            synchronousStorage.getUrl(
-                StoragePath.fromString("public/SOME_UNKNOWN_FILE"),
-                AWSS3StorageGetPresignedUrlOptions.builder().setValidateObjectExistence(true).expires(30).build()
-            )
-        }
-
-        assertTrue(exception.cause is NotFound)
-    }
-
-    @Test
-    fun testGetUrlWithObjectExistenceValidationDisabledForNonExistentObject() {
-        val result = synchronousStorage.getUrl(
-            StoragePath.fromString("public/SOME_UNKNOWN_FILE"),
-            AWSS3StorageGetPresignedUrlOptions.builder().setValidateObjectExistence(false).expires(30).build()
-        )
-
-        assertEquals("/public/SOME_UNKNOWN_FILE", result.url.path)
-        assertTrue(result.url.query.contains("X-Amz-Expires=30"))
-
-        assertThrows(java.io.FileNotFoundException::class.java) {
-            result.url.readBytes()
-        }
+        result shouldNotBe null
+        result.url.host shouldContain bucketName
+        result.url.host shouldContain region
     }
 }

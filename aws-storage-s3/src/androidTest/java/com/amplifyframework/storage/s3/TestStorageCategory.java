@@ -23,6 +23,8 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.storage.BucketInfo;
+import com.amplifyframework.storage.StorageBucket;
 import com.amplifyframework.storage.StorageCategory;
 
 import java.util.Objects;
@@ -31,7 +33,16 @@ import java.util.Objects;
  * Factory for creating {@link StorageCategory} instance suitable for test.
  */
 final class TestStorageCategory {
+
     private TestStorageCategory() {}
+
+    static StorageBucket getStorageBucket() {
+        return StorageBucket.fromBucketInfo(
+                new BucketInfo(
+                        "amplify-android-storage-integration-test",
+                        "us-west-2")
+        );
+    }
 
     /**
      * Creates an instance of {@link StorageCategory} using the provided configuration resource.
@@ -46,7 +57,7 @@ final class TestStorageCategory {
         try {
             storageCategory.addPlugin(new AWSS3StoragePlugin());
             CategoryConfiguration storageConfiguration = AmplifyConfiguration.fromConfigFile(context, resourceId)
-                .forCategoryType(CategoryType.STORAGE);
+                    .forCategoryType(CategoryType.STORAGE);
             storageCategory.configure(storageConfiguration, context);
             // storageCategory.initialize(context); // Doesn't do anything right now.
         } catch (AmplifyException initializationFailure) {

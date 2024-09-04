@@ -17,6 +17,7 @@ package com.amplifyframework.storage.s3;
 
 import android.content.Context;
 
+import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthPlugin;
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.storage.StorageAccessLevel;
@@ -25,6 +26,7 @@ import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StorageItem;
 import com.amplifyframework.storage.options.StorageListOptions;
 import com.amplifyframework.storage.options.StoragePagedListOptions;
+import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.s3.UserCredentials.IdentityIdSource;
@@ -35,6 +37,7 @@ import com.amplifyframework.testutils.random.RandomTempFile;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousStorage;
 
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -89,6 +92,16 @@ public final class AWSS3StorageListAccessLevelTest {
         storage = SynchronousStorage.delegatingTo(asyncDelegate);
         // Upload test file in S3 ahead of time
         uploadTestFiles();
+    }
+
+    /**
+     * Remove upload test files from test suite.
+     *
+     * @throws Exception from failure to remove test resources.
+     */
+    @AfterClass
+    public static void tearDownOnce() throws Exception {
+        removeUploadedTestFiles();
     }
 
     /**
@@ -324,6 +337,46 @@ public final class AWSS3StorageListAccessLevelTest {
         }
 
         // Upload as user one
+        synchronousAuth.signOut();
+    }
+
+    private static void removeUploadedTestFiles() throws AuthException, StorageException {
+        // remove PUBLIC test files
+        synchronousAuth.signOut();
+        synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
+        StorageRemoveOptions options = StorageRemoveOptions.builder()
+                .accessLevel(StorageAccessLevel.PUBLIC)
+                .build();
+        for (int i = 0; i < 10; i++) {
+            storage.remove(pagedUploadKeyPrefix + i, options);
+        }
+        storage.remove(uploadKey, options);
+
+        // remove PROTECTED test files
+        options = StorageRemoveOptions.builder()
+                .accessLevel(StorageAccessLevel.PROTECTED)
+                .build();
+        storage.remove(uploadKey, options);
+
+        // remove PRIVATE test files
+        options = StorageRemoveOptions.builder()
+                .accessLevel(StorageAccessLevel.PRIVATE)
+                .build();
+        storage.remove(uploadKey, options);
+
+        synchronousAuth.signOut();
+        synchronousAuth.signIn(userTwo.getUsername(), userTwo.getPassword());
+        options = StorageRemoveOptions.builder()
+                .accessLevel(StorageAccessLevel.PROTECTED)
+                .build();
+        storage.remove(uploadKey, options);
+
+        // remove PRIVATE test files
+        options = StorageRemoveOptions.builder()
+                .accessLevel(StorageAccessLevel.PRIVATE)
+                .build();
+        storage.remove(uploadKey, options);
+
         synchronousAuth.signOut();
     }
 }
