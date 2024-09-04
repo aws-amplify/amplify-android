@@ -1096,9 +1096,16 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             options.getNextToken(),
             options.getSubpathStrategy());
 
+        AWSS3StorageService storageService = defaultStorageService;
+        try {
+            storageService = getStorageService(options.getBucket());
+        } catch (StorageException exception) {
+            onError.accept(exception);
+        }
+
         AWSS3StorageListOperation operation =
             new AWSS3StorageListOperation(
-                defaultStorageService,
+                storageService,
                 executorService,
                 authCredentialsProvider,
                 request,
@@ -1125,9 +1132,16 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                 options.getNextToken(),
                 options.getSubpathStrategy());
 
+        AWSS3StorageService storageService = defaultStorageService;
+        try {
+            storageService = getStorageService(options.getBucket());
+        } catch (StorageException exception) {
+            onError.accept(exception);
+        }
+
         AWSS3StoragePathListOperation operation =
                 new AWSS3StoragePathListOperation(
-                        defaultStorageService,
+                        storageService,
                         executorService,
                         authCredentialsProvider,
                         request,
