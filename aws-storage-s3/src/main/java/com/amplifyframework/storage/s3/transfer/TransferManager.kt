@@ -20,7 +20,6 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import androidx.work.WorkManager
-import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.model.ObjectCannedAcl
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.category.CategoryType
@@ -102,7 +101,16 @@ internal class TransferManager(
         useAccelerateEndpoint: Boolean = false
     ): TransferObserver {
         val transferRecordId = if (shouldUploadInMultipart(file)) {
-            createMultipartUploadRecords(transferId, bucket, region, key, file, metadata, cannedAcl, useAccelerateEndpoint)
+            createMultipartUploadRecords(
+                transferId,
+                bucket,
+                region,
+                key,
+                file,
+                metadata,
+                cannedAcl,
+                useAccelerateEndpoint
+            )
         } else {
             val uri = transferDB.insertSingleTransferRecord(
                 transferId,

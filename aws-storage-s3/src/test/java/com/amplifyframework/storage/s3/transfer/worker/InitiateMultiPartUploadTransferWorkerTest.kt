@@ -68,7 +68,7 @@ internal class InitiateMultiPartUploadTransferWorkerTest {
         every { workerParameters.runAttemptCount }.answers { 1 }
         every { workerParameters.taskExecutor }.answers { ImmediateTaskExecutor() }
         every { s3Client.withConfig(any()) } returns s3Client
-        every { clientProvider.getStorageTransferClient(any(), any())}.answers { s3Client }
+        every { clientProvider.getStorageTransferClient(any(), any()) }.answers { s3Client }
     }
 
     @After

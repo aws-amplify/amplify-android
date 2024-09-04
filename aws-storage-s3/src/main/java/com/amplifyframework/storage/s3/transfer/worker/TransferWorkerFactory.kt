@@ -17,7 +17,6 @@ package com.amplifyframework.storage.s3.transfer.worker
 import android.content.Context
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
-import aws.sdk.kotlin.services.s3.S3Client
 import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater

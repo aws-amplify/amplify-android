@@ -15,7 +15,6 @@
 package com.amplifyframework.storage.s3.transfer
 
 import aws.sdk.kotlin.services.s3.S3Client
-import com.amplifyframework.annotations.InternalApiWarning
 
 internal interface StorageTransferClientProvider {
     fun getStorageTransferClient(region: String?, bucketName: String?): S3Client

@@ -3937,7 +3937,7 @@ public final class com/amplifyframework/storage/BucketInfo {
 	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lcom/amplifyframework/storage/BucketInfo;
 	public static synthetic fun copy$default (Lcom/amplifyframework/storage/BucketInfo;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/storage/BucketInfo;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getName ()Ljava/lang/String;
+	public final fun getBucketName ()Ljava/lang/String;
 	public final fun getRegion ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
