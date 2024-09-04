@@ -300,12 +300,12 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             this.defaultStorageService = storageServiceFactory.create(
                     context,
                     region,
-                    bucket.getBucketInfo().getName(),
+                    bucket.getBucketInfo().getBucketName(),
                     clientProvider);
             this.awss3StorageServiceContainer = new AWSS3StorageServiceContainer(
                     context, storageServiceFactory,
                     (S3StorageTransferClientProvider) clientProvider);
-            this.awss3StorageServiceContainer.put(bucket.getBucketInfo().getName(), this.defaultStorageService);
+            this.awss3StorageServiceContainer.put(bucket.getBucketInfo().getBucketName(), this.defaultStorageService);
         } catch (RuntimeException exception) {
             throw new StorageException(
                 "Failed to create storage service.",

@@ -14,4 +14,4 @@
  */
 package com.amplifyframework.storage
 
-data class BucketInfo(val name: String, val region: String)
+data class BucketInfo(val bucketName: String, val region: String)
