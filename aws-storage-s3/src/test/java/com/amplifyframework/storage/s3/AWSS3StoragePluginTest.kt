@@ -173,6 +173,7 @@ class AWSS3StoragePluginTest {
         service shouldNotBe null
         exception shouldBe null
     }
+
     @Test
     fun `getStorageServiceResult returns result with exception`() {
         val data = amplifyOutputsData {
