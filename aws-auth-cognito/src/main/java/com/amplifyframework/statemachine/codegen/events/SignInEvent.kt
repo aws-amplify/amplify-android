@@ -15,7 +15,6 @@
 
 package com.amplifyframework.statemachine.codegen.events
 
-import com.amplifyframework.auth.MFAType
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
@@ -63,8 +62,6 @@ internal class SignInEvent(val eventType: EventType, override val time: Date? = 
         data class FinalizeSignIn(val id: String = "") : EventType()
         data class ReceivedChallenge(val challenge: AuthChallenge) : EventType()
         data class ThrowError(val exception: Exception) : EventType()
-        data class InitiateMfaSetup(val allowedMfaTypes: List<MFAType>) : EventType()
-        object InitiateEmailMfaSetup : EventType()
         data class InitiateTOTPSetup(val signInTOTPSetupData: SignInTOTPSetupData) : EventType()
     }
 
