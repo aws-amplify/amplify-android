@@ -1114,8 +1114,9 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         }
     }
 
+    @VisibleForTesting
     @NonNull
-    private GetStorageServiceResult getStorageServiceResult(@Nullable StorageBucket bucket) {
+    GetStorageServiceResult getStorageServiceResult(@Nullable StorageBucket bucket) {
         StorageException storageException = null;
         AWSS3StorageService storageService = defaultStorageService;
         try {
@@ -1197,9 +1198,11 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         }
     }
 
-    private static class GetStorageServiceResult {
-        private final AWSS3StorageService storageService;
-        private final StorageException storageException;
+    @VisibleForTesting
+    @SuppressWarnings("checkstyle:VisibilityModifier")
+    static class GetStorageServiceResult {
+        final AWSS3StorageService storageService;
+        final StorageException storageException;
 
         GetStorageServiceResult(AWSS3StorageService storageService, StorageException exception) {
             this.storageService = storageService;

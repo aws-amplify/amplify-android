@@ -22,6 +22,7 @@ import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.s3.service.AWSS3StorageService
 import com.amplifyframework.testutils.configuration.amplifyOutputsData
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.throwable.shouldHaveCauseOfType
 import io.mockk.every
@@ -147,6 +148,49 @@ class AWSS3StoragePluginTest {
         val exception = shouldThrow<StorageException> {
             plugin.getStorageService(bucket)
         }
+        exception.shouldHaveCauseOfType<InvalidStorageBucketException>()
+    }
+
+    @Test
+    fun `getStorageServiceResult returns result without exception`() {
+        val data = amplifyOutputsData {
+            storage {
+                awsRegion = "test-region"
+                bucketName = "test-bucket"
+                buckets {
+                    awsRegion = "test-region"
+                    bucketName = "test-bucket"
+                    name = "test-name"
+                }
+            }
+        }
+
+        plugin.configure(data, mockk())
+        val bucket = StorageBucket.fromOutputs("test-name")
+        val result = plugin.getStorageServiceResult(bucket)
+        val service = result.storageService
+        val exception = result.storageException
+        service shouldNotBe null
+        exception shouldBe null
+    }
+    @Test
+    fun `getStorageServiceResult returns result with exception`() {
+        val data = amplifyOutputsData {
+            storage {
+                awsRegion = "test-region"
+                bucketName = "test-bucket"
+                buckets {
+                    awsRegion = "test-region"
+                    bucketName = "test-bucket"
+                    name = "test=name"
+                }
+            }
+        }
+
+        plugin.configure(data, mockk())
+        val bucket = StorageBucket.fromOutputs("myBucket")
+        val exception = plugin.getStorageServiceResult(bucket).storageException
+        exception shouldNotBe null
         exception.shouldHaveCauseOfType<InvalidStorageBucketException>()
     }
 }
