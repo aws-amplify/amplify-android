@@ -41,6 +41,10 @@ def getRepositoryPassword() {
     return hasProperty('SONATYPE_NEXUS_PASSWORD') ? SONATYPE_NEXUS_PASSWORD : ""
 }
 
+Boolean useLegacyPublishingConventions(Project project) {
+    return !project.name.startsWith("apollo")
+}
+
 afterEvaluate { project ->
     publishing {
         publications {
@@ -49,7 +53,12 @@ afterEvaluate { project ->
                 artifactId POM_ARTIFACT_ID
                 version VERSION_NAME
 
-                from(components.named("release").get())
+                project.pluginManager.withPlugin("com.android.library") {
+                    from(components.named("release").get())
+                }
+                project.pluginManager.withPlugin("java-library") {
+                    from(components["java"])
+                }
 
                 pom {
                     name = POM_NAME
@@ -79,13 +88,15 @@ afterEvaluate { project ->
                         }
                     }
 
-                    withXml {
-                        // Remove the scope information for all dependencies. This puts
-                        // everything at "compile" scope, which matches the way Amplify V2 has been
-                        // published historically. For v3 we should remove this and include the
-                        // scope information for our dependencies.
-                        def dependencies = asNode().get('dependencies').first()
-                        dependencies.each { it.remove(it.get('scope')) }
+                    if (useLegacyPublishingConventions(project)) {
+                        withXml {
+                            // Remove the scope information for all dependencies. This puts
+                            // everything at "compile" scope, which matches the way Amplify V2 has been
+                            // published historically. For v3 we should remove this and include the
+                            // scope information for our dependencies.
+                            def dependencies = asNode().get('dependencies').first()
+                            dependencies.each { it.remove(it.get('scope')) }
+                        }
                     }
                 }
             }
@@ -113,9 +124,11 @@ afterEvaluate { project ->
         sign publishing.publications.library
     }
 
-    // Turn off Gradle metadata. This is to maintain compatibility with the way Amplify V2 has
-    // been published historically. For v3 we should remove this and publish the gradle metadata.
-    tasks.withType(GenerateModuleMetadata).configureEach {
-        enabled = false
+    if (useLegacyPublishingConventions(project)) {
+        // Turn off Gradle metadata. This is to maintain compatibility with the way Amplify V2 has
+        // been published historically. For v3 we should remove this and publish the gradle metadata.
+        tasks.withType(GenerateModuleMetadata).configureEach {
+            enabled = false
+        }
     }
 }
