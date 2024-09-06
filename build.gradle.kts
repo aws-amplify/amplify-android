@@ -36,6 +36,8 @@ buildscript {
 
 plugins {
     alias(libs.plugins.binary.compatibility.validator)
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.android.library) apply false
 }
@@ -79,29 +81,32 @@ subprojects {
     }
 
     apply(plugin = "app.cash.licensee")
-    configure<LicenseeExtension> {
-        allow("Apache-2.0")
-        allow("MIT")
-        allow("BSD-2-Clause")
-        allow("CC0-1.0")
-        allowUrl("https://developer.android.com/studio/terms.html")
-        allowDependency("net.zetetic", "android-database-sqlcipher", "4.5.4") {
-            because("BSD style License")
-        }
-        allowDependency("org.jetbrains", "annotations", "16.0.1") {
-            because("Apache-2.0, but typo in license URL fixed in newer versions")
-        }
-        allowDependency("org.mockito", "mockito-core", "3.9.0") {
-            because("MIT license")
-        }
-        allowDependency("junit", "junit", "4.13.2") {
-            because("Test Dependency")
-        }
-    }
-
     afterEvaluate {
+        configure<LicenseeExtension> {
+            allow("Apache-2.0")
+            allow("MIT")
+            allow("BSD-2-Clause")
+            allow("CC0-1.0")
+            allowUrl("https://developer.android.com/studio/terms.html")
+            allowDependency("net.zetetic", "android-database-sqlcipher", "4.5.4") {
+                because("BSD style License")
+            }
+            allowDependency("org.jetbrains", "annotations", "16.0.1") {
+                because("Apache-2.0, but typo in license URL fixed in newer versions")
+            }
+            allowDependency("org.mockito", "mockito-core", "3.9.0") {
+                because("MIT license")
+            }
+            allowDependency("junit", "junit", "4.13.2") {
+                because("Test Dependency")
+            }
+            allowUrl("https://raw.githubusercontent.com/apollographql/apollo-kotlin/main/LICENSE") {
+                because("MIT license")
+            }
+        }
+
         configureAndroid()
-        apply(from = "../kover.gradle")
+        apply(from = rootProject.file("kover.gradle"))
     }
 
     tasks.withType<KotlinCompile> {
@@ -114,7 +119,7 @@ subprojects {
 }
 
 @Suppress("ExpiredTargetSdkVersion")
-fun Project.configureAndroid() {
+fun Project.configureAndroid() = pluginManager.withPlugin("com.android.library") {
     val sdkVersionName = findProperty("VERSION_NAME") ?: rootProject.findProperty("VERSION_NAME")
 
     if (hasProperty("signingKeyId")) {
