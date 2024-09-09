@@ -119,9 +119,7 @@ subprojects {
 }
 
 @Suppress("ExpiredTargetSdkVersion")
-fun Project.configureAndroid() = pluginManager.withPlugin("com.android.library") {
-    val sdkVersionName = findProperty("VERSION_NAME") ?: rootProject.findProperty("VERSION_NAME")
-
+fun Project.configureAndroid() {
     if (hasProperty("signingKeyId")) {
         println("Getting signing info from protected source.")
         extra["signing.keyId"] = findProperty("signingKeyId")
@@ -129,72 +127,76 @@ fun Project.configureAndroid() = pluginManager.withPlugin("com.android.library")
         extra["signing.inMemoryKey"] = findProperty("signingInMemoryKey")
     }
 
-    configure<LibraryExtension> {
-        buildToolsVersion = "30.0.3"
-        compileSdk = 34
+    pluginManager.withPlugin("com.android.library") {
+        val sdkVersionName = findProperty("VERSION_NAME") ?: rootProject.findProperty("VERSION_NAME")
 
-        buildFeatures {
-            // Allow specifying custom buildConfig fields
-            buildConfig = true
-        }
+        configure<LibraryExtension> {
+            buildToolsVersion = "30.0.3"
+            compileSdk = 34
 
-        defaultConfig {
-            minSdk = 24
-            targetSdk = 30
-            testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-            testInstrumentationRunnerArguments += "clearPackageData" to "true"
-            consumerProguardFiles += rootProject.file("configuration/consumer-rules.pro")
+            buildFeatures {
+                // Allow specifying custom buildConfig fields
+                buildConfig = true
+            }
 
-            testOptions {
-                animationsDisabled = true
-                unitTests {
-                    isIncludeAndroidResources = true
+            defaultConfig {
+                minSdk = 24
+                targetSdk = 30
+                testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+                testInstrumentationRunnerArguments += "clearPackageData" to "true"
+                consumerProguardFiles += rootProject.file("configuration/consumer-rules.pro")
+
+                testOptions {
+                    animationsDisabled = true
+                    unitTests {
+                        isIncludeAndroidResources = true
+                    }
+                }
+
+                buildConfigField("String", "VERSION_NAME", "\"$sdkVersionName\"")
+            }
+
+            lint {
+                warningsAsErrors = true
+                abortOnError = true
+                enable += listOf("UnusedResources", "NewerVersionAvailable")
+            }
+
+            compileOptions {
+                isCoreLibraryDesugaringEnabled = true
+                sourceCompatibility = JavaVersion.VERSION_11
+                targetCompatibility = JavaVersion.VERSION_11
+            }
+
+            tasks.withType<KotlinCompile>().configureEach {
+                kotlinOptions {
+                    jvmTarget = JavaVersion.VERSION_11.toString()
                 }
             }
 
-            buildConfigField("String", "VERSION_NAME", "\"$sdkVersionName\"")
-        }
-
-        lint {
-            warningsAsErrors = true
-            abortOnError = true
-            enable += listOf("UnusedResources", "NewerVersionAvailable")
-        }
-
-        compileOptions {
-            isCoreLibraryDesugaringEnabled = true
-            sourceCompatibility = JavaVersion.VERSION_11
-            targetCompatibility = JavaVersion.VERSION_11
-        }
-
-        tasks.withType<KotlinCompile>().configureEach {
-            kotlinOptions {
-                jvmTarget = JavaVersion.VERSION_11.toString()
-            }
-        }
-
-        // Needed when running integration tests. The oauth2 library uses relies on two
-        // dependencies (Apache's httpcore and httpclient), both of which include
-        // META-INF/DEPENDENCIES. Tried a couple other options to no avail.
-        packagingOptions {
-            resources.excludes.addAll(
-                listOf(
-                    "META-INF/DEPENDENCIES",
-                    "META-INF/LICENSE.md",
-                    "META-INF/LICENSE-notice.md"
+            // Needed when running integration tests. The oauth2 library uses relies on two
+            // dependencies (Apache's httpcore and httpclient), both of which include
+            // META-INF/DEPENDENCIES. Tried a couple other options to no avail.
+            packagingOptions {
+                resources.excludes.addAll(
+                    listOf(
+                        "META-INF/DEPENDENCIES",
+                        "META-INF/LICENSE.md",
+                        "META-INF/LICENSE-notice.md"
+                    )
                 )
-            )
-        }
+            }
 
-        publishing {
-            singleVariant("release") {
-                withSourcesJar()
+            publishing {
+                singleVariant("release") {
+                    withSourcesJar()
+                }
             }
         }
-    }
 
-    dependencies {
-        add("coreLibraryDesugaring", libs.android.desugartools)
+        dependencies {
+            add("coreLibraryDesugaring", libs.android.desugartools)
+        }
     }
 }
 
