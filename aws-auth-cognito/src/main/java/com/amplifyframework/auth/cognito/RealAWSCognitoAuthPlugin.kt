@@ -27,6 +27,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedStatusType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.EmailMfaSettingsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgetDeviceRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserAttributeVerificationCodeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
@@ -71,9 +72,12 @@ import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
+import com.amplifyframework.auth.cognito.helpers.getAllowedMFATypesFromChallengeParameters
+import com.amplifyframework.auth.cognito.helpers.getMFASetupTypeOrNull
 import com.amplifyframework.auth.cognito.helpers.getMFAType
 import com.amplifyframework.auth.cognito.helpers.getMFATypeOrNull
 import com.amplifyframework.auth.cognito.helpers.identityProviderName
+import com.amplifyframework.auth.cognito.helpers.isMfaSetupSelectionChallenge
 import com.amplifyframework.auth.cognito.helpers.value
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions
@@ -594,7 +598,7 @@ internal class RealAWSCognitoAuthPlugin(
                                     onError,
                                     totpSetupState.signInTOTPSetupData
                                 )
-                                totpSetupState?.hasNewResponse = false
+                                totpSetupState.hasNewResponse = false
                             }
                         }
                     }
@@ -706,20 +710,32 @@ internal class RealAWSCognitoAuthPlugin(
                             )
                         )
                     }
+
                     signInState is SignInState.ResolvingChallenge &&
                         signInState.challengeState is SignInChallengeState.WaitingForAnswer &&
                         (signInState.challengeState as SignInChallengeState.WaitingForAnswer).hasNewResponse -> {
                         authStateMachine.cancel(token)
                         val signInChallengeState = signInState.challengeState as SignInChallengeState.WaitingForAnswer
                         var allowedMFATypes: Set<MFAType>? = null
+
+                        if (signInChallengeState.challenge.challengeName == ChallengeNameType.MfaSetup.value ||
+                            signInChallengeState.challenge.challengeName == ChallengeNameType.EmailOtp.value) {
+                            SignInChallengeHelper.getNextStep(
+                                signInChallengeState.challenge,
+                                onSuccess,
+                                onError
+                            )
+                            (signInState.challengeState as SignInChallengeState.WaitingForAnswer).hasNewResponse = false
+                            return@listen
+                        }
+
                         val signInStep = when (signInChallengeState.challenge.challengeName) {
                             "SMS_MFA" -> AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE
                             "NEW_PASSWORD_REQUIRED" -> AuthSignInStep.CONFIRM_SIGN_IN_WITH_NEW_PASSWORD
                             "SOFTWARE_TOKEN_MFA" -> AuthSignInStep.CONFIRM_SIGN_IN_WITH_TOTP_CODE
                             "SELECT_MFA_TYPE" -> {
-                                signInChallengeState.challenge.parameters?.get("MFAS_CAN_CHOOSE")?.let {
-                                    allowedMFATypes = SignInChallengeHelper.getAllowedMFATypes(it)
-                                }
+                                allowedMFATypes =
+                                    getAllowedMFATypesFromChallengeParameters(signInChallengeState.challenge.parameters)
                                 AuthSignInStep.CONTINUE_SIGN_IN_WITH_MFA_SELECTION
                             }
                             else -> AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE
@@ -797,9 +813,18 @@ internal class RealAWSCognitoAuthPlugin(
                             getMFATypeOrNull(challengeResponse) == null
                         ) {
                             val error = InvalidParameterException(
-                                message = "Value for challengeResponse must be one of SMS_MFA or SOFTWARE_TOKEN_MFA"
+                                message = "Value for challengeResponse must be one of SMS_MFA, EMAIL_OTP or SOFTWARE_TOKEN_MFA"
                             )
                             onError.accept(error)
+                        } else if (challengeState is SignInChallengeState.WaitingForAnswer &&
+                            isMfaSetupSelectionChallenge(challengeState.challenge) &&
+                            getMFASetupTypeOrNull(challengeResponse) == null
+                        ) {
+                            val error = InvalidParameterException(
+                                message = "Value for challengeResponse must be one of EMAIL_OTP or SOFTWARE_TOKEN_MFA"
+                            )
+                            onError.accept(error)
+                            authStateMachine.cancel(token)
                         } else {
                             val event = SignInChallengeEvent(
                                 SignInChallengeEvent.EventType.VerifyChallengeAnswer(
