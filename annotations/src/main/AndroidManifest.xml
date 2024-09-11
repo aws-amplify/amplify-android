@@ -14,7 +14,4 @@
    permissions and limitations under the License.
 -->
 
-<manifest package="com.amplifyframework.annotations"
-        xmlns:android="http://schemas.android.com/apk/res/android">
-</manifest>
-
+<manifest />

@@ -1,0 +1,11 @@
+subscription onCreateSubscription {
+  onCreateTodo {
+    ... todoFragment
+  }
+}
+
+subscription onDeleteSubscription {
+  onDeleteTodo {
+    ... todoFragment
+  }
+}
