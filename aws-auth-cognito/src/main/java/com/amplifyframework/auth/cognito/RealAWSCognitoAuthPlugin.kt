@@ -2327,7 +2327,7 @@ internal class RealAWSCognitoAuthPlugin(
                                         .cognitoIdentityProviderClient
                                         ?.setUserMfaPreference {
                                             this.accessToken = token
-                                            this.smsMfaSettings = sms?.let { it ->
+                                            this.smsMfaSettings = sms?.let {
                                                 val preferredMFASetting = it.mfaPreferred
                                                     ?: (
                                                         overridePreferredSetting &&
@@ -2339,7 +2339,7 @@ internal class RealAWSCognitoAuthPlugin(
                                                     preferredMfa = preferredMFASetting
                                                 }
                                             }
-                                            this.softwareTokenMfaSettings = totp?.let { it ->
+                                            this.softwareTokenMfaSettings = totp?.let {
                                                 val preferredMFASetting = it.mfaPreferred
                                                     ?: (
                                                         overridePreferredSetting &&
@@ -2351,7 +2351,7 @@ internal class RealAWSCognitoAuthPlugin(
                                                     preferredMfa = preferredMFASetting
                                                 }
                                             }
-                                            this.emailMfaSettings = email?.let { it ->
+                                            this.emailMfaSettings = email?.let {
                                                 val preferredMFASetting = it.mfaPreferred
                                                     ?: (
                                                             overridePreferredSetting &&
