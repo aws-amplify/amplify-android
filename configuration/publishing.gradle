@@ -57,7 +57,7 @@ afterEvaluate { project ->
                     from(components.named("release").get())
                 }
                 project.pluginManager.withPlugin("java-library") {
-                    from(components["java"])
+                    from(components.named("java").get())
                 }
 
                 pom {

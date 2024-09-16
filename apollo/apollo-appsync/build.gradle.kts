@@ -23,6 +23,7 @@ plugins {
 
 java {
     withSourcesJar()
+    withJavadocJar()
 }
 
 kotlin {
