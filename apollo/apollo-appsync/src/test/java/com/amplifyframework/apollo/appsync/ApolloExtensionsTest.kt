@@ -22,16 +22,12 @@ import com.apollographql.apollo.api.AnyAdapter
 import com.apollographql.apollo.api.CustomScalarAdapters
 import com.apollographql.apollo.api.json.BufferedSourceJsonReader
 import com.apollographql.apollo.network.ws.WebSocketNetworkTransport
-import io.kotest.matchers.shouldBe
 import io.mockk.mockk
-import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import okio.Buffer
 import okio.ByteString
-import okio.ByteString.Companion.decodeBase64
 import org.junit.Test
 
 class ApolloExtensionsTest {
@@ -84,23 +80,21 @@ class ApolloExtensionsTest {
         val transportBuilder = mockk<WebSocketNetworkTransport.Builder>(relaxed = true)
         builder.appSync(endpoint, authorizer, transportBuilder)
 
-        val slot = slot<suspend () -> String>()
         verify {
-            transportBuilder.serverUrl(capture(slot))
+            transportBuilder.serverUrl(
+                "https://example1234567890123456789.appsync-realtime-api.us-east-1.amazonaws.com/graphql/connect"
+            )
         }
+    }
 
-        val serverUrl = slot.captured().toHttpUrl()
+    @Test
+    fun `sets websocket engine`() {
+        val transportBuilder = mockk<WebSocketNetworkTransport.Builder>(relaxed = true)
+        builder.appSync(endpoint, authorizer, transportBuilder)
 
-        // Expected URL:
-        // https://example1234567890123456789.appsync-realtime-api.us-east-1.amazonaws.com/graphql/connect
-        serverUrl.host shouldBe "example1234567890123456789.appsync-realtime-api.us-east-1.amazonaws.com"
-        serverUrl.encodedPath shouldBe "/graphql/connect"
-
-        val header = serverUrl.queryParameter("header")?.decodeBase64()!!.toJsonMap()
-        header["host"] shouldBe "example1234567890123456789.appsync-api.us-east-1.amazonaws.com"
-        header["x-api-key"] shouldBe "apiKey"
-
-        serverUrl.queryParameter("payload") shouldBe "e30="
+        verify {
+            transportBuilder.webSocketEngine(any())
+        }
     }
 
     @Suppress("UNCHECKED_CAST")

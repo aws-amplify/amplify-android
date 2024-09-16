@@ -62,6 +62,7 @@ class AppSyncEndpoint(serverUrl: String) {
      * Creates the serverUrl to be used for the WebSocketTransport's serverUrl. For AppSync, this URL has authorization
      * information appended in query parameters. Set this value as the serverUrl for the WebSocketTransport.
      */
+    @Deprecated("Use HTTP header authorization instead of appending a query parameter")
     suspend fun createWebsocketServerUrl(authorizer: AppSyncAuthorizer): String {
         val headers = mapOf("host" to serverUrl.host) + authorizer.getWebsocketConnectionHeaders(this)
         val authorization = headers.base64()
