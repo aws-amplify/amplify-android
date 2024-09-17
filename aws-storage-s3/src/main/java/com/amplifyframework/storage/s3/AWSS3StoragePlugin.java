@@ -18,6 +18,7 @@ package com.amplifyframework.storage.s3;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.OptIn;
 import androidx.annotation.VisibleForTesting;
 
@@ -27,8 +28,14 @@ import com.amplifyframework.auth.AuthCredentialsProvider;
 import com.amplifyframework.auth.CognitoCredentialsProvider;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.NoOpConsumer;
+import com.amplifyframework.core.async.AmplifyOperation;
 import com.amplifyframework.core.configuration.AmplifyOutputsData;
+import com.amplifyframework.storage.BucketInfo;
+import com.amplifyframework.storage.InvalidStorageBucketException;
+import com.amplifyframework.storage.OutputsStorageBucket;
+import com.amplifyframework.storage.ResolvedStorageBucket;
 import com.amplifyframework.storage.StorageAccessLevel;
+import com.amplifyframework.storage.StorageBucket;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StoragePath;
 import com.amplifyframework.storage.StoragePlugin;
@@ -84,7 +91,9 @@ import com.amplifyframework.storage.s3.request.AWSS3StoragePathUploadRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadRequest;
 import com.amplifyframework.storage.s3.service.AWSS3StorageService;
-import com.amplifyframework.storage.s3.service.StorageService;
+import com.amplifyframework.storage.s3.service.AWSS3StorageServiceContainer;
+import com.amplifyframework.storage.s3.transfer.S3StorageTransferClientProvider;
+import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider;
 import com.amplifyframework.storage.s3.transfer.TransferObserver;
 import com.amplifyframework.storage.s3.transfer.TransferRecord;
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater;
@@ -95,6 +104,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -117,14 +127,32 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
     private static final int DEFAULT_URL_EXPIRATION_DAYS = 7;
 
-    private final StorageService.Factory storageServiceFactory;
+    private final AWSS3StorageService.Factory storageServiceFactory;
     private final ExecutorService executorService;
-    private final AuthCredentialsProvider authCredentialsProvider;
+    private AuthCredentialsProvider authCredentialsProvider;
     private final AWSS3StoragePluginConfiguration awsS3StoragePluginConfiguration;
-    private AWSS3StorageService storageService;
+    private AWSS3StorageService defaultStorageService;
     @SuppressWarnings("deprecation")
     private StorageAccessLevel defaultAccessLevel;
     private int defaultUrlExpiration;
+
+    private AWSS3StorageServiceContainer awss3StorageServiceContainer;
+    @SuppressLint("UnsafeOptInUsageError")
+    private List<AmplifyOutputsData.StorageBucket> configuredBuckets;
+
+    @SuppressLint("UnsafeOptInUsageError")
+    private StorageTransferClientProvider clientProvider
+            = new S3StorageTransferClientProvider((region, bucketName) -> {
+                if (region != null && bucketName != null) {
+                    StorageBucket bucket = StorageBucket.fromBucketInfo(new BucketInfo(bucketName, region));
+                    return awss3StorageServiceContainer.get((ResolvedStorageBucket) bucket).getClient();
+                }
+
+                if (region != null) {
+                    return S3StorageTransferClientProvider.getS3Client(region, authCredentialsProvider);
+                }
+                return defaultStorageService.getClient();
+            });
 
     /**
      * Constructs the AWS S3 Storage Plugin initializing the executor service.
@@ -148,13 +176,14 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
     @VisibleForTesting
     AWSS3StoragePlugin(AuthCredentialsProvider authCredentialsProvider) {
-        this((context, region, bucket) ->
+        this((context, region, bucket, clientProvider) ->
                 new AWSS3StorageService(
                     context,
                     region,
                     bucket,
                     authCredentialsProvider,
-                    AWS_S3_STORAGE_PLUGIN_KEY
+                    AWS_S3_STORAGE_PLUGIN_KEY,
+                    clientProvider
                 ),
             authCredentialsProvider,
             new AWSS3StoragePluginConfiguration.Builder().build());
@@ -163,13 +192,15 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     @VisibleForTesting
     AWSS3StoragePlugin(AuthCredentialsProvider authCredentialsProvider,
                        AWSS3StoragePluginConfiguration awss3StoragePluginConfiguration) {
-        this((context, region, bucket) ->
+
+        this((context, region, bucket, clientProvider) ->
                 new AWSS3StorageService(
                     context,
                     region,
                     bucket,
                     authCredentialsProvider,
-                    AWS_S3_STORAGE_PLUGIN_KEY
+                    AWS_S3_STORAGE_PLUGIN_KEY,
+                    clientProvider
                 ),
             authCredentialsProvider,
             awss3StoragePluginConfiguration);
@@ -177,7 +208,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
     @VisibleForTesting
     AWSS3StoragePlugin(
-        StorageService.Factory storageServiceFactory,
+        AWSS3StorageService.Factory storageServiceFactory,
         AuthCredentialsProvider authCredentialsProvider,
         AWSS3StoragePluginConfiguration awss3StoragePluginConfiguration
     ) {
@@ -194,6 +225,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         return AWS_S3_STORAGE_PLUGIN_KEY;
     }
 
+    @SuppressLint("UnsafeOptInUsageError")
     @Override
     @SuppressWarnings("deprecation")
     public void configure(
@@ -237,7 +269,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             );
         }
 
-        configure(context, region, bucket);
+        BucketInfo bucketInfo = new BucketInfo(bucket, region);
+        configure(context, region, (ResolvedStorageBucket) StorageBucket.fromBucketInfo(bucketInfo));
     }
 
     @Override
@@ -252,17 +285,28 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             );
         }
 
-        configure(context, storage.getAwsRegion(), storage.getBucketName());
+        this.configuredBuckets = storage.getBuckets();
+        BucketInfo bucketInfo = new BucketInfo(storage.getBucketName(), storage.getAwsRegion());
+        configure(context, storage.getAwsRegion(), (ResolvedStorageBucket) StorageBucket.fromBucketInfo(bucketInfo));
     }
 
     @SuppressWarnings("deprecation")
+    @SuppressLint("UnsafeOptInUsageError")
     private void configure(
-        @NonNull Context context,
-        @NonNull String region,
-        @NonNull String bucket
+            @NonNull Context context,
+            @NonNull String region,
+            @NonNull ResolvedStorageBucket bucket
     ) throws StorageException {
         try {
-            this.storageService = (AWSS3StorageService) storageServiceFactory.create(context, region, bucket);
+            this.defaultStorageService = storageServiceFactory.create(
+                    context,
+                    region,
+                    bucket.getBucketInfo().getBucketName(),
+                    clientProvider);
+            this.awss3StorageServiceContainer = new AWSS3StorageServiceContainer(
+                    context, storageServiceFactory,
+                    (S3StorageTransferClientProvider) clientProvider);
+            this.awss3StorageServiceContainer.put(bucket.getBucketInfo().getBucketName(), this.defaultStorageService);
         } catch (RuntimeException exception) {
             throw new StorageException(
                 "Failed to create storage service.",
@@ -280,7 +324,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     @NonNull
     @Override
     public S3Client getEscapeHatch() {
-        return storageService.getClient();
+        return defaultStorageService.getClient();
     }
 
     @NonNull
@@ -334,16 +378,19 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             validateObjectExistence
         );
 
+        GetStorageServiceResult result = getStorageServiceResult(options.getBucket());
+
         AWSS3StorageGetPresignedUrlOperation operation =
             new AWSS3StorageGetPresignedUrlOperation(
-                storageService,
+                result.storageService,
                 executorService,
                 authCredentialsProvider,
                 request,
                 awsS3StoragePluginConfiguration,
                 onSuccess,
                 onError);
-        operation.start();
+
+        handleGetStorageServiceResult(onError, result, operation);
 
         return operation;
     }
@@ -369,15 +416,18 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                 validateObjectExistence
         );
 
+        GetStorageServiceResult result = getStorageServiceResult(options.getBucket());
+
         AWSS3StoragePathGetPresignedUrlOperation operation =
                 new AWSS3StoragePathGetPresignedUrlOperation(
-                        storageService,
+                        result.storageService,
                         executorService,
                         authCredentialsProvider,
                         request,
                         onSuccess,
                         onError);
-        operation.start();
+
+        handleGetStorageServiceResult(onError, result, operation);
 
         return operation;
     }
@@ -456,8 +506,10 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             useAccelerateEndpoint
         );
 
+        GetStorageServiceResult result = getStorageServiceResult(options.getBucket());
+
         AWSS3StorageDownloadFileOperation operation = new AWSS3StorageDownloadFileOperation(
-            storageService,
+            result.storageService,
             executorService,
             authCredentialsProvider,
             request,
@@ -466,7 +518,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             onSuccess,
             onError
         );
-        operation.start();
+
+        handleGetStorageServiceResult(onError, result, operation);
 
         return operation;
     }
@@ -491,16 +544,19 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                 useAccelerateEndpoint
         );
 
+        GetStorageServiceResult result = getStorageServiceResult(options.getBucket());
+
         AWSS3StoragePathDownloadFileOperation operation = new AWSS3StoragePathDownloadFileOperation(
                 request,
-                storageService,
+                result.storageService,
                 executorService,
                 authCredentialsProvider,
                 onProgress,
                 onSuccess,
                 onError
         );
-        operation.start();
+
+        handleGetStorageServiceResult(onError, result, operation);
 
         return operation;
     }
@@ -583,8 +639,10 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             useAccelerateEndpoint
         );
 
+        GetStorageServiceResult result = getStorageServiceResult(options.getBucket());
+
         AWSS3StorageUploadFileOperation operation = new AWSS3StorageUploadFileOperation(
-            storageService,
+            result.storageService,
             executorService,
             authCredentialsProvider,
             request,
@@ -593,7 +651,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             onSuccess,
             onError
         );
-        operation.start();
+
+        handleGetStorageServiceResult(onError, result, operation);
 
         return operation;
     }
@@ -621,16 +680,19 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                 useAccelerateEndpoint
         );
 
+        GetStorageServiceResult result = getStorageServiceResult(options.getBucket());
+
         AWSS3StoragePathUploadFileOperation operation = new AWSS3StoragePathUploadFileOperation(
                 request,
-                storageService,
+                result.storageService,
                 executorService,
                 authCredentialsProvider,
                 onProgress,
                 onSuccess,
                 onError
         );
-        operation.start();
+
+        handleGetStorageServiceResult(onError, result, operation);
 
         return operation;
     }
@@ -711,8 +773,10 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             useAccelerateEndpoint
         );
 
+        GetStorageServiceResult result = getStorageServiceResult(options.getBucket());
+
         AWSS3StorageUploadInputStreamOperation operation = new AWSS3StorageUploadInputStreamOperation(
-            storageService,
+            result.storageService,
             executorService,
             authCredentialsProvider,
             awsS3StoragePluginConfiguration,
@@ -721,7 +785,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             onSuccess,
             onError
         );
-        operation.start();
+
+        handleGetStorageServiceResult(onError, result, operation);
 
         return operation;
     }
@@ -749,17 +814,20 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                 useAccelerateEndpoint
         );
 
+        GetStorageServiceResult result = getStorageServiceResult(options.getBucket());
+
         AWSS3StoragePathUploadInputStreamOperation operation =
                 new AWSS3StoragePathUploadInputStreamOperation(
                         request,
-                        storageService,
+                        result.storageService,
                         executorService,
                         authCredentialsProvider,
                         onProgress,
                         onSuccess,
                         onError
                 );
-        operation.start();
+
+        handleGetStorageServiceResult(onError, result, operation);
 
         return operation;
     }
@@ -802,9 +870,11 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             options.getTargetIdentityId()
         );
 
+        GetStorageServiceResult result = getStorageServiceResult(options.getBucket());
+
         AWSS3StorageRemoveOperation operation =
             new AWSS3StorageRemoveOperation(
-                storageService,
+                result.storageService,
                 executorService,
                 authCredentialsProvider,
                 request,
@@ -812,7 +882,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                 onSuccess,
                 onError);
 
-        operation.start();
+        handleGetStorageServiceResult(onError, result, operation);
 
         return operation;
     }
@@ -827,20 +897,23 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     ) {
         AWSS3StoragePathRemoveRequest request = new AWSS3StoragePathRemoveRequest(path);
 
+        GetStorageServiceResult result = getStorageServiceResult(options.getBucket());
+
         AWSS3StoragePathRemoveOperation operation =
                 new AWSS3StoragePathRemoveOperation(
-                        storageService,
+                        result.storageService,
                         executorService,
                         authCredentialsProvider,
                         request,
                         onSuccess,
                         onError);
 
-        operation.start();
+        handleGetStorageServiceResult(onError, result, operation);
 
         return operation;
     }
-
+    
+    @SuppressLint("UnsafeOptInUsageError")
     @Override
     @SuppressWarnings("deprecation")
     public void getTransfer(
@@ -849,18 +922,23 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         @NonNull Consumer<StorageException> onError) {
         executorService.submit(() -> {
             try {
-                TransferRecord transferRecord = storageService.getTransfer(transferId);
+                TransferRecord transferRecord = defaultStorageService.getTransfer(transferId);
                 if (transferRecord != null) {
                     TransferObserver transferObserver =
                         new TransferObserver(
                             transferRecord.getId(),
-                            storageService.getTransferManager().getTransferStatusUpdater(),
+                            defaultStorageService.getTransferManager().getTransferStatusUpdater(),
                             transferRecord.getBucketName(),
+                            transferRecord.getRegion(),
                             transferRecord.getKey(),
                             transferRecord.getFile(),
                             null,
                             transferRecord.getState() != null ? transferRecord.getState() : TransferState.UNKNOWN);
                     TransferType transferType = transferRecord.getType();
+
+                    AWSS3StorageService storageService
+                            = getAwss3StorageServiceFromTransferRecord(onError, transferRecord);
+
                     switch (Objects.requireNonNull(transferType)) {
                         case UPLOAD:
                             if (transferRecord.getFile().startsWith(TransferStatusUpdater.TEMP_FILE_PREFIX)) {
@@ -914,6 +992,25 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         });
     }
 
+    private AWSS3StorageService getAwss3StorageServiceFromTransferRecord(
+            @NonNull Consumer<StorageException> onError,
+            TransferRecord transferRecord
+    ) {
+        AWSS3StorageService storageService = defaultStorageService;
+        if (transferRecord.getRegion() != null && transferRecord.getBucketName() != null) {
+            try {
+                BucketInfo bucketInfo = new BucketInfo(
+                        transferRecord.getBucketName(),
+                        transferRecord.getRegion());
+                StorageBucket bucket = StorageBucket.fromBucketInfo(bucketInfo);
+                storageService = getStorageService(bucket);
+            } catch (StorageException exception) {
+                onError.accept(exception);
+            }
+        }
+        return storageService;
+    }
+
     @NonNull
     @SuppressWarnings("deprecation")
     @Override
@@ -958,9 +1055,11 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             options.getNextToken(),
             options.getSubpathStrategy());
 
+        GetStorageServiceResult result = getStorageServiceResult(options.getBucket());
+
         AWSS3StorageListOperation operation =
             new AWSS3StorageListOperation(
-                storageService,
+                result.storageService,
                 executorService,
                 authCredentialsProvider,
                 request,
@@ -968,7 +1067,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                 onSuccess,
                 onError);
 
-        operation.start();
+        handleGetStorageServiceResult(onError, result, operation);
 
         return operation;
     }
@@ -987,18 +1086,77 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                 options.getNextToken(),
                 options.getSubpathStrategy());
 
+        GetStorageServiceResult result = getStorageServiceResult(options.getBucket());
+
         AWSS3StoragePathListOperation operation =
                 new AWSS3StoragePathListOperation(
-                        storageService,
+                        result.storageService,
                         executorService,
                         authCredentialsProvider,
                         request,
                         onSuccess,
                         onError);
 
-        operation.start();
+        handleGetStorageServiceResult(onError, result, operation);
 
         return operation;
+    }
+
+    private static void handleGetStorageServiceResult(
+            @NonNull Consumer<StorageException> onError,
+            GetStorageServiceResult result,
+            AmplifyOperation<?> operation
+    ) {
+        if (result.storageException == null) {
+            operation.start();
+        } else {
+            onError.accept(result.storageException);
+        }
+    }
+
+    @VisibleForTesting
+    @NonNull
+    GetStorageServiceResult getStorageServiceResult(@Nullable StorageBucket bucket) {
+        StorageException storageException = null;
+        AWSS3StorageService storageService = defaultStorageService;
+        try {
+            storageService = getStorageService(bucket);
+        } catch (StorageException exception) {
+            storageException = exception;
+        }
+        return new GetStorageServiceResult(storageService, storageException);
+    }
+
+    @SuppressLint("UnsafeOptInUsageError")
+    @VisibleForTesting
+    @NonNull
+    AWSS3StorageService getStorageService(@Nullable StorageBucket bucket) throws StorageException {
+        if (bucket == null) {
+            return defaultStorageService;
+        }
+
+        if (bucket instanceof OutputsStorageBucket) {
+            if (configuredBuckets != null && !configuredBuckets.isEmpty()) {
+                String name = ((OutputsStorageBucket) bucket).getName();
+                for (AmplifyOutputsData.StorageBucket configuredBucket : configuredBuckets) {
+                    if (configuredBucket.getName().equals(name)) {
+                        String bucketName = configuredBucket.getBucketName();
+                        String region = configuredBucket.getAwsRegion();
+                        return awss3StorageServiceContainer.get(bucketName, region);
+                    }
+                }
+            }
+            throw new StorageException(
+                    "Unable to find bucket from name in Amplify Outputs.",
+                    new InvalidStorageBucketException(),
+                    "Ensure the bucket name used is available in Amplify Outputs.");
+        }
+
+        if (bucket instanceof ResolvedStorageBucket) {
+            return awss3StorageServiceContainer.get((ResolvedStorageBucket) bucket);
+        }
+
+        return defaultStorageService;
     }
 
     /**
@@ -1037,6 +1195,18 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         @NonNull
         public String getConfigurationKey() {
             return configurationKey;
+        }
+    }
+
+    @VisibleForTesting
+    @SuppressWarnings("checkstyle:VisibilityModifier")
+    static class GetStorageServiceResult {
+        final AWSS3StorageService storageService;
+        final StorageException storageException;
+
+        GetStorageServiceResult(AWSS3StorageService storageService, StorageException exception) {
+            this.storageService = storageService;
+            this.storageException = exception;
         }
     }
 }

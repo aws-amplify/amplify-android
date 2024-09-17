@@ -253,6 +253,49 @@ class AmplifyOutputsDataTest {
         outputs.storage?.run {
             awsRegion shouldBe "us-east-1"
             bucketName shouldBe "myBucket"
+            buckets.size shouldBe 0
+        }
+    }
+
+    @Test
+    fun `parses multi-bucket storage configuration`() {
+        val json = createJson(
+            Keys.storage to mapOf(
+                Keys.region to "us-east-1",
+                Keys.bucket to "myBucket",
+                Keys.buckets to listOf(
+                    mapOf(
+                        Keys.region to "us-east-1",
+                        Keys.bucket to "myBucket",
+                        Keys.name to "name1"
+                    ),
+                    mapOf(
+                        Keys.region to "us-east-2",
+                        Keys.bucket to "myBucket2",
+                        Keys.name to "name2"
+                    )
+                )
+            )
+        )
+
+        val outputs = AmplifyOutputsData.deserialize(json)
+
+        outputs.storage.shouldNotBeNull()
+        outputs.storage?.run {
+            awsRegion shouldBe "us-east-1"
+            bucketName shouldBe "myBucket"
+            buckets.size shouldBe 2
+            buckets[0].apply {
+                name shouldBe "name1"
+                awsRegion shouldBe "us-east-1"
+                bucketName shouldBe "myBucket"
+            }
+
+            buckets[1].apply {
+                name shouldBe "name2"
+                awsRegion shouldBe "us-east-2"
+                bucketName shouldBe "myBucket2"
+            }
         }
     }
 
@@ -361,6 +404,8 @@ class AmplifyOutputsDataTest {
         // Storage
         const val storage = "storage"
         const val bucket = "bucket_name"
+        const val buckets = "buckets"
+        const val name = "name"
 
         // Custom
         const val custom = "custom"

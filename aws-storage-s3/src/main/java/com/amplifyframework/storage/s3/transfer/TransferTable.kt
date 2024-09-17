@@ -134,6 +134,8 @@ internal class TransferTable {
 
         const val COLUMN_USE_ACCELERATE_ENDPOINT = "useAccelerateEndpoint"
 
+        const val COLUMN_REGION = "region"
+
         private const val TABLE_VERSION_2 = 2
         private const val TABLE_VERSION_3 = 3
         private const val TABLE_VERSION_4 = 4
@@ -142,8 +144,13 @@ internal class TransferTable {
         private const val TABLE_VERSION_7 = 7
         private const val TABLE_VERSION_8 = 8
         private const val TABLE_VERSION_9 = 9
+        private const val TABLE_VERSION_10 = 10
 
-        // Database creation SQL statement
+        // **** DO NOT UPDATE ***
+        // Database creation SQL statement for TABLE_VERSION 1
+        // The current database migration implementation assumes that the original version 1 is always created
+        // and then incrementally upgrades from the original version 1 to latest version.
+        // instead of of upgrading from the last/previous version to the latest version.
         const val DATABASE_CREATE = "create table $TABLE_TRANSFER (" +
             "$COLUMN_ID integer primary key autoincrement, " +
             "$COLUMN_MAIN_UPLOAD_ID integer, " +
@@ -218,6 +225,9 @@ internal class TransferTable {
             }
             if (TABLE_VERSION_9 in (oldVersion + 1)..newVersion) {
                 addVersion9Columns(database)
+            }
+            if (TABLE_VERSION_10 in (oldVersion + 1)..newVersion) {
+                addVersion10Columns(database)
             }
             database.setTransactionSuccessful()
             database.endTransaction()
@@ -295,6 +305,11 @@ internal class TransferTable {
             val addConnectionType = "ALTER TABLE $TABLE_TRANSFER ADD COLUMN $COLUMN_USE_ACCELERATE_ENDPOINT int " +
                 "DEFAULT 0;"
             database.execSQL(addConnectionType)
+        }
+
+        private fun addVersion10Columns(database: SQLiteDatabase) {
+            val addRegion = "ALTER TABLE $TABLE_TRANSFER ADD COLUMN $COLUMN_REGION text " + "DEFAULT null;"
+            database.execSQL(addRegion)
         }
     }
 }
