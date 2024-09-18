@@ -131,7 +131,7 @@ final class SubscriptionEndpoint {
                                                   .addHeader("Sec-WebSocket-Protocol", "graphql-ws")
                                                   .header("User-Agent", UserAgent.string());
                     // Add all authorization headers
-                    getConnectionAuthorizationHeaders(authType).forEach(builder::addHeader);
+                    getConnectionAuthorizationHeaders(authType).forEach(builder::header);
                     webSocket = okHttpClient.newWebSocket(builder.build(), webSocketListener);
                 } catch (ApiException apiException) {
                     onSubscriptionError.accept(apiException);
