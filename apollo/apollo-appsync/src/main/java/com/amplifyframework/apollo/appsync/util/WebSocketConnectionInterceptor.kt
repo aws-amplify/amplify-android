@@ -32,8 +32,8 @@ internal class WebSocketConnectionInterceptor(
         // runBlocking is okay because we are on an IO thread when the interceptor is called
         val headers = runBlocking { authorizer.getWebsocketConnectionHeaders(endpoint) }
         val builder = chain.request().newBuilder()
-        headers.forEach { header -> builder.addHeader(header.key, header.value) }
-        builder.addHeader("host", endpoint.serverUrl.host)
+        headers.forEach { header -> builder.header(header.key, header.value) }
+        builder.header("host", endpoint.serverUrl.host)
         return chain.proceed(builder.build())
     }
 }

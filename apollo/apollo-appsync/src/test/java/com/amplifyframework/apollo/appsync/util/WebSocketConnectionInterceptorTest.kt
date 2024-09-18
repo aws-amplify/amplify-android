@@ -46,8 +46,8 @@ class WebSocketConnectionInterceptorTest {
         interceptor.intercept(chain)
 
         verify {
-            builder.addHeader("test", "value")
-            builder.addHeader("host", "example1234567890123456789.appsync-api.us-east-1.amazonaws.com")
+            builder.header("test", "value")
+            builder.header("host", "example1234567890123456789.appsync-api.us-east-1.amazonaws.com")
         }
     }
 }
