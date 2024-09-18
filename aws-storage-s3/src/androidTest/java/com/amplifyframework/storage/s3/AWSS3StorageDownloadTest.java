@@ -17,7 +17,6 @@ package com.amplifyframework.storage.s3;
 
 import android.content.Context;
 
-import com.amplifyframework.auth.AuthPlugin;
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.async.Cancelable;
@@ -31,6 +30,7 @@ import com.amplifyframework.storage.StorageChannelEventName;
 import com.amplifyframework.storage.TransferState;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
+import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.s3.options.AWSS3StorageDownloadFileOptions;
 import com.amplifyframework.storage.s3.test.R;
@@ -41,6 +41,7 @@ import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousStorage;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -89,7 +90,7 @@ public final class AWSS3StorageDownloadTest {
     public static void setUpOnce() throws Exception {
         Context context = getApplicationContext();
         WorkmanagerTestUtils.INSTANCE.initializeWorkmanagerTestUtil(context);
-        SynchronousAuth.delegatingToCognito(context, (AuthPlugin) new AWSCognitoAuthPlugin());
+        SynchronousAuth.delegatingToCognito(context, new AWSCognitoAuthPlugin());
 
         // Get a handle to storage
         storageCategory = TestStorageCategory.create(context, R.raw.amplifyconfiguration);
@@ -110,6 +111,21 @@ public final class AWSS3StorageDownloadTest {
         smallFile = new RandomTempFile(SMALL_FILE_NAME, SMALL_FILE_SIZE);
         key = SMALL_FILE_NAME;
         synchronousStorage.uploadFile(key, smallFile, uploadOptions);
+    }
+
+    /**
+     * Clean up test resources from test suite.
+     * @throws Exception from failure to remove test resources.
+     */
+    @AfterClass
+    public static void tearDownOnce() throws Exception {
+        StorageRemoveOptions options = StorageRemoveOptions
+                .builder()
+                .accessLevel(TESTING_ACCESS_LEVEL)
+                .build();
+
+        synchronousStorage.remove(SMALL_FILE_NAME, options);
+        synchronousStorage.remove(LARGE_FILE_NAME, options);
     }
 
     /**

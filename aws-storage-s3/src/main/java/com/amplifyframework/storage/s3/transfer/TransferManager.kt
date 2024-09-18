@@ -20,7 +20,6 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import androidx.work.WorkManager
-import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.model.ObjectCannedAcl
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.category.CategoryType
@@ -45,7 +44,7 @@ import kotlin.math.min
  */
 internal class TransferManager(
     context: Context,
-    s3: S3Client,
+    clientProvider: StorageTransferClientProvider,
     private val pluginKey: String,
     private val workManager: WorkManager = WorkManager.getInstance(context)
 ) {
@@ -71,7 +70,7 @@ internal class TransferManager(
     init {
         RouterWorker.workerFactories[pluginKey] = TransferWorkerFactory(
             transferDB,
-            s3,
+            clientProvider,
             transferStatusUpdater
         )
     }
@@ -93,6 +92,7 @@ internal class TransferManager(
     fun upload(
         transferId: String,
         bucket: String,
+        region: String,
         key: String,
         file: File,
         metadata: ObjectMetadata,
@@ -101,12 +101,22 @@ internal class TransferManager(
         useAccelerateEndpoint: Boolean = false
     ): TransferObserver {
         val transferRecordId = if (shouldUploadInMultipart(file)) {
-            createMultipartUploadRecords(transferId, bucket, key, file, metadata, cannedAcl, useAccelerateEndpoint)
+            createMultipartUploadRecords(
+                transferId,
+                bucket,
+                region,
+                key,
+                file,
+                metadata,
+                cannedAcl,
+                useAccelerateEndpoint
+            )
         } else {
             val uri = transferDB.insertSingleTransferRecord(
                 transferId,
                 TransferType.UPLOAD,
                 bucket,
+                region,
                 key,
                 file,
                 cannedAcl,
@@ -147,6 +157,7 @@ internal class TransferManager(
         return upload(
             transferId,
             options.bucket,
+            options.region,
             key,
             file,
             options.objectMetadata,
@@ -160,6 +171,7 @@ internal class TransferManager(
     fun download(
         transferId: String,
         bucket: String,
+        region: String,
         key: String,
         file: File,
         listener: TransferListener? = null,
@@ -172,6 +184,7 @@ internal class TransferManager(
             transferId,
             TransferType.DOWNLOAD,
             bucket,
+            region,
             key,
             file,
             useAccelerateEndpoint = useAccelerateEndpoint
@@ -246,6 +259,7 @@ internal class TransferManager(
     private fun createMultipartUploadRecords(
         transferId: String,
         bucket: String,
+        region: String,
         key: String,
         file: File,
         metadata: ObjectMetadata,
@@ -263,6 +277,7 @@ internal class TransferManager(
         contentValues[0] = transferDB.generateContentValuesForMultiPartUpload(
             transferId,
             bucket,
+            region,
             key,
             file,
             fileOffset,
@@ -279,6 +294,7 @@ internal class TransferManager(
             contentValues[partNum] = transferDB.generateContentValuesForMultiPartUpload(
                 UUID.randomUUID().toString(),
                 bucket,
+                region,
                 key,
                 file,
                 fileOffset,

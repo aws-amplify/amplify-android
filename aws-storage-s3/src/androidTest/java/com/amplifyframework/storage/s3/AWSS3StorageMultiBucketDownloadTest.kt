@@ -23,6 +23,8 @@ import com.amplifyframework.core.async.Resumable
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.hub.SubscriptionToken
+import com.amplifyframework.storage.BucketInfo
+import com.amplifyframework.storage.StorageBucket
 import com.amplifyframework.storage.StorageCategory
 import com.amplifyframework.storage.StorageChannelEventName
 import com.amplifyframework.storage.StorageException
@@ -33,34 +35,31 @@ import com.amplifyframework.storage.operation.StorageDownloadFileOperation
 import com.amplifyframework.storage.options.StorageDownloadFileOptions
 import com.amplifyframework.storage.options.StorageRemoveOptions
 import com.amplifyframework.storage.options.StorageUploadFileOptions
-import com.amplifyframework.storage.s3.options.AWSS3StorageDownloadFileOptions
 import com.amplifyframework.storage.s3.test.R
 import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils.initializeWorkmanagerTestUtil
 import com.amplifyframework.testutils.FileAssert
 import com.amplifyframework.testutils.random.RandomTempFile
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousStorage
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import org.junit.After
 import org.junit.AfterClass
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.Test
 
 /**
  * Instrumentation test for operational work on download.
  */
-class AWSS3StoragePathDownloadTest {
-    // Create a file to download to
+class AWSS3StorageMultiBucketDownloadTest {
     private val downloadFile: File = RandomTempFile()
-    private val options = StorageDownloadFileOptions.defaultInstance()
+    private val options = StorageDownloadFileOptions.builder().bucket(TestStorageCategory.getStorageBucket()).build()
     // Create a set to remember all the subscriptions
     private val subscriptions = mutableSetOf<SubscriptionToken>()
-
     companion object {
         private val EXTENDED_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(60)
         private const val LARGE_FILE_SIZE = 10 * 1024 * 1024L // 10 MB
@@ -69,20 +68,12 @@ class AWSS3StoragePathDownloadTest {
         private val LARGE_FILE_PATH = StoragePath.fromString("public/$LARGE_FILE_NAME")
         private val SMALL_FILE_NAME = "small-${System.currentTimeMillis()}"
         private val SMALL_FILE_PATH = StoragePath.fromString("public/$SMALL_FILE_NAME")
-        private val USER_ONE_PROTECTED_FILE_NAME = "user1Protected-${System.currentTimeMillis()}"
-        private val USER_ONE_PRIVATE_FILE_NAME = "user1Private-${System.currentTimeMillis()}"
 
         lateinit var storageCategory: StorageCategory
         lateinit var synchronousStorage: SynchronousStorage
         lateinit var synchronousAuth: SynchronousAuth
         lateinit var largeFile: File
         lateinit var smallFile: File
-        lateinit var userOneProtectedFile: File
-        lateinit var userOneProtectedStoragePath: StoragePath
-        lateinit var userOnePrivateFile: File
-        lateinit var userOnePrivateStoragePath: StoragePath
-        internal lateinit var userOne: UserCredentials.Credential
-        internal lateinit var userTwo: UserCredentials.Credential
 
         /**
          * Initialize mobile client and configure the storage.
@@ -94,19 +85,12 @@ class AWSS3StoragePathDownloadTest {
             val context = ApplicationProvider.getApplicationContext<Context>()
             initializeWorkmanagerTestUtil(context)
             synchronousAuth = SynchronousAuth.delegatingToCognito(context, AWSCognitoAuthPlugin())
-            val identityIdSource = MobileClientIdentityIdSource.create(synchronousAuth)
-            val userCredentials = UserCredentials.create(context, identityIdSource)
-            val iterator = userCredentials.iterator()
-            userOne = iterator.next()
-            userTwo = iterator.next()
 
             // Get a handle to storage
             storageCategory = TestStorageCategory.create(context, R.raw.amplifyconfiguration)
             synchronousStorage = SynchronousStorage.delegatingTo(storageCategory)
 
             val uploadOptions = StorageUploadFileOptions.defaultInstance()
-
-            synchronousAuth.signOut()
 
             // Upload large test file
             largeFile = RandomTempFile(LARGE_FILE_NAME, LARGE_FILE_SIZE)
@@ -115,42 +99,13 @@ class AWSS3StoragePathDownloadTest {
             // Upload small test file
             smallFile = RandomTempFile(SMALL_FILE_NAME, SMALL_FILE_SIZE)
             synchronousStorage.uploadFile(SMALL_FILE_PATH, smallFile, uploadOptions)
-
-            synchronousAuth.signIn(userOne.username, userOne.password)
-
-            userOneProtectedFile = RandomTempFile(USER_ONE_PROTECTED_FILE_NAME, SMALL_FILE_SIZE)
-            userOneProtectedStoragePath =
-                StoragePath.fromString("protected/${userOne.identityId}/$USER_ONE_PROTECTED_FILE_NAME")
-            synchronousStorage.uploadFile(
-                StoragePath.fromString("protected/${userOne.identityId}/$USER_ONE_PROTECTED_FILE_NAME"),
-                userOneProtectedFile,
-                uploadOptions
-            )
-
-            userOnePrivateFile = RandomTempFile(USER_ONE_PRIVATE_FILE_NAME, SMALL_FILE_SIZE)
-            userOnePrivateStoragePath =
-                StoragePath.fromString("private/${userOne.identityId}/$USER_ONE_PRIVATE_FILE_NAME")
-            synchronousStorage.uploadFile(
-                userOnePrivateStoragePath,
-                userOnePrivateFile,
-                uploadOptions
-            )
-
-            synchronousAuth.signOut()
         }
 
         @JvmStatic
         @AfterClass
         fun tearDownOnce() {
-            synchronousAuth.signOut()
-            synchronousAuth.signIn(userOne.username, userOne.password)
-
             synchronousStorage.remove(LARGE_FILE_PATH, StorageRemoveOptions.defaultInstance())
             synchronousStorage.remove(SMALL_FILE_PATH, StorageRemoveOptions.defaultInstance())
-            synchronousStorage.remove(userOnePrivateStoragePath, StorageRemoveOptions.defaultInstance())
-            synchronousStorage.remove(userOneProtectedStoragePath, StorageRemoveOptions.defaultInstance())
-
-            synchronousAuth.signOut()
         }
     }
 
@@ -159,12 +114,9 @@ class AWSS3StoragePathDownloadTest {
      */
     @After
     fun tearDown() {
-        // Unsubscribe from everything
         for (token in subscriptions) {
             Amplify.Hub.unsubscribe(token)
         }
-
-        synchronousAuth.signOut()
     }
 
     @Test
@@ -217,8 +169,8 @@ class AWSS3StoragePathDownloadTest {
         opContainer.set(op)
 
         // Assert that the required conditions have been met
-        assertTrue(canceled.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-        assertNull(errorContainer.get())
+        canceled.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS) shouldBe true
+        errorContainer.get() shouldBe null
     }
 
     @Test
@@ -256,9 +208,9 @@ class AWSS3StoragePathDownloadTest {
         opContainer.set(op)
 
         // Assert that all the required conditions have been met
-        assertTrue(resumed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-        assertTrue(completed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-        assertNull(errorContainer.get())
+        resumed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS) shouldBe true
+        completed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS) shouldBe true
+        errorContainer.get() shouldBe null
         FileAssert.assertEquals(largeFile, downloadFile)
     }
 
@@ -308,66 +260,22 @@ class AWSS3StoragePathDownloadTest {
         transferId.set(op.transferId)
 
         // Assert that all the required conditions have been met
-        assertTrue(resumed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-        assertTrue(completed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS))
-        assertNull(errorContainer.get())
+        resumed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS) shouldBe true
+        completed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS) shouldBe true
+        errorContainer.get() shouldBe null
         FileAssert.assertEquals(largeFile, downloadFile)
     }
 
     @Test
-    fun testDownloadLargeFileWithAccelerationEnabled() {
-        val awsS3Options = AWSS3StorageDownloadFileOptions.builder().setUseAccelerateEndpoint(true).build()
-        synchronousStorage.downloadFile(
-            LARGE_FILE_PATH,
-            downloadFile,
-            awsS3Options,
-            EXTENDED_TIMEOUT_MS
-        )
-    }
+    fun testDownloadFromInvalidBucket() {
+        val bucketName = "amplify-android-storage-integration-test-123xyz"
+        val region = "us-east-1"
+        val bucketInfo = BucketInfo(bucketName, region)
+        val storageBucket = StorageBucket.fromBucketInfo(bucketInfo)
+        val option = StorageDownloadFileOptions.builder().bucket(storageBucket).build()
 
-    @Test
-    fun testDownloadUnauthenticatedProtectedAccess() {
-        val result = synchronousStorage.downloadFile(
-            userOneProtectedStoragePath,
-            downloadFile,
-            options
-        )
-
-        FileAssert.assertEquals(userOneProtectedFile, result.file)
-    }
-
-    @Test
-    fun testDownloadAuthenticatedProtectedAccess() {
-        synchronousAuth.signIn(userOne.username, userOne.password)
-
-        val result = synchronousStorage.downloadFile(
-            userOneProtectedStoragePath,
-            downloadFile,
-            options
-        )
-
-        FileAssert.assertEquals(userOneProtectedFile, result.file)
-    }
-
-    @Test(expected = StorageException::class)
-    fun testDownloadUnauthenticatedPrivateAccess() {
-        synchronousStorage.downloadFile(
-            userOnePrivateStoragePath,
-            downloadFile,
-            options
-        )
-    }
-
-    @Test
-    fun testAuthenticatedPrivateAccess() {
-        synchronousAuth.signIn(userOne.username, userOne.password)
-
-        val result = synchronousStorage.downloadFile(
-            userOnePrivateStoragePath,
-            downloadFile,
-            options
-        )
-
-        FileAssert.assertEquals(userOnePrivateFile, result.file)
+        shouldThrow<StorageException> {
+            synchronousStorage.downloadFile(SMALL_FILE_PATH, downloadFile, option)
+        }
     }
 }

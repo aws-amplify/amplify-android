@@ -56,8 +56,9 @@ public final class AWSS3StorageRemoveOptions extends StorageRemoveOptions {
     @SuppressWarnings("deprecation")
     public static Builder from(@NonNull final AWSS3StorageRemoveOptions options) {
         return builder()
-            .accessLevel(options.getAccessLevel())
-            .targetIdentityId(options.getTargetIdentityId());
+                .accessLevel(options.getAccessLevel())
+                .targetIdentityId(options.getTargetIdentityId())
+                .bucket(options.getBucket());
     }
 
     /**
@@ -79,7 +80,8 @@ public final class AWSS3StorageRemoveOptions extends StorageRemoveOptions {
         } else {
             AWSS3StorageRemoveOptions that = (AWSS3StorageRemoveOptions) obj;
             return ObjectsCompat.equals(getAccessLevel(), that.getAccessLevel()) &&
-                    ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId());
+                    ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId()) &&
+                    ObjectsCompat.equals(getBucket(), that.getBucket());
         }
     }
 
@@ -88,7 +90,8 @@ public final class AWSS3StorageRemoveOptions extends StorageRemoveOptions {
     public int hashCode() {
         return ObjectsCompat.hash(
                 getAccessLevel(),
-                getTargetIdentityId()
+                getTargetIdentityId(),
+                getBucket()
         );
     }
 
@@ -99,6 +102,7 @@ public final class AWSS3StorageRemoveOptions extends StorageRemoveOptions {
         return "AWSS3StorageRemoveOptions {" +
                 "accessLevel=" + getAccessLevel() +
                 ", targetIdentityId=" + getTargetIdentityId() +
+                ", bucket=" + getBucket() +
                 '}';
     }
 
