@@ -31,7 +31,7 @@ public class StorageListOptions extends StorageOptions {
      */
     @SuppressWarnings("deprecation")
     protected StorageListOptions(final Builder<?> builder) {
-        super(builder.getAccessLevel(), builder.getTargetIdentityId());
+        super(builder.getAccessLevel(), builder.getTargetIdentityId(), builder.getBucket());
     }
 
     /**
@@ -58,8 +58,9 @@ public class StorageListOptions extends StorageOptions {
     @SuppressWarnings("deprecation")
     public static Builder<?> from(@NonNull final StorageListOptions options) {
         return builder()
-            .accessLevel(options.getAccessLevel())
-            .targetIdentityId(options.getTargetIdentityId());
+                .accessLevel(options.getAccessLevel())
+                .targetIdentityId(options.getTargetIdentityId())
+                .bucket(options.getBucket());
     }
 
     /**
@@ -85,7 +86,8 @@ public class StorageListOptions extends StorageOptions {
         } else {
             StorageListOptions that = (StorageListOptions) obj;
             return ObjectsCompat.equals(getAccessLevel(), that.getAccessLevel()) &&
-                    ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId());
+                    ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId()) &&
+                    ObjectsCompat.equals(getBucket(), that.getBucket());
         }
     }
 
@@ -97,7 +99,8 @@ public class StorageListOptions extends StorageOptions {
     public int hashCode() {
         return ObjectsCompat.hash(
                 getAccessLevel(),
-                getTargetIdentityId()
+                getTargetIdentityId(),
+                getBucket()
         );
     }
 
@@ -111,6 +114,7 @@ public class StorageListOptions extends StorageOptions {
         return "StorageListOptions {" +
                 "accessLevel=" + getAccessLevel() +
                 ", targetIdentityId=" + getTargetIdentityId() +
+                ", bucket=" + getBucket() +
                 '}';
     }
 

@@ -33,7 +33,7 @@ public class StoragePagedListOptions extends StorageOptions {
      */
     @SuppressWarnings("deprecation")
     protected StoragePagedListOptions(Builder<?> builder) {
-        super(builder.getAccessLevel(), builder.getTargetIdentityId());
+        super(builder.getAccessLevel(), builder.getTargetIdentityId(), builder.getBucket());
         pageSize = builder.pageSize;
         nextToken = builder.nextToken;
         subpathStrategy = builder.subpathStrategy;

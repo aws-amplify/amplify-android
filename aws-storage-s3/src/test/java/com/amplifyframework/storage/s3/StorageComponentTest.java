@@ -32,6 +32,7 @@ import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration;
 import com.amplifyframework.storage.s3.service.AWSS3StorageService;
 import com.amplifyframework.storage.s3.service.StorageService;
+import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider;
 import com.amplifyframework.storage.s3.transfer.TransferListener;
 import com.amplifyframework.storage.s3.transfer.TransferObserver;
 import com.amplifyframework.testutils.Await;
@@ -76,6 +77,7 @@ public final class StorageComponentTest {
 
     private StorageCategory storage;
     private StorageService storageService;
+    private StorageTransferClientProvider clientProvider;
 
     /**
      * Sets up Storage category by registering a mock AWSS3StoragePlugin
@@ -88,7 +90,8 @@ public final class StorageComponentTest {
     public void setup() throws AmplifyException {
         this.storage = new StorageCategory();
         this.storageService = mock(AWSS3StorageService.class);
-        StorageService.Factory storageServiceFactory = (context, region, bucket) -> storageService;
+        AWSS3StorageService.Factory storageServiceFactory
+                = (context, region, bucket, clientProvider) -> (AWSS3StorageService) storageService;
         AuthCredentialsProvider cognitoAuthProvider = mock(AuthCredentialsProvider.class);
         doReturn(RandomString.string()).when(cognitoAuthProvider).getIdentityId(null);
         this.storage.addPlugin(new AWSS3StoragePlugin(storageServiceFactory,
