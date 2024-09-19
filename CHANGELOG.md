@@ -1,3 +1,10 @@
+## [Release 2.22.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.22.0)
+
+### Features
+- **storage:** implement multiple buckets support ([#2904](https://github.com/aws-amplify/amplify-android/issues/2904))
+
+[See all changes between 2.21.1 and 2.22.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.21.1...release_v2.22.0)
+
 ## [Release 2.21.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.21.1)
 
 ### Bug Fixes
