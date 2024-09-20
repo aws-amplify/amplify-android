@@ -30,7 +30,6 @@ import com.amplifyframework.testutils.await
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.seconds
-import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -72,11 +71,6 @@ class AWSCognitoAuthPluginInstrumentationTests {
     fun setup() {
         signOut()
         Thread.sleep(1000) // ensure signout has time to complete
-    }
-
-    @After
-    fun tearDown() {
-        signOut()
     }
 
     @Test
