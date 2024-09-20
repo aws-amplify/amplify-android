@@ -197,6 +197,9 @@ public final class HubAccumulator {
         return events.isEmpty() ? null : events.get(0);
     }
 
+    /**
+     * Unsubscribe from the Hub.
+     */
     public void stop() {
         Amplify.Hub.unsubscribe(this.token.get());
     }
