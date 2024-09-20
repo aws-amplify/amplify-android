@@ -26,13 +26,16 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.InitializationStatus
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.testutils.HubAccumulator
+import com.amplifyframework.testutils.await
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -65,6 +68,12 @@ class AWSCognitoAuthPluginInstrumentationTests {
         }
     }
 
+    @Before
+    fun setup() {
+        signOut()
+        Thread.sleep(1000) // ensure signout has time to complete
+    }
+
     @After
     fun tearDown() {
         signOut()
@@ -76,7 +85,7 @@ class AWSCognitoAuthPluginInstrumentationTests {
 
         signInWithCognito()
 
-        hubAccumulator.await(10, TimeUnit.SECONDS)
+        hubAccumulator.await(10.seconds)
         // if we made it this far without timeout, it means hub event was received
     }
 
@@ -87,7 +96,7 @@ class AWSCognitoAuthPluginInstrumentationTests {
         signInWithCognito()
         signOut()
 
-        hubAccumulator.await(10, TimeUnit.SECONDS)
+        hubAccumulator.await(10.seconds)
         // if we made it this far without timeout, it means hub event was received
     }
 
@@ -104,8 +113,8 @@ class AWSCognitoAuthPluginInstrumentationTests {
         signOut()
         signInWithCognito()
 
-        signInAccumulator.await(10, TimeUnit.SECONDS)
-        signOutAccumulator.await(10, TimeUnit.SECONDS)
+        signInAccumulator.await(10.seconds)
+        signOutAccumulator.await(10.seconds)
         // if we made it this far without timeout, it means hub event was received
     }
 
@@ -120,7 +129,7 @@ class AWSCognitoAuthPluginInstrumentationTests {
         signOut()
         signInWithCognito()
 
-        signInAccumulatorExtra.await(10, TimeUnit.SECONDS)
+        signInAccumulatorExtra.await(2.seconds)
         // Execution should not reach here
     }
 
@@ -140,7 +149,7 @@ class AWSCognitoAuthPluginInstrumentationTests {
                 latch.countDown()
             }
         )
-        latch.await(10, TimeUnit.SECONDS)
+        latch.await(10.seconds)
 
         assertTrue(session.isSignedIn)
         with(session as AWSCognitoAuthSession) {
@@ -168,7 +177,7 @@ class AWSCognitoAuthPluginInstrumentationTests {
                 latch.countDown()
             }
         )
-        latch.await(10, TimeUnit.SECONDS)
+        latch.await(10.seconds)
 
         assertFalse(session.isSignedIn)
         with(session as AWSCognitoAuthSession) {
@@ -195,7 +204,7 @@ class AWSCognitoAuthPluginInstrumentationTests {
             }
         )
 
-        rememberLatch.await(10, TimeUnit.SECONDS)
+        rememberLatch.await(10.seconds)
 
         val forgetLatch = CountDownLatch(1)
 
@@ -209,7 +218,7 @@ class AWSCognitoAuthPluginInstrumentationTests {
             }
         )
 
-        forgetLatch.await(10, TimeUnit.SECONDS)
+        forgetLatch.await(10.seconds)
 
         signOut()
         signInWithCognito()
@@ -226,7 +235,7 @@ class AWSCognitoAuthPluginInstrumentationTests {
             }
         )
 
-        rememberLatch2.await(10, TimeUnit.SECONDS)
+        rememberLatch2.await(10.seconds)
 
         val forgetLatch2 = CountDownLatch(1)
 
@@ -240,7 +249,7 @@ class AWSCognitoAuthPluginInstrumentationTests {
             }
         )
 
-        forgetLatch2.await(10, TimeUnit.SECONDS)
+        forgetLatch2.await(10.seconds)
     }
 
     private fun signInWithCognito(synchronous: Boolean = true) {
