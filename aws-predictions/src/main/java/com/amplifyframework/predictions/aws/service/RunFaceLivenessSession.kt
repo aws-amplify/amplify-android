@@ -189,7 +189,7 @@ internal class RunFaceLivenessSession(
             region.startsWith("us-isof", ignoreCase = true) -> ISO_PARTITION_BASE_DOMAIN
             else -> DEFAULT_BASE_DOMAIN
         }
-        return "wss://streaming-rekognition.${region}.${baseDomain}:443"
+        return "wss://streaming-rekognition.$region.$baseDomain:443"
     }
 
     companion object {
