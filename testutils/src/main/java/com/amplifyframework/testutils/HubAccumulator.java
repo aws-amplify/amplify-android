@@ -123,7 +123,7 @@ public final class HubAccumulator {
                     events.add(event);
                     latch.countDown();
                     if (latch.getCount() == 0) {
-                        Amplify.Hub.unsubscribe(this.token.get());
+                        stop();
                     }
                 }
             }
@@ -195,5 +195,12 @@ public final class HubAccumulator {
             Latch.await(latch, unit.toMillis(amount));
         }
         return events.isEmpty() ? null : events.get(0);
+    }
+
+    /**
+     * Unsubscribe from the Hub.
+     */
+    public void stop() {
+        Amplify.Hub.unsubscribe(this.token.get());
     }
 }
