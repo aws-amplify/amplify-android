@@ -1,3 +1,11 @@
+## [Release 2.23.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.23.0)
+
+### Features
+- **predictions:** Added region handling for creating correct streaming endpoint from region ([#2923](https://github.com/aws-amplify/amplify-android/issues/2923))
+- **api:** Pass authorization in header instead of query parameter for API category ([#2918](https://github.com/aws-amplify/amplify-android/issues/2918))
+
+[See all changes between 2.22.0 and 2.23.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.22.0...release_v2.23.0)
+
 ## [Release 2.22.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.22.0)
 
 ### Features
