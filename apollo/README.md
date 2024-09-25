@@ -17,10 +17,10 @@ Add the dependency you prefer to your `build.gradle.kts` file.
 
 ```kotlin
 // To only use Apollo to speak to AppSync, without using Amplify
-implementation("com.amplifyframework:apollo-appsync:1.0.0")
+implementation("com.amplifyframework:apollo-appsync:1.1.0")
 
 // To connect Apollo to AppSync using your existing Amplify Gen2 Backend
-implementation("com.amplifyframework:apollo-appsync-amplify:1.0.0")
+implementation("com.amplifyframework:apollo-appsync-amplify:1.1.0")
 ```
 
 For applications using `apollo-appsync` directly, instantiate the Endpoint and the desired Authorizer instance, and then call the Apollo builder extension.
