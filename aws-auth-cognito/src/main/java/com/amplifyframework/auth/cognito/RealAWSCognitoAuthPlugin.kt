@@ -2307,7 +2307,7 @@ internal class RealAWSCognitoAuthPlugin(
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        if (sms == null && totp == null) {
+        if (sms == null && totp == null && email == null) {
             onError.accept(InvalidParameterException("No mfa settings given"))
             return
         }
