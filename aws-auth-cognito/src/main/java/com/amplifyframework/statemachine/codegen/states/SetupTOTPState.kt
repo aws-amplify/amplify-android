@@ -27,7 +27,8 @@ internal sealed class SetupTOTPState : State {
     data class SetupTOTP(val id: String = "") : SetupTOTPState()
     data class WaitingForAnswer(
         val signInTOTPSetupData: SignInTOTPSetupData,
-        var hasNewResponse: Boolean = false
+        var hasNewResponse: Boolean = false,
+        val challengeParams: Map<String, String>?
     ) : SetupTOTPState()
     data class Verifying(val id: String = "") : SetupTOTPState()
     data class RespondingToAuthChallenge(val id: String = "") : SetupTOTPState()
@@ -63,7 +64,11 @@ internal sealed class SetupTOTPState : State {
 
                 is SetupTOTP -> when (challengeEvent) {
                     is SetupTOTPEvent.EventType.WaitForAnswer -> {
-                        StateResolution(WaitingForAnswer(challengeEvent.totpSetupDetails, true))
+                        StateResolution(WaitingForAnswer(
+                            signInTOTPSetupData = challengeEvent.totpSetupDetails,
+                            hasNewResponse = true,
+                            challengeParams = challengeEvent.challengeParams
+                        ))
                     }
 
                     is SetupTOTPEvent.EventType.ThrowAuthError -> StateResolution(
@@ -130,7 +135,11 @@ internal sealed class SetupTOTPState : State {
                     }
 
                     is SetupTOTPEvent.EventType.WaitForAnswer -> {
-                        StateResolution(WaitingForAnswer(challengeEvent.totpSetupDetails, true))
+                        StateResolution(WaitingForAnswer(
+                            signInTOTPSetupData = challengeEvent.totpSetupDetails,
+                            hasNewResponse = true,
+                            challengeParams = challengeEvent.challengeParams
+                        ))
                     }
 
                     else -> defaultResolution

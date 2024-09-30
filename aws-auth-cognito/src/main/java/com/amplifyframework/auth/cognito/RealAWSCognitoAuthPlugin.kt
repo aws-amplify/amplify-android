@@ -592,7 +592,7 @@ internal class RealAWSCognitoAuthPlugin(
                                         ChallengeNameType.MfaSetup.value,
                                         null,
                                         null,
-                                        null
+                                        totpSetupState.challengeParams
                                     ),
                                     onSuccess,
                                     onError,
@@ -763,7 +763,7 @@ internal class RealAWSCognitoAuthPlugin(
                                 ChallengeNameType.MfaSetup.value,
                                 null,
                                 null,
-                                null
+                                totpSetupState.challengeParams
                             ),
                             onSuccess,
                             onError,

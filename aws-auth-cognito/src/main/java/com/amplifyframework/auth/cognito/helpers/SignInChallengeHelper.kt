@@ -98,7 +98,7 @@ internal object SignInChallengeHelper {
                     SignInEvent(SignInEvent.EventType.ReceivedChallenge(challenge))
                 } else if (allowedMFASetupTypes.contains(MFAType.TOTP)) {
                     val setupTOTPData = SignInTOTPSetupData("", session, username)
-                    SignInEvent(SignInEvent.EventType.InitiateTOTPSetup(setupTOTPData))
+                    SignInEvent(SignInEvent.EventType.InitiateTOTPSetup(setupTOTPData, challenge.parameters))
                 } else {
                     SignInEvent(
                         SignInEvent.EventType.ThrowError(
