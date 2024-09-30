@@ -49,12 +49,11 @@ internal val MFAType.value: String
 
 internal fun isMfaSetupSelectionChallenge(challenge: AuthChallenge) =
     challenge.challengeName == "MFA_SETUP" &&
-            getAllowedMFASetupTypesFromChallengeParameters(challenge.parameters).size > 1
+        getAllowedMFASetupTypesFromChallengeParameters(challenge.parameters).size > 1
 
 internal fun isEmailMfaSetupChallenge(challenge: AuthChallenge) =
     challenge.challengeName == "MFA_SETUP" &&
-            getAllowedMFASetupTypesFromChallengeParameters(challenge.parameters) == setOf(MFAType.EMAIL)
-
+        getAllowedMFASetupTypesFromChallengeParameters(challenge.parameters) == setOf(MFAType.EMAIL)
 
 internal fun getAllowedMFATypesFromChallengeParameters(challengeParameters: Map<String, String>?): Set<MFAType> {
     val mfasCanChoose = challengeParameters?.get("MFAS_CAN_CHOOSE") ?: return emptySet()

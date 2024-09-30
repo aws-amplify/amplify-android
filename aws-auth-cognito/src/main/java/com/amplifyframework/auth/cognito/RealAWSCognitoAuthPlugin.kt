@@ -719,7 +719,8 @@ internal class RealAWSCognitoAuthPlugin(
                         var allowedMFATypes: Set<MFAType>? = null
 
                         if (signInChallengeState.challenge.challengeName == ChallengeNameType.MfaSetup.value ||
-                            signInChallengeState.challenge.challengeName == ChallengeNameType.EmailOtp.value) {
+                            signInChallengeState.challenge.challengeName == ChallengeNameType.EmailOtp.value
+                        ) {
                             SignInChallengeHelper.getNextStep(
                                 signInChallengeState.challenge,
                                 onSuccess,
@@ -813,7 +814,8 @@ internal class RealAWSCognitoAuthPlugin(
                             getMFATypeOrNull(challengeResponse) == null
                         ) {
                             val error = InvalidParameterException(
-                                message = "Value for challengeResponse must be one of SMS_MFA, EMAIL_OTP or SOFTWARE_TOKEN_MFA"
+                                message = "Value for challengeResponse must be one of " +
+                                    "SMS_MFA, EMAIL_OTP or SOFTWARE_TOKEN_MFA"
                             )
                             onError.accept(error)
                         } else if (challengeState is SignInChallengeState.WaitingForAnswer &&
@@ -2354,10 +2356,10 @@ internal class RealAWSCognitoAuthPlugin(
                                             this.emailMfaSettings = email?.let {
                                                 val preferredMFASetting = it.mfaPreferred
                                                     ?: (
-                                                            overridePreferredSetting &&
-                                                                    userPreference.preferred == MFAType.EMAIL &&
-                                                                    it.mfaEnabled
-                                                            )
+                                                        overridePreferredSetting &&
+                                                            userPreference.preferred == MFAType.EMAIL &&
+                                                            it.mfaEnabled
+                                                        )
                                                 EmailMfaSettingsType.invoke {
                                                     enabled = it.mfaEnabled
                                                     preferredMfa = preferredMFASetting

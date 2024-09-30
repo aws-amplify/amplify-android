@@ -41,7 +41,11 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
             response?.secretCode?.let { secret ->
                 SetupTOTPEvent(
                     SetupTOTPEvent.EventType.WaitForAnswer(
-                        totpSetupDetails = SignInTOTPSetupData(secret, response.session, eventType.totpSetupDetails.username),
+                        totpSetupDetails = SignInTOTPSetupData(
+                            secretCode = secret,
+                            session = response.session,
+                            username = eventType.totpSetupDetails.username
+                        ),
                         challengeParams = eventType.challengeParams
                     )
                 )

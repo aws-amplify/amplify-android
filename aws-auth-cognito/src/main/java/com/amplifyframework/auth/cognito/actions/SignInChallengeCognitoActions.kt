@@ -48,7 +48,7 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
 
             // If we are selecting an MFA Setup Type, Cognito doesn't want a response.
             // We handle the next step locally
-            if(isMfaSetupSelectionChallenge(challenge)) {
+            if (isMfaSetupSelectionChallenge(challenge)) {
                 val event = SignInChallengeHelper.evaluateNextStep(
                     username = username ?: "",
                     challengeNameType = ChallengeNameType.MfaSetup,
@@ -130,7 +130,7 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
     }
 
     private fun getChallengeResponseKey(challenge: AuthChallenge): String? {
-        val challengeName  = challenge.challengeName
+        val challengeName = challenge.challengeName
         return when (ChallengeNameType.fromValue(challengeName)) {
             is ChallengeNameType.SmsMfa -> "SMS_MFA_CODE"
             is ChallengeNameType.NewPasswordRequired -> "NEW_PASSWORD"

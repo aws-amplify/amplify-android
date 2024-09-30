@@ -1645,8 +1645,9 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.ENABLED, MFAPreference.ENABLED, null,
-            onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.ENABLED, MFAPreference.ENABLED, null, onSuccess, mockk()
+        )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
@@ -1687,7 +1688,9 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.ENABLED, MFAPreference.ENABLED, null, onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.ENABLED, MFAPreference.ENABLED, null, onSuccess, mockk()
+        )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
@@ -1728,8 +1731,9 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.ENABLED, MFAPreference.ENABLED, MFAPreference.ENABLED,
-            onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.ENABLED, MFAPreference.ENABLED, MFAPreference.ENABLED, onSuccess, mockk()
+        )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
@@ -1800,8 +1804,9 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.ENABLED, MFAPreference.ENABLED, MFAPreference.ENABLED,
-            onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.ENABLED, MFAPreference.ENABLED, MFAPreference.ENABLED, onSuccess, mockk()
+        )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
@@ -1849,8 +1854,9 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.ENABLED, MFAPreference.DISABLED, MFAPreference.DISABLED,
-            onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.ENABLED, MFAPreference.DISABLED, MFAPreference.DISABLED, onSuccess, mockk()
+        )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
@@ -1898,8 +1904,9 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.DISABLED, MFAPreference.ENABLED, MFAPreference.DISABLED,
-            onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.DISABLED, MFAPreference.ENABLED, MFAPreference.DISABLED, onSuccess, mockk()
+        )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
@@ -1947,8 +1954,9 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.DISABLED, MFAPreference.DISABLED, MFAPreference.ENABLED,
-            onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.DISABLED, MFAPreference.DISABLED, MFAPreference.ENABLED, onSuccess, mockk()
+        )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
@@ -1996,8 +2004,9 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.PREFERRED, MFAPreference.ENABLED, MFAPreference.ENABLED,
-            onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.PREFERRED, MFAPreference.ENABLED, MFAPreference.ENABLED, onSuccess, mockk()
+        )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
@@ -2045,8 +2054,9 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.ENABLED, MFAPreference.PREFERRED, MFAPreference.ENABLED,
-            onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.ENABLED, MFAPreference.PREFERRED, MFAPreference.ENABLED, onSuccess, mockk()
+        )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
@@ -2094,8 +2104,9 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.ENABLED, MFAPreference.ENABLED, MFAPreference.PREFERRED,
-            onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.ENABLED, MFAPreference.ENABLED, MFAPreference.PREFERRED, onSuccess, mockk()
+        )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
@@ -2143,8 +2154,9 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.DISABLED, MFAPreference.PREFERRED, MFAPreference.DISABLED,
-            onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.DISABLED, MFAPreference.PREFERRED, MFAPreference.DISABLED, onSuccess, mockk()
+        )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
@@ -2192,8 +2204,9 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.PREFERRED, MFAPreference.DISABLED, MFAPreference.DISABLED,
-            onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.PREFERRED, MFAPreference.DISABLED, MFAPreference.DISABLED, onSuccess, mockk()
+        )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
@@ -2241,8 +2254,9 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.DISABLED, MFAPreference.DISABLED, MFAPreference.PREFERRED,
-            onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.DISABLED, MFAPreference.DISABLED, MFAPreference.PREFERRED, onSuccess, mockk()
+        )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
@@ -2290,8 +2304,9 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.ENABLED, MFAPreference.DISABLED, MFAPreference.ENABLED,
-            onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.ENABLED, MFAPreference.DISABLED, MFAPreference.ENABLED, onSuccess, mockk()
+        )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
@@ -2339,8 +2354,9 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.DISABLED, MFAPreference.ENABLED, MFAPreference.ENABLED,
-            onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.DISABLED, MFAPreference.ENABLED, MFAPreference.ENABLED, onSuccess, mockk()
+        )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
@@ -2388,8 +2404,9 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.ENABLED, MFAPreference.ENABLED, MFAPreference.DISABLED,
-            onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.ENABLED, MFAPreference.ENABLED, MFAPreference.DISABLED, onSuccess, mockk()
+        )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
@@ -2438,8 +2455,9 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.DISABLED, MFAPreference.ENABLED, MFAPreference.DISABLED,
-            onSuccess, onError)
+        plugin.updateMFAPreference(
+            MFAPreference.DISABLED, MFAPreference.ENABLED, MFAPreference.DISABLED, onSuccess, onError
+        )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
@@ -2487,8 +2505,9 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.PREFERRED, MFAPreference.ENABLED, MFAPreference.ENABLED,
-            onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.PREFERRED, MFAPreference.ENABLED, MFAPreference.ENABLED, onSuccess, mockk()
+        )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
@@ -2536,8 +2555,9 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.ENABLED, MFAPreference.PREFERRED, MFAPreference.ENABLED,
-            onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.ENABLED, MFAPreference.PREFERRED, MFAPreference.ENABLED, onSuccess, mockk()
+        )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
@@ -2585,8 +2605,9 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.ENABLED, MFAPreference.PREFERRED, MFAPreference.ENABLED,
-            onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.ENABLED, MFAPreference.PREFERRED, MFAPreference.ENABLED, onSuccess, mockk()
+        )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
