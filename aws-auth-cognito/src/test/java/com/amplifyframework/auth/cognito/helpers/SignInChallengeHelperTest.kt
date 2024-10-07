@@ -24,12 +24,9 @@ import com.amplifyframework.auth.result.step.AuthNextSignInStep
 import com.amplifyframework.auth.result.step.AuthSignInStep
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.SignInTOTPSetupData
-import featureTest.utilities.APICaptorFactory.Companion.onError
-import featureTest.utilities.APICaptorFactory.Companion.onSuccess
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class SignInChallengeHelperTest {

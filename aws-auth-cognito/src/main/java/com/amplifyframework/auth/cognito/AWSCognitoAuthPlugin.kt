@@ -481,7 +481,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) = enqueue(onSuccess, onError) { queueFacade.updateMFAPreference(sms, totp, null) }
-    
+
     fun updateMFAPreference(
         sms: MFAPreference? = null,
         totp: MFAPreference? = null,
