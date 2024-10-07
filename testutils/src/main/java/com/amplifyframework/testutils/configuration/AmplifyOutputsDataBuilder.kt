@@ -163,4 +163,14 @@ class NotificationsBuilder : AmplifyOutputsData.Notifications {
 class StorageBuilder : AmplifyOutputsData.Storage {
     override var awsRegion: String = "us-east-1"
     override var bucketName: String = "bucket-name"
+    override var buckets: MutableList<AmplifyOutputsData.StorageBucket> = mutableListOf()
+    fun buckets(func: StorageBucketBuilder.() -> Unit) {
+        buckets += StorageBucketBuilder().apply(func)
+    }
+}
+
+class StorageBucketBuilder : AmplifyOutputsData.StorageBucket {
+    override var awsRegion: String = "us-east-1"
+    override var bucketName: String = "bucket-name"
+    override var name: String = "test-name"
 }

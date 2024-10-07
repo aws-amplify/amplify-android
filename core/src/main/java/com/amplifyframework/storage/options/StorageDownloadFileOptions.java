@@ -30,7 +30,7 @@ public class StorageDownloadFileOptions extends StorageOptions {
      */
     @SuppressWarnings("deprecation")
     protected StorageDownloadFileOptions(final Builder<?> builder) {
-        super(builder.getAccessLevel(), builder.getTargetIdentityId());
+        super(builder.getAccessLevel(), builder.getTargetIdentityId(), builder.getBucket());
     }
 
     /**
@@ -59,8 +59,9 @@ public class StorageDownloadFileOptions extends StorageOptions {
     @SuppressWarnings("deprecation")
     public static Builder<?> from(@NonNull final StorageDownloadFileOptions options) {
         return builder()
-            .accessLevel(options.getAccessLevel())
-            .targetIdentityId(options.getTargetIdentityId());
+                .accessLevel(options.getAccessLevel())
+                .targetIdentityId(options.getTargetIdentityId())
+                .bucket(options.getBucket());
     }
 
     /**
@@ -85,7 +86,8 @@ public class StorageDownloadFileOptions extends StorageOptions {
         } else {
             StorageDownloadFileOptions that = (StorageDownloadFileOptions) obj;
             return ObjectsCompat.equals(getAccessLevel(), that.getAccessLevel()) &&
-                    ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId());
+                    ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId()) &&
+                    ObjectsCompat.equals(getBucket(), that.getBucket());
         }
     }
 
@@ -97,7 +99,8 @@ public class StorageDownloadFileOptions extends StorageOptions {
     public int hashCode() {
         return ObjectsCompat.hash(
                 getAccessLevel(),
-                getTargetIdentityId()
+                getTargetIdentityId(),
+                getBucket()
         );
     }
 
@@ -109,9 +112,10 @@ public class StorageDownloadFileOptions extends StorageOptions {
     @SuppressWarnings("deprecation")
     public String toString() {
         return "StorageDownloadFileOptions {" +
-            "accessLevel=" + getAccessLevel() +
-            ", targetIdentityId=" + getTargetIdentityId() +
-            '}';
+                "accessLevel=" + getAccessLevel() +
+                ", targetIdentityId=" + getTargetIdentityId() +
+                ", bucket=" + getBucket() +
+                '}';
     }
 
     /**

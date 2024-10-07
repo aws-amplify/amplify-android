@@ -31,6 +31,7 @@ import org.junit.Test
 
 open class TransferDBTest {
     private val bucketName = "bucket_name"
+    private val region = "us-east-1"
     private val fileKey = "file_key"
     private lateinit var transferDB: TransferDB
     private lateinit var tempFile: File
@@ -55,6 +56,7 @@ open class TransferDBTest {
             transferId,
             TransferType.UPLOAD,
             bucketName,
+            region,
             fileKey,
             tempFile,
             null,
@@ -67,6 +69,7 @@ open class TransferDBTest {
             Assert.assertEquals(tempFile, File(this.file))
             Assert.assertEquals(fileKey, this.key)
             Assert.assertEquals(bucketName, this.bucketName)
+            Assert.assertEquals(region, this.region)
         } ?: Assert.fail("InsertedRecord is null")
     }
 
@@ -76,6 +79,7 @@ open class TransferDBTest {
         val uri = transferDB.insertMultipartUploadRecord(
             uploadID,
             bucketName,
+            region,
             fileKey,
             tempFile,
             1L,
@@ -91,6 +95,7 @@ open class TransferDBTest {
             Assert.assertEquals(fileKey, this.key)
             Assert.assertEquals(bucketName, this.bucketName)
             Assert.assertEquals(uploadID, this.multipartId)
+            Assert.assertEquals(region, this.region)
         } ?: Assert.fail("InsertedRecord is null")
     }
 
@@ -104,6 +109,7 @@ open class TransferDBTest {
         contentValues[0] = transferDB.generateContentValuesForMultiPartUpload(
             key,
             bucketName,
+            region,
             key,
             tempFile,
             0L,
@@ -137,6 +143,7 @@ open class TransferDBTest {
         contentValues[0] = transferDB.generateContentValuesForMultiPartUpload(
             key,
             bucketName,
+            region,
             key,
             tempFile,
             0L,
@@ -151,6 +158,7 @@ open class TransferDBTest {
         contentValues[1] = transferDB.generateContentValuesForMultiPartUpload(
             key,
             bucketName,
+            region,
             key,
             tempFile,
             0L,
@@ -165,6 +173,7 @@ open class TransferDBTest {
         contentValues[2] = transferDB.generateContentValuesForMultiPartUpload(
             key,
             bucketName,
+            region,
             key,
             tempFile,
             0L,

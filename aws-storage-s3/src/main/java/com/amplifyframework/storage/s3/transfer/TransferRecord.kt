@@ -36,6 +36,7 @@ internal data class TransferRecord(
     var type: TransferType? = null,
     var state: TransferState? = null,
     var bucketName: String? = null,
+    var region: String? = null,
     var key: String? = null,
     var versionId: String? = null,
     var file: String = "",
@@ -80,6 +81,8 @@ internal data class TransferRecord(
                     )
                 this.bucketName =
                     c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_BUCKET_NAME))
+                this.region =
+                    c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_REGION))
                 this.key = c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_KEY))
                 this.versionId =
                     c.getString(c.getColumnIndexOrThrow(TransferTable.COLUMN_VERSION_ID))

@@ -20,6 +20,7 @@ import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.storage.StorageCategory
 import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.StoragePath
+import com.amplifyframework.storage.options.StorageRemoveOptions
 import com.amplifyframework.storage.options.StorageUploadFileOptions
 import com.amplifyframework.storage.s3.options.AWSS3StoragePagedListOptions
 import com.amplifyframework.storage.s3.test.R
@@ -30,6 +31,7 @@ import com.amplifyframework.testutils.sync.SynchronousStorage
 import java.io.File
 import java.util.concurrent.TimeUnit
 import org.junit.After
+import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
@@ -105,6 +107,16 @@ class AWSS3StoragePathListTest {
                 uploadOptions
             )
 
+            synchronousAuth.signOut()
+        }
+
+        @JvmStatic
+        @AfterClass
+        fun tearDownOnce() {
+            synchronousAuth.signIn(userOne.username, userOne.password)
+            synchronousStorage.remove(SMALL_FILE_PATH, StorageRemoveOptions.defaultInstance())
+            synchronousStorage.remove(LARGE_FILE_PATH, StorageRemoveOptions.defaultInstance())
+            synchronousStorage.remove(userOnePrivateFileStoragePath, StorageRemoveOptions.defaultInstance())
             synchronousAuth.signOut()
         }
     }
