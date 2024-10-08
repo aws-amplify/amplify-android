@@ -16,7 +16,7 @@ package com.amplifyframework.auth.cognito.testutils
 
 import java.util.concurrent.CountDownLatch
 
-class AbortableCountDownLatch(count: Int) : CountDownLatch(count) {
+class AbortableCountdownLatch(count: Int) : CountDownLatch(count) {
 
     fun abort() {
         if (count == 0L) {

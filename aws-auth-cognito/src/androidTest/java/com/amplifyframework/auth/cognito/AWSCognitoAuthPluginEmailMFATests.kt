@@ -24,7 +24,7 @@ import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.MFAType
 import com.amplifyframework.auth.cognito.exceptions.service.CodeMismatchException
 import com.amplifyframework.auth.cognito.test.R
-import com.amplifyframework.auth.cognito.testutils.AbortableCountDownLatch
+import com.amplifyframework.auth.cognito.testutils.AbortableCountdownLatch
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.step.AuthSignInStep
@@ -53,7 +53,7 @@ class AWSCognitoAuthPluginEmailMFATests {
         private var apiPlugin = AWSApiPlugin()
         lateinit var synchronousAuth: SynchronousAuth
         var mfaCode = ""
-        var abortableLatch: AbortableCountDownLatch? = null
+        var abortableLatch: AbortableCountdownLatch? = null
 
         @JvmStatic
         @BeforeClass
@@ -111,7 +111,7 @@ class AWSCognitoAuthPluginEmailMFATests {
         assertEquals(AuthSignInStep.CONTINUE_SIGN_IN_WITH_EMAIL_MFA_SETUP, signInResult.nextStep.signInStep)
 
         // Step 4: Input the email address to send the code to then wait for the MFA code
-        abortableLatch = AbortableCountDownLatch(1)
+        abortableLatch = AbortableCountdownLatch(1)
         signInResult = synchronousAuth.confirmSignIn(email)
 
         // Validation 3: Validate that the next step is to confirm the emailed MFA code
@@ -133,7 +133,7 @@ class AWSCognitoAuthPluginEmailMFATests {
         signUpNewUser(email)
 
         // Step 2: Attempt to sign in with the newly created user
-        abortableLatch = AbortableCountDownLatch(1)
+        abortableLatch = AbortableCountdownLatch(1)
         var signInResult = synchronousAuth.signIn(userName, password)
 
         // Validation 1: Validate that the next step is to confirm the emailed MFA code
@@ -155,7 +155,7 @@ class AWSCognitoAuthPluginEmailMFATests {
         signUpNewUser(email)
 
         // Step 2: Attempt to sign in with the newly created user
-        abortableLatch = AbortableCountDownLatch(1)
+        abortableLatch = AbortableCountdownLatch(1)
         var signInResult = synchronousAuth.signIn(userName, password)
 
         // Validation 1: Validate that the next step is to confirm the emailed MFA code
