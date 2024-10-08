@@ -138,4 +138,33 @@ class SignInChallengeCognitoActionsTest {
         assertTrue(capturedRequest.isCaptured)
         assertEquals(expectedChallengeResponses, capturedRequest.captured.challengeResponses)
     }
+
+    @Test
+    fun `verify email MFA setup selection challenge is handled`() = runTest {
+        val expectedChallengeResponses = mapOf(
+            "USERNAME" to "testUser",
+        )
+
+        val capturedRequest = slot<RespondToAuthChallengeRequest>()
+        coEvery {
+            cognitoIdentityProviderClientMock.respondToAuthChallenge(capture(capturedRequest))
+        }.answers {
+            mockk()
+        }
+
+        SignInChallengeCognitoActions.verifyChallengeAuthAction(
+            "EMAIL_OTP",
+            emptyMap(),
+            emptyList(),
+            AuthChallenge(
+                "MFA_SETUP",
+                username = "testUser",
+                session = null,
+                parameters = null
+            )
+        ).execute(dispatcher, authEnvironment)
+
+        assertTrue(capturedRequest.isCaptured)
+        assertEquals(expectedChallengeResponses, capturedRequest.captured.challengeResponses)
+    }
 }

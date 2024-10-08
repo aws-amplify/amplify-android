@@ -553,12 +553,14 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
 
     suspend fun updateMFAPreference(
         sms: MFAPreference?,
-        totp: MFAPreference?
+        totp: MFAPreference?,
+        email: MFAPreference?
     ) {
         return suspendCoroutine { continuation ->
             delegate.updateMFAPreference(
                 sms,
                 totp,
+                email,
                 { continuation.resume(Unit) },
                 { continuation.resumeWithException(it) }
             )

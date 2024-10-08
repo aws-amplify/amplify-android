@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -12,25 +12,19 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.auth
+package com.amplifyframework.auth.cognito.testutils
 
-/**
- * Type of MFA for authentication.
- */
-enum class MFAType {
+import java.util.concurrent.CountDownLatch
 
-    /**
-     * Short Messaging Service linked with a phone number
-     */
-    SMS,
+class AbortableCountdownLatch(count: Int) : CountDownLatch(count) {
 
-    /**
-     * Time-based One Time Password linked with an authenticator app
-     */
-    TOTP,
+    fun abort() {
+        if (count == 0L) {
+            return
+        }
 
-    /**
-     * Receives MFA codes with an email
-     */
-    EMAIL;
+        while (count > 0) {
+            countDown()
+        }
+    }
 }
