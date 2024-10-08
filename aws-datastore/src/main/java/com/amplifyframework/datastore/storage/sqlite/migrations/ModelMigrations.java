@@ -37,6 +37,7 @@ public class ModelMigrations {
     public ModelMigrations(SQLiteDatabase databaseConnectionHandle, ModelProvider modelsProvider) {
         List<ModelMigration> migrationClasses = new ArrayList<>();
         migrationClasses.add(new AddModelNameToModelMetadataKey(databaseConnectionHandle, modelsProvider));
+        migrationClasses.add(new AddSyncExpressionToLastSyncMetadata(databaseConnectionHandle, modelsProvider));
         this.modelMigrations = Immutable.of(migrationClasses);
     }
 
