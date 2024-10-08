@@ -146,7 +146,8 @@ internal object SignInCognitoActions : SignInActions {
                 SetupTOTPEvent.EventType.SetupTOTP(
                     totpSetupDetails = event.signInTOTPSetupData,
                     challengeParams = event.challengeParams
-            ))
+                )
+            )
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }

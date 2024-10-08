@@ -64,11 +64,13 @@ internal sealed class SetupTOTPState : State {
 
                 is SetupTOTP -> when (challengeEvent) {
                     is SetupTOTPEvent.EventType.WaitForAnswer -> {
-                        StateResolution(WaitingForAnswer(
-                            signInTOTPSetupData = challengeEvent.totpSetupDetails,
-                            hasNewResponse = true,
-                            challengeParams = challengeEvent.challengeParams
-                        ))
+                        StateResolution(
+                            WaitingForAnswer(
+                                signInTOTPSetupData = challengeEvent.totpSetupDetails,
+                                hasNewResponse = true,
+                                challengeParams = challengeEvent.challengeParams
+                            )
+                        )
                     }
 
                     is SetupTOTPEvent.EventType.ThrowAuthError -> StateResolution(
@@ -135,11 +137,13 @@ internal sealed class SetupTOTPState : State {
                     }
 
                     is SetupTOTPEvent.EventType.WaitForAnswer -> {
-                        StateResolution(WaitingForAnswer(
-                            signInTOTPSetupData = challengeEvent.totpSetupDetails,
-                            hasNewResponse = true,
-                            challengeParams = challengeEvent.challengeParams
-                        ))
+                        StateResolution(
+                            WaitingForAnswer(
+                                signInTOTPSetupData = challengeEvent.totpSetupDetails,
+                                hasNewResponse = true,
+                                challengeParams = challengeEvent.challengeParams
+                            )
+                        )
                     }
 
                     else -> defaultResolution
