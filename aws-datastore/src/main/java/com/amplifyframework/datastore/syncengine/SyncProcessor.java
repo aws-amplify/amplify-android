@@ -182,6 +182,9 @@ final class SyncProcessor {
 
     private Completable createHydrationTask(ModelSchema schema) {
         ModelSyncMetricsAccumulator metricsAccumulator = new ModelSyncMetricsAccumulator(schema.getName());
+        //TODO: QueryPredicate currentPredicate = this.queryPredicateProvider.getPredicate(schema.getName());
+        //TODO deserialize current predicate to deserializedCurrentPredicate
+        //TODO: pass deserializedCurrentPredicate to lookupLastSyncTime as the second parameter
         return syncTimeRegistry.lookupLastSyncTime(schema.getName())
             .map(this::filterOutOldSyncTimes)
             // And for each, perform a sync. The network response will contain an Iterable<ModelWithMetadata<T>>
@@ -201,9 +204,10 @@ final class SyncProcessor {
                     .toSingle(() -> lastSyncTime.exists() ? SyncType.DELTA : SyncType.BASE);
             })
             .flatMapCompletable(syncType -> {
+                //TODO: pass the deserializedCurrentPredicate to saveLastDelta/BaseSync as the third parameter
                 Completable syncTimeSaveCompletable = SyncType.DELTA.equals(syncType) ?
-                    syncTimeRegistry.saveLastDeltaSyncTime(schema.getName(), SyncTime.now()) :
-                    syncTimeRegistry.saveLastBaseSyncTime(schema.getName(), SyncTime.now());
+                    syncTimeRegistry.saveLastDeltaSyncTime(schema.getName(), SyncTime.now(), null) :
+                    syncTimeRegistry.saveLastBaseSyncTime(schema.getName(), SyncTime.now(), null);
                 return syncTimeSaveCompletable.andThen(Completable.fromAction(() ->
                     Amplify.Hub.publish(
                         HubChannel.DATASTORE, metricsAccumulator.toModelSyncedEvent(syncType).toHubEvent()
