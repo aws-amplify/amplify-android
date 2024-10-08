@@ -27,7 +27,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Metadata about the last time that a model class was sync'd with AppSync backend.
+ * Metadata about the last time that a model class was sync'd with AppSync backend using a certain syncExpression.
  * This metadata is persisted locally as a system model. This metadata is inspected
  * whenever the Sync Engine starts up. The system consider the value of
  * {@link LastSyncMetadata#getLastSyncTime()} to decide whether or not it should
@@ -39,13 +39,15 @@ public final class LastSyncMetadata implements Model {
     private final @ModelField(targetType = "String", isRequired = true) String modelClassName;
     private final @ModelField(targetType = "AWSTimestamp", isRequired = true) Long lastSyncTime;
     private final @ModelField(targetType = "String", isRequired = true) String lastSyncType;
+    private final @ModelField(targetType = "String") String syncExpression;
 
     @SuppressWarnings("checkstyle:ParameterName") // The field is named "id" in the model; keep it consistent
-    private LastSyncMetadata(String id, String modelClassName, Long lastSyncTime, SyncType syncType) {
+    private LastSyncMetadata(String id, String modelClassName, Long lastSyncTime, SyncType syncType, @Nullable String syncExpression) {
         this.id = id;
         this.modelClassName = modelClassName;
         this.lastSyncTime = lastSyncTime;
         this.lastSyncType = syncType.name();
+        this.syncExpression = syncExpression;
     }
 
     /**
@@ -57,9 +59,9 @@ public final class LastSyncMetadata implements Model {
      * @return {@link LastSyncMetadata} for the model class
      */
     public static <T extends Model> LastSyncMetadata baseSyncedAt(@NonNull String modelClassName,
-                                                           @Nullable long lastSyncTime) {
+                                                           @Nullable long lastSyncTime, @Nullable String syncExpression) {
         Objects.requireNonNull(modelClassName);
-        return create(modelClassName, lastSyncTime, SyncType.BASE);
+        return create(modelClassName, lastSyncTime, SyncType.BASE, syncExpression);
     }
 
     /**
@@ -70,9 +72,9 @@ public final class LastSyncMetadata implements Model {
      * @return {@link LastSyncMetadata} for the model class
      */
     static <T extends Model> LastSyncMetadata deltaSyncedAt(@NonNull String modelClassName,
-                                                           @Nullable long lastSyncTime) {
+                                                           @Nullable long lastSyncTime, @Nullable String syncExpression) {
         Objects.requireNonNull(modelClassName);
-        return create(modelClassName, lastSyncTime, SyncType.DELTA);
+        return create(modelClassName, lastSyncTime, SyncType.DELTA, syncExpression);
     }
 
     /**
@@ -84,7 +86,7 @@ public final class LastSyncMetadata implements Model {
      */
     public static <T extends Model> LastSyncMetadata neverSynced(@NonNull String modelClassName) {
         Objects.requireNonNull(modelClassName);
-        return create(modelClassName, null, SyncType.BASE);
+        return create(modelClassName, null, SyncType.BASE, null);
     }
 
     /**
@@ -97,9 +99,9 @@ public final class LastSyncMetadata implements Model {
      */
     @SuppressWarnings("WeakerAccess")
     static <T extends Model> LastSyncMetadata create(
-            @NonNull String modelClassName, @Nullable Long lastSyncTime, @NonNull SyncType syncType) {
+            @NonNull String modelClassName, @Nullable Long lastSyncTime, @NonNull SyncType syncType, @Nullable String syncExpression) {
         Objects.requireNonNull(modelClassName);
-        return new LastSyncMetadata(hash(modelClassName), modelClassName, lastSyncTime, syncType);
+        return new LastSyncMetadata(hash(modelClassName), modelClassName, lastSyncTime, syncType, syncExpression);
     }
 
     @NonNull
@@ -145,6 +147,14 @@ public final class LastSyncMetadata implements Model {
     }
 
     /**
+     * Returns the sync expression being used in the last sync
+     * @return A serialized sync expression
+     */
+    public String getSyncExpression() {
+        return this.syncExpression;
+    }
+
+    /**
      * Computes a stable hash for a model class, by its name.
      * Since {@link Model}s have to have unique IDs, we need an ID for this class.
      * However, ideally, we wouldn't use it. Ideally, we'd use the model class name.
@@ -175,6 +185,9 @@ public final class LastSyncMetadata implements Model {
         if (!ObjectsCompat.equals(lastSyncType, that.lastSyncType)) {
             return false;
         }
+        if (!ObjectsCompat.equals(syncExpression, that.syncExpression)) {
+            return false;
+        }
         return ObjectsCompat.equals(lastSyncTime, that.lastSyncTime);
     }
 
@@ -184,6 +197,7 @@ public final class LastSyncMetadata implements Model {
         result = 31 * result + modelClassName.hashCode();
         result = 31 * result + lastSyncTime.hashCode();
         result = 31 * result + lastSyncType.hashCode();
+        result = 31 * result + syncExpression.hashCode();
         return result;
     }
 
@@ -194,6 +208,7 @@ public final class LastSyncMetadata implements Model {
             ", modelClassName='" + modelClassName + '\'' +
             ", lastSyncTime=" + lastSyncTime +
             ", lastSyncType=" + lastSyncType +
+            ", syncExpression" + syncExpression +
             '}';
     }
 }
