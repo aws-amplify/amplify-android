@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryField;
@@ -40,18 +41,19 @@ final class SyncTimeRegistry {
         this.localStorageAdapter = localStorageAdapter;
     }
 
-    //TODO: add the second argument: current sync expression here
-    Single<SyncTime> lookupLastSyncTime(@NonNull String modelClassName) {
+    Single<SyncTime> lookupLastSyncTime(@NonNull String modelClassName, @NonNull String syncExpression) {
         return Single.create(emitter -> {
             QueryPredicate hasMatchingModelClassName = QueryField.field("modelClassName").eq(modelClassName);
 
             localStorageAdapter.query(LastSyncMetadata.class, Where.matches(hasMatchingModelClassName), results -> {
                 try {
                     LastSyncMetadata syncMetadata = extractSingleResult(modelClassName, results);
-                    //TODO: syncMetadata should contain the previous serialized sync expression
-                    //TODO: compare the previous sync expression with the current one
-                    //TODO: emmit SyncTime.never() if different
-                    emitter.onSuccess(SyncTime.from(syncMetadata.getLastSyncTime()));
+                    SyncTime lastSyncTime = SyncTime.from(syncMetadata.getLastSyncTime());
+                    String lastSyncExpression = syncMetadata.getSyncExpression();
+                    if(!ObjectsCompat.equals(lastSyncExpression, syncExpression)){
+                        lastSyncTime = SyncTime.never();
+                    }
+                    emitter.onSuccess(lastSyncTime);
                 } catch (DataStoreException queryResultFailure) {
                     emitter.onError(queryResultFailure);
                 }
@@ -59,8 +61,7 @@ final class SyncTimeRegistry {
         });
     }
 
-    //TODO: change the name to saveLastDeltaSync, and add the second argument for sync expression
-    Completable saveLastDeltaSyncTime(@NonNull String modelClassName, @Nullable SyncTime syncTime, @Nullable String syncExpression) {
+    Completable saveLastDeltaSync(@NonNull String modelClassName, @Nullable SyncTime syncTime, @Nullable String syncExpression) {
         LastSyncMetadata metadata = syncTime != null && syncTime.exists() ?
             LastSyncMetadata.deltaSyncedAt(modelClassName, syncTime.toLong(), syncExpression) :
             LastSyncMetadata.neverSynced(modelClassName);
@@ -76,8 +77,7 @@ final class SyncTimeRegistry {
         );
     }
 
-    //TODO: change the name to saveLastDeltaSync, and add the second argument for sync expression
-    Completable saveLastBaseSyncTime(@NonNull String modelClassName, @Nullable SyncTime syncTime, @Nullable String syncExpression) {
+    Completable saveLastBaseSync(@NonNull String modelClassName, @Nullable SyncTime syncTime, @Nullable String syncExpression) {
         LastSyncMetadata metadata = syncTime != null && syncTime.exists() ?
             LastSyncMetadata.baseSyncedAt(modelClassName, syncTime.toLong(), syncExpression) :
             LastSyncMetadata.neverSynced(modelClassName);

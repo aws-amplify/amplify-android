@@ -46,7 +46,9 @@ import com.amplifyframework.datastore.utils.ErrorInspector;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
+import com.amplifyframework.util.GsonFactory;
 import com.amplifyframework.util.Time;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -80,6 +82,7 @@ final class SyncProcessor {
     private final DataStoreConfigurationProvider dataStoreConfigurationProvider;
     private final QueryPredicateProvider queryPredicateProvider;
     private final RetryHandler requestRetry;
+    private final Gson gson;    //TODO: for pre-deserialization of QueryPredicate, will remove shortly
 
     /**
      * The `isSyncRetryEnabled` value is being passed down all the way from the `AWSDataStorePlugin` or the
@@ -97,7 +100,7 @@ final class SyncProcessor {
         this.queryPredicateProvider = builder.queryPredicateProvider;
         this.requestRetry = builder.requestRetry;
         this.isSyncRetryEnabled = builder.isSyncRetryEnabled;
-
+        this.gson = GsonFactory.instance();     //TODO: for pre-deserialization of QueryPredicate, will remove shortly
         if (!this.isSyncRetryEnabled) {
             LOG.warn("Disabling sync retries will be deprecated in a future version.");
         }
@@ -182,10 +185,9 @@ final class SyncProcessor {
 
     private Completable createHydrationTask(ModelSchema schema) {
         ModelSyncMetricsAccumulator metricsAccumulator = new ModelSyncMetricsAccumulator(schema.getName());
-        //TODO: QueryPredicate currentPredicate = this.queryPredicateProvider.getPredicate(schema.getName());
-        //TODO deserialize current predicate to deserializedCurrentPredicate
-        //TODO: pass deserializedCurrentPredicate to lookupLastSyncTime as the second parameter
-        return syncTimeRegistry.lookupLastSyncTime(schema.getName())
+        QueryPredicate currentPredicate = this.queryPredicateProvider.getPredicate(schema.getName());
+        String serializedSyncExpression = gson.toJson(currentPredicate); //TODO: for pre-deserialization of QueryPredicate, will remove shortly
+        return syncTimeRegistry.lookupLastSyncTime(schema.getName(), serializedSyncExpression)
             .map(this::filterOutOldSyncTimes)
             // And for each, perform a sync. The network response will contain an Iterable<ModelWithMetadata<T>>
             .flatMap(lastSyncTime -> {
@@ -204,10 +206,9 @@ final class SyncProcessor {
                     .toSingle(() -> lastSyncTime.exists() ? SyncType.DELTA : SyncType.BASE);
             })
             .flatMapCompletable(syncType -> {
-                //TODO: pass the deserializedCurrentPredicate to saveLastDelta/BaseSync as the third parameter
                 Completable syncTimeSaveCompletable = SyncType.DELTA.equals(syncType) ?
-                    syncTimeRegistry.saveLastDeltaSyncTime(schema.getName(), SyncTime.now(), null) :
-                    syncTimeRegistry.saveLastBaseSyncTime(schema.getName(), SyncTime.now(), null);
+                    syncTimeRegistry.saveLastDeltaSync(schema.getName(), SyncTime.now(), serializedSyncExpression) :
+                    syncTimeRegistry.saveLastBaseSync(schema.getName(), SyncTime.now(), serializedSyncExpression);
                 return syncTimeSaveCompletable.andThen(Completable.fromAction(() ->
                     Amplify.Hub.publish(
                         HubChannel.DATASTORE, metricsAccumulator.toModelSyncedEvent(syncType).toHubEvent()
