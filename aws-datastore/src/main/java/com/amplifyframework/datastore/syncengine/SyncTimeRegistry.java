@@ -40,6 +40,7 @@ final class SyncTimeRegistry {
         this.localStorageAdapter = localStorageAdapter;
     }
 
+    //TODO: add the second argument: current sync expression here
     Single<SyncTime> lookupLastSyncTime(@NonNull String modelClassName) {
         return Single.create(emitter -> {
             QueryPredicate hasMatchingModelClassName = QueryField.field("modelClassName").eq(modelClassName);
@@ -47,6 +48,9 @@ final class SyncTimeRegistry {
             localStorageAdapter.query(LastSyncMetadata.class, Where.matches(hasMatchingModelClassName), results -> {
                 try {
                     LastSyncMetadata syncMetadata = extractSingleResult(modelClassName, results);
+                    //TODO: syncMetadata should contain the previous serialized sync expression
+                    //TODO: compare the previous sync expression with the current one
+                    //TODO: emmit SyncTime.never() if different
                     emitter.onSuccess(SyncTime.from(syncMetadata.getLastSyncTime()));
                 } catch (DataStoreException queryResultFailure) {
                     emitter.onError(queryResultFailure);
@@ -55,9 +59,10 @@ final class SyncTimeRegistry {
         });
     }
 
-    Completable saveLastDeltaSyncTime(@NonNull String modelClassName, @Nullable SyncTime syncTime) {
+    //TODO: change the name to saveLastDeltaSync, and add the second argument for sync expression
+    Completable saveLastDeltaSyncTime(@NonNull String modelClassName, @Nullable SyncTime syncTime, @Nullable String syncExpression) {
         LastSyncMetadata metadata = syncTime != null && syncTime.exists() ?
-            LastSyncMetadata.deltaSyncedAt(modelClassName, syncTime.toLong()) :
+            LastSyncMetadata.deltaSyncedAt(modelClassName, syncTime.toLong(), syncExpression) :
             LastSyncMetadata.neverSynced(modelClassName);
 
         return Completable.create(emitter ->
@@ -71,9 +76,10 @@ final class SyncTimeRegistry {
         );
     }
 
-    Completable saveLastBaseSyncTime(@NonNull String modelClassName, @Nullable SyncTime syncTime) {
+    //TODO: change the name to saveLastDeltaSync, and add the second argument for sync expression
+    Completable saveLastBaseSyncTime(@NonNull String modelClassName, @Nullable SyncTime syncTime, @Nullable String syncExpression) {
         LastSyncMetadata metadata = syncTime != null && syncTime.exists() ?
-            LastSyncMetadata.baseSyncedAt(modelClassName, syncTime.toLong()) :
+            LastSyncMetadata.baseSyncedAt(modelClassName, syncTime.toLong(), syncExpression) :
             LastSyncMetadata.neverSynced(modelClassName);
 
         return Completable.create(emitter ->
