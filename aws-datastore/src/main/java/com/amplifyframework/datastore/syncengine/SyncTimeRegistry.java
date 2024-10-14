@@ -49,10 +49,10 @@ final class SyncTimeRegistry {
                 try {
                     LastSyncMetadata syncMetadata = extractSingleResult(modelClassName, results);
                     SyncTime lastSyncTime = SyncTime.from(syncMetadata.getLastSyncTime());
-//                    String lastSyncExpression = syncMetadata.getSyncExpression();
-//                    if(!ObjectsCompat.equals(lastSyncExpression, syncExpression)){
-//                        lastSyncTime = SyncTime.never();
-//                    }
+                    QueryPredicate lastSyncExpression = syncMetadata.getSyncExpression();
+                    if(!ObjectsCompat.equals(lastSyncExpression, syncExpression)) {
+                        lastSyncTime = SyncTime.never();
+                    }
                     emitter.onSuccess(lastSyncTime);
                 } catch (DataStoreException queryResultFailure) {
                     emitter.onError(queryResultFailure);
