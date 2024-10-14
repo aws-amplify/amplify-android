@@ -43,7 +43,7 @@ public class SyncStatusTest {
      */
     @Test
     public void syncStatusGetReturnSyncedStatus() {
-        final LastSyncMetadata lastSyncMetadata = LastSyncMetadata.baseSyncedAt(BlogOwner.class.getName(), Time.now());
+        final LastSyncMetadata lastSyncMetadata = LastSyncMetadata.baseSyncedAt(BlogOwner.class.getName(), Time.now(), null);
         List<LastSyncMetadata> resultList = new ArrayList<>();
         resultList.add(lastSyncMetadata);
         Consumer<DataStoreException> onObservationError = value -> { };
@@ -63,7 +63,7 @@ public class SyncStatusTest {
      */
     @Test
     public void syncStatusGetReturnNotSyncedStatus() {
-        final LastSyncMetadata lastSyncMetadata = LastSyncMetadata.baseSyncedAt(BlogOwner.class.getName(), Time.now());
+        final LastSyncMetadata lastSyncMetadata = LastSyncMetadata.baseSyncedAt(BlogOwner.class.getName(), Time.now(), null);
         List<LastSyncMetadata> resultList = new ArrayList<>();
         resultList.add(lastSyncMetadata);
         Consumer<DataStoreException> onObservationError = value -> { };

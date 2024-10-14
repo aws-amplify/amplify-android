@@ -512,7 +512,7 @@ public final class SyncProcessorTest {
         // were sync'd too long ago. That is, longer ago than the base sync interval.
         long longAgoTimeMs = Time.now() - (TimeUnit.MINUTES.toMillis(BASE_SYNC_INTERVAL_MINUTES) * 2);
         Observable.fromIterable(modelProvider.modelNames())
-            .map(modelName -> LastSyncMetadata.baseSyncedAt(modelName, longAgoTimeMs))
+            .map(modelName -> LastSyncMetadata.baseSyncedAt(modelName, longAgoTimeMs, null))
             .blockingForEach(storageAdapter::save);
 
         // Arrange: return some content from the fake AppSync endpoint
@@ -555,7 +555,7 @@ public final class SyncProcessorTest {
         // were sync'd very recently (within the interval.)
         long recentTimeMs = Time.now();
         Observable.fromIterable(modelProvider.modelNames())
-            .map(modelName -> LastSyncMetadata.deltaSyncedAt(modelName, recentTimeMs))
+            .map(modelName -> LastSyncMetadata.deltaSyncedAt(modelName, recentTimeMs, null))
             .blockingForEach(storageAdapter::save);
 
         // Arrange: return some content from the fake AppSync endpoint
