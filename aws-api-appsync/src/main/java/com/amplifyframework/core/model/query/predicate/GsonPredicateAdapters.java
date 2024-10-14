@@ -130,7 +130,8 @@ public final class GsonPredicateAdapters {
         private enum PredicateType {
             OPERATION,
             GROUP,
-            ALL
+            ALL,
+            NONE
         }
 
         /**
@@ -152,6 +153,8 @@ public final class GsonPredicateAdapters {
                     return context.deserialize(json, QueryPredicateGroup.class);
                 case ALL:
                     return context.deserialize(json, MatchAllQueryPredicate.class);
+                case NONE:
+                    return context.deserialize(json, MatchNoneQueryPredicate.class);
                 default:
                     throw new JsonParseException("Unable to deserialize " +
                             json.toString() + " to QueryPredicate instance.");
@@ -169,6 +172,9 @@ public final class GsonPredicateAdapters {
             if (predicate instanceof MatchAllQueryPredicate) {
                 predicateType = PredicateType.ALL;
                 json = context.serialize(predicate, MatchAllQueryPredicate.class);
+            } else if (predicate instanceof MatchNoneQueryPredicate) {
+                predicateType = PredicateType.NONE;
+                json = context.serialize(predicate, MatchNoneQueryPredicate.class);
             } else if (predicate instanceof QueryPredicateOperation) {
                 json = context.serialize(predicate, QueryPredicateOperation.class);
                 predicateType = PredicateType.OPERATION;
