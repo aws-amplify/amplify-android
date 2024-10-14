@@ -41,7 +41,7 @@ final class SyncTimeRegistry {
         this.localStorageAdapter = localStorageAdapter;
     }
 
-    Single<SyncTime> lookupLastSyncTime(@NonNull String modelClassName, @NonNull String syncExpression) {
+    Single<SyncTime> lookupLastSyncTime(@NonNull String modelClassName, @NonNull QueryPredicate syncExpression) {
         return Single.create(emitter -> {
             QueryPredicate hasMatchingModelClassName = QueryField.field("modelClassName").eq(modelClassName);
 
@@ -49,10 +49,10 @@ final class SyncTimeRegistry {
                 try {
                     LastSyncMetadata syncMetadata = extractSingleResult(modelClassName, results);
                     SyncTime lastSyncTime = SyncTime.from(syncMetadata.getLastSyncTime());
-                    String lastSyncExpression = syncMetadata.getSyncExpression();
-                    if(!ObjectsCompat.equals(lastSyncExpression, syncExpression)){
-                        lastSyncTime = SyncTime.never();
-                    }
+//                    String lastSyncExpression = syncMetadata.getSyncExpression();
+//                    if(!ObjectsCompat.equals(lastSyncExpression, syncExpression)){
+//                        lastSyncTime = SyncTime.never();
+//                    }
                     emitter.onSuccess(lastSyncTime);
                 } catch (DataStoreException queryResultFailure) {
                     emitter.onError(queryResultFailure);
@@ -61,7 +61,7 @@ final class SyncTimeRegistry {
         });
     }
 
-    Completable saveLastDeltaSync(@NonNull String modelClassName, @Nullable SyncTime syncTime, @Nullable String syncExpression) {
+    Completable saveLastDeltaSync(@NonNull String modelClassName, @Nullable SyncTime syncTime, @Nullable QueryPredicate syncExpression) {
         LastSyncMetadata metadata = syncTime != null && syncTime.exists() ?
             LastSyncMetadata.deltaSyncedAt(modelClassName, syncTime.toLong(), syncExpression) :
             LastSyncMetadata.neverSynced(modelClassName);
@@ -77,7 +77,7 @@ final class SyncTimeRegistry {
         );
     }
 
-    Completable saveLastBaseSync(@NonNull String modelClassName, @Nullable SyncTime syncTime, @Nullable String syncExpression) {
+    Completable saveLastBaseSync(@NonNull String modelClassName, @Nullable SyncTime syncTime, @Nullable QueryPredicate syncExpression) {
         LastSyncMetadata metadata = syncTime != null && syncTime.exists() ?
             LastSyncMetadata.baseSyncedAt(modelClassName, syncTime.toLong(), syncExpression) :
             LastSyncMetadata.neverSynced(modelClassName);

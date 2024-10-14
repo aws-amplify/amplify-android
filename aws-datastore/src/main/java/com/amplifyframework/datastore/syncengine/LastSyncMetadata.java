@@ -22,6 +22,7 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -39,10 +40,10 @@ public final class LastSyncMetadata implements Model {
     private final @ModelField(targetType = "String", isRequired = true) String modelClassName;
     private final @ModelField(targetType = "AWSTimestamp", isRequired = true) Long lastSyncTime;
     private final @ModelField(targetType = "String", isRequired = true) String lastSyncType;
-    private final @ModelField(targetType = "String") String syncExpression;
+    private final @ModelField(targetType = "String") QueryPredicate syncExpression;
 
     @SuppressWarnings("checkstyle:ParameterName") // The field is named "id" in the model; keep it consistent
-    private LastSyncMetadata(String id, String modelClassName, Long lastSyncTime, SyncType syncType, @Nullable String syncExpression) {
+    private LastSyncMetadata(String id, String modelClassName, Long lastSyncTime, SyncType syncType, @Nullable QueryPredicate syncExpression) {
         this.id = id;
         this.modelClassName = modelClassName;
         this.lastSyncTime = lastSyncTime;
@@ -55,11 +56,12 @@ public final class LastSyncMetadata implements Model {
      * model has been base sync'd, and that the last sync occurred at the given time.
      * @param modelClassName Name of model
      * @param lastSyncTime Last time it was synced
+     * @param syncExpression the corresponding sync expression being used during last sync
      * @param <T> t type of Model.
      * @return {@link LastSyncMetadata} for the model class
      */
     public static <T extends Model> LastSyncMetadata baseSyncedAt(@NonNull String modelClassName,
-                                                           @Nullable long lastSyncTime, @Nullable String syncExpression) {
+                                                           @Nullable long lastSyncTime, @Nullable QueryPredicate syncExpression) {
         Objects.requireNonNull(modelClassName);
         return create(modelClassName, lastSyncTime, SyncType.BASE, syncExpression);
     }
@@ -69,10 +71,12 @@ public final class LastSyncMetadata implements Model {
      * model has been base delta sync'd, and that the last sync occurred at the given time.
      * @param modelClassName Name of model
      * @param lastSyncTime Last time it was synced
+     * @param syncExpression the corresponding sync expression being used during last sync
+     * @param <T> t type of Model.
      * @return {@link LastSyncMetadata} for the model class
      */
     static <T extends Model> LastSyncMetadata deltaSyncedAt(@NonNull String modelClassName,
-                                                           @Nullable long lastSyncTime, @Nullable String syncExpression) {
+                                                           @Nullable long lastSyncTime, @Nullable QueryPredicate syncExpression) {
         Objects.requireNonNull(modelClassName);
         return create(modelClassName, lastSyncTime, SyncType.DELTA, syncExpression);
     }
@@ -94,12 +98,13 @@ public final class LastSyncMetadata implements Model {
      * @param modelClassName Name of model class for which metadata pertains
      * @param lastSyncTime Time of last sync; null, if never.
      * @param syncType The type of sync (FULL or DELTA).
+     * @param syncExpression the corresponding sync expression being used during last sync
      * @param <T> Type of model
      * @return {@link LastSyncMetadata}
      */
     @SuppressWarnings("WeakerAccess")
     static <T extends Model> LastSyncMetadata create(
-            @NonNull String modelClassName, @Nullable Long lastSyncTime, @NonNull SyncType syncType, @Nullable String syncExpression) {
+            @NonNull String modelClassName, @Nullable Long lastSyncTime, @NonNull SyncType syncType, @Nullable QueryPredicate syncExpression) {
         Objects.requireNonNull(modelClassName);
         return new LastSyncMetadata(hash(modelClassName), modelClassName, lastSyncTime, syncType, syncExpression);
     }
@@ -150,7 +155,7 @@ public final class LastSyncMetadata implements Model {
      * Returns the sync expression being used in the last sync
      * @return A serialized sync expression
      */
-    public String getSyncExpression() {
+    public QueryPredicate getSyncExpression() {
         return this.syncExpression;
     }
 
@@ -208,7 +213,7 @@ public final class LastSyncMetadata implements Model {
             ", modelClassName='" + modelClassName + '\'' +
             ", lastSyncTime=" + lastSyncTime +
             ", lastSyncType=" + lastSyncType +
-            ", syncExpression" + syncExpression +
+            ", syncExpression=" + syncExpression +
             '}';
     }
 }
