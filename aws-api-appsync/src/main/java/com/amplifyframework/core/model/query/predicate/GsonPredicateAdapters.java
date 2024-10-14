@@ -15,6 +15,8 @@
 
 package com.amplifyframework.core.model.query.predicate;
 
+import com.amplifyframework.util.GsonFactory;
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -33,13 +35,14 @@ public final class GsonPredicateAdapters {
     private GsonPredicateAdapters() {}
 
     /**
-     * Registers the adapters into an {@link GsonBuilder}.
+     * Registers the QueryPredicate adapter into an {@link GsonBuilder}.
+     * registerTypeHierarchyAdapter enables objects assigned to concrete QueryPredicate classes (e.g., QueryPredicateOperation) to use this adapter.
+     * 
      * @param builder A GsonBuilder.
      */
     public static void register(GsonBuilder builder) {
         builder
-            .registerTypeAdapter(QueryOperator.class, new QueryOperatorAdapter())
-            .registerTypeAdapter(QueryPredicate.class, new QueryPredicateAdapter());
+            .registerTypeHierarchyAdapter(QueryPredicate.class, new QueryPredicateAdapter());
     }
 
     /**
@@ -125,6 +128,11 @@ public final class GsonPredicateAdapters {
      */
     public static final class QueryPredicateAdapter implements
             JsonDeserializer<QueryPredicate>, JsonSerializer<QueryPredicate> {
+        // internal Gson instance for avoiding infinite loop
+        private final Gson gson = new GsonBuilder()
+                .registerTypeAdapter(QueryOperator.class, new QueryOperatorAdapter())
+                .serializeNulls()
+                .create();
         private static final String TYPE = "_type";
 
         private enum PredicateType {
@@ -148,13 +156,13 @@ public final class GsonPredicateAdapters {
             String predicateType = jsonObject.get(TYPE).getAsString();
             switch (PredicateType.valueOf(predicateType)) {
                 case OPERATION:
-                    return context.deserialize(json, QueryPredicateOperation.class);
+                    return gson.fromJson(json, QueryPredicateOperation.class);
                 case GROUP:
-                    return context.deserialize(json, QueryPredicateGroup.class);
+                    return gson.fromJson(json, QueryPredicateGroup.class);
                 case ALL:
-                    return context.deserialize(json, MatchAllQueryPredicate.class);
+                    return gson.fromJson(json, MatchAllQueryPredicate.class);
                 case NONE:
-                    return context.deserialize(json, MatchNoneQueryPredicate.class);
+                    return gson.fromJson(json, MatchNoneQueryPredicate.class);
                 default:
                     throw new JsonParseException("Unable to deserialize " +
                             json.toString() + " to QueryPredicate instance.");
@@ -167,19 +175,15 @@ public final class GsonPredicateAdapters {
         @Override
         public JsonElement serialize(QueryPredicate predicate, Type type, JsonSerializationContext context)
                 throws JsonParseException {
-            JsonElement json;
+            JsonElement json = gson.toJsonTree(predicate);
             PredicateType predicateType;
             if (predicate instanceof MatchAllQueryPredicate) {
                 predicateType = PredicateType.ALL;
-                json = context.serialize(predicate, MatchAllQueryPredicate.class);
             } else if (predicate instanceof MatchNoneQueryPredicate) {
                 predicateType = PredicateType.NONE;
-                json = context.serialize(predicate, MatchNoneQueryPredicate.class);
             } else if (predicate instanceof QueryPredicateOperation) {
-                json = context.serialize(predicate, QueryPredicateOperation.class);
                 predicateType = PredicateType.OPERATION;
             } else if (predicate instanceof QueryPredicateGroup) {
-                json = context.serialize(predicate, QueryPredicateGroup.class);
                 predicateType = PredicateType.GROUP;
             } else {
                 throw new JsonParseException("Unable to identify the predicate type.");
