@@ -512,6 +512,20 @@ public final class DataStoreConfiguration {
             return Builder.this;
         }
 
+        /**
+         * Sets sync expressions for models to filter which data is synced locally.
+         * The expression is evaluated each time DataStore is started.
+         * The QueryPredicate is applied on both sync and subscriptions.
+         * [NOTE: this will override the previous syncExpression configuration if there's any]
+         * @param syncExpressions the Map of all {@link DataStoreSyncExpression}s used to filter data during sync/subscriptions
+         * @return Current builder
+         */
+        @NonNull
+        public Builder syncExpressions(@NonNull Map<String, DataStoreSyncExpression> syncExpressions) {
+            this.syncExpressions = Objects.requireNonNull(syncExpressions);
+            return Builder.this;
+        }
+
         private void populateSettingsFromJson() throws DataStoreException {
             if (pluginJson == null) {
                 return;
