@@ -26,6 +26,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
+import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.core.model.temporal.Temporal;
@@ -65,6 +66,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.robolectric.RobolectricTestRunner;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -606,62 +608,99 @@ public final class SyncProcessorTest {
             assertEquals(recentTimeMs, capturedValue.getVariables().get("lastSync"));
         }
     }
-//
-//    /**
-//     * When a sync is requested, the last sync time and last sync expression should be considered.
-//     * If the last sync time is before (nowMs - baseSyncIntervalMs),
-//     * and the current sync expression is diffrent from last sync expression,
-//     * then a base sync will be performed.
-//     * @throws AmplifyException On failure to build GraphQLRequest for sync query
-//     */
-//    @Test
-//    public void baseSyncRequestedIfLastSyncBeyondIntervalAndDifferentSyncExpressionUsed() throws AmplifyException {
-//        // Arrange: add LastSyncMetadata for the types, indicating that they
-//        // were sync'd too long ago. That is, longer ago than the base sync interval
-//        long longAgoTimeMs = Time.now() - (TimeUnit.MINUTES.toMillis(BASE_SYNC_INTERVAL_MINUTES) * 2);
-//        Observable.fromIterable(modelProvider.modelNames())
-//                .map(modelName -> LastSyncMetadata.baseSyncedAt(modelName, longAgoTimeMs, null))
-//                .blockingForEach(storageAdapter::save);
-//
-//        // Arrange: return some content from the fake AppSync endpoint
-//        AppSyncMocking.sync(appSync)
-//                .mockSuccessResponse(BlogOwner.class, BLOGGER_JAMESON);
-//
-//        // Act: hydrate the store.
-//        assertTrue(syncProcessor.hydrate().blockingAwait(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
-//
-//        // Assert: the sync time that was passed to AppSync should have been 'null'
-//        // The class count should be one less than the total model count because Author model has sync expression =
-//        // QueryPredicates.none()
-//        int modelClassCount = modelProvider.models().size() - 1;
-//        @SuppressWarnings("unchecked")
-//        ArgumentCaptor<GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>>> requestCaptor =
-//                ArgumentCaptor.forClass(GraphQLRequest.class);
-//        verify(appSync, times(modelClassCount)).sync(
-//                requestCaptor.capture(),
-//                any(),
-//                any()
-//        );
-//        List<GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>>> capturedValues =
-//                requestCaptor.getAllValues();
-//        assertEquals(modelClassCount, capturedValues.size());
-//        for (GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>> capturedValue : capturedValues) {
-//            assertNull(capturedValue.getVariables().get("lastSync"));
-//        }
-//    }
-//
-//    /**
-//     * When a sync is requested, the last sync time and last sync expression should be considered.
-//     * If the last sync time is after (nowMs - baseSyncIntervalMs) - that is,
-//     * if the last sync time is within the base sync interval,
-//     * and the current sync expression is different from last sync expression,
-//     * then a base sync will be performed.
-//     * @throws AmplifyException On failure to build GraphQLRequest for sync query
-//     */
-//    @Test
-//    public void baseSyncRequestedIfLastSyncIsRecentAndDifferentSyncExpressionUsed() throws AmplifyException {
-//
-//    }
+
+    /**
+     * When a sync is requested, the last sync time and last sync expression should be considered.
+     * If the last sync time is before (nowMs - baseSyncIntervalMs),
+     * and the current sync expression is different from last sync expression,
+     * then a base sync will be performed.
+     * @throws AmplifyException On failure to build GraphQLRequest for sync query
+     */
+    @Test
+    public void baseSyncRequestedIfLastSyncBeyondIntervalAndDifferentSyncExpressionUsed() throws AmplifyException {
+        // Arrange: add LastSyncMetadata for the types, indicating that they
+        // were sync'd too long ago. That is, longer ago than the base sync interval
+        long longAgoTimeMs = Time.now() - (TimeUnit.MINUTES.toMillis(BASE_SYNC_INTERVAL_MINUTES) * 2);
+        Observable.fromIterable(modelProvider.modelNames())
+                .map(modelName -> {
+                    QueryPredicate mockLastSyncExpression = generateIDQueryPredicate(modelName, true, 3);
+                    return LastSyncMetadata.deltaSyncedAt(modelName, longAgoTimeMs, mockLastSyncExpression);
+                })
+                .blockingForEach(storageAdapter::save);
+
+        // Arrange: return some content from the fake AppSync endpoint
+        AppSyncMocking.sync(appSync)
+                .mockSuccessResponse(BlogOwner.class, BLOGGER_JAMESON);
+
+        // Act: hydrate the store.
+        assertTrue(syncProcessor.hydrate().blockingAwait(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+
+        // Assert: the sync time that was passed to AppSync should have been 'null'
+        // The class count should be one less than the total model count because Author model has sync expression =
+        // QueryPredicates.none()
+        int modelClassCount = modelProvider.models().size() - 1;
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>>> requestCaptor =
+                ArgumentCaptor.forClass(GraphQLRequest.class);
+        verify(appSync, times(modelClassCount)).sync(
+                requestCaptor.capture(),
+                any(),
+                any()
+        );
+        List<GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>>> capturedValues =
+                requestCaptor.getAllValues();
+        assertEquals(modelClassCount, capturedValues.size());
+        for (GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>> capturedValue : capturedValues) {
+            assertNull(capturedValue.getVariables().get("lastSync"));
+        }
+    }
+
+    /**
+     * When a sync is requested, the last sync time and last sync expression should be considered.
+     * If the last sync time is after (nowMs - baseSyncIntervalMs) - that is,
+     * if the last sync time is within the base sync interval,
+     * and the current sync expression is different from last sync expression,
+     * then a base sync will be performed.
+     * @throws AmplifyException On failure to build GraphQLRequest for sync query
+     */
+    @Test
+    public void baseSyncRequestedIfLastSyncIsRecentAndDifferentSyncExpressionUsed() throws AmplifyException {
+        // Arrange: add LastSyncMetadata for the types, indicating that they
+        // were sync'd very recently (within the interval.)
+        long recentTimeMs = Time.now();
+        Observable.fromIterable(modelProvider.modelNames())
+                .map(modelName -> {
+                    QueryPredicate mockLastSyncExpression = generateIDQueryPredicate(modelName, true, 3);
+                    return LastSyncMetadata.deltaSyncedAt(modelName, recentTimeMs, mockLastSyncExpression);
+                })
+                .blockingForEach(storageAdapter::save);
+
+        // Arrange: return some content from the fake AppSync endpoint
+        AppSyncMocking.sync(appSync)
+                .mockSuccessResponse(BlogOwner.class, BLOGGER_JAMESON);
+
+        // Act: hydrate the store.
+        assertTrue(syncProcessor.hydrate().blockingAwait(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+
+        // Assert: the sync time that was passed to AppSync should be recentTimeMs.
+        //The class count should be one less than total model count because Author model has sync expression =
+        // QueryPredicates.none()
+        int modelClassCount = modelProvider.models().size() - 1;
+        @SuppressWarnings("unchecked") // ignore GraphQLRequest.class not being a parameterized type.
+        ArgumentCaptor<GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>>> requestCaptor =
+                ArgumentCaptor.forClass(GraphQLRequest.class);
+        verify(appSync, times(modelClassCount)).sync(
+                requestCaptor.capture(),
+                any(),
+                any()
+        );
+        final List<GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>>> capturedValues =
+                requestCaptor.getAllValues();
+        assertEquals(modelClassCount, capturedValues.size());
+        for (GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>> capturedValue : capturedValues) {
+            assertNull(capturedValue.getVariables().get("lastSync"));
+        }
+    }
 
     /**
      * Verify that the syncExpressions from the DataStoreConfiguration are applied to the sync request.
@@ -1065,6 +1104,37 @@ public final class SyncProcessorTest {
          */
         static int compare(Model left, Model right) {
             return left.getPrimaryKeyString().compareTo(right.getPrimaryKeyString());
+        }
+    }
+
+    /**
+     * Utility method to generate a new QueryPredicate for ID QueryField with Java Reflection
+     * This is implemented based on the fact that
+     *  1. All the test models are in package: "com.amplifyframework.testmodels.commentsblog"
+     *  2. All the test models declared in {@link AmplifyModelProvider} have a static field ID if type QueryField
+     * @param testModelName a modelName declared in {@link AmplifyModelProvider}
+     * @param lessThan return a {@link com.amplifyframework.core.model.query.predicate.LessThanQueryOperator} for ID if true
+     * @param idVal value used in the generated QueryOperator
+     * @return an ID QueryPredicate; or MatchNoneQueryPredicate if 1.||2. is false
+     */
+    private QueryPredicate generateIDQueryPredicate(String testModelName, boolean lessThan, int idVal) {
+        try {
+            // Where all the test models are defined
+            String testModelsPackage = "com.amplifyframework.testmodels.commentsblog.";
+            // All the test models have a static field named ID of type QueryField
+            Field IDField = Class.forName(testModelsPackage+testModelName)
+                    .getDeclaredField("ID");
+            IDField.setAccessible(true);
+            Object IDValue = IDField.get(null);
+
+            if(IDValue instanceof QueryField) {
+                QueryField IDQueryField = (QueryField)IDValue;
+                return lessThan ? IDQueryField.lt(idVal) : IDQueryField.ge(idVal);
+            }else{
+                throw new NoSuchFieldException("Failed to find a field named 'ID' of type QueryField");
+            }
+        }  catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
+            return QueryPredicates.none();
         }
     }
 }
