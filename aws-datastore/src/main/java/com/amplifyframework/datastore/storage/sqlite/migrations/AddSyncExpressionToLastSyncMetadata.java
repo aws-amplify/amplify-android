@@ -24,7 +24,7 @@ import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Wrap;
 
 /**
- * Add SyncExpression (TEXT) column to LastSyncMetadata table
+ * Add SyncExpression (TEXT) column to LastSyncMetadata table.
  */
 public final class AddSyncExpressionToLastSyncMetadata implements ModelMigration {
     private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
