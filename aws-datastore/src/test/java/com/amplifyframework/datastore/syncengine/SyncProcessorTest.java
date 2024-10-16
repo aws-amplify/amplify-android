@@ -577,7 +577,8 @@ public final class SyncProcessorTest {
         long recentTimeMs = Time.now();
         Observable.fromIterable(modelProvider.modelNames())
             .map(modelName -> {
-                    QueryPredicate syncExpression = Objects.requireNonNull(configuredSyncExpressions.getOrDefault(modelName, QueryPredicates::all)).resolvePredicate();
+                    QueryPredicate syncExpression = Objects.requireNonNull(configuredSyncExpressions.getOrDefault(modelName, QueryPredicates::all))
+                            .resolvePredicate();
                     return LastSyncMetadata.deltaSyncedAt(modelName, recentTimeMs, syncExpression);
             })
             .blockingForEach(storageAdapter::save);
