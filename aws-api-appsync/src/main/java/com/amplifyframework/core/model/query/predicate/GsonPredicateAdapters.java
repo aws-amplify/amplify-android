@@ -15,7 +15,6 @@
 
 package com.amplifyframework.core.model.query.predicate;
 
-import com.amplifyframework.util.GsonFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
@@ -36,7 +35,8 @@ public final class GsonPredicateAdapters {
 
     /**
      * Registers the QueryPredicate adapter into an {@link GsonBuilder}.
-     * registerTypeHierarchyAdapter enables objects assigned to concrete QueryPredicate classes (e.g., QueryPredicateOperation) to use this adapter.
+     * registerTypeHierarchyAdapter enables objects assigned to concrete QueryPredicate classes
+     * (e.g., QueryPredicateOperation) to use this adapter.
      * 
      * @param builder A GsonBuilder.
      */
@@ -128,12 +128,13 @@ public final class GsonPredicateAdapters {
      */
     public static final class QueryPredicateAdapter implements
             JsonDeserializer<QueryPredicate>, JsonSerializer<QueryPredicate> {
+        private static final String TYPE = "_type";
+
         // internal Gson instance for avoiding infinite loop
         private final Gson gson = new GsonBuilder()
                 .registerTypeAdapter(QueryOperator.class, new QueryOperatorAdapter())
                 .serializeNulls()
                 .create();
-        private static final String TYPE = "_type";
 
         private enum PredicateType {
             OPERATION,
