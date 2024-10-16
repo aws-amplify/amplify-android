@@ -20,11 +20,13 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.category.CategoryType;
-import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Wrap;
 
-public class AddSyncExpressionToLastSyncMetadata implements ModelMigration{
+/**
+ * Add SyncExpression (TEXT) column to LastSyncMetadata table
+ */
+public final class AddSyncExpressionToLastSyncMetadata implements ModelMigration {
     private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
     private final SQLiteDatabase database;
     private final String newSyncExpColumnName = "syncExpression";
@@ -39,7 +41,7 @@ public class AddSyncExpressionToLastSyncMetadata implements ModelMigration{
 
     @Override
     public void apply() {
-        if(!needsMigration()) {
+        if (!needsMigration()) {
             LOG.debug("No LastSyncMetadata migration needed.");
             return;
         }
@@ -47,8 +49,9 @@ public class AddSyncExpressionToLastSyncMetadata implements ModelMigration{
     }
 
     /**
+     * Alter LastSyncMetadata table with new column.
      * Existing rows in LasySyncMetadata will have 'null' for ${newSyncExpColumnName} value,
-     * until the next sync/hydrate operation
+     * until the next sync/hydrate operation.
      */
     private void addNewSyncExpColumnName() {
         try {
@@ -71,7 +74,7 @@ public class AddSyncExpressionToLastSyncMetadata implements ModelMigration{
         try (Cursor queryResults = database.rawQuery(checkColumnSql, new String[]{})) {
             if (queryResults.moveToNext()) {
                 int recordNum = queryResults.getInt(0);
-                return recordNum==0; // needs to be upgraded if there's no column named ${newSyncExpColumnName}
+                return recordNum == 0; // needs to be upgraded if there's no column named ${newSyncExpColumnName}
             }
         }
         return false;

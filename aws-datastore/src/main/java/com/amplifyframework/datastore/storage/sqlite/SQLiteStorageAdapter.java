@@ -934,8 +934,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     Objects.requireNonNull(databaseConnectionHandle);
                     sqliteStorageHelper.update(databaseConnectionHandle, oldVersion, newVersion);
                 } else {
-                    // We only need to do the model migration here because
-                    // the current implementation of sqliteStorageHelper.update will drop all existing tables and recreate tables with new schemas,
+                    // We only need to do the model migration here because the current implementation of
+                    // sqliteStorageHelper.update will drop all existing tables and recreate tables with new schemas,
                     // However, this might be changed in the future
                     LOG.debug("Database up to date. Checking System Models.");
                     new ModelMigrations(databaseConnectionHandle, modelsProvider).apply();

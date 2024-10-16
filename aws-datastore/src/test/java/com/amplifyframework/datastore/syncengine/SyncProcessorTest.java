@@ -529,8 +529,9 @@ public final class SyncProcessorTest {
         long longAgoTimeMs = Time.now() - (TimeUnit.MINUTES.toMillis(BASE_SYNC_INTERVAL_MINUTES) * 2);
         Observable.fromIterable(modelProvider.modelNames())
             .map(modelName -> {
-                QueryPredicate syncExpression = Objects.requireNonNull(configuredSyncExpressions.getOrDefault(modelName, QueryPredicates::all))
-                        .resolvePredicate();
+                QueryPredicate syncExpression = Objects.requireNonNull(
+                            configuredSyncExpressions.getOrDefault(modelName, QueryPredicates::all)
+                        ).resolvePredicate();
                 return LastSyncMetadata.deltaSyncedAt(modelName, longAgoTimeMs, syncExpression);
             })
             .blockingForEach(storageAdapter::save);
@@ -577,9 +578,10 @@ public final class SyncProcessorTest {
         long recentTimeMs = Time.now();
         Observable.fromIterable(modelProvider.modelNames())
             .map(modelName -> {
-                    QueryPredicate syncExpression = Objects.requireNonNull(configuredSyncExpressions.getOrDefault(modelName, QueryPredicates::all))
-                            .resolvePredicate();
-                    return LastSyncMetadata.deltaSyncedAt(modelName, recentTimeMs, syncExpression);
+                QueryPredicate syncExpression = Objects.requireNonNull(
+                        configuredSyncExpressions.getOrDefault(modelName, QueryPredicates::all)
+                ).resolvePredicate();
+                return LastSyncMetadata.deltaSyncedAt(modelName, recentTimeMs, syncExpression);
             })
             .blockingForEach(storageAdapter::save);
 
@@ -1074,6 +1076,37 @@ public final class SyncProcessorTest {
         );
     }
 
+    /**
+     * Utility method to generate a new QueryPredicate for ID QueryField with Java Reflection
+     * This is implemented based on the fact that
+     *  1. All the test models are in package: "com.amplifyframework.testmodels.commentsblog"
+     *  2. All the test models declared in {@link AmplifyModelProvider} have a static field ID if type QueryField
+     * @param testModelName a modelName declared in {@link AmplifyModelProvider}
+     * @param lessThan return a LessThanQueryOperator for ID if true
+     * @param idVal value used in the generated QueryOperator
+     * @return an ID QueryPredicate; or MatchNoneQueryPredicate if 1.||2. is false
+     */
+    private QueryPredicate generateIDQueryPredicate(String testModelName, boolean lessThan, int idVal) {
+        try {
+            // Where all the test models are defined
+            String testModelsPackage = "com.amplifyframework.testmodels.commentsblog.";
+            // All the test models have a static field named ID of type QueryField
+            Field idField = Class.forName(testModelsPackage + testModelName)
+                    .getDeclaredField("ID");
+            idField.setAccessible(true);
+            Object idValue = idField.get(null);
+
+            if (idValue instanceof QueryField) {
+                QueryField idQueryField = (QueryField) idValue;
+                return lessThan ? idQueryField.lt(idVal) : idQueryField.ge(idVal);
+            } else {
+                throw new NoSuchFieldException("Failed to find a field named 'ID' of type QueryField");
+            }
+        } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException err) {
+            return QueryPredicates.none();
+        }
+    }
+
     static final class RecentTimeWindow {
         private static final long ACCEPTABLE_DRIFT_MS = TimeUnit.SECONDS.toMillis(2);
 
@@ -1105,37 +1138,6 @@ public final class SyncProcessorTest {
          */
         static int compare(Model left, Model right) {
             return left.getPrimaryKeyString().compareTo(right.getPrimaryKeyString());
-        }
-    }
-
-    /**
-     * Utility method to generate a new QueryPredicate for ID QueryField with Java Reflection
-     * This is implemented based on the fact that
-     *  1. All the test models are in package: "com.amplifyframework.testmodels.commentsblog"
-     *  2. All the test models declared in {@link AmplifyModelProvider} have a static field ID if type QueryField
-     * @param testModelName a modelName declared in {@link AmplifyModelProvider}
-     * @param lessThan return a {@link com.amplifyframework.core.model.query.predicate.LessThanQueryOperator} for ID if true
-     * @param idVal value used in the generated QueryOperator
-     * @return an ID QueryPredicate; or MatchNoneQueryPredicate if 1.||2. is false
-     */
-    private QueryPredicate generateIDQueryPredicate(String testModelName, boolean lessThan, int idVal) {
-        try {
-            // Where all the test models are defined
-            String testModelsPackage = "com.amplifyframework.testmodels.commentsblog.";
-            // All the test models have a static field named ID of type QueryField
-            Field IDField = Class.forName(testModelsPackage+testModelName)
-                    .getDeclaredField("ID");
-            IDField.setAccessible(true);
-            Object IDValue = IDField.get(null);
-
-            if(IDValue instanceof QueryField) {
-                QueryField IDQueryField = (QueryField)IDValue;
-                return lessThan ? IDQueryField.lt(idVal) : IDQueryField.ge(idVal);
-            }else{
-                throw new NoSuchFieldException("Failed to find a field named 'ID' of type QueryField");
-            }
-        }  catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
-            return QueryPredicates.none();
         }
     }
 }

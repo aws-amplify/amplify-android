@@ -517,7 +517,7 @@ public final class DataStoreConfiguration {
          * The expression is evaluated each time DataStore is started.
          * The QueryPredicate is applied on both sync and subscriptions.
          * [NOTE: this will override the previous syncExpression configuration if there's any]
-         * @param syncExpressions the Map of all {@link DataStoreSyncExpression}s used to filter data during sync/subscriptions
+         * @param syncExpressions the Map of {@link DataStoreSyncExpression}s to filter data
          * @return Current builder
          */
         @NonNull

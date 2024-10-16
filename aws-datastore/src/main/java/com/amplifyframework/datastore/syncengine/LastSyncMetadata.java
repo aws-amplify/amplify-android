@@ -43,7 +43,8 @@ public final class LastSyncMetadata implements Model {
     private final @ModelField(targetType = "String") QueryPredicate syncExpression;
 
     @SuppressWarnings("checkstyle:ParameterName") // The field is named "id" in the model; keep it consistent
-    private LastSyncMetadata(String id, String modelClassName, Long lastSyncTime, SyncType syncType, @Nullable QueryPredicate syncExpression) {
+    private LastSyncMetadata(String id, String modelClassName, Long lastSyncTime,
+                             SyncType syncType, @Nullable QueryPredicate syncExpression) {
         this.id = id;
         this.modelClassName = modelClassName;
         this.lastSyncTime = lastSyncTime;
@@ -61,7 +62,8 @@ public final class LastSyncMetadata implements Model {
      * @return {@link LastSyncMetadata} for the model class
      */
     public static <T extends Model> LastSyncMetadata baseSyncedAt(@NonNull String modelClassName,
-                                                           @Nullable long lastSyncTime, @Nullable QueryPredicate syncExpression) {
+                                                                  @Nullable long lastSyncTime,
+                                                                  @Nullable QueryPredicate syncExpression) {
         Objects.requireNonNull(modelClassName);
         return create(modelClassName, lastSyncTime, SyncType.BASE, syncExpression);
     }
@@ -76,7 +78,8 @@ public final class LastSyncMetadata implements Model {
      * @return {@link LastSyncMetadata} for the model class
      */
     static <T extends Model> LastSyncMetadata deltaSyncedAt(@NonNull String modelClassName,
-                                                           @Nullable long lastSyncTime, @Nullable QueryPredicate syncExpression) {
+                                                            @Nullable long lastSyncTime,
+                                                            @Nullable QueryPredicate syncExpression) {
         Objects.requireNonNull(modelClassName);
         return create(modelClassName, lastSyncTime, SyncType.DELTA, syncExpression);
     }
@@ -103,8 +106,10 @@ public final class LastSyncMetadata implements Model {
      * @return {@link LastSyncMetadata}
      */
     @SuppressWarnings("WeakerAccess")
-    static <T extends Model> LastSyncMetadata create(
-            @NonNull String modelClassName, @Nullable Long lastSyncTime, @NonNull SyncType syncType, @Nullable QueryPredicate syncExpression) {
+    static <T extends Model> LastSyncMetadata create(@NonNull String modelClassName,
+                                                     @Nullable Long lastSyncTime,
+                                                     @NonNull SyncType syncType,
+                                                     @Nullable QueryPredicate syncExpression) {
         Objects.requireNonNull(modelClassName);
         return new LastSyncMetadata(hash(modelClassName), modelClassName, lastSyncTime, syncType, syncExpression);
     }
@@ -152,7 +157,7 @@ public final class LastSyncMetadata implements Model {
     }
 
     /**
-     * Returns the sync expression being used in the last sync
+     * Returns the sync expression being used in the last sync.
      * @return A serialized sync expression
      */
     public QueryPredicate getSyncExpression() {

@@ -50,7 +50,7 @@ final class SyncTimeRegistry {
                     LastSyncMetadata syncMetadata = extractSingleResult(modelClassName, results);
                     SyncTime lastSyncTime = SyncTime.from(syncMetadata.getLastSyncTime());
                     QueryPredicate lastSyncExpression = syncMetadata.getSyncExpression();
-                    if(!ObjectsCompat.equals(lastSyncExpression, syncExpression)) {
+                    if (!ObjectsCompat.equals(lastSyncExpression, syncExpression)) {
                         lastSyncTime = SyncTime.never();
                     }
                     emitter.onSuccess(lastSyncTime);
@@ -61,7 +61,9 @@ final class SyncTimeRegistry {
         });
     }
 
-    Completable saveLastDeltaSync(@NonNull String modelClassName, @Nullable SyncTime syncTime, @Nullable QueryPredicate syncExpression) {
+    Completable saveLastDeltaSync(@NonNull String modelClassName,
+                                  @Nullable SyncTime syncTime,
+                                  @Nullable QueryPredicate syncExpression) {
         LastSyncMetadata metadata = syncTime != null && syncTime.exists() ?
             LastSyncMetadata.deltaSyncedAt(modelClassName, syncTime.toLong(), syncExpression) :
             LastSyncMetadata.neverSynced(modelClassName);
@@ -77,7 +79,9 @@ final class SyncTimeRegistry {
         );
     }
 
-    Completable saveLastBaseSync(@NonNull String modelClassName, @Nullable SyncTime syncTime, @Nullable QueryPredicate syncExpression) {
+    Completable saveLastBaseSync(@NonNull String modelClassName,
+                                 @Nullable SyncTime syncTime,
+                                 @Nullable QueryPredicate syncExpression) {
         LastSyncMetadata metadata = syncTime != null && syncTime.exists() ?
             LastSyncMetadata.baseSyncedAt(modelClassName, syncTime.toLong(), syncExpression) :
             LastSyncMetadata.neverSynced(modelClassName);
