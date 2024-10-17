@@ -235,7 +235,7 @@ class MutationProcessorTest {
         val schema = schemaRegistry.getModelSchemaForModelClass(
             BlogOwner::class.java
         )
-        val lastSyncMetadata = LastSyncMetadata.baseSyncedAt<Model>(schema.name, 1000L)
+        val lastSyncMetadata = LastSyncMetadata.baseSyncedAt<Model>(schema.name, 1000L, null)
         synchronousStorageAdapter.save(model, metadata, lastSyncMetadata)
 
         // Enqueue an update in the mutation outbox
@@ -473,7 +473,8 @@ class MutationProcessorTest {
         )
         val lastSyncMetadata = LastSyncMetadata.baseSyncedAt<Model>(
             schema.name,
-            1000L
+            1000L,
+            null
         )
         synchronousStorageAdapter.save(model, metadata, lastSyncMetadata)
 
