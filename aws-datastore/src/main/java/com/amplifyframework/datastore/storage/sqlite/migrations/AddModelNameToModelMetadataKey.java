@@ -30,7 +30,7 @@ import java.util.Set;
 /**
  * Add model name to ModelMetadata key.
  */
-public final class AddModelNameToModelMetadataKey implements ModelMigration {
+final class AddModelNameToModelMetadataKey implements ModelMigration {
     private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
     private final SQLiteDatabase database;
     private final ModelProvider modelProvider;
@@ -40,7 +40,7 @@ public final class AddModelNameToModelMetadataKey implements ModelMigration {
      * @param database Connection to the SQLite database.
      * @param modelProvider The model provider.
      */
-    public AddModelNameToModelMetadataKey(SQLiteDatabase database, ModelProvider modelProvider) {
+    AddModelNameToModelMetadataKey(SQLiteDatabase database, ModelProvider modelProvider) {
         this.database = database;
         this.modelProvider = modelProvider;
     }

@@ -26,7 +26,7 @@ import com.amplifyframework.util.Wrap;
 /**
  * Add SyncExpression (TEXT) column to LastSyncMetadata table.
  */
-public final class AddSyncExpressionToLastSyncMetadata implements ModelMigration {
+final class AddSyncExpressionToLastSyncMetadata implements ModelMigration {
     private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
     private final SQLiteDatabase database;
     private final String newSyncExpColumnName = "syncExpression";
@@ -35,7 +35,7 @@ public final class AddSyncExpressionToLastSyncMetadata implements ModelMigration
      * Constructor for the migration class.
      * @param database Connection to the SQLite database.
      */
-    public AddSyncExpressionToLastSyncMetadata(SQLiteDatabase database) {
+    AddSyncExpressionToLastSyncMetadata(SQLiteDatabase database) {
         this.database = database;
     }
 
