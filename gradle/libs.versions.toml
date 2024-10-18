@@ -17,9 +17,9 @@ androidx-test-orchestrator = "1.4.2"
 androidx-test-runner = "1.3.0"
 androidx-workmanager = "2.7.1"
 apollo = "4.0.0"
-aws-kotlin = "1.2.8" # ensure proper aws-smithy version also set
+aws-kotlin = "1.3.48" # ensure proper aws-smithy version also set
 aws-sdk = "2.62.2"
-aws-smithy = "1.2.2" # ensure proper aws-kotlin version also set
+aws-smithy = "1.3.14" # ensure proper aws-kotlin version also set
 binary-compatibility-validator = "0.14.0"
 coroutines = "1.7.3"
 desugar = "1.2.0"
@@ -81,6 +81,7 @@ aws-polly = { module = "aws.sdk.kotlin:polly", version.ref = "aws-kotlin" }
 aws-rekognition = { module = "aws.sdk.kotlin:rekognition", version.ref = "aws-kotlin" }
 aws-s3 = { module = "aws.sdk.kotlin:s3", version.ref = "aws-kotlin" }
 aws-signing = { module = "aws.smithy.kotlin:aws-signing-default", version.ref = "aws-smithy" }
+aws-smithy-okhttp4 = { module = "aws.smithy.kotlin:http-client-engine-okhttp4", version.ref = "aws-smithy" }
 aws-textract = { module = "aws.sdk.kotlin:textract", version.ref = "aws-kotlin" }
 aws-translate = { module = "aws.sdk.kotlin:translate", version.ref = "aws-kotlin" }
 firebasemessaging = { module = "com.google.firebase:firebase-messaging-ktx", version.ref = "fcm" }

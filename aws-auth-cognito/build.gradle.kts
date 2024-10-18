@@ -41,6 +41,7 @@ dependencies {
     implementation(libs.aws.http)
     implementation(libs.aws.cognitoidentity)
     implementation(libs.aws.cognitoidentityprovider)
+    compileOnly(libs.aws.smithy.okhttp4)
 
     testImplementation(project(":testutils"))
     testImplementation(project(":core"))

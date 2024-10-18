@@ -74,7 +74,8 @@ import org.json.JSONObject
 /**
  * A Cognito implementation of the Auth Plugin.
  */
-class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
+class AWSCognitoAuthPlugin @JvmOverloads constructor(private val options: Options = Options.builder().build()) :
+    AuthPlugin<AWSCognitoAuthService>() {
     companion object {
         const val AWS_COGNITO_AUTH_LOG_NAMESPACE = "amplify:aws-cognito-auth:%s"
         private const val AWS_COGNITO_AUTH_PLUGIN_KEY = "awsCognitoAuthPlugin"
@@ -102,9 +103,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     // older Authenticator versions we translate the config - whether it comes from Gen1 or Gen2 - back into Gen1 JSON
     @InternalAmplifyApi
     @Deprecated("Use getAuthConfiguration instead", replaceWith = ReplaceWith("getAuthConfiguration()"))
-    fun getPluginConfiguration(): JSONObject {
-        return getAuthConfiguration().toGen1Json()
-    }
+    fun getPluginConfiguration(): JSONObject = getAuthConfiguration().toGen1Json()
 
     @InternalAmplifyApi
     fun getAuthConfiguration() = realPlugin.configuration
@@ -114,12 +113,10 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         realPlugin.addToUserAgent(type, value)
     }
 
-    private fun Exception.toAuthException(): AuthException {
-        return if (this is AuthException) {
-            this
-        } else {
-            UnknownException(cause = this)
-        }
+    private fun Exception.toAuthException(): AuthException = if (this is AuthException) {
+        this
+    } else {
+        UnknownException(cause = this)
     }
 
     override fun initialize(context: Context) {
@@ -157,7 +154,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         val authEnvironment = AuthEnvironment(
             context,
             configuration,
-            AWSCognitoAuthService.fromConfiguration(configuration),
+            AWSCognitoAuthService.fromConfiguration(configuration, options),
             credentialStoreClient,
             configuration.userPool?.let { UserContextDataProvider(context, it.poolId!!, it.appClient!!) },
             HostedUIClient.create(context, configuration.oauth, logger),
@@ -480,11 +477,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         )
     }
 
-    override fun forgetDevice(
-        device: AuthDevice,
-        onSuccess: Action,
-        onError: Consumer<AuthException>
-    ) {
+    override fun forgetDevice(device: AuthDevice, onSuccess: Action, onError: Consumer<AuthException>) {
         queueChannel.trySend(
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
@@ -497,10 +490,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         )
     }
 
-    override fun fetchDevices(
-        onSuccess: Consumer<List<AuthDevice>>,
-        onError: Consumer<AuthException>
-    ) {
+    override fun fetchDevices(onSuccess: Consumer<List<AuthDevice>>, onError: Consumer<AuthException>) {
         queueChannel.trySend(
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
@@ -605,10 +595,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         )
     }
 
-    override fun fetchUserAttributes(
-        onSuccess: Consumer<List<AuthUserAttribute>>,
-        onError: Consumer<AuthException>
-    ) {
+    override fun fetchUserAttributes(onSuccess: Consumer<List<AuthUserAttribute>>, onError: Consumer<AuthException>) {
         queueChannel.trySend(
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
@@ -744,10 +731,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         )
     }
 
-    override fun getCurrentUser(
-        onSuccess: Consumer<AuthUser>,
-        onError: Consumer<AuthException>
-    ) {
+    override fun getCurrentUser(onSuccess: Consumer<AuthUser>, onError: Consumer<AuthException>) {
         queueChannel.trySend(
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
@@ -894,10 +878,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
      * @param onSuccess Success callback
      * @param onError Error callback
      */
-    fun clearFederationToIdentityPool(
-        onSuccess: Action,
-        onError: Consumer<AuthException>
-    ) {
+    fun clearFederationToIdentityPool(onSuccess: Action, onError: Consumer<AuthException>) {
         queueChannel.trySend(
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
@@ -910,10 +891,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         )
     }
 
-    fun fetchMFAPreference(
-        onSuccess: Consumer<UserMFAPreference>,
-        onError: Consumer<AuthException>
-    ) {
+    fun fetchMFAPreference(onSuccess: Consumer<UserMFAPreference>, onError: Consumer<AuthException>) {
         queueChannel.trySend(
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
@@ -942,5 +920,51 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
                 }
             }
         )
+    }
+
+    /**
+     * Runtime Options that can be supplied to the Auth plugin
+     * @param useOkHttp4 Use the OkHttp4Engine when constructing AWS clients. Please see the documentation for details
+     *  on additional dependencies needed to use this option.
+     */
+    data class Options internal constructor(val useOkHttp4: Boolean) {
+        companion object {
+            /**
+             * Return a builder for this class.
+             * @return A Builder for the options.
+             */
+            @JvmStatic
+            fun builder() = Builder()
+
+            @JvmSynthetic
+            operator fun invoke(func: Builder.() -> Unit) = builder().apply(func).build()
+        }
+
+        /**
+         * The Builder for the Options class
+         */
+        class Builder {
+            /**
+             * Indicate whether or not to use an OkHttp4Engine when constructing AWS clients. Please see the
+             * documentation for details on additional dependencies needed to use this option. Defaults to false.
+             */
+            var useOkHttp4: Boolean = false
+                @JvmSynthetic set
+
+            /**
+             * Indicate whether or not to use an OkHttp4Engine when constructing AWS clients. Please see the
+             * documentation for details on additional dependencies needed to use this option. Defaults to false.
+             * @param useOkHttp4 Set to true to use OkHttp4 instead of OkHttp5
+             */
+            fun useOkHttp4(useOkHttp4: Boolean) = apply { this.useOkHttp4 = useOkHttp4 }
+
+            /**
+             * Build the Options object
+             * @return The Options object
+             */
+            fun build() = Options(
+                useOkHttp4 = useOkHttp4
+            )
+        }
     }
 }

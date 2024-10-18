@@ -21,6 +21,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderCl
 import aws.sdk.kotlin.services.cognitoidentityprovider.endpoints.CognitoIdentityProviderEndpointProvider
 import aws.smithy.kotlin.runtime.client.RequestInterceptorContext
 import aws.smithy.kotlin.runtime.client.endpoints.Endpoint
+import aws.smithy.kotlin.runtime.http.engine.okhttp4.OkHttp4Engine
 import aws.smithy.kotlin.runtime.http.interceptors.HttpInterceptor
 
 interface AWSCognitoAuthService {
@@ -29,10 +30,17 @@ interface AWSCognitoAuthService {
     val customUserAgentPairs: MutableMap<String, String>
 
     companion object {
-        internal fun fromConfiguration(configuration: AuthConfiguration): AWSCognitoAuthService {
+        internal fun fromConfiguration(
+            configuration: AuthConfiguration,
+            options: AWSCognitoAuthPlugin.Options
+        ): AWSCognitoAuthService {
             val customPairs: MutableMap<String, String> = mutableMapOf()
             val cognitoIdentityProviderClient = configuration.userPool?.let { it ->
                 CognitoIdentityProviderClient {
+                    if (options.useOkHttp4) {
+                        this.httpClient = OkHttp4Engine()
+                    }
+
                     this.region = it.region
                     this.endpointProvider = it.endpoint?.let { endpoint ->
                         CognitoIdentityProviderEndpointProvider { Endpoint(endpoint) }
@@ -50,6 +58,9 @@ interface AWSCognitoAuthService {
 
             val cognitoIdentityClient = configuration.identityPool?.let { it ->
                 CognitoIdentityClient {
+                    if (options.useOkHttp4) {
+                        this.httpClient = OkHttp4Engine()
+                    }
                     this.region = it.region
                     this.interceptors += object : HttpInterceptor {
                         override suspend fun modifyBeforeSerialization(context: RequestInterceptorContext<Any>): Any {
