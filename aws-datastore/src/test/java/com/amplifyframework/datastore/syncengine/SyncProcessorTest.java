@@ -175,14 +175,16 @@ public final class SyncProcessorTest {
         final VersionRepository versionRepository = new VersionRepository(sqliteStorageAdapter);
         final Merger merger = new Merger(mutationOutbox, versionRepository, sqliteStorageAdapter);
 
-        DataStoreConfigurationProvider dataStoreConfigurationProvider = () -> DataStoreConfiguration
-                .builder()
-                .syncInterval(BASE_SYNC_INTERVAL_MINUTES, TimeUnit.MINUTES)
-                .syncMaxRecords(syncMaxRecords)
-                .syncPageSize(1_000)
-                .errorHandler(this.errorHandler)
-                .syncExpressions(configuredSyncExpressions)
-                .build();
+        DataStoreConfigurationProvider dataStoreConfigurationProvider = () -> {
+            DataStoreConfiguration.Builder builder = DataStoreConfiguration
+                    .builder()
+                    .syncInterval(BASE_SYNC_INTERVAL_MINUTES, TimeUnit.MINUTES)
+                    .syncMaxRecords(syncMaxRecords)
+                    .syncPageSize(1_000)
+                    .errorHandler(this.errorHandler);
+            configuredSyncExpressions.forEach(builder::syncExpression);
+            return builder.build();
+        };
 
         QueryPredicateProvider queryPredicateProvider = new QueryPredicateProvider(dataStoreConfigurationProvider);
         queryPredicateProvider.resolvePredicates();
