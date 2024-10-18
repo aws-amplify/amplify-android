@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.annotations.InternalApiWarning;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
@@ -61,6 +62,7 @@ public final class LastSyncMetadata implements Model {
      * @param <T> t type of Model.
      * @return {@link LastSyncMetadata} for the model class
      */
+    @InternalApiWarning
     public static <T extends Model> LastSyncMetadata baseSyncedAt(@NonNull String modelClassName,
                                                                   @Nullable long lastSyncTime,
                                                                   @Nullable QueryPredicate syncExpression) {
@@ -160,7 +162,7 @@ public final class LastSyncMetadata implements Model {
      * Returns the sync expression being used in the last sync.
      * @return A serialized sync expression
      */
-    public QueryPredicate getSyncExpression() {
+    QueryPredicate getSyncExpression() {
         return this.syncExpression;
     }
 
