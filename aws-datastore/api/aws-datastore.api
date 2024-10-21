@@ -482,15 +482,6 @@ public final class com/amplifyframework/datastore/storage/sqlite/adapter/SQLiteT
 	public fun type (Lcom/amplifyframework/core/model/Model$Type;)Lcom/amplifyframework/datastore/storage/sqlite/adapter/SQLiteTable$Builder;
 }
 
-public final class com/amplifyframework/datastore/storage/sqlite/migrations/AddModelNameToModelMetadataKey : com/amplifyframework/datastore/storage/sqlite/migrations/ModelMigration {
-	public fun <init> (Landroid/database/sqlite/SQLiteDatabase;Lcom/amplifyframework/core/model/ModelProvider;)V
-	public fun apply ()V
-}
-
-public abstract interface class com/amplifyframework/datastore/storage/sqlite/migrations/ModelMigration {
-	public abstract fun apply ()V
-}
-
 public class com/amplifyframework/datastore/storage/sqlite/migrations/ModelMigrations {
 	public fun <init> (Landroid/database/sqlite/SQLiteDatabase;Lcom/amplifyframework/core/model/ModelProvider;)V
 	public fun apply ()V
@@ -502,7 +493,6 @@ public abstract interface class com/amplifyframework/datastore/syncengine/Connec
 }
 
 public final class com/amplifyframework/datastore/syncengine/LastSyncMetadata : com/amplifyframework/core/model/Model {
-	public static fun baseSyncedAt (Ljava/lang/String;J)Lcom/amplifyframework/datastore/syncengine/LastSyncMetadata;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getId ()Ljava/lang/String;
 	public fun getLastSyncTime ()Ljava/lang/Long;
