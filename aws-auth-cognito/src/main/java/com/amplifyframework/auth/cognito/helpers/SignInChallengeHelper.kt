@@ -252,7 +252,7 @@ internal object SignInChallengeHelper {
                 val authSignInResult = AuthSignInResult(
                     false,
                     AuthNextSignInStep(
-                        AuthSignInStep.CONFIRM_SIGN_IN_WITH_EMAIL_MFA_CODE,
+                        AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP,
                         mapOf(),
                         deliveryDetails,
                         null,

@@ -115,7 +115,7 @@ class AWSCognitoAuthPluginEmailMFATests {
         signInResult = synchronousAuth.confirmSignIn(email)
 
         // Validation 3: Validate that the next step is to confirm the emailed MFA code
-        assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_EMAIL_MFA_CODE, signInResult.nextStep.signInStep)
+        assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP, signInResult.nextStep.signInStep)
 
         // Wait until the MFA code has been received
         abortableLatch?.await(20, TimeUnit.SECONDS)
@@ -137,7 +137,7 @@ class AWSCognitoAuthPluginEmailMFATests {
         var signInResult = synchronousAuth.signIn(userName, password)
 
         // Validation 1: Validate that the next step is to confirm the emailed MFA code
-        assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_EMAIL_MFA_CODE, signInResult.nextStep.signInStep)
+        assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP, signInResult.nextStep.signInStep)
 
         // Wait until the MFA code has been received
         abortableLatch?.await(20, TimeUnit.SECONDS)
@@ -159,7 +159,7 @@ class AWSCognitoAuthPluginEmailMFATests {
         var signInResult = synchronousAuth.signIn(userName, password)
 
         // Validation 1: Validate that the next step is to confirm the emailed MFA code
-        assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_EMAIL_MFA_CODE, signInResult.nextStep.signInStep)
+        assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP, signInResult.nextStep.signInStep)
 
         // Wait until the MFA code has been received
         abortableLatch?.await(20, TimeUnit.SECONDS)

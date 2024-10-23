@@ -94,11 +94,12 @@ public enum AuthSignInStep {
     CONFIRM_SIGN_IN_WITH_TOTP_CODE,
 
     /**
-     * MFA is enabled on this account and requires the user to confirm with the code received by email.
+     * MFA is enabled on this account and requires the user to confirm with the code received by
+     * email, sms, etc.
      * Call {@link com.amplifyframework.auth.AuthCategoryBehavior#confirmSignIn(String, Consumer, Consumer)}
-     * with email code.
+     * with the OTP code.
      */
-    CONFIRM_SIGN_IN_WITH_EMAIL_MFA_CODE,
+    CONFIRM_SIGN_IN_WITH_OTP,
 
     /**
      * No further steps are needed in the sign in flow.
