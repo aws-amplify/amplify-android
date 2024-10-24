@@ -110,6 +110,7 @@ import static org.mockito.Mockito.when;
 public final class SyncProcessorTest {
     private static final long OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
     private static final long BASE_SYNC_INTERVAL_MINUTES = TimeUnit.DAYS.toMinutes(1);
+    private static final int SYNC_MAX_RECORDS = 10_000;
     private AppSync appSync;
     private ModelProvider modelProvider;
     private SynchronousStorageAdapter storageAdapter;
@@ -138,10 +139,6 @@ public final class SyncProcessorTest {
         this.appSync = mock(AppSync.class);
         this.errorHandler = mock(DataStoreErrorHandler.class);
         this.requestRetry = new RetryHandler();
-
-        initializeConfiguredSyncExpressions();
-
-        initSyncProcessor(10_000);
     }
 
     /**
@@ -160,6 +157,7 @@ public final class SyncProcessorTest {
     }
 
     private void initSyncProcessor(int syncMaxRecords) throws AmplifyException {
+        initializeConfiguredSyncExpressions();
         SQLiteStorageAdapter sqliteStorageAdapter = SQLiteStorageAdapter.forModels(
                 SchemaRegistry.instance(),
                 AmplifyModelProvider.getInstance()
@@ -211,7 +209,7 @@ public final class SyncProcessorTest {
      */
     @Test
     public void dataStoreHubEventsTriggered() throws AmplifyException, InterruptedException {
-        initSyncProcessor(10_000);
+        initSyncProcessor(SYNC_MAX_RECORDS);
         // Arrange - BEGIN
         int expectedModelCount = Arrays.asList(Post.class, BlogOwner.class).size();
         // Collects one syncQueriesStarted event.
@@ -297,6 +295,7 @@ public final class SyncProcessorTest {
     @SuppressWarnings("unchecked") // Varied types in Observable.fromArray(...).
     @Test
     public void localStorageAdapterIsHydratedFromRemoteModelState() throws AmplifyException, InterruptedException {
+        initSyncProcessor(SYNC_MAX_RECORDS);
         // Arrange: drum post is already in the adapter before hydration.
         storageAdapter.save(DRUM_POST.getModel());
 
@@ -425,6 +424,7 @@ public final class SyncProcessorTest {
      */
     @Test
     public void hydrationContinuesEvenIfOneItemFailsToSync() throws AmplifyException, InterruptedException {
+        initSyncProcessor(SYNC_MAX_RECORDS);
         // The local store does NOT have the drum post to start (or, for that matter, any items.)
         // inMemoryStorageAdapter.items().add(DRUM_POST.getModel());
 
@@ -527,6 +527,7 @@ public final class SyncProcessorTest {
      */
     @Test
     public void baseSyncRequestedIfLastSyncBeyondIntervalAndSameSyncExpressionUsed() throws AmplifyException {
+        initSyncProcessor(SYNC_MAX_RECORDS);
         // Arrange: add LastSyncMetadata for the types, indicating that they
         // were sync'd too long ago. That is, longer ago than the base sync interval.
         long longAgoTimeMs = Time.now() - (TimeUnit.MINUTES.toMillis(BASE_SYNC_INTERVAL_MINUTES) * 2);
@@ -576,6 +577,7 @@ public final class SyncProcessorTest {
      */
     @Test
     public void deltaSyncRequestedIfLastSyncIsRecentAndSameSyncExpressionUsed() throws AmplifyException {
+        initSyncProcessor(SYNC_MAX_RECORDS);
         // Arrange: add LastSyncMetadata for the types, indicating that they
         // were sync'd very recently (within the interval.)
         long recentTimeMs = Time.now();
@@ -624,6 +626,7 @@ public final class SyncProcessorTest {
      */
     @Test
     public void baseSyncRequestedIfLastSyncBeyondIntervalAndDifferentSyncExpressionUsed() throws AmplifyException {
+        initSyncProcessor(SYNC_MAX_RECORDS);
         // Arrange: add LastSyncMetadata for the types, indicating that they
         // were sync'd too long ago. That is, longer ago than the base sync interval
         long longAgoTimeMs = Time.now() - (TimeUnit.MINUTES.toMillis(BASE_SYNC_INTERVAL_MINUTES) * 2);
@@ -671,6 +674,7 @@ public final class SyncProcessorTest {
      */
     @Test
     public void baseSyncRequestedIfLastSyncIsRecentAndDifferentSyncExpressionUsed() throws AmplifyException {
+        initSyncProcessor(SYNC_MAX_RECORDS);
         // Arrange: add LastSyncMetadata for the types, indicating that they
         // were sync'd very recently (within the interval.)
         long recentTimeMs = Time.now();
@@ -715,6 +719,7 @@ public final class SyncProcessorTest {
      */
     @Test
     public void syncExpressionsAppliedOnSyncRequest() throws AmplifyException, InterruptedException {
+        initSyncProcessor(SYNC_MAX_RECORDS);
         // Arrange some responses from AppSync
         AppSyncMocking.sync(appSync)
                 .mockSuccessResponse(Post.class, DELETED_DRUM_POST)
@@ -738,7 +743,8 @@ public final class SyncProcessorTest {
      * @throws DataStoreException On failure to build GraphQLRequest for sync query.
      */
     @Test
-    public void userProvidedErrorCallbackInvokedOnFailure() throws DataStoreException {
+    public void userProvidedErrorCallbackInvokedOnFailure() throws AmplifyException {
+        initSyncProcessor(SYNC_MAX_RECORDS);
         // Arrange: mock failure when invoking hydrate on the mock object.
         AppSyncMocking.sync(appSync)
             .mockFailure(new DataStoreException
@@ -761,7 +767,8 @@ public final class SyncProcessorTest {
      * @throws DataStoreException On failure to build GraphQLRequest for sync query.
      */
     @Test
-    public void userProvidedErrorCallbackInvokedOnNonApplicableData() throws DataStoreException {
+    public void userProvidedErrorCallbackInvokedOnNonApplicableData() throws AmplifyException {
+        initSyncProcessor(SYNC_MAX_RECORDS);
         // Arrange: mock data + errors when invoking hydrate on the mock object. Each response is a page in a paginated
         // syncQuery
         AppSyncMocking.sync(appSync)
@@ -812,8 +819,7 @@ public final class SyncProcessorTest {
         when(requestRetry.retry(any(), any())).thenReturn(Single.error(
                 new DataStoreException("PaginatedResult<ModelWithMetadata<BlogOwner>>", "")));
 
-        tearDown(); // release the LocalStorageAdapter resources created in common setup
-        initSyncProcessor(10_000);
+        initSyncProcessor(SYNC_MAX_RECORDS);
         AppSyncMocking.sync(appSync)
                 .mockFailure(new DataStoreException("Something timed out during sync.", ""));
 
@@ -839,8 +845,7 @@ public final class SyncProcessorTest {
         when(requestRetry.retry(any(), any())).thenReturn(Single.error(
                 new DataStoreException("PaginatedResult<ModelWithMetadata<BlogOwner>>", "")));
 
-        tearDown(); // release the LocalStorageAdapter resources created in common setup
-        initSyncProcessor(10_000);
+        initSyncProcessor(SYNC_MAX_RECORDS);
         AppSyncMocking.sync(appSync)
                 .mockFailure(new DataStoreException("Something timed out during sync.", ""));
 
@@ -862,8 +867,7 @@ public final class SyncProcessorTest {
     public void retryHandlesHydrateSubscriptionDispose() throws AmplifyException {
         // Arrange: mock failure when invoking hydrate
         requestRetry = spy(RetryHandler.class);
-        tearDown(); // release the LocalStorageAdapter resources created in common setup
-        initSyncProcessor(10_000);
+        initSyncProcessor(SYNC_MAX_RECORDS);
         AppSyncMocking.sync(appSync)
                 .mockFailure(new DataStoreException("Something timed out during sync.", ""));
 
@@ -922,7 +926,6 @@ public final class SyncProcessorTest {
     }
 
     private void syncAndExpect(int numPages, int maxSyncRecords) throws AmplifyException, InterruptedException {
-        tearDown(); // release the LocalStorageAdapter resources created in common setup
         initSyncProcessor(maxSyncRecords);
         // Arrange a subscription to the storage adapter. We're going to watch for changes.
         // We expect to see content here as a result of the SyncProcessor applying updates.
