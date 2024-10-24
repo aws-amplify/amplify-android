@@ -811,6 +811,7 @@ public final class SyncProcessorTest {
         when(requestRetry.retry(any(), any())).thenReturn(Single.error(
                 new DataStoreException("PaginatedResult<ModelWithMetadata<BlogOwner>>", "")));
 
+        tearDown(); // release the LocalStorageAdapter resources created in common setup
         initSyncProcessor(10_000);
         AppSyncMocking.sync(appSync)
                 .mockFailure(new DataStoreException("Something timed out during sync.", ""));
@@ -837,6 +838,7 @@ public final class SyncProcessorTest {
         when(requestRetry.retry(any(), any())).thenReturn(Single.error(
                 new DataStoreException("PaginatedResult<ModelWithMetadata<BlogOwner>>", "")));
 
+        tearDown(); // release the LocalStorageAdapter resources created in common setup
         initSyncProcessor(10_000);
         AppSyncMocking.sync(appSync)
                 .mockFailure(new DataStoreException("Something timed out during sync.", ""));
@@ -859,6 +861,7 @@ public final class SyncProcessorTest {
     public void retryHandlesHydrateSubscriptionDispose() throws AmplifyException {
         // Arrange: mock failure when invoking hydrate
         requestRetry = spy(RetryHandler.class);
+        tearDown(); // release the LocalStorageAdapter resources created in common setup
         initSyncProcessor(10_000);
         AppSyncMocking.sync(appSync)
                 .mockFailure(new DataStoreException("Something timed out during sync.", ""));
@@ -918,6 +921,7 @@ public final class SyncProcessorTest {
     }
 
     private void syncAndExpect(int numPages, int maxSyncRecords) throws AmplifyException, InterruptedException {
+        tearDown(); // release the LocalStorageAdapter resources created in common setup
         initSyncProcessor(maxSyncRecords);
         // Arrange a subscription to the storage adapter. We're going to watch for changes.
         // We expect to see content here as a result of the SyncProcessor applying updates.
