@@ -204,7 +204,7 @@ public final class SyncProcessorTest {
      * During a base sync, there are a series of events that should be emitted.
      * This test verifies that these events are published via Amplify Hub depending
      * on actions takes for each available model.
-     * @throws DataStoreException Not expected.
+     * @throws AmplifyException Not expected.
      * @throws InterruptedException Not expected.
      */
     @Test
@@ -740,7 +740,7 @@ public final class SyncProcessorTest {
 
     /**
      * Verify that the user-provided onError callback (if specified) is invoked if initial sync fails.
-     * @throws DataStoreException On failure to build GraphQLRequest for sync query.
+     * @throws AmplifyException On failure to initialize SyncProcessor
      */
     @Test
     public void userProvidedErrorCallbackInvokedOnFailure() throws AmplifyException {
@@ -764,7 +764,7 @@ public final class SyncProcessorTest {
     /**
      * Verify that the user-provided onError callback is invoked for every error if sync contains data and errors.
      * Verify that Hub events are emitted once per page with non-applicable data
-     * @throws DataStoreException On failure to build GraphQLRequest for sync query.
+     * @throws AmplifyException On failure to initialize SyncProcessor
      */
     @Test
     public void userProvidedErrorCallbackInvokedOnNonApplicableData() throws AmplifyException {
