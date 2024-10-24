@@ -59,11 +59,25 @@ public enum AuthSignInStep {
     CONFIRM_SIGN_UP,
 
     /**
+     * User selects MFA type to use.
+     * Call {@link com.amplifyframework.auth.AuthCategoryBehavior#confirmSignIn(String, Consumer, Consumer)}
+     * with MFAType to select.
+     */
+    CONTINUE_SIGN_IN_WITH_MFA_SETUP_SELECTION,
+
+    /**
      * Admin requires user to setup TOTP.
      * Call {@link com.amplifyframework.auth.AuthCategoryBehavior#confirmSignIn(String, Consumer, Consumer)}
      * with TOTP code to verify.
      */
     CONTINUE_SIGN_IN_WITH_TOTP_SETUP,
+
+    /**
+     * Admin requires user to setup email MFA.
+     * Call {@link com.amplifyframework.auth.AuthCategoryBehavior#confirmSignIn(String, Consumer, Consumer)}
+     * with email code to verify.
+     */
+    CONTINUE_SIGN_IN_WITH_EMAIL_MFA_SETUP,
 
     /**
      * The user account is required to set MFA selection.
@@ -78,6 +92,14 @@ public enum AuthSignInStep {
      * with TOTP Code.
      */
     CONFIRM_SIGN_IN_WITH_TOTP_CODE,
+
+    /**
+     * MFA is enabled on this account and requires the user to confirm with the code received by
+     * email, sms, etc.
+     * Call {@link com.amplifyframework.auth.AuthCategoryBehavior#confirmSignIn(String, Consumer, Consumer)}
+     * with the OTP code.
+     */
+    CONFIRM_SIGN_IN_WITH_OTP,
 
     /**
      * No further steps are needed in the sign in flow.
