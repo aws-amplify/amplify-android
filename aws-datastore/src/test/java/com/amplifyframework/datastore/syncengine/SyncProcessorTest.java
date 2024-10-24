@@ -210,7 +210,8 @@ public final class SyncProcessorTest {
      * @throws InterruptedException Not expected.
      */
     @Test
-    public void dataStoreHubEventsTriggered() throws DataStoreException, InterruptedException {
+    public void dataStoreHubEventsTriggered() throws AmplifyException, InterruptedException {
+        initSyncProcessor(10_000);
         // Arrange - BEGIN
         int expectedModelCount = Arrays.asList(Post.class, BlogOwner.class).size();
         // Collects one syncQueriesStarted event.
