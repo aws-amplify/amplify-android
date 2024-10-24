@@ -26,6 +26,8 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.SchemaRegistry;
+import com.amplifyframework.core.model.query.predicate.QueryField;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
@@ -33,6 +35,7 @@ import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.DataStoreErrorHandler;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.DataStoreSyncExpression;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncMocking;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
@@ -63,11 +66,14 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.robolectric.RobolectricTestRunner;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
@@ -104,6 +110,7 @@ import static org.mockito.Mockito.when;
 public final class SyncProcessorTest {
     private static final long OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
     private static final long BASE_SYNC_INTERVAL_MINUTES = TimeUnit.DAYS.toMinutes(1);
+    private static final int SYNC_MAX_RECORDS = 10_000;
     private AppSync appSync;
     private ModelProvider modelProvider;
     private SynchronousStorageAdapter storageAdapter;
@@ -113,6 +120,8 @@ public final class SyncProcessorTest {
     private int modelCount;
     private RetryHandler requestRetry;
     private boolean isSyncRetryEnabled = true;
+
+    private Map<String, DataStoreSyncExpression> configuredSyncExpressions;
 
 
     /**
@@ -130,8 +139,6 @@ public final class SyncProcessorTest {
         this.appSync = mock(AppSync.class);
         this.errorHandler = mock(DataStoreErrorHandler.class);
         this.requestRetry = new RetryHandler();
-
-        initSyncProcessor(10_000);
     }
 
     /**
@@ -143,7 +150,14 @@ public final class SyncProcessorTest {
         storageAdapter.terminate();
     }
 
+    private void initializeConfiguredSyncExpressions() {
+        configuredSyncExpressions = new HashMap<>();
+        configuredSyncExpressions.put(BlogOwner.class.getSimpleName(), () -> BlogOwner.NAME.beginsWith("J"));
+        configuredSyncExpressions.put(Author.class.getSimpleName(), QueryPredicates::none);
+    }
+
     private void initSyncProcessor(int syncMaxRecords) throws AmplifyException {
+        initializeConfiguredSyncExpressions();
         SQLiteStorageAdapter sqliteStorageAdapter = SQLiteStorageAdapter.forModels(
                 SchemaRegistry.instance(),
                 AmplifyModelProvider.getInstance()
@@ -159,15 +173,16 @@ public final class SyncProcessorTest {
         final VersionRepository versionRepository = new VersionRepository(sqliteStorageAdapter);
         final Merger merger = new Merger(mutationOutbox, versionRepository, sqliteStorageAdapter);
 
-        DataStoreConfigurationProvider dataStoreConfigurationProvider = () -> DataStoreConfiguration
-                .builder()
-                .syncInterval(BASE_SYNC_INTERVAL_MINUTES, TimeUnit.MINUTES)
-                .syncMaxRecords(syncMaxRecords)
-                .syncPageSize(1_000)
-                .errorHandler(this.errorHandler)
-                .syncExpression(BlogOwner.class, () -> BlogOwner.NAME.beginsWith("J"))
-                .syncExpression(Author.class, QueryPredicates::none)
-                .build();
+        DataStoreConfigurationProvider dataStoreConfigurationProvider = () -> {
+            DataStoreConfiguration.Builder builder = DataStoreConfiguration
+                    .builder()
+                    .syncInterval(BASE_SYNC_INTERVAL_MINUTES, TimeUnit.MINUTES)
+                    .syncMaxRecords(syncMaxRecords)
+                    .syncPageSize(1_000)
+                    .errorHandler(this.errorHandler);
+            configuredSyncExpressions.forEach(builder::syncExpression);
+            return builder.build();
+        };
 
         QueryPredicateProvider queryPredicateProvider = new QueryPredicateProvider(dataStoreConfigurationProvider);
         queryPredicateProvider.resolvePredicates();
@@ -189,11 +204,12 @@ public final class SyncProcessorTest {
      * During a base sync, there are a series of events that should be emitted.
      * This test verifies that these events are published via Amplify Hub depending
      * on actions takes for each available model.
-     * @throws DataStoreException Not expected.
+     * @throws AmplifyException Not expected.
      * @throws InterruptedException Not expected.
      */
     @Test
-    public void dataStoreHubEventsTriggered() throws DataStoreException, InterruptedException {
+    public void dataStoreHubEventsTriggered() throws AmplifyException, InterruptedException {
+        initSyncProcessor(SYNC_MAX_RECORDS);
         // Arrange - BEGIN
         int expectedModelCount = Arrays.asList(Post.class, BlogOwner.class).size();
         // Collects one syncQueriesStarted event.
@@ -279,6 +295,7 @@ public final class SyncProcessorTest {
     @SuppressWarnings("unchecked") // Varied types in Observable.fromArray(...).
     @Test
     public void localStorageAdapterIsHydratedFromRemoteModelState() throws AmplifyException, InterruptedException {
+        initSyncProcessor(SYNC_MAX_RECORDS);
         // Arrange: drum post is already in the adapter before hydration.
         storageAdapter.save(DRUM_POST.getModel());
 
@@ -407,6 +424,7 @@ public final class SyncProcessorTest {
      */
     @Test
     public void hydrationContinuesEvenIfOneItemFailsToSync() throws AmplifyException, InterruptedException {
+        initSyncProcessor(SYNC_MAX_RECORDS);
         // The local store does NOT have the drum post to start (or, for that matter, any items.)
         // inMemoryStorageAdapter.items().add(DRUM_POST.getModel());
 
@@ -501,18 +519,25 @@ public final class SyncProcessorTest {
     }
 
     /**
-     * When a sync is requested, the last sync time should be considered.
-     * If the last sync time is before (nowMs - baseSyncIntervalMs), then a base
-     * sync will be performed.
+     * When a sync is requested, the last sync time and last sync expression should be considered.
+     * If the last sync time is before (nowMs - baseSyncIntervalMs),
+     * and the current sync expression is the same as last sync expression,
+     * then a base sync will be performed.
      * @throws AmplifyException On failure to build GraphQLRequest for sync query
      */
     @Test
-    public void baseSyncRequestedIfLastSyncBeyondInterval() throws AmplifyException {
+    public void baseSyncRequestedIfLastSyncBeyondIntervalAndSameSyncExpressionUsed() throws AmplifyException {
+        initSyncProcessor(SYNC_MAX_RECORDS);
         // Arrange: add LastSyncMetadata for the types, indicating that they
         // were sync'd too long ago. That is, longer ago than the base sync interval.
         long longAgoTimeMs = Time.now() - (TimeUnit.MINUTES.toMillis(BASE_SYNC_INTERVAL_MINUTES) * 2);
         Observable.fromIterable(modelProvider.modelNames())
-            .map(modelName -> LastSyncMetadata.baseSyncedAt(modelName, longAgoTimeMs))
+            .map(modelName -> {
+                QueryPredicate syncExpression = Objects.requireNonNull(
+                            configuredSyncExpressions.getOrDefault(modelName, QueryPredicates::all)
+                        ).resolvePredicate();
+                return LastSyncMetadata.deltaSyncedAt(modelName, longAgoTimeMs, syncExpression);
+            })
             .blockingForEach(storageAdapter::save);
 
         // Arrange: return some content from the fake AppSync endpoint
@@ -543,19 +568,26 @@ public final class SyncProcessorTest {
     }
 
     /**
-     * When a sync is requested, the last sync time should be considered.
+     * When a sync is requested, the last sync time and last sync expression should be considered.
      * If the last sync time is after (nowMs - baseSyncIntervalMs) - that is,
-     * if the last sync time is within the base sync interval, then a DELTA sync
-     * will be performed.
+     * if the last sync time is within the base sync interval,
+     * and the current sync expression is the same as last sync expression,
+     * then a DELTA sync will be performed.
      * @throws AmplifyException On failure to build GraphQLRequest for sync query
      */
     @Test
-    public void deltaSyncRequestedIfLastSyncIsRecent() throws AmplifyException {
+    public void deltaSyncRequestedIfLastSyncIsRecentAndSameSyncExpressionUsed() throws AmplifyException {
+        initSyncProcessor(SYNC_MAX_RECORDS);
         // Arrange: add LastSyncMetadata for the types, indicating that they
         // were sync'd very recently (within the interval.)
         long recentTimeMs = Time.now();
         Observable.fromIterable(modelProvider.modelNames())
-            .map(modelName -> LastSyncMetadata.deltaSyncedAt(modelName, recentTimeMs))
+            .map(modelName -> {
+                QueryPredicate syncExpression = Objects.requireNonNull(
+                        configuredSyncExpressions.getOrDefault(modelName, QueryPredicates::all)
+                ).resolvePredicate();
+                return LastSyncMetadata.deltaSyncedAt(modelName, recentTimeMs, syncExpression);
+            })
             .blockingForEach(storageAdapter::save);
 
         // Arrange: return some content from the fake AppSync endpoint
@@ -565,7 +597,7 @@ public final class SyncProcessorTest {
         // Act: hydrate the store.
         assertTrue(syncProcessor.hydrate().blockingAwait(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
 
-        // Assert: the sync time that was passed to AppSync should have been `null`.
+        // Assert: the sync time that was passed to AppSync should be recentTimeMs.
         //The class count should be one less than total model count because Author model has sync expression =
         // QueryPredicates.none()
         int modelClassCount = modelProvider.models().size() - 1;
@@ -586,12 +618,108 @@ public final class SyncProcessorTest {
     }
 
     /**
+     * When a sync is requested, the last sync time and last sync expression should be considered.
+     * If the last sync time is before (nowMs - baseSyncIntervalMs),
+     * and the current sync expression is different from last sync expression,
+     * then a base sync will be performed.
+     * @throws AmplifyException On failure to build GraphQLRequest for sync query
+     */
+    @Test
+    public void baseSyncRequestedIfLastSyncBeyondIntervalAndDifferentSyncExpressionUsed() throws AmplifyException {
+        initSyncProcessor(SYNC_MAX_RECORDS);
+        // Arrange: add LastSyncMetadata for the types, indicating that they
+        // were sync'd too long ago. That is, longer ago than the base sync interval
+        long longAgoTimeMs = Time.now() - (TimeUnit.MINUTES.toMillis(BASE_SYNC_INTERVAL_MINUTES) * 2);
+        Observable.fromIterable(modelProvider.modelNames())
+                .map(modelName -> {
+                    QueryPredicate mockLastSyncExpression = generateIDQueryPredicate(modelName, true, 3);
+                    return LastSyncMetadata.deltaSyncedAt(modelName, longAgoTimeMs, mockLastSyncExpression);
+                })
+                .blockingForEach(storageAdapter::save);
+
+        // Arrange: return some content from the fake AppSync endpoint
+        AppSyncMocking.sync(appSync)
+                .mockSuccessResponse(BlogOwner.class, BLOGGER_JAMESON);
+
+        // Act: hydrate the store.
+        assertTrue(syncProcessor.hydrate().blockingAwait(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+
+        // Assert: the sync time that was passed to AppSync should have been 'null'
+        // The class count should be one less than the total model count because Author model has sync expression =
+        // QueryPredicates.none()
+        int modelClassCount = modelProvider.models().size() - 1;
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>>> requestCaptor =
+                ArgumentCaptor.forClass(GraphQLRequest.class);
+        verify(appSync, times(modelClassCount)).sync(
+                requestCaptor.capture(),
+                any(),
+                any()
+        );
+        List<GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>>> capturedValues =
+                requestCaptor.getAllValues();
+        assertEquals(modelClassCount, capturedValues.size());
+        for (GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>> capturedValue : capturedValues) {
+            assertNull(capturedValue.getVariables().get("lastSync"));
+        }
+    }
+
+    /**
+     * When a sync is requested, the last sync time and last sync expression should be considered.
+     * If the last sync time is after (nowMs - baseSyncIntervalMs) - that is,
+     * if the last sync time is within the base sync interval,
+     * and the current sync expression is different from last sync expression,
+     * then a base sync will be performed.
+     * @throws AmplifyException On failure to build GraphQLRequest for sync query
+     */
+    @Test
+    public void baseSyncRequestedIfLastSyncIsRecentAndDifferentSyncExpressionUsed() throws AmplifyException {
+        initSyncProcessor(SYNC_MAX_RECORDS);
+        // Arrange: add LastSyncMetadata for the types, indicating that they
+        // were sync'd very recently (within the interval.)
+        long recentTimeMs = Time.now();
+        Observable.fromIterable(modelProvider.modelNames())
+                .map(modelName -> {
+                    QueryPredicate mockLastSyncExpression = generateIDQueryPredicate(modelName, true, 3);
+                    return LastSyncMetadata.deltaSyncedAt(modelName, recentTimeMs, mockLastSyncExpression);
+                })
+                .blockingForEach(storageAdapter::save);
+
+        // Arrange: return some content from the fake AppSync endpoint
+        AppSyncMocking.sync(appSync)
+                .mockSuccessResponse(BlogOwner.class, BLOGGER_JAMESON);
+
+        // Act: hydrate the store.
+        assertTrue(syncProcessor.hydrate().blockingAwait(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+
+        // Assert: the sync time that was passed to AppSync should be recentTimeMs.
+        //The class count should be one less than total model count because Author model has sync expression =
+        // QueryPredicates.none()
+        int modelClassCount = modelProvider.models().size() - 1;
+        @SuppressWarnings("unchecked") // ignore GraphQLRequest.class not being a parameterized type.
+        ArgumentCaptor<GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>>> requestCaptor =
+                ArgumentCaptor.forClass(GraphQLRequest.class);
+        verify(appSync, times(modelClassCount)).sync(
+                requestCaptor.capture(),
+                any(),
+                any()
+        );
+        final List<GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>>> capturedValues =
+                requestCaptor.getAllValues();
+        assertEquals(modelClassCount, capturedValues.size());
+        for (GraphQLRequest<PaginatedResult<ModelWithMetadata<BlogOwner>>> capturedValue : capturedValues) {
+            assertNull(capturedValue.getVariables().get("lastSync"));
+        }
+    }
+
+    /**
      * Verify that the syncExpressions from the DataStoreConfiguration are applied to the sync request.
      * @throws AmplifyException On failure interacting with storage adapter
      * @throws InterruptedException If interrupted while awaiting terminal result in test observer
      */
     @Test
     public void syncExpressionsAppliedOnSyncRequest() throws AmplifyException, InterruptedException {
+        initSyncProcessor(SYNC_MAX_RECORDS);
         // Arrange some responses from AppSync
         AppSyncMocking.sync(appSync)
                 .mockSuccessResponse(Post.class, DELETED_DRUM_POST)
@@ -612,10 +740,11 @@ public final class SyncProcessorTest {
 
     /**
      * Verify that the user-provided onError callback (if specified) is invoked if initial sync fails.
-     * @throws DataStoreException On failure to build GraphQLRequest for sync query.
+     * @throws AmplifyException On failure to initialize SyncProcessor
      */
     @Test
-    public void userProvidedErrorCallbackInvokedOnFailure() throws DataStoreException {
+    public void userProvidedErrorCallbackInvokedOnFailure() throws AmplifyException {
+        initSyncProcessor(SYNC_MAX_RECORDS);
         // Arrange: mock failure when invoking hydrate on the mock object.
         AppSyncMocking.sync(appSync)
             .mockFailure(new DataStoreException
@@ -635,10 +764,11 @@ public final class SyncProcessorTest {
     /**
      * Verify that the user-provided onError callback is invoked for every error if sync contains data and errors.
      * Verify that Hub events are emitted once per page with non-applicable data
-     * @throws DataStoreException On failure to build GraphQLRequest for sync query.
+     * @throws AmplifyException On failure to initialize SyncProcessor
      */
     @Test
-    public void userProvidedErrorCallbackInvokedOnNonApplicableData() throws DataStoreException {
+    public void userProvidedErrorCallbackInvokedOnNonApplicableData() throws AmplifyException {
+        initSyncProcessor(SYNC_MAX_RECORDS);
         // Arrange: mock data + errors when invoking hydrate on the mock object. Each response is a page in a paginated
         // syncQuery
         AppSyncMocking.sync(appSync)
@@ -689,7 +819,7 @@ public final class SyncProcessorTest {
         when(requestRetry.retry(any(), any())).thenReturn(Single.error(
                 new DataStoreException("PaginatedResult<ModelWithMetadata<BlogOwner>>", "")));
 
-        initSyncProcessor(10_000);
+        initSyncProcessor(SYNC_MAX_RECORDS);
         AppSyncMocking.sync(appSync)
                 .mockFailure(new DataStoreException("Something timed out during sync.", ""));
 
@@ -702,7 +832,7 @@ public final class SyncProcessorTest {
     }
 
     /**
-     * Verify that retry is called on appsync failure when syncRetry is set to true.
+     * Verify that retry is NOT called on appsync failure when syncRetry is set to false.
      *
      * @throws AmplifyException On failure to build GraphQLRequest for sync query.
      * @throws InterruptedException if await is interrupted.
@@ -715,7 +845,7 @@ public final class SyncProcessorTest {
         when(requestRetry.retry(any(), any())).thenReturn(Single.error(
                 new DataStoreException("PaginatedResult<ModelWithMetadata<BlogOwner>>", "")));
 
-        initSyncProcessor(10_000);
+        initSyncProcessor(SYNC_MAX_RECORDS);
         AppSyncMocking.sync(appSync)
                 .mockFailure(new DataStoreException("Something timed out during sync.", ""));
 
@@ -737,7 +867,7 @@ public final class SyncProcessorTest {
     public void retryHandlesHydrateSubscriptionDispose() throws AmplifyException {
         // Arrange: mock failure when invoking hydrate
         requestRetry = spy(RetryHandler.class);
-        initSyncProcessor(10_000);
+        initSyncProcessor(SYNC_MAX_RECORDS);
         AppSyncMocking.sync(appSync)
                 .mockFailure(new DataStoreException("Something timed out during sync.", ""));
 
@@ -954,6 +1084,37 @@ public final class SyncProcessorTest {
                     expected.contains(model)
             )
         );
+    }
+
+    /**
+     * Utility method to generate a new QueryPredicate for ID QueryField with Java Reflection
+     * This is implemented based on the fact that
+     *  1. All the test models are in package: "com.amplifyframework.testmodels.commentsblog"
+     *  2. All the test models declared in {@link AmplifyModelProvider} have a static field ID if type QueryField
+     * @param testModelName a modelName declared in {@link AmplifyModelProvider}
+     * @param lessThan return a LessThanQueryOperator for ID if true
+     * @param idVal value used in the generated QueryOperator
+     * @return an ID QueryPredicate; or MatchNoneQueryPredicate if 1.||2. is false
+     */
+    private QueryPredicate generateIDQueryPredicate(String testModelName, boolean lessThan, int idVal) {
+        try {
+            // Where all the test models are defined
+            String testModelsPackage = "com.amplifyframework.testmodels.commentsblog.";
+            // All the test models have a static field named ID of type QueryField
+            Field idField = Class.forName(testModelsPackage + testModelName)
+                    .getDeclaredField("ID");
+            idField.setAccessible(true);
+            Object idValue = idField.get(null);
+
+            if (idValue instanceof QueryField) {
+                QueryField idQueryField = (QueryField) idValue;
+                return lessThan ? idQueryField.lt(idVal) : idQueryField.ge(idVal);
+            } else {
+                throw new NoSuchFieldException("Failed to find a field named 'ID' of type QueryField");
+            }
+        } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException err) {
+            return QueryPredicates.none();
+        }
     }
 
     static final class RecentTimeWindow {

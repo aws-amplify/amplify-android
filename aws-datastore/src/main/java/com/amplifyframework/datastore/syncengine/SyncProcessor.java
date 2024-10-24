@@ -97,7 +97,6 @@ final class SyncProcessor {
         this.queryPredicateProvider = builder.queryPredicateProvider;
         this.requestRetry = builder.requestRetry;
         this.isSyncRetryEnabled = builder.isSyncRetryEnabled;
-
         if (!this.isSyncRetryEnabled) {
             LOG.warn("Disabling sync retries will be deprecated in a future version.");
         }
@@ -182,7 +181,8 @@ final class SyncProcessor {
 
     private Completable createHydrationTask(ModelSchema schema) {
         ModelSyncMetricsAccumulator metricsAccumulator = new ModelSyncMetricsAccumulator(schema.getName());
-        return syncTimeRegistry.lookupLastSyncTime(schema.getName())
+        QueryPredicate currentSyncExpression = this.queryPredicateProvider.getPredicate(schema.getName());
+        return syncTimeRegistry.lookupLastSyncTime(schema.getName(), currentSyncExpression)
             .map(this::filterOutOldSyncTimes)
             // And for each, perform a sync. The network response will contain an Iterable<ModelWithMetadata<T>>
             .flatMap(lastSyncTime -> {
@@ -202,8 +202,8 @@ final class SyncProcessor {
             })
             .flatMapCompletable(syncType -> {
                 Completable syncTimeSaveCompletable = SyncType.DELTA.equals(syncType) ?
-                    syncTimeRegistry.saveLastDeltaSyncTime(schema.getName(), SyncTime.now()) :
-                    syncTimeRegistry.saveLastBaseSyncTime(schema.getName(), SyncTime.now());
+                    syncTimeRegistry.saveLastDeltaSync(schema.getName(), SyncTime.now(), currentSyncExpression) :
+                    syncTimeRegistry.saveLastBaseSync(schema.getName(), SyncTime.now(), currentSyncExpression);
                 return syncTimeSaveCompletable.andThen(Completable.fromAction(() ->
                     Amplify.Hub.publish(
                         HubChannel.DATASTORE, metricsAccumulator.toModelSyncedEvent(syncType).toHubEvent()

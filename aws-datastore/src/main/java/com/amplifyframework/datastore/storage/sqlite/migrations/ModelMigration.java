@@ -15,9 +15,12 @@
 
 package com.amplifyframework.datastore.storage.sqlite.migrations;
 
+import com.amplifyframework.annotations.InternalApiWarning;
+
 /**
  * Interface that defines the contract of an in-place model migration.
  */
+@InternalApiWarning
 public interface ModelMigration {
     /**
      * Apply the migration.
