@@ -50,7 +50,7 @@ class AWSCognitoAuthPluginEmailMFATests {
 
     private var authPlugin = AWSCognitoAuthPlugin()
     private var apiPlugin = AWSApiPlugin()
-    lateinit var synchronousAuth: SynchronousAuth
+    private lateinit var synchronousAuth: SynchronousAuth
     private var mfaCode = ""
     private var latch: CountDownLatch? = null
 
