@@ -39,49 +39,46 @@ import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import org.junit.After
-import org.junit.BeforeClass
+import org.junit.Before
 import org.junit.Test
 
 class AWSCognitoAuthPluginEmailMFATests {
 
     private val password = "${UUID.randomUUID()}BleepBloop1234!"
     private val userName = "test${Random().nextInt()}"
-    private val email = "$userName@testdomain.com"
+    private val email = "$userName@amplify-swift-gamma.awsapps.com"
 
-    companion object {
-        private var authPlugin = AWSCognitoAuthPlugin()
-        private var apiPlugin = AWSApiPlugin()
-        lateinit var synchronousAuth: SynchronousAuth
-        var mfaCode = ""
-        var latch: CountDownLatch? = null
+    private var authPlugin = AWSCognitoAuthPlugin()
+    private var apiPlugin = AWSApiPlugin()
+    lateinit var synchronousAuth: SynchronousAuth
+    private var mfaCode = ""
+    private var latch: CountDownLatch? = null
 
-        @JvmStatic
-        @BeforeClass
-        fun initializePlugin() {
-            val context = ApplicationProvider.getApplicationContext<Context>()
-            val config = AmplifyOutputsData
-                .deserialize(context, AmplifyOutputs.fromResource(R.raw.amplify_outputs_email_or_totp_mfa))
+    @Before
+    fun initializePlugin() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val config = AmplifyOutputsData
+            .deserialize(context, AmplifyOutputs.fromResource(R.raw.amplify_outputs_email_or_totp_mfa))
 
-            authPlugin.configure(config, context)
-            apiPlugin.configure(config, context)
-            synchronousAuth = SynchronousAuth.delegatingTo(authPlugin)
+        authPlugin.configure(config, context)
+        apiPlugin.configure(config, context)
+        synchronousAuth = SynchronousAuth.delegatingTo(authPlugin)
 
-            apiPlugin.subscribe(
-                SimpleGraphQLRequest<MfaInfo>(
-                    Assets.readAsString("create-mfa-subscription.graphql"),
-                    MfaInfo::class.java,
-                    null
-                ),
-                { println("====== Subscription Established ======") },
-                {
-                    println("====== Received some MFA Info ======")
-                    mfaCode = it.data.code
-                    latch?.countDown()
-                },
-                { println("====== Subscription Failed $it ======") },
-                { }
-            )
-        }
+        apiPlugin.subscribe(
+            SimpleGraphQLRequest<MfaInfo>(
+                Assets.readAsString("create-mfa-subscription.graphql"),
+                MfaInfo::class.java,
+                null
+            ),
+            { println("====== Subscription Established ======") },
+            {
+                println("====== Received some MFA Info ======")
+                mfaCode = it.data.code
+                latch?.countDown()
+            },
+            { println("====== Subscription Failed $it ======") },
+            { }
+        )
     }
 
     @After
