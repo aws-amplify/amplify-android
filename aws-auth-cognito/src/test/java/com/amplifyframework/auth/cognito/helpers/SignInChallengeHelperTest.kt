@@ -161,7 +161,7 @@ class SignInChallengeHelperTest {
                 challengeName = "SELECT_MFA_TYPE",
                 username = username,
                 session = "session",
-                parameters = mapOf("MFAS_CAN_CHOOSE" to "\"EMAIL_MFA\",\"SOFTWARE_TOKEN_MFA\",\"SMS_MFA\"")
+                parameters = mapOf("MFAS_CAN_CHOOSE" to "\"EMAIL_OTP\",\"SOFTWARE_TOKEN_MFA\",\"SMS_MFA\"")
             ),
             onSuccess = {
                 signInResult = it
