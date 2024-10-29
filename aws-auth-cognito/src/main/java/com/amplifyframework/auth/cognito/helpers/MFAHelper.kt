@@ -62,7 +62,7 @@ internal fun getAllowedMFATypesFromChallengeParameters(challengeParameters: Map<
         when (it) {
             "SMS_MFA" -> result.add(MFAType.SMS)
             "SOFTWARE_TOKEN_MFA" -> result.add(MFAType.TOTP)
-            "EMAIL_MFA" -> result.add(MFAType.EMAIL)
+            "EMAIL_OTP" -> result.add(MFAType.EMAIL)
             else -> throw UnknownException(cause = Exception("MFA type not supported."))
         }
     }

@@ -24,7 +24,6 @@ import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.MFAType
 import com.amplifyframework.auth.cognito.exceptions.service.CodeMismatchException
 import com.amplifyframework.auth.cognito.test.R
-import com.amplifyframework.auth.cognito.testutils.AbortableCountdownLatch
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.step.AuthSignInStep
@@ -35,6 +34,7 @@ import com.amplifyframework.testutils.Assets
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import java.util.Random
 import java.util.UUID
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -53,7 +53,7 @@ class AWSCognitoAuthPluginEmailMFATests {
         private var apiPlugin = AWSApiPlugin()
         lateinit var synchronousAuth: SynchronousAuth
         var mfaCode = ""
-        var abortableLatch: AbortableCountdownLatch? = null
+        var latch: CountDownLatch? = null
 
         @JvmStatic
         @BeforeClass
@@ -76,7 +76,7 @@ class AWSCognitoAuthPluginEmailMFATests {
                 {
                     println("====== Received some MFA Info ======")
                     mfaCode = it.data.code
-                    abortableLatch?.abort()
+                    latch?.countDown()
                 },
                 { println("====== Subscription Failed $it ======") },
                 { }
@@ -111,14 +111,14 @@ class AWSCognitoAuthPluginEmailMFATests {
         assertEquals(AuthSignInStep.CONTINUE_SIGN_IN_WITH_EMAIL_MFA_SETUP, signInResult.nextStep.signInStep)
 
         // Step 4: Input the email address to send the code to then wait for the MFA code
-        abortableLatch = AbortableCountdownLatch(1)
+        latch = CountDownLatch(1)
         signInResult = synchronousAuth.confirmSignIn(email)
 
         // Validation 3: Validate that the next step is to confirm the emailed MFA code
         assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP, signInResult.nextStep.signInStep)
 
         // Wait until the MFA code has been received
-        abortableLatch?.await(20, TimeUnit.SECONDS)
+        latch?.await(20, TimeUnit.SECONDS)
 
         // Step 5: Input the emailed MFA code for confirmation
         signInResult = synchronousAuth.confirmSignIn(mfaCode)
@@ -133,14 +133,14 @@ class AWSCognitoAuthPluginEmailMFATests {
         signUpNewUser(email)
 
         // Step 2: Attempt to sign in with the newly created user
-        abortableLatch = AbortableCountdownLatch(1)
+        latch = CountDownLatch(1)
         var signInResult = synchronousAuth.signIn(userName, password)
 
         // Validation 1: Validate that the next step is to confirm the emailed MFA code
         assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP, signInResult.nextStep.signInStep)
 
         // Wait until the MFA code has been received
-        abortableLatch?.await(20, TimeUnit.SECONDS)
+        latch?.await(20, TimeUnit.SECONDS)
 
         // Step 4: Input the emailed MFA code for confirmation
         signInResult = synchronousAuth.confirmSignIn(mfaCode)
@@ -155,14 +155,14 @@ class AWSCognitoAuthPluginEmailMFATests {
         signUpNewUser(email)
 
         // Step 2: Attempt to sign in with the newly created user
-        abortableLatch = AbortableCountdownLatch(1)
+        latch = CountDownLatch(1)
         var signInResult = synchronousAuth.signIn(userName, password)
 
         // Validation 1: Validate that the next step is to confirm the emailed MFA code
         assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP, signInResult.nextStep.signInStep)
 
         // Wait until the MFA code has been received
-        abortableLatch?.await(20, TimeUnit.SECONDS)
+        latch?.await(20, TimeUnit.SECONDS)
 
         // Step 4: Input the an incorrect MFA code
         // Validation 2: Validate that an incorrect MFA code throws a CodeMismatchException
