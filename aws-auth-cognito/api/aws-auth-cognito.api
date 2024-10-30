@@ -53,7 +53,9 @@ public final class com/amplifyframework/auth/cognito/AWSCognitoAuthPlugin : com/
 	public fun signOut (Lcom/amplifyframework/auth/options/AuthSignOutOptions;Lcom/amplifyframework/core/Consumer;)V
 	public fun signOut (Lcom/amplifyframework/core/Consumer;)V
 	public fun signUp (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthSignUpOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public final fun updateMFAPreference (Lcom/amplifyframework/auth/cognito/MFAPreference;Lcom/amplifyframework/auth/cognito/MFAPreference;Lcom/amplifyframework/auth/cognito/MFAPreference;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public final fun updateMFAPreference (Lcom/amplifyframework/auth/cognito/MFAPreference;Lcom/amplifyframework/auth/cognito/MFAPreference;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
+	public static synthetic fun updateMFAPreference$default (Lcom/amplifyframework/auth/cognito/AWSCognitoAuthPlugin;Lcom/amplifyframework/auth/cognito/MFAPreference;Lcom/amplifyframework/auth/cognito/MFAPreference;Lcom/amplifyframework/auth/cognito/MFAPreference;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;ILjava/lang/Object;)V
 	public fun updatePassword (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public fun updateUserAttribute (Lcom/amplifyframework/auth/AuthUserAttribute;Lcom/amplifyframework/auth/options/AuthUpdateUserAttributeOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun updateUserAttribute (Lcom/amplifyframework/auth/AuthUserAttribute;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V

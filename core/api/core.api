@@ -691,6 +691,7 @@ public final class com/amplifyframework/auth/AuthUserAttributeKey {
 }
 
 public final class com/amplifyframework/auth/MFAType : java/lang/Enum {
+	public static final field EMAIL Lcom/amplifyframework/auth/MFAType;
 	public static final field SMS Lcom/amplifyframework/auth/MFAType;
 	public static final field TOTP Lcom/amplifyframework/auth/MFAType;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
@@ -1152,10 +1153,13 @@ public final class com/amplifyframework/auth/result/step/AuthResetPasswordStep :
 public final class com/amplifyframework/auth/result/step/AuthSignInStep : java/lang/Enum {
 	public static final field CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE Lcom/amplifyframework/auth/result/step/AuthSignInStep;
 	public static final field CONFIRM_SIGN_IN_WITH_NEW_PASSWORD Lcom/amplifyframework/auth/result/step/AuthSignInStep;
+	public static final field CONFIRM_SIGN_IN_WITH_OTP Lcom/amplifyframework/auth/result/step/AuthSignInStep;
 	public static final field CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE Lcom/amplifyframework/auth/result/step/AuthSignInStep;
 	public static final field CONFIRM_SIGN_IN_WITH_TOTP_CODE Lcom/amplifyframework/auth/result/step/AuthSignInStep;
 	public static final field CONFIRM_SIGN_UP Lcom/amplifyframework/auth/result/step/AuthSignInStep;
+	public static final field CONTINUE_SIGN_IN_WITH_EMAIL_MFA_SETUP Lcom/amplifyframework/auth/result/step/AuthSignInStep;
 	public static final field CONTINUE_SIGN_IN_WITH_MFA_SELECTION Lcom/amplifyframework/auth/result/step/AuthSignInStep;
+	public static final field CONTINUE_SIGN_IN_WITH_MFA_SETUP_SELECTION Lcom/amplifyframework/auth/result/step/AuthSignInStep;
 	public static final field CONTINUE_SIGN_IN_WITH_TOTP_SETUP Lcom/amplifyframework/auth/result/step/AuthSignInStep;
 	public static final field DONE Lcom/amplifyframework/auth/result/step/AuthSignInStep;
 	public static final field RESET_PASSWORD Lcom/amplifyframework/auth/result/step/AuthSignInStep;
