@@ -21,4 +21,4 @@ jobs:
         # PRs wont go stale
         days-before-pr-stale: -1
         # Issues with any of these labels are checked.
-        any-of-labels: "pending-response, closing soon"
+        any-of-labels: "pending-community-response, closing soon"

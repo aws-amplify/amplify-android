@@ -31,7 +31,7 @@ public class StorageRemoveOptions extends StorageOptions {
      */
     @SuppressWarnings("deprecation")
     protected StorageRemoveOptions(final Builder<?> builder) {
-        super(builder.getAccessLevel(), builder.getTargetIdentityId());
+        super(builder.getAccessLevel(), builder.getTargetIdentityId(), builder.getBucket());
     }
 
     /**
@@ -60,8 +60,9 @@ public class StorageRemoveOptions extends StorageOptions {
     @SuppressWarnings("deprecation")
     public static Builder<?> from(@NonNull final StorageRemoveOptions options) {
         return builder()
-            .accessLevel(options.getAccessLevel())
-            .targetIdentityId(options.getTargetIdentityId());
+                .accessLevel(options.getAccessLevel())
+                .targetIdentityId(options.getTargetIdentityId())
+                .bucket(options.getBucket());
     }
 
     /**
@@ -86,7 +87,8 @@ public class StorageRemoveOptions extends StorageOptions {
         } else {
             StorageRemoveOptions that = (StorageRemoveOptions) obj;
             return ObjectsCompat.equals(getAccessLevel(), that.getAccessLevel()) &&
-                    ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId());
+                    ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId()) &&
+                    ObjectsCompat.equals(getBucket(), that.getBucket());
         }
     }
 
@@ -98,7 +100,8 @@ public class StorageRemoveOptions extends StorageOptions {
     public int hashCode() {
         return ObjectsCompat.hash(
                 getAccessLevel(),
-                getTargetIdentityId()
+                getTargetIdentityId(),
+                getBucket()
         );
     }
 
@@ -112,6 +115,7 @@ public class StorageRemoveOptions extends StorageOptions {
         return "StorageRemoveOptions {" +
                 "accessLevel=" + getAccessLevel() +
                 ", targetIdentityId=" + getTargetIdentityId() +
+                ", bucket=" + getBucket() +
                 '}';
     }
 

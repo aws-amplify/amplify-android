@@ -22,6 +22,7 @@ import aws.sdk.kotlin.services.s3.withConfig
 import aws.smithy.kotlin.runtime.content.asByteStream
 import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.s3.transfer.PartUploadProgressListener
+import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import com.amplifyframework.storage.s3.transfer.UploadProgressListenerInterceptor
@@ -33,7 +34,7 @@ import kotlinx.coroutines.isActive
  * Worker to upload a part for multipart upload
  **/
 internal class PartUploadTransferWorker(
-    private val s3: S3Client,
+    private val clientProvider: StorageTransferClientProvider,
     private val transferDB: TransferDB,
     private val transferStatusUpdater: TransferStatusUpdater,
     context: Context,
@@ -51,6 +52,7 @@ internal class PartUploadTransferWorker(
         transferStatusUpdater.updateTransferState(transferRecord.mainUploadId, TransferState.IN_PROGRESS)
         multiPartUploadId = inputData.keyValueMap[MULTI_PART_UPLOAD_ID] as String
         partUploadProgressListener = PartUploadProgressListener(transferRecord, transferStatusUpdater)
+        val s3: S3Client = clientProvider.getStorageTransferClient(transferRecord.region, transferRecord.bucketName)
         return s3.withConfig {
             interceptors += UploadProgressListenerInterceptor(partUploadProgressListener)
             enableAccelerate = transferRecord.useAccelerateEndpoint == 1

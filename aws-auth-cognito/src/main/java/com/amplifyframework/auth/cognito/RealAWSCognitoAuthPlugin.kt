@@ -27,6 +27,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedStatusType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.EmailMfaSettingsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgetDeviceRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserAttributeVerificationCodeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
@@ -71,9 +72,12 @@ import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
+import com.amplifyframework.auth.cognito.helpers.getAllowedMFATypesFromChallengeParameters
+import com.amplifyframework.auth.cognito.helpers.getMFASetupTypeOrNull
 import com.amplifyframework.auth.cognito.helpers.getMFAType
 import com.amplifyframework.auth.cognito.helpers.getMFATypeOrNull
 import com.amplifyframework.auth.cognito.helpers.identityProviderName
+import com.amplifyframework.auth.cognito.helpers.isMfaSetupSelectionChallenge
 import com.amplifyframework.auth.cognito.helpers.value
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions
@@ -588,13 +592,13 @@ internal class RealAWSCognitoAuthPlugin(
                                         ChallengeNameType.MfaSetup.value,
                                         null,
                                         null,
-                                        null
+                                        totpSetupState.challengeParams
                                     ),
                                     onSuccess,
                                     onError,
                                     totpSetupState.signInTOTPSetupData
                                 )
-                                totpSetupState?.hasNewResponse = false
+                                totpSetupState.hasNewResponse = false
                             }
                         }
                     }
@@ -706,20 +710,33 @@ internal class RealAWSCognitoAuthPlugin(
                             )
                         )
                     }
+
                     signInState is SignInState.ResolvingChallenge &&
                         signInState.challengeState is SignInChallengeState.WaitingForAnswer &&
                         (signInState.challengeState as SignInChallengeState.WaitingForAnswer).hasNewResponse -> {
                         authStateMachine.cancel(token)
                         val signInChallengeState = signInState.challengeState as SignInChallengeState.WaitingForAnswer
                         var allowedMFATypes: Set<MFAType>? = null
+
+                        if (signInChallengeState.challenge.challengeName == ChallengeNameType.MfaSetup.value ||
+                            signInChallengeState.challenge.challengeName == ChallengeNameType.EmailOtp.value
+                        ) {
+                            SignInChallengeHelper.getNextStep(
+                                signInChallengeState.challenge,
+                                onSuccess,
+                                onError
+                            )
+                            (signInState.challengeState as SignInChallengeState.WaitingForAnswer).hasNewResponse = false
+                            return@listen
+                        }
+
                         val signInStep = when (signInChallengeState.challenge.challengeName) {
                             "SMS_MFA" -> AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE
                             "NEW_PASSWORD_REQUIRED" -> AuthSignInStep.CONFIRM_SIGN_IN_WITH_NEW_PASSWORD
                             "SOFTWARE_TOKEN_MFA" -> AuthSignInStep.CONFIRM_SIGN_IN_WITH_TOTP_CODE
                             "SELECT_MFA_TYPE" -> {
-                                signInChallengeState.challenge.parameters?.get("MFAS_CAN_CHOOSE")?.let {
-                                    allowedMFATypes = SignInChallengeHelper.getAllowedMFATypes(it)
-                                }
+                                allowedMFATypes =
+                                    getAllowedMFATypesFromChallengeParameters(signInChallengeState.challenge.parameters)
                                 AuthSignInStep.CONTINUE_SIGN_IN_WITH_MFA_SELECTION
                             }
                             else -> AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE
@@ -747,7 +764,7 @@ internal class RealAWSCognitoAuthPlugin(
                                 ChallengeNameType.MfaSetup.value,
                                 null,
                                 null,
-                                null
+                                totpSetupState.challengeParams
                             ),
                             onSuccess,
                             onError,
@@ -797,9 +814,19 @@ internal class RealAWSCognitoAuthPlugin(
                             getMFATypeOrNull(challengeResponse) == null
                         ) {
                             val error = InvalidParameterException(
-                                message = "Value for challengeResponse must be one of SMS_MFA or SOFTWARE_TOKEN_MFA"
+                                message = "Value for challengeResponse must be one of " +
+                                    "SMS_MFA, EMAIL_OTP or SOFTWARE_TOKEN_MFA"
                             )
                             onError.accept(error)
+                        } else if (challengeState is SignInChallengeState.WaitingForAnswer &&
+                            isMfaSetupSelectionChallenge(challengeState.challenge) &&
+                            getMFASetupTypeOrNull(challengeResponse) == null
+                        ) {
+                            val error = InvalidParameterException(
+                                message = "Value for challengeResponse must be one of EMAIL_OTP or SOFTWARE_TOKEN_MFA"
+                            )
+                            onError.accept(error)
+                            authStateMachine.cancel(token)
                         } else {
                             val event = SignInChallengeEvent(
                                 SignInChallengeEvent.EventType.VerifyChallengeAnswer(
@@ -1541,10 +1568,12 @@ internal class RealAWSCognitoAuthPlugin(
                                 getUserRequest
                             )
                             val userAttributes = buildList {
-                                user?.userAttributes?.mapTo(this) {
-                                    AuthUserAttribute(
-                                        AuthUserAttributeKey.custom(it.name),
-                                        it.value
+                                user?.userAttributes?.forEach {
+                                    add(
+                                        AuthUserAttribute(
+                                            AuthUserAttributeKey.custom(it.name),
+                                            it.value
+                                        )
                                     )
                                 }
                             }
@@ -1818,12 +1847,18 @@ internal class RealAWSCognitoAuthPlugin(
             when (authState.authNState) {
                 is AuthenticationState.SignedIn -> {
                     GlobalScope.async {
-                        val accessToken = getSession().userPoolTokensResult.value?.accessToken
-                        accessToken?.run {
-                            val userid = SessionHelper.getUserSub(accessToken) ?: ""
-                            val username = SessionHelper.getUsername(accessToken) ?: ""
-                            onSuccess.accept(AuthUser(userid, username))
-                        } ?: onError.accept(InvalidUserPoolConfigurationException())
+                        val userPoolToken = getSession().userPoolTokensResult
+                        val userPoolTokenResultError = userPoolToken.error
+                        if (userPoolTokenResultError != null && userPoolTokenResultError is SessionExpiredException) {
+                            onError.accept(userPoolTokenResultError)
+                        } else {
+                            val accessToken = userPoolToken.value?.accessToken
+                            accessToken?.run {
+                                val userid = SessionHelper.getUserSub(accessToken) ?: ""
+                                val username = SessionHelper.getUsername(accessToken) ?: ""
+                                onSuccess.accept(AuthUser(userid, username))
+                            } ?: onError.accept(InvalidUserPoolConfigurationException())
+                        }
                     }
                 }
                 is AuthenticationState.SignedOut -> {
@@ -2270,15 +2305,17 @@ internal class RealAWSCognitoAuthPlugin(
     fun updateMFAPreference(
         sms: MFAPreference?,
         totp: MFAPreference?,
+        email: MFAPreference?,
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) {
-        if (sms == null && totp == null) {
+        if (sms == null && totp == null && email == null) {
             onError.accept(InvalidParameterException("No mfa settings given"))
             return
         }
         // If either of the params have preferred setting set then ignore fetched preference preferred property
-        val overridePreferredSetting: Boolean = !(sms?.mfaPreferred == true || totp?.mfaPreferred == true)
+        val overridePreferredSetting =
+            !(sms?.mfaPreferred == true || totp?.mfaPreferred == true || email?.mfaPreferred == true)
         fetchMFAPreference({ userPreference ->
             authStateMachine.getCurrentState { authState ->
                 when (authState.authNState) {
@@ -2292,7 +2329,7 @@ internal class RealAWSCognitoAuthPlugin(
                                         .cognitoIdentityProviderClient
                                         ?.setUserMfaPreference {
                                             this.accessToken = token
-                                            this.smsMfaSettings = sms?.let { it ->
+                                            this.smsMfaSettings = sms?.let {
                                                 val preferredMFASetting = it.mfaPreferred
                                                     ?: (
                                                         overridePreferredSetting &&
@@ -2304,7 +2341,7 @@ internal class RealAWSCognitoAuthPlugin(
                                                     preferredMfa = preferredMFASetting
                                                 }
                                             }
-                                            this.softwareTokenMfaSettings = totp?.let { it ->
+                                            this.softwareTokenMfaSettings = totp?.let {
                                                 val preferredMFASetting = it.mfaPreferred
                                                     ?: (
                                                         overridePreferredSetting &&
@@ -2312,6 +2349,18 @@ internal class RealAWSCognitoAuthPlugin(
                                                             it.mfaEnabled
                                                         )
                                                 SoftwareTokenMfaSettingsType.invoke {
+                                                    enabled = it.mfaEnabled
+                                                    preferredMfa = preferredMFASetting
+                                                }
+                                            }
+                                            this.emailMfaSettings = email?.let {
+                                                val preferredMFASetting = it.mfaPreferred
+                                                    ?: (
+                                                        overridePreferredSetting &&
+                                                            userPreference.preferred == MFAType.EMAIL &&
+                                                            it.mfaEnabled
+                                                        )
+                                                EmailMfaSettingsType.invoke {
                                                     enabled = it.mfaEnabled
                                                     preferredMfa = preferredMFASetting
                                                 }

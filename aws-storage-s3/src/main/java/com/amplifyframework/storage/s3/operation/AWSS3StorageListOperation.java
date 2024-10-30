@@ -16,19 +16,20 @@
 package com.amplifyframework.storage.s3.operation;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.OptIn;
 
+import com.amplifyframework.annotations.InternalApiWarning;
 import com.amplifyframework.auth.AuthCredentialsProvider;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageException;
-import com.amplifyframework.storage.StorageItem;
 import com.amplifyframework.storage.operation.StorageListOperation;
+import com.amplifyframework.storage.options.SubpathStrategy;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration;
 import com.amplifyframework.storage.s3.options.AWSS3StoragePagedListOptions;
 import com.amplifyframework.storage.s3.request.AWSS3StorageListRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
 
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -37,6 +38,7 @@ import java.util.concurrent.ExecutorService;
  *  @deprecated Class should not be public and explicitly cast to. Cast to StorageListOperation
  */
 @Deprecated
+@OptIn(markerClass = InternalApiWarning.class)
 public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3StorageListRequest> {
     private final StorageService storageService;
     private final ExecutorService executorService;
@@ -86,14 +88,14 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
                         prefix -> {
                             try {
                                 String serviceKey = prefix.concat(getRequest().getPath());
+                                SubpathStrategy subpathStrategy = getRequest().getSubpathStrategy();
                                 if (getRequest().getPageSize() == AWSS3StoragePagedListOptions.ALL_PAGE_SIZE) {
                                     // fetch all the keys
-                                    List<StorageItem> listedItems = storageService.listFiles(serviceKey, prefix);
-                                    onSuccess.accept(StorageListResult.fromItems(listedItems, null));
+                                    onSuccess.accept(storageService.listFiles(serviceKey, prefix, subpathStrategy));
                                 } else {
                                     onSuccess.accept(
                                         storageService.listFiles(serviceKey, prefix, getRequest().getPageSize(),
-                                            getRequest().getNextToken()));
+                                            getRequest().getNextToken(), subpathStrategy));
                                 }
                             } catch (Exception exception) {
                                 onError.accept(new StorageException(

@@ -24,6 +24,7 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 group = properties["POM_GROUP"].toString()
 
 android {
+    namespace = "com.amplifyframework.storage.s3"
     defaultConfig {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -60,6 +61,7 @@ dependencies {
     androidTestImplementation(libs.test.androidx.runner)
     androidTestImplementation(libs.test.androidx.junit)
     androidTestImplementation(libs.test.androidx.workmanager)
+    androidTestImplementation(libs.test.kotest.assertions)
     androidTestImplementation(project(":aws-storage-s3"))
 
     androidTestUtil(libs.test.androidx.orchestrator)

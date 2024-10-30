@@ -26,11 +26,9 @@ buildscript {
     }
 
     dependencies {
-        classpath("com.android.tools.build:gradle:7.3.1")
         classpath(kotlin("gradle-plugin", version = "1.9.10"))
         classpath("com.google.gms:google-services:4.3.15")
         classpath("org.jlleitschuh.gradle:ktlint-gradle:11.0.0")
-        classpath("org.gradle:test-retry-gradle-plugin:1.4.1")
         classpath("org.jetbrains.kotlinx:kover:0.6.1")
         classpath("app.cash.licensee:licensee-gradle-plugin:1.7.0")
     }
@@ -38,7 +36,10 @@ buildscript {
 
 plugins {
     alias(libs.plugins.binary.compatibility.validator)
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.serialization) apply false
+    alias(libs.plugins.android.library) apply false
 }
 
 allprojects {
@@ -80,39 +81,32 @@ subprojects {
     }
 
     apply(plugin = "app.cash.licensee")
-    configure<LicenseeExtension> {
-        allow("Apache-2.0")
-        allow("MIT")
-        allow("BSD-2-Clause")
-        allow("CC0-1.0")
-        allowUrl("https://developer.android.com/studio/terms.html")
-        allowDependency("net.zetetic", "android-database-sqlcipher", "4.5.4") {
-            because("BSD style License")
-        }
-        allowDependency("org.jetbrains", "annotations", "16.0.1") {
-            because("Apache-2.0, but typo in license URL fixed in newer versions")
-        }
-        allowDependency("org.mockito", "mockito-core", "3.9.0") {
-            because("MIT license")
-        }
-        allowDependency("junit", "junit", "4.13.2") {
-            because("Test Dependency")
-        }
-    }
-
     afterEvaluate {
-        configureAndroid()
-        apply(from = "../kover.gradle")
-    }
-
-    apply(plugin = "org.gradle.test-retry")
-
-    tasks.withType<Test>().configureEach {
-        retry {
-            maxRetries.set(1)
-            maxFailures.set(100)
-            failOnPassedAfterRetry.set(true)
+        configure<LicenseeExtension> {
+            allow("Apache-2.0")
+            allow("MIT")
+            allow("BSD-2-Clause")
+            allow("CC0-1.0")
+            allowUrl("https://developer.android.com/studio/terms.html")
+            allowDependency("net.zetetic", "android-database-sqlcipher", "4.5.4") {
+                because("BSD style License")
+            }
+            allowDependency("org.jetbrains", "annotations", "16.0.1") {
+                because("Apache-2.0, but typo in license URL fixed in newer versions")
+            }
+            allowDependency("org.mockito", "mockito-core", "3.9.0") {
+                because("MIT license")
+            }
+            allowDependency("junit", "junit", "4.13.2") {
+                because("Test Dependency")
+            }
+            allowUrl("https://raw.githubusercontent.com/apollographql/apollo-kotlin/main/LICENSE") {
+                because("MIT license")
+            }
         }
+
+        configureAndroid()
+        apply(from = rootProject.file("kover.gradle"))
     }
 
     tasks.withType<KotlinCompile> {
@@ -126,8 +120,6 @@ subprojects {
 
 @Suppress("ExpiredTargetSdkVersion")
 fun Project.configureAndroid() {
-    val sdkVersionName = findProperty("VERSION_NAME") ?: rootProject.findProperty("VERSION_NAME")
-
     if (hasProperty("signingKeyId")) {
         println("Getting signing info from protected source.")
         extra["signing.keyId"] = findProperty("signingKeyId")
@@ -135,61 +127,76 @@ fun Project.configureAndroid() {
         extra["signing.inMemoryKey"] = findProperty("signingInMemoryKey")
     }
 
-    configure<LibraryExtension> {
-        buildToolsVersion = "30.0.3"
-        compileSdk = 32
+    pluginManager.withPlugin("com.android.library") {
+        val sdkVersionName = findProperty("VERSION_NAME") ?: rootProject.findProperty("VERSION_NAME")
 
-        defaultConfig {
-            minSdk = 24
-            targetSdk = 30
-            testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-            testInstrumentationRunnerArguments += "clearPackageData" to "true"
-            consumerProguardFiles += rootProject.file("configuration/consumer-rules.pro")
+        configure<LibraryExtension> {
+            buildToolsVersion = "30.0.3"
+            compileSdk = 34
 
-            testOptions {
-                animationsDisabled = true
-                unitTests {
-                    isIncludeAndroidResources = true
+            buildFeatures {
+                // Allow specifying custom buildConfig fields
+                buildConfig = true
+            }
+
+            defaultConfig {
+                minSdk = 24
+                targetSdk = 30
+                testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+                testInstrumentationRunnerArguments += "clearPackageData" to "true"
+                consumerProguardFiles += rootProject.file("configuration/consumer-rules.pro")
+
+                testOptions {
+                    animationsDisabled = true
+                    unitTests {
+                        isIncludeAndroidResources = true
+                    }
+                }
+
+                buildConfigField("String", "VERSION_NAME", "\"$sdkVersionName\"")
+            }
+
+            lint {
+                warningsAsErrors = true
+                abortOnError = true
+                enable += listOf("UnusedResources", "NewerVersionAvailable")
+            }
+
+            compileOptions {
+                isCoreLibraryDesugaringEnabled = true
+                sourceCompatibility = JavaVersion.VERSION_11
+                targetCompatibility = JavaVersion.VERSION_11
+            }
+
+            tasks.withType<KotlinCompile>().configureEach {
+                kotlinOptions {
+                    jvmTarget = JavaVersion.VERSION_11.toString()
                 }
             }
 
-            buildConfigField("String", "VERSION_NAME", "\"$sdkVersionName\"")
-        }
-
-        lint {
-            warningsAsErrors = true
-            abortOnError = true
-            enable += listOf("UnusedResources", "NewerVersionAvailable")
-        }
-
-        compileOptions {
-            isCoreLibraryDesugaringEnabled = true
-            sourceCompatibility = JavaVersion.VERSION_11
-            targetCompatibility = JavaVersion.VERSION_11
-        }
-
-        // Needed when running integration tests. The oauth2 library uses relies on two
-        // dependencies (Apache's httpcore and httpclient), both of which include
-        // META-INF/DEPENDENCIES. Tried a couple other options to no avail.
-        packagingOptions {
-            resources.excludes.addAll(
-                listOf(
-                    "META-INF/DEPENDENCIES",
-                    "META-INF/LICENSE.md",
-                    "META-INF/LICENSE-notice.md"
+            // Needed when running integration tests. The oauth2 library uses relies on two
+            // dependencies (Apache's httpcore and httpclient), both of which include
+            // META-INF/DEPENDENCIES. Tried a couple other options to no avail.
+            packagingOptions {
+                resources.excludes.addAll(
+                    listOf(
+                        "META-INF/DEPENDENCIES",
+                        "META-INF/LICENSE.md",
+                        "META-INF/LICENSE-notice.md"
+                    )
                 )
-            )
-        }
+            }
 
-        publishing {
-            singleVariant("release") {
-                withSourcesJar()
+            publishing {
+                singleVariant("release") {
+                    withSourcesJar()
+                }
             }
         }
-    }
 
-    dependencies {
-        add("coreLibraryDesugaring", libs.android.desugartools)
+        dependencies {
+            add("coreLibraryDesugaring", libs.android.desugartools)
+        }
     }
 }
 

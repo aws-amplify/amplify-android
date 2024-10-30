@@ -15,6 +15,7 @@
 
 package com.amplifyframework.core;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Resources.NotFoundException;
 import androidx.annotation.RawRes;
@@ -39,6 +40,7 @@ public final class Resources {
      * @throws ResourceLoadingException if the specified raw resource does not exist
      */
     @RawRes
+    @SuppressLint("DiscouragedApi")
     public static int getRawResourceId(Context context, String identifier) throws ResourceLoadingException {
         try {
             return context.getResources().getIdentifier(identifier, "raw", context.getPackageName());

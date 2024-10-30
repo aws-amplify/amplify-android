@@ -31,6 +31,7 @@ import com.amplifyframework.storage.StorageChannelEventName;
 import com.amplifyframework.storage.TransferState;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.operation.StorageUploadInputStreamOperation;
+import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
 import com.amplifyframework.storage.s3.options.AWSS3StorageUploadFileOptions;
@@ -73,6 +74,7 @@ public final class AWSS3StorageUploadTest {
 
     private StorageUploadFileOptions options;
     private Set<SubscriptionToken> subscriptions;
+    private File uploadFile;
 
     /**
      * Initialize mobile client and configure the storage.
@@ -106,14 +108,17 @@ public final class AWSS3StorageUploadTest {
     }
 
     /**
-     * Unsubscribe from everything after each test.
+     * Clean up resources and unsubscribe from everything after each test.
+     * @throws Exception when failure to remove test resources.
      */
     @After
-    public void tearDown() {
+    public void tearDown() throws Exception {
         // Unsubscribe from everything
         for (SubscriptionToken token : subscriptions) {
             Amplify.Hub.unsubscribe(token);
         }
+
+        synchronousStorage.remove(uploadFile.getName(), StorageRemoveOptions.defaultInstance());
     }
 
     /**
@@ -123,7 +128,7 @@ public final class AWSS3StorageUploadTest {
      */
     @Test
     public void testUploadSmallFile() throws Exception {
-        File uploadFile = new RandomTempFile(SMALL_FILE_SIZE);
+        uploadFile = new RandomTempFile(SMALL_FILE_SIZE);
         String fileName = uploadFile.getName();
         synchronousStorage.uploadFile(fileName, uploadFile, options);
     }
@@ -135,7 +140,7 @@ public final class AWSS3StorageUploadTest {
      */
     @Test
     public void testUploadSmallFileStream() throws Exception {
-        File uploadFile = new RandomTempFile(SMALL_FILE_SIZE);
+        uploadFile = new RandomTempFile(SMALL_FILE_SIZE);
         String fileName = uploadFile.getName();
         StorageUploadInputStreamOptions options = StorageUploadInputStreamOptions.builder()
             .accessLevel(TESTING_ACCESS_LEVEL)
@@ -150,7 +155,7 @@ public final class AWSS3StorageUploadTest {
      */
     @Test
     public void testUploadLargeFile() throws Exception {
-        File uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
+        uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
         String fileName = uploadFile.getName();
         AWSS3StorageUploadFileOptions options =
             AWSS3StorageUploadFileOptions.builder().setUseAccelerateEndpoint(true).build();
@@ -172,7 +177,7 @@ public final class AWSS3StorageUploadTest {
         final AtomicReference<Throwable> errorContainer = new AtomicReference<>();
 
         // Create a file large enough that transfer won't finish before being canceled
-        File uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
+        uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
 
         // Listen to Hub events for cancel
         SubscriptionToken cancelToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
@@ -222,7 +227,7 @@ public final class AWSS3StorageUploadTest {
         final AtomicReference<Throwable> errorContainer = new AtomicReference<>();
 
         // Create a file large enough that transfer won't finish before being paused
-        File uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
+        uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
 
         // Listen to Hub events to resume when operation has been paused
         SubscriptionToken resumeToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
@@ -275,7 +280,7 @@ public final class AWSS3StorageUploadTest {
         final AtomicReference<Throwable> errorContainer = new AtomicReference<>();
 
         // Create a file large enough that transfer won't finish before being paused
-        File uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
+        uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
 
         // Listen to Hub events to resume when operation has been paused
         SubscriptionToken resumeToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
@@ -338,7 +343,7 @@ public final class AWSS3StorageUploadTest {
         final AtomicReference<Throwable> errorContainer = new AtomicReference<>();
 
         // Create a file large enough that transfer won't finish before being paused
-        File uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
+        uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
 
         // Listen to Hub events to resume when operation has been paused
         SubscriptionToken resumeToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
@@ -393,7 +398,7 @@ public final class AWSS3StorageUploadTest {
      */
     @Test
     public void testUploadSmallFileWithAccelerationEnabled() throws Exception {
-        File uploadFile = new RandomTempFile(SMALL_FILE_SIZE);
+        uploadFile = new RandomTempFile(SMALL_FILE_SIZE);
         String fileName = uploadFile.getName();
         AWSS3StorageUploadFileOptions awss3StorageUploadFileOptions =
             AWSS3StorageUploadFileOptions.builder().setUseAccelerateEndpoint(true).build();
@@ -408,7 +413,7 @@ public final class AWSS3StorageUploadTest {
      */
     @Test
     public void testUploadLargeFileWithAccelerationEnabled() throws Exception {
-        File uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
+        uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
         String fileName = uploadFile.getName();
         AWSS3StorageUploadFileOptions awss3StorageUploadFileOptions =
             AWSS3StorageUploadFileOptions.builder().setUseAccelerateEndpoint(true).build();

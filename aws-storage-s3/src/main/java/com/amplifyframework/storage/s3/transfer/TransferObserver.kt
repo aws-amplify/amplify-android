@@ -24,6 +24,7 @@ internal data class TransferObserver @JvmOverloads constructor(
     val id: Int,
     private val transferStatusUpdater: TransferStatusUpdater,
     val bucket: String? = null,
+    val region: String? = null,
     val key: String? = null,
     val filePath: String? = null,
     private val listener: TransferListener? = null,

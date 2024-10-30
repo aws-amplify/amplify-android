@@ -109,7 +109,7 @@ public final class AppSyncClientInstrumentationTest {
         BlogOwner actual = blogOwnerCreateResult.getModel();
 
         ModelAssert.assertEqualsIgnoringTimestamps(owner, actual);
-        assertEquals(new Integer(1), blogOwnerCreateResult.getSyncMetadata().getVersion());
+        assertEquals(Integer.valueOf(1), blogOwnerCreateResult.getSyncMetadata().getVersion());
         // TODO: BE AWARE THAT THE DELETED PROPERTY RETURNS NULL INSTEAD OF FALSE
         assertNull(blogOwnerCreateResult.getSyncMetadata().isDeleted());
         assertTrue(blogOwnerCreateResult.getSyncMetadata().resolveIdentifier().endsWith(owner.getPrimaryKeyString()));
@@ -129,7 +129,7 @@ public final class AppSyncClientInstrumentationTest {
         assertEquals(blog.getId(), blogCreateResult.getModel().getId());
         assertEquals(blog.getName(), blogCreateResult.getModel().getName());
         assertEquals(blog.getOwner().getId(), blogCreateResult.getModel().getOwner().getId());
-        assertEquals(new Integer(1), blogCreateResult.getSyncMetadata().getVersion());
+        assertEquals(Integer.valueOf(1), blogCreateResult.getSyncMetadata().getVersion());
         assertNull(blogCreateResult.getSyncMetadata().isDeleted());
         Temporal.Timestamp createdBlogLastChangedAt = blogCreateResult.getSyncMetadata().getLastChangedAt();
         assertNotNull(createdBlogLastChangedAt);
@@ -193,7 +193,7 @@ public final class AppSyncClientInstrumentationTest {
         assertEquals(updatedBlog.getOwner().getId(), blogUpdateResult.getModel().getOwner().getId());
         assertEquals(updatedBlog.getId(), blogUpdateResult.getModel().getId());
         assertEquals(2, blogUpdateResult.getModel().getPosts().size());
-        assertEquals(new Integer(2), blogUpdateResult.getSyncMetadata().getVersion());
+        assertEquals(Integer.valueOf(2), blogUpdateResult.getSyncMetadata().getVersion());
         assertNull(blogUpdateResult.getSyncMetadata().isDeleted());
         Temporal.Timestamp updatedBlogLastChangedAt = blogUpdateResult.getSyncMetadata().getLastChangedAt();
         assertNotNull(updatedBlogLastChangedAt);
