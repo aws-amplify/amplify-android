@@ -719,14 +719,27 @@ class AWSCognitoAuthPluginTest {
     }
 
     @Test
-    fun updateMFAPreferences() {
+    fun updateMFAPreferencesDeprecatedApi() {
         val smsPreference = MFAPreference.ENABLED
         val totpPreference = MFAPreference.PREFERRED
         val onSuccess = Action { }
         val onError = Consumer<AuthException> { }
         authPlugin.updateMFAPreference(smsPreference, totpPreference, onSuccess, onError)
         verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.updateMFAPreference(smsPreference, totpPreference, any(), any())
+            realPlugin.updateMFAPreference(smsPreference, totpPreference, null, any(), any())
+        }
+    }
+
+    @Test
+    fun updateMFAPreferences() {
+        val smsPreference = MFAPreference.ENABLED
+        val totpPreference = MFAPreference.PREFERRED
+        val emailPreference = MFAPreference.NOT_PREFERRED
+        val onSuccess = Action { }
+        val onError = Consumer<AuthException> { }
+        authPlugin.updateMFAPreference(smsPreference, totpPreference, emailPreference, onSuccess, onError)
+        verify(timeout = CHANNEL_TIMEOUT) {
+            realPlugin.updateMFAPreference(smsPreference, totpPreference, emailPreference, any(), any())
         }
     }
 

@@ -62,6 +62,7 @@ readonly config_files=(
     "aws-auth-cognito/src/androidTest/res/raw/awsconfiguration.json"
     "aws-auth-cognito/src/androidTest/res/raw/credentials.json"
     "aws-auth-cognito/src/androidTest/res/raw/amplify_outputs.json"
+    "aws-auth-cognito/src/androidTest/res/raw/amplify_outputs_email_or_totp_mfa.json"
 )
 
 # Set up output path
