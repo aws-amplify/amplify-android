@@ -27,4 +27,5 @@ val MFAType.challengeResponse: String
     get() = when (this) {
         MFAType.SMS -> "SMS_MFA"
         MFAType.TOTP -> "SOFTWARE_TOKEN_MFA"
+        MFAType.EMAIL -> "EMAIL_OTP"
     }
