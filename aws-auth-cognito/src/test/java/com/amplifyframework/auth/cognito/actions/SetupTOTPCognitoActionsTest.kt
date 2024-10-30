@@ -87,13 +87,17 @@ class SetupTOTPCognitoActionsTest {
         }
         val initiateAction = SetupTOTPCognitoActions.initiateTOTPSetup(
             SetupTOTPEvent.EventType.SetupTOTP(
-                SignInTOTPSetupData("", "SESSION", "USERNAME")
+                SignInTOTPSetupData("", "SESSION", "USERNAME"),
+                mapOf("MFAS_CAN_SETUP" to "SOFTWARE_TOKEN_MFA")
             )
         )
         initiateAction.execute(dispatcher, authEnvironment)
 
         val expectedEvent = SetupTOTPEvent(
-            SetupTOTPEvent.EventType.WaitForAnswer(SignInTOTPSetupData(secretCode, session, username))
+            SetupTOTPEvent.EventType.WaitForAnswer(
+                SignInTOTPSetupData(secretCode, session, username),
+                mapOf("MFAS_CAN_SETUP" to "SOFTWARE_TOKEN_MFA")
+            )
         )
         assertEquals(
             expectedEvent.type,
@@ -124,7 +128,8 @@ class SetupTOTPCognitoActionsTest {
         }
         val initiateAction = SetupTOTPCognitoActions.initiateTOTPSetup(
             SetupTOTPEvent.EventType.SetupTOTP(
-                SignInTOTPSetupData("", "SESSION", "USERNAME")
+                SignInTOTPSetupData("", "SESSION", "USERNAME"),
+                mapOf("MFAS_CAN_SETUP" to "SOFTWARE_TOKEN_MFA")
             )
         )
         initiateAction.execute(dispatcher, authEnvironment)

@@ -79,6 +79,7 @@ internal class TransferDB private constructor(context: Context) {
     fun insertMultipartUploadRecord(
         transferId: String,
         bucket: String,
+        region: String,
         key: String,
         file: File,
         fileOffset: Long,
@@ -90,7 +91,7 @@ internal class TransferDB private constructor(context: Context) {
     ): Uri {
         val values: ContentValues = generateContentValuesForMultiPartUpload(
             transferId,
-            bucket, key, file,
+            bucket, region, key, file,
             fileOffset, partNumber, uploadId, bytesTotal, isLastPart, ObjectMetadata(),
             null,
             useAccelerateEndpoint
@@ -114,6 +115,7 @@ internal class TransferDB private constructor(context: Context) {
         transferId: String,
         type: TransferType,
         bucket: String,
+        region: String,
         key: String,
         file: File?,
         cannedAcl: ObjectCannedAcl? = null,
@@ -124,6 +126,7 @@ internal class TransferDB private constructor(context: Context) {
             transferId,
             type,
             bucket,
+            region,
             key,
             file,
             metadata,
@@ -398,7 +401,7 @@ internal class TransferDB private constructor(context: Context) {
      */
     fun getTransferRecordById(id: Int): TransferRecord? {
         var transferRecord: TransferRecord? = null
-        var c: Cursor? = null
+        var c: Cursor?
         try {
             c = queryTransferById(id)
             c?.use {
@@ -415,7 +418,7 @@ internal class TransferDB private constructor(context: Context) {
 
     fun getTransferByTransferId(transferId: String): TransferRecord? {
         var transferRecord: TransferRecord? = null
-        var c: Cursor? = null
+        var c: Cursor?
         try {
             c = transferDBHelper.query(getTransferRecordIdUri(transferId))
             c.use {
@@ -560,6 +563,7 @@ internal class TransferDB private constructor(context: Context) {
         transferId: String,
         type: TransferType,
         bucket: String,
+        region: String,
         key: String,
         file: File,
         metadata: ObjectMetadata?,
@@ -570,6 +574,7 @@ internal class TransferDB private constructor(context: Context) {
             transferId,
             type,
             bucket,
+            region,
             key,
             file,
             metadata,
@@ -602,6 +607,7 @@ internal class TransferDB private constructor(context: Context) {
     fun generateContentValuesForMultiPartUpload(
         transferId: String,
         bucket: String?,
+        region: String?,
         key: String?,
         file: File,
         fileOffset: Long,
@@ -618,6 +624,7 @@ internal class TransferDB private constructor(context: Context) {
         values.put(TransferTable.COLUMN_TYPE, TransferType.UPLOAD.toString())
         values.put(TransferTable.COLUMN_STATE, TransferState.WAITING.toString())
         values.put(TransferTable.COLUMN_BUCKET_NAME, bucket)
+        values.put(TransferTable.COLUMN_REGION, region)
         values.put(TransferTable.COLUMN_KEY, key)
         values.put(TransferTable.COLUMN_FILE, file.absolutePath)
         values.put(TransferTable.COLUMN_BYTES_CURRENT, 0L)
@@ -723,6 +730,7 @@ internal class TransferDB private constructor(context: Context) {
         transferId: String,
         type: TransferType,
         bucket: String,
+        region: String,
         key: String,
         file: File?,
         metadata: ObjectMetadata?,
@@ -734,6 +742,7 @@ internal class TransferDB private constructor(context: Context) {
         values.put(TransferTable.COLUMN_TYPE, type.toString())
         values.put(TransferTable.COLUMN_STATE, TransferState.WAITING.toString())
         values.put(TransferTable.COLUMN_BUCKET_NAME, bucket)
+        values.put(TransferTable.COLUMN_REGION, region)
         values.put(TransferTable.COLUMN_KEY, key)
         values.put(TransferTable.COLUMN_FILE, file?.absolutePath)
         values.put(TransferTable.COLUMN_BYTES_CURRENT, 0L)

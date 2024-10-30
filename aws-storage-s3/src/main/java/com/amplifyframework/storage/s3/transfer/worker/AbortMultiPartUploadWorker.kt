@@ -20,6 +20,7 @@ import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.abortMultipartUpload
 import aws.sdk.kotlin.services.s3.withConfig
 import com.amplifyframework.storage.TransferState
+import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 
@@ -27,7 +28,7 @@ import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
  * Worker to abort pending multipart upload
  **/
 internal class AbortMultiPartUploadWorker(
-    private val s3: S3Client,
+    private val clientProvider: StorageTransferClientProvider,
     private val transferDB: TransferDB,
     private val transferStatusUpdater: TransferStatusUpdater,
     context: Context,
@@ -35,6 +36,7 @@ internal class AbortMultiPartUploadWorker(
 ) : BaseTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
 
     override suspend fun performWork(): Result {
+        val s3: S3Client = clientProvider.getStorageTransferClient(transferRecord.region, transferRecord.bucketName)
         return s3.withConfig {
             enableAccelerate = transferRecord.useAccelerateEndpoint == 1
         }.abortMultipartUpload {

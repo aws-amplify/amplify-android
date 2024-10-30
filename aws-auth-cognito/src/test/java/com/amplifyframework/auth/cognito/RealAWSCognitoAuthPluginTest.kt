@@ -30,6 +30,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpReques
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.EmailMfaSettingsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgetDeviceResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserAttributeVerificationCodeResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserResponse
@@ -98,13 +99,14 @@ import com.amplifyframework.statemachine.codegen.errors.SessionError
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
+import com.amplifyframework.testutils.await
 import featureTest.utilities.APICaptorFactory.Companion.onError
+import io.kotest.assertions.throwables.shouldThrowWithMessage
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.mockk.coEvery
-import io.mockk.coJustRun
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.invoke
-import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.mockkObject
@@ -120,11 +122,15 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class RealAWSCognitoAuthPluginTest {
 
     private val dummyToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkpvaG4gRG9lIiwiZXhwIjoxNTE2Mj" +
@@ -249,7 +255,7 @@ class RealAWSCognitoAuthPluginTest {
     @Test
     fun testGetCurrentUserSucceedsIfSignedIn() {
         // GIVEN
-        val onSuccess = mockk<Consumer<AuthUser>>()
+        val onSuccess = ConsumerWithLatch<AuthUser>()
         val onError = mockk<Consumer<AuthException>>()
         mockkObject(SessionHelper)
         every { SessionHelper.getUsername(any()) } returns "username"
@@ -258,7 +264,7 @@ class RealAWSCognitoAuthPluginTest {
         plugin.getCurrentUser(onSuccess, onError)
 
         // THEN
-        verify { onSuccess.accept(any()) }
+        onSuccess.shouldBeCalled()
         verify(exactly = 0) { onError.accept(any()) }
     }
 
@@ -266,7 +272,7 @@ class RealAWSCognitoAuthPluginTest {
     fun testGetCurrentUserFailsWithInvalidStateException() {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthUser>>()
-        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val onError = ConsumerWithLatch<AuthException>(expect = InvalidStateException())
 
         setupCurrentAuthState(authNState = AuthenticationState.NotConfigured())
 
@@ -274,15 +280,15 @@ class RealAWSCognitoAuthPluginTest {
         plugin.getCurrentUser(onSuccess, onError)
 
         // THEN
+        onError.shouldBeCalled()
         verify(exactly = 0) { onSuccess.accept(any()) }
-        verify { onError.accept(InvalidStateException()) }
     }
 
     @Test
     fun testGetCurrentUserFailsWithSignedOutException() {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthUser>>()
-        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val onError = ConsumerWithLatch<AuthException>(expect = SignedOutException())
 
         setupCurrentAuthState(
             authNState = AuthenticationState.SignedOut(mockk()),
@@ -292,23 +298,18 @@ class RealAWSCognitoAuthPluginTest {
         plugin.getCurrentUser(onSuccess, onError)
 
         // THEN
+        onError.shouldBeCalled()
         verify(exactly = 0) { onSuccess.accept(any()) }
-        verify { onError.accept(SignedOutException()) }
     }
 
     @Test
     fun testGetCurrentUserFailsWithExpiredSessionException() {
         // GIVEN
         val onGetCurrentUserSuccess = mockk<Consumer<AuthUser>>()
-        val onGetCurrentUserError = mockk<Consumer<AuthException>>(relaxed = true)
+        val onGetCurrentUserError = ConsumerWithLatch<AuthException>(expect = SessionExpiredException())
         val sessionExpiredException = SessionExpiredException()
         val sessionError = SessionError(sessionExpiredException, credentials)
-        val authNState = AuthenticationState.SignedIn(
-            mockk {
-                every { username } returns "username"
-            },
-            mockk()
-        )
+        val authNState = AuthenticationState.SignedIn(mockk { every { username } returns "username" }, mockk())
         val authZState = AuthorizationState.Error(sessionError)
 
         setupCurrentAuthState(
@@ -318,9 +319,7 @@ class RealAWSCognitoAuthPluginTest {
 
         val sessionErrorState = mockk<AuthState> {
             every { this@mockk.authNState } returns AuthenticationState.SignedIn(
-                mockk {
-                    every { username } returns "username"
-                },
+                mockk { every { username } returns "username" },
                 mockk()
             )
             every { this@mockk.authZState } returns AuthorizationState.Error(sessionError)
@@ -336,8 +335,8 @@ class RealAWSCognitoAuthPluginTest {
         plugin.getCurrentUser(onGetCurrentUserSuccess, onGetCurrentUserError)
 
         // THEN
+        onGetCurrentUserError.shouldBeCalled()
         verify(exactly = 0) { onGetCurrentUserSuccess.accept(any()) }
-        verify(timeout = 1000L) { onGetCurrentUserError.accept(sessionExpiredException) }
     }
 
     @Test
@@ -364,9 +363,9 @@ class RealAWSCognitoAuthPluginTest {
     @Test
     fun testConfirmSignUpFailsIfNotConfigured() {
         // GIVEN
-        val onSuccess = mockk<Consumer<AuthSignUpResult>>()
-        val onError = mockk<Consumer<AuthException>>(relaxed = true)
         val expectedAuthError = InvalidUserPoolConfigurationException()
+        val onSuccess = mockk<Consumer<AuthSignUpResult>>()
+        val onError = ConsumerWithLatch<AuthException>(expect = expectedAuthError)
 
         setupCurrentAuthState(authNState = AuthenticationState.NotConfigured())
 
@@ -374,16 +373,16 @@ class RealAWSCognitoAuthPluginTest {
         plugin.confirmSignUp("user", "pass", AuthConfirmSignUpOptions.defaults(), onSuccess, onError)
 
         // THEN
+        onError.shouldBeCalled()
         verify(exactly = 0) { onSuccess.accept(any()) }
-        verify { onError.accept(expectedAuthError) }
     }
 
     @Test
     fun testSignInFailsIfNotConfigured() {
         // GIVEN
-        val onSuccess = mockk<Consumer<AuthSignInResult>>()
-        val onError = mockk<Consumer<AuthException>>(relaxed = true)
         val expectedAuthError = InvalidUserPoolConfigurationException()
+        val onSuccess = mockk<Consumer<AuthSignInResult>>()
+        val onError = ConsumerWithLatch<AuthException>(expect = expectedAuthError)
 
         setupCurrentAuthState(authNState = AuthenticationState.NotConfigured())
 
@@ -392,14 +391,14 @@ class RealAWSCognitoAuthPluginTest {
         plugin.signIn("user", "password", AuthSignInOptions.defaults(), onSuccess, onError)
 
         // THEN
+        onError.shouldBeCalled()
         verify(exactly = 0) { onSuccess.accept(any()) }
-        verify { onError.accept(expectedAuthError) }
     }
 
     @Test
     fun testSignInFailsIfAlreadySignedIn() {
         // GIVEN
-        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+        val onError = ConsumerWithLatch<AuthException>()
         coEvery { authConfiguration.authFlowType } returns AuthFlowType.USER_SRP_AUTH
 
         setupCurrentAuthState(
@@ -419,14 +418,13 @@ class RealAWSCognitoAuthPluginTest {
         plugin.signIn("user", "password", AuthSignInOptions.defaults(), mockk(), onError)
 
         // THEN
-        verify { onError.accept(any()) }
+        onError.shouldBeCalled()
     }
 
     @Test
     fun testResendSignUpCodeFailsIfNotConfigured() {
         // GIVEN
-        val onError = mockk<Consumer<AuthException>>(relaxed = true)
-        val expectedAuthError = InvalidUserPoolConfigurationException()
+        val onError = ConsumerWithLatch<AuthException>(expect = InvalidUserPoolConfigurationException())
 
         setupCurrentAuthState(authNState = AuthenticationState.NotConfigured())
 
@@ -434,7 +432,7 @@ class RealAWSCognitoAuthPluginTest {
         plugin.resendSignUpCode("user", AuthResendSignUpCodeOptions.defaults(), mockk(), onError)
 
         // THEN
-        verify { onError.accept(expectedAuthError) }
+        onError.shouldBeCalled()
     }
 
     @Test
@@ -449,7 +447,7 @@ class RealAWSCognitoAuthPluginTest {
         // WHEN
         plugin.updatePassword("old", "new", onSuccess, mockk())
 
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
     }
 
     @Test
@@ -461,7 +459,7 @@ class RealAWSCognitoAuthPluginTest {
 
         // WHEN
         plugin.updatePassword("old", "new", mockk(), onError)
-        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        onError.shouldBeCalled()
     }
 
     @Test
@@ -469,92 +467,74 @@ class RealAWSCognitoAuthPluginTest {
         val onError = ConsumerWithLatch<AuthException>()
 
         plugin.updatePassword("old", "new", mockk(), onError)
-        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        onError.shouldBeCalled()
     }
 
     @Test
     fun `reset password fails if cognitoIdentityProviderClient is not set`() {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthResetPasswordResult>>()
-        val onError = mockk<Consumer<AuthException>>(relaxed = true)
-        val expectedAuthError = InvalidUserPoolConfigurationException()
+        val onError = ConsumerWithLatch<AuthException>(expect = InvalidUserPoolConfigurationException())
 
         val userPool = UserPoolConfiguration.invoke { appClientId = "app Client Id" }
         every { authService.cognitoIdentityProviderClient } returns null
         every { authConfiguration.userPool } returns userPool
 
-        val errorCaptor = slot<InvalidUserPoolConfigurationException>()
-        justRun { onError.accept(capture(errorCaptor)) }
-
         // WHEN
         plugin.resetPassword("user", AuthResetPasswordOptions.defaults(), onSuccess, onError)
 
         // THEN
+        onError.shouldBeCalled()
         verify(exactly = 0) { onSuccess.accept(any()) }
-        assertEquals(expectedAuthError.toString(), errorCaptor.captured.toString())
     }
 
     @Test
     fun `reset password fails if appClientId is not set`() {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthResetPasswordResult>>()
-        val onError = mockk<Consumer<AuthException>>(relaxed = true)
-        val expectedAuthError = InvalidUserPoolConfigurationException()
+        val onError = ConsumerWithLatch<AuthException>(expect = InvalidUserPoolConfigurationException())
 
         val userPool = UserPoolConfiguration.invoke { appClientId = null }
         every { authService.cognitoIdentityProviderClient } returns mockk()
         every { authConfiguration.userPool } returns userPool
 
-        val errorCaptor = slot<InvalidUserPoolConfigurationException>()
-        justRun { onError.accept(capture(errorCaptor)) }
-
         // WHEN
         plugin.resetPassword("user", AuthResetPasswordOptions.defaults(), onSuccess, onError)
 
         // THEN
+        onError.shouldBeCalled()
         verify(exactly = 0) { onSuccess.accept(any()) }
-        assertEquals(expectedAuthError.toString(), errorCaptor.captured.toString())
     }
+
     @Test
     fun `reset password executes ResetPasswordUseCase if required params are set`() {
         // GIVEN
-        val onSuccess = mockk<Consumer<AuthResetPasswordResult>>()
+        val onSuccess = ConsumerWithLatch<AuthResetPasswordResult>()
         val onError = mockk<Consumer<AuthException>>()
         val options = mockk<AuthResetPasswordOptions>()
         val username = "user"
         val pinpointAppId = "abc"
         val encodedData = "encodedData"
 
-        coEvery {
-            authEnvironment.getUserContextData(username)
-        } returns encodedData
-
-        every {
-            authEnvironment.getPinpointEndpointId()
-        } returns pinpointAppId
+        coEvery { authEnvironment.getUserContextData(username) } returns encodedData
+        every { authEnvironment.getPinpointEndpointId() } returns pinpointAppId
 
         mockkConstructor(ResetPasswordUseCase::class)
 
         every { authService.cognitoIdentityProviderClient } returns mockk()
         every { authConfiguration.userPool } returns UserPoolConfiguration.invoke { appClientId = "app Client Id" }
-        coJustRun {
-            anyConstructed<ResetPasswordUseCase>().execute(
-                username,
-                options,
-                encodedData,
-                pinpointAppId,
-                onSuccess,
-                onError
-            )
+
+        coEvery {
+            anyConstructed<ResetPasswordUseCase>().execute(any(), any(), any(), any(), any(), any())
+        } answers {
+            arg<Consumer<AuthResetPasswordResult>>(4).accept(mockk())
         }
 
         // WHEN
         plugin.resetPassword(username, options, onSuccess, onError)
 
         // THEN
-        coVerify {
-            anyConstructed<ResetPasswordUseCase>().execute(username, options, any(), pinpointAppId, onSuccess, onError)
-        }
+        onSuccess.shouldBeCalled()
     }
 
     @Test
@@ -592,7 +572,7 @@ class RealAWSCognitoAuthPluginTest {
         // WHEN
         plugin.fetchUserAttributes(onSuccess, mockk())
 
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
         assertEquals(expectedResult, onSuccess.captured)
     }
 
@@ -606,7 +586,7 @@ class RealAWSCognitoAuthPluginTest {
         // WHEN
         plugin.fetchUserAttributes(mockk(), onError)
 
-        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        onError.shouldBeCalled()
     }
 
     @Test
@@ -623,7 +603,7 @@ class RealAWSCognitoAuthPluginTest {
         plugin.confirmResetPassword("user", "pass", "code", mockk(), mockk(), onError)
 
         // Then
-        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        onError.shouldBeCalled()
     }
 
     @Test
@@ -688,7 +668,7 @@ class RealAWSCognitoAuthPluginTest {
         plugin.confirmResetPassword(user, pass, code, AuthConfirmResetPasswordOptions.defaults(), onSuccess, mockk())
 
         // THEN
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
     }
 
     @Test
@@ -709,7 +689,7 @@ class RealAWSCognitoAuthPluginTest {
         plugin.confirmResetPassword(user, pass, code, AuthConfirmResetPasswordOptions.defaults(), mockk(), onError)
 
         // THEN
-        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        onError.shouldBeCalled()
         assertEquals(expectedException, onError.captured.cause)
     }
 
@@ -807,9 +787,9 @@ class RealAWSCognitoAuthPluginTest {
 
         // WHEN
         plugin.signUp(username, password, options, onSuccess, mockk())
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
 
         // THEN
+        onSuccess.shouldBeCalled()
         assertEquals(expectedAuthSignUpResult, onSuccess.captured)
     }
 
@@ -967,7 +947,7 @@ class RealAWSCognitoAuthPluginTest {
 
         // WHEN
         plugin.resendSignUpCode(username, AuthResendSignUpCodeOptions.defaults(), onSuccess, onError)
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
 
         // THEN
         assertEquals(expectedCodeDeliveryDetails, onSuccess.captured)
@@ -987,7 +967,7 @@ class RealAWSCognitoAuthPluginTest {
             onError
         )
 
-        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        onError.shouldBeCalled()
     }
 
     @Test
@@ -1008,7 +988,7 @@ class RealAWSCognitoAuthPluginTest {
             onError
         )
 
-        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        onError.shouldBeCalled()
     }
 
     @Test
@@ -1027,7 +1007,7 @@ class RealAWSCognitoAuthPluginTest {
             onError
         )
 
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
         assertTrue(onSuccess.captured.isUpdated, "attribute should be successfully updated")
         assertNotNull(onSuccess.captured.nextStep, "next step should not be null")
         assertNull(onSuccess.captured.nextStep.codeDeliveryDetails, "code delivery details should be null")
@@ -1058,7 +1038,7 @@ class RealAWSCognitoAuthPluginTest {
             mockk()
         )
 
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
         assertTrue(onSuccess.captured.isUpdated, "attribute should be successfully updated")
         assertNotNull(onSuccess.captured.nextStep, "next step should not be null")
         assertNull(onSuccess.captured.nextStep.codeDeliveryDetails, "code delivery details should be null")
@@ -1100,7 +1080,7 @@ class RealAWSCognitoAuthPluginTest {
             mockk()
         )
 
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
         assertEquals(onSuccess.captured.size, 2)
         // nickname
         assertNotNull(onSuccess.captured[AuthUserAttributeKey.nickname()], "nick name should be in result")
@@ -1163,7 +1143,7 @@ class RealAWSCognitoAuthPluginTest {
             onError
         )
 
-        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        onError.shouldBeCalled()
     }
 
     @Test
@@ -1194,7 +1174,7 @@ class RealAWSCognitoAuthPluginTest {
             onError
         )
 
-        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        onError.shouldBeCalled()
     }
 
     @Test
@@ -1214,7 +1194,7 @@ class RealAWSCognitoAuthPluginTest {
             onError
         )
 
-        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        onError.shouldBeCalled()
         assertEquals(expectedException, onError.captured.cause)
     }
 
@@ -1234,7 +1214,7 @@ class RealAWSCognitoAuthPluginTest {
             mockk()
         )
 
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
     }
 
     @Test
@@ -1251,7 +1231,7 @@ class RealAWSCognitoAuthPluginTest {
             onError
         )
 
-        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        onError.shouldBeCalled()
     }
 
     @Test
@@ -1281,7 +1261,7 @@ class RealAWSCognitoAuthPluginTest {
             onError
         )
 
-        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        onError.shouldBeCalled()
     }
 
     @Test
@@ -1304,7 +1284,7 @@ class RealAWSCognitoAuthPluginTest {
             onError
         )
 
-        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        onError.shouldBeCalled()
         assertEquals(expectedException, onError.captured.cause)
     }
 
@@ -1337,7 +1317,7 @@ class RealAWSCognitoAuthPluginTest {
             mockk()
         )
 
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
         // nickname
         assertEquals(
             onSuccess.captured.attributeName,
@@ -1372,12 +1352,10 @@ class RealAWSCognitoAuthPluginTest {
         configJsonObject.put("Endpoint", invalidEndpoint)
         val expectedErrorMessage = "Invalid endpoint value $invalidEndpoint. Expected fully qualified hostname with " +
             "no scheme, no path and no query"
-        val message = try {
+
+        shouldThrowWithMessage<Exception>(expectedErrorMessage) {
             UserPoolConfiguration.fromJson(configJsonObject).build()
-        } catch (ex: Exception) {
-            ex.message
         }
-        assertEquals(message, expectedErrorMessage, "Error message do not match expected one")
     }
 
     @Test
@@ -1390,12 +1368,10 @@ class RealAWSCognitoAuthPluginTest {
         configJsonObject.put("Endpoint", invalidEndpoint)
         val expectedErrorMessage = "Invalid endpoint value $invalidEndpoint. Expected fully qualified hostname with " +
             "no scheme, no path and no query"
-        val message = try {
+
+        shouldThrowWithMessage<Exception>(expectedErrorMessage) {
             UserPoolConfiguration.fromJson(configJsonObject).build()
-        } catch (ex: Exception) {
-            ex.message
         }
-        assertEquals(message, expectedErrorMessage, "Error message do not match expected one")
     }
 
     @Test
@@ -1409,12 +1385,10 @@ class RealAWSCognitoAuthPluginTest {
         configJsonObject.put("Endpoint", invalidEndpoint)
         val expectedErrorMessage = "Invalid endpoint value $invalidEndpoint. Expected fully qualified hostname with " +
             "no scheme, no path and no query"
-        val message = try {
+
+        shouldThrowWithMessage<Exception>(expectedErrorMessage) {
             UserPoolConfiguration.fromJson(configJsonObject).build()
-        } catch (ex: Exception) {
-            ex.message
         }
-        assertEquals(message, expectedErrorMessage, "Error message do not match expected one")
     }
 
     @Test
@@ -1479,7 +1453,7 @@ class RealAWSCognitoAuthPluginTest {
 
         plugin.setUpTOTP(onSuccess, mockk())
 
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
         assertEquals(secretCode, onSuccess.captured.sharedSecret)
     }
 
@@ -1496,7 +1470,7 @@ class RealAWSCognitoAuthPluginTest {
 
         plugin.setUpTOTP(mockk(), onError)
 
-        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        onError.shouldBeCalled()
         assertEquals(expectedErrorMessage, onError.captured.cause?.message)
     }
 
@@ -1526,7 +1500,7 @@ class RealAWSCognitoAuthPluginTest {
             mockk()
         )
 
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
     }
 
     @Test
@@ -1557,7 +1531,7 @@ class RealAWSCognitoAuthPluginTest {
             onError
         )
 
-        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        onError.shouldBeCalled()
         assertEquals(errorMessage, onError.captured.cause?.message)
     }
 
@@ -1579,7 +1553,7 @@ class RealAWSCognitoAuthPluginTest {
         }
         plugin.fetchMFAPreference(onSuccess, mockk())
 
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
         assertEquals(setOf(MFAType.SMS, MFAType.TOTP), onSuccess.captured.enabled)
         assertEquals(MFAType.TOTP, onSuccess.captured.preferred)
     }
@@ -1603,9 +1577,9 @@ class RealAWSCognitoAuthPluginTest {
                 username = ""
             }
         }
-        plugin.updateMFAPreference(MFAPreference.ENABLED, MFAPreference.PREFERRED, onSuccess, mockk())
+        plugin.updateMFAPreference(MFAPreference.ENABLED, MFAPreference.PREFERRED, null, onSuccess, mockk())
 
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
         assertEquals(
             SmsMfaSettingsType.invoke {
@@ -1644,9 +1618,11 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.ENABLED, MFAPreference.ENABLED, onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.ENABLED, MFAPreference.ENABLED, null, onSuccess, mockk()
+        )
 
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
         assertEquals(
             SmsMfaSettingsType.invoke {
@@ -1685,9 +1661,11 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.ENABLED, MFAPreference.ENABLED, onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.ENABLED, MFAPreference.ENABLED, null, onSuccess, mockk()
+        )
 
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
         assertEquals(
             SmsMfaSettingsType.invoke {
@@ -1706,12 +1684,62 @@ class RealAWSCognitoAuthPluginTest {
     }
 
     @Test
-    fun `updateMFAPreferences when both provided sms and totp preference are null and cognito throws an exception`() {
+    fun `updateMFAPreferences when current preference is email with additional sms and totp preferences are enabled`() {
+        val onSuccess = ActionWithLatch()
+        val setUserMFAPreferenceRequest = slot<SetUserMfaPreferenceRequest>()
+
+        coEvery {
+            mockCognitoIPClient.getUser {
+                accessToken = credentials.signedInData.cognitoUserPoolTokens.accessToken
+            }
+        }.answers {
+            GetUserResponse.invoke {
+                userMfaSettingList = listOf("SMS_MFA", "SOFTWARE_TOKEN_MFA", "EMAIL_OTP")
+                preferredMfaSetting = "EMAIL_OTP"
+                userAttributes = listOf()
+                username = ""
+            }
+        }
+
+        coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
+            SetUserMfaPreferenceResponse.invoke {}
+        }
+        plugin.updateMFAPreference(
+            MFAPreference.ENABLED, MFAPreference.ENABLED, MFAPreference.ENABLED, onSuccess, mockk()
+        )
+
+        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        assertTrue(setUserMFAPreferenceRequest.isCaptured)
+        assertEquals(
+            EmailMfaSettingsType.invoke {
+                enabled = true
+                preferredMfa = true
+            },
+            setUserMFAPreferenceRequest.captured.emailMfaSettings
+        )
+        assertEquals(
+            SmsMfaSettingsType.invoke {
+                enabled = true
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.smsMfaSettings
+        )
+        assertEquals(
+            SoftwareTokenMfaSettingsType.invoke {
+                enabled = true
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
+        )
+    }
+
+    @Test
+    fun `updateMFAPreferences when provided email sms and totp preference are null and cognito throws an exception`() {
         val onError = ConsumerWithLatch<AuthException>()
         coEvery { mockCognitoIPClient.setUserMfaPreference(any()) } throws Exception()
-        plugin.updateMFAPreference(null, null, mockk(), onError)
+        plugin.updateMFAPreference(null, null, null, mockk(), onError)
 
-        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        onError.shouldBeCalled()
     }
 
     @Test
@@ -1723,13 +1751,13 @@ class RealAWSCognitoAuthPluginTest {
                 accessToken = credentials.signedInData.cognitoUserPoolTokens.accessToken
             }
         } throws Exception()
-        plugin.updateMFAPreference(null, null, mockk(), onError)
+        plugin.updateMFAPreference(null, null, null, mockk(), onError)
 
-        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        onError.shouldBeCalled()
     }
 
     @Test
-    fun `updatepref  when currentpref is null and TOTP is enabled and SMS is enabled`() {
+    fun `updatepref  when currentpref is null and TOTP, SMS, and email are enabled`() {
         val onSuccess = ActionWithLatch()
         val setUserMFAPreferenceRequest = slot<SetUserMfaPreferenceRequest>()
 
@@ -1749,9 +1777,11 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.ENABLED, MFAPreference.ENABLED, onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.ENABLED, MFAPreference.ENABLED, MFAPreference.ENABLED, onSuccess, mockk()
+        )
 
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
         assertEquals(
             SmsMfaSettingsType.invoke {
@@ -1767,10 +1797,17 @@ class RealAWSCognitoAuthPluginTest {
             },
             setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
         )
+        assertEquals(
+            EmailMfaSettingsType.invoke {
+                enabled = true
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.emailMfaSettings
+        )
     }
 
     @Test
-    fun `updatepref  when currentpref is null and TOTP is enabled and SMS is disabled`() {
+    fun `updatepref when currentpref is null and TOTP is enabled and SMS and email are disabled`() {
         val onSuccess = ActionWithLatch()
         val setUserMFAPreferenceRequest = slot<SetUserMfaPreferenceRequest>()
 
@@ -1790,9 +1827,11 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.ENABLED, MFAPreference.DISABLED, onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.ENABLED, MFAPreference.DISABLED, MFAPreference.DISABLED, onSuccess, mockk()
+        )
 
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
         assertEquals(
             SmsMfaSettingsType.invoke {
@@ -1808,10 +1847,17 @@ class RealAWSCognitoAuthPluginTest {
             },
             setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
         )
+        assertEquals(
+            EmailMfaSettingsType.invoke {
+                enabled = false
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.emailMfaSettings
+        )
     }
 
     @Test
-    fun `updatepref  when currentpref is null and TOTP is disabled and SMS is enabled`() {
+    fun `updatepref when currentpref is null and TOTP and email are disabled and SMS is enabled`() {
         val onSuccess = ActionWithLatch()
         val setUserMFAPreferenceRequest = slot<SetUserMfaPreferenceRequest>()
 
@@ -1831,9 +1877,11 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.DISABLED, MFAPreference.ENABLED, onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.DISABLED, MFAPreference.ENABLED, MFAPreference.DISABLED, onSuccess, mockk()
+        )
 
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
         assertEquals(
             SmsMfaSettingsType.invoke {
@@ -1849,10 +1897,17 @@ class RealAWSCognitoAuthPluginTest {
             },
             setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
         )
+        assertEquals(
+            EmailMfaSettingsType.invoke {
+                enabled = false
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.emailMfaSettings
+        )
     }
 
     @Test
-    fun `updatepref  when currentpref is null and SMS is preferred and TOTP is enabled`() {
+    fun `updatepref when currentpref is null and TOTP and SMS are disabled and email is enabled`() {
         val onSuccess = ActionWithLatch()
         val setUserMFAPreferenceRequest = slot<SetUserMfaPreferenceRequest>()
 
@@ -1872,9 +1927,61 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.PREFERRED, MFAPreference.ENABLED, onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.DISABLED, MFAPreference.DISABLED, MFAPreference.ENABLED, onSuccess, mockk()
+        )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        assertTrue(setUserMFAPreferenceRequest.isCaptured)
+        assertEquals(
+            SmsMfaSettingsType.invoke {
+                enabled = false
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.smsMfaSettings
+        )
+        assertEquals(
+            SoftwareTokenMfaSettingsType.invoke {
+                enabled = false
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
+        )
+        assertEquals(
+            EmailMfaSettingsType.invoke {
+                enabled = true
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.emailMfaSettings
+        )
+    }
+
+    @Test
+    fun `updatepref when currentpref is null and SMS is preferred and TOTP and email are enabled`() {
+        val onSuccess = ActionWithLatch()
+        val setUserMFAPreferenceRequest = slot<SetUserMfaPreferenceRequest>()
+
+        coEvery {
+            mockCognitoIPClient.getUser {
+                accessToken = credentials.signedInData.cognitoUserPoolTokens.accessToken
+            }
+        }.answers {
+            GetUserResponse.invoke {
+                userMfaSettingList = null
+                preferredMfaSetting = null
+                userAttributes = listOf()
+                username = ""
+            }
+        }
+
+        coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
+            SetUserMfaPreferenceResponse.invoke {}
+        }
+        plugin.updateMFAPreference(
+            MFAPreference.PREFERRED, MFAPreference.ENABLED, MFAPreference.ENABLED, onSuccess, mockk()
+        )
+
+        onSuccess.shouldBeCalled()
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
         assertEquals(
             SmsMfaSettingsType.invoke {
@@ -1890,10 +1997,17 @@ class RealAWSCognitoAuthPluginTest {
             },
             setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
         )
+        assertEquals(
+            SoftwareTokenMfaSettingsType.invoke {
+                enabled = true
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
+        )
     }
 
     @Test
-    fun `updatepref  when currentpref is null and SMS is enabled and TOTP is preferred`() {
+    fun `updatepref when currentpref is null and SMS and email are enabled and TOTP is preferred`() {
         val onSuccess = ActionWithLatch()
         val setUserMFAPreferenceRequest = slot<SetUserMfaPreferenceRequest>()
 
@@ -1913,9 +2027,11 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.ENABLED, MFAPreference.PREFERRED, onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.ENABLED, MFAPreference.PREFERRED, MFAPreference.ENABLED, onSuccess, mockk()
+        )
 
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
         assertEquals(
             SmsMfaSettingsType.invoke {
@@ -1931,10 +2047,17 @@ class RealAWSCognitoAuthPluginTest {
             },
             setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
         )
+        assertEquals(
+            EmailMfaSettingsType.invoke {
+                enabled = true
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.emailMfaSettings
+        )
     }
 
     @Test
-    fun `updatepref  when currentpref is null and TOTP is preferred and SMS is disabled`() {
+    fun `updatepref when currentpref is null and SMS and TOTP are enabled and email is preferred`() {
         val onSuccess = ActionWithLatch()
         val setUserMFAPreferenceRequest = slot<SetUserMfaPreferenceRequest>()
 
@@ -1954,9 +2077,61 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.DISABLED, MFAPreference.PREFERRED, onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.ENABLED, MFAPreference.ENABLED, MFAPreference.PREFERRED, onSuccess, mockk()
+        )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        assertTrue(setUserMFAPreferenceRequest.isCaptured)
+        assertEquals(
+            SmsMfaSettingsType.invoke {
+                enabled = true
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.smsMfaSettings
+        )
+        assertEquals(
+            SoftwareTokenMfaSettingsType.invoke {
+                enabled = true
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
+        )
+        assertEquals(
+            EmailMfaSettingsType.invoke {
+                enabled = true
+                preferredMfa = true
+            },
+            setUserMFAPreferenceRequest.captured.emailMfaSettings
+        )
+    }
+
+    @Test
+    fun `updatepref when currentpref is null and TOTP is preferred and SMS and email are disabled`() {
+        val onSuccess = ActionWithLatch()
+        val setUserMFAPreferenceRequest = slot<SetUserMfaPreferenceRequest>()
+
+        coEvery {
+            mockCognitoIPClient.getUser {
+                accessToken = credentials.signedInData.cognitoUserPoolTokens.accessToken
+            }
+        }.answers {
+            GetUserResponse.invoke {
+                userMfaSettingList = null
+                preferredMfaSetting = null
+                userAttributes = listOf()
+                username = ""
+            }
+        }
+
+        coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
+            SetUserMfaPreferenceResponse.invoke {}
+        }
+        plugin.updateMFAPreference(
+            MFAPreference.DISABLED, MFAPreference.PREFERRED, MFAPreference.DISABLED, onSuccess, mockk()
+        )
+
+        onSuccess.shouldBeCalled()
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
         assertEquals(
             SmsMfaSettingsType.invoke {
@@ -1972,10 +2147,17 @@ class RealAWSCognitoAuthPluginTest {
             },
             setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
         )
+        assertEquals(
+            EmailMfaSettingsType.invoke {
+                enabled = false
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.emailMfaSettings
+        )
     }
 
     @Test
-    fun `updatepref  when currentpref is null and TOTP is disabled and SMS is preferred`() {
+    fun `updatepref when currentpref is null and TOTP and email are disabled and SMS is preferred`() {
         val onSuccess = ActionWithLatch()
         val setUserMFAPreferenceRequest = slot<SetUserMfaPreferenceRequest>()
 
@@ -1995,9 +2177,11 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.PREFERRED, MFAPreference.DISABLED, onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.PREFERRED, MFAPreference.DISABLED, MFAPreference.DISABLED, onSuccess, mockk()
+        )
 
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
         assertEquals(
             SmsMfaSettingsType.invoke {
@@ -2013,10 +2197,67 @@ class RealAWSCognitoAuthPluginTest {
             },
             setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
         )
+        assertEquals(
+            EmailMfaSettingsType.invoke {
+                enabled = false
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.emailMfaSettings
+        )
     }
 
     @Test
-    fun `updatepref  when currentpref is TOTP preferred and TOTP parameter is disabled`() {
+    fun `updatepref when currentpref is null and TOTP and sms are disabled and email is preferred`() {
+        val onSuccess = ActionWithLatch()
+        val setUserMFAPreferenceRequest = slot<SetUserMfaPreferenceRequest>()
+
+        coEvery {
+            mockCognitoIPClient.getUser {
+                accessToken = credentials.signedInData.cognitoUserPoolTokens.accessToken
+            }
+        }.answers {
+            GetUserResponse.invoke {
+                userMfaSettingList = null
+                preferredMfaSetting = null
+                userAttributes = listOf()
+                username = ""
+            }
+        }
+
+        coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
+            SetUserMfaPreferenceResponse.invoke {}
+        }
+        plugin.updateMFAPreference(
+            MFAPreference.DISABLED, MFAPreference.DISABLED, MFAPreference.PREFERRED, onSuccess, mockk()
+        )
+
+        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        assertTrue(setUserMFAPreferenceRequest.isCaptured)
+        assertEquals(
+            SmsMfaSettingsType.invoke {
+                enabled = false
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.smsMfaSettings
+        )
+        assertEquals(
+            SoftwareTokenMfaSettingsType.invoke {
+                enabled = false
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
+        )
+        assertEquals(
+            EmailMfaSettingsType.invoke {
+                enabled = true
+                preferredMfa = true
+            },
+            setUserMFAPreferenceRequest.captured.emailMfaSettings
+        )
+    }
+
+    @Test
+    fun `updatepref when currentpref is TOTP preferred and TOTP parameter is disabled`() {
         val onSuccess = ActionWithLatch()
         val setUserMFAPreferenceRequest = slot<SetUserMfaPreferenceRequest>()
 
@@ -2036,9 +2277,11 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.ENABLED, MFAPreference.DISABLED, onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.ENABLED, MFAPreference.DISABLED, MFAPreference.ENABLED, onSuccess, mockk()
+        )
 
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
         assertEquals(
             SmsMfaSettingsType.invoke {
@@ -2054,10 +2297,17 @@ class RealAWSCognitoAuthPluginTest {
             },
             setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
         )
+        assertEquals(
+            EmailMfaSettingsType.invoke {
+                enabled = true
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.emailMfaSettings
+        )
     }
 
     @Test
-    fun `updatepref  when currentpref is SMS preferred and SMS parameter is disabled`() {
+    fun `updatepref when currentpref is SMS preferred and SMS parameter is disabled`() {
         val onSuccess = ActionWithLatch()
         val setUserMFAPreferenceRequest = slot<SetUserMfaPreferenceRequest>()
 
@@ -2077,9 +2327,11 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.DISABLED, MFAPreference.ENABLED, onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.DISABLED, MFAPreference.ENABLED, MFAPreference.ENABLED, onSuccess, mockk()
+        )
 
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
         assertEquals(
             SmsMfaSettingsType.invoke {
@@ -2094,6 +2346,63 @@ class RealAWSCognitoAuthPluginTest {
                 preferredMfa = false
             },
             setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
+        )
+        assertEquals(
+            EmailMfaSettingsType.invoke {
+                enabled = true
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.emailMfaSettings
+        )
+    }
+
+    @Test
+    fun `updatepref when currentpref is email preferred and email parameter is disabled`() {
+        val onSuccess = ActionWithLatch()
+        val setUserMFAPreferenceRequest = slot<SetUserMfaPreferenceRequest>()
+
+        coEvery {
+            mockCognitoIPClient.getUser {
+                accessToken = credentials.signedInData.cognitoUserPoolTokens.accessToken
+            }
+        }.answers {
+            GetUserResponse.invoke {
+                userMfaSettingList = listOf("EMAIL_OTP")
+                preferredMfaSetting = "EMAIL_OTP"
+                userAttributes = listOf()
+                username = ""
+            }
+        }
+
+        coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
+            SetUserMfaPreferenceResponse.invoke {}
+        }
+        plugin.updateMFAPreference(
+            MFAPreference.ENABLED, MFAPreference.ENABLED, MFAPreference.DISABLED, onSuccess, mockk()
+        )
+
+        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        assertTrue(setUserMFAPreferenceRequest.isCaptured)
+        assertEquals(
+            SmsMfaSettingsType.invoke {
+                enabled = true
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.smsMfaSettings
+        )
+        assertEquals(
+            SoftwareTokenMfaSettingsType.invoke {
+                enabled = true
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
+        )
+        assertEquals(
+            EmailMfaSettingsType.invoke {
+                enabled = false
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.emailMfaSettings
         )
     }
 
@@ -2119,9 +2428,11 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.DISABLED, MFAPreference.ENABLED, onSuccess, onError)
+        plugin.updateMFAPreference(
+            MFAPreference.DISABLED, MFAPreference.ENABLED, MFAPreference.DISABLED, onSuccess, onError
+        )
 
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
         assertEquals(
             SmsMfaSettingsType.invoke {
@@ -2137,10 +2448,17 @@ class RealAWSCognitoAuthPluginTest {
             },
             setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
         )
+        assertEquals(
+            EmailMfaSettingsType.invoke {
+                enabled = false
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.emailMfaSettings
+        )
     }
 
     @Test
-    fun `updatepref  when currentpref is TOTP preferred and params include SMS preferred and TOTP enabled`() {
+    fun `updatepref when currentpref is TOTP preferred and params include SMS preferred and TOTP and email enabled`() {
         val onSuccess = ActionWithLatch()
         val setUserMFAPreferenceRequest = slot<SetUserMfaPreferenceRequest>()
 
@@ -2160,9 +2478,11 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.PREFERRED, MFAPreference.ENABLED, onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.PREFERRED, MFAPreference.ENABLED, MFAPreference.ENABLED, onSuccess, mockk()
+        )
 
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
         assertEquals(
             SmsMfaSettingsType.invoke {
@@ -2178,10 +2498,17 @@ class RealAWSCognitoAuthPluginTest {
             },
             setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
         )
+        assertEquals(
+            EmailMfaSettingsType.invoke {
+                enabled = true
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.emailMfaSettings
+        )
     }
 
     @Test
-    fun `updatepref  when currentpref is SMS preferred and params include SMS enabled and TOTP preferred`() {
+    fun `updatepref when currentpref is SMS preferred and params include SMS and email enabled and TOTP preferred`() {
         val onSuccess = ActionWithLatch()
         val setUserMFAPreferenceRequest = slot<SetUserMfaPreferenceRequest>()
 
@@ -2201,7 +2528,59 @@ class RealAWSCognitoAuthPluginTest {
         coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
             SetUserMfaPreferenceResponse.invoke {}
         }
-        plugin.updateMFAPreference(MFAPreference.ENABLED, MFAPreference.PREFERRED, onSuccess, mockk())
+        plugin.updateMFAPreference(
+            MFAPreference.ENABLED, MFAPreference.PREFERRED, MFAPreference.ENABLED, onSuccess, mockk()
+        )
+
+        onSuccess.shouldBeCalled()
+        assertTrue(setUserMFAPreferenceRequest.isCaptured)
+        assertEquals(
+            SmsMfaSettingsType.invoke {
+                enabled = true
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.smsMfaSettings
+        )
+        assertEquals(
+            SoftwareTokenMfaSettingsType.invoke {
+                enabled = true
+                preferredMfa = true
+            },
+            setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
+        )
+        assertEquals(
+            EmailMfaSettingsType.invoke {
+                enabled = true
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.emailMfaSettings
+        )
+    }
+
+    @Test
+    fun `updatepref when currentpref is email preferred and params include SMS and email enabled and TOTP preferred`() {
+        val onSuccess = ActionWithLatch()
+        val setUserMFAPreferenceRequest = slot<SetUserMfaPreferenceRequest>()
+
+        coEvery {
+            mockCognitoIPClient.getUser {
+                accessToken = credentials.signedInData.cognitoUserPoolTokens.accessToken
+            }
+        }.answers {
+            GetUserResponse.invoke {
+                userMfaSettingList = listOf("EMAIL_OTP")
+                preferredMfaSetting = "EMAIL_OTP"
+                userAttributes = listOf()
+                username = ""
+            }
+        }
+
+        coEvery { mockCognitoIPClient.setUserMfaPreference(capture(setUserMFAPreferenceRequest)) }.answers {
+            SetUserMfaPreferenceResponse.invoke {}
+        }
+        plugin.updateMFAPreference(
+            MFAPreference.ENABLED, MFAPreference.PREFERRED, MFAPreference.ENABLED, onSuccess, mockk()
+        )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
         assertTrue(setUserMFAPreferenceRequest.isCaptured)
@@ -2219,6 +2598,13 @@ class RealAWSCognitoAuthPluginTest {
             },
             setUserMFAPreferenceRequest.captured.softwareTokenMfaSettings
         )
+        assertEquals(
+            EmailMfaSettingsType.invoke {
+                enabled = true
+                preferredMfa = false
+            },
+            setUserMFAPreferenceRequest.captured.emailMfaSettings
+        )
     }
 
     @Test
@@ -2233,7 +2619,7 @@ class RealAWSCognitoAuthPluginTest {
 
         plugin.forgetDevice(onSuccess, mockk())
 
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
         coVerify { mockCognitoIPClient.forgetDevice(match { it.deviceKey == "test" }) }
     }
 
@@ -2249,7 +2635,7 @@ class RealAWSCognitoAuthPluginTest {
 
         plugin.forgetDevice(mockk(), onError)
 
-        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        onError.shouldBeCalled()
         assertEquals("failed", onError.captured.cause?.message)
     }
 
@@ -2261,7 +2647,7 @@ class RealAWSCognitoAuthPluginTest {
 
         plugin.forgetDevice(AuthDevice.fromId("test"), onSuccess, mockk())
 
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
         coVerify { mockCognitoIPClient.forgetDevice(match { it.deviceKey == "test" }) }
     }
 
@@ -2273,7 +2659,7 @@ class RealAWSCognitoAuthPluginTest {
 
         plugin.forgetDevice(AuthDevice.fromId("test"), mockk(), onError)
 
-        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        onError.shouldBeCalled()
         assertEquals("failed", onError.captured.cause?.message)
     }
 
@@ -2286,7 +2672,10 @@ class RealAWSCognitoAuthPluginTest {
                 DeviceType.invoke {
                     deviceKey = "id1"
                     deviceAttributes = listOf(
-                        AttributeType.invoke { name = "device_name"; value = "name1" }
+                        AttributeType.invoke {
+                            name = "device_name"
+                            value = "name1"
+                        }
                     )
                 }
             )
@@ -2294,7 +2683,7 @@ class RealAWSCognitoAuthPluginTest {
 
         plugin.fetchDevices(onSuccess, mockk())
 
-        assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
+        onSuccess.shouldBeCalled()
         assertEquals("id1", onSuccess.captured.first().id)
         assertEquals("name1", onSuccess.captured.first().name)
     }
@@ -2306,7 +2695,7 @@ class RealAWSCognitoAuthPluginTest {
 
         plugin.fetchDevices(mockk(), onError)
 
-        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        onError.shouldBeCalled()
     }
 
     @Test
@@ -2316,7 +2705,7 @@ class RealAWSCognitoAuthPluginTest {
 
         plugin.fetchDevices(mockk(), onError)
 
-        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        onError.shouldBeCalled()
         assertEquals(SignedOutException(), onError.captured)
     }
 
@@ -2327,14 +2716,11 @@ class RealAWSCognitoAuthPluginTest {
 
         plugin.fetchDevices(mockk(), onError)
 
-        assertTrue { onError.latch.await(5, TimeUnit.SECONDS) }
+        onError.shouldBeCalled()
         assertEquals(InvalidStateException(), onError.captured)
     }
 
-    private fun setupCurrentAuthState(
-        authNState: AuthenticationState? = null,
-        authZState: AuthorizationState? = null
-    ) {
+    private fun setupCurrentAuthState(authNState: AuthenticationState? = null, authZState: AuthorizationState? = null) {
         val currentAuthState = mockk<AuthState> {
             every { this@mockk.authNState } returns authNState
             every { this@mockk.authZState } returns authZState
@@ -2350,6 +2736,8 @@ class RealAWSCognitoAuthPluginTest {
             assertTrue(latch.count > 0)
             latch.countDown()
         }
+
+        fun shouldBeCalled(timeout: Duration = 5.seconds) = latch.await(timeout).shouldBeTrue()
     }
 
     private class ConsumerWithLatch<T : Any>(private val expect: T? = null, count: Int = 1) : Consumer<T> {
@@ -2363,5 +2751,7 @@ class RealAWSCognitoAuthPluginTest {
                 latch.countDown()
             }
         }
+
+        fun shouldBeCalled(timeout: Duration = 5.seconds) = latch.await(timeout).shouldBeTrue()
     }
 }

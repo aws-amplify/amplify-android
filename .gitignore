@@ -96,6 +96,7 @@ __pycache__/
 .gradle/**
 
 #amplify
+.amplify/
 amplify/
 build/
 dist/
