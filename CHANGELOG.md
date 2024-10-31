@@ -3,9 +3,6 @@
 ### Features
 - **auth:** Add support for Email MFA ([#2935](https://github.com/aws-amplify/amplify-android/issues/2935))
 
-### Miscellaneous
-- release: Apollo AppSync Extensions 1.1.0 ([#2931](https://github.com/aws-amplify/amplify-android/issues/2931))
-
 [See all changes between 2.23.0 and 2.24.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.23.0...release_v2.24.0)
 
 ## [Release 2.23.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.23.0)
