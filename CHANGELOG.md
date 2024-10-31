@@ -1,3 +1,10 @@
+## [Release 2.24.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.24.0)
+
+### Features
+- **auth:** Add support for Email MFA ([#2935](https://github.com/aws-amplify/amplify-android/issues/2935))
+
+[See all changes between 2.23.0 and 2.24.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.23.0...release_v2.24.0)
+
 ## [Release 2.23.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.23.0)
 
 ### Features
