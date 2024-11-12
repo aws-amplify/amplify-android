@@ -57,9 +57,10 @@ public final class AWSS3StorageDownloadFileOptions extends StorageDownloadFileOp
     @SuppressWarnings("deprecation")
     public static Builder from(@NonNull final AWSS3StorageDownloadFileOptions options) {
         return builder()
-            .accessLevel(options.getAccessLevel())
-            .targetIdentityId(options.getTargetIdentityId())
-            .setUseAccelerateEndpoint(options.useAccelerateEndpoint());
+                .accessLevel(options.getAccessLevel())
+                .targetIdentityId(options.getTargetIdentityId())
+                .setUseAccelerateEndpoint(options.useAccelerateEndpoint())
+                .bucket(options.getBucket());
     }
 
     /**
@@ -90,7 +91,8 @@ public final class AWSS3StorageDownloadFileOptions extends StorageDownloadFileOp
         } else {
             AWSS3StorageDownloadFileOptions that = (AWSS3StorageDownloadFileOptions) obj;
             return ObjectsCompat.equals(getAccessLevel(), that.getAccessLevel()) &&
-                    ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId());
+                    ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId()) &&
+                    ObjectsCompat.equals(getBucket(), that.getBucket());
         }
     }
 
@@ -99,7 +101,8 @@ public final class AWSS3StorageDownloadFileOptions extends StorageDownloadFileOp
     public int hashCode() {
         return ObjectsCompat.hash(
                 getAccessLevel(),
-                getTargetIdentityId()
+                getTargetIdentityId(),
+                getBucket()
         );
     }
 
@@ -111,6 +114,7 @@ public final class AWSS3StorageDownloadFileOptions extends StorageDownloadFileOp
                 "accessLevel=" + getAccessLevel() +
                 ", targetIdentityId=" + getTargetIdentityId() +
                 ", useAccelerationMode=" + useAccelerateEndpoint() +
+                ", bucket=" + getBucket() +
                 '}';
     }
 

@@ -63,7 +63,8 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
             .targetIdentityId(options.getTargetIdentityId())
             .expires(options.getExpires())
             .setValidateObjectExistence(options.getValidateObjectExistence())
-            .expires(options.getExpires());
+            .expires(options.getExpires())
+            .bucket(options.getBucket());
     }
 
     /**
@@ -106,6 +107,7 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
             return ObjectsCompat.equals(getAccessLevel(), that.getAccessLevel()) &&
                     ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId()) &&
                     ObjectsCompat.equals(getExpires(), that.getExpires()) &&
+                    ObjectsCompat.equals(getBucket(), that.getBucket()) &&
                     ObjectsCompat.equals(getValidateObjectExistence(), that.getValidateObjectExistence());
         }
     }
@@ -117,7 +119,8 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
                 getAccessLevel(),
                 getTargetIdentityId(),
                 getExpires(),
-                getValidateObjectExistence()
+                getValidateObjectExistence(),
+                getBucket()
         );
     }
 
@@ -130,6 +133,7 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
                 ", targetIdentityId=" + getTargetIdentityId() +
                 ", expires=" + getExpires() +
                 ", validateObjectExistence=" + getValidateObjectExistence() +
+                ", bucket=" + getBucket() +
                 '}';
     }
 

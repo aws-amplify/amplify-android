@@ -1,0 +1,72 @@
+public final class com/amplifyframework/apollo/appsync/ApolloExtensions {
+	public static final fun appSync (Lcom/apollographql/apollo/ApolloClient$Builder;Lcom/amplifyframework/apollo/appsync/AppSyncEndpoint;Lcom/amplifyframework/apollo/appsync/AppSyncAuthorizer;)Lcom/apollographql/apollo/ApolloClient$Builder;
+	public static final fun appSync (Lcom/apollographql/apollo/network/ws/WebSocketNetworkTransport$Builder;Lcom/amplifyframework/apollo/appsync/AppSyncEndpoint;Lcom/amplifyframework/apollo/appsync/AppSyncAuthorizer;)Lcom/apollographql/apollo/network/ws/WebSocketNetworkTransport$Builder;
+}
+
+public abstract interface class com/amplifyframework/apollo/appsync/AppSyncAuthorizer {
+	public abstract fun getHttpAuthorizationHeaders (Lcom/apollographql/apollo/api/http/HttpRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getWebSocketSubscriptionPayload (Lcom/amplifyframework/apollo/appsync/AppSyncEndpoint;Lcom/apollographql/apollo/api/ApolloRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getWebsocketConnectionHeaders (Lcom/amplifyframework/apollo/appsync/AppSyncEndpoint;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/amplifyframework/apollo/appsync/AppSyncEndpoint {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun createWebsocketServerUrl (Lcom/amplifyframework/apollo/appsync/AppSyncAuthorizer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getServerUrl ()Ljava/net/URL;
+}
+
+public final class com/amplifyframework/apollo/appsync/AppSyncInterceptor : com/apollographql/apollo/network/http/HttpInterceptor {
+	public fun <init> (Lcom/amplifyframework/apollo/appsync/AppSyncAuthorizer;)V
+	public fun intercept (Lcom/apollographql/apollo/api/http/HttpRequest;Lcom/apollographql/apollo/network/http/HttpInterceptorChain;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/amplifyframework/apollo/appsync/AppSyncProtocol : com/apollographql/apollo/network/ws/WsProtocol {
+	public fun connectionInit (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun handleServerMessage (Ljava/util/Map;)V
+	public fun startOperation (Lcom/apollographql/apollo/api/ApolloRequest;)V
+	public fun stopOperation (Lcom/apollographql/apollo/api/ApolloRequest;)V
+}
+
+public final class com/amplifyframework/apollo/appsync/AppSyncProtocol$Factory : com/apollographql/apollo/network/ws/WsProtocol$Factory {
+	public fun <init> (Lcom/amplifyframework/apollo/appsync/AppSyncEndpoint;Lcom/amplifyframework/apollo/appsync/AppSyncAuthorizer;)V
+	public fun create (Lcom/apollographql/apollo/network/ws/WebSocketConnection;Lcom/apollographql/apollo/network/ws/WsProtocol$Listener;Lkotlinx/coroutines/CoroutineScope;)Lcom/apollographql/apollo/network/ws/WsProtocol;
+	public fun getName ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/apollo/appsync/authorizers/ApiKeyAuthorizer : com/amplifyframework/apollo/appsync/AppSyncAuthorizer {
+	public fun <init> (Lcom/amplifyframework/apollo/appsync/authorizers/ApiKeyAuthorizer$ApiKeyProvider;)V
+	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Lkotlin/jvm/functions/Function1;)V
+	public fun getHttpAuthorizationHeaders (Lcom/apollographql/apollo/api/http/HttpRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getWebSocketSubscriptionPayload (Lcom/amplifyframework/apollo/appsync/AppSyncEndpoint;Lcom/apollographql/apollo/api/ApolloRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getWebsocketConnectionHeaders (Lcom/amplifyframework/apollo/appsync/AppSyncEndpoint;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class com/amplifyframework/apollo/appsync/authorizers/ApiKeyAuthorizer$ApiKeyProvider {
+	public abstract fun fetchApiKey (Ljava/util/function/Consumer;Ljava/util/function/Consumer;)V
+}
+
+public final class com/amplifyframework/apollo/appsync/authorizers/AuthTokenAuthorizer : com/amplifyframework/apollo/appsync/AppSyncAuthorizer {
+	public fun <init> (Lcom/amplifyframework/apollo/appsync/authorizers/AuthTokenAuthorizer$AuthTokenProvider;)V
+	public fun <init> (Lkotlin/jvm/functions/Function1;)V
+	public fun getHttpAuthorizationHeaders (Lcom/apollographql/apollo/api/http/HttpRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getWebSocketSubscriptionPayload (Lcom/amplifyframework/apollo/appsync/AppSyncEndpoint;Lcom/apollographql/apollo/api/ApolloRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getWebsocketConnectionHeaders (Lcom/amplifyframework/apollo/appsync/AppSyncEndpoint;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class com/amplifyframework/apollo/appsync/authorizers/AuthTokenAuthorizer$AuthTokenProvider {
+	public abstract fun fetchLatestAuthToken (Ljava/util/function/Consumer;Ljava/util/function/Consumer;)V
+}
+
+public final class com/amplifyframework/apollo/appsync/authorizers/IamAuthorizer : com/amplifyframework/apollo/appsync/AppSyncAuthorizer {
+	public fun <init> (Lcom/amplifyframework/apollo/appsync/authorizers/IamAuthorizer$SignatureProvider;)V
+	public fun <init> (Lkotlin/jvm/functions/Function2;)V
+	public fun getHttpAuthorizationHeaders (Lcom/apollographql/apollo/api/http/HttpRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getWebSocketSubscriptionPayload (Lcom/amplifyframework/apollo/appsync/AppSyncEndpoint;Lcom/apollographql/apollo/api/ApolloRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getWebsocketConnectionHeaders (Lcom/amplifyframework/apollo/appsync/AppSyncEndpoint;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class com/amplifyframework/apollo/appsync/authorizers/IamAuthorizer$SignatureProvider {
+	public abstract fun generateSignatureHeaders (Lcom/apollographql/apollo/api/http/HttpRequest;Ljava/util/function/Consumer;Ljava/util/function/Consumer;)V
+}
+

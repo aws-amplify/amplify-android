@@ -32,7 +32,7 @@ public class StorageGetUrlOptions extends StorageOptions {
      */
     @SuppressWarnings("deprecation")
     protected StorageGetUrlOptions(final Builder<?> builder) {
-        super(builder.getAccessLevel(), builder.getTargetIdentityId());
+        super(builder.getAccessLevel(), builder.getTargetIdentityId(), builder.getBucket());
         this.expires = builder.getExpires();
     }
 
@@ -69,9 +69,10 @@ public class StorageGetUrlOptions extends StorageOptions {
     @SuppressWarnings("deprecation")
     public static Builder<?> from(@NonNull StorageGetUrlOptions options) {
         return builder()
-            .accessLevel(options.getAccessLevel())
-            .targetIdentityId(options.getTargetIdentityId())
-            .expires(options.getExpires());
+                .accessLevel(options.getAccessLevel())
+                .targetIdentityId(options.getTargetIdentityId())
+                .bucket(options.getBucket())
+                .expires(options.getExpires());
     }
 
     /**
@@ -97,6 +98,7 @@ public class StorageGetUrlOptions extends StorageOptions {
             StorageGetUrlOptions that = (StorageGetUrlOptions) obj;
             return ObjectsCompat.equals(getAccessLevel(), that.getAccessLevel()) &&
                     ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId()) &&
+                    ObjectsCompat.equals(getBucket(), that.getBucket()) &&
                     ObjectsCompat.equals(getExpires(), that.getExpires());
         }
     }
@@ -110,6 +112,7 @@ public class StorageGetUrlOptions extends StorageOptions {
         return ObjectsCompat.hash(
                 getAccessLevel(),
                 getTargetIdentityId(),
+                getBucket(),
                 getExpires()
         );
     }
@@ -124,6 +127,7 @@ public class StorageGetUrlOptions extends StorageOptions {
         return "StorageGetUrlOptions {" +
                 "accessLevel=" + getAccessLevel() +
                 ", targetIdentityId=" + getTargetIdentityId() +
+                ", bucket=" + getBucket() +
                 ", expires=" + getExpires() +
                 '}';
     }

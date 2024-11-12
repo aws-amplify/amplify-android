@@ -1,3 +1,32 @@
+## [Release 2.24.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.24.0)
+
+### Features
+- **auth:** Add support for Email MFA ([#2935](https://github.com/aws-amplify/amplify-android/issues/2935))
+
+[See all changes between 2.23.0 and 2.24.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.23.0...release_v2.24.0)
+
+## [Release 2.23.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.23.0)
+
+### Features
+- **predictions:** Added region handling for creating correct streaming endpoint from region ([#2923](https://github.com/aws-amplify/amplify-android/issues/2923))
+- **api:** Pass authorization in header instead of query parameter for API category ([#2918](https://github.com/aws-amplify/amplify-android/issues/2918))
+
+[See all changes between 2.22.0 and 2.23.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.22.0...release_v2.23.0)
+
+## [Release 2.22.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.22.0)
+
+### Features
+- **storage:** implement multiple buckets support ([#2904](https://github.com/aws-amplify/amplify-android/issues/2904))
+
+[See all changes between 2.21.1 and 2.22.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.21.1...release_v2.22.0)
+
+## [Release 2.21.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.21.1)
+
+### Bug Fixes
+- **notifications:** Catch Exception when download icon image of pinpoint notification ([#2873](https://github.com/aws-amplify/amplify-android/issues/2873))
+
+[See all changes between 2.21.0 and 2.21.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.21.0...release_v2.21.1)
+
 ## [Release 2.21.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.21.0)
 
 ### Features

@@ -70,6 +70,7 @@ internal object TransferOperations {
             transferRecord.id,
             transferStatusUpdater,
             transferRecord.bucketName,
+            transferRecord.region,
             transferRecord.key,
             transferRecord.file,
             listener
