@@ -1,3 +1,11 @@
+## [Release 2.24.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.24.1)
+
+### Bug Fixes
+- **analytics:** Fix accessing the Analytics category from RxAmplify or Kotlin Facade ([#2944](https://github.com/aws-amplify/amplify-android/issues/2944))
+- **api:** Fix connecting to AppSync from China with API category ([#2948](https://github.com/aws-amplify/amplify-android/issues/2948))
+
+[See all changes between 2.24.0 and 2.24.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.24.0...release_v2.24.1)
+
 ## [Release 2.24.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.24.0)
 
 ### Features
