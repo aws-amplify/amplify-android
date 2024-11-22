@@ -1,0 +1,22 @@
+{
+    "type": "AuthState.Configured",
+    "AuthenticationState": {
+        "type": "AuthenticationState.SigningIn",
+        "SignInState": {
+            "type": "SignInState.ResolvingChallenge",
+            "SignInChallengeState": {
+                "type": "SignInChallengeState.WaitingForAnswer",
+                "authChallenge": {
+                    "challengeName": "SELECT_CHALLENGE",
+                    "username": "username",
+                    "session": "someSession",
+                    "parameters" : {},
+                    "availableChallenges": [ "PASSWORD", "WEB_AUTHN", "EMAIL_OTP" ]
+                }
+            }
+        }
+    },
+    "AuthorizationState": {
+        "type": "AuthorizationState.SigningIn"
+    }
+}

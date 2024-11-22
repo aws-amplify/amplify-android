@@ -29,6 +29,7 @@ import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignInChallengeActions
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.CredentialType
+import com.amplifyframework.statemachine.codegen.data.challengeNameType
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 
@@ -88,7 +89,7 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
             val pinpointEndpointId = getPinpointEndpointId()
             val response = cognitoAuthService.cognitoIdentityProviderClient?.respondToAuthChallenge {
                 clientId = configuration.userPool?.appClient
-                challengeName = ChallengeNameType.fromValue(challenge.challengeName)
+                challengeName = challenge.challengeNameType
                 this.challengeResponses = challengeResponses
                 session = challenge.session
                 clientMetadata = metadata
@@ -130,13 +131,17 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
     }
 
     private fun getChallengeResponseKey(challenge: AuthChallenge): String? {
-        val challengeName = challenge.challengeName
-        return when (ChallengeNameType.fromValue(challengeName)) {
+        return when (challenge.challengeNameType) {
             is ChallengeNameType.SmsMfa -> "SMS_MFA_CODE"
-            is ChallengeNameType.NewPasswordRequired -> "NEW_PASSWORD"
-            is ChallengeNameType.CustomChallenge, ChallengeNameType.SelectMfaType -> "ANSWER"
-            is ChallengeNameType.SoftwareTokenMfa -> "SOFTWARE_TOKEN_MFA_CODE"
             is ChallengeNameType.EmailOtp -> "EMAIL_OTP_CODE"
+            is ChallengeNameType.SmsOtp -> "SMS_OTP_CODE"
+            is ChallengeNameType.NewPasswordRequired -> "NEW_PASSWORD"
+            is ChallengeNameType.CustomChallenge,
+            is ChallengeNameType.SelectMfaType,
+            is ChallengeNameType.SelectChallenge -> {
+                "ANSWER"
+            }
+            is ChallengeNameType.SoftwareTokenMfa -> "SOFTWARE_TOKEN_MFA_CODE"
             // TOTP is not part of this because, it follows a completely different setup path
             is ChallengeNameType.MfaSetup -> {
                 if (isMfaSetupSelectionChallenge(challenge)) {

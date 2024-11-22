@@ -17,12 +17,16 @@ package com.amplifyframework.statemachine
 
 import java.util.UUID
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.newFixedThreadPoolContext
+import kotlinx.coroutines.newSingleThreadContext
+import kotlinx.coroutines.withContext
 
 internal typealias OnSubscribedCallback = () -> Unit
 
@@ -49,43 +53,34 @@ internal class StateChangeListenerToken private constructor(val uuid: UUID) {
 internal open class StateMachine<StateType : State, EnvironmentType : Environment>(
     resolver: StateMachineResolver<StateType>,
     val environment: EnvironmentType,
-    executor: EffectExecutor? = null,
-    concurrentQueue: CoroutineDispatcher? = null,
+    private val dispatcherQueue: CoroutineDispatcher = Dispatchers.Default,
+    private val executor: EffectExecutor = ConcurrentEffectExecutor(dispatcherQueue),
     initialState: StateType? = null
 ) : EventDispatcher {
     private val resolver = resolver.eraseToAnyResolver()
-    private val executor: EffectExecutor
-    private var currentState = initialState ?: resolver.defaultState
 
-    private val dispatcherQueue: CoroutineDispatcher
+    // The current state of the state machine. Consumers can collect or read the current state from the read-only StateFlow
+    private val _state = MutableStateFlow(initialState ?: resolver.defaultState)
+    val state = _state.asStateFlow()
 
-    /**
-     * Manage consistency of internal state machine state and limits invocation of listeners to a minimum of one at a time.
-     */
-    private val operationQueue = newFixedThreadPoolContext(1, "Single threaded dispatcher")
-    private val exceptionHandler = CoroutineExceptionHandler { _, exception ->
-        println("CoroutineExceptionHandler got $exception")
-    }
+    // Private accessor for the current state. Although this is thread-safe to access/mutate, we still want to limit
+    // read/write to the single-threaded stateMachineContext for consistency
+    private var currentState: StateType
+        get() = _state.value
+        set(value) {
+            _state.value = value
+        }
 
-    /**
-     * TODO: add coroutine exception handler if required.
-     */
-    private val stateMachineScope = Job() + operationQueue // + exceptionHandler
+    // Manage consistency of internal state machine state and limits invocation of listeners to a minimum of one at a time.
+    @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
+    private val stateMachineContext = SupervisorJob() + newSingleThreadContext("StateMachineContext")
+    private val stateMachineScope = CoroutineScope(stateMachineContext)
 
     // weak wrapper ??
-    private val subscribers: MutableMap<StateChangeListenerToken, (StateType) -> Unit>
+    private val subscribers: MutableMap<StateChangeListenerToken, (StateType) -> Unit> = mutableMapOf()
 
     // atomic value ??
-    private val pendingCancellations: MutableSet<StateChangeListenerToken>
-
-    init {
-        val resolvedQueue = concurrentQueue ?: Dispatchers.Default
-        dispatcherQueue = resolvedQueue
-        this.executor = executor ?: ConcurrentEffectExecutor(resolvedQueue)
-
-        subscribers = mutableMapOf()
-        pendingCancellations = mutableSetOf()
-    }
+    private val pendingCancellations: MutableSet<StateChangeListenerToken> = mutableSetOf()
 
     /**
      * Start listening to state changes updates. Asynchronously invoke listener on a background queue with the current state.
@@ -94,8 +89,9 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      * @param onSubscribe callback to invoke when subscription is complete
      * @return token that can be used to unsubscribe the listener
      */
+    @Deprecated("Collect from state flow instead")
     fun listen(token: StateChangeListenerToken, listener: (StateType) -> Unit, onSubscribe: OnSubscribedCallback?) {
-        GlobalScope.launch(stateMachineScope) {
+        stateMachineScope.launch {
             addSubscription(token, listener, onSubscribe)
         }
     }
@@ -105,9 +101,10 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      * `cancel` is called and the time the pending cancellation is processed, the event will not be dispatched to the listener.
      * @param token identifies the listener to be removed
      */
+    @Deprecated("Collect from state flow instead")
     fun cancel(token: StateChangeListenerToken) {
         pendingCancellations.add(token)
-        GlobalScope.launch(stateMachineScope) {
+        stateMachineScope.launch {
             removeSubscription(token)
         }
     }
@@ -116,11 +113,17 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      * Invoke `completion` with the current state
      * @param completion callback to invoke with the current state
      */
+    @Deprecated("Use suspending version instead")
     fun getCurrentState(completion: (StateType) -> Unit) {
-        GlobalScope.launch(stateMachineScope) {
+        stateMachineScope.launch {
             completion(currentState)
         }
     }
+
+    /**
+     * Get the current state, dispatching to the state machine context for the read.
+     */
+    suspend fun getCurrentState() = withContext(stateMachineContext) { currentState }
 
     /**
      * Register a listener.
@@ -137,7 +140,7 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
         val currentState = this.currentState
         subscribers[token] = listener
         onSubscribe?.invoke()
-        GlobalScope.launch(dispatcherQueue) {
+        stateMachineScope.launch(dispatcherQueue) {
             listener.invoke(currentState)
         }
     }
@@ -156,7 +159,7 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      * @param event event to send to the system
      */
     override fun send(event: StateMachineEvent) {
-        GlobalScope.launch(stateMachineScope) {
+        stateMachineScope.launch {
             process(event)
         }
     }

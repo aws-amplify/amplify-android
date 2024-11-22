@@ -58,6 +58,25 @@ internal sealed class SignInChallengeState : State {
                     else -> defaultResolution
                 }
                 is WaitingForAnswer -> when (challengeEvent) {
+                    is SignInChallengeEvent.EventType.WaitForAnswer -> {
+                        /**
+                         * This sends out a second WaitingForAnswer because it requires an additional user-response
+                         * before calling RespondToAuth. e.g. the first WaitingForAnswer asks the user to select
+                         * a first-factor challenge and the user selects password. The user needs to supply the password
+                         * so that the answer *and* the password can be sent in one RespondToAuth call.
+                         **/
+                        StateResolution(
+                            WaitingForAnswer(
+                                challenge = AuthChallenge(
+                                    challengeName = challengeEvent.challenge.challengeName,
+                                    username = oldState.challenge.username,
+                                    session = oldState.challenge.session,
+                                    parameters = oldState.challenge.parameters
+                                ),
+                                hasNewResponse = true
+                            )
+                        )
+                    }
                     is SignInChallengeEvent.EventType.VerifyChallengeAnswer -> {
                         val action = challengeActions.verifyChallengeAuthAction(
                             challengeEvent.answer,

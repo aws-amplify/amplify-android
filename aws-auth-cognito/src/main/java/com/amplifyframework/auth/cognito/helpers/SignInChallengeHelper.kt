@@ -15,12 +15,14 @@
 
 package com.amplifyframework.auth.cognito.helpers
 
+import android.app.Activity
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthenticationResultType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthCodeDeliveryDetails.DeliveryMedium
 import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.AuthFactorType
 import com.amplifyframework.auth.MFAType
 import com.amplifyframework.auth.TOTPSetupDetails
 import com.amplifyframework.auth.exceptions.UnknownException
@@ -30,13 +32,17 @@ import com.amplifyframework.auth.result.step.AuthSignInStep
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
+import com.amplifyframework.statemachine.codegen.data.ChallengeParameter
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignInTOTPSetupData
 import com.amplifyframework.statemachine.codegen.data.SignedInData
+import com.amplifyframework.statemachine.codegen.data.WebAuthnSignInContext
+import com.amplifyframework.statemachine.codegen.data.challengeNameType
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
+import java.lang.ref.WeakReference
 import java.util.Date
 import kotlin.time.Duration.Companion.seconds
 
@@ -45,73 +51,97 @@ internal object SignInChallengeHelper {
         username: String,
         challengeNameType: ChallengeNameType?,
         session: String?,
-        challengeParameters: Map<String, String>?,
+        challengeParameters: Map<String, String>? = null,
+        availableChallenges: List<String>? = null,
         authenticationResult: AuthenticationResultType?,
+        callingActivity: WeakReference<Activity> = WeakReference(null),
         signInMethod: SignInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
-    ): StateMachineEvent {
-        return when {
-            authenticationResult != null -> {
-                authenticationResult.let {
-                    val userId = it.accessToken?.let { token -> SessionHelper.getUserSub(token) } ?: ""
-                    val expiresIn = Instant.now().plus(it.expiresIn.seconds).epochSeconds
-                    val tokens = CognitoUserPoolTokens(it.idToken, it.accessToken, it.refreshToken, expiresIn)
-                    val signedInData = SignedInData(
-                        userId,
-                        username,
-                        Date(),
-                        signInMethod,
-                        tokens
-                    )
-                    it.newDeviceMetadata?.let { metadata ->
-                        SignInEvent(
-                            SignInEvent.EventType.ConfirmDevice(
-                                DeviceMetadata.Metadata(
-                                    metadata.deviceKey ?: "",
-                                    metadata.deviceGroupKey ?: ""
-                                ),
-                                signedInData
-                            )
-                        )
-                    } ?: AuthenticationEvent(
-                        AuthenticationEvent.EventType.SignInCompleted(
-                            signedInData,
-                            DeviceMetadata.Empty
-                        )
-                    )
-                }
-            }
-            challengeNameType is ChallengeNameType.SmsMfa ||
-                challengeNameType is ChallengeNameType.CustomChallenge ||
-                challengeNameType is ChallengeNameType.NewPasswordRequired ||
-                challengeNameType is ChallengeNameType.SoftwareTokenMfa ||
-                challengeNameType is ChallengeNameType.EmailOtp ||
-                challengeNameType is ChallengeNameType.SelectMfaType -> {
-                val challenge =
-                    AuthChallenge(challengeNameType.value, username, session, challengeParameters)
-                SignInEvent(SignInEvent.EventType.ReceivedChallenge(challenge))
-            }
-            challengeNameType is ChallengeNameType.MfaSetup -> {
-                val allowedMFASetupTypes = getAllowedMFASetupTypesFromChallengeParameters(challengeParameters)
-                val challenge = AuthChallenge(challengeNameType.value, username, session, challengeParameters)
-
-                if (allowedMFASetupTypes.contains(MFAType.EMAIL)) {
-                    SignInEvent(SignInEvent.EventType.ReceivedChallenge(challenge))
-                } else if (allowedMFASetupTypes.contains(MFAType.TOTP)) {
-                    val setupTOTPData = SignInTOTPSetupData("", session, username)
-                    SignInEvent(SignInEvent.EventType.InitiateTOTPSetup(setupTOTPData, challenge.parameters))
-                } else {
+    ): StateMachineEvent = when {
+        authenticationResult != null -> {
+            authenticationResult.let {
+                val userId = it.accessToken?.let { token -> SessionHelper.getUserSub(token) } ?: ""
+                val expiresIn = Instant.now().plus(it.expiresIn.seconds).epochSeconds
+                val tokens = CognitoUserPoolTokens(it.idToken, it.accessToken, it.refreshToken, expiresIn)
+                val signedInData = SignedInData(
+                    userId,
+                    username,
+                    Date(),
+                    signInMethod,
+                    tokens
+                )
+                it.newDeviceMetadata?.let { metadata ->
                     SignInEvent(
-                        SignInEvent.EventType.ThrowError(
-                            Exception("Cannot initiate MFA setup from available Types: $allowedMFASetupTypes")
+                        SignInEvent.EventType.ConfirmDevice(
+                            DeviceMetadata.Metadata(
+                                metadata.deviceKey ?: "",
+                                metadata.deviceGroupKey ?: ""
+                            ),
+                            signedInData
                         )
                     )
-                }
+                } ?: AuthenticationEvent(
+                    AuthenticationEvent.EventType.SignInCompleted(
+                        signedInData,
+                        DeviceMetadata.Empty
+                    )
+                )
             }
-            challengeNameType is ChallengeNameType.DeviceSrpAuth -> {
-                SignInEvent(SignInEvent.EventType.InitiateSignInWithDeviceSRP(username, mapOf()))
-            }
-            else -> SignInEvent(SignInEvent.EventType.ThrowError(Exception("Response did not contain sign in info.")))
         }
+        challengeNameType is ChallengeNameType.SmsMfa ||
+            challengeNameType is ChallengeNameType.CustomChallenge ||
+            challengeNameType is ChallengeNameType.NewPasswordRequired ||
+            challengeNameType is ChallengeNameType.SoftwareTokenMfa ||
+            challengeNameType is ChallengeNameType.SelectMfaType ||
+            challengeNameType is ChallengeNameType.SmsOtp ||
+            challengeNameType is ChallengeNameType.EmailOtp -> {
+            val challenge =
+                AuthChallenge(challengeNameType.value, username, session, challengeParameters)
+            SignInEvent(SignInEvent.EventType.ReceivedChallenge(challenge))
+        }
+        challengeNameType is ChallengeNameType.MfaSetup -> {
+            val allowedMFASetupTypes = getAllowedMFASetupTypesFromChallengeParameters(challengeParameters)
+            val challenge = AuthChallenge(challengeNameType.value, username, session, challengeParameters)
+
+            if (allowedMFASetupTypes.contains(MFAType.EMAIL)) {
+                SignInEvent(SignInEvent.EventType.ReceivedChallenge(challenge))
+            } else if (allowedMFASetupTypes.contains(MFAType.TOTP)) {
+                val setupTOTPData = SignInTOTPSetupData("", session, username)
+                SignInEvent(SignInEvent.EventType.InitiateTOTPSetup(setupTOTPData, challenge.parameters))
+            } else {
+                SignInEvent(
+                    SignInEvent.EventType.ThrowError(
+                        Exception("Cannot initiate MFA setup from available Types: $allowedMFASetupTypes")
+                    )
+                )
+            }
+        }
+        challengeNameType is ChallengeNameType.DeviceSrpAuth -> {
+            SignInEvent(SignInEvent.EventType.InitiateSignInWithDeviceSRP(username, mapOf()))
+        }
+        challengeNameType is ChallengeNameType.SelectChallenge -> {
+            SignInEvent(
+                SignInEvent.EventType.ReceivedChallenge(
+                    AuthChallenge(
+                        challengeName = ChallengeNameType.SelectChallenge.value,
+                        username = username,
+                        session = session,
+                        parameters = null,
+                        availableChallenges = availableChallenges
+                    )
+                )
+            )
+        }
+        challengeNameType is ChallengeNameType.WebAuthn -> {
+            val requestOptions = challengeParameters?.get(ChallengeParameter.CredentialRequestOptions.key)
+            val signInContext = WebAuthnSignInContext(
+                username = username,
+                callingActivity = callingActivity,
+                session = session,
+                requestJson = requestOptions
+            )
+            SignInEvent(SignInEvent.EventType.InitiateWebAuthnSignIn(signInContext))
+        }
+        else -> SignInEvent(SignInEvent.EventType.ThrowError(Exception("Response did not contain sign in info.")))
     }
 
     fun getNextStep(
@@ -121,22 +151,28 @@ internal object SignInChallengeHelper {
         signInTOTPSetupData: SignInTOTPSetupData? = null,
         allowedMFAType: Set<MFAType>? = null
     ) {
-        val challengeParams = challenge.parameters?.toMutableMap() ?: mapOf()
+        val challengeParams = challenge.parameters ?: emptyMap()
 
-        when (ChallengeNameType.fromValue(challenge.challengeName)) {
-            is ChallengeNameType.SmsMfa -> {
+        when (challenge.challengeNameType) {
+            is ChallengeNameType.SmsMfa,
+            ChallengeNameType.EmailOtp,
+            ChallengeNameType.SmsOtp -> {
                 val deliveryDetails = AuthCodeDeliveryDetails(
-                    challengeParams.getValue("CODE_DELIVERY_DESTINATION"),
-                    DeliveryMedium.fromString(
-                        challengeParams.getValue("CODE_DELIVERY_DELIVERY_MEDIUM")
-                    )
+                    challengeParams.getValue(ChallengeParameter.CodeDeliveryDestination.key),
+                    DeliveryMedium.fromString(challengeParams.getValue(ChallengeParameter.CodeDeliveryMedium.key))
                 )
+                val signInStep = if (challenge.challengeNameType == ChallengeNameType.SmsMfa) {
+                    AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE
+                } else {
+                    AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP
+                }
                 val authSignInResult = AuthSignInResult(
                     false,
                     AuthNextSignInStep(
-                        AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE,
+                        signInStep,
                         mapOf(),
                         deliveryDetails,
+                        null,
                         null,
                         null
                     )
@@ -149,6 +185,7 @@ internal object SignInChallengeHelper {
                     AuthNextSignInStep(
                         AuthSignInStep.CONFIRM_SIGN_IN_WITH_NEW_PASSWORD,
                         challengeParams,
+                        null,
                         null,
                         null,
                         null
@@ -164,6 +201,7 @@ internal object SignInChallengeHelper {
                         challengeParams,
                         null,
                         null,
+                        null,
                         null
                     )
                 )
@@ -175,6 +213,7 @@ internal object SignInChallengeHelper {
                     AuthNextSignInStep(
                         AuthSignInStep.CONFIRM_SIGN_IN_WITH_TOTP_CODE,
                         emptyMap(),
+                        null,
                         null,
                         null,
                         null
@@ -193,7 +232,8 @@ internal object SignInChallengeHelper {
                             emptyMap(),
                             null,
                             null,
-                            allowedMFASetupTypes
+                            allowedMFASetupTypes,
+                            null
                         )
                     )
                     onSuccess.accept(authSignInResult)
@@ -205,7 +245,8 @@ internal object SignInChallengeHelper {
                             challengeParams,
                             null,
                             TOTPSetupDetails(signInTOTPSetupData.secretCode, signInTOTPSetupData.username),
-                            allowedMFAType
+                            allowedMFAType,
+                            null
                         )
                     )
                     onSuccess.accept(authSignInResult)
@@ -217,7 +258,8 @@ internal object SignInChallengeHelper {
                             emptyMap(),
                             null,
                             null,
-                            allowedMFAType
+                            allowedMFAType,
+                            null
                         )
                     )
                     onSuccess.accept(authSignInResult)
@@ -233,35 +275,43 @@ internal object SignInChallengeHelper {
                         mapOf(),
                         null,
                         null,
-                        getAllowedMFATypesFromChallengeParameters(challengeParams)
+                        getAllowedMFATypesFromChallengeParameters(challengeParams),
+                        null
                     )
                 )
                 onSuccess.accept(authSignInResult)
             }
-            is ChallengeNameType.EmailOtp -> {
-                val codeDeliveryMedium = DeliveryMedium.fromString(
-                    challengeParams["CODE_DELIVERY_DELIVERY_MEDIUM"] ?: DeliveryMedium.UNKNOWN.value
-                )
-                val codeDeliveryDestination = challengeParams["CODE_DELIVERY_DESTINATION"]
-                val deliveryDetails = if (codeDeliveryDestination != null) {
-                    AuthCodeDeliveryDetails(codeDeliveryDestination, codeDeliveryMedium)
-                } else {
-                    null
-                }
-
+            is ChallengeNameType.SelectChallenge -> {
                 val authSignInResult = AuthSignInResult(
                     false,
                     AuthNextSignInStep(
-                        AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP,
+                        AuthSignInStep.CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION,
                         mapOf(),
-                        deliveryDetails,
                         null,
-                        null
+                        null,
+                        null,
+                        getAvailableFactors(challenge.availableChallenges)
                     )
                 )
                 onSuccess.accept(authSignInResult)
             }
             else -> onError.accept(UnknownException(cause = Exception("Challenge type not supported.")))
         }
+    }
+
+    private fun getAvailableFactors(possibleFactors: List<String>?): Set<AuthFactorType> {
+        val result = mutableSetOf<AuthFactorType>()
+        if (possibleFactors == null) {
+            throw UnknownException(cause = Exception("Tried to parse available factors but found none."))
+        } else {
+            possibleFactors.forEach {
+                try {
+                    result.add(AuthFactorType.valueOf(it))
+                } catch (exception: IllegalArgumentException) {
+                    throw UnknownException(cause = Exception("Tried to parse an unrecognized AuthFactorType"))
+                }
+            }
+        }
+        return result
     }
 }

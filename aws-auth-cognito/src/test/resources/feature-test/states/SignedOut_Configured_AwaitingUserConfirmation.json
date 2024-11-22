@@ -1,0 +1,21 @@
+{
+    "type": "AuthState.Configured",
+    "AuthenticationState": {
+        "type": "AuthenticationState.SignedOut",
+        "signedOutData": {
+            "lastKnownUsername": "username"
+        }
+    },
+    "AuthorizationState": {
+        "type": "AuthorizationState.Configured"
+    },
+    "SignUpState": {
+        "type": "SignUpState.AwaitingUserConfirmation",
+        "signUpData": {
+            "username": "username",
+            "session": "session-id",
+            "userId": ""
+        },
+        "signUpResult": "{\"isSignUpComplete\":false,\"nextStep\":{\"signUpStep\":\"CONFIRM_SIGN_UP_STEP\",\"additionalInfo\":{},\"codeDeliveryDetails\":{\"destination\":\"user@domain.com\",\"deliveryMedium\":\"EMAIL\",\"attributeName\":\"attributeName\"}},\"userId\":\"\"}"
+    }
+}

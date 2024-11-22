@@ -55,7 +55,11 @@
                 "isSignUpComplete": true,
                 "nextStep": {
                     "signUpStep": "DONE",
-                    "additionalInfo": {
+                    "additionalInfo": {},
+                    "codeDeliveryDetails": {
+                        "destination": "",
+                        "deliveryMedium": "UNKNOWN",
+                        "attributeName": ""
                     }
                 },
                 "userId": ""

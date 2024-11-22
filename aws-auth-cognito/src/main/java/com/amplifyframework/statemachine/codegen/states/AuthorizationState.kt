@@ -84,6 +84,15 @@ internal sealed class AuthorizationState : State {
             val authorizationEvent = event.isAuthorizationEvent()
             val deleteUserEvent = event.isDeleteUserEvent()
             val defaultResolution = StateResolution(oldState)
+
+            if (authenticationEvent is AuthenticationEvent.EventType.SignInCompleted) {
+                val action = authorizationActions.initializeFetchAuthSession(authenticationEvent.signedInData)
+                return StateResolution(
+                    FetchingAuthSession(authenticationEvent.signedInData, FetchAuthSessionState.NotStarted()),
+                    listOf(action)
+                )
+            }
+
             return when (oldState) {
                 is NotConfigured -> when (authorizationEvent) {
                     is AuthorizationEvent.EventType.Configure -> {

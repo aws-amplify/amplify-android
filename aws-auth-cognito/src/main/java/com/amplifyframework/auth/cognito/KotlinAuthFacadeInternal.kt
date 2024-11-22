@@ -54,7 +54,7 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
 
     suspend fun signUp(
         username: String,
-        password: String,
+        password: String?,
         options: AuthSignUpOptions
     ): AuthSignUpResult {
         return suspendCoroutine { continuation ->
@@ -562,6 +562,15 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
                 totp,
                 email,
                 { continuation.resume(Unit) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+    }
+
+    suspend fun autoSignIn(): AuthSignInResult {
+        return suspendCoroutine { continuation ->
+            delegate.autoSignIn(
+                { continuation.resume(it) },
                 { continuation.resumeWithException(it) }
             )
         }

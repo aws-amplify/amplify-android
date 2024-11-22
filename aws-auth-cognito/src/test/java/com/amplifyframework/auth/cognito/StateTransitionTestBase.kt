@@ -17,6 +17,7 @@ package com.amplifyframework.auth.cognito
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import com.amplifyframework.auth.cognito.actions.DeleteUserCognitoActions
+import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthActions
 import com.amplifyframework.statemachine.codegen.actions.AuthenticationActions
@@ -31,6 +32,9 @@ import com.amplifyframework.statemachine.codegen.actions.SetupTOTPActions
 import com.amplifyframework.statemachine.codegen.actions.SignInActions
 import com.amplifyframework.statemachine.codegen.actions.SignInChallengeActions
 import com.amplifyframework.statemachine.codegen.actions.SignOutActions
+import com.amplifyframework.statemachine.codegen.actions.SignUpActions
+import com.amplifyframework.statemachine.codegen.actions.UserAuthSignInActions
+import com.amplifyframework.statemachine.codegen.actions.WebAuthnSignInActions
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
@@ -119,6 +123,15 @@ open class StateTransitionTestBase {
 
     @Mock
     internal lateinit var mockSetupTOTPActions: SetupTOTPActions
+
+    @Mock
+    internal lateinit var mockSignUpActions: SignUpActions
+
+    @Mock
+    internal lateinit var mockUserAuthSignInActions: UserAuthSignInActions
+
+    @Mock
+    internal lateinit var mockWebAuthnSignInActions: WebAuthnSignInActions
 
     private val dummyCredential = AmplifyCredential.UserAndIdentityPool(
         SignedInData(
@@ -269,7 +282,8 @@ open class StateTransitionTestBase {
                             SRPEvent.EventType.InitiateSRP(
                                 "username",
                                 "password",
-                                mapOf()
+                                mapOf(),
+                                AuthFlowType.USER_SRP_AUTH
                             )
                         )
                     )

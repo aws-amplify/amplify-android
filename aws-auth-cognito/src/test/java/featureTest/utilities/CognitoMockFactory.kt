@@ -25,6 +25,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthenticationResul
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeDeliveryDetailsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmDeviceResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeleteUserResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceType
@@ -46,6 +47,7 @@ import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentity
 import com.amplifyframework.auth.cognito.featuretest.serializers.CognitoIdentityProviderExceptionSerializer
 import io.mockk.coEvery
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.boolean
@@ -77,7 +79,18 @@ class CognitoMockFactory(
                         this.userConfirmed = if (responseObject.containsKey("userConfirmed")) {
                             (responseObject["userConfirmed"] as? JsonPrimitive)?.boolean ?: false
                         } else false
+                        // session will be null in non-user-auth flow
+                        this.session = (responseObject["session"] as? JsonPrimitive)?.content
                         this.userSub = ""
+                    }
+                }
+            }
+            "confirmSignUp" -> {
+                coEvery { mockCognitoIPClient.confirmSignUp(any()) } coAnswers {
+                    setupError(mockResponse, responseObject)
+                    ConfirmSignUpResponse.invoke {
+                        // session will be null in non-user-auth flow
+                        this.session = (responseObject["session"] as? JsonPrimitive)?.content
                     }
                 }
             }
@@ -96,6 +109,12 @@ class CognitoMockFactory(
                         this.authenticationResult = responseObject["authenticationResult"]?.let {
                             parseAuthenticationResult(it as JsonObject)
                         }
+
+                        this.availableChallenges = responseObject["availableChallenges"]?.let {
+                            parseAvailableChallenges(it as JsonArray)
+                        }
+
+                        this.session = responseObject["session"]?.toString()
                     }
                 }
             }
@@ -230,6 +249,9 @@ class CognitoMockFactory(
     private fun parseChallengeParams(params: JsonObject): Map<String, String> {
         return params.mapValues { (k, v) -> (v as JsonPrimitive).content }
     }
+
+    private fun parseAvailableChallenges(availableChallenges: JsonArray) =
+        availableChallenges.map { ChallengeNameType.fromValue(it.toString().replace("\"", "")) }
 
     private fun parseAuthenticationResult(result: JsonObject): AuthenticationResultType {
         return AuthenticationResultType.invoke {

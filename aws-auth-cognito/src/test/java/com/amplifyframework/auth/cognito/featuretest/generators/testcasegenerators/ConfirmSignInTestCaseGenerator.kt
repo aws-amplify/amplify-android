@@ -15,7 +15,10 @@
 
 package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators
 
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeMismatchException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException
+import com.amplifyframework.auth.AuthFactorType
 import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter
 import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
@@ -32,6 +35,12 @@ import kotlinx.serialization.json.JsonObject
 
 object ConfirmSignInTestCaseGenerator : SerializableProvider {
     private const val challengeCode = "000000"
+    private const val userId = "userId"
+    private const val username = "username"
+    private const val password = "password"
+    private const val phone = "+12345678900"
+    private const val email = "test@****.com"
+    private const val session = "someSession"
 
     private val mockedRespondToAuthChallengeResponse = MockResponse(
         CognitoType.CognitoIdentityProvider,
@@ -61,6 +70,45 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
             )
         ).toJsonElement()
     )
+
+    private val mockedRespondToAuthSrpResponse = MockResponse(
+        CognitoType.CognitoIdentityProvider,
+        "respondToAuthChallenge",
+        ResponseType.Success,
+        mapOf(
+            "challengeName" to ChallengeNameType.PasswordVerifier.value,
+            "challengeParameters" to mapOf(
+                "SALT" to "abc",
+                "SECRET_BLOCK" to "secretBlock",
+                "SRP_B" to "def",
+                "USERNAME" to username,
+                "USER_ID_FOR_SRP" to userId
+            )
+        ).toJsonElement()
+    )
+
+    private fun mockedRespondToAuthEmailOrSmsResponse(challengeNameType: ChallengeNameType): MockResponse {
+        val (medium, destination) = if (challengeNameType == ChallengeNameType.EmailOtp) {
+            Pair("EMAIL", email)
+        } else {
+            Pair("SMS", phone)
+        }
+
+        return MockResponse(
+            CognitoType.CognitoIdentityProvider,
+            "respondToAuthChallenge",
+            ResponseType.Success,
+            mapOf(
+                "challengeName" to challengeNameType.value,
+                "session" to session,
+                "parameters" to JsonObject(emptyMap()),
+                "challengeParameters" to mapOf(
+                    "CODE_DELIVERY_DELIVERY_MEDIUM" to medium,
+                    "CODE_DELIVERY_DESTINATION" to destination
+                )
+            ).toJsonElement()
+        )
+    }
 
     private val mockedIdentityIdResponse = MockResponse(
         CognitoType.CognitoIdentity,
@@ -110,6 +158,68 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
             )
         ).toJsonElement()
     )
+
+    private val mockedRespondToAuthNotAuthorizedException = MockResponse(
+        CognitoType.CognitoIdentityProvider,
+        "respondToAuthChallenge",
+        ResponseType.Failure,
+        NotAuthorizedException.invoke {
+            message = "Incorrect username or password."
+        }.toJsonElement()
+    )
+
+    private val mockedRespondToAuthCodeMismatchException = MockResponse(
+        CognitoType.CognitoIdentityProvider,
+        "respondToAuthChallenge",
+        ResponseType.Failure,
+        CodeMismatchException.invoke {
+            message = "Confirmation code entered is not correct."
+        }.toJsonElement()
+    )
+
+    private val notAuthorizedExceptionExpectation = ExpectationShapes.Amplify(
+        AuthAPI.confirmSignIn,
+        ResponseType.Failure,
+        com.amplifyframework.auth.exceptions.NotAuthorizedException(
+            cause = NotAuthorizedException.invoke {
+                message = "Incorrect username or password."
+            }
+        ).toJsonElement(),
+    )
+
+    private val codeMismatchExceptionExpectation = ExpectationShapes.Amplify(
+        AuthAPI.confirmSignIn,
+        ResponseType.Failure,
+        CognitoAuthExceptionConverter.lookup(
+            CodeMismatchException.invoke {
+                message = "Confirmation code entered is not correct."
+            },
+            "Confirm Sign in failed."
+        ).toJsonElement()
+    )
+
+    private fun mockedConfirmSignInWithOtpExpectation(challengeNameType: ChallengeNameType): ExpectationShapes.Amplify {
+        val (medium, destination) = if (challengeNameType == ChallengeNameType.EmailOtp) {
+            Pair("EMAIL", email)
+        } else {
+            Pair("SMS", phone)
+        }
+        return ExpectationShapes.Amplify(
+            apiName = AuthAPI.signIn,
+            responseType = ResponseType.Success,
+            response = mapOf(
+                "isSignedIn" to false,
+                "nextStep" to mapOf(
+                    "signInStep" to "CONFIRM_SIGN_IN_WITH_OTP",
+                    "additionalInfo" to JsonObject(emptyMap()),
+                    "codeDeliveryDetails" to mapOf(
+                        "destination" to destination,
+                        "deliveryMedium" to medium,
+                    )
+                )
+            ).toJsonElement()
+        )
+    }
 
     private val baseCase = FeatureTestCase(
         description = "Test that SignIn with SMS challenge invokes proper cognito request and returns success",
@@ -189,5 +299,252 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
         )
     )
 
-    override val serializables: List<Any> = listOf(baseCase, errorCase, successCaseWithSecondaryChallenge)
+    // SELECT_CHALLENGE > Select Email OTP
+    private val userAuthSelectEmailOtpChallenge = FeatureTestCase(
+        description = "Test that selecting the email OTP challenge returns the proper state",
+        preConditions = PreConditions(
+            "authconfiguration_userauth.json",
+            "SigningIn_SelectChallenge.json",
+            mockedResponses = listOf(
+                mockedRespondToAuthEmailOrSmsResponse(ChallengeNameType.EmailOtp)
+            )
+        ),
+        api = API(
+            AuthAPI.confirmSignIn,
+            params = mapOf(
+                "challengeResponse" to AuthFactorType.EMAIL_OTP.challengeResponse
+            ).toJsonElement(),
+            options = JsonObject(emptyMap())
+        ),
+        validations = listOf(
+            mockedConfirmSignInWithOtpExpectation(ChallengeNameType.EmailOtp),
+            ExpectationShapes.State("SigningIn_EmailOtp.json")
+        )
+    )
+
+    // Email OTP > Enter Correct Challenge Code
+    private val userAuthConfirmEmailOtpCodeSucceeds = FeatureTestCase(
+        description = "Test that entering the correct email OTP code signs the user in",
+        preConditions = PreConditions(
+            "authconfiguration_userauth.json",
+            "SigningIn_EmailOtp.json",
+            mockedResponses = listOf(
+                mockedRespondToAuthChallengeResponse,
+                mockedIdentityIdResponse,
+                mockedAWSCredentialsResponse,
+            )
+        ),
+        api = API(
+            AuthAPI.confirmSignIn,
+            params = mapOf(
+                "challengeResponse" to challengeCode
+            ).toJsonElement(),
+            options = JsonObject(emptyMap())
+        ),
+        validations = listOf(
+            mockedSignInSuccessExpectation,
+            ExpectationShapes.State("SignedIn_SessionEstablished.json")
+        )
+    )
+
+    // Email OTP > Enter Incorrect Challenge Code
+    private val userAuthConfirmEmailOtpCodeFails = FeatureTestCase(
+        description = "Test that entering the incorrect email OTP code fails",
+        preConditions = PreConditions(
+            "authconfiguration_userauth.json",
+            "SigningIn_EmailOtp.json",
+            mockedResponses = listOf(
+                mockedRespondToAuthCodeMismatchException
+            )
+        ),
+        api = API(
+            AuthAPI.confirmSignIn,
+            params = mapOf(
+                "challengeResponse" to challengeCode
+            ).toJsonElement(),
+            options = JsonObject(emptyMap())
+        ),
+        validations = listOf(
+            codeMismatchExceptionExpectation
+        )
+    )
+
+    // SELECT_CHALLENGE > Select SMS OTP
+    private val userAuthSelectSmsOtpChallenge = FeatureTestCase(
+        description = "Test that selecting the SMS OTP challenge returns the proper state",
+        preConditions = PreConditions(
+            "authconfiguration_userauth.json",
+            "SigningIn_SelectChallenge.json",
+            mockedResponses = listOf(
+                mockedRespondToAuthEmailOrSmsResponse(ChallengeNameType.SmsOtp)
+            )
+        ),
+        api = API(
+            AuthAPI.confirmSignIn,
+            params = mapOf(
+                "challengeResponse" to AuthFactorType.SMS_OTP.challengeResponse
+            ).toJsonElement(),
+            options = JsonObject(emptyMap())
+        ),
+        validations = listOf(
+            mockedConfirmSignInWithOtpExpectation(ChallengeNameType.SmsOtp),
+            ExpectationShapes.State("SigningIn_SmsOtp.json")
+        )
+    )
+
+    // SMS OTP > Enter Correct Challenge Code
+    private val userAuthConfirmSmsOtpCodeSucceeds = FeatureTestCase(
+        description = "Test that entering the correct SMS OTP code signs the user in",
+        preConditions = PreConditions(
+            "authconfiguration_userauth.json",
+            "SigningIn_SmsOtp.json",
+            mockedResponses = listOf(
+                mockedRespondToAuthChallengeResponse,
+                mockedIdentityIdResponse,
+                mockedAWSCredentialsResponse,
+            )
+        ),
+        api = API(
+            AuthAPI.confirmSignIn,
+            params = mapOf(
+                "challengeResponse" to challengeCode
+            ).toJsonElement(),
+            options = JsonObject(emptyMap())
+        ),
+        validations = listOf(
+            mockedSignInSuccessExpectation,
+            ExpectationShapes.State("SignedIn_SessionEstablished.json")
+        )
+    )
+
+    // SMS OTP > Enter Incorrect Challenge Code
+    private val userAuthConfirmSmsOtpCodeFails = FeatureTestCase(
+        description = "Test that entering the incorrect SMS OTP code fails",
+        preConditions = PreConditions(
+            "authconfiguration_userauth.json",
+            "SigningIn_SmsOtp.json",
+            mockedResponses = listOf(
+                mockedRespondToAuthCodeMismatchException
+            )
+        ),
+        api = API(
+            AuthAPI.confirmSignIn,
+            params = mapOf(
+                "challengeResponse" to challengeCode
+            ).toJsonElement(),
+            options = JsonObject(emptyMap())
+        ),
+        validations = listOf(
+            codeMismatchExceptionExpectation
+        )
+    )
+
+    // SELECT_CHALLENGE > Select Password w/Correct Password
+    private val userAuthSelectPasswordChallengeSucceeds = FeatureTestCase(
+        description = "Test that selecting the PASSWORD challenge with the correct password succeeds",
+        preConditions = PreConditions(
+            "authconfiguration_userauth.json",
+            "SigningIn_SelectChallenge.json",
+            mockedResponses = listOf(
+                mockedRespondToAuthChallengeResponse
+            )
+        ),
+        api = API(
+            AuthAPI.confirmSignIn,
+            params = mapOf(
+                "challengeResponse" to password
+            ).toJsonElement(),
+            options = JsonObject(emptyMap())
+        ),
+        validations = listOf(
+            mockedSignInSuccessExpectation,
+            ExpectationShapes.State("SignedIn_SessionEstablished.json")
+        )
+    )
+
+    // SELECT_CHALLENGE > Select Password w/Incorrect Password
+    private val userAuthSelectPasswordChallengeFails = FeatureTestCase(
+        description = "Test that selecting the PASSWORD challenge with the incorrect password fails",
+        preConditions = PreConditions(
+            "authconfiguration_userauth.json",
+            "SigningIn_SelectChallenge.json",
+            mockedResponses = listOf(
+                mockedRespondToAuthNotAuthorizedException
+            )
+        ),
+        api = API(
+            AuthAPI.confirmSignIn,
+            params = mapOf(
+                "challengeResponse" to password
+            ).toJsonElement(),
+            options = JsonObject(emptyMap())
+        ),
+        validations = listOf(
+            notAuthorizedExceptionExpectation
+        )
+    )
+
+    // SELECT_CHALLENGE > Select Password_SRP w/Correct Password
+    private val userAuthSelectPasswordSrpChallengeSucceeds = FeatureTestCase(
+        description = "Test that selecting the PASSWORD_SRP challenge with the correct password succeeds",
+        preConditions = PreConditions(
+            "authconfiguration_userauth.json",
+            "SigningIn_SelectChallenge.json",
+            mockedResponses = listOf(
+                mockedRespondToAuthSrpResponse,
+                mockedRespondToAuthChallengeResponse,
+                mockedIdentityIdResponse,
+                mockedAWSCredentialsResponse,
+            )
+        ),
+        api = API(
+            AuthAPI.confirmSignIn,
+            params = mapOf(
+                "challengeResponse" to password
+            ).toJsonElement(),
+            options = JsonObject(emptyMap())
+        ),
+        validations = listOf(
+            mockedSignInSuccessExpectation,
+            ExpectationShapes.State("SignedIn_SessionEstablished.json")
+        )
+    )
+
+    // SELECT_CHALLENGE > Select Password_SRP w/Incorrect Password
+    private val userAuthSelectPasswordSrpChallengeFails = FeatureTestCase(
+        description = "Test that selecting the PASSWORD_SRP challenge with the incorrect password fails",
+        preConditions = PreConditions(
+            "authconfiguration_userauth.json",
+            "SigningIn_SelectChallenge.json",
+            mockedResponses = listOf(
+                mockedRespondToAuthNotAuthorizedException
+            )
+        ),
+        api = API(
+            AuthAPI.confirmSignIn,
+            params = mapOf(
+                "challengeResponse" to password
+            ).toJsonElement(),
+            options = JsonObject(emptyMap())
+        ),
+        validations = listOf(
+            notAuthorizedExceptionExpectation
+        )
+    )
+
+    override val serializables: List<Any> = listOf(
+        baseCase,
+        errorCase,
+        successCaseWithSecondaryChallenge,
+        userAuthSelectEmailOtpChallenge,
+        userAuthConfirmEmailOtpCodeSucceeds,
+        userAuthConfirmEmailOtpCodeFails,
+        userAuthSelectSmsOtpChallenge,
+        userAuthConfirmSmsOtpCodeSucceeds,
+        userAuthConfirmSmsOtpCodeFails,
+        userAuthSelectPasswordChallengeSucceeds,
+        userAuthSelectPasswordChallengeFails,
+        userAuthSelectPasswordSrpChallengeSucceeds,
+        userAuthSelectPasswordSrpChallengeFails,
+    )
 }

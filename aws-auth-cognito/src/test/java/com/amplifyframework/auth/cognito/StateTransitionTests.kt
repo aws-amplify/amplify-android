@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
+import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
@@ -44,6 +45,8 @@ import com.amplifyframework.statemachine.codegen.states.SetupTOTPState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
+import com.amplifyframework.statemachine.codegen.states.SignUpState
+import com.amplifyframework.statemachine.codegen.states.WebAuthnSignInState
 import io.mockk.mockk
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -96,6 +99,8 @@ class StateTransitionTests : StateTransitionTestBase() {
                         HostedUISignInState.Resolver(mockHostedUIActions),
                         DeviceSRPSignInState.Resolver(mockDeviceSRPSignInActions),
                         SetupTOTPState.Resolver(mockSetupTOTPActions),
+                        WebAuthnSignInState.Resolver(mockWebAuthnSignInActions, mockSignInActions),
+                        mockUserAuthSignInActions,
                         mockSignInActions
                     ),
                     SignOutState.Resolver(mockSignOutActions),
@@ -110,7 +115,8 @@ class StateTransitionTests : StateTransitionTestBase() {
                     DeleteUserState.Resolver(mockDeleteUserActions),
                     mockAuthorizationActions
                 ),
-                mockAuthActions
+                mockAuthActions,
+                SignUpState.Resolver(mockSignUpActions)
             ),
             AuthEnvironment(mockk(), configuration, cognitoAuthService, storeClient, null, null, mockk())
         )
@@ -283,7 +289,12 @@ class StateTransitionTests : StateTransitionTestBase() {
                 Action { dispatcher, _ ->
                     dispatcher.send(
                         SignInEvent(
-                            SignInEvent.EventType.InitiateSignInWithSRP("username", "password", emptyMap())
+                            SignInEvent.EventType.InitiateSignInWithSRP(
+                                "username",
+                                "password",
+                                emptyMap(),
+                                AuthFlowType.USER_SRP_AUTH
+                            )
                         )
                     )
                 }
@@ -306,7 +317,8 @@ class StateTransitionTests : StateTransitionTestBase() {
                                 SignInData.SRPSignInData(
                                     "username",
                                     "password",
-                                    emptyMap()
+                                    emptyMap(),
+                                    AuthFlowType.USER_SRP_AUTH
                                 )
                             )
                         )

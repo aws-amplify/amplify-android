@@ -15,6 +15,8 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
+import com.amplifyframework.statemachine.util.mask
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -22,5 +24,24 @@ internal data class AuthChallenge(
     val challengeName: String,
     val username: String? = null,
     val session: String?,
-    val parameters: Map<String, String>?
+    val parameters: Map<String, String>?,
+    val availableChallenges: List<String>? = null
+) {
+    override fun toString(): String = "AuthChallenge(" +
+        "challengeName='$challengeName', " +
+        "username=$username, " +
+        "session=${session.mask()}, " +
+        "parameters=${parameters?.maskSensitiveChallengeParameters()}, " +
+        "availableChallenges=$availableChallenges" +
+        ")"
+}
+
+internal val AuthChallenge.challengeNameType
+    get() = ChallengeNameType.fromValue(challengeName)
+
+internal fun AuthChallenge.getParameter(parameter: ChallengeParameter) = parameters?.get(parameter.key)
+
+internal fun Map<String, String>.maskSensitiveChallengeParameters() = mask(
+    ChallengeParameter.CodeDeliveryDestination.key,
+    ChallengeParameter.CredentialRequestOptions.key
 )

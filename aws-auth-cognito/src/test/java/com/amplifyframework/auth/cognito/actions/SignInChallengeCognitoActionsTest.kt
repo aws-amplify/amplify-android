@@ -67,6 +67,9 @@ class SignInChallengeCognitoActionsTest {
 
     private lateinit var authEnvironment: AuthEnvironment
 
+    private val answer = "myAnswer"
+    private val username = "fakeUserName"
+
     @Before
     fun setup() {
         every { cognitoAuthService.cognitoIdentityProviderClient }.answers { cognitoIdentityProviderClientMock }
@@ -84,7 +87,7 @@ class SignInChallengeCognitoActionsTest {
     @Test
     fun `very auth challenge without user attributes`() = runTest {
         val expectedChallengeResponses = mapOf(
-            "USERNAME" to "testUser"
+            "USERNAME" to username
         )
         val capturedRequest = slot<RespondToAuthChallengeRequest>()
         coEvery {
@@ -94,12 +97,12 @@ class SignInChallengeCognitoActionsTest {
         }
 
         SignInChallengeCognitoActions.verifyChallengeAuthAction(
-            "myAnswer",
+            answer,
             emptyMap(),
             emptyList(),
             AuthChallenge(
                 "CONFIRM_SIGN_IN_WITH_NEW_PASSWORD",
-                username = "testUser",
+                username = username,
                 session = null,
                 parameters = null
             )
@@ -113,7 +116,7 @@ class SignInChallengeCognitoActionsTest {
     fun `user attributes are added to auth challenge`() = runTest {
         val providedUserAttributes = listOf(AuthUserAttribute(AuthUserAttributeKey.phoneNumber(), "+15555555555"))
         val expectedChallengeResponses = mapOf(
-            "USERNAME" to "testUser",
+            "USERNAME" to username,
             "userAttributes.phone_number" to "+15555555555"
         )
         val capturedRequest = slot<RespondToAuthChallengeRequest>()
@@ -124,12 +127,12 @@ class SignInChallengeCognitoActionsTest {
         }
 
         SignInChallengeCognitoActions.verifyChallengeAuthAction(
-            "myAnswer",
+            answer,
             emptyMap(),
             providedUserAttributes,
             AuthChallenge(
                 "CONFIRM_SIGN_IN_WITH_NEW_PASSWORD",
-                username = "testUser",
+                username = username,
                 session = null,
                 parameters = null
             )
@@ -142,7 +145,7 @@ class SignInChallengeCognitoActionsTest {
     @Test
     fun `verify email MFA setup selection challenge is handled`() = runTest {
         val expectedChallengeResponses = mapOf(
-            "USERNAME" to "testUser",
+            "USERNAME" to username,
         )
 
         val capturedRequest = slot<RespondToAuthChallengeRequest>()
@@ -158,7 +161,98 @@ class SignInChallengeCognitoActionsTest {
             emptyList(),
             AuthChallenge(
                 "MFA_SETUP",
-                username = "testUser",
+                username = username,
+                session = null,
+                parameters = null
+            )
+        ).execute(dispatcher, authEnvironment)
+
+        assertTrue(capturedRequest.isCaptured)
+        assertEquals(expectedChallengeResponses, capturedRequest.captured.challengeResponses)
+    }
+
+    @Test
+    fun `verify challenge response key for Email Otp`() = runTest {
+        val expectedChallengeResponses = mapOf(
+            "USERNAME" to username,
+            "EMAIL_OTP_CODE" to answer
+        )
+
+        val capturedRequest = slot<RespondToAuthChallengeRequest>()
+        coEvery {
+            cognitoIdentityProviderClientMock.respondToAuthChallenge(capture(capturedRequest))
+        }.answers {
+            mockk()
+        }
+
+        SignInChallengeCognitoActions.verifyChallengeAuthAction(
+            answer,
+            emptyMap(),
+            emptyList(),
+            AuthChallenge(
+                "EMAIL_OTP",
+                username = username,
+                session = null,
+                parameters = null
+            )
+        ).execute(dispatcher, authEnvironment)
+
+        assertTrue(capturedRequest.isCaptured)
+        assertEquals(expectedChallengeResponses, capturedRequest.captured.challengeResponses)
+    }
+
+    @Test
+    fun `verify challenge response key for SMS Otp`() = runTest {
+        val expectedChallengeResponses = mapOf(
+            "USERNAME" to username,
+            "SMS_OTP_CODE" to answer
+        )
+
+        val capturedRequest = slot<RespondToAuthChallengeRequest>()
+        coEvery {
+            cognitoIdentityProviderClientMock.respondToAuthChallenge(capture(capturedRequest))
+        }.answers {
+            mockk()
+        }
+
+        SignInChallengeCognitoActions.verifyChallengeAuthAction(
+            answer,
+            emptyMap(),
+            emptyList(),
+            AuthChallenge(
+                "SMS_OTP",
+                username = username,
+                session = null,
+                parameters = null
+            )
+        ).execute(dispatcher, authEnvironment)
+
+        assertTrue(capturedRequest.isCaptured)
+        assertEquals(expectedChallengeResponses, capturedRequest.captured.challengeResponses)
+    }
+
+    @Test
+    fun `verify challenge response key for Select Challenge`() = runTest {
+        val selectChallengeChallengeResponseKey = "ANSWER"
+        val expectedChallengeResponses = mapOf(
+            "USERNAME" to username,
+            selectChallengeChallengeResponseKey to answer
+        )
+
+        val capturedRequest = slot<RespondToAuthChallengeRequest>()
+        coEvery {
+            cognitoIdentityProviderClientMock.respondToAuthChallenge(capture(capturedRequest))
+        }.answers {
+            mockk()
+        }
+
+        SignInChallengeCognitoActions.verifyChallengeAuthAction(
+            answer,
+            emptyMap(),
+            emptyList(),
+            AuthChallenge(
+                "SELECT_CHALLENGE",
+                username = username,
                 session = null,
                 parameters = null
             )

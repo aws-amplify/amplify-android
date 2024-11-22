@@ -28,6 +28,9 @@ public abstract interface class com/amplifyframework/rx/RxApiCategoryBehavior : 
 }
 
 public abstract interface class com/amplifyframework/rx/RxAuthCategoryBehavior {
+	public abstract fun associateWebAuthnCredential (Landroid/app/Activity;)Lio/reactivex/rxjava3/core/Completable;
+	public abstract fun associateWebAuthnCredential (Landroid/app/Activity;Lcom/amplifyframework/auth/options/AuthAssociateWebAuthnCredentialsOptions;)Lio/reactivex/rxjava3/core/Completable;
+	public abstract fun autoSignIn ()Lio/reactivex/rxjava3/core/Single;
 	public abstract fun confirmResetPassword (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lio/reactivex/rxjava3/core/Completable;
 	public abstract fun confirmResetPassword (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmResetPasswordOptions;)Lio/reactivex/rxjava3/core/Completable;
 	public abstract fun confirmSignIn (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
@@ -36,6 +39,8 @@ public abstract interface class com/amplifyframework/rx/RxAuthCategoryBehavior {
 	public abstract fun confirmSignUp (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmSignUpOptions;)Lio/reactivex/rxjava3/core/Single;
 	public abstract fun confirmUserAttribute (Lcom/amplifyframework/auth/AuthUserAttributeKey;Ljava/lang/String;)Lio/reactivex/rxjava3/core/Completable;
 	public abstract fun deleteUser ()Lio/reactivex/rxjava3/core/Completable;
+	public abstract fun deleteWebAuthnCredential (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Completable;
+	public abstract fun deleteWebAuthnCredential (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthDeleteWebAuthnCredentialOptions;)Lio/reactivex/rxjava3/core/Completable;
 	public abstract fun fetchAuthSession ()Lio/reactivex/rxjava3/core/Single;
 	public abstract fun fetchAuthSession (Lcom/amplifyframework/auth/options/AuthFetchSessionOptions;)Lio/reactivex/rxjava3/core/Single;
 	public abstract fun fetchDevices ()Lio/reactivex/rxjava3/core/Single;
@@ -44,6 +49,8 @@ public abstract interface class com/amplifyframework/rx/RxAuthCategoryBehavior {
 	public abstract fun forgetDevice (Lcom/amplifyframework/auth/AuthDevice;)Lio/reactivex/rxjava3/core/Completable;
 	public abstract fun getCurrentUser ()Lio/reactivex/rxjava3/core/Single;
 	public abstract fun handleWebUISignInResponse (Landroid/content/Intent;)V
+	public abstract fun listWebAuthnCredentials ()Lio/reactivex/rxjava3/core/Single;
+	public abstract fun listWebAuthnCredentials (Lcom/amplifyframework/auth/options/AuthListWebAuthnCredentialsOptions;)Lio/reactivex/rxjava3/core/Single;
 	public abstract fun rememberDevice ()Lio/reactivex/rxjava3/core/Completable;
 	public abstract fun resendSignUpCode (Ljava/lang/String;)Lio/reactivex/rxjava3/core/Single;
 	public abstract fun resendSignUpCode (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthResendSignUpCodeOptions;)Lio/reactivex/rxjava3/core/Single;
