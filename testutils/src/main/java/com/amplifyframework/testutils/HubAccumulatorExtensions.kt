@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -12,25 +12,16 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.auth
+
+package com.amplifyframework.testutils
+
+import com.amplifyframework.hub.HubEvent
+import java.util.concurrent.TimeUnit
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
- * Type of MFA for authentication.
+ * Await using a [Duration]
  */
-enum class MFAType {
-
-    /**
-     * Short Messaging Service linked with a phone number
-     */
-    SMS,
-
-    /**
-     * Time-based One Time Password linked with an authenticator app
-     */
-    TOTP,
-
-    /**
-     * Receives MFA codes with an email
-     */
-    EMAIL;
-}
+fun HubAccumulator.await(timeout: Duration = 2.seconds): List<HubEvent<*>> =
+    await(timeout.inWholeMilliseconds.toInt(), TimeUnit.MILLISECONDS)

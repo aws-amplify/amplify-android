@@ -47,7 +47,7 @@ internal class RunFaceLivenessSession(
     onError: Consumer<PredictionsException>
 ) {
 
-    private val livenessEndpoint = "wss://streaming-rekognition.${sessionInformation.region}.amazonaws.com:443"
+    private val livenessEndpoint = getStreamingEndpointForRegion(sessionInformation.region)
 
     private val livenessWebSocket = LivenessWebSocket(
         credentialsProvider = credentialsProvider,
@@ -182,5 +182,18 @@ internal class RunFaceLivenessSession(
     private fun stopLivenessSession(reasonCode: Int?) {
         livenessWebSocket.clientStoppedSession = true
         reasonCode?.let { livenessWebSocket.destroy(it) } ?: livenessWebSocket.destroy()
+    }
+
+    private fun getStreamingEndpointForRegion(region: String): String {
+        val baseDomain = when {
+            region.startsWith("us-isof", ignoreCase = true) -> ISO_PARTITION_BASE_DOMAIN
+            else -> DEFAULT_BASE_DOMAIN
+        }
+        return "wss://streaming-rekognition.$region.$baseDomain:443"
+    }
+
+    companion object {
+        private const val ISO_PARTITION_BASE_DOMAIN = "csp.hci.ic.gov"
+        private const val DEFAULT_BASE_DOMAIN = "amazonaws.com"
     }
 }

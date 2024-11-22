@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -12,25 +12,13 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.auth
 
-/**
- * Type of MFA for authentication.
- */
-enum class MFAType {
+package com.amplifyframework.api.aws.utils
 
-    /**
-     * Short Messaging Service linked with a phone number
-     */
-    SMS,
+import org.json.JSONObject
 
-    /**
-     * Time-based One Time Password linked with an authenticator app
-     */
-    TOTP,
-
-    /**
-     * Receives MFA codes with an email
-     */
-    EMAIL;
+internal fun JSONObject.toStringMap(): Map<String, String> {
+    val map = mutableMapOf<String, String>()
+    this.keys().forEach { key -> map[key] = this.getString(key) }
+    return map
 }
