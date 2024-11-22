@@ -34,10 +34,10 @@ public final class RxAmplify {
     private RxAmplify() {}
 
     // Breaking the rules, here. Don't look.
-    @SuppressWarnings({"checkstyle:all"}) public static final AnalyticsCategory Analytics = new AnalyticsCategory();
+    @SuppressWarnings({"checkstyle:all"}) public static final AnalyticsCategory Analytics = Amplify.Analytics;
     @SuppressWarnings({"checkstyle:all"}) public static final RxApiCategoryBehavior API = new RxApiBinding();
     @SuppressWarnings({"checkstyle:all"}) public static final RxAuthCategoryBehavior Auth = new RxAuthBinding();
-    @SuppressWarnings({"checkstyle:all"}) public static final LoggingCategory Logging = new LoggingCategory();
+    @SuppressWarnings({"checkstyle:all"}) public static final LoggingCategory Logging = Amplify.Logging;
     @SuppressWarnings({"checkstyle:all"}) public static final RxStorageCategoryBehavior Storage = new RxStorageBinding();
     @SuppressWarnings({"checkstyle:all"}) public static final RxHubCategoryBehavior Hub = new RxHubBinding();
     @SuppressWarnings({"checkstyle:all"}) public static final RxDataStoreCategoryBehavior DataStore = new RxDataStoreBinding();

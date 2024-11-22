@@ -21,7 +21,7 @@ import java.net.URL
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
 private val standardEndpointRegex =
-    "^https://\\w{26}\\.appsync-api\\.\\w{2}(?:-\\w{2,})+-\\d\\.amazonaws.com/graphql$".toRegex()
+    "^https://\\w{26}\\.appsync-api\\.\\w{2}(?:-\\w{2,})+-\\d\\.amazonaws.com(?:\\.cn)?/graphql$".toRegex()
 
 /**
  * Class representing the AppSync endpoint. There are multiple URLs associated with each AppSync endpoint: the
@@ -62,6 +62,7 @@ class AppSyncEndpoint(serverUrl: String) {
      * Creates the serverUrl to be used for the WebSocketTransport's serverUrl. For AppSync, this URL has authorization
      * information appended in query parameters. Set this value as the serverUrl for the WebSocketTransport.
      */
+    @Deprecated("Use HTTP header authorization instead of appending a query parameter")
     suspend fun createWebsocketServerUrl(authorizer: AppSyncAuthorizer): String {
         val headers = mapOf("host" to serverUrl.host) + authorizer.getWebsocketConnectionHeaders(this)
         val authorization = headers.base64()

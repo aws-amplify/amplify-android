@@ -24,6 +24,8 @@ import static com.amplifyframework.api.aws.DomainType.STANDARD;
 public class DomainTypeTest {
     private static final String STANDARD_URL =
             "https://abcdefghijklmnopqrstuvwxyz.appsync-api.us-west-2.amazonaws.com/graphql";
+    private static final String STANDARD_URL_CHINA =
+        "https://abcdefghijklmnopqrstuvwxyz.appsync-api.us-west-2.amazonaws.com.cn/graphql";
     private static final String CUSTOM_URL = "https://something.in.somedomain.com/graphql";
 
     /**
@@ -32,6 +34,14 @@ public class DomainTypeTest {
     @Test
     public void testStandardURLMatch() {
         Assert.assertEquals(STANDARD, DomainType.from(STANDARD_URL));
+    }
+
+    /**
+     * Test that Domain type is {@link DomainType#STANDARD} for generated URL.
+     */
+    @Test
+    public void testStandardURLChinaMatch() {
+        Assert.assertEquals(STANDARD, DomainType.from(STANDARD_URL_CHINA));
     }
 
     /**

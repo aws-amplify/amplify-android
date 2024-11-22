@@ -143,7 +143,7 @@ class AWSCognitoAuthPluginTOTPTests {
         )
         synchronousAuth.confirmSignIn(otp)
         synchronousAuth.updateUserAttribute(AuthUserAttribute(AuthUserAttributeKey.phoneNumber(), "+19876543210"))
-        updateMFAPreference(MFAPreference.ENABLED, MFAPreference.ENABLED)
+        updateMFAPreference(MFAPreference.ENABLED, MFAPreference.ENABLED, MFAPreference.ENABLED)
         synchronousAuth.signOut()
         val signInResult = synchronousAuth.signIn(userName, password)
         Assert.assertEquals(AuthSignInStep.CONTINUE_SIGN_IN_WITH_MFA_SELECTION, signInResult.nextStep.signInStep)
@@ -168,9 +168,9 @@ class AWSCognitoAuthPluginTOTPTests {
         synchronousAuth.signUp(userName, password, options)
     }
 
-    private fun updateMFAPreference(sms: MFAPreference, totp: MFAPreference) {
+    private fun updateMFAPreference(sms: MFAPreference, totp: MFAPreference, email: MFAPreference) {
         val latch = CountDownLatch(1)
-        authPlugin.updateMFAPreference(sms, totp, { latch.countDown() }, { latch.countDown() })
+        authPlugin.updateMFAPreference(sms, totp, email, { latch.countDown() }, { latch.countDown() })
         latch.await(5, TimeUnit.SECONDS)
     }
 }
