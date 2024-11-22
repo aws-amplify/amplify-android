@@ -278,6 +278,10 @@ internal sealed class SignInState : State {
                     is SignInEvent.EventType.FinalizeSignIn -> {
                         StateResolution(SignedIn())
                     }
+                    is SignInEvent.EventType.ConfirmDevice -> {
+                        val action = signInActions.confirmDevice(signInEvent)
+                        StateResolution(ConfirmingDevice(), listOf(action))
+                    }
                     is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception))
 
                     else -> defaultResolution
