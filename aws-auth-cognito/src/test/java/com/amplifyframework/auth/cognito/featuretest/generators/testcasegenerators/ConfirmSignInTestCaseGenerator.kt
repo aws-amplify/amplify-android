@@ -458,7 +458,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
         ),
         validations = listOf(
             mockedSignInSuccessExpectation,
-            ExpectationShapes.State("SignedIn_SessionEstablished.json")
+            ExpectationShapes.State("SignedIn_SessionEstablished_User_Auth.json")
         )
     )
 
