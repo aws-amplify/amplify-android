@@ -865,7 +865,7 @@ object SignInTestCaseGenerator : SerializableProvider {
         ),
         validations = listOf(
             mockedSignInCustomAuthChallengeExpectation,
-            ExpectationShapes.State("CustomSignIn_SigningIn.json")
+            ExpectationShapes.State("CustomSignIn_SigningIn_Password_Challenge.json")
         )
     )
 
@@ -892,7 +892,7 @@ object SignInTestCaseGenerator : SerializableProvider {
         ),
         validations = listOf(
             mockedSignInCustomAuthChallengeExpectationWithAlias,
-            ExpectationShapes.State("CustomSignIn_SigningIn.json")
+            ExpectationShapes.State("CustomSignIn_SigningIn_With_Alias.json")
         )
     )
 
@@ -920,7 +920,7 @@ object SignInTestCaseGenerator : SerializableProvider {
         ),
         validations = listOf(
             mockedSignInCustomAuthChallengeExpectation,
-            ExpectationShapes.State("CustomSignIn_SigningIn.json")
+            ExpectationShapes.State("CustomSignIn_SigningIn_Password_Challenge.json")
         )
     )
 
