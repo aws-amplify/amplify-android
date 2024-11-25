@@ -295,7 +295,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
         ),
         validations = listOf(
             mockedConfirmSignInSuccessWithChallengeExpectation,
-            ExpectationShapes.State("SigningIn_SigningIn.json")
+            ExpectationShapes.State("SigningIn_CustomChallenge.json")
         )
     )
 
