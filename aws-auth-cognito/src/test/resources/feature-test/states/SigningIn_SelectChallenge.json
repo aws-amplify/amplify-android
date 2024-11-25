@@ -10,13 +10,20 @@
                     "challengeName": "SELECT_CHALLENGE",
                     "username": "username",
                     "session": "someSession",
-                    "parameters" : {},
-                    "availableChallenges": [ "PASSWORD", "WEB_AUTHN", "EMAIL_OTP" ]
+                    "parameters": null,
+                    "availableChallenges": [
+                        "PASSWORD",
+                        "WEB_AUTHN",
+                        "EMAIL_OTP"
+                    ]
                 }
             }
         }
     },
     "AuthorizationState": {
         "type": "AuthorizationState.SigningIn"
+    },
+    "SignUpState": {
+        "type": "SignUpState.NotStarted"
     }
 }
