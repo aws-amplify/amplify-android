@@ -172,7 +172,9 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
                 )
             } catch (exception: Exception) {
                 SetupTOTPEvent(
-                    SetupTOTPEvent.EventType.ThrowAuthError(exception, eventType.username, eventType.session, eventType.signInMethod)
+                    SetupTOTPEvent.EventType.ThrowAuthError(
+                        exception, eventType.username, eventType.session, eventType.signInMethod
+                    )
                 )
             }
             dispatcher.send(evt)

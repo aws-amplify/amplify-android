@@ -33,7 +33,12 @@ internal class SetupTOTPEvent(val eventType: EventType, override val time: Date?
             val challengeParams: Map<String, String>?,
             val signInMethod: SignInMethod
         ) : EventType()
-        data class ThrowAuthError(val exception: Exception, val username: String, val session: String?, val signInMethod: SignInMethod) : EventType()
+        data class ThrowAuthError(
+            val exception: Exception,
+            val username: String,
+            val session: String?,
+            val signInMethod: SignInMethod
+        ) : EventType()
         data class VerifyChallengeAnswer(
             val answer: String,
             val username: String,
@@ -43,7 +48,11 @@ internal class SetupTOTPEvent(val eventType: EventType, override val time: Date?
         ) :
             EventType()
 
-        data class RespondToAuthChallenge(val username: String, val session: String?, val signInMethod: SignInMethod) : EventType()
+        data class RespondToAuthChallenge(
+            val username: String,
+            val session: String?,
+            val signInMethod: SignInMethod
+        ) : EventType()
         data class Verified(val id: String = "") : EventType()
     }
 

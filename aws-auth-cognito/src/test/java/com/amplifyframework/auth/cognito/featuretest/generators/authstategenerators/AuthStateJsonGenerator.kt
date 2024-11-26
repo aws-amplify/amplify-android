@@ -107,7 +107,7 @@ object AuthStateJsonGenerator : SerializableProvider {
                             "CODE_DELIVERY_DESTINATION" to "+12345678900"
                         ),
                     ),
-                    SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.CUSTOM_AUTH)
+                    SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
                 )
             )
         ),

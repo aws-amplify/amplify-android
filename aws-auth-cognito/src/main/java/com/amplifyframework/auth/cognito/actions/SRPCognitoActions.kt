@@ -246,7 +246,8 @@ internal object SRPCognitoActions : SRPActions {
     override fun verifyPasswordSRPAction(
         challengeParameters: Map<String, String>,
         metadata: Map<String, String>,
-        session: String?
+        session: String?,
+        signInMethod: SignInMethod
     ) =
         Action<AuthEnvironment>("VerifyPasswordSRP") { id, dispatcher ->
             logger.verbose("$id Starting execution")
@@ -294,7 +295,7 @@ internal object SRPCognitoActions : SRPActions {
                         session = response.session,
                         challengeParameters = response.challengeParameters,
                         authenticationResult = response.authenticationResult,
-                        signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
+                        signInMethod = signInMethod
                     )
                 } else {
                     throw ServiceException(
@@ -313,7 +314,7 @@ internal object SRPCognitoActions : SRPActions {
                             )
                         )
                     )
-                    SRPEvent(SRPEvent.EventType.RetryRespondPasswordVerifier(challengeParams, metadata, session))
+                    SRPEvent(SRPEvent.EventType.RetryRespondPasswordVerifier(challengeParams, metadata, session, signInMethod))
                 } else {
                     val errorEvent = SRPEvent(SRPEvent.EventType.ThrowPasswordVerifierError(e))
                     logger.verbose("$id Sending event ${errorEvent.type}")

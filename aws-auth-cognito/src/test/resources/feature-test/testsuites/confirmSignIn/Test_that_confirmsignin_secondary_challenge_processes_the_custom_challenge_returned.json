@@ -2,7 +2,7 @@
     "description": "Test that confirmsignin secondary challenge processes the custom challenge returned",
     "preConditions": {
         "amplify-configuration": "authconfiguration.json",
-        "state": "SigningIn_SigningIn.json",
+        "state": "SigningIn_SigningIn_Custom.json",
         "mockedResponses": [
             {
                 "type": "cognitoIdentityProvider",

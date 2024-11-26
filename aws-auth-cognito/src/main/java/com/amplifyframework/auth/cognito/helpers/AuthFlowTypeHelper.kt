@@ -16,6 +16,7 @@ package com.amplifyframework.auth.cognito.helpers
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType as CognitoAuthFlowType
 import com.amplifyframework.auth.cognito.options.AuthFlowType
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
 
 internal fun AuthFlowType.toCognitoType() = when (this) {
     AuthFlowType.USER_SRP_AUTH -> CognitoAuthFlowType.UserSrpAuth
@@ -24,4 +25,13 @@ internal fun AuthFlowType.toCognitoType() = when (this) {
     AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP -> CognitoAuthFlowType.CustomAuth
     AuthFlowType.USER_PASSWORD_AUTH -> CognitoAuthFlowType.UserPasswordAuth
     AuthFlowType.USER_AUTH -> CognitoAuthFlowType.UserAuth
+}
+
+internal fun AuthFlowType.toSignInMethod() = when (this) {
+    AuthFlowType.USER_SRP_AUTH -> SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
+    AuthFlowType.CUSTOM_AUTH -> SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.CUSTOM_AUTH)
+    AuthFlowType.CUSTOM_AUTH_WITH_SRP -> SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.CUSTOM_AUTH)
+    AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP -> SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.CUSTOM_AUTH)
+    AuthFlowType.USER_PASSWORD_AUTH -> SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_PASSWORD_AUTH)
+    AuthFlowType.USER_AUTH -> SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_AUTH)
 }
