@@ -24,6 +24,8 @@ import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.cognito.helpers.isEmailMfaSetupChallenge
 import com.amplifyframework.auth.cognito.helpers.isMfaSetupSelectionChallenge
+import com.amplifyframework.auth.cognito.helpers.toSignInMethod
+import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignInChallengeActions
@@ -41,7 +43,8 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
         answer: String,
         metadata: Map<String, String>,
         attributes: List<AuthUserAttribute>,
-        challenge: AuthChallenge
+        challenge: AuthChallenge,
+        authFlowType: AuthFlowType
     ): Action = Action<AuthEnvironment>("VerifySignInChallenge") { id, dispatcher ->
         logger.verbose("$id Starting execution")
         val evt = try {
@@ -102,7 +105,8 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
                     challengeNameType = response.challengeName,
                     session = response.session,
                     challengeParameters = response.challengeParameters,
-                    authenticationResult = response.authenticationResult
+                    authenticationResult = response.authenticationResult,
+                    signInMethod = authFlowType.toSignInMethod()
                 )
             } ?: CustomSignInEvent(
                 CustomSignInEvent.EventType.ThrowAuthError(
@@ -119,7 +123,8 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
                         answer,
                         metadata,
                         attributes,
-                        challenge
+                        challenge,
+                        authFlowType
                     )
                 )
             } else {

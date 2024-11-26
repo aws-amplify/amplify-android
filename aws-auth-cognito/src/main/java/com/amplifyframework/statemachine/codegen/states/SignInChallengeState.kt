@@ -82,7 +82,8 @@ internal sealed class SignInChallengeState : State {
                             challengeEvent.answer,
                             challengeEvent.metadata,
                             challengeEvent.userAttributes,
-                            oldState.challenge
+                            oldState.challenge,
+                            challengeEvent.authFlowType
                         )
                         StateResolution(Verifying(oldState.challenge.challengeName), listOf(action))
                     }
@@ -104,6 +105,7 @@ internal sealed class SignInChallengeState : State {
                             challengeEvent.metadata,
                             challengeEvent.userAttributes,
                             challengeEvent.authChallenge,
+                            challengeEvent.authFlowType
                         )
                         StateResolution(Verifying(challengeEvent.authChallenge.challengeName), listOf(action))
                     }
@@ -121,6 +123,7 @@ internal sealed class SignInChallengeState : State {
                                 challengeEvent.metadata,
                                 challengeEvent.userAttributes,
                                 oldState.challenge,
+                                challengeEvent.authFlowType
                             )
                             StateResolution(Verifying(oldState.challenge.challengeName), listOf(action))
                         }

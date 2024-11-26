@@ -16,6 +16,7 @@
 package com.amplifyframework.statemachine.codegen.events
 
 import com.amplifyframework.auth.AuthUserAttribute
+import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import java.util.Date
@@ -26,14 +27,16 @@ internal class SignInChallengeEvent(val eventType: EventType, override val time:
         data class VerifyChallengeAnswer(
             val answer: String,
             val metadata: Map<String, String>,
-            val userAttributes: List<AuthUserAttribute>
+            val userAttributes: List<AuthUserAttribute>,
+            val authFlowType: AuthFlowType
         ) : EventType()
 
         data class RetryVerifyChallengeAnswer(
             val answer: String,
             val metadata: Map<String, String>,
             val userAttributes: List<AuthUserAttribute>,
-            val authChallenge: AuthChallenge
+            val authChallenge: AuthChallenge,
+            val authFlowType: AuthFlowType
         ) : EventType()
         data class FinalizeSignIn(val accessToken: String) : EventType()
         data class Verified(val id: String = "") : EventType()

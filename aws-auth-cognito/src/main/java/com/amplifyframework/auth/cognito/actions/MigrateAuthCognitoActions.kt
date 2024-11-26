@@ -24,6 +24,7 @@ import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.cognito.helpers.toCognitoType
+import com.amplifyframework.auth.cognito.helpers.toSignInMethod
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.statemachine.Action
@@ -100,18 +101,13 @@ internal object MigrateAuthCognitoActions : MigrateAuthActions {
                                 KEY_USERID_FOR_SRP
                             )
                         )
-                        val signInMethod = if (event.authFlowType == AuthFlowType.USER_AUTH) {
-                            SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_AUTH)
-                        } else {
-                            SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
-                        }
                         SignInChallengeHelper.evaluateNextStep(
                             username = username,
                             challengeNameType = response.challengeName,
                             session = response.session,
                             challengeParameters = response.challengeParameters,
                             authenticationResult = response.authenticationResult,
-                            signInMethod = signInMethod
+                            signInMethod = event.authFlowType.toSignInMethod()
                         )
                     } ?: throw ServiceException("Sign in failed", AmplifyException.TODO_RECOVERY_SUGGESTION)
                 }

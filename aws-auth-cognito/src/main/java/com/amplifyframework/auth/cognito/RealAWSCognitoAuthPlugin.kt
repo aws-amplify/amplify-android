@@ -1025,7 +1025,8 @@ internal class RealAWSCognitoAuthPlugin(
                                 SignInChallengeEvent.EventType.VerifyChallengeAnswer(
                                     challengeResponse,
                                     metadata,
-                                    userAttributes
+                                    userAttributes,
+                                    configuration.authFlowType
                                 )
                             )
                             authStateMachine.send(event)

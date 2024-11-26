@@ -105,7 +105,8 @@ class SignInChallengeCognitoActionsTest {
                 username = username,
                 session = null,
                 parameters = null
-            )
+            ),
+            configuration.authFlowType
         ).execute(dispatcher, authEnvironment)
 
         assertTrue(capturedRequest.isCaptured)
@@ -135,7 +136,8 @@ class SignInChallengeCognitoActionsTest {
                 username = username,
                 session = null,
                 parameters = null
-            )
+            ),
+            configuration.authFlowType
         ).execute(dispatcher, authEnvironment)
 
         assertTrue(capturedRequest.isCaptured)
@@ -164,7 +166,8 @@ class SignInChallengeCognitoActionsTest {
                 username = username,
                 session = null,
                 parameters = null
-            )
+            ),
+            configuration.authFlowType
         ).execute(dispatcher, authEnvironment)
 
         assertTrue(capturedRequest.isCaptured)
@@ -194,7 +197,8 @@ class SignInChallengeCognitoActionsTest {
                 username = username,
                 session = null,
                 parameters = null
-            )
+            ),
+            configuration.authFlowType
         ).execute(dispatcher, authEnvironment)
 
         assertTrue(capturedRequest.isCaptured)
@@ -224,7 +228,8 @@ class SignInChallengeCognitoActionsTest {
                 username = username,
                 session = null,
                 parameters = null
-            )
+            ),
+            configuration.authFlowType
         ).execute(dispatcher, authEnvironment)
 
         assertTrue(capturedRequest.isCaptured)
@@ -255,7 +260,8 @@ class SignInChallengeCognitoActionsTest {
                 username = username,
                 session = null,
                 parameters = null
-            )
+            ),
+            configuration.authFlowType
         ).execute(dispatcher, authEnvironment)
 
         assertTrue(capturedRequest.isCaptured)

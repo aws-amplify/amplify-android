@@ -406,7 +406,8 @@ class StateTransitionTests : StateTransitionTestBase() {
                                     "Test",
                                     "session_mock_value",
                                     emptyMap(),
-                                )
+                                ),
+                                configuration.authFlowType
                             )
                         )
                     )
@@ -415,7 +416,8 @@ class StateTransitionTests : StateTransitionTestBase() {
                             SignInChallengeEvent.EventType.VerifyChallengeAnswer(
                                 "test",
                                 emptyMap(),
-                                emptyList()
+                                emptyList(),
+                                configuration.authFlowType
                             )
                         )
                     )
@@ -495,7 +497,12 @@ class StateTransitionTests : StateTransitionTestBase() {
                 challengeState?.apply {
                     stateMachine.send(
                         SignInChallengeEvent(
-                            SignInChallengeEvent.EventType.VerifyChallengeAnswer("test", emptyMap(), emptyList())
+                            SignInChallengeEvent.EventType.VerifyChallengeAnswer(
+                                "test",
+                                emptyMap(),
+                                emptyList(),
+                                configuration.authFlowType
+                            )
                         )
                     )
                 }
