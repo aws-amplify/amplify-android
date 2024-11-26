@@ -246,10 +246,9 @@ internal class RealAWSCognitoAuthPlugin(
                 is AuthenticationState.NotConfigured -> onError.accept(
                     InvalidUserPoolConfigurationException()
                 )
-                is AuthenticationState.SignedIn, is AuthenticationState.SignedOut -> GlobalScope.launch {
+                else -> GlobalScope.launch {
                     _signUp(username, password, options, onSuccess, onError)
                 }
-                else -> onError.accept(InvalidStateException())
             }
         }
     }
@@ -309,10 +308,9 @@ internal class RealAWSCognitoAuthPlugin(
                 is AuthenticationState.NotConfigured -> onError.accept(
                     InvalidUserPoolConfigurationException()
                 )
-                is AuthenticationState.SignedIn, is AuthenticationState.SignedOut -> GlobalScope.launch {
+                else -> GlobalScope.launch {
                     _confirmSignUp(username, confirmationCode, authState.authSignUpState, options, onSuccess, onError)
                 }
-                else -> onError.accept(InvalidStateException())
             }
         }
     }
@@ -380,6 +378,29 @@ internal class RealAWSCognitoAuthPlugin(
                         }
                         else -> onError.accept(InvalidStateException())
                     }
+                }
+                is AuthenticationState.SigningIn -> {
+                    val token = StateChangeListenerToken()
+                    authStateMachine.listen(
+                        token,
+                        { authState ->
+                            when (authState.authNState) {
+                                is AuthenticationState.SignedOut -> {
+                                    authStateMachine.cancel(token)
+                                    when (val signUpState = authState.authSignUpState) {
+                                        is SignUpState.SignedUp -> GlobalScope.launch {
+                                            _autoSignIn(signUpState.signUpData, onSuccess, onError)
+                                        }
+                                        else -> onError.accept(InvalidStateException())
+                                    }
+                                }
+                                else -> Unit
+                            }
+                        },
+                        {
+                            authStateMachine.send(AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn()))
+                        }
+                    )
                 }
                 else -> onError.accept(InvalidStateException())
             }
