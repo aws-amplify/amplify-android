@@ -343,7 +343,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
         ),
         validations = listOf(
             mockedSignInSuccessExpectation,
-            ExpectationShapes.State("SignedIn_SessionEstablished.json")
+            ExpectationShapes.State("SignedIn_SessionEstablished_User_Auth.json")
         )
     )
 
@@ -413,7 +413,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
         ),
         validations = listOf(
             mockedSignInSuccessExpectation,
-            ExpectationShapes.State("SignedIn_SessionEstablished.json")
+            ExpectationShapes.State("SignedIn_SessionEstablished_User_Auth.json")
         )
     )
 
@@ -446,7 +446,9 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
             "authconfiguration_userauth.json",
             "SigningIn_SelectChallenge.json",
             mockedResponses = listOf(
-                mockedRespondToAuthChallengeResponse
+                mockedRespondToAuthChallengeResponse,
+                mockedIdentityIdResponse,
+                mockedAWSCredentialsResponse
             )
         ),
         api = API(
@@ -506,7 +508,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
         ),
         validations = listOf(
             mockedSignInSuccessExpectation,
-            ExpectationShapes.State("SignedIn_SessionEstablished.json")
+            ExpectationShapes.State("SignedIn_SessionEstablished_User_Auth.json")
         )
     )
 

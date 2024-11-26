@@ -601,7 +601,9 @@ object SignInTestCaseGenerator : SerializableProvider {
             "authconfiguration_userauth.json",
             "SignedOut_Configured.json",
             mockedResponses = listOf(
-                mockedInitiateAuthPasswordResponse
+                mockedInitiateAuthPasswordResponse,
+                mockedIdentityIdResponse,
+                mockedAWSCredentialsResponse
             )
         ),
         api = API(

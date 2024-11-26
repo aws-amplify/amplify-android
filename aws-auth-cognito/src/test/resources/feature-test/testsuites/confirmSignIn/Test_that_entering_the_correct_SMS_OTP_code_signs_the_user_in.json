@@ -62,7 +62,7 @@
         },
         {
             "type": "state",
-            "expectedState": "SignedIn_SessionEstablished.json"
+            "expectedState": "SignedIn_SessionEstablished_User_Auth.json"
         }
     ]
 }
