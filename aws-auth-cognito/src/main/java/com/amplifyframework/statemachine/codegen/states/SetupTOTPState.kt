@@ -59,7 +59,12 @@ internal sealed class SetupTOTPState : State {
                     }
 
                     is SetupTOTPEvent.EventType.ThrowAuthError -> StateResolution(
-                        Error(challengeEvent.exception, challengeEvent.username, challengeEvent.session, challengeEvent.signInMethod)
+                        Error(
+                            challengeEvent.exception,
+                            challengeEvent.username,
+                            challengeEvent.session,
+                            challengeEvent.signInMethod
+                        )
                     )
 
                     else -> defaultResolution
@@ -78,7 +83,12 @@ internal sealed class SetupTOTPState : State {
                     }
 
                     is SetupTOTPEvent.EventType.ThrowAuthError -> StateResolution(
-                        Error(challengeEvent.exception, challengeEvent.username, challengeEvent.session, challengeEvent.signInMethod)
+                        Error(
+                            challengeEvent.exception,
+                            challengeEvent.username,
+                            challengeEvent.session,
+                            challengeEvent.signInMethod
+                        )
                     )
 
                     else -> defaultResolution
@@ -93,7 +103,12 @@ internal sealed class SetupTOTPState : State {
                     }
 
                     is SetupTOTPEvent.EventType.ThrowAuthError -> StateResolution(
-                        Error(challengeEvent.exception, challengeEvent.username, challengeEvent.session, challengeEvent.signInMethod)
+                        Error(
+                            challengeEvent.exception,
+                            challengeEvent.username,
+                            challengeEvent.session,
+                            challengeEvent.signInMethod
+                        )
                     )
 
                     else -> defaultResolution
@@ -112,7 +127,13 @@ internal sealed class SetupTOTPState : State {
                     }
 
                     is SetupTOTPEvent.EventType.ThrowAuthError -> StateResolution(
-                        Error(challengeEvent.exception, challengeEvent.username, challengeEvent.session, challengeEvent.signInMethod, true)
+                        Error(
+                            challengeEvent.exception,
+                            challengeEvent.username,
+                            challengeEvent.session,
+                            challengeEvent.signInMethod,
+                            true
+                        )
                     )
 
                     else -> defaultResolution
@@ -126,7 +147,12 @@ internal sealed class SetupTOTPState : State {
                     }
 
                     is SetupTOTPEvent.EventType.ThrowAuthError -> StateResolution(
-                        Error(challengeEvent.exception, challengeEvent.username, challengeEvent.session, challengeEvent.signInMethod)
+                        Error(
+                            challengeEvent.exception,
+                            challengeEvent.username,
+                            challengeEvent.session,
+                            challengeEvent.signInMethod
+                        )
                     )
 
                     else -> defaultResolution

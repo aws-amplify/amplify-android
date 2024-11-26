@@ -50,7 +50,10 @@ internal sealed class SRPSignInState : State {
                     }
                     is SRPEvent.EventType.InitiateSRPWithCustom -> {
                         val action = srpActions.initiateSRPWithCustomAuthAction(srpEvent)
-                        StateResolution(InitiatingSRPA(SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.CUSTOM_AUTH)), listOf(action))
+                        StateResolution(
+                            InitiatingSRPA(SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.CUSTOM_AUTH)),
+                            listOf(action)
+                        )
                     }
                     else -> defaultResolution
                 }

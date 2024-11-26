@@ -314,7 +314,14 @@ internal object SRPCognitoActions : SRPActions {
                             )
                         )
                     )
-                    SRPEvent(SRPEvent.EventType.RetryRespondPasswordVerifier(challengeParams, metadata, session, signInMethod))
+                    SRPEvent(
+                        SRPEvent.EventType.RetryRespondPasswordVerifier(
+                            challengeParams,
+                            metadata,
+                            session,
+                            signInMethod
+                        )
+                    )
                 } else {
                     val errorEvent = SRPEvent(SRPEvent.EventType.ThrowPasswordVerifierError(e))
                     logger.verbose("$id Sending event ${errorEvent.type}")
