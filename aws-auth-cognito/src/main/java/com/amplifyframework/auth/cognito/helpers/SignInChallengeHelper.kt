@@ -55,7 +55,7 @@ internal object SignInChallengeHelper {
         availableChallenges: List<String>? = null,
         authenticationResult: AuthenticationResultType?,
         callingActivity: WeakReference<Activity> = WeakReference(null),
-        signInMethod: SignInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
+        signInMethod: SignInMethod
     ): StateMachineEvent = when {
         authenticationResult != null -> {
             authenticationResult.let {
@@ -96,17 +96,17 @@ internal object SignInChallengeHelper {
             challengeNameType is ChallengeNameType.EmailOtp -> {
             val challenge =
                 AuthChallenge(challengeNameType.value, username, session, challengeParameters)
-            SignInEvent(SignInEvent.EventType.ReceivedChallenge(challenge))
+            SignInEvent(SignInEvent.EventType.ReceivedChallenge(challenge, signInMethod))
         }
         challengeNameType is ChallengeNameType.MfaSetup -> {
             val allowedMFASetupTypes = getAllowedMFASetupTypesFromChallengeParameters(challengeParameters)
             val challenge = AuthChallenge(challengeNameType.value, username, session, challengeParameters)
 
             if (allowedMFASetupTypes.contains(MFAType.EMAIL)) {
-                SignInEvent(SignInEvent.EventType.ReceivedChallenge(challenge))
+                SignInEvent(SignInEvent.EventType.ReceivedChallenge(challenge, signInMethod))
             } else if (allowedMFASetupTypes.contains(MFAType.TOTP)) {
                 val setupTOTPData = SignInTOTPSetupData("", session, username)
-                SignInEvent(SignInEvent.EventType.InitiateTOTPSetup(setupTOTPData, challenge.parameters))
+                SignInEvent(SignInEvent.EventType.InitiateTOTPSetup(setupTOTPData, challenge.parameters, signInMethod))
             } else {
                 SignInEvent(
                     SignInEvent.EventType.ThrowError(
@@ -127,7 +127,8 @@ internal object SignInChallengeHelper {
                         session = session,
                         parameters = null,
                         availableChallenges = availableChallenges
-                    )
+                    ),
+                    signInMethod
                 )
             )
         }

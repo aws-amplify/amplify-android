@@ -16,6 +16,10 @@
                         "WEB_AUTHN",
                         "EMAIL_OTP"
                     ]
+                },
+                "signInMethod": {
+                    "type": "SignInMethod.ApiBased",
+                    "authType": "USER_AUTH"
                 }
             }
         }

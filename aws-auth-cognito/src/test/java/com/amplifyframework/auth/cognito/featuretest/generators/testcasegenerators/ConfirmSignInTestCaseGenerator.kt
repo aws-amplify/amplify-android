@@ -281,7 +281,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
         description = "Test that confirmsignin secondary challenge processes the custom challenge returned",
         preConditions = PreConditions(
             "authconfiguration.json",
-            "SigningIn_SigningIn.json",
+            "SigningIn_SigningIn_Custom.json",
             mockedResponses = listOf(
                 mockedRespondToAuthCustomChallengeResponse
             )

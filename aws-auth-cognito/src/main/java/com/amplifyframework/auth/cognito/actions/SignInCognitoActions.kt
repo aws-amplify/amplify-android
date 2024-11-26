@@ -108,7 +108,7 @@ internal object SignInCognitoActions : SignInActions {
     override fun initResolveChallenge(event: SignInEvent.EventType.ReceivedChallenge) =
         Action<AuthEnvironment>("InitResolveChallenge") { id, dispatcher ->
             logger.verbose("$id Starting execution")
-            val evt = SignInChallengeEvent(SignInChallengeEvent.EventType.WaitForAnswer(event.challenge, true))
+            val evt = SignInChallengeEvent(SignInChallengeEvent.EventType.WaitForAnswer(event.challenge, event.signInMethod, true))
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
@@ -167,7 +167,8 @@ internal object SignInCognitoActions : SignInActions {
             val evt = SetupTOTPEvent(
                 SetupTOTPEvent.EventType.SetupTOTP(
                     totpSetupDetails = event.signInTOTPSetupData,
-                    challengeParams = event.challengeParams
+                    challengeParams = event.challengeParams,
+                    signInMethod = event.signInMethod
                 )
             )
             logger.verbose("$id Sending event ${evt.type}")

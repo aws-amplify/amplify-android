@@ -29,6 +29,7 @@ import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.CredentialType
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
 import io.mockk.coEvery
 import io.mockk.every
@@ -104,8 +105,9 @@ class SignInChallengeCognitoActionsTest {
                 "CONFIRM_SIGN_IN_WITH_NEW_PASSWORD",
                 username = username,
                 session = null,
-                parameters = null
-            )
+                parameters = null,
+            ),
+            SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
         ).execute(dispatcher, authEnvironment)
 
         assertTrue(capturedRequest.isCaptured)
@@ -135,7 +137,8 @@ class SignInChallengeCognitoActionsTest {
                 username = username,
                 session = null,
                 parameters = null
-            )
+            ),
+            SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
         ).execute(dispatcher, authEnvironment)
 
         assertTrue(capturedRequest.isCaptured)
@@ -164,7 +167,8 @@ class SignInChallengeCognitoActionsTest {
                 username = username,
                 session = null,
                 parameters = null
-            )
+            ),
+            SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
         ).execute(dispatcher, authEnvironment)
 
         assertTrue(capturedRequest.isCaptured)
@@ -194,7 +198,8 @@ class SignInChallengeCognitoActionsTest {
                 username = username,
                 session = null,
                 parameters = null
-            )
+            ),
+            SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
         ).execute(dispatcher, authEnvironment)
 
         assertTrue(capturedRequest.isCaptured)
@@ -224,7 +229,8 @@ class SignInChallengeCognitoActionsTest {
                 username = username,
                 session = null,
                 parameters = null
-            )
+            ),
+            SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
         ).execute(dispatcher, authEnvironment)
 
         assertTrue(capturedRequest.isCaptured)
@@ -255,7 +261,8 @@ class SignInChallengeCognitoActionsTest {
                 username = username,
                 session = null,
                 parameters = null
-            )
+            ),
+            SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
         ).execute(dispatcher, authEnvironment)
 
         assertTrue(capturedRequest.isCaptured)

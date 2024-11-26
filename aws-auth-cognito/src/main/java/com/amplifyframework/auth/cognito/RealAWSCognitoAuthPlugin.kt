@@ -965,7 +965,8 @@ internal class RealAWSCognitoAuthPlugin(
                                         username = challengeState.challenge.username,
                                         session = challengeState.challenge.session,
                                         parameters = challengeState.challenge.parameters
-                                    )
+                                    ),
+                                    signInMethod = challengeState.signInMethod
                                 )
                             )
                             authStateMachine.send(event)
@@ -980,7 +981,8 @@ internal class RealAWSCognitoAuthPlugin(
                                         username = challengeState.challenge.username,
                                         session = challengeState.challenge.session,
                                         parameters = challengeState.challenge.parameters
-                                    )
+                                    ),
+                                    signInMethod = challengeState.signInMethod
                                 )
                             )
                             authStateMachine.send(event)
@@ -1035,15 +1037,16 @@ internal class RealAWSCognitoAuthPlugin(
                     is SignInState.ResolvingTOTPSetup -> {
                         when (signInState.setupTOTPState) {
                             is SetupTOTPState.WaitingForAnswer -> {
-                                val setupData =
-                                    (signInState.setupTOTPState as SetupTOTPState.WaitingForAnswer).signInTOTPSetupData
+                                val setupTOTPState =
+                                    (signInState.setupTOTPState as SetupTOTPState.WaitingForAnswer)
 
                                 val event = SetupTOTPEvent(
                                     SetupTOTPEvent.EventType.VerifyChallengeAnswer(
                                         challengeResponse,
-                                        setupData.username,
-                                        setupData.session,
-                                        awsCognitoConfirmSignInOptions?.friendlyDeviceName
+                                        setupTOTPState.signInTOTPSetupData.username,
+                                        setupTOTPState.signInTOTPSetupData.session,
+                                        awsCognitoConfirmSignInOptions?.friendlyDeviceName,
+                                        setupTOTPState.signInMethod
                                     )
                                 )
                                 authStateMachine.send(event)
@@ -1053,13 +1056,16 @@ internal class RealAWSCognitoAuthPlugin(
                                     (signInState.setupTOTPState as SetupTOTPState.Error).username
                                 val session =
                                     (signInState.setupTOTPState as SetupTOTPState.Error).session
+                                val signInMethod =
+                                    (signInState.setupTOTPState as SetupTOTPState.Error).signInMethod
 
                                 val event = SetupTOTPEvent(
                                     SetupTOTPEvent.EventType.VerifyChallengeAnswer(
                                         challengeResponse,
                                         username,
                                         session,
-                                        awsCognitoConfirmSignInOptions?.friendlyDeviceName
+                                        awsCognitoConfirmSignInOptions?.friendlyDeviceName,
+                                        signInMethod
                                     )
                                 )
                                 authStateMachine.send(event)

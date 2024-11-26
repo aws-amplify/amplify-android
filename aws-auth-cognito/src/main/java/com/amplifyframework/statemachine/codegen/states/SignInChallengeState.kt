@@ -21,19 +21,25 @@ import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.SignInChallengeActions
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 
 internal sealed class SignInChallengeState : State {
     data class NotStarted(val id: String = "") : SignInChallengeState()
     data class WaitingForAnswer(
         val challenge: AuthChallenge,
+        val signInMethod: SignInMethod,
         var hasNewResponse: Boolean = false
     ) : SignInChallengeState()
-    data class Verifying(val id: String = "") : SignInChallengeState()
+    data class Verifying(
+        val id: String = "",
+        val signInMethod: SignInMethod
+    ) : SignInChallengeState()
     data class Verified(val id: String = "") : SignInChallengeState()
     data class Error(
         val exception: Exception,
         val challenge: AuthChallenge,
+        val signInMethod: SignInMethod,
         var hasNewResponse: Boolean = false
     ) : SignInChallengeState()
 
@@ -53,7 +59,7 @@ internal sealed class SignInChallengeState : State {
             return when (oldState) {
                 is NotStarted -> when (challengeEvent) {
                     is SignInChallengeEvent.EventType.WaitForAnswer -> {
-                        StateResolution(WaitingForAnswer(challengeEvent.challenge))
+                        StateResolution(WaitingForAnswer(challengeEvent.challenge, challengeEvent.signInMethod))
                     }
                     else -> defaultResolution
                 }
@@ -73,6 +79,7 @@ internal sealed class SignInChallengeState : State {
                                     session = oldState.challenge.session,
                                     parameters = oldState.challenge.parameters
                                 ),
+                                signInMethod = oldState.signInMethod,
                                 hasNewResponse = true
                             )
                         )
@@ -82,9 +89,16 @@ internal sealed class SignInChallengeState : State {
                             challengeEvent.answer,
                             challengeEvent.metadata,
                             challengeEvent.userAttributes,
-                            oldState.challenge
+                            oldState.challenge,
+                            oldState.signInMethod
                         )
-                        StateResolution(Verifying(oldState.challenge.challengeName), listOf(action))
+                        StateResolution(
+                            Verifying(
+                                oldState.challenge.challengeName,
+                                oldState.signInMethod
+                            ),
+                            listOf(action)
+                        )
                     }
                     else -> defaultResolution
                 }
@@ -93,7 +107,10 @@ internal sealed class SignInChallengeState : State {
                     is SignInChallengeEvent.EventType.ThrowError -> {
                         StateResolution(
                             Error(
-                                challengeEvent.exception, challengeEvent.challenge, true
+                                challengeEvent.exception,
+                                challengeEvent.challenge,
+                                oldState.signInMethod,
+                                true
                             ),
                             listOf()
                         )
@@ -104,11 +121,25 @@ internal sealed class SignInChallengeState : State {
                             challengeEvent.metadata,
                             challengeEvent.userAttributes,
                             challengeEvent.authChallenge,
+                            oldState.signInMethod
                         )
-                        StateResolution(Verifying(challengeEvent.authChallenge.challengeName), listOf(action))
+                        StateResolution(
+                            Verifying(
+                                challengeEvent.authChallenge.challengeName,
+                                oldState.signInMethod
+                            ),
+                            listOf(action)
+                        )
                     }
                     is SignInChallengeEvent.EventType.WaitForAnswer -> {
-                        StateResolution(WaitingForAnswer(challengeEvent.challenge, true), listOf())
+                        StateResolution(
+                            WaitingForAnswer(
+                                challengeEvent.challenge,
+                                oldState.signInMethod,
+                                true
+                            ),
+                            listOf()
+                        )
                     }
 
                     else -> defaultResolution
@@ -121,11 +152,24 @@ internal sealed class SignInChallengeState : State {
                                 challengeEvent.metadata,
                                 challengeEvent.userAttributes,
                                 oldState.challenge,
+                                oldState.signInMethod
                             )
-                            StateResolution(Verifying(oldState.challenge.challengeName), listOf(action))
+                            StateResolution(
+                                Verifying(
+                                    oldState.challenge.challengeName,
+                                    oldState.signInMethod
+                                ),
+                                listOf(action)
+                            )
                         }
                         is SignInChallengeEvent.EventType.WaitForAnswer -> {
-                            StateResolution(WaitingForAnswer(challengeEvent.challenge), listOf())
+                            StateResolution(
+                                WaitingForAnswer(
+                                    challengeEvent.challenge,
+                                    oldState.signInMethod
+                                ),
+                                listOf()
+                            )
                         }
                         else -> defaultResolution
                     }

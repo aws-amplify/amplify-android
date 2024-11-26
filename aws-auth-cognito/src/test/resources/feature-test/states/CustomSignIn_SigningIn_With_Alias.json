@@ -16,6 +16,10 @@
             "SRP_B": "def",
             "USERNAME": "alternateUsername"
           }
+        },
+        "signInMethod": {
+          "type": "SignInMethod.ApiBased",
+          "authType": "CUSTOM_AUTH"
         }
       }
     }

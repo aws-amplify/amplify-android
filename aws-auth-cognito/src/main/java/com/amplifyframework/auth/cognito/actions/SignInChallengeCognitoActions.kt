@@ -29,6 +29,7 @@ import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignInChallengeActions
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.CredentialType
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.challengeNameType
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
@@ -41,7 +42,8 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
         answer: String,
         metadata: Map<String, String>,
         attributes: List<AuthUserAttribute>,
-        challenge: AuthChallenge
+        challenge: AuthChallenge,
+        signInMethod: SignInMethod
     ): Action = Action<AuthEnvironment>("VerifySignInChallenge") { id, dispatcher ->
         logger.verbose("$id Starting execution")
         val evt = try {
@@ -55,7 +57,8 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
                     challengeNameType = ChallengeNameType.MfaSetup,
                     session = challenge.session,
                     challengeParameters = mapOf("MFAS_CAN_SETUP" to answer),
-                    authenticationResult = null
+                    authenticationResult = null,
+                    signInMethod = signInMethod
                 )
                 logger.verbose("$id Sending event ${event.type}")
                 dispatcher.send(event)
@@ -102,7 +105,8 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
                     challengeNameType = response.challengeName,
                     session = response.session,
                     challengeParameters = response.challengeParameters,
-                    authenticationResult = response.authenticationResult
+                    authenticationResult = response.authenticationResult,
+                    signInMethod = signInMethod
                 )
             } ?: CustomSignInEvent(
                 CustomSignInEvent.EventType.ThrowAuthError(
