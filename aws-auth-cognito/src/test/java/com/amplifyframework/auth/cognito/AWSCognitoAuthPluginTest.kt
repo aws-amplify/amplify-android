@@ -776,7 +776,7 @@ class AWSCognitoAuthPluginTest {
     fun listWebAuthnCredentials() {
         val useCase = authPlugin.useCaseFactory.listWebAuthnCredentials()
         authPlugin.listWebAuthnCredentials({}, {})
-        coVerify {
+        coVerify(timeout = CHANNEL_TIMEOUT) {
             useCase.execute(AuthListWebAuthnCredentialsOptions.defaults())
         }
     }
@@ -786,7 +786,7 @@ class AWSCognitoAuthPluginTest {
         val useCase = authPlugin.useCaseFactory.listWebAuthnCredentials()
         val options = AWSCognitoAuthListWebAuthnCredentialsOptions.builder().build()
         authPlugin.listWebAuthnCredentials(options, {}, {})
-        coVerify {
+        coVerify(timeout = CHANNEL_TIMEOUT) {
             useCase.execute(options)
         }
     }
@@ -796,7 +796,7 @@ class AWSCognitoAuthPluginTest {
         val useCase = authPlugin.useCaseFactory.deleteWebAuthnCredential()
         val credentialId = "someId"
         authPlugin.deleteWebAuthnCredential(credentialId, {}, {})
-        coVerify {
+        coVerify(timeout = CHANNEL_TIMEOUT) {
             useCase.execute(credentialId, AuthDeleteWebAuthnCredentialOptions.defaults())
         }
     }
@@ -807,7 +807,7 @@ class AWSCognitoAuthPluginTest {
         val options: AuthDeleteWebAuthnCredentialOptions = mockk()
         val credentialId = "someId"
         authPlugin.deleteWebAuthnCredential(credentialId, options, {}, {})
-        coVerify {
+        coVerify(timeout = CHANNEL_TIMEOUT) {
             useCase.execute(credentialId, options)
         }
     }
