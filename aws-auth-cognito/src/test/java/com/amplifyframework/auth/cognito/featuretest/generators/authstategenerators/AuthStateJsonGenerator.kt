@@ -105,8 +105,9 @@ object AuthStateJsonGenerator : SerializableProvider {
                         parameters = mapOf(
                             "CODE_DELIVERY_DELIVERY_MEDIUM" to "SMS",
                             "CODE_DELIVERY_DESTINATION" to "+12345678900"
-                        )
-                    )
+                        ),
+                    ),
+                    SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
                 )
             )
         ),
@@ -205,7 +206,8 @@ object AuthStateJsonGenerator : SerializableProvider {
                             "SRP_B" to "def",
                             "USERNAME" to "username"
                         )
-                    )
+                    ),
+                    SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.CUSTOM_AUTH)
                 )
             )
         ),

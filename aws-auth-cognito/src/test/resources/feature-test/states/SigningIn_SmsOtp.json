@@ -14,11 +14,18 @@
                         "CODE_DELIVERY_DELIVERY_MEDIUM": "SMS",
                         "CODE_DELIVERY_DESTINATION": "+12345678900"
                     }
+                },
+                "signInMethod": {
+                    "type": "SignInMethod.ApiBased",
+                    "authType": "USER_AUTH"
                 }
             }
         }
     },
     "AuthorizationState": {
         "type": "AuthorizationState.SigningIn"
+    },
+    "SignUpState": {
+        "type": "SignUpState.NotStarted"
     }
 }

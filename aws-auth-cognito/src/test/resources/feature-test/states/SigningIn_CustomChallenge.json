@@ -7,19 +7,18 @@
             "SignInChallengeState": {
                 "type": "SignInChallengeState.WaitingForAnswer",
                 "authChallenge": {
-                    "challengeName": "SELECT_CHALLENGE",
+                    "challengeName": "CUSTOM_CHALLENGE",
                     "username": "username",
                     "session": "someSession",
-                    "parameters": null,
-                    "availableChallenges": [
-                        "PASSWORD",
-                        "WEB_AUTHN",
-                        "EMAIL_OTP"
-                    ]
+                    "parameters": {
+                        "SALT": "abc",
+                        "SECRET_BLOCK": "secretBlock",
+                        "SRP_B": "def"
+                    }
                 },
                 "signInMethod": {
                     "type": "SignInMethod.ApiBased",
-                    "authType": "USER_AUTH"
+                    "authType": "CUSTOM_AUTH"
                 }
             }
         }

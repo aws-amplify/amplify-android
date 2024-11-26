@@ -86,8 +86,10 @@ internal fun AuthState.exportJson() {
     val signUpState = authSignUpState?.let { signUpState ->
         if (signUpState !is SignUpState.NotStarted) {
             "_${signUpState.javaClass.simpleName}"
+        } else {
+            ""
         }
-    }
+    } ?: ""
     val fileName = "${authNState?.javaClass?.simpleName}_${authZState?.javaClass?.simpleName}$signUpState.json"
 
     writeFile(result, dirName, fileName)

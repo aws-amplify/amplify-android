@@ -9,12 +9,12 @@
         "authChallenge": {
           "challengeName": "CUSTOM_CHALLENGE",
           "username": "username",
-          "session": null,
+          "session": "someSession",
           "parameters": {
             "SALT": "abc",
             "SECRET_BLOCK": "secretBlock",
             "SRP_B": "def",
-            "USERNAME": "username"
+            "USERNAME": "alternateUsername"
           }
         },
         "signInMethod": {

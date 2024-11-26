@@ -281,7 +281,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
         description = "Test that confirmsignin secondary challenge processes the custom challenge returned",
         preConditions = PreConditions(
             "authconfiguration.json",
-            "SigningIn_SigningIn.json",
+            "SigningIn_SigningIn_Custom.json",
             mockedResponses = listOf(
                 mockedRespondToAuthCustomChallengeResponse
             )
@@ -295,7 +295,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
         ),
         validations = listOf(
             mockedConfirmSignInSuccessWithChallengeExpectation,
-            ExpectationShapes.State("SigningIn_SigningIn.json")
+            ExpectationShapes.State("SigningIn_CustomChallenge.json")
         )
     )
 
@@ -343,7 +343,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
         ),
         validations = listOf(
             mockedSignInSuccessExpectation,
-            ExpectationShapes.State("SignedIn_SessionEstablished.json")
+            ExpectationShapes.State("SignedIn_SessionEstablished_User_Auth.json")
         )
     )
 
@@ -413,7 +413,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
         ),
         validations = listOf(
             mockedSignInSuccessExpectation,
-            ExpectationShapes.State("SignedIn_SessionEstablished.json")
+            ExpectationShapes.State("SignedIn_SessionEstablished_User_Auth.json")
         )
     )
 
@@ -446,7 +446,9 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
             "authconfiguration_userauth.json",
             "SigningIn_SelectChallenge.json",
             mockedResponses = listOf(
-                mockedRespondToAuthChallengeResponse
+                mockedRespondToAuthChallengeResponse,
+                mockedIdentityIdResponse,
+                mockedAWSCredentialsResponse
             )
         ),
         api = API(
@@ -458,7 +460,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
         ),
         validations = listOf(
             mockedSignInSuccessExpectation,
-            ExpectationShapes.State("SignedIn_SessionEstablished.json")
+            ExpectationShapes.State("SignedIn_SessionEstablished_User_Auth.json")
         )
     )
 
@@ -506,7 +508,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
         ),
         validations = listOf(
             mockedSignInSuccessExpectation,
-            ExpectationShapes.State("SignedIn_SessionEstablished.json")
+            ExpectationShapes.State("SignedIn_SessionEstablished_User_Auth.json")
         )
     )
 

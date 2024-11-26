@@ -62,7 +62,8 @@ internal object WebAuthnSignInCognitoActions : WebAuthnSignInActions {
                 session = response.session,
                 challengeParameters = response.challengeParameters,
                 authenticationResult = response.authenticationResult,
-                callingActivity = signInContext.callingActivity
+                callingActivity = signInContext.callingActivity,
+                signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_AUTH)
             )
         }
 

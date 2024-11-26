@@ -46,14 +46,16 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
                             session = response.session,
                             username = eventType.totpSetupDetails.username
                         ),
-                        challengeParams = eventType.challengeParams
+                        challengeParams = eventType.challengeParams,
+                        signInMethod = eventType.signInMethod
                     )
                 )
             } ?: SetupTOTPEvent(
                 SetupTOTPEvent.EventType.ThrowAuthError(
                     Exception("Software token setup failed"),
                     eventType.totpSetupDetails.username,
-                    eventType.totpSetupDetails.session
+                    eventType.totpSetupDetails.session,
+                    eventType.signInMethod
                 )
             )
         } catch (e: Exception) {
@@ -61,7 +63,8 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
                 SetupTOTPEvent.EventType.ThrowAuthError(
                     e,
                     eventType.totpSetupDetails.username,
-                    eventType.totpSetupDetails.session
+                    eventType.totpSetupDetails.session,
+                    eventType.signInMethod
                 )
             )
         }
@@ -87,7 +90,8 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
                             SetupTOTPEvent(
                                 SetupTOTPEvent.EventType.RespondToAuthChallenge(
                                     eventType.username,
-                                    it.session
+                                    it.session,
+                                    eventType.signInMethod
                                 )
                             )
                         }
@@ -99,7 +103,8 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
                                         recoverySuggestion = AmplifyException.TODO_RECOVERY_SUGGESTION
                                     ),
                                     eventType.username,
-                                    eventType.session
+                                    eventType.session,
+                                    eventType.signInMethod
                                 )
                             )
                         }
@@ -108,7 +113,8 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
                     SetupTOTPEvent.EventType.ThrowAuthError(
                         Exception("Software token verification failed"),
                         eventType.username,
-                        eventType.session
+                        eventType.session,
+                        eventType.signInMethod
                     )
                 )
             } catch (exception: Exception) {
@@ -116,7 +122,8 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
                     SetupTOTPEvent.EventType.ThrowAuthError(
                         exception,
                         eventType.username,
-                        eventType.session
+                        eventType.session,
+                        eventType.signInMethod
                     )
                 )
             }
@@ -152,18 +159,22 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
                         challengeNameType = response.challengeName,
                         session = response.session,
                         challengeParameters = response.challengeParameters,
-                        authenticationResult = response.authenticationResult
+                        authenticationResult = response.authenticationResult,
+                        signInMethod = eventType.signInMethod
                     )
                 } ?: SetupTOTPEvent(
                     SetupTOTPEvent.EventType.ThrowAuthError(
                         Exception("Software token verification failed"),
                         eventType.username,
-                        eventType.session
+                        eventType.session,
+                        eventType.signInMethod
                     )
                 )
             } catch (exception: Exception) {
                 SetupTOTPEvent(
-                    SetupTOTPEvent.EventType.ThrowAuthError(exception, eventType.username, eventType.session)
+                    SetupTOTPEvent.EventType.ThrowAuthError(
+                        exception, eventType.username, eventType.session, eventType.signInMethod
+                    )
                 )
             }
             dispatcher.send(evt)

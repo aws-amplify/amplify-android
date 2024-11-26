@@ -560,7 +560,7 @@ object SignInTestCaseGenerator : SerializableProvider {
         ),
         validations = listOf(
             mockedSignInSuccessExpectation,
-            ExpectationShapes.State("SignedIn_SessionEstablished.json")
+            ExpectationShapes.State("SignedIn_SessionEstablished_User_Auth.json")
         )
     )
 
@@ -601,7 +601,9 @@ object SignInTestCaseGenerator : SerializableProvider {
             "authconfiguration_userauth.json",
             "SignedOut_Configured.json",
             mockedResponses = listOf(
-                mockedInitiateAuthPasswordResponse
+                mockedInitiateAuthPasswordResponse,
+                mockedIdentityIdResponse,
+                mockedAWSCredentialsResponse
             )
         ),
         api = API(
@@ -621,7 +623,7 @@ object SignInTestCaseGenerator : SerializableProvider {
         ),
         validations = listOf(
             mockedSignInSuccessExpectation,
-            ExpectationShapes.State("SignedIn_SessionEstablished.json")
+            ExpectationShapes.State("SignedIn_SessionEstablished_User_Auth.json")
         )
     )
 
@@ -865,7 +867,7 @@ object SignInTestCaseGenerator : SerializableProvider {
         ),
         validations = listOf(
             mockedSignInCustomAuthChallengeExpectation,
-            ExpectationShapes.State("CustomSignIn_SigningIn.json")
+            ExpectationShapes.State("CustomSignIn_SigningIn_Password_Challenge.json")
         )
     )
 
@@ -892,7 +894,7 @@ object SignInTestCaseGenerator : SerializableProvider {
         ),
         validations = listOf(
             mockedSignInCustomAuthChallengeExpectationWithAlias,
-            ExpectationShapes.State("CustomSignIn_SigningIn.json")
+            ExpectationShapes.State("CustomSignIn_SigningIn_With_Alias.json")
         )
     )
 
@@ -920,7 +922,7 @@ object SignInTestCaseGenerator : SerializableProvider {
         ),
         validations = listOf(
             mockedSignInCustomAuthChallengeExpectation,
-            ExpectationShapes.State("CustomSignIn_SigningIn.json")
+            ExpectationShapes.State("CustomSignIn_SigningIn_Password_Challenge.json")
         )
     )
 

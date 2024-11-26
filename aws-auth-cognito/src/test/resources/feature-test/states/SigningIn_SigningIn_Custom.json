@@ -7,19 +7,17 @@
             "SignInChallengeState": {
                 "type": "SignInChallengeState.WaitingForAnswer",
                 "authChallenge": {
-                    "challengeName": "SELECT_CHALLENGE",
+                    "challengeName": "SMS_MFA",
                     "username": "username",
                     "session": "someSession",
-                    "parameters": null,
-                    "availableChallenges": [
-                        "PASSWORD",
-                        "WEB_AUTHN",
-                        "EMAIL_OTP"
-                    ]
+                    "parameters": {
+                        "CODE_DELIVERY_DELIVERY_MEDIUM": "SMS",
+                        "CODE_DELIVERY_DESTINATION": "+12345678900"
+                    }
                 },
                 "signInMethod": {
                     "type": "SignInMethod.ApiBased",
-                    "authType": "USER_AUTH"
+                    "authType": "CUSTOM_AUTH"
                 }
             }
         }

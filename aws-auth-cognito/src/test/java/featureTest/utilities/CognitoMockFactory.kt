@@ -114,7 +114,7 @@ class CognitoMockFactory(
                             parseAvailableChallenges(it as JsonArray)
                         }
 
-                        this.session = responseObject["session"]?.toString()
+                        this.session = (responseObject["session"] as? JsonPrimitive)?.content
                     }
                 }
             }

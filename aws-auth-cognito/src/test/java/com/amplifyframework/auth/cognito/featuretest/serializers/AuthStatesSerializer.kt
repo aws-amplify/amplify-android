@@ -22,6 +22,7 @@ import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignUpData
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
@@ -72,7 +73,9 @@ internal data class AuthStatesProxy(
     @Contextual
     val authChallenge: AuthChallenge? = null,
     @Contextual
-    val amplifyCredential: AmplifyCredential? = null
+    val amplifyCredential: AmplifyCredential? = null,
+    @Contextual
+    val signInMethod: SignInMethod? = null
 ) {
 
     internal fun <T> toRealAuthState(): T {
@@ -107,7 +110,7 @@ internal data class AuthStatesProxy(
             "AuthorizationState.SigningIn" -> AuthorizationState.SigningIn() as T
             "SignInState.ResolvingChallenge" -> SignInState.ResolvingChallenge(signInChallengeState) as T
             "SignInChallengeState.WaitingForAnswer" -> authChallenge?.let {
-                SignInChallengeState.WaitingForAnswer(it)
+                SignInChallengeState.WaitingForAnswer(it, signInMethod!!)
             } as T
             else -> {
                 error("Cannot get real type!")
@@ -210,7 +213,8 @@ internal data class AuthStatesProxy(
                         is SignInChallengeState.Verifying -> TODO()
                         is SignInChallengeState.WaitingForAnswer -> AuthStatesProxy(
                             type = "SignInChallengeState.WaitingForAnswer",
-                            authChallenge = authState.challenge
+                            authChallenge = authState.challenge,
+                            signInMethod = authState.signInMethod
                         )
                         is SignInChallengeState.Error -> TODO()
                     }

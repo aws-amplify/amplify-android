@@ -22,6 +22,7 @@ import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInData
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignInTOTPSetupData
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.WebAuthnSignInContext
@@ -61,11 +62,12 @@ internal class SignInEvent(val eventType: EventType, override val time: Date? = 
         data class ConfirmDevice(val deviceMetadata: DeviceMetadata.Metadata, val signedInData: SignedInData) :
             EventType()
         data class FinalizeSignIn(val id: String = "") : EventType()
-        data class ReceivedChallenge(val challenge: AuthChallenge) : EventType()
+        data class ReceivedChallenge(val challenge: AuthChallenge, val signInMethod: SignInMethod) : EventType()
         data class ThrowError(val exception: Exception) : EventType()
         data class InitiateTOTPSetup(
             val signInTOTPSetupData: SignInTOTPSetupData,
-            val challengeParams: Map<String, String>?
+            val challengeParams: Map<String, String>?,
+            val signInMethod: SignInMethod
         ) : EventType()
 
         data class InitiateUserAuth(

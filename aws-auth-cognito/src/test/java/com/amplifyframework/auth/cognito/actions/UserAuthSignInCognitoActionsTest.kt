@@ -33,6 +33,7 @@ import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
 import com.amplifyframework.statemachine.codegen.data.WebAuthnSignInContext
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
@@ -132,7 +133,8 @@ class UserAuthSignInCognitoActionsTest {
                     session = dummySession,
                     parameters = null,
                     availableChallenges = availableChallenges
-                )
+                ),
+                SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
             )
         )
 
@@ -201,7 +203,8 @@ class UserAuthSignInCognitoActionsTest {
                     session = dummySession,
                     availableChallenges = null,
                     parameters = challengeParams
-                )
+                ),
+                SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
             )
         )
 
@@ -269,8 +272,9 @@ class UserAuthSignInCognitoActionsTest {
                     session = dummySession,
                     availableChallenges = null,
                     parameters = challengeParams
-                )
-            )
+                ),
+                SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
+            ),
         )
 
         UserAuthSignInCognitoActions.initiateUserAuthSignIn(

@@ -202,11 +202,13 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
             }
             is ExpectationShapes.State -> {
                 val getStateLatch = CountDownLatch(1)
-                authStateMachine.getCurrentState { authState ->
-                    assertEquals(getState(validation.expectedState), authState)
+                var authState: AuthState? = null
+                authStateMachine.getCurrentState {
+                    authState = it
                     getStateLatch.countDown()
                 }
                 getStateLatch.await(10, TimeUnit.SECONDS)
+                assertEquals(getState(validation.expectedState), authState)
             }
         }
     }
