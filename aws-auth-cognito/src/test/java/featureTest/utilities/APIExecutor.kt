@@ -33,7 +33,7 @@ import kotlinx.serialization.json.JsonObject
  */
 internal val apiExecutor: (AWSCognitoAuthPlugin, API) -> Any = { authPlugin: AWSCognitoAuthPlugin, api: API ->
 
-    lateinit var result: Any
+    var result: Any = Unit
     val latch = CountDownLatch(1)
     val targetApis = authPlugin::class.declaredFunctions.filter { it.name == api.name.name }
 
@@ -64,12 +64,13 @@ internal val apiExecutor: (AWSCognitoAuthPlugin, API) -> Any = { authPlugin: AWS
         }
     }
 
-    if (targetApi == null || requiredParams == null)
+    if (targetApi == null || requiredParams == null) {
         throw Exception("No matching api function with required parameters found")
+    }
     targetApi.callBy(requiredParams)
 
-    latch.await(5, TimeUnit.SECONDS)
-    result
+    val complete = latch.await(10, TimeUnit.SECONDS)
+    if (complete) result else "timed_out"
 }
 
 /**
