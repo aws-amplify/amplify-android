@@ -69,8 +69,11 @@ internal val apiExecutor: (AWSCognitoAuthPlugin, API) -> Any = { authPlugin: AWS
     }
     targetApi.callBy(requiredParams)
 
-    val complete = latch.await(10, TimeUnit.SECONDS)
-    if (complete) result else "timed_out"
+    val complete = latch.await(15, TimeUnit.SECONDS)
+    if (!complete) {
+        throw Exception("Test did not invoke completion handlers within the allotted timeout")
+    }
+    result
 }
 
 /**
