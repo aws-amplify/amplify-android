@@ -14,6 +14,8 @@
  */
 package com.amplifyframework.statemachine.codegen.data
 
+import com.amplifyframework.statemachine.util.mask
+
 internal data class SignInTOTPSetupData(
     val secretCode: String,
     val session: String?,
@@ -21,17 +23,9 @@ internal data class SignInTOTPSetupData(
 ) {
     override fun toString(): String {
         return "SignInTOTPSetupData(" +
-            "secretCode = ${mask(secretCode)}, " +
-            "session = ${mask(session)}, " +
+            "secretCode = ${secretCode.mask()}, " +
+            "session = ${session.mask()}, " +
             "username = $username}" +
             ")"
-    }
-
-    private fun mask(value: String?): String {
-        return if (value == null || value.length <= 4) {
-            "***"
-        } else {
-            "${value.substring(0 until 4)}***"
-        }
     }
 }

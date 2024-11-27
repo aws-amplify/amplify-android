@@ -1,0 +1,55 @@
+{
+    "description": "Test that autoSignIn invokes proper cognito request and returns DONE",
+    "preConditions": {
+        "amplify-configuration": "authconfiguration_userauth.json",
+        "state": "SignedOut_SessionEstablished_SignedUp.json",
+        "mockedResponses": [
+            {
+                "type": "cognitoIdentityProvider",
+                "apiName": "initiateAuth",
+                "responseType": "success",
+                "response": {
+                    "authenticationResult": {
+                        "idToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
+                        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
+                        "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU",
+                        "expiresIn": 300
+                    }
+                }
+            }
+        ]
+    },
+    "api": {
+        "name": "autoSignIn",
+        "params": {},
+        "options": {}
+    },
+    "validations": [
+        {
+            "type": "cognitoIdentityProvider",
+            "apiName": "initiateAuth",
+            "request": {
+                "authFlow": "USER_AUTH",
+                "clientId": "testAppClientId",
+                "authParameters": {
+                    "USERNAME": "username",
+                    "SECRET_HASH": "a hash"
+                },
+                "clientMetadata": {},
+                "session": "session-id"
+            }
+        },
+        {
+            "type": "amplify",
+            "apiName": "signIn",
+            "responseType": "success",
+            "response": {
+                "isSignedIn": true,
+                "nextStep": {
+                    "signInStep": "DONE",
+                    "additionalInfo": {}
+                }
+            }
+        }
+    ]
+}

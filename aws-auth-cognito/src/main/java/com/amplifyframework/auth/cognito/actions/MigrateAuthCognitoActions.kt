@@ -16,14 +16,19 @@
 package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.initiateAuth
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
+import aws.sdk.kotlin.services.cognitoidentityprovider.respondToAuthChallenge
+import aws.smithy.kotlin.runtime.util.type
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
+import com.amplifyframework.auth.cognito.helpers.toCognitoType
+import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.MigrateAuthActions
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
@@ -32,6 +37,8 @@ internal object MigrateAuthCognitoActions : MigrateAuthActions {
     private const val KEY_PASSWORD = "PASSWORD"
     private const val KEY_SECRET_HASH = "SECRET_HASH"
     private const val KEY_USERID_FOR_SRP = "USER_ID_FOR_SRP"
+    private const val KEY_ANSWER = "ANSWER"
+    private const val KEY_PREFERRED_CHALLENGE = "PREFERRED_CHALLENGE"
 
     override fun initiateMigrateAuthAction(event: SignInEvent.EventType.InitiateMigrateAuth) =
         Action<AuthEnvironment>("InitMigrateAuth") { id, dispatcher ->
@@ -49,32 +56,64 @@ internal object MigrateAuthCognitoActions : MigrateAuthActions {
                 val encodedContextData = getUserContextData(event.username)
                 val pinpointEndpointId = getPinpointEndpointId()
 
-                val response = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
-                    authFlow = AuthFlowType.UserPasswordAuth
-                    clientId = configuration.userPool?.appClient
-                    authParameters = authParams
-                    clientMetadata = event.metadata
-                    pinpointEndpointId?.let { analyticsMetadata { analyticsEndpointId = it } }
-                    encodedContextData?.let { userContextData { encodedData = it } }
-                }
+                if (event.respondToAuthChallenge?.session != null) {
+                    authParams[KEY_ANSWER] = ChallengeNameType.Password.value
 
-                if (response != null) {
-                    val username = AuthHelper.getActiveUsername(
-                        username = event.username,
-                        alternateUsername = response.challengeParameters?.get(KEY_USERNAME),
-                        userIDForSRP = response.challengeParameters?.get(
-                            KEY_USERID_FOR_SRP
+                    val response = cognitoAuthService.cognitoIdentityProviderClient?.respondToAuthChallenge {
+                        clientId = configuration.userPool?.appClient
+                        challengeName = ChallengeNameType.SelectChallenge
+                        this.challengeResponses = authParams
+                        session = event.respondToAuthChallenge.session
+                        clientMetadata = event.metadata
+                        pinpointEndpointId?.let { analyticsMetadata { analyticsEndpointId = it } }
+                        encodedContextData?.let { this.userContextData { encodedData = it } }
+                    }
+
+                    response?.let {
+                        SignInChallengeHelper.evaluateNextStep(
+                            username = event.username,
+                            challengeNameType = response.challengeName,
+                            session = response.session,
+                            challengeParameters = response.challengeParameters,
+                            authenticationResult = response.authenticationResult,
+                            signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_AUTH)
                         )
-                    )
-                    SignInChallengeHelper.evaluateNextStep(
-                        username,
-                        response.challengeName,
-                        response.session,
-                        response.challengeParameters,
-                        response.authenticationResult
-                    )
+                    } ?: throw ServiceException("Sign in failed", AmplifyException.TODO_RECOVERY_SUGGESTION)
                 } else {
-                    throw ServiceException("Sign in failed", AmplifyException.TODO_RECOVERY_SUGGESTION)
+                    if (event.authFlowType == AuthFlowType.USER_AUTH) {
+                        authParams[KEY_PREFERRED_CHALLENGE] = KEY_PASSWORD
+                    }
+                    val response = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
+                        authFlow = event.authFlowType.toCognitoType()
+                        clientId = configuration.userPool?.appClient
+                        authParameters = authParams
+                        clientMetadata = event.metadata
+                        pinpointEndpointId?.let { analyticsMetadata { analyticsEndpointId = it } }
+                        encodedContextData?.let { userContextData { encodedData = it } }
+                    }
+
+                    response?.let {
+                        val username = AuthHelper.getActiveUsername(
+                            username = event.username,
+                            alternateUsername = response.challengeParameters?.get(KEY_USERNAME),
+                            userIDForSRP = response.challengeParameters?.get(
+                                KEY_USERID_FOR_SRP
+                            )
+                        )
+                        val signInMethod = if (event.authFlowType == AuthFlowType.USER_AUTH) {
+                            SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_AUTH)
+                        } else {
+                            SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
+                        }
+                        SignInChallengeHelper.evaluateNextStep(
+                            username = username,
+                            challengeNameType = response.challengeName,
+                            session = response.session,
+                            challengeParameters = response.challengeParameters,
+                            authenticationResult = response.authenticationResult,
+                            signInMethod = signInMethod
+                        )
+                    } ?: throw ServiceException("Sign in failed", AmplifyException.TODO_RECOVERY_SUGGESTION)
                 }
             } catch (e: Exception) {
                 val errorEvent = SignInEvent(SignInEvent.EventType.ThrowError(e))

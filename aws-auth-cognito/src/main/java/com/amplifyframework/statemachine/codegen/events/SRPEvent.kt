@@ -15,7 +15,10 @@
 
 package com.amplifyframework.statemachine.codegen.events
 
+import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.statemachine.StateMachineEvent
+import com.amplifyframework.statemachine.codegen.data.AuthChallenge
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import java.util.Date
 
 internal class SRPEvent(val eventType: EventType, override val time: Date? = null) :
@@ -24,7 +27,9 @@ internal class SRPEvent(val eventType: EventType, override val time: Date? = nul
         data class InitiateSRP(
             val username: String,
             val password: String,
-            val metadata: Map<String, String>
+            val metadata: Map<String, String>,
+            val authFlowType: AuthFlowType,
+            val respondToAuthChallenge: AuthChallenge? = null
         ) : EventType()
         data class InitiateSRPWithCustom(
             val username: String,
@@ -40,7 +45,8 @@ internal class SRPEvent(val eventType: EventType, override val time: Date? = nul
         data class RetryRespondPasswordVerifier(
             val challengeParameters: Map<String, String>,
             val metadata: Map<String, String>,
-            val session: String?
+            val session: String?,
+            val signInMethod: SignInMethod
         ) : EventType()
 
         data class ThrowAuthError(val exception: Exception) : EventType()

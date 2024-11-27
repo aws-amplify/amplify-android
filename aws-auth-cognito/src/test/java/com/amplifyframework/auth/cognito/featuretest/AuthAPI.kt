@@ -43,6 +43,7 @@ enum class AuthAPI {
     resendUserAttributeConfirmationCode,
     resetPassword,
     signIn,
+    autoSignIn,
     signInWithSocialWebUI,
     signInWithWebUI,
     signOut,

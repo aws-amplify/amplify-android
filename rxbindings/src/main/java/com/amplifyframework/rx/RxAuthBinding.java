@@ -31,10 +31,13 @@ import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.TOTPSetupDetails;
+import com.amplifyframework.auth.options.AuthAssociateWebAuthnCredentialsOptions;
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
+import com.amplifyframework.auth.options.AuthDeleteWebAuthnCredentialOptions;
 import com.amplifyframework.auth.options.AuthFetchSessionOptions;
+import com.amplifyframework.auth.options.AuthListWebAuthnCredentialsOptions;
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions;
 import com.amplifyframework.auth.options.AuthResetPasswordOptions;
@@ -45,6 +48,7 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions;
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
+import com.amplifyframework.auth.result.AuthListWebAuthnCredentialsResult;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignOutResult;
@@ -117,7 +121,7 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
 
     @Override
     public Single<AuthSignInResult> confirmSignIn(
-            @Nullable String challengeResponse, @NonNull AuthConfirmSignInOptions options) {
+            @NonNull String challengeResponse, @NonNull AuthConfirmSignInOptions options) {
         return toSingle((onResult, onError) ->
                 delegate.confirmSignIn(challengeResponse, options, onResult, onError));
     }
@@ -125,6 +129,11 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
     @Override
     public Single<AuthSignInResult> confirmSignIn(@NonNull String challengeResponse) {
         return toSingle((onResult, onError) -> delegate.confirmSignIn(challengeResponse, onResult, onError));
+    }
+
+    @Override
+    public Single<AuthSignInResult> autoSignIn() {
+        return toSingle(delegate::autoSignIn);
     }
 
     @Override
@@ -329,6 +338,48 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
     @Override
     public Completable verifyTOTPSetup(@NonNull String code, @NonNull AuthVerifyTOTPSetupOptions options) {
         return toCompletable((onComplete, onError) -> delegate.verifyTOTPSetup(code, options, onComplete, onError));
+    }
+
+    @Override
+    public Completable associateWebAuthnCredential(@NonNull Activity callingActivity) {
+        return toCompletable((onComplete, onError) ->
+                delegate.associateWebAuthnCredential(callingActivity, onComplete, onError));
+    }
+
+    @Override
+    public Completable associateWebAuthnCredential(
+            @NonNull Activity callingActivity,
+            @NonNull AuthAssociateWebAuthnCredentialsOptions options
+    ) {
+        return toCompletable((onComplete, onError) ->
+                delegate.associateWebAuthnCredential(callingActivity, options, onComplete, onError));
+    }
+
+    @Override
+    public Single<AuthListWebAuthnCredentialsResult> listWebAuthnCredentials() {
+        return toSingle(delegate::listWebAuthnCredentials);
+    }
+
+    @Override
+    public Single<AuthListWebAuthnCredentialsResult> listWebAuthnCredentials(
+            @NonNull AuthListWebAuthnCredentialsOptions options
+    ) {
+        return toSingle(delegate::listWebAuthnCredentials);
+    }
+
+    @Override
+    public Completable deleteWebAuthnCredential(@NonNull String credentialId) {
+        return toCompletable((onComplete, onError) ->
+                delegate.deleteWebAuthnCredential(credentialId, onComplete, onError));
+    }
+
+    @Override
+    public Completable deleteWebAuthnCredential(
+            @NonNull String credentialId,
+            @NonNull AuthDeleteWebAuthnCredentialOptions options
+    ) {
+        return toCompletable(((onComplete, onError) ->
+                delegate.deleteWebAuthnCredential(credentialId, options, onComplete, onError)));
     }
 
     private <T> Single<T> toSingle(VoidBehaviors.ResultEmitter<T, AuthException> behavior) {

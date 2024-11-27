@@ -36,6 +36,7 @@ import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
+import com.amplifyframework.statemachine.codegen.states.SignUpState
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
@@ -121,7 +122,8 @@ class AuthValidationTest {
         environment,
         initialState = AuthState.Configured(
             authNState = AuthenticationState.SignedOut(signedOutData = SignedOutData()),
-            authZState = AuthorizationState.Configured()
+            authZState = AuthorizationState.Configured(),
+            authSignUpState = SignUpState.NotStarted()
         )
     )
 
