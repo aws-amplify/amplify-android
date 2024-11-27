@@ -1,3 +1,10 @@
+## [Release 2.25.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.25.0)
+
+### Features
+- **auth:** Add Passwordless features to Amplify ([#2952](https://github.com/aws-amplify/amplify-android/issues/2952))
+
+[See all changes between 2.24.1 and 2.25.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.24.1...release_v2.25.0)
+
 ## [Release 2.24.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.24.1)
 
 ### Bug Fixes
