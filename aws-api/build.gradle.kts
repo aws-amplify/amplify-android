@@ -69,7 +69,3 @@ dependencies {
 
     androidTestUtil(libs.test.androidx.orchestrator)
 }
-
-android.kotlinOptions {
-    jvmTarget = "11"
-}

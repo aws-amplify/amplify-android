@@ -16,6 +16,7 @@
 import app.cash.licensee.LicenseeExtension
 import com.android.build.gradle.LibraryExtension
 import kotlinx.validation.ApiValidationExtension
+import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
@@ -110,6 +111,12 @@ subprojects {
             }
         }
     }
+
+    pluginManager.withPlugin("kotlin-android") {
+        configure<KotlinProjectExtension> {
+            jvmToolchain(17)
+        }
+    }
 }
 
 @Suppress("ExpiredTargetSdkVersion")
@@ -158,14 +165,6 @@ fun Project.configureAndroid() {
 
             compileOptions {
                 isCoreLibraryDesugaringEnabled = true
-                sourceCompatibility = JavaVersion.VERSION_11
-                targetCompatibility = JavaVersion.VERSION_11
-            }
-
-            tasks.withType<KotlinCompile>().configureEach {
-                kotlinOptions {
-                    jvmTarget = JavaVersion.VERSION_11.toString()
-                }
             }
 
             // Needed when running integration tests. The oauth2 library uses relies on two
