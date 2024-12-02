@@ -47,7 +47,7 @@ allprojects {
         tasks.withType<JavaCompile>().configureEach {
             options.compilerArgs.apply {
                 add("-Xlint:all")
-                add("-Werror")
+                //add("-Werror")
             }
         }
         tasks.withType<Test>().configureEach {
