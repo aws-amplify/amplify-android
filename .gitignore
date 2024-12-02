@@ -103,7 +103,8 @@ dist/
 node_modules/
 aws-exports.js
 awsconfiguration.json
-amplifyconfiguration.json
+amplifyconfiguration**.json
+amplify_outputs**.json
 
 test-results/
 build-artifacts/
@@ -115,4 +116,3 @@ build-artifacts.tar.gz
 # sample app resources
 sample*
 .graphqlconfig.yml
-aws-datastore/src/androidTest/res/raw/amplifyconfigurationupdated.json
