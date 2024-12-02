@@ -63,7 +63,7 @@ internal class AWSTranslateService(
                 val targetCode = result.targetLanguageCode
                 val language = LanguageType.from(targetCode)
                 TranslateTextResult.builder()
-                    .translatedText(translation ?: "")
+                    .translatedText(translation)
                     .targetLanguage(language)
                     .build()
             },

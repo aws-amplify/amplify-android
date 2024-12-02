@@ -148,10 +148,16 @@ public final class com/amplifyframework/predictions/aws/configuration/SpeechGene
 }
 
 public final class com/amplifyframework/predictions/aws/configuration/TranslateTextConfiguration {
-	public static fun fromJson (Lorg/json/JSONObject;)Lcom/amplifyframework/predictions/aws/configuration/TranslateTextConfiguration;
-	public fun getNetworkPolicy ()Lcom/amplifyframework/predictions/aws/NetworkPolicy;
-	public fun getSourceLanguage ()Lcom/amplifyframework/predictions/models/LanguageType;
-	public fun getTargetLanguage ()Lcom/amplifyframework/predictions/models/LanguageType;
+	public static final field Companion Lcom/amplifyframework/predictions/aws/configuration/TranslateTextConfiguration$Companion;
+	public synthetic fun <init> (Lcom/amplifyframework/predictions/models/LanguageType;Lcom/amplifyframework/predictions/models/LanguageType;Lcom/amplifyframework/predictions/aws/NetworkPolicy;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final fun fromJson (Lorg/json/JSONObject;)Lcom/amplifyframework/predictions/aws/configuration/TranslateTextConfiguration;
+	public final fun getNetworkPolicy ()Lcom/amplifyframework/predictions/aws/NetworkPolicy;
+	public final fun getSourceLanguage ()Lcom/amplifyframework/predictions/models/LanguageType;
+	public final fun getTargetLanguage ()Lcom/amplifyframework/predictions/models/LanguageType;
+}
+
+public final class com/amplifyframework/predictions/aws/configuration/TranslateTextConfiguration$Companion {
+	public final fun fromJson (Lorg/json/JSONObject;)Lcom/amplifyframework/predictions/aws/configuration/TranslateTextConfiguration;
 }
 
 public final class com/amplifyframework/predictions/aws/exceptions/AccessDeniedException : com/amplifyframework/predictions/PredictionsException {
