@@ -41,7 +41,3 @@ dependencies {
     testImplementation(project(":testmodels"))
     testImplementation(project(":testutils"))
 }
-
-android.kotlinOptions {
-    jvmTarget = "11"
-}

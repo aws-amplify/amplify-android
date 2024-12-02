@@ -57,7 +57,3 @@ dependencies {
     androidTestImplementation(libs.test.kotlin.coroutines)
     androidTestImplementation(libs.test.turbine)
 }
-
-android.kotlinOptions {
-    jvmTarget = "11"
-}

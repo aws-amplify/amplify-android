@@ -39,8 +39,3 @@ dependencies {
     testImplementation(project(":testmodels"))
     testImplementation(libs.test.kotest.assertions)
 }
-
-android.kotlinOptions {
-    jvmTarget = "11"
-    freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
-}
