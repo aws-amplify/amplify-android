@@ -87,7 +87,7 @@ __pycache__/
 **/credentials.json
 **/google_client_creds.json
 **/amplifyconfiguration*.json
-**/amplify_outputs.json
+**/amplify_outputs*.json
 
 # IDE files
 .idea/**
