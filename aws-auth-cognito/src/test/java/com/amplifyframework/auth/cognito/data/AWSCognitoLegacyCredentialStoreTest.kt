@@ -17,7 +17,6 @@ package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
 import com.amplifyframework.auth.cognito.AuthConfiguration
-import com.amplifyframework.core.store.KeyValueRepository
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthCredentialStore
@@ -105,40 +104,34 @@ class AWSCognitoLegacyCredentialStoreTest {
     private lateinit var mockContext: Context
 
     @Mock
-    private lateinit var mockKeyValue: KeyValueRepository
-
-    @Mock
-    private lateinit var mockFactory: KeyValueRepositoryFactory
+    private lateinit var mockKeyValue: LegacyKeyValueRepository
 
     private lateinit var persistentStore: AuthCredentialStore
 
     @Before
     fun setup() {
         `when`(
-            mockFactory.create(
+            LegacyKeyValueRepository(
                 mockContext,
                 AWSCognitoLegacyCredentialStore.AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER,
-                true
             )
         ).thenReturn(mockKeyValue)
 
         `when`(
-            mockFactory.create(
+            LegacyKeyValueRepository(
                 mockContext,
                 AWSCognitoLegacyCredentialStore.APP_TOKENS_INFO_CACHE,
-                true
             )
         ).thenReturn(mockKeyValue)
 
         `when`(
-            mockFactory.create(
+            LegacyKeyValueRepository(
                 mockContext,
                 AWSCognitoLegacyCredentialStore.AWS_MOBILE_CLIENT_PROVIDER,
-                true
             )
         ).thenReturn(mockKeyValue)
 
-        `when`(mockFactory.create(mockContext, deviceDetailsCacheKey, true)).thenReturn(mockKeyValue)
+        `when`(LegacyKeyValueRepository(mockContext, deviceDetailsCacheKey)).thenReturn(mockKeyValue)
     }
 
     @Test
@@ -146,7 +139,7 @@ class AWSCognitoLegacyCredentialStoreTest {
         setupUserPoolConfig()
         setupIdentityPoolConfig()
         setupKeyValueGetters()
-        persistentStore = AWSCognitoLegacyCredentialStore(mockContext, mockConfig, mockFactory)
+        persistentStore = AWSCognitoLegacyCredentialStore(mockContext, mockConfig)
 
         val actual = persistentStore.retrieveCredential()
 
@@ -158,7 +151,7 @@ class AWSCognitoLegacyCredentialStoreTest {
         setupUserPoolConfig()
         setupIdentityPoolConfig()
         setupKeyValueGetters()
-        persistentStore = AWSCognitoLegacyCredentialStore(mockContext, mockConfig, mockFactory)
+        persistentStore = AWSCognitoLegacyCredentialStore(mockContext, mockConfig)
 
         val actual = persistentStore.retrieveDeviceMetadata("username")
 
@@ -171,7 +164,7 @@ class AWSCognitoLegacyCredentialStoreTest {
         setupIdentityPoolConfig()
         setupKeyValueGetters()
         `when`(mockKeyValue.get("signInMode")).thenReturn("2")
-        persistentStore = AWSCognitoLegacyCredentialStore(mockContext, mockConfig, mockFactory)
+        persistentStore = AWSCognitoLegacyCredentialStore(mockContext, mockConfig)
 
         val actual = persistentStore.retrieveCredential()
 

@@ -16,8 +16,11 @@
 package com.amplifyframework.auth.cognito
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
+import com.amplifyframework.core.store.EncryptedKeyValueRepository
+import com.amplifyframework.core.store.KeyValueRepository
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
@@ -34,7 +37,12 @@ internal interface StoreClientBehavior {
     suspend fun clearCredentials(credentialType: CredentialType)
 }
 
-internal class CredentialStoreClient(configuration: AuthConfiguration, context: Context, val logger: Logger) :
+internal class CredentialStoreClient(
+    configuration: AuthConfiguration,
+    context: Context,
+    val logger: Logger,
+    val customKeyValueRepository: KeyValueRepository? = null
+) :
     StoreClientBehavior {
     private val credentialStoreStateMachine = createCredentialStoreStateMachine(configuration, context)
 
@@ -42,10 +50,28 @@ internal class CredentialStoreClient(configuration: AuthConfiguration, context: 
         configuration: AuthConfiguration,
         context: Context
     ): CredentialStoreStateMachine {
-        val awsCognitoAuthCredentialStore = AWSCognitoAuthCredentialStore(context.applicationContext, configuration)
+
+        val defaultKeyValueRepository = EncryptedKeyValueRepository(context, defaultAwsKeyValueStoreIdentifier)
+
+        if (customKeyValueRepository != null) {
+            migrateCredentialsIfNecessary(
+                existing = defaultKeyValueRepository,
+                new = customKeyValueRepository
+            )
+        }
+
+        val awsCognitoAuthCredentialStore = AWSCognitoAuthCredentialStore(
+            context.applicationContext,
+            configuration,
+            customKeyValueRepository ?: defaultKeyValueRepository
+        )
         val legacyCredentialStore = AWSCognitoLegacyCredentialStore(context.applicationContext, configuration)
         val credentialStoreEnvironment =
-            CredentialStoreEnvironment(awsCognitoAuthCredentialStore, legacyCredentialStore, logger)
+            CredentialStoreEnvironment(
+                awsCognitoAuthCredentialStore,
+                legacyCredentialStore,
+                logger
+            )
         return CredentialStoreStateMachine(credentialStoreEnvironment)
     }
 
@@ -141,5 +167,17 @@ internal class CredentialStoreClient(configuration: AuthConfiguration, context: 
                 else -> Unit
             }
         }
+    }
+
+    private fun migrateCredentialsIfNecessary(existing: KeyValueRepository, new: KeyValueRepository) {
+        existing.getAll().forEach {
+            new.put(it.key, it.value)
+        }
+        existing.removeAll()
+    }
+
+    companion object {
+        @VisibleForTesting
+        internal const val defaultAwsKeyValueStoreIdentifier = "com.amplify.credentialStore"
     }
 }

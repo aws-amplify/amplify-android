@@ -36,8 +36,7 @@ import java.util.Locale
 
 internal class AWSCognitoLegacyCredentialStore(
     val context: Context,
-    private val authConfiguration: AuthConfiguration,
-    private val keyValueRepoFactory: KeyValueRepositoryFactory = KeyValueRepositoryFactory()
+    private val authConfiguration: AuthConfiguration
 ) : AuthCredentialStore {
 
     companion object {
@@ -77,15 +76,15 @@ internal class AWSCognitoLegacyCredentialStore(
     private val userDeviceDetailsCacheKey = "$APP_DEVICE_INFO_CACHE.${authConfiguration.userPool?.poolId}.%s"
 
     private val idAndCredentialsKeyValue: KeyValueRepository by lazy {
-        keyValueRepoFactory.create(context, AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER)
+        LegacyKeyValueRepository(context, AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER)
     }
 
     private val mobileClientKeyValue: KeyValueRepository by lazy {
-        keyValueRepoFactory.create(context, AWS_MOBILE_CLIENT_PROVIDER)
+        LegacyKeyValueRepository(context, AWS_MOBILE_CLIENT_PROVIDER)
     }
 
     private val tokensKeyValue: KeyValueRepository by lazy {
-        keyValueRepoFactory.create(context, APP_TOKENS_INFO_CACHE)
+        LegacyKeyValueRepository(context, APP_TOKENS_INFO_CACHE)
     }
 
     private lateinit var deviceKeyValue: KeyValueRepository
@@ -232,7 +231,7 @@ internal class AWSCognitoLegacyCredentialStore(
     @Synchronized
     override fun retrieveDeviceMetadata(username: String): DeviceMetadata {
         val deviceDetailsCacheKey = String.format(userDeviceDetailsCacheKey, username)
-        deviceKeyValue = keyValueRepoFactory.create(context, deviceDetailsCacheKey)
+        deviceKeyValue = LegacyKeyValueRepository(context, deviceDetailsCacheKey)
 
         val deviceKey = deviceKeyValue.get(DEVICE_KEY)
         val deviceGroupKey = deviceKeyValue.get(DEVICE_GROUP_KEY)

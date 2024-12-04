@@ -30,8 +30,7 @@ import javax.crypto.spec.GCMParameterSpec
 
 internal class LegacyKeyValueRepository(
     context: Context,
-    private val sharedPreferencesName: String,
-    private var isPersistenceEnabled: Boolean = true,
+    private val sharedPreferencesName: String
 ) : KeyValueRepository {
 
     // TODO
@@ -93,12 +92,7 @@ internal class LegacyKeyValueRepository(
      * @param value Value
      */
     override fun put(dataKey: String, value: String?) {
-        // Irrespective of persistence is enabled or not, store in memory.
         value?.also { cache[dataKey] = it }
-
-        if (!isPersistenceEnabled) {
-            return
-        }
 
         if (value == null) {
             // Null value -> Removing data, IV and version from Shared Prefs.
@@ -150,10 +144,6 @@ internal class LegacyKeyValueRepository(
 
     @Synchronized
     override fun get(dataKey: String): String? {
-        if (!isPersistenceEnabled) {
-            return cache[dataKey]
-        }
-
         val dataKeyInPersistentStore = getDataKeyUsedInPersistentStore(dataKey)
 
         val encryptionKeyAlias = getEncryptionKeyAlias()
@@ -248,16 +238,13 @@ internal class LegacyKeyValueRepository(
 
     @Synchronized
     override fun remove(dataKey: String) {
-        // Irrespective of persistence is enabled or not, mutate in memory.
         cache.remove(dataKey)
-        if (isPersistenceEnabled) {
-            val keyUsedInPersistentStore: String = getDataKeyUsedInPersistentStore(dataKey)
-            sharedPreferencesForData.edit()
-                .remove(keyUsedInPersistentStore)
-                .remove(keyUsedInPersistentStore + SHARED_PREFERENCES_IV_SUFFIX)
-                .remove(keyUsedInPersistentStore + SHARED_PREFERENCES_STORE_VERSION_SUFFIX)
-                .apply()
-        }
+        val keyUsedInPersistentStore: String = getDataKeyUsedInPersistentStore(dataKey)
+        sharedPreferencesForData.edit()
+            .remove(keyUsedInPersistentStore)
+            .remove(keyUsedInPersistentStore + SHARED_PREFERENCES_IV_SUFFIX)
+            .remove(keyUsedInPersistentStore + SHARED_PREFERENCES_STORE_VERSION_SUFFIX)
+            .apply()
     }
 
     private fun getDataKeyUsedInPersistentStore(key: String): String =
@@ -295,5 +282,9 @@ internal class LegacyKeyValueRepository(
             Log.e("Error in encrypting data. ", ex.toString())
             null
         }
+    }
+
+    override fun getAll(): Map<String, String?> {
+        throw NotImplementedError("No getAll implementation for LegacyKeyValueRepository")
     }
 }

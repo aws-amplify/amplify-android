@@ -27,57 +27,52 @@ import kotlinx.serialization.json.Json
 internal class AWSCognitoAuthCredentialStore(
     val context: Context,
     private val authConfiguration: AuthConfiguration,
-    isPersistenceEnabled: Boolean = true,
-    keyValueRepoFactory: KeyValueRepositoryFactory = KeyValueRepositoryFactory()
+    private val keyValueRepository: KeyValueRepository
 ) : AuthCredentialStore {
 
     companion object {
-        const val awsKeyValueStoreIdentifier = "com.amplify.credentialStore"
         private const val Key_Session = "session"
         private const val Key_DeviceMetadata = "deviceMetadata"
         private const val Key_ASFDevice = "asfDevice"
     }
 
-    private var keyValue: KeyValueRepository =
-        keyValueRepoFactory.create(context, awsKeyValueStoreIdentifier, isPersistenceEnabled)
-
     //region Save Credentials
-    override fun saveCredential(credential: AmplifyCredential) = keyValue.put(
+    override fun saveCredential(credential: AmplifyCredential) = keyValueRepository.put(
         generateKey(Key_Session),
         serializeCredential(credential)
     )
 
-    override fun saveDeviceMetadata(username: String, deviceMetadata: DeviceMetadata) = keyValue.put(
+    override fun saveDeviceMetadata(username: String, deviceMetadata: DeviceMetadata) = keyValueRepository.put(
         generateKey("$username.$Key_DeviceMetadata"),
         serializeMetaData(deviceMetadata)
     )
 
-    override fun saveASFDevice(device: AmplifyCredential.ASFDevice) = keyValue.put(
+    override fun saveASFDevice(device: AmplifyCredential.ASFDevice) = keyValueRepository.put(
         generateKey(Key_ASFDevice),
         serializeASFDevice(device)
     )
     //endregion
 
     //region Retrieve Credentials
-    override fun retrieveCredential(): AmplifyCredential = deserializeCredential(keyValue.get(generateKey(Key_Session)))
+    override fun retrieveCredential(): AmplifyCredential = deserializeCredential(keyValueRepository.get(generateKey(Key_Session)))
 
     override fun retrieveDeviceMetadata(username: String): DeviceMetadata = deserializeMetadata(
-        keyValue.get(generateKey("$username.$Key_DeviceMetadata"))
+        keyValueRepository.get(generateKey("$username.$Key_DeviceMetadata"))
     )
 
     override fun retrieveASFDevice(): AmplifyCredential.ASFDevice = deserializeASFDevice(
-        keyValue.get(generateKey(Key_ASFDevice))
+        keyValueRepository.get(generateKey(Key_ASFDevice))
     )
     //endregion
 
     //region Delete Credentials
-    override fun deleteCredential() = keyValue.remove(generateKey(Key_Session))
+    override fun deleteCredential() = keyValueRepository.remove(generateKey(Key_Session))
 
-    override fun deleteDeviceKeyCredential(username: String) = keyValue.remove(
+    override fun deleteDeviceKeyCredential(username: String) = keyValueRepository.remove(
         generateKey("$username.$Key_DeviceMetadata")
     )
 
-    override fun deleteASFDevice() = keyValue.remove(generateKey(Key_ASFDevice))
+    override fun deleteASFDevice() = keyValueRepository.remove(generateKey(Key_ASFDevice))
     //endregion
 
     private fun generateKey(keySuffix: String): String {

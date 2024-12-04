@@ -49,6 +49,7 @@ class EncryptedKeyValueRepository @VisibleForTesting constructor(
 
     override fun put(dataKey: String, value: String?) = edit { putString(dataKey, value) }
     override fun get(dataKey: String): String? = sharedPreferences.getString(dataKey, null)
+    override fun getAll() = sharedPreferences.all.mapValues { it.value as? String }
     override fun remove(dataKey: String) = edit { remove(dataKey) }
     override fun removeAll() = edit { clear() }
 

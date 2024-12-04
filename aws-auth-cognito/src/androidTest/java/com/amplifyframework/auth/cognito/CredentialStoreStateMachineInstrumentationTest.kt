@@ -20,6 +20,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
 import com.amplifyframework.auth.cognito.testutils.AuthConfigurationProvider
 import com.amplifyframework.auth.cognito.testutils.CredentialStoreUtil
+import com.amplifyframework.core.store.EncryptedKeyValueRepository
 import com.google.gson.Gson
 import junit.framework.TestCase.assertEquals
 import org.json.JSONObject
@@ -53,7 +54,8 @@ class CredentialStoreStateMachineInstrumentationTest {
 
         val receivedCredentials = AWSCognitoAuthCredentialStore(
             context,
-            AuthConfiguration.fromJson(authConfigJson)
+            AuthConfiguration.fromJson(authConfigJson),
+            EncryptedKeyValueRepository(context, CredentialStoreClient.defaultAwsKeyValueStoreIdentifier)
         ).retrieveCredential()
 
         assertEquals(credential, receivedCredentials)

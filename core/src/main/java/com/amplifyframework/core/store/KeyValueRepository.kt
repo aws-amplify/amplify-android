@@ -18,6 +18,7 @@ package com.amplifyframework.core.store
 interface KeyValueRepository {
     fun put(dataKey: String, value: String?)
     fun get(dataKey: String): String?
+    fun getAll(): Map<String, String?>
     fun remove(dataKey: String)
     fun removeAll() = Unit
 }

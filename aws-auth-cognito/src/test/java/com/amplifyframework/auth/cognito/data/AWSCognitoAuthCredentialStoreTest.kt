@@ -17,7 +17,7 @@ package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
 import com.amplifyframework.auth.cognito.AuthConfiguration
-import com.amplifyframework.core.store.KeyValueRepository
+import com.amplifyframework.core.store.EncryptedKeyValueRepository
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
@@ -59,20 +59,16 @@ class AWSCognitoAuthCredentialStoreTest {
     private lateinit var mockContext: Context
 
     @Mock
-    private lateinit var mockKeyValue: KeyValueRepository
-
-    @Mock
-    private lateinit var mockFactory: KeyValueRepositoryFactory
+    private lateinit var mockKeyValue: EncryptedKeyValueRepository
 
     private lateinit var persistentStore: AWSCognitoAuthCredentialStore
 
     @Before
     fun setup() {
         Mockito.`when`(
-            mockFactory.create(
+            EncryptedKeyValueRepository(
                 mockContext,
-                keyValueRepoID,
-                true
+                keyValueRepoID
             )
         ).thenReturn(mockKeyValue)
 
@@ -84,7 +80,7 @@ class AWSCognitoAuthCredentialStoreTest {
     @Test
     fun testSaveCredentialWithUserPool() {
         setupUserPoolConfig()
-        persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, true, mockFactory)
+        persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, mockKeyValue)
         persistentStore.saveCredential(getCredential())
         verify(mockKeyValue, times(1))
             .put(KEY_WITH_USER_POOL, serialized(getCredential()))
@@ -93,7 +89,7 @@ class AWSCognitoAuthCredentialStoreTest {
     @Test
     fun testSaveCredentialWithIdentityPool() {
         setupIdentityPoolConfig()
-        persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, true, mockFactory)
+        persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, mockKeyValue)
 
         persistentStore.saveCredential(getCredential())
 
@@ -105,7 +101,7 @@ class AWSCognitoAuthCredentialStoreTest {
     fun testSaveCredentialWithUserAndIdentityPool() {
         setupUserPoolConfig()
         setupIdentityPoolConfig()
-        persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, true, mockFactory)
+        persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, mockKeyValue)
 
         persistentStore.saveCredential(getCredential())
 
@@ -117,7 +113,7 @@ class AWSCognitoAuthCredentialStoreTest {
     fun testRetrieveCredential() {
         setupUserPoolConfig()
         setupIdentityPoolConfig()
-        persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, true, mockFactory)
+        persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, mockKeyValue)
 
         val actual = persistentStore.retrieveCredential()
 
@@ -127,22 +123,11 @@ class AWSCognitoAuthCredentialStoreTest {
     @Test
     fun testDeleteCredential() {
         setupUserPoolConfig()
-        persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, true, mockFactory)
+        persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, mockKeyValue)
 
         persistentStore.deleteCredential()
 
         verify(mockKeyValue, times(1)).remove(KEY_WITH_USER_POOL)
-    }
-
-    @Test
-    fun testInMemoryCredentialStore() {
-        val store = AWSCognitoAuthCredentialStore(mockContext, mockConfig, false)
-
-        store.saveCredential(getCredential())
-        assertEquals(getCredential(), store.retrieveCredential())
-
-        store.deleteCredential()
-        assertEquals(AmplifyCredential.Empty, store.retrieveCredential())
     }
 
     private fun setStoreCredentials(credential: AmplifyCredential) {
@@ -150,7 +135,7 @@ class AWSCognitoAuthCredentialStoreTest {
 
         setupUserPoolConfig()
         setupIdentityPoolConfig()
-        persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, true, mockFactory)
+        persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, mockKeyValue)
     }
 
     private fun setupIdentityPoolConfig() {
