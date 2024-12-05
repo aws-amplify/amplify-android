@@ -25,21 +25,19 @@ import com.amplifyframework.statemachine.codegen.data.IdentityPoolConfiguration
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
+import io.kotest.matchers.equals.shouldBeEqual
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkConstructor
+import io.mockk.unmockkConstructor
+import io.mockk.verify
 import java.util.Date
-import kotlin.test.assertEquals
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.junit.Assert
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.Mockito
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
-import org.mockito.junit.MockitoJUnitRunner
 
-@RunWith(MockitoJUnitRunner::class)
 class AWSCognitoAuthCredentialStoreTest {
 
     companion object {
@@ -50,51 +48,43 @@ class AWSCognitoAuthCredentialStoreTest {
         private const val KEY_WITH_USER_AND_IDENTITY_POOL: String = "amplify.$USER_POOL_ID.$IDENTITY_POOL_ID.session"
     }
 
-    private val keyValueRepoID: String = "com.amplify.credentialStore"
-
-    @Mock
-    private lateinit var mockConfig: AuthConfiguration
-
-    @Mock
-    private lateinit var mockContext: Context
-
-    @Mock
-    private lateinit var mockKeyValue: EncryptedKeyValueRepository
+    private val mockConfig = mockk<AuthConfiguration>()
+    private val mockContext = mockk<Context>()
+    private val mockKeyValue = mockk<EncryptedKeyValueRepository>(relaxed = true)
 
     private lateinit var persistentStore: AWSCognitoAuthCredentialStore
 
     @Before
     fun setup() {
-        Mockito.`when`(
-            EncryptedKeyValueRepository(
-                mockContext,
-                keyValueRepoID
-            )
-        ).thenReturn(mockKeyValue)
+        mockkConstructor(EncryptedKeyValueRepository::class)
+        every { mockKeyValue.get(any<String>()) } returns serialized(getCredential())
+    }
 
-        Mockito.`when`(mockKeyValue.get(Mockito.anyString())).thenReturn(
-            serialized(getCredential())
-        )
+    @After
+    fun tearDown() {
+        unmockkConstructor(EncryptedKeyValueRepository::class)
     }
 
     @Test
     fun testSaveCredentialWithUserPool() {
         setupUserPoolConfig()
+        every { mockConfig.identityPool } returns null
         persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, mockKeyValue)
+
         persistentStore.saveCredential(getCredential())
-        verify(mockKeyValue, times(1))
-            .put(KEY_WITH_USER_POOL, serialized(getCredential()))
+
+        verify(exactly = 1) { mockKeyValue.put(KEY_WITH_USER_POOL, serialized(getCredential())) }
     }
 
     @Test
     fun testSaveCredentialWithIdentityPool() {
         setupIdentityPoolConfig()
+        every { mockConfig.userPool } returns null
         persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, mockKeyValue)
 
         persistentStore.saveCredential(getCredential())
 
-        verify(mockKeyValue, times(1))
-            .put(KEY_WITH_IDENTITY_POOL, serialized(getCredential()))
+        verify(exactly = 1) { mockKeyValue.put(KEY_WITH_IDENTITY_POOL, serialized(getCredential())) }
     }
 
     @Test
@@ -105,8 +95,7 @@ class AWSCognitoAuthCredentialStoreTest {
 
         persistentStore.saveCredential(getCredential())
 
-        verify(mockKeyValue, times(1))
-            .put(KEY_WITH_USER_AND_IDENTITY_POOL, serialized(getCredential()))
+        verify(exactly = 1) { mockKeyValue.put(KEY_WITH_USER_AND_IDENTITY_POOL, serialized(getCredential())) }
     }
 
     @Test
@@ -117,42 +106,31 @@ class AWSCognitoAuthCredentialStoreTest {
 
         val actual = persistentStore.retrieveCredential()
 
-        Assert.assertEquals(actual, getCredential())
+        actual shouldBeEqual getCredential()
     }
 
     @Test
     fun testDeleteCredential() {
         setupUserPoolConfig()
+        setupIdentityPoolConfig()
         persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, mockKeyValue)
 
         persistentStore.deleteCredential()
 
-        verify(mockKeyValue, times(1)).remove(KEY_WITH_USER_POOL)
-    }
-
-    private fun setStoreCredentials(credential: AmplifyCredential) {
-        Mockito.`when`(mockKeyValue.get(Mockito.anyString())).thenReturn(serialized(credential))
-
-        setupUserPoolConfig()
-        setupIdentityPoolConfig()
-        persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, mockKeyValue)
+        verify(exactly = 1) { mockKeyValue.remove(KEY_WITH_USER_AND_IDENTITY_POOL) }
     }
 
     private fun setupIdentityPoolConfig() {
-        Mockito.`when`(mockConfig.identityPool).thenReturn(
-            IdentityPoolConfiguration {
-                this.poolId = IDENTITY_POOL_ID
-            }
-        )
+        every { mockConfig.identityPool } returns IdentityPoolConfiguration {
+            this.poolId = IDENTITY_POOL_ID
+        }
     }
 
     private fun setupUserPoolConfig() {
-        Mockito.`when`(mockConfig.userPool).thenReturn(
-            UserPoolConfiguration {
-                this.poolId = USER_POOL_ID
-                this.appClientId = "appClientId"
-            }
-        )
+        every { mockConfig.userPool } returns UserPoolConfiguration {
+            this.poolId = USER_POOL_ID
+            this.appClientId = "appClientId"
+        }
     }
 
     private fun getCredential(): AmplifyCredential {

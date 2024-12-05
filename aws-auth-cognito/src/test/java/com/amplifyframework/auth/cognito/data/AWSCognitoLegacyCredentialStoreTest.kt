@@ -26,17 +26,17 @@ import com.amplifyframework.statemachine.codegen.data.IdentityPoolConfiguration
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
+import io.kotest.matchers.equals.shouldBeEqual
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkConstructor
+import io.mockk.unmockkConstructor
 import java.util.Date
 import java.util.Locale
-import org.junit.Assert
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.Mockito.`when`
-import org.mockito.junit.MockitoJUnitRunner
 
-@RunWith(MockitoJUnitRunner::class)
 class AWSCognitoLegacyCredentialStoreTest {
 
     companion object {
@@ -97,41 +97,20 @@ class AWSCognitoLegacyCredentialStoreTest {
         private const val expirationTimestampInMs: Long = 1714431706486
     }
 
-    @Mock
-    private lateinit var mockConfig: AuthConfiguration
-
-    @Mock
-    private lateinit var mockContext: Context
-
-    @Mock
-    private lateinit var mockKeyValue: LegacyKeyValueRepository
+    private val mockConfig = mockk<AuthConfiguration>()
+    private val mockContext = mockk<Context>(relaxed = true)
+    private val mockKeyValue = mockk<LegacyKeyValueRepository>()
 
     private lateinit var persistentStore: AuthCredentialStore
 
     @Before
     fun setup() {
-        `when`(
-            LegacyKeyValueRepository(
-                mockContext,
-                AWSCognitoLegacyCredentialStore.AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER,
-            )
-        ).thenReturn(mockKeyValue)
+        mockkConstructor(LegacyKeyValueRepository::class)
+    }
 
-        `when`(
-            LegacyKeyValueRepository(
-                mockContext,
-                AWSCognitoLegacyCredentialStore.APP_TOKENS_INFO_CACHE,
-            )
-        ).thenReturn(mockKeyValue)
-
-        `when`(
-            LegacyKeyValueRepository(
-                mockContext,
-                AWSCognitoLegacyCredentialStore.AWS_MOBILE_CLIENT_PROVIDER,
-            )
-        ).thenReturn(mockKeyValue)
-
-        `when`(LegacyKeyValueRepository(mockContext, deviceDetailsCacheKey)).thenReturn(mockKeyValue)
+    @After
+    fun tearDown() {
+        unmockkConstructor(LegacyKeyValueRepository::class)
     }
 
     @Test
@@ -143,7 +122,7 @@ class AWSCognitoLegacyCredentialStoreTest {
 
         val actual = persistentStore.retrieveCredential()
 
-        Assert.assertEquals(actual, getSRPCredential())
+        actual shouldBeEqual getSRPCredential()
     }
 
     @Test
@@ -155,7 +134,7 @@ class AWSCognitoLegacyCredentialStoreTest {
 
         val actual = persistentStore.retrieveDeviceMetadata("username")
 
-        Assert.assertEquals(actual, getDeviceMetaData())
+        actual shouldBeEqual getDeviceMetaData()
     }
 
     @Test
@@ -163,55 +142,64 @@ class AWSCognitoLegacyCredentialStoreTest {
         setupUserPoolConfig()
         setupIdentityPoolConfig()
         setupKeyValueGetters()
-        `when`(mockKeyValue.get("signInMode")).thenReturn("2")
+        every { anyConstructed<LegacyKeyValueRepository>().get("signInMode") } returns "2"
         persistentStore = AWSCognitoLegacyCredentialStore(mockContext, mockConfig)
 
         val actual = persistentStore.retrieveCredential()
 
-        Assert.assertEquals(actual, getHostedUICredential())
+        actual shouldBeEqual getHostedUICredential()
     }
 
     private fun setupKeyValueGetters() {
         // Tokens
-        `when`(mockKeyValue.get(userIdTokenKey)).thenReturn("username")
-        `when`(mockKeyValue.get(cachedIdTokenKey)).thenReturn("idToken")
-        `when`(mockKeyValue.get(cachedAccessTokenKey)).thenReturn(dummyToken)
-        `when`(mockKeyValue.get(cachedRefreshTokenKey)).thenReturn("refreshToken")
-        `when`(mockKeyValue.get(cachedTokenExpirationKey)).thenReturn(expirationTimestampInMs.toString())
+        every { anyConstructed<LegacyKeyValueRepository>().get(userIdTokenKey) } returns "username"
+        every { anyConstructed<LegacyKeyValueRepository>().get(cachedIdTokenKey) } returns "idToken"
+        every { anyConstructed<LegacyKeyValueRepository>().get(cachedAccessTokenKey) } returns dummyToken
+        every { anyConstructed<LegacyKeyValueRepository>().get(cachedRefreshTokenKey) } returns "refreshToken"
+        every {
+            anyConstructed<LegacyKeyValueRepository>().get(cachedTokenExpirationKey)
+        } returns expirationTimestampInMs.toString()
 
         // Device Metadata
-        `when`(mockKeyValue.get("DeviceKey")).thenReturn("someDeviceKey")
-        `when`(mockKeyValue.get("DeviceGroupKey")).thenReturn("someDeviceGroupKey")
-        `when`(mockKeyValue.get("DeviceSecret")).thenReturn("someSecret")
+        every { anyConstructed<LegacyKeyValueRepository>().get("DeviceKey") } returns "someDeviceKey"
+        every { anyConstructed<LegacyKeyValueRepository>().get("DeviceGroupKey") } returns "someDeviceGroupKey"
+        every { anyConstructed<LegacyKeyValueRepository>().get("DeviceSecret") } returns "someSecret"
 
         // AWS Creds
-        `when`(mockKeyValue.get("$IDENTITY_POOL_ID.${"accessKey"}")).thenReturn("accessKeyId")
-        `when`(mockKeyValue.get("$IDENTITY_POOL_ID.${"secretKey"}")).thenReturn("secretAccessKey")
-        `when`(mockKeyValue.get("$IDENTITY_POOL_ID.${"sessionToken"}")).thenReturn("sessionToken")
-        `when`(mockKeyValue.get("$IDENTITY_POOL_ID.${"expirationDate"}")).thenReturn(expirationTimestampInMs.toString())
+        every {
+            anyConstructed<LegacyKeyValueRepository>().get("$IDENTITY_POOL_ID.accessKey")
+        } returns "accessKeyId"
+        every {
+            anyConstructed<LegacyKeyValueRepository>().get("$IDENTITY_POOL_ID.secretKey")
+        } returns "secretAccessKey"
+        every {
+            anyConstructed<LegacyKeyValueRepository>().get("$IDENTITY_POOL_ID.sessionToken")
+        } returns "sessionToken"
+        every {
+            anyConstructed<LegacyKeyValueRepository>().get("$IDENTITY_POOL_ID.expirationDate")
+        } returns expirationTimestampInMs.toString()
 
         // Identity ID
-        `when`(mockKeyValue.get("$IDENTITY_POOL_ID.${"identityId"}")).thenReturn("identityPool")
+        every {
+            anyConstructed<LegacyKeyValueRepository>().get("$IDENTITY_POOL_ID.identityId")
+        } returns "identityPool"
 
         // Mobile Client SignInMethod
-        `when`(mockKeyValue.get("signInMode")).thenReturn(null)
+        every { anyConstructed<LegacyKeyValueRepository>().get("signInMode") } returns null
+        every { anyConstructed<LegacyKeyValueRepository>().get("provider") } returns null
     }
 
     private fun setupIdentityPoolConfig() {
-        `when`(mockConfig.identityPool).thenReturn(
-            IdentityPoolConfiguration {
-                this.poolId = IDENTITY_POOL_ID
-            }
-        )
+        every { mockConfig.identityPool } returns IdentityPoolConfiguration {
+            this.poolId = IDENTITY_POOL_ID
+        }
     }
 
     private fun setupUserPoolConfig() {
-        `when`(mockConfig.userPool).thenReturn(
-            UserPoolConfiguration {
-                this.poolId = USER_POOL_ID
-                this.appClientId = appClient
-            }
-        )
+        every { mockConfig.userPool } returns UserPoolConfiguration {
+            this.poolId = USER_POOL_ID
+            this.appClientId = appClient
+        }
     }
 
     private fun getSRPCredential(): AmplifyCredential {
