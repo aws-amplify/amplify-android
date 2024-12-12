@@ -20,7 +20,8 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
 import com.amplifyframework.auth.cognito.testutils.AuthConfigurationProvider
 import com.amplifyframework.auth.cognito.testutils.CredentialStoreUtil
-import org.junit.Assert.assertTrue
+import kotlin.test.assertEquals
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,7 +32,8 @@ class AWSCognitoLegacyCredentialStoreInstrumentationTest {
 
     private val configuration: AuthConfiguration = AuthConfigurationProvider.getAuthConfiguration()
 
-    private val credential = CredentialStoreUtil.getDefaultCredential()
+    private val credentialStoreUtil = CredentialStoreUtil()
+    private val credential = credentialStoreUtil.getDefaultCredential()
 
     private lateinit var store: AWSCognitoLegacyCredentialStore
 
@@ -39,12 +41,33 @@ class AWSCognitoLegacyCredentialStoreInstrumentationTest {
     fun setup() {
         store = AWSCognitoLegacyCredentialStore(context, configuration)
         // TODO: Pull the appClientID from the configuration instead of hardcoding
-        CredentialStoreUtil.setupLegacyStore(context, "userPoolAppClientId", "userPoolId", "identityPoolId")
+        credentialStoreUtil.setupLegacyStore(context, "userPoolAppClientId", "userPoolId", "identityPoolId")
+    }
+
+    @After
+    fun tearDown() {
+        credentialStoreUtil.clearSharedPreferences(context)
     }
 
     @Test
     fun test_legacy_store_implementation_can_retrieve_credentials_stored_using_aws_sdk() {
-        val creds = store.retrieveCredential()
-        assertTrue(creds == credential)
+        assertEquals(credential, store.retrieveCredential())
+    }
+
+    @Test
+    fun test_legacy_store_implementation_can_retrieve_device_metadata_using_aws_sdk() {
+        val user1DeviceMetadata = store.retrieveDeviceMetadata(credentialStoreUtil.user1UserId)
+        val user2DeviceMetadata = store.retrieveDeviceMetadata(credentialStoreUtil.user2UserId)
+
+        assertEquals(credentialStoreUtil.getUser1DeviceMetadata(), user1DeviceMetadata)
+        assertEquals(credentialStoreUtil.getUser2DeviceMetadata(), user2DeviceMetadata)
+    }
+
+    @Test
+    fun test_legacy_store_implementation_can_retrieve_userIds_for_device_metadata() {
+        val expectedUserIds = listOf(credentialStoreUtil.user1UserId, credentialStoreUtil.user2UserId)
+        val deviceMetadataUserIds = store.retrieveDeviceMetadataUserIdList()
+
+        assertEquals(expectedUserIds, deviceMetadataUserIds)
     }
 }
