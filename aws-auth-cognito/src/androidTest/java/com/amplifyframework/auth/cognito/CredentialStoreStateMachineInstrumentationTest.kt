@@ -65,11 +65,11 @@ class CredentialStoreStateMachineInstrumentationTest {
         assertEquals(credentialStoreUtil.getDefaultCredential(), credentialStore.retrieveCredential())
         assertEquals(
             credentialStoreUtil.getUser1DeviceMetadata(),
-            credentialStore.retrieveDeviceMetadata(credentialStoreUtil.user1UserId)
+            credentialStore.retrieveDeviceMetadata(credentialStoreUtil.user1Username)
         )
         assertEquals(
             credentialStoreUtil.getUser2DeviceMetadata(),
-            credentialStore.retrieveDeviceMetadata(credentialStoreUtil.user2UserId)
+            credentialStore.retrieveDeviceMetadata(credentialStoreUtil.user2Username)
         )
     }
 

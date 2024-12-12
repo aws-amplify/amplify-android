@@ -52,8 +52,8 @@ import java.util.Date
         return credential
     }
 
-    val user1UserId = "2924030b-54c0-48bc-8bff-948418fba949"
-    val user2UserId = "7e001127-5f11-41fb-9d10-ab9d6cf41dba"
+    val user1Username = "2924030b-54c0-48bc-8bff-948418fba949"
+    val user2Username = "7e001127-5f11-41fb-9d10-ab9d6cf41dba"
 
     fun getUser1DeviceMetadata(): DeviceMetadata.Metadata {
         return DeviceMetadata.Metadata(
@@ -83,13 +83,13 @@ import java.util.Date
             put("CognitoIdentityProvider.$appClientId.LastAuthUser", "testuser")
         }
 
-        AWSKeyValueStore(context, "CognitoIdentityProviderDeviceCache.$userPoolId.$user1UserId", true).apply {
+        AWSKeyValueStore(context, "CognitoIdentityProviderDeviceCache.$userPoolId.$user1Username", true).apply {
             put("DeviceKey", "DeviceKey1")
             put("DeviceGroupKey", "DeviceGroupKey1")
             put("DeviceSecret", "DeviceSecret1")
         }
 
-        AWSKeyValueStore(context, "CognitoIdentityProviderDeviceCache.$userPoolId.$user2UserId", true).apply {
+        AWSKeyValueStore(context, "CognitoIdentityProviderDeviceCache.$userPoolId.$user2Username", true).apply {
             put("DeviceKey", "DeviceKey2")
             put("DeviceGroupKey", "DeviceGroupKey2")
             put("DeviceSecret", "DeviceSecret2")
@@ -117,13 +117,13 @@ import java.util.Date
      fun saveLegacyDeviceMetadata(
          context: Context,
          userPoolId: String,
-         userId: String,
+         username: String,
          deviceMetadata: DeviceMetadata.Metadata
      ) {
-         val prefsName = "CognitoIdentityProviderDeviceCache.$userPoolId.$userId"
+         val prefsName = "CognitoIdentityProviderDeviceCache.$userPoolId.$username"
          AWSKeyValueStore(
              context,
-             "CognitoIdentityProviderDeviceCache.$userPoolId.$userId", true).apply {
+             "CognitoIdentityProviderDeviceCache.$userPoolId.$username", true).apply {
              put("DeviceKey", deviceMetadata.deviceKey)
              put("DeviceGroupKey", deviceMetadata.deviceGroupKey)
              put("DeviceSecret", deviceMetadata.deviceSecret)

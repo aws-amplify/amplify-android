@@ -56,18 +56,18 @@ class AWSCognitoLegacyCredentialStoreInstrumentationTest {
 
     @Test
     fun test_legacy_store_implementation_can_retrieve_device_metadata_using_aws_sdk() {
-        val user1DeviceMetadata = store.retrieveDeviceMetadata(credentialStoreUtil.user1UserId)
-        val user2DeviceMetadata = store.retrieveDeviceMetadata(credentialStoreUtil.user2UserId)
+        val user1DeviceMetadata = store.retrieveDeviceMetadata(credentialStoreUtil.user1Username)
+        val user2DeviceMetadata = store.retrieveDeviceMetadata(credentialStoreUtil.user2Username)
 
         assertEquals(credentialStoreUtil.getUser1DeviceMetadata(), user1DeviceMetadata)
         assertEquals(credentialStoreUtil.getUser2DeviceMetadata(), user2DeviceMetadata)
     }
 
     @Test
-    fun test_legacy_store_implementation_can_retrieve_userIds_for_device_metadata() {
-        val expectedUserIds = listOf(credentialStoreUtil.user1UserId, credentialStoreUtil.user2UserId)
-        val deviceMetadataUserIds = store.retrieveDeviceMetadataUserIdList()
+    fun test_legacy_store_implementation_can_retrieve_usernames_for_device_metadata() {
+        val expectedUsernames = listOf(credentialStoreUtil.user1Username, credentialStoreUtil.user2Username)
+        val deviceMetadataUsernames = store.retrieveDeviceMetadataUsernameList()
 
-        assertEquals(expectedUserIds, deviceMetadataUserIds)
+        assertEquals(expectedUsernames, deviceMetadataUsernames)
     }
 }

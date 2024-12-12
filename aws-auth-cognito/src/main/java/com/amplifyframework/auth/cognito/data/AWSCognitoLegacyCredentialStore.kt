@@ -233,9 +233,9 @@ internal class AWSCognitoLegacyCredentialStore(
 
     /*
     During migration away from the legacy credential store, we need to find all shared preference files that store
-    device metadata. These filenames contain the real userId (not aliased) for the tracked device metadata.
+    device metadata. These filenames contain the real username (not aliased) for the tracked device metadata.
      */
-    fun retrieveDeviceMetadataUserIdList(): List<String> {
+    fun retrieveDeviceMetadataUsernameList(): List<String> {
         return try {
             val sharedPrefsSuffix = ".xml"
             File(context.dataDir, "shared_prefs").listFiles { _, filename ->
