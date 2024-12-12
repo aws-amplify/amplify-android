@@ -26,8 +26,7 @@ import com.amplifyframework.statemachine.codegen.data.SignedInData
 import java.io.File
 import java.util.Date
 
- internal class CredentialStoreUtil {
-
+internal class CredentialStoreUtil {
     private val accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwidXNlcm5hbWUiO" +
         "iJhbXBsaWZ5X3VzZXIiLCJpYXQiOjE1MTYyMzkwMjJ9.zBiQ0guLRX34pUEYLPyDxQAyDDlXmL0JY7kgPWAHZos"
 
@@ -105,7 +104,7 @@ import java.util.Date
 
         // we need to wait for shared prefs to actually hit filesystem as we always use apply instead of commit
         val beginWait = System.currentTimeMillis()
-        while(System.currentTimeMillis() - beginWait < 3000) {
+        while (System.currentTimeMillis() - beginWait < 3000) {
             if ((File(context.dataDir, "shared_prefs").listFiles()?.size ?: 0) >= 4) {
                 break
             } else {
@@ -114,33 +113,34 @@ import java.util.Date
         }
     }
 
-     fun saveLegacyDeviceMetadata(
-         context: Context,
-         userPoolId: String,
-         username: String,
-         deviceMetadata: DeviceMetadata.Metadata
-     ) {
-         val prefsName = "CognitoIdentityProviderDeviceCache.$userPoolId.$username"
-         AWSKeyValueStore(
-             context,
-             "CognitoIdentityProviderDeviceCache.$userPoolId.$username", true).apply {
-             put("DeviceKey", deviceMetadata.deviceKey)
-             put("DeviceGroupKey", deviceMetadata.deviceGroupKey)
-             put("DeviceSecret", deviceMetadata.deviceSecret)
-         }
+    fun saveLegacyDeviceMetadata(
+        context: Context,
+        userPoolId: String,
+        username: String,
+        deviceMetadata: DeviceMetadata.Metadata
+    ) {
+        val prefsName = "CognitoIdentityProviderDeviceCache.$userPoolId.$username"
+        AWSKeyValueStore(
+            context,
+            "CognitoIdentityProviderDeviceCache.$userPoolId.$username", true
+        ).apply {
+            put("DeviceKey", deviceMetadata.deviceKey)
+            put("DeviceGroupKey", deviceMetadata.deviceGroupKey)
+            put("DeviceSecret", deviceMetadata.deviceSecret)
+        }
 
-         // we need to wait for shared prefs to actually hit filesystem as we always use apply instead of commit
-         val beginWait = System.currentTimeMillis()
-         while(System.currentTimeMillis() - beginWait < 3000) {
-             if (File(context.dataDir, "shared_prefs/$prefsName.xml").exists()) {
-                 break
-             } else {
-                 Thread.sleep(50)
-             }
-         }
-     }
+        // we need to wait for shared prefs to actually hit filesystem as we always use apply instead of commit
+        val beginWait = System.currentTimeMillis()
+        while (System.currentTimeMillis() - beginWait < 3000) {
+            if (File(context.dataDir, "shared_prefs/$prefsName.xml").exists()) {
+                break
+            } else {
+                Thread.sleep(50)
+            }
+        }
+    }
 
-     fun clearSharedPreferences(context: Context) {
-         File(context.dataDir, "shared_prefs").listFiles()?.forEach { it.delete() }
-     }
+    fun clearSharedPreferences(context: Context) {
+        File(context.dataDir, "shared_prefs").listFiles()?.forEach { it.delete() }
+    }
 }
