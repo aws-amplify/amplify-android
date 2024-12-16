@@ -36,13 +36,27 @@ internal object CredentialStoreCognitoActions : CredentialStoreActions {
                     legacyCredentialStore.deleteCredential()
                 }
 
-                // migrate device data
-                val lastAuthUserId = legacyCredentialStore.retrieveLastAuthUserId()
-                lastAuthUserId?.let {
-                    val deviceMetaData = legacyCredentialStore.retrieveDeviceMetadata(lastAuthUserId)
+                /*
+                Migrate Device Metadata
+                1. We first need to get the list of usernames that contain device metadata on the device.
+                2. For each username, we check to see if the current credential store has device metadata for that user.
+                3. If the current user does not have device metadata in the current store, migrate from legacy.
+                This is a possibility because of a bug where we were previously attempting to migrate using an aliased
+                username lookup.
+                4. If the current user has device metadata in the current credential store, do not migrate from legacy.
+                This situation would happen if a user updated from legacy, signed out, then signed back in. Upon
+                signing back in, they would be granted new device metadata. Since that new metadata is what is
+                associated with the refresh token, we do not want to overwrite it with legacy metadata.
+                5. Upon completed migration, we delete the legacy device metadata.
+                 */
+                legacyCredentialStore.retrieveDeviceMetadataUsernameList().forEach { username ->
+                    val deviceMetaData = legacyCredentialStore.retrieveDeviceMetadata(username)
                     if (deviceMetaData != DeviceMetadata.Empty) {
-                        credentialStore.saveDeviceMetadata(lastAuthUserId, deviceMetaData)
-                        legacyCredentialStore.deleteDeviceKeyCredential(lastAuthUserId)
+                        credentialStore.retrieveDeviceMetadata(username)
+                        if (credentialStore.retrieveDeviceMetadata(username) == DeviceMetadata.Empty) {
+                            credentialStore.saveDeviceMetadata(username, deviceMetaData)
+                        }
+                        legacyCredentialStore.deleteDeviceKeyCredential(username)
                     }
                 }
 
