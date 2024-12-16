@@ -1,3 +1,10 @@
+## [Release 2.25.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.25.1)
+
+### Bug Fixes
+- **auth:** Fix Device Metadata migration if alised userId was used ([#2963](https://github.com/aws-amplify/amplify-android/issues/2963))
+
+[See all changes between 2.25.0 and 2.25.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.25.0...release_v2.25.1)
+
 ## [Release 2.25.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.25.0)
 
 ### Features
