@@ -15,17 +15,19 @@
 
 package com.amplifyframework.statemachine
 
+import app.cash.turbine.test
 import com.amplifyframework.statemachine.state.Color
 import com.amplifyframework.statemachine.state.ColorCounter
 import com.amplifyframework.statemachine.state.Counter
 import com.amplifyframework.statemachine.state.CounterStateMachine
+import com.amplifyframework.testutils.await
+import io.kotest.matchers.shouldBe
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
@@ -33,6 +35,7 @@ import org.junit.Test
 
 class StateMachineTests {
 
+    private val timeout = 1.seconds
     private val mainThreadSurrogate = newSingleThreadContext("Main thread")
 
     @Before
@@ -51,24 +54,40 @@ class StateMachineTests {
     fun testDefaultState() {
         val testLatch = CountDownLatch(1)
         val testMachine = CounterStateMachine.logging()
-        testMachine.getCurrentState {
-            assertEquals(0, it.value)
+        testMachine.getCurrentState { state ->
+            state.value shouldBe 0
             testLatch.countDown()
         }
-        assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
+        testLatch.await(timeout) shouldBe true
     }
 
     @Test
-    fun testBasicReceive() {
+    fun `test default state suspending`() = runTest {
+        val testMachine = CounterStateMachine.logging()
+        val currentState = testMachine.getCurrentState()
+        currentState.value shouldBe 0
+    }
+
+    @Test
+    fun testBasicReceive() = runTest {
         val testLatch = CountDownLatch(1)
         val testMachine = CounterStateMachine.logging()
         val increment = Counter.Event("1", Counter.Event.EventType.Increment)
         testMachine.send(increment)
-        testMachine.getCurrentState {
-            assertEquals(1, it.value)
+        testMachine.getCurrentState { state ->
+            state.value shouldBe 1
             testLatch.countDown()
         }
-        assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
+        testLatch.await(timeout) shouldBe true
+    }
+
+    @Test
+    fun `test basic receive suspending`() = runTest {
+        val testMachine = CounterStateMachine.logging()
+        val increment = Counter.Event("1", Counter.Event.EventType.Increment)
+        testMachine.send(increment)
+        val state = testMachine.getCurrentState()
+        state.value shouldBe 1
     }
 
     @Test
@@ -76,41 +95,65 @@ class StateMachineTests {
         val testLatch = CountDownLatch(10)
         val testMachine = CounterStateMachine()
         val increment = Counter.Event("1", Counter.Event.EventType.Increment)
-        (1..10)
-            .map { i ->
-                testMachine.send(increment)
-                testMachine.getCurrentState {
-                    assertEquals(it.value, i)
-                    testLatch.countDown()
-                }
+        for (i in 1..10) {
+            testMachine.send(increment)
+            testMachine.getCurrentState { state ->
+                state.value shouldBe i
+                testLatch.countDown()
             }
-        assertTrue { testLatch.await(5, TimeUnit.SECONDS) }
+        }
+        testLatch.await(timeout) shouldBe true
+    }
+
+    @Test
+    fun `test concurrent receive and read suspending`() = runTest {
+        val testMachine = CounterStateMachine()
+        val increment = Counter.Event("1", Counter.Event.EventType.Increment)
+        for (i in 1..10) {
+            testMachine.send(increment)
+            val state = testMachine.getCurrentState()
+            state.value shouldBe i
+        }
+    }
+
+    @Test
+    fun `test collecting state from flow`() = runTest {
+        val testMachine = CounterStateMachine.logging()
+        val increment = Counter.Event("1", Counter.Event.EventType.Increment)
+
+        testMachine.state.test {
+            awaitItem().value shouldBe 0
+            testMachine.send(increment)
+            awaitItem().value shouldBe 1
+            testMachine.send(increment)
+            awaitItem().value shouldBe 2
+        }
     }
 
     @Test
     fun testExecuteEffects() {
         val action1Latch = CountDownLatch(1)
         val action2Latch = CountDownLatch(1)
-        val action1 = com.amplifyframework.statemachine.BasicAction("basic") { _, _ ->
+        val action1 = BasicAction("basic") { _, _ ->
             action1Latch.countDown()
         }
-        val action2 = com.amplifyframework.statemachine.BasicAction("basic") { _, _ ->
+        val action2 = BasicAction("basic") { _, _ ->
             action2Latch.countDown()
         }
         val testMachine = CounterStateMachine.logging()
         val event = Counter.Event("1", Counter.Event.EventType.IncrementAndDoActions(listOf(action1, action2)))
         testMachine.send(event)
-        assertTrue { action1Latch.await(5, TimeUnit.SECONDS) }
-        assertTrue { action2Latch.await(5, TimeUnit.SECONDS) }
+        action1Latch.await(timeout) shouldBe true
+        action2Latch.await(timeout) shouldBe true
     }
 
     @Test
     fun testDispatchFromAction() {
         val action1Latch = CountDownLatch(1)
         val action2Latch = CountDownLatch(1)
-        val action1 = com.amplifyframework.statemachine.BasicAction("basic") { dispatcher, _ ->
+        val action1 = BasicAction("basic") { dispatcher, _ ->
             action1Latch.countDown()
-            val action2 = com.amplifyframework.statemachine.BasicAction("basic") { _, _ ->
+            val action2 = BasicAction("basic") { _, _ ->
                 action2Latch.countDown()
             }
             val event = Counter.Event("2", Counter.Event.EventType.IncrementAndDoActions(listOf(action2)))
@@ -120,8 +163,8 @@ class StateMachineTests {
         val event = Counter.Event("1", Counter.Event.EventType.IncrementAndDoActions(listOf(action1)))
         testMachine.send(event)
 
-        assertTrue { action1Latch.await(5, TimeUnit.SECONDS) }
-        assertTrue { action2Latch.await(5, TimeUnit.SECONDS) }
+        action1Latch.await(timeout) shouldBe true
+        action2Latch.await(timeout) shouldBe true
     }
 
     @Test
@@ -129,7 +172,7 @@ class StateMachineTests {
         val startState = ColorCounter(Color.red, Counter(0), false)
         val resolvedState = ColorCounter.Resolver().logging().resolve(startState, Color.Event.next)
         val expected = ColorCounter(Color.green, Counter(0), false)
-        assertEquals(expected, resolvedState.newState)
+        resolvedState.newState shouldBe expected
     }
 
     @Test
@@ -137,6 +180,6 @@ class StateMachineTests {
         val startState = ColorCounter(Color.blue, Counter(2), false)
         val resolvedState = ColorCounter.Resolver().logging().resolve(startState, Color.Event.next)
         val expected = ColorCounter(Color.yellow, Counter(2), true)
-        assertEquals(expected, resolvedState.newState)
+        resolvedState.newState shouldBe expected
     }
 }

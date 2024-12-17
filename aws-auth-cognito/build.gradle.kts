@@ -26,6 +26,9 @@ group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.auth.cognito"
+    defaultConfig {
+        consumerProguardFiles += file("consumer-rules.pro")
+    }
 }
 
 dependencies {
@@ -37,6 +40,7 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.security)
     implementation(libs.androidx.browser)
+    implementation(libs.androidx.credentials)
 
     implementation(libs.aws.http)
     implementation(libs.aws.cognitoidentity)
@@ -61,6 +65,7 @@ dependencies {
     testImplementation(libs.test.kotlin.reflection)
     testImplementation(libs.test.kotest.assertions)
     testImplementation(libs.test.kotest.assertions.json)
+    testImplementation(libs.test.turbine)
 
     androidTestImplementation(libs.gson)
     //noinspection GradleDependency

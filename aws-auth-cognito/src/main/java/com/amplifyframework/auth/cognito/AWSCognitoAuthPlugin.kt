@@ -33,15 +33,19 @@ import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.TOTPSetupDetails
 import com.amplifyframework.auth.cognito.asf.UserContextDataProvider
+import com.amplifyframework.auth.cognito.helpers.authLogger
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
+import com.amplifyframework.auth.cognito.usecases.AuthUseCaseFactory
 import com.amplifyframework.auth.exceptions.ConfigurationException
-import com.amplifyframework.auth.exceptions.UnknownException
+import com.amplifyframework.auth.options.AuthAssociateWebAuthnCredentialsOptions
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
+import com.amplifyframework.auth.options.AuthDeleteWebAuthnCredentialOptions
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
+import com.amplifyframework.auth.options.AuthListWebAuthnCredentialsOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -52,15 +56,14 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
+import com.amplifyframework.auth.result.AuthListWebAuthnCredentialsResult
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.core.Action
-import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
-import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.core.configuration.AmplifyOutputsData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -80,11 +83,13 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         private const val AWS_COGNITO_AUTH_PLUGIN_KEY = "awsCognitoAuthPlugin"
     }
 
-    private val logger =
-        Amplify.Logging.logger(CategoryType.AUTH, AWS_COGNITO_AUTH_LOG_NAMESPACE.format(this::class.java.simpleName))
+    private val logger = authLogger()
 
     @VisibleForTesting
     internal lateinit var realPlugin: RealAWSCognitoAuthPlugin
+
+    @VisibleForTesting
+    internal lateinit var useCaseFactory: AuthUseCaseFactory
 
     private val pluginScope = CoroutineScope(Job() + Dispatchers.Default)
     private val queueFacade: KotlinAuthFacadeInternal by lazy {
@@ -115,7 +120,10 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     private fun Exception.toAuthException(): AuthException = if (this is AuthException) {
         this
     } else {
-        UnknownException(cause = this)
+        CognitoAuthExceptionConverter.lookup(
+            error = this,
+            fallbackMessage = "An unclassified error prevented this operation."
+        )
     }
 
     override fun initialize(context: Context) {
@@ -168,6 +176,8 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             logger
         )
 
+        useCaseFactory = AuthUseCaseFactory(realPlugin, authEnvironment, authStateMachine)
+
         blockQueueChannelWhileConfiguring()
     }
 
@@ -183,7 +193,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
 
     override fun signUp(
         username: String,
-        password: String,
+        password: String?,
         options: AuthSignUpOptions,
         onSuccess: Consumer<AuthSignUpResult>,
         onError: Consumer<AuthException>
@@ -416,6 +426,48 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) = enqueue(onSuccess, onError) { queueFacade.verifyTOTPSetup(code, options) }
+
+    override fun associateWebAuthnCredential(
+        callingActivity: Activity,
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) = associateWebAuthnCredential(
+        callingActivity,
+        AuthAssociateWebAuthnCredentialsOptions.defaults(),
+        onSuccess,
+        onError
+    )
+
+    override fun associateWebAuthnCredential(
+        callingActivity: Activity,
+        options: AuthAssociateWebAuthnCredentialsOptions,
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) = enqueue(onSuccess, onError) { useCaseFactory.associateWebAuthnCredential().execute(callingActivity, options) }
+
+    override fun listWebAuthnCredentials(
+        onSuccess: Consumer<AuthListWebAuthnCredentialsResult>,
+        onError: Consumer<AuthException>
+    ) = listWebAuthnCredentials(AuthListWebAuthnCredentialsOptions.defaults(), onSuccess, onError)
+
+    override fun listWebAuthnCredentials(
+        options: AuthListWebAuthnCredentialsOptions,
+        onSuccess: Consumer<AuthListWebAuthnCredentialsResult>,
+        onError: Consumer<AuthException>
+    ) = enqueue(onSuccess, onError) { useCaseFactory.listWebAuthnCredentials().execute(options) }
+
+    override fun autoSignIn(onSuccess: Consumer<AuthSignInResult>, onError: Consumer<AuthException>) =
+        enqueue(onSuccess, onError) { queueFacade.autoSignIn() }
+
+    override fun deleteWebAuthnCredential(credentialId: String, onSuccess: Action, onError: Consumer<AuthException>) =
+        deleteWebAuthnCredential(credentialId, AuthDeleteWebAuthnCredentialOptions.defaults(), onSuccess, onError)
+
+    override fun deleteWebAuthnCredential(
+        credentialId: String,
+        options: AuthDeleteWebAuthnCredentialOptions,
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) = enqueue(onSuccess, onError) { useCaseFactory.deleteWebAuthnCredential().execute(credentialId, options) }
 
     override fun getEscapeHatch() = realPlugin.escapeHatch()
 

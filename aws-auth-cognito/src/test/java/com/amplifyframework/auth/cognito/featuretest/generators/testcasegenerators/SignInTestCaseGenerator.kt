@@ -16,7 +16,9 @@
 package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResourceNotFoundException
+import com.amplifyframework.auth.AuthFactorType
 import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
 import com.amplifyframework.auth.cognito.featuretest.CognitoType
@@ -29,6 +31,7 @@ import com.amplifyframework.auth.cognito.featuretest.generators.SerializableProv
 import com.amplifyframework.auth.cognito.featuretest.generators.authstategenerators.AuthStateJsonGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.toJsonElement
 import com.amplifyframework.auth.cognito.options.AuthFlowType
+import com.amplifyframework.auth.exceptions.InvalidStateException
 import kotlinx.serialization.json.JsonObject
 
 object SignInTestCaseGenerator : SerializableProvider {
@@ -36,13 +39,15 @@ object SignInTestCaseGenerator : SerializableProvider {
     private const val username = "username"
     private const val password = "password"
     private const val phone = "+12345678900"
+    private const val email = "test@****.com"
+    private const val session = "someSession"
 
     private val mockedInitiateAuthResponse = MockResponse(
         CognitoType.CognitoIdentityProvider,
         "initiateAuth",
         ResponseType.Success,
         mapOf(
-            "challengeName" to ChallengeNameType.PasswordVerifier.toString(),
+            "challengeName" to ChallengeNameType.PasswordVerifier.value,
             "challengeParameters" to mapOf(
                 "SALT" to "abc",
                 "SECRET_BLOCK" to "secretBlock",
@@ -53,17 +58,70 @@ object SignInTestCaseGenerator : SerializableProvider {
         ).toJsonElement()
     )
 
+    private val mockedInitiateAuthPasswordResponse = MockResponse(
+        CognitoType.CognitoIdentityProvider,
+        "initiateAuth",
+        ResponseType.Success,
+        mapOf(
+            "authenticationResult" to mapOf(
+                "idToken" to AuthStateJsonGenerator.dummyToken,
+                "accessToken" to AuthStateJsonGenerator.dummyToken,
+                "refreshToken" to AuthStateJsonGenerator.dummyToken,
+                "expiresIn" to 300
+            )
+        ).toJsonElement()
+    )
+
+    private val mockedInitiateAuthSelectChallengeResponse = MockResponse(
+        CognitoType.CognitoIdentityProvider,
+        "initiateAuth",
+        ResponseType.Success,
+        mapOf(
+            "challengeName" to ChallengeNameType.SelectChallenge.value,
+            "session" to session,
+            "parameters" to JsonObject(emptyMap()),
+            "availableChallenges" to listOf(
+                ChallengeNameType.Password.value,
+                ChallengeNameType.WebAuthn.value,
+                ChallengeNameType.EmailOtp.value
+            )
+        ).toJsonElement()
+    )
+
+    private fun mockedInitiateAuthEmailOrSmsResponse(challengeNameType: ChallengeNameType): MockResponse {
+        val (medium, destination) = if (challengeNameType == ChallengeNameType.EmailOtp) {
+            Pair("EMAIL", email)
+        } else {
+            Pair("SMS", phone)
+        }
+
+        return MockResponse(
+            CognitoType.CognitoIdentityProvider,
+            "initiateAuth",
+            ResponseType.Success,
+            mapOf(
+                "challengeName" to challengeNameType.value,
+                "session" to session,
+                "parameters" to JsonObject(emptyMap()),
+                "challengeParameters" to mapOf(
+                    "CODE_DELIVERY_DELIVERY_MEDIUM" to medium,
+                    "CODE_DELIVERY_DESTINATION" to destination
+                )
+            ).toJsonElement()
+        )
+    }
+
     private val mockedInitiateAuthForCustomAuthWithoutSRPResponse = MockResponse(
         CognitoType.CognitoIdentityProvider,
         "initiateAuth",
         ResponseType.Success,
         mapOf(
-            "challengeName" to ChallengeNameType.CustomChallenge.toString(),
+            "challengeName" to ChallengeNameType.CustomChallenge.value,
             "challengeParameters" to mapOf(
                 "SALT" to "abc",
                 "SECRET_BLOCK" to "secretBlock",
                 "SRP_B" to "def",
-                "USERNAME" to username,
+                "USERNAME" to username
             )
         ).toJsonElement()
     )
@@ -87,6 +145,31 @@ object SignInTestCaseGenerator : SerializableProvider {
         "respondToAuthChallenge",
         ResponseType.Failure,
         ResourceNotFoundException.invoke {}.toJsonElement()
+    )
+
+    private val mockedInitAuthNotAuthorizedException = MockResponse(
+        CognitoType.CognitoIdentityProvider,
+        "initiateAuth",
+        ResponseType.Failure,
+        NotAuthorizedException.invoke {
+            message = "Incorrect username or password."
+        }.toJsonElement()
+    )
+
+    private val notAuthorizedExceptionExpectation = ExpectationShapes.Amplify(
+        AuthAPI.signIn,
+        ResponseType.Failure,
+        com.amplifyframework.auth.exceptions.NotAuthorizedException(
+            cause = NotAuthorizedException.invoke {
+                message = "Incorrect username or password."
+            }
+        ).toJsonElement()
+    )
+
+    private val mockedInvalidStateException = ExpectationShapes.Amplify(
+        AuthAPI.autoSignIn,
+        ResponseType.Failure,
+        InvalidStateException().toJsonElement()
     )
 
     private val mockedRespondToAuthChallengeWithDeviceMetadataResponse = MockResponse(
@@ -181,7 +264,7 @@ object SignInTestCaseGenerator : SerializableProvider {
             "isSignedIn" to true,
             "nextStep" to mapOf(
                 "signInStep" to "DONE",
-                "additionalInfo" to JsonObject(emptyMap()),
+                "additionalInfo" to JsonObject(emptyMap())
             )
         ).toJsonElement()
     )
@@ -196,11 +279,51 @@ object SignInTestCaseGenerator : SerializableProvider {
                 "additionalInfo" to JsonObject(emptyMap()),
                 "codeDeliveryDetails" to mapOf(
                     "destination" to phone,
-                    "deliveryMedium" to "SMS",
+                    "deliveryMedium" to "SMS"
                 )
             )
         ).toJsonElement()
     )
+
+    private val mockedSignInSelectChallengeExpectation = ExpectationShapes.Amplify(
+        apiName = AuthAPI.signIn,
+        responseType = ResponseType.Success,
+        response = mapOf(
+            "isSignedIn" to false,
+            "nextStep" to mapOf(
+                "signInStep" to "CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION",
+                "additionalInfo" to JsonObject(emptyMap()),
+                "availableFactors" to listOf(
+                    AuthFactorType.PASSWORD.challengeResponse,
+                    AuthFactorType.WEB_AUTHN.challengeResponse,
+                    AuthFactorType.EMAIL_OTP.challengeResponse
+                )
+            )
+        ).toJsonElement()
+    )
+
+    private fun mockedConfirmSignInWithOtpExpectation(challengeNameType: ChallengeNameType): ExpectationShapes.Amplify {
+        val (medium, destination) = if (challengeNameType == ChallengeNameType.EmailOtp) {
+            Pair("EMAIL", email)
+        } else {
+            Pair("SMS", phone)
+        }
+        return ExpectationShapes.Amplify(
+            apiName = AuthAPI.signIn,
+            responseType = ResponseType.Success,
+            response = mapOf(
+                "isSignedIn" to false,
+                "nextStep" to mapOf(
+                    "signInStep" to "CONFIRM_SIGN_IN_WITH_OTP",
+                    "additionalInfo" to JsonObject(emptyMap()),
+                    "codeDeliveryDetails" to mapOf(
+                        "destination" to destination,
+                        "deliveryMedium" to medium
+                    )
+                )
+            ).toJsonElement()
+        )
+    }
 
     private val mockedSignInCustomAuthChallengeExpectation = ExpectationShapes.Amplify(
         apiName = AuthAPI.signIn,
@@ -236,6 +359,20 @@ object SignInTestCaseGenerator : SerializableProvider {
         ).toJsonElement()
     )
 
+    private val expectedCognitoAutoSignInRequest = ExpectationShapes.Cognito.CognitoIdentityProvider(
+        apiName = "initiateAuth",
+        request = mapOf(
+            "authFlow" to aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType.UserAuth,
+            "clientId" to "testAppClientId", // This should be pulled from configuration
+            "authParameters" to mapOf(
+                "USERNAME" to AuthStateJsonGenerator.username, // pulled from loaded SignedUp state
+                "SECRET_HASH" to "a hash"
+            ),
+            "clientMetadata" to emptyMap<String, String>(),
+            "session" to AuthStateJsonGenerator.session // pulled from loaded SignedUp state
+        ).toJsonElement()
+    )
+
     private val mockConfirmDeviceResponse = MockResponse(
         CognitoType.CognitoIdentityProvider,
         "confirmDevice",
@@ -252,7 +389,7 @@ object SignInTestCaseGenerator : SerializableProvider {
                 mockedInitiateAuthResponse,
                 mockedRespondToAuthChallengeResponse,
                 mockedIdentityIdResponse,
-                mockedAWSCredentialsResponse,
+                mockedAWSCredentialsResponse
             )
         ),
         api = API(
@@ -269,6 +406,294 @@ object SignInTestCaseGenerator : SerializableProvider {
         )
     )
 
+    // Init USER_AUTH with no preference
+    private val signInWithUserAuthWithNoPreferenceReturnsSelectChallenge = FeatureTestCase(
+        description = "Test that USER_AUTH signIn with no preference returns Select Challenge",
+        preConditions = PreConditions(
+            "authconfiguration_userauth.json",
+            "SignedOut_Configured.json",
+            mockedResponses = listOf(
+                mockedInitiateAuthSelectChallengeResponse
+            )
+        ),
+        api = API(
+            AuthAPI.signIn,
+            params = mapOf(
+                "username" to username,
+                "password" to ""
+            ).toJsonElement(),
+            options = mapOf(
+                "signInOptions" to
+                    mapOf(
+                        "authFlow" to AuthFlowType.USER_AUTH.toString(),
+                        "preferredFirstFactor" to null
+                    )
+            ).toJsonElement()
+
+        ),
+        validations = listOf(
+            mockedSignInSelectChallengeExpectation,
+            ExpectationShapes.State("SigningIn_SelectChallenge.json")
+        )
+    )
+
+    // Init USER_AUTH with a preference not supported for the user
+    private val signInWithUserAuthWithUnsupportedPreferenceReturnsSelectChallenge = FeatureTestCase(
+        description = "Test that USER_AUTH signIn with an unsupported preference returns Select Challenge",
+        preConditions = PreConditions(
+            "authconfiguration_userauth.json",
+            "SignedOut_Configured.json",
+            mockedResponses = listOf(
+                mockedInitiateAuthSelectChallengeResponse
+            )
+        ),
+        api = API(
+            AuthAPI.signIn,
+            params = mapOf(
+                "username" to username,
+                "password" to ""
+            ).toJsonElement(),
+            options = mapOf(
+                "signInOptions" to
+                    mapOf(
+                        "authFlow" to AuthFlowType.USER_AUTH.toString(),
+                        "preferredFirstFactor" to AuthFactorType.SMS_OTP.challengeResponse
+                    )
+            ).toJsonElement()
+
+        ),
+        validations = listOf(
+            mockedSignInSelectChallengeExpectation,
+            ExpectationShapes.State("SigningIn_SelectChallenge.json")
+        )
+    )
+
+    // Init USER_AUTH with EMAIL_OTP preference
+    private val signInWithUserAuthWithEmailOtpPreferenceReturnsVerifyChallenge = FeatureTestCase(
+        description = "Test that USER_AUTH signIn with EMAIL preference returns Confirm Sign In With OTP",
+        preConditions = PreConditions(
+            "authconfiguration_userauth.json",
+            "SignedOut_Configured.json",
+            mockedResponses = listOf(
+                mockedInitiateAuthEmailOrSmsResponse(ChallengeNameType.EmailOtp)
+            )
+        ),
+        api = API(
+            AuthAPI.signIn,
+            params = mapOf(
+                "username" to username,
+                "password" to ""
+            ).toJsonElement(),
+            options = mapOf(
+                "signInOptions" to
+                    mapOf(
+                        "authFlow" to AuthFlowType.USER_AUTH.toString(),
+                        "preferredFirstFactor" to AuthFactorType.EMAIL_OTP.challengeResponse
+                    )
+            ).toJsonElement()
+
+        ),
+        validations = listOf(
+            mockedConfirmSignInWithOtpExpectation(ChallengeNameType.EmailOtp),
+            ExpectationShapes.State("SigningIn_EmailOtp.json")
+        )
+    )
+
+    // Init USER_AUTH with SMS_OTP preference
+    private val signInWithUserAuthWithSmsOtpPreferenceReturnsVerifyChallenge = FeatureTestCase(
+        description = "Test that USER_AUTH signIn with SMS preference returns Confirm Sign In With OTP",
+        preConditions = PreConditions(
+            "authconfiguration_userauth.json",
+            "SignedOut_Configured.json",
+            mockedResponses = listOf(
+                mockedInitiateAuthEmailOrSmsResponse(ChallengeNameType.SmsOtp)
+            )
+        ),
+        api = API(
+            AuthAPI.signIn,
+            params = mapOf(
+                "username" to username,
+                "password" to ""
+            ).toJsonElement(),
+            options = mapOf(
+                "signInOptions" to
+                    mapOf(
+                        "authFlow" to AuthFlowType.USER_AUTH.toString(),
+                        "preferredFirstFactor" to AuthFactorType.SMS_OTP.challengeResponse
+                    )
+            ).toJsonElement()
+
+        ),
+        validations = listOf(
+            mockedConfirmSignInWithOtpExpectation(ChallengeNameType.SmsOtp),
+            ExpectationShapes.State("SigningIn_SmsOtp.json")
+        )
+    )
+
+    // Init USER_AUTH with PASSWORD_SRP preference with correct password
+    private val signInWithUserAuthWithPasswordSrpPreferenceSucceeds = FeatureTestCase(
+        description = "Test that USER_AUTH signIn with PASSWORD_SRP preference succeeds",
+        preConditions = PreConditions(
+            "authconfiguration_userauth.json",
+            "SignedOut_Configured.json",
+            mockedResponses = listOf(
+                mockedInitiateAuthResponse,
+                mockedRespondToAuthChallengeResponse,
+                mockedIdentityIdResponse,
+                mockedAWSCredentialsResponse
+            )
+        ),
+        api = API(
+            AuthAPI.signIn,
+            params = mapOf(
+                "username" to username,
+                "password" to password
+            ).toJsonElement(),
+            options = mapOf(
+                "signInOptions" to
+                    mapOf(
+                        "authFlow" to AuthFlowType.USER_AUTH.toString(),
+                        "preferredFirstFactor" to AuthFactorType.PASSWORD_SRP.challengeResponse
+                    )
+            ).toJsonElement()
+
+        ),
+        validations = listOf(
+            mockedSignInSuccessExpectation,
+            ExpectationShapes.State("SignedIn_SessionEstablished_User_Auth.json")
+        )
+    )
+
+    // Init USER_AUTH with PASSWORD_SRP preference with incorrect password
+    private val signInWithUserAuthWithPasswordSrpPreferenceFails = FeatureTestCase(
+        description = "Test that USER_AUTH signIn with PASSWORD_SRP preference fails",
+        preConditions = PreConditions(
+            "authconfiguration_userauth.json",
+            "SignedOut_Configured.json",
+            mockedResponses = listOf(
+                mockedInitAuthNotAuthorizedException
+            )
+        ),
+        api = API(
+            AuthAPI.signIn,
+            params = mapOf(
+                "username" to username,
+                "password" to password
+            ).toJsonElement(),
+            options = mapOf(
+                "signInOptions" to
+                    mapOf(
+                        "authFlow" to AuthFlowType.USER_AUTH.toString(),
+                        "preferredFirstFactor" to AuthFactorType.PASSWORD_SRP.challengeResponse
+                    )
+            ).toJsonElement()
+
+        ),
+        validations = listOf(
+            notAuthorizedExceptionExpectation
+        )
+    )
+
+    // Init USER_AUTH with PASSWORD preference with correct password
+    private val signInWithUserAuthWithPasswordPreferenceSucceeds = FeatureTestCase(
+        description = "Test that USER_AUTH signIn with PASSWORD preference succeeds",
+        preConditions = PreConditions(
+            "authconfiguration_userauth.json",
+            "SignedOut_Configured.json",
+            mockedResponses = listOf(
+                mockedInitiateAuthPasswordResponse,
+                mockedIdentityIdResponse,
+                mockedAWSCredentialsResponse
+            )
+        ),
+        api = API(
+            AuthAPI.signIn,
+            params = mapOf(
+                "username" to username,
+                "password" to password
+            ).toJsonElement(),
+            options = mapOf(
+                "signInOptions" to
+                    mapOf(
+                        "authFlow" to AuthFlowType.USER_AUTH.toString(),
+                        "preferredFirstFactor" to ChallengeNameType.Password.value
+                    )
+            ).toJsonElement()
+
+        ),
+        validations = listOf(
+            mockedSignInSuccessExpectation,
+            ExpectationShapes.State("SignedIn_SessionEstablished_User_Auth.json")
+        )
+    )
+
+    // Init USER_AUTH with PASSWORD preference with incorrect password
+    private val signInWithUserAuthWithPasswordPreferenceFails = FeatureTestCase(
+        description = "Test that USER_AUTH signIn with PASSWORD preference fails",
+        preConditions = PreConditions(
+            "authconfiguration_userauth.json",
+            "SignedOut_Configured.json",
+            mockedResponses = listOf(
+                mockedInitAuthNotAuthorizedException
+            )
+        ),
+        api = API(
+            AuthAPI.signIn,
+            params = mapOf(
+                "username" to username,
+                "password" to password
+            ).toJsonElement(),
+            options = mapOf(
+                "signInOptions" to
+                    mapOf(
+                        "authFlow" to AuthFlowType.USER_AUTH.toString(),
+                        "preferredFirstFactor" to ChallengeNameType.Password.value
+                    )
+            ).toJsonElement()
+
+        ),
+        validations = listOf(
+            notAuthorizedExceptionExpectation
+        )
+    )
+
+    private val autoSignInSucceeds = FeatureTestCase(
+        description = "Test that autoSignIn invokes proper cognito request and returns DONE",
+        preConditions = PreConditions(
+            "authconfiguration_userauth.json",
+            "SignedOut_SessionEstablished_SignedUp.json",
+            mockedResponses = listOf(
+                mockedInitiateAuthPasswordResponse
+            )
+        ),
+        api = API(
+            AuthAPI.autoSignIn,
+            params = emptyMap<Any, Any>().toJsonElement(),
+            options = JsonObject(emptyMap())
+        ),
+        validations = listOf(
+            expectedCognitoAutoSignInRequest,
+            mockedSignInSuccessExpectation
+        )
+    )
+
+    private val autoSignInWithoutConfirmSignUpFails = FeatureTestCase(
+        description = "Test that autoSignIn without ConfirmSignUp fails",
+        preConditions = PreConditions(
+            "authconfiguration_userauth.json",
+            "SignedOut_SessionEstablished_AwaitingUserConfirmation.json",
+            mockedResponses = listOf()
+        ),
+        api = API(
+            AuthAPI.autoSignIn,
+            params = emptyMap<Any, Any>().toJsonElement(),
+            options = JsonObject(emptyMap())
+        ),
+        validations = listOf(
+            mockedInvalidStateException
+        )
+    )
+
     private val signInWhenResourceNotFoundExceptionCase = FeatureTestCase(
         description = "Test that SRP signIn invokes proper cognito request and returns " +
             "ResourceNotFoundException but still signs in successfully",
@@ -280,7 +705,7 @@ object SignInTestCaseGenerator : SerializableProvider {
                 mockedRespondToAuthChallengeResponseWhenResourceNotFoundException,
                 mockedRespondToAuthChallengeResponse,
                 mockedIdentityIdResponse,
-                mockedAWSCredentialsResponse,
+                mockedAWSCredentialsResponse
             )
         ),
         api = API(
@@ -307,7 +732,7 @@ object SignInTestCaseGenerator : SerializableProvider {
                 mockedRespondToAuthChallengeWithDeviceMetadataResponse,
                 mockConfirmDeviceResponse,
                 mockedIdentityIdResponse,
-                mockedAWSCredentialsResponse,
+                mockedAWSCredentialsResponse
             )
         ),
         api = API(
@@ -331,7 +756,7 @@ object SignInTestCaseGenerator : SerializableProvider {
             "SignedOut_Configured.json",
             mockedResponses = listOf(
                 mockedInitiateAuthResponse,
-                mockedSMSChallengeResponse,
+                mockedSMSChallengeResponse
             )
         ),
         validations = listOf(
@@ -347,7 +772,7 @@ object SignInTestCaseGenerator : SerializableProvider {
             "SigningIn_SigningIn.json",
             mockedResponses = listOf(
                 mockedInitiateAuthResponse,
-                mockedSMSChallengeResponse,
+                mockedSMSChallengeResponse
             )
         ),
         api = API(
@@ -378,7 +803,7 @@ object SignInTestCaseGenerator : SerializableProvider {
             AuthAPI.signIn,
             params = mapOf(
                 "username" to username,
-                "password" to "",
+                "password" to ""
             ).toJsonElement(),
             options = mapOf(
                 "signInOptions" to
@@ -407,7 +832,7 @@ object SignInTestCaseGenerator : SerializableProvider {
             AuthAPI.signIn,
             params = mapOf(
                 "username" to username,
-                "password" to "",
+                "password" to ""
             ).toJsonElement(),
             options = mapOf(
                 "signInOptions" to
@@ -434,7 +859,7 @@ object SignInTestCaseGenerator : SerializableProvider {
             AuthAPI.signIn,
             params = mapOf(
                 "username" to username,
-                "password" to "",
+                "password" to ""
             ).toJsonElement(),
             options = mapOf(
                 "signInOptions" to mapOf("authFlow" to AuthFlowType.CUSTOM_AUTH_WITH_SRP.toString())
@@ -442,7 +867,7 @@ object SignInTestCaseGenerator : SerializableProvider {
         ),
         validations = listOf(
             mockedSignInCustomAuthChallengeExpectation,
-            ExpectationShapes.State("CustomSignIn_SigningIn.json")
+            ExpectationShapes.State("CustomSignIn_SigningIn_Password_Challenge.json")
         )
     )
 
@@ -461,7 +886,7 @@ object SignInTestCaseGenerator : SerializableProvider {
             AuthAPI.signIn,
             params = mapOf(
                 "username" to username,
-                "password" to "",
+                "password" to ""
             ).toJsonElement(),
             options = mapOf(
                 "signInOptions" to mapOf("authFlow" to AuthFlowType.CUSTOM_AUTH_WITH_SRP.toString())
@@ -469,7 +894,7 @@ object SignInTestCaseGenerator : SerializableProvider {
         ),
         validations = listOf(
             mockedSignInCustomAuthChallengeExpectationWithAlias,
-            ExpectationShapes.State("CustomSignIn_SigningIn.json")
+            ExpectationShapes.State("CustomSignIn_SigningIn_With_Alias.json")
         )
     )
 
@@ -489,7 +914,7 @@ object SignInTestCaseGenerator : SerializableProvider {
             AuthAPI.signIn,
             params = mapOf(
                 "username" to username,
-                "password" to "",
+                "password" to ""
             ).toJsonElement(),
             options = mapOf(
                 "signInOptions" to mapOf("authFlow" to AuthFlowType.CUSTOM_AUTH_WITH_SRP.toString())
@@ -497,7 +922,7 @@ object SignInTestCaseGenerator : SerializableProvider {
         ),
         validations = listOf(
             mockedSignInCustomAuthChallengeExpectation,
-            ExpectationShapes.State("CustomSignIn_SigningIn.json")
+            ExpectationShapes.State("CustomSignIn_SigningIn_Password_Challenge.json")
         )
     )
 
@@ -511,6 +936,16 @@ object SignInTestCaseGenerator : SerializableProvider {
         customAuthWithSRPWhenResourceNotFoundExceptionCase,
         customAuthCaseWhenResourceNotFoundExceptionCase,
         signInWhenResourceNotFoundExceptionCase,
-        customAuthWithSRPCaseWhenAliasIsUsedToSignIn
+        customAuthWithSRPCaseWhenAliasIsUsedToSignIn,
+        signInWithUserAuthWithNoPreferenceReturnsSelectChallenge,
+        signInWithUserAuthWithUnsupportedPreferenceReturnsSelectChallenge,
+        signInWithUserAuthWithEmailOtpPreferenceReturnsVerifyChallenge,
+        signInWithUserAuthWithSmsOtpPreferenceReturnsVerifyChallenge,
+        signInWithUserAuthWithPasswordSrpPreferenceSucceeds,
+        signInWithUserAuthWithPasswordSrpPreferenceFails,
+        signInWithUserAuthWithPasswordPreferenceSucceeds,
+        signInWithUserAuthWithPasswordPreferenceFails,
+        autoSignInSucceeds,
+        autoSignInWithoutConfirmSignUpFails
     )
 }

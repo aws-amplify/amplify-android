@@ -43,12 +43,6 @@ plugins {
 }
 
 allprojects {
-    repositories {
-        maven(url = "https://aws.oss.sonatype.org/content/repositories/snapshots/")
-        google()
-        mavenCentral()
-    }
-
     gradle.projectsEvaluated {
         tasks.withType<JavaCompile>().configureEach {
             options.compilerArgs.apply {

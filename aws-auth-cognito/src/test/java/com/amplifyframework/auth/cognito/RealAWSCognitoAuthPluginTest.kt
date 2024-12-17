@@ -26,8 +26,6 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeMismatchExcepti
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswordResponse
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpRequest
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.EmailMfaSettingsType
@@ -39,8 +37,6 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationC
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SetUserMfaPreferenceRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SetUserMfaPreferenceResponse
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpRequest
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SmsMfaSettingsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SoftwareTokenMfaNotFoundException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SoftwareTokenMfaSettingsType
@@ -83,8 +79,6 @@ import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
-import com.amplifyframework.auth.result.step.AuthNextSignUpStep
-import com.amplifyframework.auth.result.step.AuthSignUpStep
 import com.amplifyframework.auth.result.step.AuthUpdateAttributeStep
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
@@ -691,183 +685,6 @@ class RealAWSCognitoAuthPluginTest {
         // THEN
         onError.shouldBeCalled()
         assertEquals(expectedException, onError.captured.cause)
-    }
-
-    @Test
-    fun `test signup API with given arguments and auth signed in`() {
-        `test signup API with given arguments`()
-    }
-
-    @Test
-    fun `test signup API with given arguments and auth signed out`() {
-        setupCurrentAuthState(authNState = AuthenticationState.SignedOut(mockk()))
-        `test signup API with given arguments`()
-    }
-
-    private fun `test signup API with given arguments`() {
-        val latch = CountDownLatch(1)
-
-        // GIVEN
-        val username = "user"
-        val password = "password"
-        val email = "user@domain.com"
-        val options = AuthSignUpOptions.builder().userAttribute(AuthUserAttributeKey.email(), email).build()
-
-        val requestCaptor = slot<SignUpRequest>()
-        coEvery { authService.cognitoIdentityProviderClient?.signUp(capture(requestCaptor)) } coAnswers {
-            latch.countDown()
-            mockk()
-        }
-
-        val expectedRequest: SignUpRequest.Builder.() -> Unit = {
-            clientId = "app Client Id"
-            this.username = username
-            this.password = password
-            userAttributes = listOf(
-                AttributeType {
-                    name = "email"
-                    value = email
-                }
-            )
-            secretHash = "dummy Hash"
-            userContextData = null
-            analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = expectedEndpointId }
-        }
-
-        // WHEN
-        plugin.signUp(username, password, options, {}, {})
-        assertTrue { latch.await(5, TimeUnit.SECONDS) }
-
-        // THEN
-        assertEquals(SignUpRequest.invoke(expectedRequest), requestCaptor.captured)
-    }
-
-    @Test
-    fun `test signup success`() {
-        // GIVEN
-        val onSuccess = ConsumerWithLatch<AuthSignUpResult>()
-        val userId = "123456"
-        val username = "user"
-        val password = "password"
-        val email = "user@domain.com"
-        val options = AuthSignUpOptions.builder().userAttribute(AuthUserAttributeKey.email(), email).build()
-
-        setupCurrentAuthState(authNState = AuthenticationState.SignedOut(mockk()))
-
-        val deliveryDetails = mapOf(
-            "DESTINATION" to email,
-            "MEDIUM" to "EMAIL",
-            "ATTRIBUTE" to "attributeName"
-        )
-
-        val expectedAuthSignUpResult = AuthSignUpResult(
-            false,
-            AuthNextSignUpStep(
-                AuthSignUpStep.CONFIRM_SIGN_UP_STEP,
-                mapOf(),
-                AuthCodeDeliveryDetails(
-                    deliveryDetails.getValue("DESTINATION"),
-                    AuthCodeDeliveryDetails.DeliveryMedium.fromString(deliveryDetails.getValue("MEDIUM")),
-                    deliveryDetails.getValue("ATTRIBUTE")
-                )
-            ),
-            userId
-        )
-
-        coEvery { authService.cognitoIdentityProviderClient?.signUp(any()) } coAnswers {
-            SignUpResponse.invoke {
-                this.userSub = userId
-                this.codeDeliveryDetails {
-                    this.attributeName = "attributeName"
-                    this.deliveryMedium = DeliveryMediumType.Email
-                    this.destination = email
-                }
-            }
-        }
-
-        // WHEN
-        plugin.signUp(username, password, options, onSuccess, mockk())
-
-        // THEN
-        onSuccess.shouldBeCalled()
-        assertEquals(expectedAuthSignUpResult, onSuccess.captured)
-    }
-
-    @Test
-    fun `test confirm signup API with given arguments and auth signed in`() {
-        `test confirm signup API with given arguments`()
-    }
-
-    @Test
-    fun `test confirm signup API with given arguments and auth signed out`() {
-        setupCurrentAuthState(authNState = AuthenticationState.SignedOut(mockk()))
-        `test confirm signup API with given arguments`()
-    }
-
-    private fun `test confirm signup API with given arguments`() {
-        val latch = CountDownLatch(1)
-
-        // GIVEN
-        val username = "user"
-        val confirmationCode = "123456"
-        val options = AuthConfirmSignUpOptions.defaults()
-
-        val requestCaptor = slot<ConfirmSignUpRequest>()
-        coEvery { authService.cognitoIdentityProviderClient?.confirmSignUp(capture(requestCaptor)) } coAnswers {
-            latch.countDown()
-            mockk()
-        }
-
-        val expectedRequest: ConfirmSignUpRequest.Builder.() -> Unit = {
-            clientId = "app Client Id"
-            this.username = username
-            this.confirmationCode = confirmationCode
-            secretHash = "dummy Hash"
-            userContextData = null
-            analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = expectedEndpointId }
-        }
-
-        // WHEN
-        plugin.confirmSignUp(username, confirmationCode, options, {}, {})
-        assertTrue { latch.await(5, TimeUnit.SECONDS) }
-
-        // THEN
-        assertEquals(ConfirmSignUpRequest.invoke(expectedRequest), requestCaptor.captured)
-    }
-
-    @Test
-    fun `test confirm signup success`() {
-        val latch = CountDownLatch(1)
-
-        // GIVEN
-        val onSuccess = mockk<Consumer<AuthSignUpResult>>()
-        val onError = mockk<Consumer<AuthException>>()
-        val username = "user"
-        val confirmationCode = "123456"
-        val options = AuthConfirmSignUpOptions.defaults()
-
-        val resultCaptor = slot<AuthSignUpResult>()
-        every { onSuccess.accept(capture(resultCaptor)) } answers { latch.countDown() }
-
-        setupCurrentAuthState(authNState = AuthenticationState.SignedOut(mockk()))
-
-        val expectedAuthSignUpResult = AuthSignUpResult(
-            true,
-            AuthNextSignUpStep(AuthSignUpStep.DONE, mapOf(), null),
-            null
-        )
-
-        coEvery { authService.cognitoIdentityProviderClient?.confirmSignUp(any()) } coAnswers {
-            ConfirmSignUpResponse.invoke { }
-        }
-
-        // WHEN
-        plugin.confirmSignUp(username, confirmationCode, options, onSuccess, onError)
-        assertTrue { latch.await(5, TimeUnit.SECONDS) }
-
-        // THEN
-        verify(exactly = 0) { onError.accept(any()) }
-        verify(exactly = 1) { onSuccess.accept(expectedAuthSignUpResult) }
     }
 
     @Test
@@ -1619,7 +1436,11 @@ class RealAWSCognitoAuthPluginTest {
             SetUserMfaPreferenceResponse.invoke {}
         }
         plugin.updateMFAPreference(
-            MFAPreference.ENABLED, MFAPreference.ENABLED, null, onSuccess, mockk()
+            MFAPreference.ENABLED,
+            MFAPreference.ENABLED,
+            null,
+            onSuccess,
+            mockk()
         )
 
         onSuccess.shouldBeCalled()
@@ -1662,7 +1483,11 @@ class RealAWSCognitoAuthPluginTest {
             SetUserMfaPreferenceResponse.invoke {}
         }
         plugin.updateMFAPreference(
-            MFAPreference.ENABLED, MFAPreference.ENABLED, null, onSuccess, mockk()
+            MFAPreference.ENABLED,
+            MFAPreference.ENABLED,
+            null,
+            onSuccess,
+            mockk()
         )
 
         onSuccess.shouldBeCalled()
@@ -1705,7 +1530,11 @@ class RealAWSCognitoAuthPluginTest {
             SetUserMfaPreferenceResponse.invoke {}
         }
         plugin.updateMFAPreference(
-            MFAPreference.ENABLED, MFAPreference.ENABLED, MFAPreference.ENABLED, onSuccess, mockk()
+            MFAPreference.ENABLED,
+            MFAPreference.ENABLED,
+            MFAPreference.ENABLED,
+            onSuccess,
+            mockk()
         )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
@@ -1778,7 +1607,11 @@ class RealAWSCognitoAuthPluginTest {
             SetUserMfaPreferenceResponse.invoke {}
         }
         plugin.updateMFAPreference(
-            MFAPreference.ENABLED, MFAPreference.ENABLED, MFAPreference.ENABLED, onSuccess, mockk()
+            MFAPreference.ENABLED,
+            MFAPreference.ENABLED,
+            MFAPreference.ENABLED,
+            onSuccess,
+            mockk()
         )
 
         onSuccess.shouldBeCalled()
@@ -1828,7 +1661,11 @@ class RealAWSCognitoAuthPluginTest {
             SetUserMfaPreferenceResponse.invoke {}
         }
         plugin.updateMFAPreference(
-            MFAPreference.ENABLED, MFAPreference.DISABLED, MFAPreference.DISABLED, onSuccess, mockk()
+            MFAPreference.ENABLED,
+            MFAPreference.DISABLED,
+            MFAPreference.DISABLED,
+            onSuccess,
+            mockk()
         )
 
         onSuccess.shouldBeCalled()
@@ -1878,7 +1715,11 @@ class RealAWSCognitoAuthPluginTest {
             SetUserMfaPreferenceResponse.invoke {}
         }
         plugin.updateMFAPreference(
-            MFAPreference.DISABLED, MFAPreference.ENABLED, MFAPreference.DISABLED, onSuccess, mockk()
+            MFAPreference.DISABLED,
+            MFAPreference.ENABLED,
+            MFAPreference.DISABLED,
+            onSuccess,
+            mockk()
         )
 
         onSuccess.shouldBeCalled()
@@ -1928,7 +1769,11 @@ class RealAWSCognitoAuthPluginTest {
             SetUserMfaPreferenceResponse.invoke {}
         }
         plugin.updateMFAPreference(
-            MFAPreference.DISABLED, MFAPreference.DISABLED, MFAPreference.ENABLED, onSuccess, mockk()
+            MFAPreference.DISABLED,
+            MFAPreference.DISABLED,
+            MFAPreference.ENABLED,
+            onSuccess,
+            mockk()
         )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
@@ -1978,7 +1823,11 @@ class RealAWSCognitoAuthPluginTest {
             SetUserMfaPreferenceResponse.invoke {}
         }
         plugin.updateMFAPreference(
-            MFAPreference.PREFERRED, MFAPreference.ENABLED, MFAPreference.ENABLED, onSuccess, mockk()
+            MFAPreference.PREFERRED,
+            MFAPreference.ENABLED,
+            MFAPreference.ENABLED,
+            onSuccess,
+            mockk()
         )
 
         onSuccess.shouldBeCalled()
@@ -2028,7 +1877,11 @@ class RealAWSCognitoAuthPluginTest {
             SetUserMfaPreferenceResponse.invoke {}
         }
         plugin.updateMFAPreference(
-            MFAPreference.ENABLED, MFAPreference.PREFERRED, MFAPreference.ENABLED, onSuccess, mockk()
+            MFAPreference.ENABLED,
+            MFAPreference.PREFERRED,
+            MFAPreference.ENABLED,
+            onSuccess,
+            mockk()
         )
 
         onSuccess.shouldBeCalled()
@@ -2078,7 +1931,11 @@ class RealAWSCognitoAuthPluginTest {
             SetUserMfaPreferenceResponse.invoke {}
         }
         plugin.updateMFAPreference(
-            MFAPreference.ENABLED, MFAPreference.ENABLED, MFAPreference.PREFERRED, onSuccess, mockk()
+            MFAPreference.ENABLED,
+            MFAPreference.ENABLED,
+            MFAPreference.PREFERRED,
+            onSuccess,
+            mockk()
         )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
@@ -2128,7 +1985,11 @@ class RealAWSCognitoAuthPluginTest {
             SetUserMfaPreferenceResponse.invoke {}
         }
         plugin.updateMFAPreference(
-            MFAPreference.DISABLED, MFAPreference.PREFERRED, MFAPreference.DISABLED, onSuccess, mockk()
+            MFAPreference.DISABLED,
+            MFAPreference.PREFERRED,
+            MFAPreference.DISABLED,
+            onSuccess,
+            mockk()
         )
 
         onSuccess.shouldBeCalled()
@@ -2178,7 +2039,11 @@ class RealAWSCognitoAuthPluginTest {
             SetUserMfaPreferenceResponse.invoke {}
         }
         plugin.updateMFAPreference(
-            MFAPreference.PREFERRED, MFAPreference.DISABLED, MFAPreference.DISABLED, onSuccess, mockk()
+            MFAPreference.PREFERRED,
+            MFAPreference.DISABLED,
+            MFAPreference.DISABLED,
+            onSuccess,
+            mockk()
         )
 
         onSuccess.shouldBeCalled()
@@ -2228,7 +2093,11 @@ class RealAWSCognitoAuthPluginTest {
             SetUserMfaPreferenceResponse.invoke {}
         }
         plugin.updateMFAPreference(
-            MFAPreference.DISABLED, MFAPreference.DISABLED, MFAPreference.PREFERRED, onSuccess, mockk()
+            MFAPreference.DISABLED,
+            MFAPreference.DISABLED,
+            MFAPreference.PREFERRED,
+            onSuccess,
+            mockk()
         )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
@@ -2278,7 +2147,11 @@ class RealAWSCognitoAuthPluginTest {
             SetUserMfaPreferenceResponse.invoke {}
         }
         plugin.updateMFAPreference(
-            MFAPreference.ENABLED, MFAPreference.DISABLED, MFAPreference.ENABLED, onSuccess, mockk()
+            MFAPreference.ENABLED,
+            MFAPreference.DISABLED,
+            MFAPreference.ENABLED,
+            onSuccess,
+            mockk()
         )
 
         onSuccess.shouldBeCalled()
@@ -2328,7 +2201,11 @@ class RealAWSCognitoAuthPluginTest {
             SetUserMfaPreferenceResponse.invoke {}
         }
         plugin.updateMFAPreference(
-            MFAPreference.DISABLED, MFAPreference.ENABLED, MFAPreference.ENABLED, onSuccess, mockk()
+            MFAPreference.DISABLED,
+            MFAPreference.ENABLED,
+            MFAPreference.ENABLED,
+            onSuccess,
+            mockk()
         )
 
         onSuccess.shouldBeCalled()
@@ -2378,7 +2255,11 @@ class RealAWSCognitoAuthPluginTest {
             SetUserMfaPreferenceResponse.invoke {}
         }
         plugin.updateMFAPreference(
-            MFAPreference.ENABLED, MFAPreference.ENABLED, MFAPreference.DISABLED, onSuccess, mockk()
+            MFAPreference.ENABLED,
+            MFAPreference.ENABLED,
+            MFAPreference.DISABLED,
+            onSuccess,
+            mockk()
         )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
@@ -2429,7 +2310,11 @@ class RealAWSCognitoAuthPluginTest {
             SetUserMfaPreferenceResponse.invoke {}
         }
         plugin.updateMFAPreference(
-            MFAPreference.DISABLED, MFAPreference.ENABLED, MFAPreference.DISABLED, onSuccess, onError
+            MFAPreference.DISABLED,
+            MFAPreference.ENABLED,
+            MFAPreference.DISABLED,
+            onSuccess,
+            onError
         )
 
         onSuccess.shouldBeCalled()
@@ -2479,7 +2364,11 @@ class RealAWSCognitoAuthPluginTest {
             SetUserMfaPreferenceResponse.invoke {}
         }
         plugin.updateMFAPreference(
-            MFAPreference.PREFERRED, MFAPreference.ENABLED, MFAPreference.ENABLED, onSuccess, mockk()
+            MFAPreference.PREFERRED,
+            MFAPreference.ENABLED,
+            MFAPreference.ENABLED,
+            onSuccess,
+            mockk()
         )
 
         onSuccess.shouldBeCalled()
@@ -2529,7 +2418,11 @@ class RealAWSCognitoAuthPluginTest {
             SetUserMfaPreferenceResponse.invoke {}
         }
         plugin.updateMFAPreference(
-            MFAPreference.ENABLED, MFAPreference.PREFERRED, MFAPreference.ENABLED, onSuccess, mockk()
+            MFAPreference.ENABLED,
+            MFAPreference.PREFERRED,
+            MFAPreference.ENABLED,
+            onSuccess,
+            mockk()
         )
 
         onSuccess.shouldBeCalled()
@@ -2579,7 +2472,11 @@ class RealAWSCognitoAuthPluginTest {
             SetUserMfaPreferenceResponse.invoke {}
         }
         plugin.updateMFAPreference(
-            MFAPreference.ENABLED, MFAPreference.PREFERRED, MFAPreference.ENABLED, onSuccess, mockk()
+            MFAPreference.ENABLED,
+            MFAPreference.PREFERRED,
+            MFAPreference.ENABLED,
+            onSuccess,
+            mockk()
         )
 
         assertTrue { onSuccess.latch.await(5, TimeUnit.SECONDS) }
