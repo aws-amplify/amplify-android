@@ -29,6 +29,10 @@ import com.amplifyframework.auth.cognito.actions.SignInChallengeCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignInCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignInCustomCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignOutCognitoActions
+import com.amplifyframework.auth.cognito.actions.SignUpCognitoActions
+import com.amplifyframework.auth.cognito.actions.UserAuthSignInCognitoActions
+import com.amplifyframework.auth.cognito.actions.WebAuthnSignInCognitoActions
+import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.statemachine.Environment
 import com.amplifyframework.statemachine.StateMachine
 import com.amplifyframework.statemachine.StateMachineResolver
@@ -47,13 +51,14 @@ import com.amplifyframework.statemachine.codegen.states.SetupTOTPState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
+import com.amplifyframework.statemachine.codegen.states.SignUpState
+import com.amplifyframework.statemachine.codegen.states.WebAuthnSignInState
 
 internal class AuthStateMachine(
     resolver: StateMachineResolver<AuthState>,
     environment: Environment,
     initialState: AuthState? = null
-) :
-    StateMachine<AuthState, Environment>(resolver, environment, initialState = initialState) {
+) : StateMachine<AuthState, Environment>(resolver, environment, initialState = initialState) {
     constructor(environment: Environment, initialState: AuthState? = null) : this(
         AuthState.Resolver(
             AuthenticationState.Resolver(
@@ -65,6 +70,8 @@ internal class AuthStateMachine(
                     HostedUISignInState.Resolver(HostedUICognitoActions),
                     DeviceSRPSignInState.Resolver(DeviceSRPCognitoSignInActions),
                     SetupTOTPState.Resolver(SetupTOTPCognitoActions),
+                    WebAuthnSignInState.Resolver(WebAuthnSignInCognitoActions, SignInCognitoActions),
+                    UserAuthSignInCognitoActions,
                     SignInCognitoActions
                 ),
                 SignOutState.Resolver(SignOutCognitoActions),
@@ -79,7 +86,8 @@ internal class AuthStateMachine(
                 DeleteUserState.Resolver(DeleteUserCognitoActions),
                 AuthorizationCognitoActions
             ),
-            AuthCognitoActions
+            AuthCognitoActions,
+            SignUpState.Resolver(SignUpCognitoActions)
         ),
         environment,
         initialState
@@ -97,6 +105,8 @@ internal class AuthStateMachine(
                         HostedUISignInState.Resolver(HostedUICognitoActions).logging(),
                         DeviceSRPSignInState.Resolver(DeviceSRPCognitoSignInActions).logging(),
                         SetupTOTPState.Resolver(SetupTOTPCognitoActions).logging(),
+                        WebAuthnSignInState.Resolver(WebAuthnSignInCognitoActions, SignInCognitoActions).logging(),
+                        UserAuthSignInCognitoActions,
                         SignInCognitoActions
                     ).logging(),
                     SignOutState.Resolver(SignOutCognitoActions).logging(),
@@ -111,9 +121,19 @@ internal class AuthStateMachine(
                     DeleteUserState.Resolver(DeleteUserCognitoActions),
                     AuthorizationCognitoActions
                 ).logging(),
-                AuthCognitoActions
+                AuthCognitoActions,
+                SignUpState.Resolver(SignUpCognitoActions).logging()
             ).logging(),
             environment
+        )
+    }
+}
+
+// This function throws if the state machine is *not* in the required state
+internal suspend inline fun <reified T : AuthenticationState> AuthStateMachine.requireAuthenticationState() {
+    if (getCurrentState().authNState !is T) {
+        throw InvalidStateException(
+            "Auth State Machine is not in the required authentication state: ${T::class.simpleName}"
         )
     }
 }

@@ -26,13 +26,17 @@ import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.TOTPSetupDetails
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthListWebAuthnCredentialsOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
+import com.amplifyframework.auth.options.AuthAssociateWebAuthnCredentialsOptions
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
+import com.amplifyframework.auth.options.AuthDeleteWebAuthnCredentialOptions
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
+import com.amplifyframework.auth.options.AuthListWebAuthnCredentialsOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -49,6 +53,7 @@ import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -69,6 +74,7 @@ class AWSCognitoAuthPluginTest {
     fun setup() {
         authPlugin = AWSCognitoAuthPlugin()
         authPlugin.realPlugin = realPlugin
+        authPlugin.useCaseFactory = mockk(relaxed = true)
     }
 
     @Test
@@ -740,6 +746,69 @@ class AWSCognitoAuthPluginTest {
         authPlugin.updateMFAPreference(smsPreference, totpPreference, emailPreference, onSuccess, onError)
         verify(timeout = CHANNEL_TIMEOUT) {
             realPlugin.updateMFAPreference(smsPreference, totpPreference, emailPreference, any(), any())
+        }
+    }
+
+    @Test
+    fun associateWebAuthnCredential() {
+        val useCase = authPlugin.useCaseFactory.associateWebAuthnCredential()
+
+        val activity: Activity = mockk()
+        authPlugin.associateWebAuthnCredential(activity, {}, {})
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute(activity, AuthAssociateWebAuthnCredentialsOptions.defaults())
+        }
+    }
+
+    @Test
+    fun associateWebAuthnCredentialWithOptions() {
+        val useCase = authPlugin.useCaseFactory.associateWebAuthnCredential()
+
+        val activity: Activity = mockk()
+        val options: AuthAssociateWebAuthnCredentialsOptions = mockk()
+        authPlugin.associateWebAuthnCredential(activity, options, {}, {})
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute(activity, options)
+        }
+    }
+
+    @Test
+    fun listWebAuthnCredentials() {
+        val useCase = authPlugin.useCaseFactory.listWebAuthnCredentials()
+        authPlugin.listWebAuthnCredentials({}, {})
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute(AuthListWebAuthnCredentialsOptions.defaults())
+        }
+    }
+
+    @Test
+    fun listWebAuthnCredentialsWithOptions() {
+        val useCase = authPlugin.useCaseFactory.listWebAuthnCredentials()
+        val options = AWSCognitoAuthListWebAuthnCredentialsOptions.builder().build()
+        authPlugin.listWebAuthnCredentials(options, {}, {})
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute(options)
+        }
+    }
+
+    @Test
+    fun deleteWebAuthnCredential() {
+        val useCase = authPlugin.useCaseFactory.deleteWebAuthnCredential()
+        val credentialId = "someId"
+        authPlugin.deleteWebAuthnCredential(credentialId, {}, {})
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute(credentialId, AuthDeleteWebAuthnCredentialOptions.defaults())
+        }
+    }
+
+    @Test
+    fun deleteWebAuthnCredentialWithOptions() {
+        val useCase = authPlugin.useCaseFactory.deleteWebAuthnCredential()
+        val options: AuthDeleteWebAuthnCredentialOptions = mockk()
+        val credentialId = "someId"
+        authPlugin.deleteWebAuthnCredential(credentialId, options, {}, {})
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute(credentialId, options)
         }
     }
 

@@ -21,7 +21,7 @@ import java.net.URL
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
 private val standardEndpointRegex =
-    "^https://\\w{26}\\.appsync-api\\.\\w{2}(?:-\\w{2,})+-\\d\\.amazonaws.com/graphql$".toRegex()
+    "^https://\\w{26}\\.appsync-api\\.\\w{2}(?:-\\w{2,})+-\\d\\.amazonaws.com(?:\\.cn)?/graphql$".toRegex()
 
 /**
  * Class representing the AppSync endpoint. There are multiple URLs associated with each AppSync endpoint: the

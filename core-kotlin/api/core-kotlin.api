@@ -55,17 +55,21 @@ public final class com/amplifyframework/kotlin/api/Rest$DefaultImpls {
 }
 
 public abstract interface class com/amplifyframework/kotlin/auth/Auth {
+	public abstract fun associateWebAuthnCredential (Landroid/app/Activity;Lcom/amplifyframework/auth/options/AuthAssociateWebAuthnCredentialsOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun autoSignIn (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun confirmResetPassword (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmResetPasswordOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun confirmSignIn (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmSignInOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun confirmSignUp (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmSignUpOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun confirmUserAttribute (Lcom/amplifyframework/auth/AuthUserAttributeKey;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun deleteUser (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun deleteWebAuthnCredential (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthDeleteWebAuthnCredentialOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun fetchAuthSession (Lcom/amplifyframework/auth/options/AuthFetchSessionOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun fetchDevices (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun fetchUserAttributes (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun forgetDevice (Lcom/amplifyframework/auth/AuthDevice;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getCurrentUser (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun handleWebUISignInResponse (Landroid/content/Intent;)V
+	public abstract fun listWebAuthnCredentials (Lcom/amplifyframework/auth/options/AuthListWebAuthnCredentialsOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun rememberDevice (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun resendSignUpCode (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthResendSignUpCodeOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun resendUserAttributeConfirmationCode (Lcom/amplifyframework/auth/AuthUserAttributeKey;Lcom/amplifyframework/auth/options/AuthResendUserAttributeConfirmationCodeOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -83,11 +87,14 @@ public abstract interface class com/amplifyframework/kotlin/auth/Auth {
 }
 
 public final class com/amplifyframework/kotlin/auth/Auth$DefaultImpls {
+	public static synthetic fun associateWebAuthnCredential$default (Lcom/amplifyframework/kotlin/auth/Auth;Landroid/app/Activity;Lcom/amplifyframework/auth/options/AuthAssociateWebAuthnCredentialsOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun confirmResetPassword$default (Lcom/amplifyframework/kotlin/auth/Auth;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmResetPasswordOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun confirmSignIn$default (Lcom/amplifyframework/kotlin/auth/Auth;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmSignInOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun confirmSignUp$default (Lcom/amplifyframework/kotlin/auth/Auth;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmSignUpOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun deleteWebAuthnCredential$default (Lcom/amplifyframework/kotlin/auth/Auth;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthDeleteWebAuthnCredentialOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun fetchAuthSession$default (Lcom/amplifyframework/kotlin/auth/Auth;Lcom/amplifyframework/auth/options/AuthFetchSessionOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun forgetDevice$default (Lcom/amplifyframework/kotlin/auth/Auth;Lcom/amplifyframework/auth/AuthDevice;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun listWebAuthnCredentials$default (Lcom/amplifyframework/kotlin/auth/Auth;Lcom/amplifyframework/auth/options/AuthListWebAuthnCredentialsOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun resendSignUpCode$default (Lcom/amplifyframework/kotlin/auth/Auth;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthResendSignUpCodeOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun resendUserAttributeConfirmationCode$default (Lcom/amplifyframework/kotlin/auth/Auth;Lcom/amplifyframework/auth/AuthUserAttributeKey;Lcom/amplifyframework/auth/options/AuthResendUserAttributeConfirmationCodeOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun resetPassword$default (Lcom/amplifyframework/kotlin/auth/Auth;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthResetPasswordOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
@@ -105,17 +112,21 @@ public final class com/amplifyframework/kotlin/auth/KotlinAuthFacade : com/ampli
 	public fun <init> ()V
 	public fun <init> (Lcom/amplifyframework/auth/AuthCategoryBehavior;)V
 	public synthetic fun <init> (Lcom/amplifyframework/auth/AuthCategoryBehavior;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun associateWebAuthnCredential (Landroid/app/Activity;Lcom/amplifyframework/auth/options/AuthAssociateWebAuthnCredentialsOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun autoSignIn (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun confirmResetPassword (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmResetPasswordOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun confirmSignIn (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmSignInOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun confirmSignUp (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmSignUpOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun confirmUserAttribute (Lcom/amplifyframework/auth/AuthUserAttributeKey;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun deleteUser (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun deleteWebAuthnCredential (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthDeleteWebAuthnCredentialOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun fetchAuthSession (Lcom/amplifyframework/auth/options/AuthFetchSessionOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun fetchDevices (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun fetchUserAttributes (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun forgetDevice (Lcom/amplifyframework/auth/AuthDevice;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getCurrentUser (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun handleWebUISignInResponse (Landroid/content/Intent;)V
+	public fun listWebAuthnCredentials (Lcom/amplifyframework/auth/options/AuthListWebAuthnCredentialsOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun rememberDevice (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun resendSignUpCode (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthResendSignUpCodeOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun resendUserAttributeConfirmationCode (Lcom/amplifyframework/auth/AuthUserAttributeKey;Lcom/amplifyframework/auth/options/AuthResendUserAttributeConfirmationCodeOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

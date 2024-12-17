@@ -18,6 +18,7 @@ package com.amplifyframework.auth.cognito
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.api.aws.AWSApiPlugin
+import com.amplifyframework.api.graphql.GraphQLOperation
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
@@ -51,6 +52,7 @@ class AWSCognitoAuthPluginEmailMFATests {
     private var authPlugin = AWSCognitoAuthPlugin()
     private var apiPlugin = AWSApiPlugin()
     private lateinit var synchronousAuth: SynchronousAuth
+    private var subscription: GraphQLOperation<MfaInfo>? = null
     private var mfaCode = ""
     private var latch: CountDownLatch? = null
 
@@ -64,8 +66,8 @@ class AWSCognitoAuthPluginEmailMFATests {
         apiPlugin.configure(config, context)
         synchronousAuth = SynchronousAuth.delegatingTo(authPlugin)
 
-        apiPlugin.subscribe(
-            SimpleGraphQLRequest<MfaInfo>(
+        subscription = apiPlugin.subscribe(
+            SimpleGraphQLRequest(
                 Assets.readAsString("create-mfa-subscription.graphql"),
                 MfaInfo::class.java,
                 null
@@ -83,6 +85,7 @@ class AWSCognitoAuthPluginEmailMFATests {
 
     @After
     fun tearDown() {
+        subscription?.cancel()
         mfaCode = ""
         synchronousAuth.deleteUser()
     }

@@ -41,11 +41,11 @@ import com.amplifyframework.logging.LoggingCategory
 @Suppress("unused")
 class Amplify {
     companion object {
-        val Analytics = AnalyticsCategory()
+        val Analytics: AnalyticsCategory = delegate.Analytics
         val API = KotlinApiFacade()
         val Auth = KotlinAuthFacade()
         val Geo = KotlinGeoFacade()
-        val Logging = LoggingCategory()
+        val Logging: LoggingCategory = delegate.Logging
         val Storage = KotlinStorageFacade()
         val Hub = KotlinHubFacade()
         val DataStore = KotlinDataStoreFacade()

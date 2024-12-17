@@ -21,8 +21,11 @@ import aws.sdk.kotlin.services.cognitoidentity.model.CognitoIdentityException
 import aws.sdk.kotlin.services.cognitoidentity.model.TooManyRequestsException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeMismatchException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.InvalidParameterException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResourceNotFoundException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.UserNotFoundException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.UsernameExistsException
 import com.amplifyframework.auth.exceptions.UnknownException
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -44,6 +47,15 @@ private data class CognitoExceptionSurrogate(
                 message = errorMessage
             } as T
             TooManyRequestsException::class.java.simpleName -> TooManyRequestsException.invoke {
+                message = errorMessage
+            } as T
+            UsernameExistsException::class.java.simpleName -> UsernameExistsException.invoke {
+                message = errorMessage
+            } as T
+            InvalidParameterException::class.java.simpleName -> InvalidParameterException.invoke {
+                message = errorMessage
+            } as T
+            UserNotFoundException::class.java.simpleName -> UserNotFoundException.invoke {
                 message = errorMessage
             } as T
             UnknownException::class.java.simpleName -> UnknownException(message = errorMessage ?: "") as T

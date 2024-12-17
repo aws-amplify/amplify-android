@@ -15,8 +15,10 @@
 
 package com.amplifyframework.auth.cognito.options
 
+import android.app.Activity
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
+import java.lang.ref.WeakReference
 
 /**
  * Cognito extension of confirm sign in options to add the platform specific fields.
@@ -36,7 +38,12 @@ data class AWSCognitoAuthConfirmSignInOptions internal constructor(
      * Get the friendly device name used to setup TOTP.
      * @return friendly device name
      */
-    val friendlyDeviceName: String?
+    val friendlyDeviceName: String?,
+    /**
+     * Get the Activity instance, if any.
+     * @return A WeakReference to the Activity
+     */
+    val callingActivity: WeakReference<Activity>
 ) : AuthConfirmSignInOptions() {
 
     companion object {
@@ -45,9 +52,7 @@ data class AWSCognitoAuthConfirmSignInOptions internal constructor(
          * @return a builder object.
          */
         @JvmStatic
-        fun builder(): CognitoBuilder {
-            return CognitoBuilder()
-        }
+        fun builder(): CognitoBuilder = CognitoBuilder()
 
         inline operator fun invoke(block: CognitoBuilder.() -> Unit) = CognitoBuilder().apply(block).build()
     }
@@ -59,14 +64,13 @@ data class AWSCognitoAuthConfirmSignInOptions internal constructor(
         private var metadata: Map<String, String> = mapOf()
         private var userAttributes: List<AuthUserAttribute> = listOf()
         private var friendlyDeviceName: String? = null
+        private var callingActivity: WeakReference<Activity> = WeakReference(null)
 
         /**
          * Returns the type of builder this is to support proper flow with it being an extended class.
          * @return the type of builder this is to support proper flow with it being an extended class.
          */
-        override fun getThis(): CognitoBuilder {
-            return this
-        }
+        override fun getThis(): CognitoBuilder = this
 
         /**
          * Set the metadata field for the object being built.
@@ -91,9 +95,20 @@ data class AWSCognitoAuthConfirmSignInOptions internal constructor(
         fun friendlyDeviceName(friendlyDeviceName: String) = apply { this.friendlyDeviceName = friendlyDeviceName }
 
         /**
+         * Set the callingActivity field for the object being built. This should be set when using WebAuthn to ensure
+         * the optimal user experience.
+         * @param callingActivity The current Activity.
+         * @return the instance of the builder.
+         */
+        fun callingActivity(callingActivity: Activity) = apply {
+            this.callingActivity = WeakReference(callingActivity)
+        }
+
+        /**
          * Construct and return the object with the values set in the builder.
          * @return a new instance of AWSCognitoAuthConfirmSignInOptions with the values specified in the builder.
          */
-        override fun build() = AWSCognitoAuthConfirmSignInOptions(metadata, userAttributes, friendlyDeviceName)
+        override fun build() =
+            AWSCognitoAuthConfirmSignInOptions(metadata, userAttributes, friendlyDeviceName, callingActivity)
     }
 }

@@ -21,6 +21,7 @@ import com.amplifyframework.auth.cognito.featuretest.AuthAPI
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.resetPassword
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signIn
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI.signUp
+import com.amplifyframework.auth.cognito.helpers.toAuthFactorTypeOrNull
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
@@ -62,6 +63,7 @@ object AuthOptionsFactory {
         AuthAPI.resendSignUpCode -> AuthResendSignUpCodeOptions.defaults()
         AuthAPI.resendUserAttributeConfirmationCode -> AuthResendUserAttributeConfirmationCodeOptions.defaults()
         signIn -> getSignInOptions(optionsData)
+        AuthAPI.autoSignIn -> null
         AuthAPI.signInWithSocialWebUI -> AuthWebUISignInOptions.builder().build()
         AuthAPI.signInWithWebUI -> AuthWebUISignInOptions.builder().build()
         AuthAPI.signOut -> getSignOutOptions(optionsData)
@@ -76,16 +78,20 @@ object AuthOptionsFactory {
         AuthAPI.getVersion -> TODO()
     } as T
 
-    private fun getSignInOptions(optionsData: JsonObject): AuthSignInOptions {
-        return if (optionsData.containsKey("signInOptions")) {
+    private fun getSignInOptions(optionsData: JsonObject): AuthSignInOptions =
+        if (optionsData.containsKey("signInOptions")) {
             val authFlowType = AuthFlowType.valueOf(
                 ((optionsData["signInOptions"] as Map<String, String>)["authFlow"] as JsonPrimitive).content
             )
-            AWSCognitoAuthSignInOptions.builder().authFlowType(authFlowType).build()
+            val preferredFirstFactor =
+                ((optionsData["signInOptions"] as Map<String, String>)["preferredFirstFactor"] as? JsonPrimitive)
+                    ?.content?.toAuthFactorTypeOrNull()
+            AWSCognitoAuthSignInOptions.builder().authFlowType(
+                authFlowType
+            ).preferredFirstFactor(preferredFirstFactor).build()
         } else {
             AuthSignInOptions.defaults()
         }
-    }
 
     private fun getSignUpOptions(optionsData: JsonObject): AuthSignUpOptions =
         AuthSignUpOptions.builder().userAttributes(

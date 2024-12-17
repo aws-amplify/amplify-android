@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito.featuretest.generators
 
 import aws.sdk.kotlin.services.cognitoidentity.model.CognitoIdentityException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.AuthException
@@ -27,6 +28,7 @@ import com.amplifyframework.auth.cognito.featuretest.serializers.serialize
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.result.AuthSessionResult
 import com.amplifyframework.statemachine.codegen.states.AuthState
+import com.amplifyframework.statemachine.codegen.states.SignUpState
 import com.google.gson.Gson
 import java.io.BufferedWriter
 import java.io.File
@@ -81,7 +83,15 @@ internal fun AuthState.exportJson() {
     val reverse = result.deserializeToAuthState()
 
     val dirName = "states"
-    val fileName = "${authNState?.javaClass?.simpleName}_${authZState?.javaClass?.simpleName}.json"
+    val signUpState = authSignUpState?.let { signUpState ->
+        if (signUpState !is SignUpState.NotStarted) {
+            "_${signUpState.javaClass.simpleName}"
+        } else {
+            ""
+        }
+    } ?: ""
+    val fileName = "${authNState?.javaClass?.simpleName}_${authZState?.javaClass?.simpleName}$signUpState.json"
+
     writeFile(result, dirName, fileName)
     println("Json exported:\n $result")
     println("Serialized can be reversed = ${reverse.serialize() == result}")
@@ -179,6 +189,7 @@ fun Any?.toJsonElement(): JsonElement {
             CognitoIdentityProviderExceptionSerializer,
             this
         )
+        is AuthFlowType -> this.value.toJsonElement()
         is AuthSessionResult<*> -> toJsonElement()
         is CognitoIdentityException -> Json.encodeToJsonElement(CognitoIdentityExceptionSerializer, this)
         else -> gsonBasedSerializer(this)
