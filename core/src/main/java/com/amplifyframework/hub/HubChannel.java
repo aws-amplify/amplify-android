@@ -71,7 +71,13 @@ public enum HubChannel {
     /**
      * Hub messages relating to Amplify Storage.
      */
-    STORAGE(CategoryType.STORAGE);
+    STORAGE(CategoryType.STORAGE),
+
+    /**
+     * Hub messages relating to Amplify Preference.
+     */
+    PREFERENCE(CategoryType.PREFERENCE);
+    ;
 
     private final CategoryType categoryType;
 

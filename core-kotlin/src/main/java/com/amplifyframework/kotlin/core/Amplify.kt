@@ -31,6 +31,7 @@ import com.amplifyframework.kotlin.notifications.KotlinNotificationsFacade
 import com.amplifyframework.kotlin.predictions.KotlinPredictionsFacade
 import com.amplifyframework.kotlin.storage.KotlinStorageFacade
 import com.amplifyframework.logging.LoggingCategory
+import com.amplifyframework.preference.PreferenceCategory
 
 /**
  * A Kotlin-language facade to the Amplify framework.
@@ -46,6 +47,7 @@ class Amplify {
         val Auth = KotlinAuthFacade()
         val Geo = KotlinGeoFacade()
         val Logging: LoggingCategory = delegate.Logging
+        val Preference: PreferenceCategory = delegate.Preferences
         val Storage = KotlinStorageFacade()
         val Hub = KotlinHubFacade()
         val DataStore = KotlinDataStoreFacade()
