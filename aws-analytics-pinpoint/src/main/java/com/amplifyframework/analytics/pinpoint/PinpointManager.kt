@@ -17,7 +17,10 @@ package com.amplifyframework.analytics.pinpoint
 import android.content.Context
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
+import com.amplifyframework.core.store.AmplifyV2KeyValueRepositoryProvider
 import com.amplifyframework.core.store.EncryptedKeyValueRepository
+import com.amplifyframework.core.store.KeyValueRepository
+import com.amplifyframework.core.store.KeyValueRepositoryProvider
 import com.amplifyframework.pinpoint.core.AnalyticsClient
 import com.amplifyframework.pinpoint.core.TargetingClient
 import com.amplifyframework.pinpoint.core.data.AndroidAppDetails
@@ -28,10 +31,11 @@ import com.amplifyframework.pinpoint.core.util.getUniqueId
 /**
  * PinpointManager is the entry point to Pinpoint Analytics and Targeting.
  */
-internal class PinpointManager constructor(
+internal class PinpointManager(
     context: Context,
     private val awsPinpointConfiguration: AWSPinpointAnalyticsPluginConfiguration,
-    private val credentialsProvider: CredentialsProvider?
+    private val credentialsProvider: CredentialsProvider?,
+    private val keyValueRepositoryProvider: KeyValueRepositoryProvider
 ) {
     val analyticsClient: AnalyticsClient
     val targetingClient: TargetingClient
@@ -52,6 +56,8 @@ internal class PinpointManager constructor(
     init {
         val pinpointDatabase = PinpointDatabase(context)
 
+        val keyValueRepositoryIdentifier = "${awsPinpointConfiguration.appId}$PINPOINT_SHARED_PREFS_SUFFIX"
+
         /*
         Auth plugin needs to read from Pinpoint shared preferences, but we don't currently have an architecture
         that allows the plugins to pass data between each other. If the storage mechanism of UniqueId changes, we
@@ -62,17 +68,28 @@ internal class PinpointManager constructor(
             Context.MODE_PRIVATE
         )
 
-        val encryptedStore = EncryptedKeyValueRepository(
+        val defaultKeyValueRepository = EncryptedKeyValueRepository(
             context,
             "${awsPinpointConfiguration.appId}$PINPOINT_SHARED_PREFS_SUFFIX"
         )
+
+        val keyValueRepository = if (keyValueRepositoryProvider !is AmplifyV2KeyValueRepositoryProvider) {
+            val injectedKeyValueRepository = keyValueRepositoryProvider.get(keyValueRepositoryIdentifier)
+            KeyValueRepository.migrate(
+                existing = defaultKeyValueRepository,
+                new = injectedKeyValueRepository
+            )
+            injectedKeyValueRepository
+        } else {
+            defaultKeyValueRepository
+        }
 
         val androidAppDetails = AndroidAppDetails(context, awsPinpointConfiguration.appId)
         val androidDeviceDetails = AndroidDeviceDetails(context)
         targetingClient = TargetingClient(
             context,
             pinpointClient,
-            encryptedStore,
+            keyValueRepository,
             sharedPrefs,
             androidAppDetails,
             androidDeviceDetails

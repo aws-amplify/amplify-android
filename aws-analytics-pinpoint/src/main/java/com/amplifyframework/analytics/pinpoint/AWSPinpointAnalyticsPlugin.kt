@@ -22,6 +22,7 @@ import com.amplifyframework.analytics.AnalyticsProperties
 import com.amplifyframework.analytics.UserProfile
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.CognitoCredentialsProvider
+import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.configuration.AmplifyOutputsData
 import org.json.JSONObject
 
@@ -115,10 +116,13 @@ class AWSPinpointAnalyticsPlugin @JvmOverloads constructor(
     }
 
     private fun configure(configuration: AWSPinpointAnalyticsPluginConfiguration, context: Context) {
+        val keyValueRepositoryProvider = Amplify.Preferences.getKeyValueRepositoryProvider()
+
         pinpointManager = PinpointManager(
             context,
             configuration,
-            CognitoCredentialsProvider()
+            CognitoCredentialsProvider(),
+            keyValueRepositoryProvider
         )
 
         awsPinpointAnalyticsPluginBehavior = AWSPinpointAnalyticsPluginBehavior(

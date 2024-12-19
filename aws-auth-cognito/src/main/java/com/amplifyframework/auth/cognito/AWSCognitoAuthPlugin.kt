@@ -63,9 +63,9 @@ import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.core.Action
+import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.configuration.AmplifyOutputsData
-import com.amplifyframework.core.store.KeyValueRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -78,17 +78,12 @@ import org.json.JSONObject
 /**
  * A Cognito implementation of the Auth Plugin.
  */
-class AWSCognitoAuthPlugin @JvmOverloads constructor(
-    private val options: Options? = null
-) : AuthPlugin<AWSCognitoAuthService>() {
+class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
+
     companion object {
         const val AWS_COGNITO_AUTH_LOG_NAMESPACE = "amplify:aws-cognito-auth:%s"
         private const val AWS_COGNITO_AUTH_PLUGIN_KEY = "awsCognitoAuthPlugin"
     }
-
-    data class Options(
-        val customKeyValueRepository: KeyValueRepository? = null
-    )
 
     private val logger = authLogger()
 
@@ -168,7 +163,7 @@ class AWSCognitoAuthPlugin @JvmOverloads constructor(
             configuration,
             context,
             logger,
-            options?.customKeyValueRepository
+            Amplify.Preferences.getKeyValueRepositoryProvider()
         )
         val authEnvironment = AuthEnvironment(
             context,

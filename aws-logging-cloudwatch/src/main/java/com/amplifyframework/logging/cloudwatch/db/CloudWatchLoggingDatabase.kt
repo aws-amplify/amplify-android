@@ -20,7 +20,10 @@ import android.content.UriMatcher
 import android.database.Cursor
 import android.net.Uri
 import androidx.annotation.VisibleForTesting
+import com.amplifyframework.core.store.AmplifyV2KeyValueRepositoryProvider
 import com.amplifyframework.core.store.EncryptedKeyValueRepository
+import com.amplifyframework.core.store.KeyValueRepository
+import com.amplifyframework.core.store.KeyValueRepositoryProvider
 import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
 import java.util.UUID
 import kotlinx.coroutines.CoroutineDispatcher
@@ -30,18 +33,14 @@ import net.sqlcipher.database.SQLiteQueryBuilder
 
 internal class CloudWatchLoggingDatabase(
     private val context: Context,
+    private val keyValueRepositoryProvider: KeyValueRepositoryProvider,
     private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private val logEvents = 10
     private val logEventsId = 20
     private val passphraseKey = "passphrase"
     private val mb = 1024 * 1024
-    private val encryptedKeyValueRepository: EncryptedKeyValueRepository by lazy {
-        EncryptedKeyValueRepository(
-            context,
-            "awscloudwatchloggingdb"
-        )
-    }
+    private val keyValueRepository: KeyValueRepository
     private val database by lazy {
         System.loadLibrary("sqlcipher")
         CloudWatchDatabaseHelper(context).getWritableDatabase(getDatabasePassphrase())
@@ -58,6 +57,18 @@ internal class CloudWatchLoggingDatabase(
         uriMatcher.addURI(authority, basePath, logEvents)
         // the URI of log_event_id is for a single record
         uriMatcher.addURI(authority, "$basePath/#", logEventsId)
+
+        val defaultKeyValueRepository = EncryptedKeyValueRepository(context, KEY_VALUE_REPOSITORY_IDENTIFIER)
+        keyValueRepository = if (keyValueRepositoryProvider !is AmplifyV2KeyValueRepositoryProvider) {
+            val injectedProvider = keyValueRepositoryProvider.get(KEY_VALUE_REPOSITORY_IDENTIFIER)
+            KeyValueRepository.migrate(
+                existing = defaultKeyValueRepository,
+                new = injectedProvider
+            )
+            injectedProvider
+        } else {
+            defaultKeyValueRepository
+        }
     }
 
     internal suspend fun saveLogEvent(event: CloudWatchLogEvent): Uri = withContext(coroutineDispatcher) {
@@ -137,7 +148,7 @@ internal class CloudWatchLoggingDatabase(
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun getDatabasePassphrase(): String {
-        return encryptedKeyValueRepository.get(passphraseKey) ?: kotlin.run {
+        return keyValueRepository.get(passphraseKey) ?: kotlin.run {
             val passphrase = UUID.randomUUID().toString()
             // If the database is restored from backup and the passphrase key is not present,
             // this would result in the database file not getting loaded.
@@ -146,8 +157,12 @@ internal class CloudWatchLoggingDatabase(
             if (path.exists()) {
                 path.delete()
             }
-            encryptedKeyValueRepository.put(passphraseKey, passphrase)
+            keyValueRepository.put(passphraseKey, passphrase)
             passphrase
         }
+    }
+
+    internal companion object {
+        const val KEY_VALUE_REPOSITORY_IDENTIFIER = "awscloudwatchloggingdb"
     }
 }

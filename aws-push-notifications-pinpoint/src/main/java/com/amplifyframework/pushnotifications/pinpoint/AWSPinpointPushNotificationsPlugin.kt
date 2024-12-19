@@ -32,8 +32,10 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.core.configuration.AmplifyOutputsData
+import com.amplifyframework.core.store.AmplifyV2KeyValueRepositoryProvider
 import com.amplifyframework.core.store.EncryptedKeyValueRepository
 import com.amplifyframework.core.store.KeyValueRepository
+import com.amplifyframework.core.store.KeyValueRepositoryProvider
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 import com.amplifyframework.notifications.pushnotifications.PushNotificationResult
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsException
@@ -63,6 +65,8 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     }
 
     private lateinit var preferences: SharedPreferences
+
+    private lateinit var keyValueRepositoryProvider: KeyValueRepositoryProvider
 
     private lateinit var store: KeyValueRepository
 
@@ -108,6 +112,7 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         val androidAppDetails = AndroidAppDetails(context, configuration.appId)
         val androidDeviceDetails = AndroidDeviceDetails(context)
 
+        keyValueRepositoryProvider = Amplify.Preferences.getKeyValueRepositoryProvider()
         createAndMigrateStore()
         pinpointClient = createPinpointClient()
         targetingClient = createTargetingClient(androidAppDetails, androidDeviceDetails)
@@ -116,14 +121,24 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     }
 
     private fun createAndMigrateStore() {
+        val repositoryIdentifier = configuration.appId + AWS_PINPOINT_PUSHNOTIFICATIONS_PREFERENCES_SUFFIX
+
         preferences = context.getSharedPreferences(
-            configuration.appId + AWS_PINPOINT_PUSHNOTIFICATIONS_PREFERENCES_SUFFIX,
+            repositoryIdentifier,
             Context.MODE_PRIVATE
         )
-        store = EncryptedKeyValueRepository(
-            context,
-            configuration.appId + AWS_PINPOINT_PUSHNOTIFICATIONS_PREFERENCES_SUFFIX
-        )
+
+        val defaultKeyValueRepository = EncryptedKeyValueRepository(context, repositoryIdentifier)
+        val store = if (keyValueRepositoryProvider !is AmplifyV2KeyValueRepositoryProvider) {
+            val injectedKeyValueRepository = keyValueRepositoryProvider.get(repositoryIdentifier)
+            KeyValueRepository.migrate(
+                existing = defaultKeyValueRepository,
+                new = injectedKeyValueRepository
+            )
+            injectedKeyValueRepository
+        } else {
+            defaultKeyValueRepository
+        }
 
         val deviceToken = preferences.getString(AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_LEGACY_KEY, null)
         deviceToken?.let {

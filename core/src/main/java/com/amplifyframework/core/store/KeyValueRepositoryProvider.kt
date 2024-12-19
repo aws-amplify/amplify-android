@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -12,22 +12,8 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
 package com.amplifyframework.core.store
 
-interface KeyValueRepository {
-    fun put(dataKey: String, value: String?)
-    fun get(dataKey: String): String?
-    fun getAll(): Map<String, String?>
-    fun remove(dataKey: String)
-    fun removeAll() = Unit
-
-    companion object {
-        fun migrate(existing: KeyValueRepository, new: KeyValueRepository) {
-            existing.getAll().forEach {
-                new.put(it.key, it.value)
-            }
-            existing.removeAll()
-        }
-    }
+interface KeyValueRepositoryProvider {
+    fun get(repositoryIdentifier: String): KeyValueRepository
 }

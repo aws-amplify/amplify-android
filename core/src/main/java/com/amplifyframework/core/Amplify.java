@@ -36,6 +36,7 @@ import com.amplifyframework.hub.HubCategory;
 import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.notifications.NotificationsCategory;
 import com.amplifyframework.predictions.PredictionsCategory;
+import com.amplifyframework.preference.PreferenceCategory;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.Immutable;
@@ -82,6 +83,7 @@ public final class Amplify {
     @SuppressWarnings("checkstyle:all") public static final DataStoreCategory DataStore = new DataStoreCategory();
     @SuppressWarnings("checkstyle:all") public static final PredictionsCategory Predictions = new PredictionsCategory();
     @SuppressWarnings("checkstyle:all") public static final NotificationsCategory Notifications = new NotificationsCategory();
+    @SuppressWarnings("checkstyle:all") public static final PreferenceCategory Preferences = new PreferenceCategory();
 
     private static final LinkedHashMap<CategoryType, Category<? extends Plugin<?>>> CATEGORIES = buildCategoriesMap();
 
@@ -112,6 +114,7 @@ public final class Amplify {
         categories.put(CategoryType.DATASTORE, DataStore);
         categories.put(CategoryType.PREDICTIONS, Predictions);
         categories.put(CategoryType.NOTIFICATIONS, Notifications);
+        categories.put(CategoryType.PREFERENCE, Preferences);
         return categories;
     }
 

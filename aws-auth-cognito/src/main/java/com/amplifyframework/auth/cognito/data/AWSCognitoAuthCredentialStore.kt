@@ -54,7 +54,8 @@ internal class AWSCognitoAuthCredentialStore(
     //endregion
 
     //region Retrieve Credentials
-    override fun retrieveCredential(): AmplifyCredential = deserializeCredential(keyValueRepository.get(generateKey(Key_Session)))
+    override fun retrieveCredential(): AmplifyCredential =
+        deserializeCredential(keyValueRepository.get(generateKey(Key_Session)))
 
     override fun retrieveDeviceMetadata(username: String): DeviceMetadata = deserializeMetadata(
         keyValueRepository.get(generateKey("$username.$Key_DeviceMetadata"))

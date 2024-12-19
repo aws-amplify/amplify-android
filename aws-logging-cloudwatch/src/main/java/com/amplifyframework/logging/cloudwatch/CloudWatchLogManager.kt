@@ -55,7 +55,7 @@ internal class CloudWatchLogManager(
     private val pluginConfiguration: AWSCloudWatchLoggingPluginConfiguration,
     private val awsCloudWatchLogsClient: CloudWatchLogsClient,
     private val loggingConstraintsResolver: LoggingConstraintsResolver,
-    private val cloudWatchLoggingDatabase: CloudWatchLoggingDatabase = CloudWatchLoggingDatabase(context),
+    private val cloudWatchLoggingDatabase: CloudWatchLoggingDatabase,
     private val customCognitoCredentialsProvider: CustomCognitoCredentialsProvider = CustomCognitoCredentialsProvider(),
     private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {

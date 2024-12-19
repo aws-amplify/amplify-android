@@ -61,7 +61,7 @@ class CredentialStoreStateMachineInstrumentationTest {
         val credentialStore = AWSCognitoAuthCredentialStore(
             context,
             AuthConfiguration.fromJson(authConfigJson),
-            EncryptedKeyValueRepository(context, CredentialStoreClient.defaultAwsKeyValueStoreIdentifier)
+            EncryptedKeyValueRepository(context, CredentialStoreClient.KEY_VALUE_REPOSITORY_IDENTIFIER)
         )
 
         assertEquals(credentialStoreUtil.getDefaultCredential(), credentialStore.retrieveCredential())
@@ -91,7 +91,7 @@ class CredentialStoreStateMachineInstrumentationTest {
         AWSCognitoAuthCredentialStore(
             context,
             AuthConfiguration.fromJson(authConfigJson),
-            EncryptedKeyValueRepository(context, CredentialStoreClient.defaultAwsKeyValueStoreIdentifier)
+            EncryptedKeyValueRepository(context, CredentialStoreClient.KEY_VALUE_REPOSITORY_IDENTIFIER)
         ).apply {
             saveDeviceMetadata("userA", expectedUserADeviceMetadata)
         }
@@ -126,7 +126,7 @@ class CredentialStoreStateMachineInstrumentationTest {
         val credentialStore = AWSCognitoAuthCredentialStore(
             context,
             AuthConfiguration.fromJson(authConfigJson),
-            EncryptedKeyValueRepository(context, CredentialStoreClient.defaultAwsKeyValueStoreIdentifier)
+            EncryptedKeyValueRepository(context, CredentialStoreClient.KEY_VALUE_REPOSITORY_IDENTIFIER)
         )
 
         // Expect the device metadata for user A to have not changed from data that was already saved in v2 store

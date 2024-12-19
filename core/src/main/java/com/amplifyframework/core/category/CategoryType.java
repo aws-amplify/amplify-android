@@ -87,7 +87,12 @@ public enum CategoryType {
      * Geo category provides an interface for maps and other location-aware
      * capabilities such as location search, routing and asset tracking.
      */
-    GEO("geo");
+    GEO("geo"),
+
+    /**
+     * Provides device storage mechanism for key-value pairs across plugins.
+     */
+    PREFERENCE("preference");
 
     /**
      * The key this category is listed under in the config JSON.

@@ -16,6 +16,7 @@ package com.amplifyframework.logging.cloudwatch.db
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.amplifyframework.core.store.AmplifyV2KeyValueRepositoryProvider
 import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
 import io.kotest.matchers.MatcherResult
 import io.kotest.matchers.Matcher
@@ -42,7 +43,7 @@ import java.time.Instant
 class CloudWatchLoggingDatabaseInstrumentationTest {
     private val context = InstrumentationRegistry.getInstrumentation().context
     private val testCoroutine = UnconfinedTestDispatcher()
-    private val loggingDbClass = CloudWatchLoggingDatabase(context, testCoroutine)
+    private val loggingDbClass = CloudWatchLoggingDatabase(context, AmplifyV2KeyValueRepositoryProvider(context), testCoroutine)
 
     private val testTimestamp1 = Instant.now().epochSecond
     private val testTimestamp2 = Instant.now().epochSecond + 300
