@@ -60,6 +60,7 @@ public final class LastSyncMetadata implements Model {
      * @param lastSyncTime Last time it was synced
      * @param <T> t type of Model.
      * @return {@link LastSyncMetadata} for the model class
+     * @deprecated use the override with SyncExpression parameter instead
      */
     @InternalApiWarning
     @Deprecated
@@ -93,6 +94,7 @@ public final class LastSyncMetadata implements Model {
      * @param lastSyncTime Last time it was synced
      * @param <T> t type of Model.
      * @return {@link LastSyncMetadata} for the model class
+     * @deprecated use the override with SyncExpression parameter instead
      */
     @Deprecated
     static <T extends Model> LastSyncMetadata deltaSyncedAt(@NonNull String modelClassName,
@@ -136,6 +138,7 @@ public final class LastSyncMetadata implements Model {
      * @param syncType The type of sync (FULL or DELTA).
      * @param <T> Type of model
      * @return {@link LastSyncMetadata}
+     * @deprecated use the override with SyncExpression parameter instead
      */
     @SuppressWarnings("WeakerAccess")
     @Deprecated

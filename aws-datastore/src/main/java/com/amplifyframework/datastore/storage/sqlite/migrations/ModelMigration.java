@@ -15,7 +15,6 @@
 
 package com.amplifyframework.datastore.storage.sqlite.migrations;
 
-
 /**
  * Interface that defines the contract of an in-place model migration.
  */
