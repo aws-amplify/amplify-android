@@ -17,7 +17,6 @@ package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryField;
@@ -30,6 +29,7 @@ import com.amplifyframework.datastore.storage.StorageItemChange.Initiator;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Single;
@@ -50,7 +50,7 @@ final class SyncTimeRegistry {
                     LastSyncMetadata syncMetadata = extractSingleResult(modelClassName, results);
                     SyncTime lastSyncTime = SyncTime.from(syncMetadata.getLastSyncTime());
                     QueryPredicate lastSyncExpression = syncMetadata.getSyncExpression();
-                    if (!ObjectsCompat.equals(lastSyncExpression, syncExpression)) {
+                    if (!Objects.equals(lastSyncExpression, syncExpression)) {
                         lastSyncTime = SyncTime.never();
                     }
                     emitter.onSuccess(lastSyncTime);
