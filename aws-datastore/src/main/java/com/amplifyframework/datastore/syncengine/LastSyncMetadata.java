@@ -58,6 +58,22 @@ public final class LastSyncMetadata implements Model {
      * model has been base sync'd, and that the last sync occurred at the given time.
      * @param modelClassName Name of model
      * @param lastSyncTime Last time it was synced
+     * @param <T> t type of Model.
+     * @return {@link LastSyncMetadata} for the model class
+     */
+    @InternalApiWarning
+    @Deprecated
+    public static <T extends Model> LastSyncMetadata baseSyncedAt(@NonNull String modelClassName,
+                                                                  @Nullable long lastSyncTime) {
+        Objects.requireNonNull(modelClassName);
+        return create(modelClassName, lastSyncTime, SyncType.BASE);
+    }
+
+    /**
+     * Creates an instance of an {@link LastSyncMetadata}, indicating that the provided
+     * model has been base sync'd, and that the last sync occurred at the given time.
+     * @param modelClassName Name of model
+     * @param lastSyncTime Last time it was synced
      * @param syncExpression the corresponding sync expression being used during last sync
      * @param <T> t type of Model.
      * @return {@link LastSyncMetadata} for the model class
@@ -68,6 +84,21 @@ public final class LastSyncMetadata implements Model {
                                                                   @Nullable QueryPredicate syncExpression) {
         Objects.requireNonNull(modelClassName);
         return create(modelClassName, lastSyncTime, SyncType.BASE, syncExpression);
+    }
+
+    /**
+     * Creates an instance of an {@link LastSyncMetadata}, indicating that the provided
+     * model has been base delta sync'd, and that the last sync occurred at the given time.
+     * @param modelClassName Name of model
+     * @param lastSyncTime Last time it was synced
+     * @param <T> t type of Model.
+     * @return {@link LastSyncMetadata} for the model class
+     */
+    @Deprecated
+    static <T extends Model> LastSyncMetadata deltaSyncedAt(@NonNull String modelClassName,
+                                                            @Nullable long lastSyncTime) {
+        Objects.requireNonNull(modelClassName);
+        return create(modelClassName, lastSyncTime, SyncType.DELTA);
     }
 
     /**
@@ -96,6 +127,23 @@ public final class LastSyncMetadata implements Model {
     public static <T extends Model> LastSyncMetadata neverSynced(@NonNull String modelClassName) {
         Objects.requireNonNull(modelClassName);
         return create(modelClassName, null, SyncType.BASE, null);
+    }
+
+    /**
+     * Creates an {@link LastSyncMetadata} for the provided model class.
+     * @param modelClassName Name of model class for which metadata pertains
+     * @param lastSyncTime Time of last sync; null, if never.
+     * @param syncType The type of sync (FULL or DELTA).
+     * @param <T> Type of model
+     * @return {@link LastSyncMetadata}
+     */
+    @SuppressWarnings("WeakerAccess")
+    @Deprecated
+    static <T extends Model> LastSyncMetadata create(@NonNull String modelClassName,
+                                                     @Nullable Long lastSyncTime,
+                                                     @NonNull SyncType syncType) {
+        Objects.requireNonNull(modelClassName);
+        return new LastSyncMetadata(hash(modelClassName), modelClassName, lastSyncTime, syncType, null);
     }
 
     /**
