@@ -80,7 +80,3 @@ dependencies {
     androidTestImplementation(project(":aws-api-appsync"))
     androidTestImplementation(project(":testutils"))
 }
-
-android.kotlinOptions {
-    jvmTarget = "11"
-}

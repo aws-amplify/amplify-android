@@ -62,7 +62,3 @@ dependencies {
     androidTestImplementation(libs.okhttp)
     androidTestImplementation(libs.oauth2)
 }
-
-afterEvaluate {
-    android.kotlinOptions.jvmTarget = JavaVersion.VERSION_11.toString()
-}
