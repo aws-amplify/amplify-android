@@ -2,7 +2,6 @@ package com.amplifyframework.core.store
 
 import android.security.keystore.KeyProperties
 import androidx.test.platform.app.InstrumentationRegistry
-import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import java.io.InputStream
 import java.io.OutputStream
@@ -107,7 +106,12 @@ class AmplifyKeyValueRepositoryTest {
         override fun engineGetCertificate(alias: String?): Certificate { throw NotImplementedError() }
         override fun engineGetCreationDate(alias: String?): Date { return Date() }
         override fun engineDeleteEntry(alias: String?) {}
-        override fun engineSetKeyEntry(alias: String?, key: Key?, password: CharArray?, chain: Array<out Certificate>?) {}
+        override fun engineSetKeyEntry(
+            alias: String?,
+            key: Key?,
+            password: CharArray?,
+            chain: Array<out Certificate>?
+        ) {}
         override fun engineGetEntry(alias: String?, protParam: KeyStore.ProtectionParameter?): KeyStore.Entry {
             throw NotImplementedError()
         }
