@@ -16,6 +16,7 @@ package com.amplifyframework.storage.s3.transfer
 
 import aws.sdk.kotlin.services.s3.S3Client
 import com.amplifyframework.auth.AuthCredentialsProvider
+import com.amplifyframework.util.setHttpEngine
 
 internal class S3StorageTransferClientProvider(
     private val createS3Client: (region: String?, bucketName: String?) -> S3Client
@@ -24,6 +25,7 @@ internal class S3StorageTransferClientProvider(
         @JvmStatic
         fun getS3Client(region: String, authCredentialsProvider: AuthCredentialsProvider): S3Client {
             return S3Client {
+                setHttpEngine()
                 this.region = region
                 this.credentialsProvider = authCredentialsProvider
             }
