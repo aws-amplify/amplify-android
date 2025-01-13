@@ -45,7 +45,7 @@ class EncryptedKeyValueRepository @VisibleForTesting constructor(
         fileFactory = { dir, fileName -> File(dir, fileName) }
     )
 
-    private val sharedPreferences by lazy { getOrCreateSharedPreferences() }
+    internal val sharedPreferences by lazy { getOrCreateSharedPreferences() }
 
     override fun put(dataKey: String, value: String?) = edit { putString(dataKey, value) }
     override fun get(dataKey: String): String? = sharedPreferences.getString(dataKey, null)
