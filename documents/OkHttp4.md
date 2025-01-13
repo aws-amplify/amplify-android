@@ -1,9 +1,13 @@
 # Using OkHttp4 in Amplify Android
 
-Amplify Android uses OkHttp5 by default, but it will switch all clients to use OkHttp4 if the `OkHttp4Engine`
+Amplify Android v2 uses OkHttp5 by default, but starting with release `2.26.0` it will switch all clients to use OkHttp4 if the `OkHttp4Engine`
 is available on the runtime classpath. Please use these steps to switch to using OkHttp4.
 
-## 1. Add the required dependency
+## 1. Upgrade Amplify if necessary
+
+You must be using at least Amplify `2.26.0` to use OkHttp4.
+
+## 2. Add the required dependency
 
 Add the dependency on the `OkHttp4Engine` library to your application's `build.gradle.kts`
 
@@ -17,7 +21,7 @@ To determine the correct version for the above dependency check in Amplify's [li
 Ensure that you are viewing the file version for the Amplify version you are using, and then check the version entry for `aws-smithy`.
 Remember to keep these versions in sync when you update Amplify.
 
-## 2. Force the OkHttp version
+## 3. Force the OkHttp version
 
 Add the following snippet in your application's `build.gradle.kts` file:
 
@@ -32,7 +36,7 @@ configurations.configureEach {
 }
 ```
 
-## 3. Add Proguard rules
+## 4. Add Proguard rules
 
 If you are using Proguard obfuscation you may encounter compilation errors in obfuscated builds. Check
 `build/outputs/mapping/<variant>/missing_rules.txt` for any Proguard rules that are needed. The following
