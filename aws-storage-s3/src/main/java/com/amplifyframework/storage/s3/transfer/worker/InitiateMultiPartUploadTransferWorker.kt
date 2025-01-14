@@ -24,6 +24,8 @@ import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
+import com.amplifyframework.storage.s3.transfer.worker.BaseTransferWorker.Companion.MULTI_PART_UPLOAD_ID
+import com.amplifyframework.storage.s3.transfer.worker.BaseTransferWorker.Companion.TRANSFER_RECORD_ID
 
 /**
  * Worker to initiate multipart upload
@@ -34,7 +36,7 @@ internal class InitiateMultiPartUploadTransferWorker(
     private val transferStatusUpdater: TransferStatusUpdater,
     context: Context,
     workerParameters: WorkerParameters
-) : BaseTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
+) : SuspendingTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
 
     override suspend fun performWork(): Result {
         val s3: S3Client = clientProvider.getStorageTransferClient(transferRecord.region, transferRecord.bucketName)
