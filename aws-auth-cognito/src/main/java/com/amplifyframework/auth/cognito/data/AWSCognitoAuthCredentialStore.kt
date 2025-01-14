@@ -27,7 +27,6 @@ import kotlinx.serialization.json.Json
 internal class AWSCognitoAuthCredentialStore(
     val context: Context,
     private val authConfiguration: AuthConfiguration,
-    isPersistenceEnabled: Boolean = true,
     keyValueRepoFactory: KeyValueRepositoryFactory = KeyValueRepositoryFactory()
 ) : AuthCredentialStore {
 
@@ -39,7 +38,7 @@ internal class AWSCognitoAuthCredentialStore(
     }
 
     private var keyValue: KeyValueRepository =
-        keyValueRepoFactory.create(context, awsKeyValueStoreIdentifier, isPersistenceEnabled)
+        keyValueRepoFactory.create(context, awsKeyValueStoreIdentifier)
 
     //region Save Credentials
     override fun saveCredential(credential: AmplifyCredential) = keyValue.put(
