@@ -36,10 +36,10 @@ configurations.configureEach {
 }
 ```
 
-## 4. Add Proguard rules
+## 4. Add Proguard/R8 rules
 
-If you are using Proguard obfuscation you may encounter compilation errors in obfuscated builds. Check
-`build/outputs/mapping/<variant>/missing_rules.txt` for any Proguard rules that are needed. The following
+If you are using obfuscation/minification you may encounter compilation errors in affected builds. Check
+`build/outputs/mapping/<variant>/missing_rules.txt` for any rules that are needed. The following
 rules may need to be added to `proguard-rules.pro`:
 
 ```
