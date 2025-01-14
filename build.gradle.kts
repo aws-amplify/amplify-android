@@ -59,7 +59,7 @@ allprojects {
 }
 
 tasks.register<Delete>("clean").configure {
-    delete(rootProject.buildDir)
+    delete(rootProject.layout.buildDirectory)
 }
 
 val internalApiAnnotations = listOf(
@@ -132,7 +132,6 @@ fun Project.configureAndroid() {
         val sdkVersionName = findProperty("VERSION_NAME") ?: rootProject.findProperty("VERSION_NAME")
 
         configure<LibraryExtension> {
-            buildToolsVersion = "30.0.3"
             compileSdk = 34
 
             buildFeatures {
@@ -142,7 +141,6 @@ fun Project.configureAndroid() {
 
             defaultConfig {
                 minSdk = 24
-                targetSdk = 30
                 testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
                 testInstrumentationRunnerArguments += "clearPackageData" to "true"
                 consumerProguardFiles += rootProject.file("configuration/consumer-rules.pro")
@@ -170,7 +168,7 @@ fun Project.configureAndroid() {
             // Needed when running integration tests. The oauth2 library uses relies on two
             // dependencies (Apache's httpcore and httpclient), both of which include
             // META-INF/DEPENDENCIES. Tried a couple other options to no avail.
-            packagingOptions {
+            packaging {
                 resources.excludes.addAll(
                     listOf(
                         "META-INF/DEPENDENCIES",
