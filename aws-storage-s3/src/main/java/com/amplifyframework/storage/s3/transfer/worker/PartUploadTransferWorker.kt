@@ -26,9 +26,9 @@ import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import com.amplifyframework.storage.s3.transfer.UploadProgressListenerInterceptor
+import com.amplifyframework.storage.s3.transfer.worker.BaseTransferWorker.Companion.MULTI_PART_UPLOAD_ID
 import java.io.File
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.isActive
+import kotlinx.coroutines.runBlocking
 
 /**
  * Worker to upload a part for multipart upload
@@ -39,41 +39,39 @@ internal class PartUploadTransferWorker(
     private val transferStatusUpdater: TransferStatusUpdater,
     context: Context,
     workerParameters: WorkerParameters
-) : BaseTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
+) : BlockingTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
 
     private lateinit var multiPartUploadId: String
     private lateinit var partUploadProgressListener: PartUploadProgressListener
     override var maxRetryCount = 3
 
-    override suspend fun performWork(): Result {
-        if (!currentCoroutineContext().isActive) {
-            return Result.retry()
-        }
+    override fun performWork(): Result {
         transferStatusUpdater.updateTransferState(transferRecord.mainUploadId, TransferState.IN_PROGRESS)
         multiPartUploadId = inputData.keyValueMap[MULTI_PART_UPLOAD_ID] as String
         partUploadProgressListener = PartUploadProgressListener(transferRecord, transferStatusUpdater)
         val s3: S3Client = clientProvider.getStorageTransferClient(transferRecord.region, transferRecord.bucketName)
-        return s3.withConfig {
-            interceptors += UploadProgressListenerInterceptor(partUploadProgressListener)
-            enableAccelerate = transferRecord.useAccelerateEndpoint == 1
-        }.uploadPart {
-            bucket = transferRecord.bucketName
-            key = transferRecord.key
-            uploadId = multiPartUploadId
-            body = File(transferRecord.file).asByteStream(
-                start = transferRecord.fileOffset,
-                transferRecord.fileOffset + transferRecord.bytesTotal - 1
-            )
-            partNumber = transferRecord.partNumber
-        }.let { response ->
-            response.eTag?.let { tag ->
-                transferDB.updateETag(transferRecord.id, tag)
-                transferDB.updateState(transferRecord.id, TransferState.PART_COMPLETED)
-                updateProgress()
-                Result.success(outputData)
-            } ?: run {
-                throw IllegalStateException("Etag is empty")
+
+        return runBlocking {
+            s3.withConfig {
+                interceptors += UploadProgressListenerInterceptor(partUploadProgressListener)
+                enableAccelerate = transferRecord.useAccelerateEndpoint == 1
+            }.uploadPart {
+                bucket = transferRecord.bucketName
+                key = transferRecord.key
+                uploadId = multiPartUploadId
+                body = File(transferRecord.file).asByteStream(
+                    start = transferRecord.fileOffset,
+                    transferRecord.fileOffset + transferRecord.bytesTotal - 1
+                )
+                partNumber = transferRecord.partNumber
             }
+        }.eTag?.let { tag ->
+            transferDB.updateETag(transferRecord.id, tag)
+            transferDB.updateState(transferRecord.id, TransferState.PART_COMPLETED)
+            updateProgress()
+            return Result.success(outputData)
+        } ?: run {
+            throw IllegalStateException("Etag is empty")
         }
     }
 
