@@ -68,7 +68,7 @@ class AWSCognitoIdentityPoolOperations(
     private val KEY_LOGINS_PROVIDER = "amplify.${identityPool.poolId}.session.loginsProvider"
     private val KEY_IDENTITY_ID = "amplify.${identityPool.poolId}.session.identityId"
     private val KEY_AWS_CREDENTIALS = "amplify.${identityPool.poolId}.session.credential"
-    private val awsAuthCredentialStore = AuthCredentialStore(context.applicationContext, pluginKeySanitized, true)
+    private val awsAuthCredentialStore = AuthCredentialStore(context.applicationContext, pluginKeySanitized)
 
     val cognitoIdentityClient = CognitoClientFactory.createIdentityClient(
         identityPool,

@@ -32,7 +32,7 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.core.configuration.AmplifyOutputsData
-import com.amplifyframework.core.store.EncryptedKeyValueRepository
+import com.amplifyframework.core.store.AmplifyKeyValueRepository
 import com.amplifyframework.core.store.KeyValueRepository
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 import com.amplifyframework.notifications.pushnotifications.PushNotificationResult
@@ -120,7 +120,7 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
             configuration.appId + AWS_PINPOINT_PUSHNOTIFICATIONS_PREFERENCES_SUFFIX,
             Context.MODE_PRIVATE
         )
-        store = EncryptedKeyValueRepository(
+        store = AmplifyKeyValueRepository(
             context,
             configuration.appId + AWS_PINPOINT_PUSHNOTIFICATIONS_PREFERENCES_SUFFIX
         )
