@@ -26,7 +26,7 @@ import java.util.UUID
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import net.sqlcipher.database.SQLiteQueryBuilder
+import net.zetetic.database.sqlcipher.SQLiteQueryBuilder
 
 internal class CloudWatchLoggingDatabase(
     private val context: Context,
@@ -44,7 +44,7 @@ internal class CloudWatchLoggingDatabase(
     }
     private val database by lazy {
         System.loadLibrary("sqlcipher")
-        CloudWatchDatabaseHelper(context).getWritableDatabase(getDatabasePassphrase())
+        CloudWatchDatabaseHelper(context, getDatabasePassphrase()).writableDatabase
     }
     private val basePath = "cloudwatchlogevents"
     private val contentUri: Uri
