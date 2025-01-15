@@ -24,6 +24,7 @@ import com.amplifyframework.pinpoint.core.data.AndroidAppDetails
 import com.amplifyframework.pinpoint.core.data.AndroidDeviceDetails
 import com.amplifyframework.pinpoint.core.database.PinpointDatabase
 import com.amplifyframework.pinpoint.core.util.getUniqueId
+import com.amplifyframework.util.setHttpEngine
 
 /**
  * PinpointManager is the entry point to Pinpoint Analytics and Targeting.
@@ -36,6 +37,7 @@ internal class PinpointManager constructor(
     val analyticsClient: AnalyticsClient
     val targetingClient: TargetingClient
     internal val pinpointClient: PinpointClient = PinpointClient {
+        setHttpEngine()
         credentialsProvider = this@PinpointManager.credentialsProvider
         region = awsPinpointConfiguration.region
     }
