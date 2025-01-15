@@ -47,7 +47,7 @@ import com.amplifyframework.predictions.result.IdentifyEntityMatchesResult
 import com.amplifyframework.predictions.result.IdentifyLabelsResult
 import com.amplifyframework.predictions.result.IdentifyResult
 import com.amplifyframework.predictions.result.IdentifyTextResult
-import java.lang.StringBuilder
+import com.amplifyframework.util.setHttpEngine
 import java.net.MalformedURLException
 import java.net.URL
 import java.nio.ByteBuffer
@@ -64,6 +64,7 @@ internal class AWSRekognitionService(
 ) {
 
     val client: RekognitionClient = RekognitionClient {
+        setHttpEngine()
         this.region = pluginConfiguration.defaultRegion
         this.credentialsProvider = authCredentialsProvider
     }

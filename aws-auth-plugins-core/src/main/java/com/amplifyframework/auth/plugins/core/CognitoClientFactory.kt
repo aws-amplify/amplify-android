@@ -22,6 +22,7 @@ import aws.smithy.kotlin.runtime.http.interceptors.HttpInterceptor
 import com.amplifyframework.auth.AWSCognitoAuthMetadataType
 import com.amplifyframework.auth.plugins.core.data.AWSCognitoIdentityPoolConfiguration
 import com.amplifyframework.plugins.core.BuildConfig
+import com.amplifyframework.util.setHttpEngine
 
 internal object CognitoClientFactory {
     fun createIdentityClient(
@@ -29,6 +30,8 @@ internal object CognitoClientFactory {
         pluginKey: String,
         pluginVersion: String,
     ) = CognitoIdentityClient {
+        setHttpEngine()
+
         this.region = identityPool.region
         this.interceptors += object : HttpInterceptor {
             override suspend fun modifyBeforeSerialization(context: RequestInterceptorContext<Any>): Any {
