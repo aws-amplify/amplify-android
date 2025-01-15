@@ -44,6 +44,7 @@ import com.amplifyframework.pinpoint.core.data.AndroidAppDetails
 import com.amplifyframework.pinpoint.core.data.AndroidDeviceDetails
 import com.amplifyframework.pinpoint.core.database.PinpointDatabase
 import com.amplifyframework.pinpoint.core.util.getUniqueId
+import com.amplifyframework.util.setHttpEngine
 import com.google.firebase.messaging.FirebaseMessaging
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
@@ -133,6 +134,7 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     }
 
     private fun createPinpointClient() = PinpointClient {
+        setHttpEngine()
         region = configuration.region
         credentialsProvider = CognitoCredentialsProvider()
         interceptors += object : HttpInterceptor {

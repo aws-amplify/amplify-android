@@ -28,9 +28,9 @@ import com.amplifyframework.logging.LoggingPlugin
 import com.amplifyframework.logging.cloudwatch.models.AWSCloudWatchLoggingPluginConfiguration
 import com.amplifyframework.logging.cloudwatch.worker.CloudwatchRouterWorker
 import com.amplifyframework.logging.cloudwatch.worker.CloudwatchWorkerFactory
+import com.amplifyframework.util.setHttpEngine
 import java.net.URL
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.json.JSONObject
 
@@ -96,6 +96,7 @@ class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
             val awsLoggingConfig = awsCloudWatchLoggingPluginConfig ?: getConfigFromFile(pluginConfiguration)
             loggingConstraintsResolver.context = context
             cloudWatchLogsClient = CloudWatchLogsClient {
+                setHttpEngine()
                 credentialsProvider = CognitoCredentialsProvider()
                 region = awsLoggingConfig.region
             }
