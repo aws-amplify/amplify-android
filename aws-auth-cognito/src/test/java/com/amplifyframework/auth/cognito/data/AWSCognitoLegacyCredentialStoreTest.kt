@@ -117,28 +117,25 @@ class AWSCognitoLegacyCredentialStoreTest {
         `when`(
             mockFactory.create(
                 mockContext,
-                AWSCognitoLegacyCredentialStore.AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER,
-                true
+                AWSCognitoLegacyCredentialStore.AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER
             )
         ).thenReturn(mockKeyValue)
 
         `when`(
             mockFactory.create(
                 mockContext,
-                AWSCognitoLegacyCredentialStore.APP_TOKENS_INFO_CACHE,
-                true
+                AWSCognitoLegacyCredentialStore.APP_TOKENS_INFO_CACHE
             )
         ).thenReturn(mockKeyValue)
 
         `when`(
             mockFactory.create(
                 mockContext,
-                AWSCognitoLegacyCredentialStore.AWS_MOBILE_CLIENT_PROVIDER,
-                true
+                AWSCognitoLegacyCredentialStore.AWS_MOBILE_CLIENT_PROVIDER
             )
         ).thenReturn(mockKeyValue)
 
-        `when`(mockFactory.create(mockContext, deviceDetailsCacheKey, true)).thenReturn(mockKeyValue)
+        `when`(mockFactory.create(mockContext, deviceDetailsCacheKey)).thenReturn(mockKeyValue)
     }
 
     @Test
