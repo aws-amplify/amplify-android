@@ -33,7 +33,7 @@ internal class CompleteMultiPartUploadWorker(
     private val transferStatusUpdater: TransferStatusUpdater,
     context: Context,
     workerParameters: WorkerParameters
-) : BaseTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
+) : SuspendingTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
 
     override suspend fun performWork(): Result {
         val completedParts = transferDB.queryPartETagsOfUpload(transferRecord.id)

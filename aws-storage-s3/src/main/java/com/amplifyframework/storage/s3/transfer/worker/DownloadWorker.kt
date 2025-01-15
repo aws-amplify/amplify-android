@@ -46,7 +46,7 @@ internal class DownloadWorker(
     private val transferStatusUpdater: TransferStatusUpdater,
     context: Context,
     workerParameters: WorkerParameters
-) : BaseTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
+) : SuspendingTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
 
     private lateinit var downloadProgressListener: DownloadProgressListener
     private val defaultBufferSize = 8192L
