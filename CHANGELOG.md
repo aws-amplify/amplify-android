@@ -1,3 +1,16 @@
+## [Release 2.26.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.26.0)
+
+### Features
+- **all:** Add ability to use OkHttp4 with Amplify v2.x ([#2970](https://github.com/aws-amplify/amplify-android/issues/2970))
+
+### Bug Fixes
+- **datastore:** base sync when sync expression changes ([#2937](https://github.com/aws-amplify/amplify-android/issues/2937))
+- **auth:** Fallback to in-memory key value storage if encryption fails ([#2969](https://github.com/aws-amplify/amplify-android/issues/2969))
+- **logging:** CloudWatch Plugin 16KB page size support ([#2919](https://github.com/aws-amplify/amplify-android/issues/2919))
+- **storage:** Fix SocketTimeoutException when executing a long multi-part upload ([#2973](https://github.com/aws-amplify/amplify-android/issues/2973))
+
+[See all changes between 2.25.1 and 2.26.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.25.1...release_v2.26.0)
+
 ## [Release 2.25.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.25.1)
 
 ### Bug Fixes
