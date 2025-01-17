@@ -21,7 +21,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.StartWebAuthnRegist
 import aws.smithy.kotlin.runtime.content.Document
 import com.amplifyframework.auth.cognito.AuthStateMachine
 import com.amplifyframework.auth.cognito.helpers.WebAuthnHelper
-import com.amplifyframework.auth.exceptions.InvalidStateException
+import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.options.AuthAssociateWebAuthnCredentialsOptions
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import io.kotest.assertions.throwables.shouldThrow
@@ -60,7 +60,7 @@ class AssociateWebAuthnCredentialUseCaseTest {
     fun `fails if not in SignedIn state`() = runTest {
         coEvery { stateMachine.getCurrentState().authNState } returns AuthenticationState.SignedOut(mockk())
 
-        shouldThrow<InvalidStateException> {
+        shouldThrow<SignedOutException> {
             useCase.execute(mockk(), AuthAssociateWebAuthnCredentialsOptions.defaults())
         }
     }

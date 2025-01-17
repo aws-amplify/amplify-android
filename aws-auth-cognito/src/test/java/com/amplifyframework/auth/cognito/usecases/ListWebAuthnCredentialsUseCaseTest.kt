@@ -20,7 +20,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListWebAuthnCredent
 import com.amplifyframework.auth.cognito.AuthStateMachine
 import com.amplifyframework.auth.cognito.mockWebAuthnCredentialDescription
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthListWebAuthnCredentialsOptions
-import com.amplifyframework.auth.exceptions.InvalidStateException
+import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.options.AuthListWebAuthnCredentialsOptions
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import io.kotest.assertions.throwables.shouldThrow
@@ -103,7 +103,7 @@ class ListWebAuthnCredentialsUseCaseTest {
     fun `fails if not in SignedIn state`() = runTest {
         coEvery { stateMachine.getCurrentState().authNState } returns AuthenticationState.SignedOut(mockk())
 
-        shouldThrow<InvalidStateException> {
+        shouldThrow<SignedOutException> {
             useCase.execute(AuthListWebAuthnCredentialsOptions.defaults())
         }
     }

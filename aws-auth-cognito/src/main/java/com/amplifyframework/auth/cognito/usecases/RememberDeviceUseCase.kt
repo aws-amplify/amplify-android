@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2025 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -16,25 +16,27 @@
 package com.amplifyframework.auth.cognito.usecases
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
-import aws.sdk.kotlin.services.cognitoidentityprovider.deleteWebAuthnCredential
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedStatusType
+import aws.sdk.kotlin.services.cognitoidentityprovider.updateDeviceStatus
+import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.AuthStateMachine
 import com.amplifyframework.auth.cognito.requireSignedInState
-import com.amplifyframework.auth.options.AuthDeleteWebAuthnCredentialOptions
 
-internal class DeleteWebAuthnCredentialUseCase(
+internal class RememberDeviceUseCase(
     private val client: CognitoIdentityProviderClient,
     private val fetchAuthSession: FetchAuthSessionUseCase,
-    private val stateMachine: AuthStateMachine
+    private val stateMachine: AuthStateMachine,
+    private val environment: AuthEnvironment
 ) {
-    @Suppress("UNUSED_PARAMETER")
-    suspend fun execute(credentialId: String, options: AuthDeleteWebAuthnCredentialOptions) {
-        // User must be signed in to call this API
-        stateMachine.requireSignedInState()
+    suspend fun execute() {
+        val username = stateMachine.requireSignedInState().signedInData.username
+        val deviceId = environment.getDeviceMetadata(username)?.deviceKey
+        val token = fetchAuthSession.execute().accessToken
 
-        val accessToken = fetchAuthSession.execute().accessToken
-        client.deleteWebAuthnCredential {
-            this.accessToken = accessToken
-            this.credentialId = credentialId
+        client.updateDeviceStatus {
+            accessToken = token
+            deviceKey = deviceId
+            deviceRememberedStatus = DeviceRememberedStatusType.Remembered
         }
     }
 }

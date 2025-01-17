@@ -18,7 +18,6 @@ package com.amplifyframework.auth.cognito
 import android.app.Activity
 import android.content.Intent
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
-import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
@@ -253,43 +252,6 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
         return suspendCoroutine { continuation ->
             delegate.fetchAuthSession(
                 options,
-                { continuation.resume(it) },
-                { continuation.resumeWithException(it) }
-            )
-        }
-    }
-
-    suspend fun rememberDevice() {
-        return suspendCoroutine { continuation ->
-            delegate.rememberDevice(
-                { continuation.resume(Unit) },
-                { continuation.resumeWithException(it) }
-            )
-        }
-    }
-
-    suspend fun forgetDevice() {
-        return suspendCoroutine { continuation ->
-            delegate.forgetDevice(
-                { continuation.resume(Unit) },
-                { continuation.resumeWithException(it) }
-            )
-        }
-    }
-
-    suspend fun forgetDevice(device: AuthDevice) {
-        return suspendCoroutine { continuation ->
-            delegate.forgetDevice(
-                device,
-                { continuation.resume(Unit) },
-                { continuation.resumeWithException(it) }
-            )
-        }
-    }
-
-    suspend fun fetchDevices(): List<AuthDevice> {
-        return suspendCoroutine { continuation ->
-            delegate.fetchDevices(
                 { continuation.resume(it) },
                 { continuation.resumeWithException(it) }
             )

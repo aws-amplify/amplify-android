@@ -25,15 +25,11 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataTy
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedStatusType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.EmailMfaSettingsType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgetDeviceRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserAttributeVerificationCodeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SmsMfaSettingsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SoftwareTokenMfaSettingsType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateDeviceStatusRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareTokenResponseType
@@ -48,7 +44,6 @@ import com.amplifyframework.auth.AWSCredentials
 import com.amplifyframework.auth.AWSTemporaryCredentials
 import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
-import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthFactorType
 import com.amplifyframework.auth.AuthProvider
@@ -1495,135 +1490,6 @@ internal class RealAWSCognitoAuthPlugin(
             },
             null
         )
-    }
-
-    fun rememberDevice(onSuccess: Action, onError: Consumer<AuthException>) {
-        authStateMachine.getCurrentState { authState ->
-            when (val state = authState.authNState) {
-                is AuthenticationState.SignedIn -> {
-                    GlobalScope.launch {
-                        updateDevice(
-                            authEnvironment.getDeviceMetadata(state.signedInData.username)?.deviceKey,
-                            DeviceRememberedStatusType.Remembered,
-                            onSuccess,
-                            onError
-                        )
-                    }
-                }
-                is AuthenticationState.SignedOut -> {
-                    onError.accept(SignedOutException())
-                }
-                else -> {
-                    onError.accept(InvalidStateException())
-                }
-            }
-        }
-    }
-
-    fun forgetDevice(onSuccess: Action, onError: Consumer<AuthException>) {
-        forgetDevice(AuthDevice.fromId(""), onSuccess, onError)
-    }
-
-    private fun updateDevice(
-        alternateDeviceId: String?,
-        rememberedStatusType: DeviceRememberedStatusType,
-        onSuccess: Action,
-        onError: Consumer<AuthException>
-    ) {
-        GlobalScope.async {
-            try {
-                val tokens = getSession().userPoolTokensResult
-                authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.updateDeviceStatus(
-                    UpdateDeviceStatusRequest.invoke {
-                        accessToken = tokens.value?.accessToken
-                        deviceKey = alternateDeviceId
-                        deviceRememberedStatus = rememberedStatusType
-                    }
-                )
-                onSuccess.call()
-            } catch (e: Exception) {
-                onError.accept(CognitoAuthExceptionConverter.lookup(e, "Update device ID failed."))
-            }
-        }
-    }
-
-    fun forgetDevice(device: AuthDevice, onSuccess: Action, onError: Consumer<AuthException>) {
-        authStateMachine.getCurrentState { authState ->
-            when (val authNState = authState.authNState) {
-                is AuthenticationState.SignedIn -> {
-                    GlobalScope.launch {
-                        try {
-                            if (device.id.isEmpty()) {
-                                val deviceKey = authEnvironment.getDeviceMetadata(authNState.signedInData.username)
-                                    ?.deviceKey
-                                forgetDevice(deviceKey)
-                            } else {
-                                forgetDevice(device.id)
-                            }
-                            onSuccess.call()
-                        } catch (e: Exception) {
-                            onError.accept(CognitoAuthExceptionConverter.lookup(e, "Failed to forget device."))
-                        }
-                    }
-                }
-                is AuthenticationState.SignedOut -> {
-                    onError.accept(SignedOutException())
-                }
-                else -> {
-                    onError.accept(InvalidStateException())
-                }
-            }
-        }
-    }
-
-    private suspend fun forgetDevice(alternateDeviceId: String?) {
-        val tokens = getSession().userPoolTokensResult
-        authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.forgetDevice(
-            ForgetDeviceRequest.invoke {
-                accessToken = tokens.value?.accessToken
-                deviceKey = alternateDeviceId
-            }
-        )
-    }
-
-    fun fetchDevices(onSuccess: Consumer<List<AuthDevice>>, onError: Consumer<AuthException>) {
-        authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                is AuthenticationState.SignedIn -> {
-                    _fetchDevices(onSuccess, onError)
-                }
-                is AuthenticationState.SignedOut -> {
-                    onError.accept(SignedOutException())
-                }
-                else -> {
-                    onError.accept(InvalidStateException())
-                }
-            }
-        }
-    }
-
-    private fun _fetchDevices(onSuccess: Consumer<List<AuthDevice>>, onError: Consumer<AuthException>) {
-        GlobalScope.async {
-            try {
-                val tokens = getSession().userPoolTokensResult
-                val response =
-                    authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.listDevices(
-                        ListDevicesRequest.invoke {
-                            accessToken = tokens.value?.accessToken
-                        }
-                    )
-
-                val devices = response?.devices?.map { device ->
-                    val id = device.deviceKey ?: ""
-                    val name = device.deviceAttributes?.find { it.name == "device_name" }?.value
-                    AuthDevice.fromId(id, name)
-                } ?: emptyList()
-
-                onSuccess.accept(devices)
-            } catch (e: Exception) {
-                onError.accept(CognitoAuthExceptionConverter.lookup(e, "Fetch devices failed."))
-            }
-        }
     }
 
     @OptIn(DelicateCoroutinesApi::class)

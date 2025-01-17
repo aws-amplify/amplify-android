@@ -27,12 +27,9 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProv
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswordResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.EmailMfaSettingsType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgetDeviceResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserAttributeVerificationCodeResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserResponse
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SetUserMfaPreferenceRequest
@@ -46,7 +43,6 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareToken
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareTokenResponseType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttributeResponse
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
-import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUser
@@ -85,7 +81,6 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
-import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
@@ -98,7 +93,6 @@ import featureTest.utilities.APICaptorFactory.Companion.onError
 import io.kotest.assertions.throwables.shouldThrowWithMessage
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.invoke
 import io.mockk.mockk
@@ -2502,119 +2496,6 @@ class RealAWSCognitoAuthPluginTest {
             },
             setUserMFAPreferenceRequest.captured.emailMfaSettings
         )
-    }
-
-    @Test
-    fun `forget device invokes ForgetDevice api`() {
-        val onSuccess = ActionWithLatch()
-
-        coEvery { mockCognitoIPClient.forgetDevice(any()) } answers { ForgetDeviceResponse.invoke {} }
-
-        coEvery {
-            authEnvironment.getDeviceMetadata("username")
-        } returns DeviceMetadata.Metadata(deviceKey = "test", deviceGroupKey = "group")
-
-        plugin.forgetDevice(onSuccess, mockk())
-
-        onSuccess.shouldBeCalled()
-        coVerify { mockCognitoIPClient.forgetDevice(match { it.deviceKey == "test" }) }
-    }
-
-    @Test
-    fun `forget device emits API error`() {
-        val onError = ConsumerWithLatch<AuthException>()
-
-        coEvery { mockCognitoIPClient.forgetDevice(any()) } throws Exception("failed")
-
-        coEvery {
-            authEnvironment.getDeviceMetadata("username")
-        } returns DeviceMetadata.Metadata(deviceKey = "test", deviceGroupKey = "group")
-
-        plugin.forgetDevice(mockk(), onError)
-
-        onError.shouldBeCalled()
-        assertEquals("failed", onError.captured.cause?.message)
-    }
-
-    @Test
-    fun `forget specific device invokes ForgetDevice api`() {
-        val onSuccess = ActionWithLatch()
-
-        coEvery { mockCognitoIPClient.forgetDevice(any()) } answers { ForgetDeviceResponse.invoke {} }
-
-        plugin.forgetDevice(AuthDevice.fromId("test"), onSuccess, mockk())
-
-        onSuccess.shouldBeCalled()
-        coVerify { mockCognitoIPClient.forgetDevice(match { it.deviceKey == "test" }) }
-    }
-
-    @Test
-    fun `forget specific device emits API error`() {
-        val onError = ConsumerWithLatch<AuthException>()
-
-        coEvery { mockCognitoIPClient.forgetDevice(any()) } throws Exception("failed")
-
-        plugin.forgetDevice(AuthDevice.fromId("test"), mockk(), onError)
-
-        onError.shouldBeCalled()
-        assertEquals("failed", onError.captured.cause?.message)
-    }
-
-    @Test
-    fun `fetch devices returns device id and name`() {
-        val onSuccess = ConsumerWithLatch<List<AuthDevice>>()
-
-        coEvery { mockCognitoIPClient.listDevices(any()) } returns ListDevicesResponse.invoke {
-            devices = listOf(
-                DeviceType.invoke {
-                    deviceKey = "id1"
-                    deviceAttributes = listOf(
-                        AttributeType.invoke {
-                            name = "device_name"
-                            value = "name1"
-                        }
-                    )
-                }
-            )
-        }
-
-        plugin.fetchDevices(onSuccess, mockk())
-
-        onSuccess.shouldBeCalled()
-        assertEquals("id1", onSuccess.captured.first().id)
-        assertEquals("name1", onSuccess.captured.first().name)
-    }
-
-    @Test
-    fun `fetch devices returns error if listDevices fails`() {
-        val onError = ConsumerWithLatch<AuthException>()
-        coEvery { mockCognitoIPClient.listDevices(any()) } throws Exception("bad")
-
-        plugin.fetchDevices(mockk(), onError)
-
-        onError.shouldBeCalled()
-    }
-
-    @Test
-    fun `fetch devices returns error if signed out`() {
-        val onError = ConsumerWithLatch<AuthException>()
-        setupCurrentAuthState(authNState = AuthenticationState.SignedOut(mockk()))
-
-        plugin.fetchDevices(mockk(), onError)
-
-        onError.shouldBeCalled()
-        assertEquals(SignedOutException(), onError.captured)
-    }
-
-    @Test
-    fun `fetch devices returns error if not signed in`() {
-        val onError = ConsumerWithLatch<AuthException>()
-        setupCurrentAuthState(authNState = AuthenticationState.NotConfigured())
-
-        plugin.fetchDevices(mockk(), onError)
-
-        onError.shouldBeCalled()
-        assertEquals(InvalidStateException(), onError.captured)
     }
 
     private fun setupCurrentAuthState(authNState: AuthenticationState? = null, authZState: AuthorizationState? = null) {
