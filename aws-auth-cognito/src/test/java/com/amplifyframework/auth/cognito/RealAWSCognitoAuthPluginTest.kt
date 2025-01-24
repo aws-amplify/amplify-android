@@ -19,16 +19,13 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderCl
 import aws.sdk.kotlin.services.cognitoidentityprovider.getUser
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AssociateSoftwareTokenResponse
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordResponse
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeDeliveryDetailsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeMismatchException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswordResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.EmailMfaSettingsType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserAttributeVerificationCodeResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeResponse
@@ -37,25 +34,18 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.SetUserMfaPreferenc
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SmsMfaSettingsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SoftwareTokenMfaNotFoundException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SoftwareTokenMfaSettingsType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareTokenRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareTokenResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareTokenResponseType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttributeResponse
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthSession
-import com.amplifyframework.auth.AuthUserAttribute
-import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.MFAType
 import com.amplifyframework.auth.TOTPSetupDetails
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
-import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
-import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
-import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
@@ -66,12 +56,9 @@ import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
-import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignUpResult
-import com.amplifyframework.auth.result.AuthUpdateAttributeResult
-import com.amplifyframework.auth.result.step.AuthUpdateAttributeStep
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.logging.Logger
@@ -101,9 +88,6 @@ import java.util.Date
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -434,58 +418,6 @@ class RealAWSCognitoAuthPluginTest {
     }
 
     @Test
-    fun `fetch user attributes with success`() {
-        // GIVEN
-        val onSuccess = ConsumerWithLatch<List<AuthUserAttribute>>()
-
-        val userAttributes = listOf(
-            AttributeType.invoke {
-                name = "email"
-                value = "email"
-            },
-            AttributeType.invoke {
-                name = "nickname"
-                value = "nickname"
-            }
-        )
-
-        val expectedResult = buildList {
-            userAttributes.mapTo(this) {
-                AuthUserAttribute(
-                    AuthUserAttributeKey.custom(it.name),
-                    it.value
-                )
-            }
-        }
-
-        coEvery {
-            authService.cognitoIdentityProviderClient?.getUser(any())
-        } returns GetUserResponse.invoke {
-            this.userAttributes = userAttributes
-            username = ""
-        }
-
-        // WHEN
-        plugin.fetchUserAttributes(onSuccess, mockk())
-
-        onSuccess.shouldBeCalled()
-        assertEquals(expectedResult, onSuccess.captured)
-    }
-
-    @Test
-    fun `fetch user attributes fails when not in SignedIn state`() {
-        // GIVEN
-        val onError = ConsumerWithLatch<AuthException>(expect = InvalidStateException())
-
-        setupCurrentAuthState(authNState = AuthenticationState.NotConfigured())
-
-        // WHEN
-        plugin.fetchUserAttributes(mockk(), onError)
-
-        onError.shouldBeCalled()
-    }
-
-    @Test
     fun `confirmResetPassword fails if authentication state is NotConfigured`() {
         // Given
         setupCurrentAuthState(authNState = AuthenticationState.NotConfigured())
@@ -670,395 +602,6 @@ class RealAWSCognitoAuthPluginTest {
 
         // THEN
         assertEquals(expectedCodeDeliveryDetails, onSuccess.captured)
-    }
-
-    @Test
-    fun `update user attribute fails when not in SignedIn state`() {
-        // GIVEN
-        val onError = ConsumerWithLatch<AuthException>(expect = InvalidStateException())
-
-        setupCurrentAuthState(authNState = AuthenticationState.NotConfigured())
-
-        // WHEN
-        plugin.updateUserAttribute(
-            AuthUserAttribute(AuthUserAttributeKey.email(), "test@test.com"),
-            mockk(),
-            onError
-        )
-
-        onError.shouldBeCalled()
-    }
-
-    @Test
-    fun `update user attributes fails when not in SignedIn state`() {
-        // GIVEN
-        val onError = ConsumerWithLatch<AuthException>(expect = InvalidStateException())
-
-        setupCurrentAuthState(authNState = AuthenticationState.NotConfigured())
-
-        // WHEN
-        plugin.updateUserAttributes(
-            mutableListOf(
-                AuthUserAttribute(AuthUserAttributeKey.email(), "test@test.com"),
-                AuthUserAttribute(AuthUserAttributeKey.nickname(), "test")
-            ),
-            AuthUpdateUserAttributesOptions.defaults(),
-            mockk(),
-            onError
-        )
-
-        onError.shouldBeCalled()
-    }
-
-    @Test
-    fun `update single user attribute with no attribute options and delivery code success`() {
-        // GIVEN
-        val onSuccess = ConsumerWithLatch<AuthUpdateAttributeResult>()
-
-        coEvery {
-            authService.cognitoIdentityProviderClient?.updateUserAttributes(any())
-        } returns UpdateUserAttributesResponse.invoke {}
-
-        // WHEN
-        plugin.updateUserAttribute(
-            AuthUserAttribute(AuthUserAttributeKey.email(), "test@test.com"),
-            onSuccess,
-            onError
-        )
-
-        onSuccess.shouldBeCalled()
-        assertTrue(onSuccess.captured.isUpdated, "attribute should be successfully updated")
-        assertNotNull(onSuccess.captured.nextStep, "next step should not be null")
-        assertNull(onSuccess.captured.nextStep.codeDeliveryDetails, "code delivery details should be null")
-        assertEquals(
-            onSuccess.captured.nextStep.updateAttributeStep,
-            AuthUpdateAttributeStep.DONE,
-            "next step should be done"
-        )
-    }
-
-    @Test
-    fun `update single user attribute with attribute options and no delivery code success`() {
-        // GIVEN
-        val onSuccess = ConsumerWithLatch<AuthUpdateAttributeResult>()
-
-        coEvery {
-            authService.cognitoIdentityProviderClient?.updateUserAttributes(any())
-        } returns UpdateUserAttributesResponse.invoke {}
-
-        val builder = AWSCognitoAuthUpdateUserAttributeOptions.builder().metadata(
-            mapOf("x" to "x", "y" to "y", "z" to "z")
-        )
-        // WHEN
-        plugin.updateUserAttribute(
-            AuthUserAttribute(AuthUserAttributeKey.email(), "test@test.com"),
-            builder.build(),
-            onSuccess,
-            mockk()
-        )
-
-        onSuccess.shouldBeCalled()
-        assertTrue(onSuccess.captured.isUpdated, "attribute should be successfully updated")
-        assertNotNull(onSuccess.captured.nextStep, "next step should not be null")
-        assertNull(onSuccess.captured.nextStep.codeDeliveryDetails, "code delivery details should be null")
-        assertEquals(
-            onSuccess.captured.nextStep.updateAttributeStep,
-            AuthUpdateAttributeStep.DONE,
-            "next step should be done"
-        )
-    }
-
-    @Test
-    fun `update user attributes with delivery code success`() {
-        // GIVEN
-        val onSuccess = ConsumerWithLatch<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>>()
-
-        coEvery {
-            authService.cognitoIdentityProviderClient?.updateUserAttributes(any())
-        } returns UpdateUserAttributesResponse.invoke {
-            codeDeliveryDetailsList = listOf(
-                CodeDeliveryDetailsType.invoke {
-                    attributeName = "email"
-                    deliveryMedium = DeliveryMediumType.Email
-                }
-            )
-        }
-
-        val builder = AWSCognitoAuthUpdateUserAttributesOptions.builder().metadata(
-            mapOf("x" to "x", "y" to "y", "z" to "z")
-        )
-
-        // WHEN
-        plugin.updateUserAttributes(
-            mutableListOf(
-                AuthUserAttribute(AuthUserAttributeKey.email(), "test@test.com"),
-                AuthUserAttribute(AuthUserAttributeKey.nickname(), "test")
-            ),
-            builder.build(),
-            onSuccess,
-            mockk()
-        )
-
-        onSuccess.shouldBeCalled()
-        assertEquals(onSuccess.captured.size, 2)
-        // nickname
-        assertNotNull(onSuccess.captured[AuthUserAttributeKey.nickname()], "nick name should be in result")
-        assertTrue(
-            onSuccess.captured[AuthUserAttributeKey.nickname()]?.isUpdated ?: false,
-            "nickname attribute should be successfully updated"
-        )
-        assertNotNull(
-            onSuccess.captured[AuthUserAttributeKey.nickname()]?.nextStep,
-            "next step should not be null for nickname attribute"
-        )
-        assertNull(
-            onSuccess.captured[AuthUserAttributeKey.nickname()]?.nextStep?.codeDeliveryDetails,
-            "code delivery details should be null for nickname attribute"
-        )
-        assertEquals(
-            onSuccess.captured[AuthUserAttributeKey.nickname()]?.nextStep?.updateAttributeStep,
-            AuthUpdateAttributeStep.DONE,
-            "next step for nickname attribute should be done"
-        )
-
-        // email
-        assertNotNull(onSuccess.captured[AuthUserAttributeKey.email()], "email should be in result")
-        assertFalse(
-            onSuccess.captured[AuthUserAttributeKey.email()]?.isUpdated ?: false,
-            "email attribute should not be successfully updated"
-        )
-        assertNotNull(
-            onSuccess.captured[AuthUserAttributeKey.email()]?.nextStep,
-            "next step should not be null for email attribute"
-        )
-        assertNotNull(
-            onSuccess.captured[AuthUserAttributeKey.email()]?.nextStep?.codeDeliveryDetails,
-            "code delivery details should not be null for email attribute"
-        )
-        assertEquals(
-            onSuccess.captured[AuthUserAttributeKey.email()]?.nextStep?.codeDeliveryDetails?.attributeName,
-            "email",
-            "email attribute should not be successfully updated"
-        )
-        assertEquals(
-            onSuccess.captured[AuthUserAttributeKey.email()]?.nextStep?.updateAttributeStep,
-            AuthUpdateAttributeStep.CONFIRM_ATTRIBUTE_WITH_CODE,
-            "next step for email attribute should be confirm_attribute_with_code"
-        )
-    }
-
-    @Test
-    fun `confirm user attribute fails when not in SignedIn state`() {
-        // GIVEN
-        val onError = ConsumerWithLatch<AuthException>(expect = InvalidStateException())
-
-        setupCurrentAuthState(authNState = AuthenticationState.NotConfigured())
-
-        // WHEN
-        plugin.confirmUserAttribute(
-            AuthUserAttributeKey.email(),
-            "000000",
-            mockk(),
-            onError
-        )
-
-        onError.shouldBeCalled()
-    }
-
-    @Test
-    fun `confirm user attribute fails when access token is invalid`() {
-        // GIVEN
-        val onError = ConsumerWithLatch<AuthException>(expect = InvalidUserPoolConfigurationException())
-
-        val invalidCredentials = AmplifyCredential.UserPool(
-            SignedInData(
-                "userId",
-                "username",
-                Date(),
-                SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
-                CognitoUserPoolTokens(null, null, null, 120L)
-            )
-        )
-
-        setupCurrentAuthState(
-            authNState = AuthenticationState.SignedIn(mockk(), mockk()),
-            authZState = AuthorizationState.SessionEstablished(invalidCredentials)
-        )
-
-        // WHEN
-        plugin.confirmUserAttribute(
-            AuthUserAttributeKey.email(),
-            "000000",
-            mockk(),
-            onError
-        )
-
-        onError.shouldBeCalled()
-    }
-
-    @Test
-    fun `confirm user attributes with cognito api call error`() {
-        // GIVEN
-        val onError = ConsumerWithLatch<AuthException>()
-
-        val expectedException = CognitoIdentityProviderException("Some Cognito Message")
-        coEvery {
-            authService.cognitoIdentityProviderClient?.verifyUserAttribute(any())
-        } throws expectedException
-
-        plugin.confirmUserAttribute(
-            AuthUserAttributeKey.email(),
-            "000000",
-            mockk(),
-            onError
-        )
-
-        onError.shouldBeCalled()
-        assertEquals(expectedException, onError.captured.cause)
-    }
-
-    @Test
-    fun `confirm user attributes with success`() {
-        // GIVEN
-        val onSuccess = ActionWithLatch()
-
-        coEvery {
-            authService.cognitoIdentityProviderClient?.verifyUserAttribute(any())
-        } returns VerifyUserAttributeResponse.invoke {}
-
-        plugin.confirmUserAttribute(
-            AuthUserAttributeKey.email(),
-            "000000",
-            onSuccess,
-            mockk()
-        )
-
-        onSuccess.shouldBeCalled()
-    }
-
-    @Test
-    fun `resend user attribute confirmation code fails when not in SignedIn state`() {
-        // GIVEN
-        val onError = ConsumerWithLatch<AuthException>(expect = InvalidStateException())
-
-        setupCurrentAuthState(authNState = AuthenticationState.NotConfigured())
-
-        // WHEN
-        plugin.resendUserAttributeConfirmationCode(
-            AuthUserAttributeKey.email(),
-            mockk(),
-            onError
-        )
-
-        onError.shouldBeCalled()
-    }
-
-    @Test
-    fun `resend user attribute confirmation code fails when access token is invalid`() {
-        // GIVEN
-        val onError = ConsumerWithLatch<AuthException>(expect = InvalidUserPoolConfigurationException())
-
-        val invalidCredentials = AmplifyCredential.UserPool(
-            SignedInData(
-                "userId",
-                "username",
-                Date(),
-                SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
-                CognitoUserPoolTokens(null, null, null, 120L)
-            )
-        )
-
-        setupCurrentAuthState(
-            authNState = AuthenticationState.SignedIn(mockk(), mockk()),
-            authZState = AuthorizationState.SessionEstablished(invalidCredentials)
-        )
-
-        // WHEN
-        plugin.resendUserAttributeConfirmationCode(
-            AuthUserAttributeKey.email(),
-            mockk(),
-            onError
-        )
-
-        onError.shouldBeCalled()
-    }
-
-    @Test
-    fun `resend user attribute confirmation code with cognito api call error`() {
-        // GIVEN
-        val onError = ConsumerWithLatch<AuthException>()
-
-        val expectedException = CognitoIdentityProviderException("Some Cognito Message")
-        coEvery {
-            authService.cognitoIdentityProviderClient?.getUserAttributeVerificationCode(
-                any()
-            )
-        } answers {
-            throw expectedException
-        }
-
-        plugin.resendUserAttributeConfirmationCode(
-            AuthUserAttributeKey.email(),
-            mockk(),
-            onError
-        )
-
-        onError.shouldBeCalled()
-        assertEquals(expectedException, onError.captured.cause)
-    }
-
-    @Test
-    fun `resend user attribute confirmation code with delivery code success`() {
-        // GIVEN
-        val onSuccess = ConsumerWithLatch<AuthCodeDeliveryDetails>()
-
-        coEvery {
-            authService.cognitoIdentityProviderClient?.getUserAttributeVerificationCode(
-                any()
-            )
-        } returns GetUserAttributeVerificationCodeResponse.invoke {
-            codeDeliveryDetails = CodeDeliveryDetailsType.invoke {
-                attributeName = "email"
-                deliveryMedium = DeliveryMediumType.Email
-                destination = "test"
-            }
-        }
-
-        val builder = AWSCognitoAuthResendUserAttributeConfirmationCodeOptions.builder().metadata(
-            mapOf("x" to "x", "y" to "y", "z" to "z")
-        )
-
-        // WHEN
-        plugin.resendUserAttributeConfirmationCode(
-            AuthUserAttributeKey.email(),
-            builder.build(),
-            onSuccess,
-            mockk()
-        )
-
-        onSuccess.shouldBeCalled()
-        // nickname
-        assertEquals(
-            onSuccess.captured.attributeName,
-            "email",
-            "attribute name should be email"
-        )
-        assertEquals(
-            onSuccess.captured.destination,
-            "test",
-            "destination for code delivery do not match expected"
-        )
-
-        assertNotNull(
-            onSuccess.captured.deliveryMedium,
-            "Delivery medium should not be null"
-        )
-
-        assertEquals(
-            onSuccess.captured.deliveryMedium,
-            AuthCodeDeliveryDetails.DeliveryMedium.EMAIL,
-            "Delivery medium did not match expected value"
-        )
     }
 
     @Test

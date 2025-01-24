@@ -20,8 +20,6 @@ import android.content.Intent
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthSession
-import com.amplifyframework.auth.AuthUserAttribute
-import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.TOTPSetupDetails
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
@@ -30,20 +28,16 @@ import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
-import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
-import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions
-import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.auth.result.AuthSignUpResult
-import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -255,87 +249,6 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
             { continuation.resumeWithException(it) }
         )
     }
-
-    suspend fun fetchUserAttributes(): List<AuthUserAttribute> = suspendCoroutine { continuation ->
-        delegate.fetchUserAttributes(
-            { continuation.resume(it) },
-            { continuation.resumeWithException(it) }
-        )
-    }
-
-    suspend fun updateUserAttribute(attribute: AuthUserAttribute): AuthUpdateAttributeResult =
-        suspendCoroutine { continuation ->
-            delegate.updateUserAttribute(
-                attribute,
-                { continuation.resume(it) },
-                { continuation.resumeWithException(it) }
-            )
-        }
-
-    suspend fun updateUserAttribute(
-        attribute: AuthUserAttribute,
-        options: AuthUpdateUserAttributeOptions
-    ): AuthUpdateAttributeResult = suspendCoroutine { continuation ->
-        delegate.updateUserAttribute(
-            attribute,
-            options,
-            { continuation.resume(it) },
-            { continuation.resumeWithException(it) }
-        )
-    }
-
-    suspend fun updateUserAttributes(
-        attributes: List<AuthUserAttribute>
-    ): Map<AuthUserAttributeKey, AuthUpdateAttributeResult> = suspendCoroutine { continuation ->
-        delegate.updateUserAttributes(
-            attributes,
-            { continuation.resume(it) },
-            { continuation.resumeWithException(it) }
-        )
-    }
-
-    suspend fun updateUserAttributes(
-        attributes: List<AuthUserAttribute>,
-        options: AuthUpdateUserAttributesOptions
-    ): Map<AuthUserAttributeKey, AuthUpdateAttributeResult> = suspendCoroutine { continuation ->
-        delegate.updateUserAttributes(
-            attributes,
-            options,
-            { continuation.resume(it) },
-            { continuation.resumeWithException(it) }
-        )
-    }
-
-    suspend fun resendUserAttributeConfirmationCode(attributeKey: AuthUserAttributeKey): AuthCodeDeliveryDetails =
-        suspendCoroutine { continuation ->
-            delegate.resendUserAttributeConfirmationCode(
-                attributeKey,
-                { continuation.resume(it) },
-                { continuation.resumeWithException(it) }
-            )
-        }
-
-    suspend fun resendUserAttributeConfirmationCode(
-        attributeKey: AuthUserAttributeKey,
-        options: AuthResendUserAttributeConfirmationCodeOptions
-    ): AuthCodeDeliveryDetails = suspendCoroutine { continuation ->
-        delegate.resendUserAttributeConfirmationCode(
-            attributeKey,
-            options,
-            { continuation.resume(it) },
-            { continuation.resumeWithException(it) }
-        )
-    }
-
-    suspend fun confirmUserAttribute(attributeKey: AuthUserAttributeKey, confirmationCode: String) =
-        suspendCoroutine { continuation ->
-            delegate.confirmUserAttribute(
-                attributeKey,
-                confirmationCode,
-                { continuation.resume(Unit) },
-                { continuation.resumeWithException(it) }
-            )
-        }
 
     suspend fun signOut(): AuthSignOutResult = suspendCoroutine { continuation ->
         delegate.signOut { continuation.resume(it) }

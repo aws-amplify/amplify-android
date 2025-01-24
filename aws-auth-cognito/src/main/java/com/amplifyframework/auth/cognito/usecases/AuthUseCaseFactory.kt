@@ -68,6 +68,30 @@ internal class AuthUseCaseFactory(
         stateMachine = stateMachine
     )
 
+    fun fetchUserAttributes() = FetchUserAttributesUseCase(
+        client = authEnvironment.requireIdentityProviderClient(),
+        fetchAuthSession = fetchAuthSession(),
+        stateMachine = stateMachine
+    )
+
+    fun updateUserAttributes() = UpdateUserAttributesUseCase(
+        client = authEnvironment.requireIdentityProviderClient(),
+        fetchAuthSession = fetchAuthSession(),
+        stateMachine = stateMachine
+    )
+
+    fun confirmUserAttribute() = ConfirmUserAttributeUseCase(
+        client = authEnvironment.requireIdentityProviderClient(),
+        fetchAuthSession = fetchAuthSession(),
+        stateMachine = stateMachine
+    )
+
+    fun resendUserAttributeConfirmation() = ResendUserAttributeConfirmationUseCase(
+        client = authEnvironment.requireIdentityProviderClient(),
+        fetchAuthSession = fetchAuthSession(),
+        stateMachine = stateMachine
+    )
+
     fun getCurrentUser() = GetCurrentUserUseCase(
         fetchAuthSession = fetchAuthSession(),
         stateMachine = stateMachine
