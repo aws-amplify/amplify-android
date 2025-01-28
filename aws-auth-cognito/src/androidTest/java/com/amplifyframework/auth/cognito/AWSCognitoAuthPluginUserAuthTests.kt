@@ -89,7 +89,7 @@ class AWSCognitoAuthPluginUserAuthTests {
             { println("====== Subscription Established ======") },
             {
                 println("====== Received some MFA Info ======")
-                if (it.data.username == userName)   {
+                if (it.data.username == userName) {
                     otpCode = it.data.code
                     latch?.countDown()
                 }
