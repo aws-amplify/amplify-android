@@ -327,9 +327,11 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Action { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.rememberDevice()
+
         authPlugin.rememberDevice(expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.rememberDevice(any(), any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute() }
     }
 
     @Test
@@ -337,9 +339,11 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Action { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.forgetDevice()
+
         authPlugin.forgetDevice(expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.forgetDevice(any(), any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute() }
     }
 
     @Test
@@ -348,9 +352,11 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Action { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.forgetDevice()
+
         authPlugin.forgetDevice(expectedDevice, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.forgetDevice(expectedDevice, any(), any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute(expectedDevice) }
     }
 
     @Test
@@ -358,9 +364,11 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<List<AuthDevice>> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.fetchDevices()
+
         authPlugin.fetchDevices(expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.fetchDevices(any(), any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute() }
     }
 
     @Test

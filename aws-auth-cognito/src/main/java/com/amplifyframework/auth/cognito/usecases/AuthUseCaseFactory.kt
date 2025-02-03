@@ -47,4 +47,24 @@ internal class AuthUseCaseFactory(
         fetchAuthSession = fetchAuthSession(),
         stateMachine = stateMachine
     )
+
+    fun rememberDevice() = RememberDeviceUseCase(
+        client = authEnvironment.requireIdentityProviderClient(),
+        fetchAuthSession = fetchAuthSession(),
+        stateMachine = stateMachine,
+        environment = authEnvironment
+    )
+
+    fun forgetDevice() = ForgetDeviceUseCase(
+        client = authEnvironment.requireIdentityProviderClient(),
+        fetchAuthSession = fetchAuthSession(),
+        stateMachine = stateMachine,
+        environment = authEnvironment
+    )
+
+    fun fetchDevices() = FetchDevicesUseCase(
+        client = authEnvironment.requireIdentityProviderClient(),
+        fetchAuthSession = fetchAuthSession(),
+        stateMachine = stateMachine
+    )
 }

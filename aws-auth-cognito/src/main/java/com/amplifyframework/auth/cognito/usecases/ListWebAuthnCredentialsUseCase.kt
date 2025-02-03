@@ -21,11 +21,10 @@ import aws.smithy.kotlin.runtime.time.toJvmInstant
 import com.amplifyframework.auth.cognito.AuthStateMachine
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthListWebAuthnCredentialsOptions.Companion.maxResults
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthListWebAuthnCredentialsOptions.Companion.nextToken
-import com.amplifyframework.auth.cognito.requireAuthenticationState
+import com.amplifyframework.auth.cognito.requireSignedInState
 import com.amplifyframework.auth.cognito.result.AWSCognitoAuthListWebAuthnCredentialsResult
 import com.amplifyframework.auth.cognito.result.CognitoWebAuthnCredential
 import com.amplifyframework.auth.options.AuthListWebAuthnCredentialsOptions
-import com.amplifyframework.statemachine.codegen.states.AuthenticationState.SignedIn
 
 internal class ListWebAuthnCredentialsUseCase(
     private val client: CognitoIdentityProviderClient,
@@ -34,7 +33,7 @@ internal class ListWebAuthnCredentialsUseCase(
 ) {
     suspend fun execute(options: AuthListWebAuthnCredentialsOptions): AWSCognitoAuthListWebAuthnCredentialsResult {
         // User must be SignedIn to call this API
-        stateMachine.requireAuthenticationState<SignedIn>()
+        stateMachine.requireSignedInState()
 
         val token = fetchAuthSession.execute().accessToken
 

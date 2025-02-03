@@ -33,6 +33,7 @@ import com.amplifyframework.auth.cognito.actions.SignUpCognitoActions
 import com.amplifyframework.auth.cognito.actions.UserAuthSignInCognitoActions
 import com.amplifyframework.auth.cognito.actions.WebAuthnSignInCognitoActions
 import com.amplifyframework.auth.exceptions.InvalidStateException
+import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.statemachine.Environment
 import com.amplifyframework.statemachine.StateMachine
 import com.amplifyframework.statemachine.StateMachineResolver
@@ -135,5 +136,14 @@ internal suspend inline fun <reified T : AuthenticationState> AuthStateMachine.r
         throw InvalidStateException(
             "Auth State Machine is not in the required authentication state: ${T::class.simpleName}"
         )
+    }
+}
+
+// Returns the SignedInState or throws SignedOutException or InvalidStateException
+internal suspend fun AuthStateMachine.requireSignedInState(): AuthenticationState.SignedIn {
+    return when (val state = getCurrentState().authNState) {
+        is AuthenticationState.SignedIn -> state
+        is AuthenticationState.SignedOut -> throw SignedOutException()
+        else -> throw InvalidStateException()
     }
 }

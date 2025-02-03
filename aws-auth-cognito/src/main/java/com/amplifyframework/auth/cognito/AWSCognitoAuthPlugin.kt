@@ -297,16 +297,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         enqueue(onSuccess, onError) { queueFacade.fetchAuthSession() }
 
     override fun rememberDevice(onSuccess: Action, onError: Consumer<AuthException>) =
-        enqueue(onSuccess, onError) { queueFacade.rememberDevice() }
+        enqueue(onSuccess, onError) { useCaseFactory.rememberDevice().execute() }
 
     override fun forgetDevice(onSuccess: Action, onError: Consumer<AuthException>) =
-        enqueue(onSuccess, onError) { queueFacade.forgetDevice() }
+        enqueue(onSuccess, onError) { useCaseFactory.forgetDevice().execute() }
 
     override fun forgetDevice(device: AuthDevice, onSuccess: Action, onError: Consumer<AuthException>) =
-        enqueue(onSuccess, onError) { queueFacade.forgetDevice(device) }
+        enqueue(onSuccess, onError) { useCaseFactory.forgetDevice().execute(device) }
 
     override fun fetchDevices(onSuccess: Consumer<List<AuthDevice>>, onError: Consumer<AuthException>) =
-        enqueue(onSuccess, onError) { queueFacade.fetchDevices() }
+        enqueue(onSuccess, onError) { useCaseFactory.fetchDevices().execute() }
 
     override fun resetPassword(
         username: String,

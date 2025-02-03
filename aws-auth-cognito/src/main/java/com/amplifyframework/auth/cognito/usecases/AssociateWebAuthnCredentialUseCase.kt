@@ -22,9 +22,8 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.startWebAuthnRegistration
 import com.amplifyframework.auth.cognito.AuthStateMachine
 import com.amplifyframework.auth.cognito.helpers.WebAuthnHelper
 import com.amplifyframework.auth.cognito.helpers.authLogger
-import com.amplifyframework.auth.cognito.requireAuthenticationState
+import com.amplifyframework.auth.cognito.requireSignedInState
 import com.amplifyframework.auth.options.AuthAssociateWebAuthnCredentialsOptions
-import com.amplifyframework.statemachine.codegen.states.AuthenticationState.SignedIn
 import com.amplifyframework.statemachine.util.mask
 import com.amplifyframework.util.JsonDocument
 import com.amplifyframework.util.toJsonString
@@ -40,7 +39,7 @@ internal class AssociateWebAuthnCredentialUseCase(
     @Suppress("UNUSED_PARAMETER")
     suspend fun execute(callingActivity: Activity, options: AuthAssociateWebAuthnCredentialsOptions) {
         // User must be signed in to call this API
-        stateMachine.requireAuthenticationState<SignedIn>()
+        stateMachine.requireSignedInState()
 
         val accessToken = fetchAuthSession.execute().accessToken
 

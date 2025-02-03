@@ -18,7 +18,7 @@ package com.amplifyframework.auth.cognito.usecases
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeleteWebAuthnCredentialResponse
 import com.amplifyframework.auth.cognito.AuthStateMachine
-import com.amplifyframework.auth.exceptions.InvalidStateException
+import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.options.AuthDeleteWebAuthnCredentialOptions
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import io.kotest.assertions.throwables.shouldThrow
@@ -49,7 +49,7 @@ class DeleteWebAuthnCredentialsUseCaseTest {
     fun `fails if not in SignedIn state`() = runTest {
         coEvery { stateMachine.getCurrentState().authNState } returns AuthenticationState.SignedOut(mockk())
 
-        shouldThrow<InvalidStateException> {
+        shouldThrow<SignedOutException> {
             useCase.execute("credentialId", AuthDeleteWebAuthnCredentialOptions.defaults())
         }
     }
