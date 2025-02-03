@@ -75,8 +75,10 @@ class AWSCognitoAuthPluginEmailMFATests {
             { println("====== Subscription Established ======") },
             {
                 println("====== Received some MFA Info ======")
-                mfaCode = it.data.code
-                latch?.countDown()
+                if (it.data.username == userName) {
+                    mfaCode = it.data.code
+                    latch?.countDown()
+                }
             },
             { println("====== Subscription Failed $it ======") },
             { }
