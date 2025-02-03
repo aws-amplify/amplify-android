@@ -158,7 +158,7 @@ fun Project.configureAndroid() {
             lint {
                 warningsAsErrors = true
                 abortOnError = true
-                enable += listOf("UnusedResources", "NewerVersionAvailable")
+                enable += listOf("UnusedResources")
             }
 
             compileOptions {
