@@ -30,29 +30,35 @@ import org.junit.Test
 
 class ApolloAmplifyConnectorTest {
     private val serverUrl = "https://example1234567890123456789.appsync-api.us-east-1.amazonaws.com/graphql"
+    private val region = "us-east-1"
+    private val key = "test-key"
 
     private val outputs = mockk<AmplifyOutputsData.Data> {
         every { url } returns serverUrl
-        every { awsRegion } returns "us-east-1"
-        every { apiKey } returns "test-key"
+        every { awsRegion } returns region
+        every { apiKey } returns key
     }
 
     @Test
-    fun `reads endpoint from AmplifyOutputs`() {
+    fun `reads data from AmplifyOutputs`() {
         val connector = ApolloAmplifyConnector(outputs)
+
         connector.endpoint.serverUrl.toString() shouldBe serverUrl
+        connector.region shouldBe region
+        connector.apiKey shouldBe key
     }
 
     @Test
-    fun `reads region from AmplifyOutputs`() {
-        val connector = ApolloAmplifyConnector(outputs)
-        connector.region shouldBe "us-east-1"
-    }
+    fun `returns data passed to constructor`() {
+        val connector = ApolloAmplifyConnector(
+            endpointUrl = serverUrl,
+            region = region,
+            apiKey = key
+        )
 
-    @Test
-    fun `reads api key from AmplifyOutputs`() {
-        val connector = ApolloAmplifyConnector(outputs)
-        connector.apiKey shouldBe "test-key"
+        connector.endpoint.serverUrl.toString() shouldBe serverUrl
+        connector.region shouldBe region
+        connector.apiKey shouldBe key
     }
 
     @Test

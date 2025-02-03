@@ -65,8 +65,8 @@ class AWSCognitoLegacyCredentialStoreInstrumentationTest {
 
     @Test
     fun test_legacy_store_implementation_can_retrieve_usernames_for_device_metadata() {
-        val expectedUsernames = listOf(credentialStoreUtil.user1Username, credentialStoreUtil.user2Username)
-        val deviceMetadataUsernames = store.retrieveDeviceMetadataUsernameList()
+        val expectedUsernames = setOf(credentialStoreUtil.user1Username, credentialStoreUtil.user2Username)
+        val deviceMetadataUsernames = store.retrieveDeviceMetadataUsernameList().toSet()
 
         assertEquals(expectedUsernames, deviceMetadataUsernames)
     }
