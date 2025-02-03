@@ -38,6 +38,12 @@ For applications using `apollo-appsync-amplify`, you can connect directly to you
 
 ```kotlin
 val connector = ApolloAmplifyConnector(context, AmplifyOutputs(R.raw.amplify_outputs))
+// or
+val connector = ApolloAmplifyConnector(
+    endpointUrl = "https://example1234567890123456789.appsync-api.us-east-1.amazonaws.com/graphql",
+    region = "us-east-1",
+    apiKey = "[YOUR_API_KEY]"
+)
 
 val apolloClient = ApolloClient.Builder()
     .appSync(connector.endpoint, connector.apiKeyAuthorizer())
@@ -75,7 +81,6 @@ val authorizer = ApiKeyAuthorizer { fetchApiKey() }
 ```
 ```kotlin
 // Using ApolloAmplifyConnector to read API key from amplify_outputs.json
-val connector = ApolloAmplifyConnector(context, AmplifyOutputs(R.raw.amplify_outputs))
 val authorizer = connector.apiKeyAuthorizer()
 ```
 
@@ -95,10 +100,7 @@ val authorizer = AuthTokenAuthorizer { fetchUserToken() }
 ```
 ```kotlin
 // Use ApolloAmplifyConnector to get Cognito tokens from Amplify for the signed-in user
-val connector = ApolloAmplifyConnector(context, AmplifyOutputs(R.raw.amplify_outputs))
 val authorizer = connector.authTokenAuthorizer()
-// or
-val authorizer = AuthTokenAuthorizer { ApolloAmplifyConnector.fetchLatestCognitoAuthToken() }
 ```
 
 ### IamAuthorizer
@@ -114,10 +116,7 @@ val authorizer = IamAuthorizer { signRequestAndReturnHeaders(it) }
 ```
 ```kotlin
 // Use ApolloAmplifyConnector to sign the request
-val connector = ApolloAmplifyConnector(context, AmplifyOutputs(R.raw.amplify_outputs))
 val authorizer = connector.iamAuthorizer()
-// or supply a region to sign via the companion function
-val authorizer = IamAuthorizer { ApolloAmplifyConnector.signAppSyncRequest(it, "us-east-1") }
 ```
 
 ## Contributing
