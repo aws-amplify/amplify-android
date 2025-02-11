@@ -1926,22 +1926,10 @@ internal class RealAWSCognitoAuthPlugin(
 
     fun getCurrentUser(onSuccess: Consumer<AuthUser>, onError: Consumer<AuthException>) {
         authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
+            when (val authNState = authState.authNState) {
                 is AuthenticationState.SignedIn -> {
-                    GlobalScope.async {
-                        val userPoolToken = getSession().userPoolTokensResult
-                        val userPoolTokenResultError = userPoolToken.error
-                        if (userPoolTokenResultError != null && userPoolTokenResultError is SessionExpiredException) {
-                            onError.accept(userPoolTokenResultError)
-                        } else {
-                            val accessToken = userPoolToken.value?.accessToken
-                            accessToken?.run {
-                                val userid = SessionHelper.getUserSub(accessToken) ?: ""
-                                val username = SessionHelper.getUsername(accessToken) ?: ""
-                                onSuccess.accept(AuthUser(userid, username))
-                            } ?: onError.accept(InvalidUserPoolConfigurationException())
-                        }
-                    }
+                    val data = authNState.signedInData
+                    onSuccess.accept(AuthUser(data.userId, data.username))
                 }
                 is AuthenticationState.SignedOut -> {
                     onError.accept(SignedOutException())

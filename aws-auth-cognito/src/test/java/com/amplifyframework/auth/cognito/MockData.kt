@@ -23,6 +23,10 @@ import com.amplifyframework.auth.MFAType
 import com.amplifyframework.auth.TOTPSetupDetails
 import com.amplifyframework.auth.result.step.AuthNextSignInStep
 import com.amplifyframework.auth.result.step.AuthSignInStep
+import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
+import com.amplifyframework.statemachine.codegen.data.SignedInData
+import java.util.Date
 
 fun mockWebAuthnCredentialDescription(
     credentialId: String = "id",
@@ -51,4 +55,19 @@ fun mockAuthNextSignInStep(
     totpSetupDetails,
     allowedMFATypes,
     availableFactors
+)
+
+internal fun mockSignedInData(
+    userId: String = "userid",
+    username: String = "username",
+    signedInDate: Date = Date(),
+    signInMethod: SignInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
+    cognitoUserPoolTokens: CognitoUserPoolTokens =
+        CognitoUserPoolTokens(idToken = null, accessToken = null, refreshToken = null, expiration = null)
+) = SignedInData(
+    userId = userId,
+    username = username,
+    signedInDate = signedInDate,
+    signInMethod = signInMethod,
+    cognitoUserPoolTokens = cognitoUserPoolTokens
 )

@@ -53,7 +53,6 @@ import com.amplifyframework.auth.TOTPSetupDetails
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
-import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
@@ -62,7 +61,6 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthVerifyTOTPSetupOp
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.exceptions.InvalidStateException
-import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
@@ -84,7 +82,6 @@ import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
-import com.amplifyframework.statemachine.codegen.errors.SessionError
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
@@ -245,9 +242,12 @@ class RealAWSCognitoAuthPluginTest {
         // GIVEN
         val onSuccess = ConsumerWithLatch<AuthUser>()
         val onError = mockk<Consumer<AuthException>>()
-        mockkObject(SessionHelper)
-        every { SessionHelper.getUsername(any()) } returns "username"
-        every { SessionHelper.getUserSub(any()) } returns "sub"
+
+        val data = mockSignedInData(userId = "sub", username = "username")
+        setupCurrentAuthState(
+            authNState = AuthenticationState.SignedIn(signedInData = data, deviceMetadata = mockk())
+        )
+
         // WHEN
         plugin.getCurrentUser(onSuccess, onError)
 
@@ -288,43 +288,6 @@ class RealAWSCognitoAuthPluginTest {
         // THEN
         onError.shouldBeCalled()
         verify(exactly = 0) { onSuccess.accept(any()) }
-    }
-
-    @Test
-    fun testGetCurrentUserFailsWithExpiredSessionException() {
-        // GIVEN
-        val onGetCurrentUserSuccess = mockk<Consumer<AuthUser>>()
-        val onGetCurrentUserError = ConsumerWithLatch<AuthException>(expect = SessionExpiredException())
-        val sessionExpiredException = SessionExpiredException()
-        val sessionError = SessionError(sessionExpiredException, credentials)
-        val authNState = AuthenticationState.SignedIn(mockk { every { username } returns "username" }, mockk())
-        val authZState = AuthorizationState.Error(sessionError)
-
-        setupCurrentAuthState(
-            authNState = authNState,
-            authZState = authZState
-        )
-
-        val sessionErrorState = mockk<AuthState> {
-            every { this@mockk.authNState } returns AuthenticationState.SignedIn(
-                mockk { every { username } returns "username" },
-                mockk()
-            )
-            every { this@mockk.authZState } returns AuthorizationState.Error(sessionError)
-        }
-
-        every {
-            authStateMachine.listen(any(), captureLambda(), null)
-        } answers {
-            lambda<(AuthState) -> Unit>().invoke(sessionErrorState)
-        }
-
-        // WHEN
-        plugin.getCurrentUser(onGetCurrentUserSuccess, onGetCurrentUserError)
-
-        // THEN
-        onGetCurrentUserError.shouldBeCalled()
-        verify(exactly = 0) { onGetCurrentUserSuccess.accept(any()) }
     }
 
     @Test
