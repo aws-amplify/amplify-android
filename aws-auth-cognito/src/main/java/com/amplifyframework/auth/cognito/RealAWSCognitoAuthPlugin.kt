@@ -48,7 +48,6 @@ import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthFactorType
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthSession
-import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.MFAType
@@ -1920,23 +1919,6 @@ internal class RealAWSCognitoAuthPlugin(
                 }
                 is AuthenticationState.SignedOut -> onError.accept(SignedOutException())
                 else -> onError.accept(InvalidStateException())
-            }
-        }
-    }
-
-    fun getCurrentUser(onSuccess: Consumer<AuthUser>, onError: Consumer<AuthException>) {
-        authStateMachine.getCurrentState { authState ->
-            when (val authNState = authState.authNState) {
-                is AuthenticationState.SignedIn -> {
-                    val data = authNState.signedInData
-                    onSuccess.accept(AuthUser(data.userId, data.username))
-                }
-                is AuthenticationState.SignedOut -> {
-                    onError.accept(SignedOutException())
-                }
-                else -> {
-                    onError.accept(InvalidStateException())
-                }
             }
         }
     }

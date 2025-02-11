@@ -45,7 +45,6 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttribute
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthSession
-import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.MFAType
@@ -61,7 +60,6 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthVerifyTOTPSetupOp
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.exceptions.InvalidStateException
-import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
@@ -234,59 +232,6 @@ class RealAWSCognitoAuthPluginTest {
         plugin.fetchAuthSession(onSuccess, onError)
 
         // THEN
-        verify(exactly = 0) { onSuccess.accept(any()) }
-    }
-
-    @Test
-    fun testGetCurrentUserSucceedsIfSignedIn() {
-        // GIVEN
-        val onSuccess = ConsumerWithLatch<AuthUser>()
-        val onError = mockk<Consumer<AuthException>>()
-
-        val data = mockSignedInData(userId = "sub", username = "username")
-        setupCurrentAuthState(
-            authNState = AuthenticationState.SignedIn(signedInData = data, deviceMetadata = mockk())
-        )
-
-        // WHEN
-        plugin.getCurrentUser(onSuccess, onError)
-
-        // THEN
-        onSuccess.shouldBeCalled()
-        verify(exactly = 0) { onError.accept(any()) }
-    }
-
-    @Test
-    fun testGetCurrentUserFailsWithInvalidStateException() {
-        // GIVEN
-        val onSuccess = mockk<Consumer<AuthUser>>()
-        val onError = ConsumerWithLatch<AuthException>(expect = InvalidStateException())
-
-        setupCurrentAuthState(authNState = AuthenticationState.NotConfigured())
-
-        // WHEN
-        plugin.getCurrentUser(onSuccess, onError)
-
-        // THEN
-        onError.shouldBeCalled()
-        verify(exactly = 0) { onSuccess.accept(any()) }
-    }
-
-    @Test
-    fun testGetCurrentUserFailsWithSignedOutException() {
-        // GIVEN
-        val onSuccess = mockk<Consumer<AuthUser>>()
-        val onError = ConsumerWithLatch<AuthException>(expect = SignedOutException())
-
-        setupCurrentAuthState(
-            authNState = AuthenticationState.SignedOut(mockk()),
-            authZState = AuthorizationState.Configured()
-        )
-        // WHEN
-        plugin.getCurrentUser(onSuccess, onError)
-
-        // THEN
-        onError.shouldBeCalled()
         verify(exactly = 0) { onSuccess.accept(any()) }
     }
 

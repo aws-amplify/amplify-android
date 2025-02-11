@@ -608,9 +608,11 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthUser> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.getCurrentUser()
+
         authPlugin.getCurrentUser(expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.getCurrentUser(any(), any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute() }
     }
 
     @Test
