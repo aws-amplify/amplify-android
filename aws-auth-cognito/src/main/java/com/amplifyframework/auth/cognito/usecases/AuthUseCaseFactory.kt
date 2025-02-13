@@ -67,4 +67,9 @@ internal class AuthUseCaseFactory(
         fetchAuthSession = fetchAuthSession(),
         stateMachine = stateMachine
     )
+
+    fun getCurrentUser() = GetCurrentUserUseCase(
+        fetchAuthSession = fetchAuthSession(),
+        stateMachine = stateMachine
+    )
 }

@@ -397,7 +397,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     ) = enqueue(onSuccess, onError) { queueFacade.confirmUserAttribute(attributeKey, confirmationCode) }
 
     override fun getCurrentUser(onSuccess: Consumer<AuthUser>, onError: Consumer<AuthException>) =
-        enqueue(onSuccess, onError) { queueFacade.getCurrentUser() }
+        enqueue(onSuccess, onError) { useCaseFactory.getCurrentUser().execute() }
 
     override fun signOut(onComplete: Consumer<AuthSignOutResult>) = enqueue(
         onComplete,

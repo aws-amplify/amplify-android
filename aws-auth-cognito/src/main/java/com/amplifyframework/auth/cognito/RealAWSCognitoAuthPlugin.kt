@@ -48,7 +48,6 @@ import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthFactorType
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthSession
-import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.MFAType
@@ -1920,35 +1919,6 @@ internal class RealAWSCognitoAuthPlugin(
                 }
                 is AuthenticationState.SignedOut -> onError.accept(SignedOutException())
                 else -> onError.accept(InvalidStateException())
-            }
-        }
-    }
-
-    fun getCurrentUser(onSuccess: Consumer<AuthUser>, onError: Consumer<AuthException>) {
-        authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                is AuthenticationState.SignedIn -> {
-                    GlobalScope.async {
-                        val userPoolToken = getSession().userPoolTokensResult
-                        val userPoolTokenResultError = userPoolToken.error
-                        if (userPoolTokenResultError != null && userPoolTokenResultError is SessionExpiredException) {
-                            onError.accept(userPoolTokenResultError)
-                        } else {
-                            val accessToken = userPoolToken.value?.accessToken
-                            accessToken?.run {
-                                val userid = SessionHelper.getUserSub(accessToken) ?: ""
-                                val username = SessionHelper.getUsername(accessToken) ?: ""
-                                onSuccess.accept(AuthUser(userid, username))
-                            } ?: onError.accept(InvalidUserPoolConfigurationException())
-                        }
-                    }
-                }
-                is AuthenticationState.SignedOut -> {
-                    onError.accept(SignedOutException())
-                }
-                else -> {
-                    onError.accept(InvalidStateException())
-                }
             }
         }
     }
