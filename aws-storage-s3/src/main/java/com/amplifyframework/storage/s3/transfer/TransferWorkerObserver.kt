@@ -31,6 +31,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.concurrent.ConcurrentHashMap
 
 internal class TransferWorkerObserver private constructor(
     context: Context,
@@ -48,6 +49,9 @@ internal class TransferWorkerObserver private constructor(
             CategoryType.STORAGE,
             AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
         )
+
+    private val observedTags =
+        ConcurrentHashMap.newKeySet<String>()
 
     init {
         attachObserverForPendingTransfer()
@@ -195,6 +199,7 @@ internal class TransferWorkerObserver private constructor(
 
     private suspend fun attachObserver(tag: String) {
         withContext(Dispatchers.Main) {
+            if (observedTags.contains(tag)) return@withContext
             val liveData = workManager.getWorkInfosByTagLiveData(tag)
             liveData.observeForever(this@TransferWorkerObserver)
         }
@@ -202,8 +207,10 @@ internal class TransferWorkerObserver private constructor(
 
     private suspend fun removeObserver(tag: String) {
         withContext(Dispatchers.Main) {
+            if (!observedTags.contains(tag)) return@withContext
             workManager.getWorkInfosByTagLiveData(tag)
                 .removeObserver(this@TransferWorkerObserver)
+            observedTags.remove(tag)
         }
     }
 }
