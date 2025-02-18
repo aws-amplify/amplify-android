@@ -1,3 +1,10 @@
+## [Release 2.27.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.27.0)
+
+### Bug Fixes
+- **auth:** Return cached user id and username instead of refetching them in getCurrentUser ([#2985](https://github.com/aws-amplify/amplify-android/issues/2985))
+
+[See all changes between 2.26.0 and 2.27.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.26.0...release_v2.27.0)
+
 ## [Release 2.26.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.26.0)
 
 ### Features
