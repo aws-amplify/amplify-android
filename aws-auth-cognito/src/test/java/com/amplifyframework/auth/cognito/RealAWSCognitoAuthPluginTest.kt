@@ -18,9 +18,7 @@ package com.amplifyframework.auth.cognito
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.getUser
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.AssociateSoftwareTokenResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordResponse
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeMismatchException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswordResponse
@@ -32,21 +30,15 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationC
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SetUserMfaPreferenceRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SetUserMfaPreferenceResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SmsMfaSettingsType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.SoftwareTokenMfaNotFoundException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SoftwareTokenMfaSettingsType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareTokenRequest
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareTokenResponse
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareTokenResponseType
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.MFAType
-import com.amplifyframework.auth.TOTPSetupDetails
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
-import com.amplifyframework.auth.cognito.options.AWSCognitoAuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.exceptions.InvalidStateException
@@ -698,103 +690,6 @@ class RealAWSCognitoAuthPluginTest {
             AuthFlowType.USER_PASSWORD_AUTH,
             "Auth flow types do not match expected"
         )
-    }
-
-    @Test
-    fun `setupTOTP on success`() {
-        val onSuccess = ConsumerWithLatch<TOTPSetupDetails>()
-
-        val session = "SESSION"
-        val secretCode = "SECRET_CODE"
-        coEvery { mockCognitoIPClient.associateSoftwareToken(any()) }.answers {
-            AssociateSoftwareTokenResponse.invoke {
-                this.session = session
-                this.secretCode = secretCode
-            }
-        }
-
-        plugin.setUpTOTP(onSuccess, mockk())
-
-        onSuccess.shouldBeCalled()
-        assertEquals(secretCode, onSuccess.captured.sharedSecret)
-    }
-
-    @Test
-    fun `setupTOTP on error`() {
-        val onError = ConsumerWithLatch<AuthException>()
-
-        val expectedErrorMessage = "Software token MFA not enabled"
-        coEvery { mockCognitoIPClient.associateSoftwareToken(any()) }.answers {
-            throw SoftwareTokenMfaNotFoundException.invoke {
-                message = expectedErrorMessage
-            }
-        }
-
-        plugin.setUpTOTP(mockk(), onError)
-
-        onError.shouldBeCalled()
-        assertEquals(expectedErrorMessage, onError.captured.cause?.message)
-    }
-
-    @Test
-    fun `verifyTOTP on success`() {
-        val onSuccess = ActionWithLatch()
-        val code = "123456"
-        val friendlyDeviceName = "DEVICE_NAME"
-        coEvery {
-            mockCognitoIPClient.verifySoftwareToken(
-                VerifySoftwareTokenRequest.invoke {
-                    userCode = code
-                    this.friendlyDeviceName = friendlyDeviceName
-                    accessToken = credentials.signedInData.cognitoUserPoolTokens.accessToken
-                }
-            )
-        }.answers {
-            VerifySoftwareTokenResponse.invoke {
-                status = VerifySoftwareTokenResponseType.Success
-            }
-        }
-
-        plugin.verifyTOTPSetup(
-            code,
-            AWSCognitoAuthVerifyTOTPSetupOptions.CognitoBuilder().friendlyDeviceName(friendlyDeviceName).build(),
-            onSuccess,
-            mockk()
-        )
-
-        onSuccess.shouldBeCalled()
-    }
-
-    @Test
-    fun `verifyTOTP on error`() {
-        val onError = ConsumerWithLatch<AuthException>()
-
-        val code = "123456"
-        val errorMessage = "Invalid code"
-        coEvery {
-            mockCognitoIPClient.verifySoftwareToken(
-                VerifySoftwareTokenRequest.invoke {
-                    userCode = code
-                    accessToken = credentials.signedInData.cognitoUserPoolTokens.accessToken
-                }
-            )
-        }.answers {
-            VerifySoftwareTokenResponse.invoke {
-                throw CodeMismatchException.invoke {
-                    message = errorMessage
-                }
-            }
-        }
-
-        plugin.verifyTOTPSetup(
-            code,
-            AWSCognitoAuthVerifyTOTPSetupOptions.CognitoBuilder().build(),
-            mockk(),
-            onError
-        )
-
-        onError.shouldBeCalled()
-        assertEquals(errorMessage, onError.captured.cause?.message)
     }
 
     @Test
