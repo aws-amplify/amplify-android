@@ -22,18 +22,12 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.associateSoftwareToken
 import aws.sdk.kotlin.services.cognitoidentityprovider.confirmForgotPassword
 import aws.sdk.kotlin.services.cognitoidentityprovider.getUser
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.EmailMfaSettingsType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserAttributeVerificationCodeRequest
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SmsMfaSettingsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SoftwareTokenMfaSettingsType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesRequest
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareTokenResponseType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifyUserAttributeRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.resendConfirmationCode
 import aws.sdk.kotlin.services.cognitoidentityprovider.setUserMfaPreference
 import aws.sdk.kotlin.services.cognitoidentityprovider.verifySoftwareToken
@@ -48,14 +42,11 @@ import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthFactorType
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthSession
-import com.amplifyframework.auth.AuthUserAttribute
-import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.MFAType
 import com.amplifyframework.auth.TOTPSetupDetails
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
-import com.amplifyframework.auth.cognito.exceptions.service.CodeDeliveryFailureException
 import com.amplifyframework.auth.cognito.exceptions.service.HostedUISignOutException
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidAccountTypeException
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidParameterException
@@ -76,12 +67,9 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmResetPassw
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignUpOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendSignUpCodeOptions
-import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignOutOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions
-import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
-import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
@@ -104,24 +92,18 @@ import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
-import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
-import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions
-import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.auth.result.AuthSignUpResult
-import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.auth.result.step.AuthNextSignInStep
-import com.amplifyframework.auth.result.step.AuthNextUpdateAttributeStep
 import com.amplifyframework.auth.result.step.AuthSignInStep
-import com.amplifyframework.auth.result.step.AuthUpdateAttributeStep
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
@@ -1635,290 +1617,6 @@ internal class RealAWSCognitoAuthPlugin(
                 onSuccess.call()
             } catch (e: Exception) {
                 onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
-            }
-        }
-    }
-
-    fun fetchUserAttributes(onSuccess: Consumer<List<AuthUserAttribute>>, onError: Consumer<AuthException>) {
-        authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                // Check if user signed in
-                is AuthenticationState.SignedIn -> {
-                    GlobalScope.launch {
-                        try {
-                            val accessToken = getSession().userPoolTokensResult.value?.accessToken
-                            val getUserRequest = GetUserRequest.invoke {
-                                this.accessToken = accessToken
-                            }
-                            val user = authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.getUser(
-                                getUserRequest
-                            )
-                            val userAttributes = buildList {
-                                user?.userAttributes?.forEach {
-                                    add(
-                                        AuthUserAttribute(
-                                            AuthUserAttributeKey.custom(it.name),
-                                            it.value
-                                        )
-                                    )
-                                }
-                            }
-                            onSuccess.accept(userAttributes)
-                        } catch (e: Exception) {
-                            onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
-                        }
-                    }
-                }
-                is AuthenticationState.SignedOut -> onError.accept(SignedOutException())
-                else -> onError.accept(InvalidStateException())
-            }
-        }
-    }
-
-    fun updateUserAttribute(
-        attribute: AuthUserAttribute,
-        options: AuthUpdateUserAttributeOptions,
-        onSuccess: Consumer<AuthUpdateAttributeResult>,
-        onError: Consumer<AuthException>
-    ) {
-        GlobalScope.launch {
-            try {
-                val attributes = listOf(attribute)
-                val userAttributeOptions = options as? AWSCognitoAuthUpdateUserAttributeOptions
-                val results = updateUserAttributes(attributes.toMutableList(), userAttributeOptions?.metadata)
-                onSuccess.accept(results.entries.first().value)
-            } catch (e: AuthException) {
-                onError.accept(e)
-            } catch (e: Exception) {
-                onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
-            }
-        }
-    }
-
-    fun updateUserAttribute(
-        attribute: AuthUserAttribute,
-        onSuccess: Consumer<AuthUpdateAttributeResult>,
-        onError: Consumer<AuthException>
-    ) {
-        updateUserAttribute(attribute, AuthUpdateUserAttributeOptions.defaults(), onSuccess, onError)
-    }
-
-    fun updateUserAttributes(
-        attributes: List<AuthUserAttribute>,
-        options: AuthUpdateUserAttributesOptions,
-        onSuccess: Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>>,
-        onError: Consumer<AuthException>
-    ) {
-        GlobalScope.launch {
-            try {
-                val userAttributesOptions = options as? AWSCognitoAuthUpdateUserAttributesOptions
-                onSuccess.accept(updateUserAttributes(attributes, userAttributesOptions?.metadata))
-            } catch (e: AuthException) {
-                onError.accept(e)
-            } catch (e: Exception) {
-                onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
-            }
-        }
-    }
-
-    fun updateUserAttributes(
-        attributes: List<AuthUserAttribute>,
-        onSuccess: Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>>,
-        onError: Consumer<AuthException>
-    ) {
-        updateUserAttributes(attributes, AuthUpdateUserAttributesOptions.defaults(), onSuccess, onError)
-    }
-
-    private suspend fun updateUserAttributes(
-        attributes: List<AuthUserAttribute>,
-        userAttributesOptionsMetadata: Map<String, String>?
-    ): MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult> = suspendCoroutine { continuation ->
-
-        authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                // Check if user signed in
-                is AuthenticationState.SignedIn -> {
-                    GlobalScope.launch {
-                        try {
-                            val accessToken = getSession().userPoolTokensResult.value?.accessToken
-                            accessToken?.let {
-                                var userAttributes = attributes.map {
-                                    AttributeType.invoke {
-                                        name = it.key.keyString
-                                        value = it.value
-                                    }
-                                }
-                                val userAttributesRequest = UpdateUserAttributesRequest.invoke {
-                                    this.accessToken = accessToken
-                                    this.userAttributes = userAttributes
-                                    this.clientMetadata = userAttributesOptionsMetadata
-                                }
-                                val userAttributeResponse = authEnvironment.cognitoAuthService
-                                    .cognitoIdentityProviderClient?.updateUserAttributes(
-                                        userAttributesRequest
-                                    )
-
-                                continuation.resume(
-                                    getUpdateUserAttributeResult(userAttributeResponse, userAttributes)
-                                )
-                            } ?: continuation.resumeWithException(
-                                InvalidUserPoolConfigurationException()
-                            )
-                        } catch (e: Exception) {
-                            continuation.resumeWithException(CognitoAuthExceptionConverter.lookup(e, e.toString()))
-                        }
-                    }
-                }
-                is AuthenticationState.SignedOut -> continuation.resumeWithException(SignedOutException())
-                else -> continuation.resumeWithException(InvalidStateException())
-            }
-        }
-    }
-
-    private fun getUpdateUserAttributeResult(
-        response: UpdateUserAttributesResponse?,
-        userAttributeList: List<AttributeType>
-    ): MutableMap<AuthUserAttributeKey, AuthUpdateAttributeResult> {
-        val finalResult = HashMap<AuthUserAttributeKey, AuthUpdateAttributeResult>()
-
-        response?.codeDeliveryDetailsList?.let {
-            val codeDeliveryDetailsList = it
-            for (item in codeDeliveryDetailsList) {
-                item.attributeName?.let {
-                    val deliveryMedium = AuthCodeDeliveryDetails.DeliveryMedium.fromString(item.deliveryMedium?.value)
-                    val authCodeDeliveryDetails = AuthCodeDeliveryDetails(
-                        item.destination.toString(),
-                        deliveryMedium,
-                        item.attributeName
-                    )
-                    val nextStep = AuthNextUpdateAttributeStep(
-                        AuthUpdateAttributeStep.CONFIRM_ATTRIBUTE_WITH_CODE,
-                        HashMap(),
-                        authCodeDeliveryDetails
-                    )
-                    val updateAttributeResult = AuthUpdateAttributeResult(false, nextStep)
-                    finalResult[AuthUserAttributeKey.custom(item.attributeName)] = updateAttributeResult
-                }
-            }
-        }
-
-        // Check if all items are added to the dictionary
-        for (item in userAttributeList) {
-            if (!finalResult.containsKey(AuthUserAttributeKey.custom(item.name))) {
-                val completeStep = AuthNextUpdateAttributeStep(
-                    AuthUpdateAttributeStep.DONE,
-                    HashMap(),
-                    null
-                )
-                val updateAttributeResult = AuthUpdateAttributeResult(true, completeStep)
-                finalResult[AuthUserAttributeKey.custom(item.name)] = updateAttributeResult
-            }
-        }
-        return finalResult
-    }
-
-    fun resendUserAttributeConfirmationCode(
-        attributeKey: AuthUserAttributeKey,
-        options: AuthResendUserAttributeConfirmationCodeOptions,
-        onSuccess: Consumer<AuthCodeDeliveryDetails>,
-        onError: Consumer<AuthException>
-    ) {
-        val metadataOptions = options as? AWSCognitoAuthResendUserAttributeConfirmationCodeOptions
-        authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                // Check if user signed in
-                is AuthenticationState.SignedIn -> {
-                    GlobalScope.launch {
-                        try {
-                            val accessToken = getSession().userPoolTokensResult.value?.accessToken
-                            accessToken?.let {
-                                val getUserAttributeVerificationCodeRequest =
-                                    GetUserAttributeVerificationCodeRequest.invoke {
-                                        this.accessToken = accessToken
-                                        this.attributeName = attributeKey.keyString
-                                        this.clientMetadata = metadataOptions?.metadata
-                                    }
-
-                                val getUserAttributeVerificationCodeResponse = authEnvironment.cognitoAuthService
-                                    .cognitoIdentityProviderClient?.getUserAttributeVerificationCode(
-                                        getUserAttributeVerificationCodeRequest
-                                    )
-
-                                getUserAttributeVerificationCodeResponse?.codeDeliveryDetails?.let {
-                                    val codeDeliveryDetails = it
-                                    codeDeliveryDetails.attributeName?.let {
-                                        val deliveryMedium = AuthCodeDeliveryDetails.DeliveryMedium.fromString(
-                                            codeDeliveryDetails.deliveryMedium?.value
-                                        )
-                                        val authCodeDeliveryDetails = AuthCodeDeliveryDetails(
-                                            codeDeliveryDetails.destination.toString(),
-                                            deliveryMedium,
-                                            codeDeliveryDetails.attributeName
-                                        )
-                                        onSuccess.accept(authCodeDeliveryDetails)
-                                    } ?: {
-                                        onError.accept(CodeDeliveryFailureException())
-                                    }
-                                }
-                            } ?: onError.accept(
-                                InvalidUserPoolConfigurationException()
-                            )
-                        } catch (e: Exception) {
-                            onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
-                        }
-                    }
-                }
-                is AuthenticationState.SignedOut -> onError.accept(SignedOutException())
-                else -> onError.accept(InvalidStateException())
-            }
-        }
-    }
-
-    fun resendUserAttributeConfirmationCode(
-        attributeKey: AuthUserAttributeKey,
-        onSuccess: Consumer<AuthCodeDeliveryDetails>,
-        onError: Consumer<AuthException>
-    ) {
-        resendUserAttributeConfirmationCode(
-            attributeKey,
-            AuthResendUserAttributeConfirmationCodeOptions.defaults(),
-            onSuccess,
-            onError
-        )
-    }
-
-    fun confirmUserAttribute(
-        attributeKey: AuthUserAttributeKey,
-        confirmationCode: String,
-        onSuccess: Action,
-        onError: Consumer<AuthException>
-    ) {
-        authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                // Check if user signed in
-                is AuthenticationState.SignedIn -> {
-                    GlobalScope.launch {
-                        try {
-                            val accessToken = getSession().userPoolTokensResult.value?.accessToken
-                            accessToken?.let {
-                                val verifyUserAttributeRequest = VerifyUserAttributeRequest.invoke {
-                                    this.accessToken = accessToken
-                                    this.attributeName = attributeKey.keyString
-                                    this.code = confirmationCode
-                                }
-                                authEnvironment.cognitoAuthService
-                                    .cognitoIdentityProviderClient?.verifyUserAttribute(
-                                        verifyUserAttributeRequest
-                                    )
-                                onSuccess.call()
-                            } ?: onError.accept(InvalidUserPoolConfigurationException())
-                        } catch (e: Exception) {
-                            onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
-                        }
-                    }
-                }
-                is AuthenticationState.SignedOut -> onError.accept(SignedOutException())
-                else -> onError.accept(InvalidStateException())
             }
         }
     }

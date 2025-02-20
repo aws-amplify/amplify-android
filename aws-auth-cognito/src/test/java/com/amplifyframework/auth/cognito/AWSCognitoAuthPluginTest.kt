@@ -470,9 +470,11 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<List<AuthUserAttribute>> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.fetchUserAttributes()
+
         authPlugin.fetchUserAttributes(expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.fetchUserAttributes(any(), any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute() }
     }
 
     @Test
@@ -481,9 +483,11 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthUpdateAttributeResult> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.updateUserAttributes()
+
         authPlugin.updateUserAttribute(expectedAttribute, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.updateUserAttribute(expectedAttribute, any(), any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute(expectedAttribute) }
     }
 
     @Test
@@ -493,10 +497,12 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthUpdateAttributeResult> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.updateUserAttributes()
+
         authPlugin.updateUserAttribute(expectedAttribute, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.updateUserAttribute(expectedAttribute, expectedOptions, any(), any())
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute(expectedAttribute, expectedOptions)
         }
     }
 
@@ -506,9 +512,11 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.updateUserAttributes()
+
         authPlugin.updateUserAttributes(expectedAttributes, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.updateUserAttributes(expectedAttributes, any(), any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute(expectedAttributes) }
     }
 
     @Test
@@ -518,16 +526,11 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.updateUserAttributes()
+
         authPlugin.updateUserAttributes(expectedAttributes, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.updateUserAttributes(
-                expectedAttributes,
-                expectedOptions,
-                any(),
-                any()
-            )
-        }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute(expectedAttributes, expectedOptions) }
     }
 
     @Test
@@ -544,15 +547,11 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthCodeDeliveryDetails> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.resendUserAttributeConfirmation()
+
         authPlugin.resendUserAttributeConfirmationCode(expectedAttributeKey, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.resendUserAttributeConfirmationCode(
-                expectedAttributeKey,
-                any(),
-                any()
-            )
-        }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute(expectedAttributeKey) }
     }
 
     @Test
@@ -562,6 +561,8 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthCodeDeliveryDetails> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.resendUserAttributeConfirmation()
+
         authPlugin.resendUserAttributeConfirmationCode(
             expectedAttributeKey,
             expectedOptions,
@@ -569,14 +570,7 @@ class AWSCognitoAuthPluginTest {
             expectedOnError
         )
 
-        verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.resendUserAttributeConfirmationCode(
-                expectedAttributeKey,
-                expectedOptions,
-                any(),
-                any()
-            )
-        }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute(expectedAttributeKey, expectedOptions) }
     }
 
     @Test
@@ -586,6 +580,8 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Action { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.confirmUserAttribute()
+
         authPlugin.confirmUserAttribute(
             expectedAttributeKey,
             expectedConfirmationCode,
@@ -593,14 +589,7 @@ class AWSCognitoAuthPluginTest {
             expectedOnError
         )
 
-        verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.confirmUserAttribute(
-                expectedAttributeKey,
-                expectedConfirmationCode,
-                any(),
-                any()
-            )
-        }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute(expectedAttributeKey, expectedConfirmationCode) }
     }
 
     @Test

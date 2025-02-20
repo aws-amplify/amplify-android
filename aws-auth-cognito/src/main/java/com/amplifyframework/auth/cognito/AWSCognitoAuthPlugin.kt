@@ -348,53 +348,53 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     ) = enqueue(onSuccess, onError) { queueFacade.updatePassword(oldPassword, newPassword) }
 
     override fun fetchUserAttributes(onSuccess: Consumer<List<AuthUserAttribute>>, onError: Consumer<AuthException>) =
-        enqueue(onSuccess, onError) { queueFacade.fetchUserAttributes() }
+        enqueue(onSuccess, onError) { useCaseFactory.fetchUserAttributes().execute() }
 
     override fun updateUserAttribute(
         attribute: AuthUserAttribute,
         options: AuthUpdateUserAttributeOptions,
         onSuccess: Consumer<AuthUpdateAttributeResult>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.updateUserAttribute(attribute, options) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.updateUserAttributes().execute(attribute, options) }
 
     override fun updateUserAttribute(
         attribute: AuthUserAttribute,
         onSuccess: Consumer<AuthUpdateAttributeResult>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.updateUserAttribute(attribute) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.updateUserAttributes().execute(attribute) }
 
     override fun updateUserAttributes(
         attributes: List<AuthUserAttribute>,
         options: AuthUpdateUserAttributesOptions,
         onSuccess: Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.updateUserAttributes(attributes, options) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.updateUserAttributes().execute(attributes, options) }
 
     override fun updateUserAttributes(
         attributes: List<AuthUserAttribute>,
         onSuccess: Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.updateUserAttributes(attributes) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.updateUserAttributes().execute(attributes) }
 
     override fun resendUserAttributeConfirmationCode(
         attributeKey: AuthUserAttributeKey,
         options: AuthResendUserAttributeConfirmationCodeOptions,
         onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.resendUserAttributeConfirmationCode(attributeKey, options) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.resendUserAttributeConfirmation().execute(attributeKey, options) }
 
     override fun resendUserAttributeConfirmationCode(
         attributeKey: AuthUserAttributeKey,
         onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.resendUserAttributeConfirmationCode(attributeKey) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.resendUserAttributeConfirmation().execute(attributeKey) }
 
     override fun confirmUserAttribute(
         attributeKey: AuthUserAttributeKey,
         confirmationCode: String,
         onSuccess: Action,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.confirmUserAttribute(attributeKey, confirmationCode) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.confirmUserAttribute().execute(attributeKey, confirmationCode) }
 
     override fun getCurrentUser(onSuccess: Consumer<AuthUser>, onError: Consumer<AuthException>) =
         enqueue(onSuccess, onError) { useCaseFactory.getCurrentUser().execute() }
