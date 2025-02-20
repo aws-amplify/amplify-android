@@ -692,8 +692,11 @@ class AWSCognitoAuthPluginTest {
     fun setUpTOTP() {
         val expectedOnSuccess = Consumer<TOTPSetupDetails> { }
         val expectedOnError = Consumer<AuthException> { }
+
+        val useCase = authPlugin.useCaseFactory.setupTotp()
+
         authPlugin.setUpTOTP(expectedOnSuccess, expectedOnError)
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.setUpTOTP(any(), any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute() }
     }
 
     @Test
@@ -701,8 +704,11 @@ class AWSCognitoAuthPluginTest {
         val code = "123456"
         val expectedOnSuccess = Action { }
         val expectedOnError = Consumer<AuthException> { }
+
+        val useCase = authPlugin.useCaseFactory.verifyTotpSetup()
+
         authPlugin.verifyTOTPSetup(code, expectedOnSuccess, expectedOnError)
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.verifyTOTPSetup(code, any(), any(), any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute(code, any()) }
     }
 
     @Test
@@ -711,8 +717,11 @@ class AWSCognitoAuthPluginTest {
         val options = AWSCognitoAuthVerifyTOTPSetupOptions.CognitoBuilder().friendlyDeviceName("DEVICE_NAME").build()
         val expectedOnSuccess = Action { }
         val expectedOnError = Consumer<AuthException> { }
+
+        val useCase = authPlugin.useCaseFactory.verifyTotpSetup()
+
         authPlugin.verifyTOTPSetup(code, options, expectedOnSuccess, expectedOnError)
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.verifyTOTPSetup(code, options, any(), any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute(code, options) }
     }
 
     @Test

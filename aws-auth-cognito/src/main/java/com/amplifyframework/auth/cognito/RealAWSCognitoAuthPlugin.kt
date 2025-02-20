@@ -18,7 +18,6 @@ package com.amplifyframework.auth.cognito
 import android.app.Activity
 import android.content.Intent
 import androidx.annotation.WorkerThread
-import aws.sdk.kotlin.services.cognitoidentityprovider.associateSoftwareToken
 import aws.sdk.kotlin.services.cognitoidentityprovider.confirmForgotPassword
 import aws.sdk.kotlin.services.cognitoidentityprovider.getUser
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
@@ -27,10 +26,8 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordReque
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.EmailMfaSettingsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SmsMfaSettingsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SoftwareTokenMfaSettingsType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareTokenResponseType
 import aws.sdk.kotlin.services.cognitoidentityprovider.resendConfirmationCode
 import aws.sdk.kotlin.services.cognitoidentityprovider.setUserMfaPreference
-import aws.sdk.kotlin.services.cognitoidentityprovider.verifySoftwareToken
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.AWSCognitoAuthMetadataType
@@ -43,7 +40,6 @@ import com.amplifyframework.auth.AuthFactorType
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.MFAType
-import com.amplifyframework.auth.TOTPSetupDetails
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
@@ -53,7 +49,6 @@ import com.amplifyframework.auth.cognito.exceptions.service.InvalidParameterExce
 import com.amplifyframework.auth.cognito.exceptions.service.UserCancelledException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
-import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.cognito.helpers.collectWhile
 import com.amplifyframework.auth.cognito.helpers.getAllowedMFATypesFromChallengeParameters
@@ -70,7 +65,6 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendSignUpCodeO
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignOutOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions
-import com.amplifyframework.auth.cognito.options.AWSCognitoAuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
@@ -96,7 +90,6 @@ import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
-import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
@@ -1948,56 +1941,6 @@ internal class RealAWSCognitoAuthPlugin(
         }
     }
 
-    fun setUpTOTP(onSuccess: Consumer<TOTPSetupDetails>, onError: Consumer<AuthException>) {
-        authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                is AuthenticationState.SignedIn -> {
-                    GlobalScope.launch {
-                        try {
-                            val accessToken = getSession().userPoolTokensResult.value?.accessToken
-                            accessToken?.let { token ->
-                                SessionHelper.getUsername(token)?.let { username ->
-                                    authEnvironment.cognitoAuthService
-                                        .cognitoIdentityProviderClient?.associateSoftwareToken {
-                                            this.accessToken = token
-                                        }?.also { response ->
-                                            response.secretCode?.let { secret ->
-                                                onSuccess.accept(
-                                                    TOTPSetupDetails(
-                                                        secret,
-                                                        username
-                                                    )
-                                                )
-                                            }
-                                        }
-                                }
-                            } ?: onError.accept(SignedOutException())
-                        } catch (error: Exception) {
-                            onError.accept(
-                                CognitoAuthExceptionConverter.lookup(
-                                    error,
-                                    "Cannot find a multi-factor authentication (MFA) method."
-                                )
-                            )
-                        }
-                    }
-                }
-
-                else -> onError.accept(InvalidStateException())
-            }
-        }
-    }
-
-    fun verifyTOTPSetup(
-        code: String,
-        options: AuthVerifyTOTPSetupOptions,
-        onSuccess: Action,
-        onError: Consumer<AuthException>
-    ) {
-        val cognitoOptions = options as? AWSCognitoAuthVerifyTOTPSetupOptions
-        verifyTotp(code, cognitoOptions?.friendlyDeviceName, onSuccess, onError)
-    }
-
     fun fetchMFAPreference(onSuccess: Consumer<UserMFAPreference>, onError: Consumer<AuthException>) {
         authStateMachine.getCurrentState { authState ->
             when (authState.authNState) {
@@ -2129,50 +2072,6 @@ internal class RealAWSCognitoAuthPlugin(
                 )
             )
         })
-    }
-
-    private fun verifyTotp(
-        code: String,
-        friendlyDeviceName: String?,
-        onSuccess: Action,
-        onError: Consumer<AuthException>
-    ) {
-        authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                is AuthenticationState.SignedIn -> {
-                    GlobalScope.launch {
-                        try {
-                            val accessToken = getSession().userPoolTokensResult.value?.accessToken
-                            accessToken?.let { token ->
-                                authEnvironment.cognitoAuthService
-                                    .cognitoIdentityProviderClient?.verifySoftwareToken {
-                                        this.userCode = code
-                                        this.friendlyDeviceName = friendlyDeviceName
-                                        this.accessToken = token
-                                    }?.also {
-                                        when (it.status) {
-                                            is VerifySoftwareTokenResponseType.Success -> onSuccess.call()
-                                            else -> throw ServiceException(
-                                                message = "An unknown service error has occurred",
-                                                recoverySuggestion = AmplifyException.TODO_RECOVERY_SUGGESTION
-                                            )
-                                        }
-                                    }
-                            } ?: onError.accept(SignedOutException())
-                        } catch (error: Exception) {
-                            onError.accept(
-                                CognitoAuthExceptionConverter.lookup(
-                                    error,
-                                    "Amazon Cognito cannot find a multi-factor authentication (MFA) method."
-                                )
-                            )
-                        }
-                    }
-                }
-
-                else -> onError.accept(InvalidStateException())
-            }
-        }
     }
 
     private fun _clearFederationToIdentityPool(onSuccess: Action, onError: Consumer<AuthException>) {
