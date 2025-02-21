@@ -199,7 +199,7 @@ internal class TransferWorkerObserver private constructor(
 
     private suspend fun attachObserver(tag: String) {
         withContext(Dispatchers.Main) {
-            if (observedTags.contains(tag)) return@withContext
+            if (!observedTags.add(tag)) return@withContext
             val liveData = workManager.getWorkInfosByTagLiveData(tag)
             liveData.observeForever(this@TransferWorkerObserver)
         }
@@ -207,10 +207,9 @@ internal class TransferWorkerObserver private constructor(
 
     private suspend fun removeObserver(tag: String) {
         withContext(Dispatchers.Main) {
-            if (!observedTags.contains(tag)) return@withContext
+            if (!observedTags.remove(tag)) return@withContext
             workManager.getWorkInfosByTagLiveData(tag)
                 .removeObserver(this@TransferWorkerObserver)
-            observedTags.remove(tag)
         }
     }
 }
