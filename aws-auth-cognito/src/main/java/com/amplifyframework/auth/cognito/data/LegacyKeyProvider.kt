@@ -31,12 +31,16 @@ internal object LegacyKeyProvider {
         val keyStore = KeyStore.getInstance(ANDROID_KEY_STORE_NAME)
         keyStore.load(null)
 
-        if (keyStore.containsAlias(keyAlias)) {
-            return Result.failure(
-                CredentialStoreError(
-                    "Key already exists for the keyAlias: $keyAlias in $ANDROID_KEY_STORE_NAME"
+        try {
+            if (keyStore.containsAlias(keyAlias)) {
+                return Result.failure(
+                    CredentialStoreError(
+                        "Key already exists for the keyAlias: $keyAlias in $ANDROID_KEY_STORE_NAME"
+                    )
                 )
-            )
+            }
+        } catch (exception: Exception) {
+            return Result.failure(CredentialStoreError("Failed to connect to KeyStore"))
         }
 
         val parameterSpec =
@@ -60,10 +64,15 @@ internal object LegacyKeyProvider {
         val keyStore = KeyStore.getInstance(ANDROID_KEY_STORE_NAME)
         keyStore.load(null)
 
-        if (!keyStore.containsAlias(keyAlias)) {
-            val message = "Key does not exists for the keyAlias: $keyAlias in $ANDROID_KEY_STORE_NAME"
-            return Result.failure(CredentialStoreError(message))
+        try {
+            if (!keyStore.containsAlias(keyAlias)) {
+                val message = "Key does not exists for the keyAlias: $keyAlias in $ANDROID_KEY_STORE_NAME"
+                return Result.failure(CredentialStoreError(message))
+            }
+        } catch (exception: Exception) {
+            return Result.failure(CredentialStoreError("Failed to connect to KeyStore"))
         }
+
 
         val key: Key? = keyStore.getKey(keyAlias, null)
         return if (key != null) {
@@ -79,6 +88,10 @@ internal object LegacyKeyProvider {
         val keyStore = KeyStore.getInstance(ANDROID_KEY_STORE_NAME)
         keyStore.load(null)
 
-        keyStore.deleteEntry(keyAlias)
+        try {
+            keyStore.deleteEntry(keyAlias)
+        } catch(exception: Exception) {
+            // KeyStore unreachable
+        }
     }
 }
