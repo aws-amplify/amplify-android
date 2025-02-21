@@ -73,7 +73,6 @@ internal object LegacyKeyProvider {
             return Result.failure(CredentialStoreError("Failed to connect to KeyStore"))
         }
 
-
         val key: Key? = keyStore.getKey(keyAlias, null)
         return if (key != null) {
             Result.success(key)
@@ -90,7 +89,7 @@ internal object LegacyKeyProvider {
 
         try {
             keyStore.deleteEntry(keyAlias)
-        } catch(exception: Exception) {
+        } catch (exception: Exception) {
             // KeyStore unreachable
         }
     }
