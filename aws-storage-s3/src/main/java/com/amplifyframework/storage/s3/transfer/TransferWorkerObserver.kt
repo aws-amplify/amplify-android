@@ -50,8 +50,7 @@ internal class TransferWorkerObserver private constructor(
             AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
         )
 
-    private val observedTags =
-        ConcurrentHashMap.newKeySet<String>()
+    private val observedTags = ConcurrentHashMap.newKeySet<String>()
 
     init {
         attachObserverForPendingTransfer()
