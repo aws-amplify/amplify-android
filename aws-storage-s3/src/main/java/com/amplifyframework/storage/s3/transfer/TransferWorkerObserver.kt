@@ -25,13 +25,13 @@ import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
 import com.amplifyframework.storage.s3.TransferOperations
 import com.amplifyframework.storage.s3.transfer.worker.BaseTransferWorker
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.concurrent.ConcurrentHashMap
 
 internal class TransferWorkerObserver private constructor(
     context: Context,
