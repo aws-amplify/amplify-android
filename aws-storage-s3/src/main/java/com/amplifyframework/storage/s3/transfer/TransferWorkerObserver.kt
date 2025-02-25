@@ -25,6 +25,7 @@ import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
 import com.amplifyframework.storage.s3.TransferOperations
 import com.amplifyframework.storage.s3.transfer.worker.BaseTransferWorker
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -48,6 +49,8 @@ internal class TransferWorkerObserver private constructor(
             CategoryType.STORAGE,
             AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
         )
+
+    private val observedTags = ConcurrentHashMap.newKeySet<String>()
 
     init {
         attachObserverForPendingTransfer()
@@ -195,6 +198,7 @@ internal class TransferWorkerObserver private constructor(
 
     private suspend fun attachObserver(tag: String) {
         withContext(Dispatchers.Main) {
+            if (!observedTags.add(tag)) return@withContext
             val liveData = workManager.getWorkInfosByTagLiveData(tag)
             liveData.observeForever(this@TransferWorkerObserver)
         }
@@ -202,6 +206,7 @@ internal class TransferWorkerObserver private constructor(
 
     private suspend fun removeObserver(tag: String) {
         withContext(Dispatchers.Main) {
+            if (!observedTags.remove(tag)) return@withContext
             workManager.getWorkInfosByTagLiveData(tag)
                 .removeObserver(this@TransferWorkerObserver)
         }
