@@ -402,6 +402,8 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Action { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.confirmResetPassword()
+
         authPlugin.confirmResetPassword(
             expectedUsername,
             expectedPassword,
@@ -410,13 +412,11 @@ class AWSCognitoAuthPluginTest {
             expectedOnError
         )
 
-        verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.confirmResetPassword(
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute(
                 expectedUsername,
                 expectedPassword,
-                expectedCode,
-                any(),
-                any()
+                expectedCode
             )
         }
     }
@@ -430,6 +430,8 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Action { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.confirmResetPassword()
+
         authPlugin.confirmResetPassword(
             expectedUsername,
             expectedPassword,
@@ -439,14 +441,12 @@ class AWSCognitoAuthPluginTest {
             expectedOnError
         )
 
-        verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.confirmResetPassword(
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute(
                 expectedUsername,
                 expectedPassword,
                 expectedCode,
-                expectedOptions,
-                any(),
-                any()
+                expectedOptions
             )
         }
     }
@@ -458,10 +458,12 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Action { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.updatePassword()
+
         authPlugin.updatePassword(expectedOldPassword, expectedNewPassword, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.updatePassword(expectedOldPassword, expectedNewPassword, any(), any())
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute(expectedOldPassword, expectedNewPassword)
         }
     }
 

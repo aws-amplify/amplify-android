@@ -329,7 +329,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) = enqueue(onSuccess, onError) {
-        queueFacade.confirmResetPassword(username, newPassword, confirmationCode, options)
+        useCaseFactory.confirmResetPassword().execute(username, newPassword, confirmationCode, options)
     }
 
     override fun confirmResetPassword(
@@ -338,7 +338,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         confirmationCode: String,
         onSuccess: Action,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.confirmResetPassword(username, newPassword, confirmationCode) }
+    ) = enqueue(onSuccess, onError) {
+        useCaseFactory.confirmResetPassword().execute(username, newPassword, confirmationCode)
+    }
 
     override fun updatePassword(
         oldPassword: String,

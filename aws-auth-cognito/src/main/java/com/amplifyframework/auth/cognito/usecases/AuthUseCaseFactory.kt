@@ -114,4 +114,10 @@ internal class AuthUseCaseFactory(
         fetchAuthSession = fetchAuthSession(),
         stateMachine = stateMachine
     )
+
+    fun confirmResetPassword() = ConfirmResetPasswordUseCase(
+        client = authEnvironment.requireIdentityProviderClient(),
+        environment = authEnvironment,
+        stateMachine = stateMachine
+    )
 }

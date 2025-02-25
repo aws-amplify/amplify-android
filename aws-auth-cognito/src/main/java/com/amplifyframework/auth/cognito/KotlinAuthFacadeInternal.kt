@@ -22,7 +22,6 @@ import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
-import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
@@ -211,33 +210,6 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
                 { continuation.resumeWithException(it) }
             )
         }
-
-    suspend fun confirmResetPassword(username: String, newPassword: String, confirmationCode: String) =
-        suspendCoroutine { continuation ->
-            delegate.confirmResetPassword(
-                username,
-                newPassword,
-                confirmationCode,
-                { continuation.resume(Unit) },
-                { continuation.resumeWithException(it) }
-            )
-        }
-
-    suspend fun confirmResetPassword(
-        username: String,
-        newPassword: String,
-        confirmationCode: String,
-        options: AuthConfirmResetPasswordOptions
-    ) = suspendCoroutine { continuation ->
-        delegate.confirmResetPassword(
-            username,
-            newPassword,
-            confirmationCode,
-            options,
-            { continuation.resume(Unit) },
-            { continuation.resumeWithException(it) }
-        )
-    }
 
     suspend fun signOut(): AuthSignOutResult = suspendCoroutine { continuation ->
         delegate.signOut { continuation.resume(it) }

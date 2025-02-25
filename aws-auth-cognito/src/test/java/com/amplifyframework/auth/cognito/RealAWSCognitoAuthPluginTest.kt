@@ -18,9 +18,6 @@ package com.amplifyframework.auth.cognito
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.getUser
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswordRequest
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswordResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.EmailMfaSettingsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserResponse
@@ -40,7 +37,6 @@ import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
-import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -370,110 +366,6 @@ class RealAWSCognitoAuthPluginTest {
 
         // THEN
         onSuccess.shouldBeCalled()
-    }
-
-    @Test
-    fun `confirmResetPassword fails if authentication state is NotConfigured`() {
-        // Given
-        setupCurrentAuthState(authNState = AuthenticationState.NotConfigured())
-        val expectedError = AuthException(
-            "Confirm Reset Password failed.",
-            "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
-        )
-        val onError = ConsumerWithLatch<AuthException>(expect = expectedError)
-
-        // When
-        plugin.confirmResetPassword("user", "pass", "code", mockk(), mockk(), onError)
-
-        // Then
-        onError.shouldBeCalled()
-    }
-
-    @Test
-    fun `confirmResetPassword calls confirmForgotPassword API with given arguments`() {
-        // GIVEN
-        val latch = CountDownLatch(1)
-        val requestBuilderCaptor = slot<ConfirmForgotPasswordRequest>()
-        coEvery { mockCognitoIPClient.confirmForgotPassword(capture(requestBuilderCaptor)) } coAnswers {
-            ConfirmForgotPasswordResponse.invoke { }
-        }
-
-        val user = "username"
-        val pass = "passworD"
-        val code = "007"
-
-        val expectedRequestBuilder: ConfirmForgotPasswordRequest.Builder.() -> Unit = {
-            username = user
-            password = pass
-            confirmationCode = code
-            clientMetadata = mapOf()
-            clientId = appClientId
-            secretHash = AuthHelper.getSecretHash(
-                username,
-                appClientId,
-                appClientSecret
-            )
-            userContextData = null
-            analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = expectedEndpointId }
-        }
-
-        // WHEN
-        plugin.confirmResetPassword(
-            user,
-            pass,
-            code,
-            AuthConfirmResetPasswordOptions.defaults(),
-            { latch.countDown() },
-            { latch.countDown() }
-        )
-
-        // THEN
-        assertTrue { latch.await(5, TimeUnit.SECONDS) }
-        assertEquals(
-            ConfirmForgotPasswordRequest.invoke(expectedRequestBuilder),
-            requestBuilderCaptor.captured
-        )
-    }
-
-    @Test
-    fun `onSuccess is called when confirmResetPassword call succeeds`() {
-        // GIVEN
-        val onSuccess = ActionWithLatch()
-        val user = "username"
-        val pass = "passworD"
-        val code = "007"
-
-        coEvery { mockCognitoIPClient.confirmForgotPassword(any()) } coAnswers {
-            ConfirmForgotPasswordResponse.invoke { }
-        }
-
-        // WHEN
-        plugin.confirmResetPassword(user, pass, code, AuthConfirmResetPasswordOptions.defaults(), onSuccess, mockk())
-
-        // THEN
-        onSuccess.shouldBeCalled()
-    }
-
-    @Test
-    fun `AuthException is thrown when confirmForgotPassword API call fails`() {
-        // GIVEN
-        val onError = ConsumerWithLatch<AuthException>()
-
-        val user = "username"
-        val pass = "passworD"
-        val code = "007"
-
-        val expectedException = CognitoIdentityProviderException("Some SDK Message")
-        coEvery { mockCognitoIPClient.confirmForgotPassword(any()) } coAnswers {
-            throw expectedException
-        }
-
-        // WHEN
-        plugin.confirmResetPassword(user, pass, code, AuthConfirmResetPasswordOptions.defaults(), mockk(), onError)
-
-        // THEN
-        onError.shouldBeCalled()
-        assertEquals(expectedException, onError.captured.cause)
     }
 
     @Test

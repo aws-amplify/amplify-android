@@ -18,7 +18,6 @@ package com.amplifyframework.auth.cognito
 import android.app.Activity
 import android.content.Intent
 import androidx.annotation.WorkerThread
-import aws.sdk.kotlin.services.cognitoidentityprovider.confirmForgotPassword
 import aws.sdk.kotlin.services.cognitoidentityprovider.getUser
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
@@ -57,7 +56,6 @@ import com.amplifyframework.auth.cognito.helpers.getMFATypeOrNull
 import com.amplifyframework.auth.cognito.helpers.identityProviderName
 import com.amplifyframework.auth.cognito.helpers.isMfaSetupSelectionChallenge
 import com.amplifyframework.auth.cognito.helpers.value
-import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignUpOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendSignUpCodeOptions
@@ -80,7 +78,6 @@ import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.exceptions.UnknownException
-import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
@@ -1505,73 +1502,6 @@ internal class RealAWSCognitoAuthPlugin(
         onError: Consumer<AuthException>
     ) {
         resetPassword(username, AuthResetPasswordOptions.defaults(), onSuccess, onError)
-    }
-
-    fun confirmResetPassword(
-        username: String,
-        newPassword: String,
-        confirmationCode: String,
-        options: AuthConfirmResetPasswordOptions,
-        onSuccess: Action,
-        onError: Consumer<AuthException>
-    ) {
-        authStateMachine.getCurrentState { authState ->
-            if (authState.authNState is AuthenticationState.NotConfigured) {
-                onError.accept(
-                    ConfigurationException(
-                        "Confirm Reset Password failed.",
-                        "Cognito User Pool not configured. Please check amplifyconfiguration.json file."
-                    )
-                )
-                return@getCurrentState
-            }
-
-            GlobalScope.launch {
-                try {
-                    val encodedContextData = authEnvironment.getUserContextData(username)
-                    val pinpointEndpointId = authEnvironment.getPinpointEndpointId()
-
-                    authEnvironment.cognitoAuthService.cognitoIdentityProviderClient!!.confirmForgotPassword {
-                        this.username = username
-                        this.confirmationCode = confirmationCode
-                        password = newPassword
-                        secretHash = AuthHelper.getSecretHash(
-                            username,
-                            configuration.userPool?.appClient,
-                            configuration.userPool?.appClientSecret
-                        )
-                        clientMetadata =
-                            (options as? AWSCognitoAuthConfirmResetPasswordOptions)?.metadata ?: mapOf()
-                        clientId = configuration.userPool?.appClient
-                        encodedContextData?.let { this.userContextData { encodedData = it } }
-                        pinpointEndpointId?.let {
-                            this.analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = it }
-                        }
-                    }.let { onSuccess.call() }
-                } catch (ex: Exception) {
-                    onError.accept(
-                        CognitoAuthExceptionConverter.lookup(ex, AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION)
-                    )
-                }
-            }
-        }
-    }
-
-    fun confirmResetPassword(
-        username: String,
-        newPassword: String,
-        confirmationCode: String,
-        onSuccess: Action,
-        onError: Consumer<AuthException>
-    ) {
-        confirmResetPassword(
-            username,
-            newPassword,
-            confirmationCode,
-            AuthConfirmResetPasswordOptions.defaults(),
-            onSuccess,
-            onError
-        )
     }
 
     fun signOut(onComplete: Consumer<AuthSignOutResult>) {
