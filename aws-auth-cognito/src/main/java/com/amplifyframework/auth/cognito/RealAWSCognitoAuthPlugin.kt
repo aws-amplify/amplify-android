@@ -70,7 +70,6 @@ import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
 import com.amplifyframework.auth.cognito.result.GlobalSignOutError
 import com.amplifyframework.auth.cognito.result.HostedUIError
 import com.amplifyframework.auth.cognito.result.RevokeTokenError
-import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.cognito.util.toAuthCodeDeliveryDetails
 import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.auth.exceptions.InvalidStateException
@@ -83,12 +82,10 @@ import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
-import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
-import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.auth.result.AuthSignUpResult
@@ -141,7 +138,6 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.drop
@@ -1446,49 +1442,6 @@ internal class RealAWSCognitoAuthPlugin(
             },
             null
         )
-    }
-
-    @OptIn(DelicateCoroutinesApi::class)
-    fun resetPassword(
-        username: String,
-        options: AuthResetPasswordOptions,
-        onSuccess: Consumer<AuthResetPasswordResult>,
-        onError: Consumer<AuthException>
-    ) {
-        try {
-            val cognitoIdentityProviderClient = requireNotNull(
-                authEnvironment.cognitoAuthService.cognitoIdentityProviderClient
-            )
-
-            val appClient = requireNotNull(configuration.userPool?.appClient)
-            GlobalScope.launch {
-                val encodedData = authEnvironment.getUserContextData(username)
-                val pinpointEndpointId = authEnvironment.getPinpointEndpointId()
-
-                ResetPasswordUseCase(
-                    cognitoIdentityProviderClient,
-                    appClient,
-                    configuration.userPool?.appClientSecret
-                ).execute(
-                    username,
-                    options,
-                    encodedData,
-                    pinpointEndpointId,
-                    onSuccess,
-                    onError
-                )
-            }
-        } catch (ex: Exception) {
-            onError.accept(InvalidUserPoolConfigurationException())
-        }
-    }
-
-    fun resetPassword(
-        username: String,
-        onSuccess: Consumer<AuthResetPasswordResult>,
-        onError: Consumer<AuthException>
-    ) {
-        resetPassword(username, AuthResetPasswordOptions.defaults(), onSuccess, onError)
     }
 
     fun signOut(onComplete: Consumer<AuthSignOutResult>) {

@@ -38,7 +38,7 @@ import org.junit.Rule
 import org.junit.Test
 
 class ConfirmResetPasswordUseCaseTest {
-    private val client = mockk<CognitoIdentityProviderClient>(relaxed = true)
+    private val client: CognitoIdentityProviderClient = mockk()
     private val stateMachine: AuthStateMachine = mockk {
         coEvery { getCurrentState().authNState } returns AuthenticationState.SignedIn(mockk(), mockk())
     }

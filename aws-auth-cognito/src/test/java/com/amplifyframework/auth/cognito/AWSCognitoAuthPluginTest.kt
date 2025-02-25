@@ -377,9 +377,11 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthResetPasswordResult> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.resetPassword()
+
         authPlugin.resetPassword(expectedUsername, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.resetPassword(expectedUsername, any(), any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute(expectedUsername, any()) }
     }
 
     @Test
@@ -389,9 +391,11 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthResetPasswordResult> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.resetPassword()
+
         authPlugin.resetPassword(expectedUsername, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.resetPassword(expectedUsername, expectedOptions, any(), any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute(expectedUsername, expectedOptions) }
     }
 
     @Test

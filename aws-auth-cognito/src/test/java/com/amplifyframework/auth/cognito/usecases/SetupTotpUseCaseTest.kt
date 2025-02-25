@@ -17,7 +17,6 @@ package com.amplifyframework.auth.cognito.usecases
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AssociateSoftwareTokenResponse
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeleteWebAuthnCredentialResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SoftwareTokenMfaNotFoundException
 import com.amplifyframework.auth.cognito.AuthStateMachine
 import com.amplifyframework.auth.cognito.mockSignedInData
@@ -30,9 +29,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 class SetupTotpUseCaseTest {
-    private val client: CognitoIdentityProviderClient = mockk {
-        coEvery { deleteWebAuthnCredential(any()) } returns DeleteWebAuthnCredentialResponse { }
-    }
+    private val client: CognitoIdentityProviderClient = mockk()
     private val fetchAuthSession: FetchAuthSessionUseCase = mockk {
         coEvery { execute().accessToken } returns "access token"
     }

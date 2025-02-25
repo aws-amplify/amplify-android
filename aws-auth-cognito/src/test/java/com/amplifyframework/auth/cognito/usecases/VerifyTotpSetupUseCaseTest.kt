@@ -17,7 +17,6 @@ package com.amplifyframework.auth.cognito.usecases
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeMismatchException
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeleteWebAuthnCredentialResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareTokenRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareTokenResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.VerifySoftwareTokenResponseType
@@ -33,9 +32,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 class VerifyTotpSetupUseCaseTest {
-    private val client: CognitoIdentityProviderClient = mockk {
-        coEvery { deleteWebAuthnCredential(any()) } returns DeleteWebAuthnCredentialResponse { }
-    }
+    private val client: CognitoIdentityProviderClient = mockk()
     private val fetchAuthSession: FetchAuthSessionUseCase = mockk {
         coEvery { execute().accessToken } returns "access token"
     }

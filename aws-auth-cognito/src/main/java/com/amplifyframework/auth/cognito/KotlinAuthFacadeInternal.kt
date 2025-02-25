@@ -26,12 +26,10 @@ import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
-import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
-import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.auth.result.AuthSignUpResult
@@ -192,24 +190,6 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
             { continuation.resumeWithException(it) }
         )
     }
-
-    suspend fun resetPassword(username: String): AuthResetPasswordResult = suspendCoroutine { continuation ->
-        delegate.resetPassword(
-            username,
-            { continuation.resume(it) },
-            { continuation.resumeWithException(it) }
-        )
-    }
-
-    suspend fun resetPassword(username: String, options: AuthResetPasswordOptions): AuthResetPasswordResult =
-        suspendCoroutine { continuation ->
-            delegate.resetPassword(
-                username,
-                options,
-                { continuation.resume(it) },
-                { continuation.resumeWithException(it) }
-            )
-        }
 
     suspend fun signOut(): AuthSignOutResult = suspendCoroutine { continuation ->
         delegate.signOut { continuation.resume(it) }

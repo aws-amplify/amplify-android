@@ -32,7 +32,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 class FetchDevicesUseCaseTest {
-    private val client = mockk<CognitoIdentityProviderClient>()
+    private val client: CognitoIdentityProviderClient = mockk()
     private val fetchAuthSession: FetchAuthSessionUseCase = mockk {
         coEvery { execute().accessToken } returns "access token"
     }

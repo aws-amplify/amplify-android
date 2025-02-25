@@ -36,13 +36,10 @@ import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
-import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
-import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
-import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.core.Action
@@ -64,7 +61,6 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.invoke
 import io.mockk.mockk
-import io.mockk.mockkConstructor
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.slot
@@ -299,73 +295,6 @@ class RealAWSCognitoAuthPluginTest {
 
         // THEN
         onError.shouldBeCalled()
-    }
-
-    @Test
-    fun `reset password fails if cognitoIdentityProviderClient is not set`() {
-        // GIVEN
-        val onSuccess = mockk<Consumer<AuthResetPasswordResult>>()
-        val onError = ConsumerWithLatch<AuthException>(expect = InvalidUserPoolConfigurationException())
-
-        val userPool = UserPoolConfiguration.invoke { appClientId = "app Client Id" }
-        every { authService.cognitoIdentityProviderClient } returns null
-        every { authConfiguration.userPool } returns userPool
-
-        // WHEN
-        plugin.resetPassword("user", AuthResetPasswordOptions.defaults(), onSuccess, onError)
-
-        // THEN
-        onError.shouldBeCalled()
-        verify(exactly = 0) { onSuccess.accept(any()) }
-    }
-
-    @Test
-    fun `reset password fails if appClientId is not set`() {
-        // GIVEN
-        val onSuccess = mockk<Consumer<AuthResetPasswordResult>>()
-        val onError = ConsumerWithLatch<AuthException>(expect = InvalidUserPoolConfigurationException())
-
-        val userPool = UserPoolConfiguration.invoke { appClientId = null }
-        every { authService.cognitoIdentityProviderClient } returns mockk()
-        every { authConfiguration.userPool } returns userPool
-
-        // WHEN
-        plugin.resetPassword("user", AuthResetPasswordOptions.defaults(), onSuccess, onError)
-
-        // THEN
-        onError.shouldBeCalled()
-        verify(exactly = 0) { onSuccess.accept(any()) }
-    }
-
-    @Test
-    fun `reset password executes ResetPasswordUseCase if required params are set`() {
-        // GIVEN
-        val onSuccess = ConsumerWithLatch<AuthResetPasswordResult>()
-        val onError = mockk<Consumer<AuthException>>()
-        val options = mockk<AuthResetPasswordOptions>()
-        val username = "user"
-        val pinpointAppId = "abc"
-        val encodedData = "encodedData"
-
-        coEvery { authEnvironment.getUserContextData(username) } returns encodedData
-        every { authEnvironment.getPinpointEndpointId() } returns pinpointAppId
-
-        mockkConstructor(ResetPasswordUseCase::class)
-
-        every { authService.cognitoIdentityProviderClient } returns mockk()
-        every { authConfiguration.userPool } returns UserPoolConfiguration.invoke { appClientId = "app Client Id" }
-
-        coEvery {
-            anyConstructed<ResetPasswordUseCase>().execute(any(), any(), any(), any(), any(), any())
-        } answers {
-            arg<Consumer<AuthResetPasswordResult>>(4).accept(mockk())
-        }
-
-        // WHEN
-        plugin.resetPassword(username, options, onSuccess, onError)
-
-        // THEN
-        onSuccess.shouldBeCalled()
     }
 
     @Test

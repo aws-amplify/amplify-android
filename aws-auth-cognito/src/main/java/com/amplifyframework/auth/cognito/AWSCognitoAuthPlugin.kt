@@ -313,13 +313,13 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         options: AuthResetPasswordOptions,
         onSuccess: Consumer<AuthResetPasswordResult>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.resetPassword(username, options) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.resetPassword().execute(username, options) }
 
     override fun resetPassword(
         username: String,
         onSuccess: Consumer<AuthResetPasswordResult>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.resetPassword(username) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.resetPassword().execute(username) }
 
     override fun confirmResetPassword(
         username: String,
