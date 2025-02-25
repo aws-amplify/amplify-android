@@ -18,7 +18,6 @@ package com.amplifyframework.auth.cognito
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.getUser
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmForgotPasswordResponse
@@ -41,7 +40,6 @@ import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
-import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
@@ -304,41 +302,6 @@ class RealAWSCognitoAuthPluginTest {
         plugin.resendSignUpCode("user", AuthResendSignUpCodeOptions.defaults(), mockk(), onError)
 
         // THEN
-        onError.shouldBeCalled()
-    }
-
-    @Test
-    fun `update password with success`() {
-        // GIVEN
-        val onSuccess = ActionWithLatch()
-
-        coEvery {
-            authService.cognitoIdentityProviderClient?.changePassword(any())
-        } returns ChangePasswordResponse.invoke { }
-
-        // WHEN
-        plugin.updatePassword("old", "new", onSuccess, mockk())
-
-        onSuccess.shouldBeCalled()
-    }
-
-    @Test
-    fun `update password fails when not in SignedIn state`() {
-        // GIVEN
-        val onError = ConsumerWithLatch<AuthException>(expect = InvalidStateException())
-
-        setupCurrentAuthState(authNState = AuthenticationState.NotConfigured())
-
-        // WHEN
-        plugin.updatePassword("old", "new", mockk(), onError)
-        onError.shouldBeCalled()
-    }
-
-    @Test
-    fun `update password fails when cognitoIdentityProviderClient not set`() {
-        val onError = ConsumerWithLatch<AuthException>()
-
-        plugin.updatePassword("old", "new", mockk(), onError)
         onError.shouldBeCalled()
     }
 

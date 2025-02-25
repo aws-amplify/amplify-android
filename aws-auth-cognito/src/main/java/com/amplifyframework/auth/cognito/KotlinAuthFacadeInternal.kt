@@ -239,15 +239,6 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
         )
     }
 
-    suspend fun updatePassword(oldPassword: String, newPassword: String) = suspendCoroutine { continuation ->
-        delegate.updatePassword(
-            oldPassword,
-            newPassword,
-            { continuation.resume(Unit) },
-            { continuation.resumeWithException(it) }
-        )
-    }
-
     suspend fun signOut(): AuthSignOutResult = suspendCoroutine { continuation ->
         delegate.signOut { continuation.resume(it) }
     }

@@ -345,7 +345,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         newPassword: String,
         onSuccess: Action,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.updatePassword(oldPassword, newPassword) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.updatePassword().execute(oldPassword, newPassword) }
 
     override fun fetchUserAttributes(onSuccess: Consumer<List<AuthUserAttribute>>, onError: Consumer<AuthException>) =
         enqueue(onSuccess, onError) { useCaseFactory.fetchUserAttributes().execute() }

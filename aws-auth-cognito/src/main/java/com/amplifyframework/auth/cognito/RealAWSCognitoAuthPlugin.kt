@@ -22,7 +22,6 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.confirmForgotPassword
 import aws.sdk.kotlin.services.cognitoidentityprovider.getUser
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChangePasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.EmailMfaSettingsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SmsMfaSettingsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SoftwareTokenMfaSettingsType
@@ -146,7 +145,6 @@ import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.onStart
@@ -1574,44 +1572,6 @@ internal class RealAWSCognitoAuthPlugin(
             onSuccess,
             onError
         )
-    }
-
-    fun updatePassword(oldPassword: String, newPassword: String, onSuccess: Action, onError: Consumer<AuthException>) {
-        authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                // Check if user signed in
-                is AuthenticationState.SignedIn -> {
-                    _updatePassword(oldPassword, newPassword, onSuccess, onError)
-                }
-                is AuthenticationState.SignedOut -> onError.accept(SignedOutException())
-                else -> onError.accept(InvalidStateException())
-            }
-        }
-    }
-
-    private fun _updatePassword(
-        oldPassword: String,
-        newPassword: String,
-        onSuccess: Action,
-        onError: Consumer<AuthException>
-    ) {
-        GlobalScope.async {
-            val tokens = getSession().userPoolTokensResult
-            val changePasswordRequest = ChangePasswordRequest.invoke {
-                previousPassword = oldPassword
-                proposedPassword = newPassword
-                this.accessToken = tokens.value?.accessToken
-            }
-            try {
-                authEnvironment.cognitoAuthService
-                    .cognitoIdentityProviderClient?.changePassword(
-                        changePasswordRequest
-                    )
-                onSuccess.call()
-            } catch (e: Exception) {
-                onError.accept(CognitoAuthExceptionConverter.lookup(e, e.toString()))
-            }
-        }
     }
 
     fun signOut(onComplete: Consumer<AuthSignOutResult>) {

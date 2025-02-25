@@ -108,4 +108,10 @@ internal class AuthUseCaseFactory(
         fetchAuthSession = fetchAuthSession(),
         stateMachine = stateMachine
     )
+
+    fun updatePassword() = UpdatePasswordUseCase(
+        client = authEnvironment.requireIdentityProviderClient(),
+        fetchAuthSession = fetchAuthSession(),
+        stateMachine = stateMachine
+    )
 }
