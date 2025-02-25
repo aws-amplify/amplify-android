@@ -18,13 +18,12 @@ package com.amplifyframework.auth.cognito.usecases
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.forgotPassword
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeDeliveryDetailsType
 import com.amplifyframework.AmplifyException
-import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResetPasswordOptions
+import com.amplifyframework.auth.cognito.util.toAuthCodeDeliveryDetails
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.step.AuthNextResetPasswordStep
@@ -87,16 +86,4 @@ internal class ResetPasswordUseCase(
             }
         }
     }
-}
-
-internal fun CodeDeliveryDetailsType?.toAuthCodeDeliveryDetails(): AuthCodeDeliveryDetails? {
-    if (this == null) return this
-
-    requireNotNull(destination)
-
-    return AuthCodeDeliveryDetails(
-        destination.toString(),
-        AuthCodeDeliveryDetails.DeliveryMedium.fromString(deliveryMedium.toString()),
-        attributeName
-    )
 }

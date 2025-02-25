@@ -24,6 +24,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordReque
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordResponse
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
+import com.amplifyframework.auth.cognito.util.toAuthCodeDeliveryDetails
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.step.AuthNextResetPasswordStep

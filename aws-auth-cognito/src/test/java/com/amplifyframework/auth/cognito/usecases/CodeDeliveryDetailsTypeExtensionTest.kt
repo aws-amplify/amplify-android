@@ -18,6 +18,7 @@ package com.amplifyframework.auth.cognito.usecases
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeDeliveryDetailsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
+import com.amplifyframework.auth.cognito.util.toAuthCodeDeliveryDetails
 import kotlin.test.assertEquals
 import org.junit.Test
 

@@ -24,6 +24,7 @@ import com.amplifyframework.auth.cognito.exceptions.service.CodeDeliveryFailureE
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.cognito.requireAccessToken
 import com.amplifyframework.auth.cognito.requireSignedInState
+import com.amplifyframework.auth.cognito.util.toAuthCodeDeliveryDetails
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 
 internal class ResendUserAttributeConfirmationUseCase(

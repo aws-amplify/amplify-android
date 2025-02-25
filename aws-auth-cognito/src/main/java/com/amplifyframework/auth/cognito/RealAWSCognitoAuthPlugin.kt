@@ -71,6 +71,7 @@ import com.amplifyframework.auth.cognito.result.GlobalSignOutError
 import com.amplifyframework.auth.cognito.result.HostedUIError
 import com.amplifyframework.auth.cognito.result.RevokeTokenError
 import com.amplifyframework.auth.cognito.usecases.ResetPasswordUseCase
+import com.amplifyframework.auth.cognito.util.toAuthCodeDeliveryDetails
 import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.exceptions.NotAuthorizedException
@@ -481,21 +482,7 @@ internal class RealAWSCognitoAuthPlugin(
                 encodedContextData?.let { this.userContextData { encodedData = it } }
             }
 
-            val deliveryDetails = response?.codeDeliveryDetails?.let { details ->
-                mapOf(
-                    "DESTINATION" to details.destination,
-                    "MEDIUM" to details.deliveryMedium?.value,
-                    "ATTRIBUTE" to details.attributeName
-                )
-            }
-
-            val codeDeliveryDetails = AuthCodeDeliveryDetails(
-                deliveryDetails?.getValue("DESTINATION") ?: "",
-                AuthCodeDeliveryDetails.DeliveryMedium.fromString(
-                    deliveryDetails?.getValue("MEDIUM")
-                ),
-                deliveryDetails?.getValue("ATTRIBUTE")
-            )
+            val codeDeliveryDetails = response?.codeDeliveryDetails.toAuthCodeDeliveryDetails()
             onSuccess.accept(codeDeliveryDetails)
             logger.verbose("ResendSignUpCode Execution complete")
         } catch (exception: Exception) {
