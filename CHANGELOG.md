@@ -1,3 +1,11 @@
+## [Release 2.27.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.27.1)
+
+### Bug Fixes
+- **auth:** Prevent crash if KeyStore not available (ex: instant app) ([#2993](https://github.com/aws-amplify/amplify-android/issues/2993))
+- **storage:** Prevent duplicate observer registration in TransferWorkerObserver to mitigate OOM issues ([#2988](https://github.com/aws-amplify/amplify-android/issues/2988))
+
+[See all changes between 2.27.0 and 2.27.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.27.0...release_v2.27.1)
+
 ## [Release 2.27.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.27.0)
 
 ### Bug Fixes
