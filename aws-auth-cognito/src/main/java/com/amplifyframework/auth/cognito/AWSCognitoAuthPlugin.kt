@@ -218,14 +218,14 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         username: String,
         onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.resendSignUpCode(username) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.resendSignupCode().execute(username) }
 
     override fun resendSignUpCode(
         username: String,
         options: AuthResendSignUpCodeOptions,
         onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.resendSignUpCode(username, options) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.resendSignupCode().execute(username, options) }
 
     override fun signIn(
         username: String?,

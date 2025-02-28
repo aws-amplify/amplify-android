@@ -17,7 +17,6 @@ package com.amplifyframework.auth.cognito
 
 import android.app.Activity
 import android.content.Intent
-import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
@@ -25,7 +24,6 @@ import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
-import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
@@ -73,24 +71,6 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
             { continuation.resumeWithException(it) }
         )
     }
-
-    suspend fun resendSignUpCode(username: String): AuthCodeDeliveryDetails = suspendCoroutine { continuation ->
-        delegate.resendSignUpCode(
-            username,
-            { continuation.resume(it) },
-            { continuation.resumeWithException(it) }
-        )
-    }
-
-    suspend fun resendSignUpCode(username: String, options: AuthResendSignUpCodeOptions): AuthCodeDeliveryDetails =
-        suspendCoroutine { continuation ->
-            delegate.resendSignUpCode(
-                username,
-                options,
-                { continuation.resume(it) },
-                { continuation.resumeWithException(it) }
-            )
-        }
 
     suspend fun signIn(username: String?, password: String?): AuthSignInResult = suspendCoroutine { continuation ->
         delegate.signIn(

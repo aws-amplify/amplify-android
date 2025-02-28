@@ -19,12 +19,10 @@ import android.app.Activity
 import android.content.Intent
 import androidx.annotation.WorkerThread
 import aws.sdk.kotlin.services.cognitoidentityprovider.getUser
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.EmailMfaSettingsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SmsMfaSettingsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SoftwareTokenMfaSettingsType
-import aws.sdk.kotlin.services.cognitoidentityprovider.resendConfirmationCode
 import aws.sdk.kotlin.services.cognitoidentityprovider.setUserMfaPreference
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.annotations.InternalAmplifyApi
@@ -45,7 +43,6 @@ import com.amplifyframework.auth.cognito.exceptions.service.HostedUISignOutExcep
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidAccountTypeException
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidParameterException
 import com.amplifyframework.auth.cognito.exceptions.service.UserCancelledException
-import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.cognito.helpers.collectWhile
@@ -58,7 +55,6 @@ import com.amplifyframework.auth.cognito.helpers.isMfaSetupSelectionChallenge
 import com.amplifyframework.auth.cognito.helpers.value
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignUpOptions
-import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendSignUpCodeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignOutOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions
@@ -70,7 +66,6 @@ import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
 import com.amplifyframework.auth.cognito.result.GlobalSignOutError
 import com.amplifyframework.auth.cognito.result.HostedUIError
 import com.amplifyframework.auth.cognito.result.RevokeTokenError
-import com.amplifyframework.auth.cognito.util.toAuthCodeDeliveryDetails
 import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.exceptions.NotAuthorizedException
@@ -81,7 +76,6 @@ import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
-import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
@@ -422,68 +416,6 @@ internal class RealAWSCognitoAuthPlugin(
                 authStateMachine.send(event)
             }
         )
-    }
-
-    fun resendSignUpCode(
-        username: String,
-        onSuccess: Consumer<AuthCodeDeliveryDetails>,
-        onError: Consumer<AuthException>
-    ) {
-        resendSignUpCode(username, AuthResendSignUpCodeOptions.defaults(), onSuccess, onError)
-    }
-
-    fun resendSignUpCode(
-        username: String,
-        options: AuthResendSignUpCodeOptions,
-        onSuccess: Consumer<AuthCodeDeliveryDetails>,
-        onError: Consumer<AuthException>
-    ) {
-        authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                is AuthenticationState.NotConfigured -> onError.accept(
-                    InvalidUserPoolConfigurationException()
-                )
-                is AuthenticationState.SignedIn, is AuthenticationState.SignedOut -> GlobalScope.launch {
-                    _resendSignUpCode(username, options, onSuccess, onError)
-                }
-                else -> onError.accept(InvalidStateException())
-            }
-        }
-    }
-
-    private suspend fun _resendSignUpCode(
-        username: String,
-        options: AuthResendSignUpCodeOptions,
-        onSuccess: Consumer<AuthCodeDeliveryDetails>,
-        onError: Consumer<AuthException>
-    ) {
-        logger.verbose("ResendSignUpCode Starting execution")
-        try {
-            val metadata = (options as? AWSCognitoAuthResendSignUpCodeOptions)?.metadata
-            val encodedContextData = authEnvironment.getUserContextData(username)
-            val pinpointEndpointId = authEnvironment.getPinpointEndpointId()
-
-            val response = authEnvironment.cognitoAuthService.cognitoIdentityProviderClient?.resendConfirmationCode {
-                clientId = configuration.userPool?.appClient
-                this.username = username
-                secretHash = AuthHelper.getSecretHash(
-                    username,
-                    configuration.userPool?.appClient,
-                    configuration.userPool?.appClientSecret
-                )
-                clientMetadata = metadata
-                pinpointEndpointId?.let {
-                    this.analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = it }
-                }
-                encodedContextData?.let { this.userContextData { encodedData = it } }
-            }
-
-            val codeDeliveryDetails = response?.codeDeliveryDetails.toAuthCodeDeliveryDetails()
-            onSuccess.accept(codeDeliveryDetails)
-            logger.verbose("ResendSignUpCode Execution complete")
-        } catch (exception: Exception) {
-            onError.accept(CognitoAuthExceptionConverter.lookup(exception, "Resend sign up code failed."))
-        }
     }
 
     fun signIn(

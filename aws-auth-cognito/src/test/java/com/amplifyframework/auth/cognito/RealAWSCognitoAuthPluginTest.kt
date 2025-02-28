@@ -17,17 +17,12 @@ package com.amplifyframework.auth.cognito
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.getUser
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.EmailMfaSettingsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserResponse
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeRequest
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResendConfirmationCodeResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SetUserMfaPreferenceRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SetUserMfaPreferenceResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SmsMfaSettingsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SoftwareTokenMfaSettingsType
-import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.MFAType
@@ -37,7 +32,6 @@ import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
-import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.result.AuthSignInResult
@@ -54,7 +48,6 @@ import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.testutils.await
-import featureTest.utilities.APICaptorFactory.Companion.onError
 import io.kotest.assertions.throwables.shouldThrowWithMessage
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.mockk.coEvery
@@ -281,103 +274,6 @@ class RealAWSCognitoAuthPluginTest {
 
         // THEN
         onError.shouldBeCalled()
-    }
-
-    @Test
-    fun testResendSignUpCodeFailsIfNotConfigured() {
-        // GIVEN
-        val onError = ConsumerWithLatch<AuthException>(expect = InvalidUserPoolConfigurationException())
-
-        setupCurrentAuthState(authNState = AuthenticationState.NotConfigured())
-
-        // WHEN
-        plugin.resendSignUpCode("user", AuthResendSignUpCodeOptions.defaults(), mockk(), onError)
-
-        // THEN
-        onError.shouldBeCalled()
-    }
-
-    @Test
-    fun `test resend signup code API with given arguments and auth signed out`() {
-        setupCurrentAuthState(AuthenticationState.SignedOut(mockk()))
-        `test resend signup code API with given arguments`()
-    }
-
-    @Test
-    fun `test resend signup code API with given arguments and auth signed in`() {
-        `test resend signup code API with given arguments`()
-    }
-
-    private fun `test resend signup code API with given arguments`() {
-        val latch = CountDownLatch(1)
-
-        // GIVEN
-        val username = "user"
-
-        val requestCaptor = slot<ResendConfirmationCodeRequest>()
-        coEvery {
-            authService.cognitoIdentityProviderClient?.resendConfirmationCode(capture(requestCaptor))
-        } coAnswers {
-            latch.countDown()
-            mockk()
-        }
-
-        val expectedRequest: ResendConfirmationCodeRequest.Builder.() -> Unit = {
-            clientId = "app Client Id"
-            this.username = username
-            secretHash = "dummy Hash"
-            analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = expectedEndpointId }
-        }
-
-        // WHEN
-        plugin.resendSignUpCode(
-            username,
-            AuthResendSignUpCodeOptions.defaults(),
-            { latch.countDown() },
-            { latch.countDown() }
-        )
-        assertTrue { latch.await(5, TimeUnit.SECONDS) }
-
-        // THEN
-        assertEquals(ResendConfirmationCodeRequest.invoke(expectedRequest), requestCaptor.captured)
-    }
-
-    @Test
-    fun `test resend signup code success`() {
-        // GIVEN
-        val onSuccess = ConsumerWithLatch<AuthCodeDeliveryDetails>()
-        val username = "user"
-
-        setupCurrentAuthState(authNState = AuthenticationState.SignedOut(mockk()))
-
-        val deliveryDetails = mapOf(
-            "DESTINATION" to "destination",
-            "MEDIUM" to "EMAIL",
-            "ATTRIBUTE" to "attributeName"
-        )
-
-        val expectedCodeDeliveryDetails = AuthCodeDeliveryDetails(
-            deliveryDetails.getValue("DESTINATION"),
-            AuthCodeDeliveryDetails.DeliveryMedium.fromString(deliveryDetails.getValue("MEDIUM")),
-            deliveryDetails.getValue("ATTRIBUTE")
-        )
-
-        coEvery { authService.cognitoIdentityProviderClient?.resendConfirmationCode(any()) } coAnswers {
-            ResendConfirmationCodeResponse.invoke {
-                this.codeDeliveryDetails {
-                    this.attributeName = "attributeName"
-                    this.deliveryMedium = DeliveryMediumType.Email
-                    this.destination = "destination"
-                }
-            }
-        }
-
-        // WHEN
-        plugin.resendSignUpCode(username, AuthResendSignUpCodeOptions.defaults(), onSuccess, onError)
-        onSuccess.shouldBeCalled()
-
-        // THEN
-        assertEquals(expectedCodeDeliveryDetails, onSuccess.captured)
     }
 
     @Test
