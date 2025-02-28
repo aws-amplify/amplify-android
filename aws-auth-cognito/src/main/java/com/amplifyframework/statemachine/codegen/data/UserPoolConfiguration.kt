@@ -17,6 +17,7 @@ package com.amplifyframework.statemachine.codegen.data
 
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import org.json.JSONObject
 
 /**
@@ -49,17 +50,13 @@ data class UserPoolConfiguration internal constructor(
          * @return fresh configuration builder instance.
          */
         @JvmStatic
-        fun builder(): Builder {
-            return Builder()
-        }
+        fun builder(): Builder = Builder()
 
         /**
          * Returns a builder object populated from JSON.
          * @return populated builder instance.
          */
-        fun fromJson(configJson: JSONObject): Builder {
-            return Builder(configJson)
-        }
+        fun fromJson(configJson: JSONObject): Builder = Builder(configJson)
 
         inline operator fun invoke(block: Builder.() -> Unit) = Builder().apply(block).build()
     }
@@ -67,9 +64,7 @@ data class UserPoolConfiguration internal constructor(
     /**
      * Builder class for constructing [UserPoolConfiguration].
      */
-    internal class Builder constructor(
-        configJson: JSONObject? = null
-    ) {
+    internal class Builder constructor(configJson: JSONObject? = null) {
         var region: String? = DEFAULT_REGION
         var endpoint: String? = null
         var poolId: String? = null
@@ -160,3 +155,6 @@ data class UserPoolConfiguration internal constructor(
         PINPOINT_APP_ID("PinpointAppId")
     }
 }
+
+internal fun UserPoolConfiguration?.requireAppClientId() =
+    this?.appClient ?: throw InvalidUserPoolConfigurationException()

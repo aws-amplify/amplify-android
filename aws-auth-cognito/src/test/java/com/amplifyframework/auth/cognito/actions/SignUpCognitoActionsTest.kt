@@ -24,7 +24,7 @@ import com.amplifyframework.auth.cognito.AWSCognitoAuthService
 import com.amplifyframework.auth.cognito.AuthConfiguration
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.StoreClientBehavior
-import com.amplifyframework.auth.cognito.usecases.toAuthCodeDeliveryDetails
+import com.amplifyframework.auth.cognito.util.toAuthCodeDeliveryDetails
 import com.amplifyframework.auth.result.step.AuthSignUpStep
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.EventDispatcher

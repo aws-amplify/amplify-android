@@ -18,85 +18,56 @@ package com.amplifyframework.auth.cognito.usecases
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.forgotPassword
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeDeliveryDetailsType
-import com.amplifyframework.AmplifyException
-import com.amplifyframework.auth.AuthCodeDeliveryDetails
-import com.amplifyframework.auth.AuthException
-import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter
+import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResetPasswordOptions
+import com.amplifyframework.auth.cognito.util.toAuthCodeDeliveryDetails
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.step.AuthNextResetPasswordStep
 import com.amplifyframework.auth.result.step.AuthResetPasswordStep
-import com.amplifyframework.core.Consumer
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.amplifyframework.statemachine.codegen.data.requireAppClientId
 
 /**
  * Business logic to reset password if user forgot the old password.
  */
 internal class ResetPasswordUseCase(
-    private val cognitoIdentityProviderClient: CognitoIdentityProviderClient,
-    private val appClientId: String,
-    private val appClientSecret: String?
+    private val client: CognitoIdentityProviderClient,
+    private val environment: AuthEnvironment
 ) {
     suspend fun execute(
         username: String,
-        options: AuthResetPasswordOptions,
-        encodedContextData: String?,
-        pinpointEndpointId: String?,
-        onSuccess: Consumer<AuthResetPasswordResult>,
-        onError: Consumer<AuthException>
-    ) {
-        try {
-            val response = withContext(Dispatchers.IO) {
-                cognitoIdentityProviderClient.forgotPassword {
-                    this.username = username
-                    this.clientMetadata = (options as? AWSCognitoAuthResetPasswordOptions)?.metadata ?: mapOf()
-                    this.clientId = appClientId
-                    this.secretHash = AuthHelper.getSecretHash(
-                        username,
-                        appClientId,
-                        appClientSecret
-                    )
-                    encodedContextData?.let { this.userContextData { encodedData = it } }
-                    pinpointEndpointId?.let {
-                        this.analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = it }
-                    }
-                }
-            }
+        options: AuthResetPasswordOptions = AuthResetPasswordOptions.defaults()
+    ): AuthResetPasswordResult {
+        val awsOptions = options as? AWSCognitoAuthResetPasswordOptions
 
-            withContext(Dispatchers.Main) {
-                onSuccess.accept(
-                    AuthResetPasswordResult(
-                        false,
-                        AuthNextResetPasswordStep(
-                            AuthResetPasswordStep.CONFIRM_RESET_PASSWORD_WITH_CODE,
-                            mapOf(),
-                            response.codeDeliveryDetails.toAuthCodeDeliveryDetails()
-                        )
-                    )
-                )
-            }
-        } catch (ex: Exception) {
-            withContext(Dispatchers.Main) {
-                onError.accept(
-                    CognitoAuthExceptionConverter.lookup(ex, AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION)
-                )
+        val appClientId = environment.configuration.userPool.requireAppClientId()
+        val appClientSecret = environment.configuration.userPool?.appClientSecret
+        val encodedContextData = environment.getUserContextData(username)
+        val pinpointEndpointId = environment.getPinpointEndpointId()
+
+        val response = client.forgotPassword {
+            this.username = username
+            clientMetadata = awsOptions?.metadata ?: emptyMap()
+            clientId = appClientId
+            secretHash = AuthHelper.getSecretHash(
+                username,
+                appClientId,
+                appClientSecret
+            )
+            encodedContextData?.let { this.userContextData { encodedData = it } }
+            pinpointEndpointId?.let {
+                this.analyticsMetadata = AnalyticsMetadataType { analyticsEndpointId = it }
             }
         }
+
+        return AuthResetPasswordResult(
+            false,
+            AuthNextResetPasswordStep(
+                AuthResetPasswordStep.CONFIRM_RESET_PASSWORD_WITH_CODE,
+                emptyMap(),
+                response.codeDeliveryDetails.toAuthCodeDeliveryDetails()
+            )
+        )
     }
-}
-
-internal fun CodeDeliveryDetailsType?.toAuthCodeDeliveryDetails(): AuthCodeDeliveryDetails? {
-    if (this == null) return this
-
-    requireNotNull(destination)
-
-    return AuthCodeDeliveryDetails(
-        destination.toString(),
-        AuthCodeDeliveryDetails.DeliveryMedium.fromString(deliveryMedium.toString()),
-        attributeName
-    )
 }

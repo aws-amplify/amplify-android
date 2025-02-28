@@ -16,38 +16,23 @@
 package com.amplifyframework.auth.cognito.usecases
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
-import aws.sdk.kotlin.services.cognitoidentityprovider.getUserAttributeVerificationCode
-import com.amplifyframework.auth.AuthCodeDeliveryDetails
-import com.amplifyframework.auth.AuthUserAttributeKey
+import aws.sdk.kotlin.services.cognitoidentityprovider.changePassword
 import com.amplifyframework.auth.cognito.AuthStateMachine
-import com.amplifyframework.auth.cognito.exceptions.service.CodeDeliveryFailureException
-import com.amplifyframework.auth.cognito.options.AWSCognitoAuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.cognito.requireAccessToken
 import com.amplifyframework.auth.cognito.requireSignedInState
-import com.amplifyframework.auth.cognito.util.toAuthCodeDeliveryDetails
-import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 
-internal class ResendUserAttributeConfirmationUseCase(
+internal class UpdatePasswordUseCase(
     private val client: CognitoIdentityProviderClient,
     private val fetchAuthSession: FetchAuthSessionUseCase,
     private val stateMachine: AuthStateMachine
 ) {
-    suspend fun execute(
-        attributeKey: AuthUserAttributeKey,
-        options: AuthResendUserAttributeConfirmationCodeOptions =
-            AuthResendUserAttributeConfirmationCodeOptions.defaults()
-    ): AuthCodeDeliveryDetails {
+    suspend fun execute(oldPassword: String, newPassword: String) {
         stateMachine.requireSignedInState()
-
         val token = fetchAuthSession.execute().requireAccessToken()
-        val metadata = (options as? AWSCognitoAuthResendUserAttributeConfirmationCodeOptions)?.metadata
-
-        val response = client.getUserAttributeVerificationCode {
+        client.changePassword {
+            previousPassword = oldPassword
+            proposedPassword = newPassword
             accessToken = token
-            attributeName = attributeKey.keyString
-            clientMetadata = metadata
         }
-
-        return response.codeDeliveryDetails?.toAuthCodeDeliveryDetails() ?: throw CodeDeliveryFailureException()
     }
 }

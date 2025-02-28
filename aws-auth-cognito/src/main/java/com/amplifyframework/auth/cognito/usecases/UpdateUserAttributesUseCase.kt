@@ -26,6 +26,7 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttribu
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.cognito.requireAccessToken
 import com.amplifyframework.auth.cognito.requireSignedInState
+import com.amplifyframework.auth.cognito.util.toAuthCodeDeliveryDetails
 import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
