@@ -20,7 +20,6 @@ import android.content.Intent
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthSession
-import com.amplifyframework.auth.TOTPSetupDetails
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
@@ -32,7 +31,6 @@ import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
-import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
@@ -281,21 +279,6 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
 
     suspend fun clearFederationToIdentityPool() = suspendCoroutine { continuation ->
         delegate.clearFederationToIdentityPool(
-            { continuation.resume(Unit) },
-            { continuation.resumeWithException(it) }
-        )
-    }
-
-    suspend fun setUpTOTP(): TOTPSetupDetails = suspendCoroutine { continuation ->
-        delegate.setUpTOTP(
-            { continuation.resume(it) },
-            { continuation.resumeWithException(it) }
-        )
-    }
-    suspend fun verifyTOTPSetup(code: String, options: AuthVerifyTOTPSetupOptions) = suspendCoroutine { continuation ->
-        delegate.verifyTOTPSetup(
-            code,
-            options,
             { continuation.resume(Unit) },
             { continuation.resumeWithException(it) }
         )

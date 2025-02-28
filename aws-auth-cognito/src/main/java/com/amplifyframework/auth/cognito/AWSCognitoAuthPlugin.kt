@@ -414,7 +414,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     }
 
     override fun setUpTOTP(onSuccess: Consumer<TOTPSetupDetails>, onError: Consumer<AuthException>) =
-        enqueue(onSuccess, onError) { queueFacade.setUpTOTP() }
+        enqueue(onSuccess, onError) { useCaseFactory.setupTotp().execute() }
 
     override fun verifyTOTPSetup(code: String, onSuccess: Action, onError: Consumer<AuthException>) {
         verifyTOTPSetup(code, AWSCognitoAuthVerifyTOTPSetupOptions.CognitoBuilder().build(), onSuccess, onError)
@@ -425,7 +425,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         options: AuthVerifyTOTPSetupOptions,
         onSuccess: Action,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.verifyTOTPSetup(code, options) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.verifyTotpSetup().execute(code, options) }
 
     override fun associateWebAuthnCredential(
         callingActivity: Activity,
