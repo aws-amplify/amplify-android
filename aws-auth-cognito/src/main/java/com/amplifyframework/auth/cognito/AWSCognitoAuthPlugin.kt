@@ -313,13 +313,13 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         options: AuthResetPasswordOptions,
         onSuccess: Consumer<AuthResetPasswordResult>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.resetPassword(username, options) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.resetPassword().execute(username, options) }
 
     override fun resetPassword(
         username: String,
         onSuccess: Consumer<AuthResetPasswordResult>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.resetPassword(username) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.resetPassword().execute(username) }
 
     override fun confirmResetPassword(
         username: String,
@@ -329,7 +329,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         onSuccess: Action,
         onError: Consumer<AuthException>
     ) = enqueue(onSuccess, onError) {
-        queueFacade.confirmResetPassword(username, newPassword, confirmationCode, options)
+        useCaseFactory.confirmResetPassword().execute(username, newPassword, confirmationCode, options)
     }
 
     override fun confirmResetPassword(
@@ -338,14 +338,16 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         confirmationCode: String,
         onSuccess: Action,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.confirmResetPassword(username, newPassword, confirmationCode) }
+    ) = enqueue(onSuccess, onError) {
+        useCaseFactory.confirmResetPassword().execute(username, newPassword, confirmationCode)
+    }
 
     override fun updatePassword(
         oldPassword: String,
         newPassword: String,
         onSuccess: Action,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.updatePassword(oldPassword, newPassword) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.updatePassword().execute(oldPassword, newPassword) }
 
     override fun fetchUserAttributes(onSuccess: Consumer<List<AuthUserAttribute>>, onError: Consumer<AuthException>) =
         enqueue(onSuccess, onError) { useCaseFactory.fetchUserAttributes().execute() }

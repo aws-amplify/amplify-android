@@ -19,9 +19,9 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.confirmSignUp
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.signUp
-import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
+import com.amplifyframework.auth.cognito.util.toAuthCodeDeliveryDetails
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.step.AuthNextSignUpStep
 import com.amplifyframework.auth.result.step.AuthSignUpStep
@@ -68,13 +68,7 @@ internal object SignUpCognitoActions : SignUpActions {
                     }
                 }
 
-                val codeDeliveryDetails = AuthCodeDeliveryDetails(
-                    response?.codeDeliveryDetails?.destination ?: "",
-                    AuthCodeDeliveryDetails.DeliveryMedium.fromString(
-                        response?.codeDeliveryDetails?.deliveryMedium?.value
-                    ),
-                    response?.codeDeliveryDetails?.attributeName
-                )
+                val codeDeliveryDetails = response?.codeDeliveryDetails.toAuthCodeDeliveryDetails()
                 val signUpData = SignUpData(
                     username,
                     event.signUpData.validationData,

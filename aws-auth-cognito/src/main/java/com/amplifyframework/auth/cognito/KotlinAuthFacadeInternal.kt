@@ -22,17 +22,14 @@ import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
-import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
-import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
-import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.auth.result.AuthSignUpResult
@@ -190,60 +187,6 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
         delegate.fetchAuthSession(
             options,
             { continuation.resume(it) },
-            { continuation.resumeWithException(it) }
-        )
-    }
-
-    suspend fun resetPassword(username: String): AuthResetPasswordResult = suspendCoroutine { continuation ->
-        delegate.resetPassword(
-            username,
-            { continuation.resume(it) },
-            { continuation.resumeWithException(it) }
-        )
-    }
-
-    suspend fun resetPassword(username: String, options: AuthResetPasswordOptions): AuthResetPasswordResult =
-        suspendCoroutine { continuation ->
-            delegate.resetPassword(
-                username,
-                options,
-                { continuation.resume(it) },
-                { continuation.resumeWithException(it) }
-            )
-        }
-
-    suspend fun confirmResetPassword(username: String, newPassword: String, confirmationCode: String) =
-        suspendCoroutine { continuation ->
-            delegate.confirmResetPassword(
-                username,
-                newPassword,
-                confirmationCode,
-                { continuation.resume(Unit) },
-                { continuation.resumeWithException(it) }
-            )
-        }
-
-    suspend fun confirmResetPassword(
-        username: String,
-        newPassword: String,
-        confirmationCode: String,
-        options: AuthConfirmResetPasswordOptions
-    ) = suspendCoroutine { continuation ->
-        delegate.confirmResetPassword(
-            username,
-            newPassword,
-            confirmationCode,
-            options,
-            { continuation.resume(Unit) },
-            { continuation.resumeWithException(it) }
-        )
-    }
-
-    suspend fun updatePassword(oldPassword: String, newPassword: String) = suspendCoroutine { continuation ->
-        delegate.updatePassword(
-            oldPassword,
-            newPassword,
-            { continuation.resume(Unit) },
             { continuation.resumeWithException(it) }
         )
     }
