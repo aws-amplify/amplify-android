@@ -85,10 +85,12 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthSignUpResult> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.signUp()
+
         authPlugin.signUp(expectedUsername, expectedPassword, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.signUp(expectedUsername, expectedPassword, expectedOptions, any(), any())
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute(expectedUsername, expectedPassword, expectedOptions)
         }
     }
 
@@ -99,14 +101,14 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthSignUpResult> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.confirmSignUp()
+
         authPlugin.confirmSignUp(expectedUsername, expectedConfirmationCode, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.confirmSignUp(
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute(
                 expectedUsername,
-                expectedConfirmationCode,
-                any(),
-                any()
+                expectedConfirmationCode
             )
         }
     }
@@ -119,6 +121,8 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthSignUpResult> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.confirmSignUp()
+
         authPlugin.confirmSignUp(
             expectedUsername,
             expectedConfirmationCode,
@@ -127,13 +131,11 @@ class AWSCognitoAuthPluginTest {
             expectedOnError
         )
 
-        verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.confirmSignUp(
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute(
                 expectedUsername,
                 expectedConfirmationCode,
-                expectedOptions,
-                any(),
-                any()
+                expectedOptions
             )
         }
     }

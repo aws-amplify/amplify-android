@@ -22,55 +22,17 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
-import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
-import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignOutResult
-import com.amplifyframework.auth.result.AuthSignUpResult
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuthPlugin) {
-
-    suspend fun signUp(username: String, password: String?, options: AuthSignUpOptions): AuthSignUpResult =
-        suspendCoroutine { continuation ->
-            delegate.signUp(
-                username,
-                password,
-                options,
-                { continuation.resume(it) },
-                { continuation.resumeWithException(it) }
-            )
-        }
-
-    suspend fun confirmSignUp(username: String, confirmationCode: String): AuthSignUpResult =
-        suspendCoroutine { continuation ->
-            delegate.confirmSignUp(
-                username,
-                confirmationCode,
-                { continuation.resume(it) },
-                { continuation.resumeWithException(it) }
-            )
-        }
-
-    suspend fun confirmSignUp(
-        username: String,
-        confirmationCode: String,
-        options: AuthConfirmSignUpOptions
-    ): AuthSignUpResult = suspendCoroutine { continuation ->
-        delegate.confirmSignUp(
-            username,
-            confirmationCode,
-            options,
-            { continuation.resume(it) },
-            { continuation.resumeWithException(it) }
-        )
-    }
 
     suspend fun signIn(username: String?, password: String?): AuthSignInResult = suspendCoroutine { continuation ->
         delegate.signIn(

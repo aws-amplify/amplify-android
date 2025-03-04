@@ -31,11 +31,8 @@ import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
-import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
-import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.result.AuthSignInResult
-import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.logging.Logger
@@ -160,23 +157,6 @@ class RealAWSCognitoAuthPluginTest {
     }
 
     @Test
-    fun testSignUpFailsIfNotConfigured() {
-        // GIVEN
-        val onSuccess = mockk<Consumer<AuthSignUpResult>>()
-        val onError = mockk<Consumer<AuthException>>(relaxed = true)
-        val expectedAuthError = InvalidUserPoolConfigurationException()
-
-        setupCurrentAuthState(authNState = AuthenticationState.NotConfigured())
-
-        // WHEN
-        plugin.signUp("user", "pass", AuthSignUpOptions.builder().build(), onSuccess, onError)
-
-        // THEN
-        verify(exactly = 0) { onSuccess.accept(any()) }
-        verify { onError.accept(expectedAuthError) }
-    }
-
-    @Test
     fun testFetchAuthSessionSucceedsIfSignedOut() {
         // GIVEN
         val onSuccess = mockk<Consumer<AuthSession>>()
@@ -212,23 +192,6 @@ class RealAWSCognitoAuthPluginTest {
         )
 
         // THEN
-        verify(exactly = 0) { onSuccess.accept(any()) }
-    }
-
-    @Test
-    fun testConfirmSignUpFailsIfNotConfigured() {
-        // GIVEN
-        val expectedAuthError = InvalidUserPoolConfigurationException()
-        val onSuccess = mockk<Consumer<AuthSignUpResult>>()
-        val onError = ConsumerWithLatch<AuthException>(expect = expectedAuthError)
-
-        setupCurrentAuthState(authNState = AuthenticationState.NotConfigured())
-
-        // WHEN
-        plugin.confirmSignUp("user", "pass", AuthConfirmSignUpOptions.defaults(), onSuccess, onError)
-
-        // THEN
-        onError.shouldBeCalled()
         verify(exactly = 0) { onSuccess.accept(any()) }
     }
 

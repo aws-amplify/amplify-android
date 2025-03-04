@@ -197,14 +197,14 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         options: AuthSignUpOptions,
         onSuccess: Consumer<AuthSignUpResult>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.signUp(username, password, options) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.signUp().execute(username, password, options) }
 
     override fun confirmSignUp(
         username: String,
         confirmationCode: String,
         onSuccess: Consumer<AuthSignUpResult>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.confirmSignUp(username, confirmationCode) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.confirmSignUp().execute(username, confirmationCode) }
 
     override fun confirmSignUp(
         username: String,
@@ -212,7 +212,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         options: AuthConfirmSignUpOptions,
         onSuccess: Consumer<AuthSignUpResult>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.confirmSignUp(username, confirmationCode, options) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.confirmSignUp().execute(username, confirmationCode, options) }
 
     override fun resendSignUpCode(
         username: String,

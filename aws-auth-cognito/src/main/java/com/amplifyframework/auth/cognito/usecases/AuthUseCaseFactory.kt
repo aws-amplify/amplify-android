@@ -126,6 +126,14 @@ internal class AuthUseCaseFactory(
         stateMachine = stateMachine
     )
 
+    fun signUp() = SignUpUseCase(
+        stateMachine = stateMachine
+    )
+
+    fun confirmSignUp() = ConfirmSignUpUseCase(
+        stateMachine = stateMachine
+    )
+
     fun resendSignupCode() = ResendSignupCodeUseCase(
         client = authEnvironment.requireIdentityProviderClient(),
         environment = authEnvironment,
