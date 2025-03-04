@@ -17,6 +17,7 @@ package com.amplifyframework.auth.cognito.usecases
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceRememberedStatusType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateDeviceStatusResponse
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.AuthStateMachine
 import com.amplifyframework.auth.exceptions.InvalidStateException
@@ -56,6 +57,8 @@ class RememberDeviceUseCaseTest {
 
     @Test
     fun `remember device invokes API`() = runTest {
+        coEvery { client.updateDeviceStatus(any()) } returns UpdateDeviceStatusResponse { }
+
         useCase.execute()
         coVerify {
             client.updateDeviceStatus(

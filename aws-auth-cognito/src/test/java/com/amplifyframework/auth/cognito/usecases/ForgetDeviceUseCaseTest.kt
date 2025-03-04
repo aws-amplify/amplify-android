@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito.usecases
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgetDeviceResponse
 import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.AuthStateMachine
@@ -56,6 +57,8 @@ class ForgetDeviceUseCaseTest {
 
     @Test
     fun `forget device invokes API`() = runTest {
+        coEvery { client.forgetDevice(any()) } returns ForgetDeviceResponse { }
+
         useCase.execute()
 
         coVerify {
@@ -70,6 +73,8 @@ class ForgetDeviceUseCaseTest {
 
     @Test
     fun `forget device invokes API with device ID`() = runTest {
+        coEvery { client.forgetDevice(any()) } returns ForgetDeviceResponse { }
+
         val device = AuthDevice.fromId("specified id")
 
         useCase.execute(device)
