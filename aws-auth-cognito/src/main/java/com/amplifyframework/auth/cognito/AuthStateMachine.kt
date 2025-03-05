@@ -32,6 +32,7 @@ import com.amplifyframework.auth.cognito.actions.SignOutCognitoActions
 import com.amplifyframework.auth.cognito.actions.SignUpCognitoActions
 import com.amplifyframework.auth.cognito.actions.UserAuthSignInCognitoActions
 import com.amplifyframework.auth.cognito.actions.WebAuthnSignInCognitoActions
+import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.statemachine.Environment
@@ -140,10 +141,16 @@ internal suspend inline fun <reified T : AuthenticationState> AuthStateMachine.r
 }
 
 // Returns the SignedInState or throws SignedOutException or InvalidStateException
-internal suspend fun AuthStateMachine.requireSignedInState(): AuthenticationState.SignedIn {
-    return when (val state = getCurrentState().authNState) {
+internal suspend fun AuthStateMachine.requireSignedInState(): AuthenticationState.SignedIn =
+    when (val state = getCurrentState().authNState) {
         is AuthenticationState.SignedIn -> state
         is AuthenticationState.SignedOut -> throw SignedOutException()
         else -> throw InvalidStateException()
+    }
+
+// Throws InvalidUserPoolConfigurationException if the authentication state is NotConfigured
+internal suspend fun AuthStateMachine.throwIfNotConfigured() {
+    if (getCurrentState().authNState is AuthenticationState.NotConfigured) {
+        throw InvalidUserPoolConfigurationException()
     }
 }

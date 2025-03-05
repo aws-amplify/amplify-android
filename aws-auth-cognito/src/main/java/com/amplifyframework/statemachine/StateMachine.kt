@@ -22,8 +22,10 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.withContext
@@ -62,6 +64,10 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
     // The current state of the state machine. Consumers can collect or read the current state from the read-only StateFlow
     private val _state = MutableStateFlow(initialState ?: resolver.defaultState)
     val state = _state.asStateFlow()
+
+    // A flow of states that omits the current states - emitting only states that occur after the flow starts.
+    val stateTransitions: Flow<StateType>
+        get() = state.drop(1)
 
     // Private accessor for the current state. Although this is thread-safe to access/mutate, we still want to limit
     // read/write to the single-threaded stateMachineContext for consistency

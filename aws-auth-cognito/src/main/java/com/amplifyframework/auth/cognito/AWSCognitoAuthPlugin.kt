@@ -197,14 +197,14 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         options: AuthSignUpOptions,
         onSuccess: Consumer<AuthSignUpResult>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.signUp(username, password, options) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.signUp().execute(username, password, options) }
 
     override fun confirmSignUp(
         username: String,
         confirmationCode: String,
         onSuccess: Consumer<AuthSignUpResult>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.confirmSignUp(username, confirmationCode) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.confirmSignUp().execute(username, confirmationCode) }
 
     override fun confirmSignUp(
         username: String,
@@ -212,20 +212,20 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         options: AuthConfirmSignUpOptions,
         onSuccess: Consumer<AuthSignUpResult>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.confirmSignUp(username, confirmationCode, options) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.confirmSignUp().execute(username, confirmationCode, options) }
 
     override fun resendSignUpCode(
         username: String,
         onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.resendSignUpCode(username) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.resendSignupCode().execute(username) }
 
     override fun resendSignUpCode(
         username: String,
         options: AuthResendSignUpCodeOptions,
         onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.resendSignUpCode(username, options) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.resendSignupCode().execute(username, options) }
 
     override fun signIn(
         username: String?,
