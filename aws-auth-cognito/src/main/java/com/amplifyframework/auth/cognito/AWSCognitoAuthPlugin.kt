@@ -459,7 +459,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     ) = enqueue(onSuccess, onError) { useCaseFactory.listWebAuthnCredentials().execute(options) }
 
     override fun autoSignIn(onSuccess: Consumer<AuthSignInResult>, onError: Consumer<AuthException>) =
-        enqueue(onSuccess, onError) { queueFacade.autoSignIn() }
+        enqueue(onSuccess, onError) { useCaseFactory.autoSignIn().execute() }
 
     override fun deleteWebAuthnCredential(credentialId: String, onSuccess: Action, onError: Consumer<AuthException>) =
         deleteWebAuthnCredential(credentialId, AuthDeleteWebAuthnCredentialOptions.defaults(), onSuccess, onError)
