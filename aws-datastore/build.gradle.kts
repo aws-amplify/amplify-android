@@ -28,6 +28,8 @@ android {
 }
 
 dependencies {
+    compileOnly(libs.rxlint)
+
     implementation(project(":core"))
     implementation(project(":aws-core"))
     implementation(project(":aws-api-appsync"))
