@@ -120,7 +120,8 @@ public class SelectionSetTest {
             .fields(fields)
             .authRules(Collections.singletonList(AuthRule.builder()
                 .authStrategy(AuthStrategy.OWNER)
-                .identityClaim("cognito:username")
+                .identityClaim("sub")
+                .authProvider(AuthStrategy.Provider.USER_POOLS)
                 .ownerField("owner")
                 .operations(Arrays.asList(
                     ModelOperation.CREATE,
