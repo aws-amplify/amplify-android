@@ -14,8 +14,6 @@ CONSOLE_HANDLER = logging.StreamHandler()
 CONSOLE_HANDLER.setFormatter(LOG_FORMATTER)
 LOGGER = logging.getLogger("DeviceFarmTestRunReportGenerator")
 LOGGER.setLevel(os.getenv("LOG_LEVEL") if os.getenv("LOG_LEVEL") is not None else "INFO")
-# TODO remove this
-LOGGER.setLevel("DEBUG")
 LOGGER.addHandler(CONSOLE_HANDLER)
 
 def parse_arguments():
