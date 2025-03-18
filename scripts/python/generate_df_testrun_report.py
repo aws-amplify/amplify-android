@@ -165,7 +165,7 @@ def main(arguments):
         )
 
         response = cw_client.put_metric_data(
-            Namespace='AmplifyTests-5',
+            Namespace='AmplifyTests-6',
             MetricData=metrics
         )
         LOGGER.info(response)
