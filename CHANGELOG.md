@@ -1,3 +1,10 @@
+## [Release 2.27.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.27.2)
+
+### Bug Fixes
+- **all:** Add additional consumer proguard rules for missing classes ([#3000](https://github.com/aws-amplify/amplify-android/issues/3000))
+
+[See all changes between 2.27.1 and 2.27.2](https://github.com/aws-amplify/amplify-android/compare/release_v2.27.1...release_v2.27.2)
+
 ## [Release 2.27.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.27.1)
 
 ### Bug Fixes
