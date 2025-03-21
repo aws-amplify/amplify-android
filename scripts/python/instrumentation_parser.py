@@ -147,7 +147,7 @@ class Parser:
             # The status code acts as a delimiter for a test case so we can clear out the stack trace
                 self.stack_trace = ""
         elif TIME_PREFIX in line:
-            self.execution_time = line.replace(TIME_PREFIX, "").strip()
+            self.execution_time = line.replace(TIME_PREFIX, "").strip().replace(',','')
             print(f"Setting time: {self.execution_time}")
         elif "INSTRUMENTATION_" not in line:
             # This line is likely a continuation of the ongoing stream so append to it
