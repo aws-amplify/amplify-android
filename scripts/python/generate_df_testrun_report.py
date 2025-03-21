@@ -35,7 +35,6 @@ def main(arguments):
         region_name='us-west-2'
     )
 
-#     download_logs(df_client, args.run_arn, logs_dir)
     response = df_client.list_artifacts(
         arn=args.run_arn,
         type="FILE"
@@ -47,11 +46,10 @@ def main(arguments):
     # run's artifacts.
     artifacts = response["artifacts"]
     customer_artifacts = (artifact for artifact in artifacts if artifact["type"] == "CUSTOMER_ARTIFACT")
-    while (customer_artifact := next(customer_artifacts, None)) is not None:
+    for job_no, customer_artifact in enumerate(customer_artifacts):
         LOGGER.info(f"Parsing result for artifact ARN: {customer_artifact['arn']}")
 
-        # TODO: Change delete_after to True
-        unzip_result = dload.save_unzip(customer_artifact["url"], extract_path=logs_dir, delete_after=False)
+        unzip_result = dload.save_unzip(customer_artifact["url"], extract_path=logs_dir, delete_after=True)
         if unzip_result is None or unzip_result == "":
             LOGGER.error("Unzip of test run artifacts failed")
             break
@@ -102,13 +100,13 @@ def main(arguments):
 
                     test_cases.append(tc)
 
-                ts = TestSuite(test_suite_name, test_cases=test_cases)
+                ts = TestSuite(test_suite_name + "-" + str(job_no), test_cases=test_cases)
                 ts_output = TestSuite.to_xml_string([ts])
                 LOGGER.info(f"Saving test suite {test_suite_name} report.")
 
                 if not os.path.exists(args.output_path):
                     os.makedirs(args.output_path)
-                f = open(args.output_path + test_suite_name + ".xml", "w")
+                f = open(args.output_path + test_suite_name + "-" + str(job_no) + ".xml", "w")
                 f.write(ts_output)
                 f.close()
 
