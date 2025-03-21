@@ -1,3 +1,7 @@
+"""
+Python script that parses the Android Test Orchestrator's instrumentation logs line by line
+and stores the results in memory.
+"""
 import re
 from dataclasses import dataclass
 from typing import Dict

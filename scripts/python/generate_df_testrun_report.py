@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+"""
+Python script that parses the Android Test Orchestrator's instrumentation logs for a given
+Device Farm test run and generates a user-readable Junit report.
+"""
 import os
 import argparse
 import dload
@@ -16,6 +20,7 @@ LOGGER = logging.getLogger("DeviceFarmTestRunReportGenerator")
 LOGGER.setLevel(os.getenv("LOG_LEVEL") if os.getenv("LOG_LEVEL") is not None else "INFO")
 LOGGER.addHandler(CONSOLE_HANDLER)
 
+# Parse the required script arguments
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Utility that generates a report for a DeviceFarm test run.")
     parser.add_argument("-r", "--run_arn", help="The ARN of the DeviceFarm test run.", required=True)
@@ -27,7 +32,10 @@ def main(arguments):
     LOGGER.info(f"Starting to generate report...")
     args = parse_arguments()
 
+    # The path that the unzipped Device Farm artifacts will be unzipped into
     logs_dir = "build/allTests/{}".format(args.module_name)
+
+    # The path that the Device Farm instrumentation logs are in
     log_file = logs_dir + "/Host_Machine_Files/$DEVICEFARM_LOG_DIR/instrument.log"
 
     df_client = boto3.client(
@@ -35,17 +43,19 @@ def main(arguments):
         region_name='us-west-2'
     )
 
+    # For a particular Device Farm run, grab the list of all of the artifacts
     response = df_client.list_artifacts(
         arn=args.run_arn,
         type="FILE"
     )
 
+    # The instrumentation logs are stored in the "CUSTOMER_ARTIFACT" file for a test job
+    customer_artifacts = (artifact for artifact in response["artifacts"] if artifact["type"] == "CUSTOMER_ARTIFACT")
+
     # A single test run may have multiple jobs where each job tests on a different device
     # A regular PR typically tests on one device while a release PR typically tests on 3 devices
     # The instrumentation logs for each job is uploaded as a separate CUSTOMER_ARTIFACT in the
     # run's artifacts.
-    artifacts = response["artifacts"]
-    customer_artifacts = (artifact for artifact in artifacts if artifact["type"] == "CUSTOMER_ARTIFACT")
     for job_no, customer_artifact in enumerate(customer_artifacts):
         LOGGER.info(f"Parsing result for artifact ARN: {customer_artifact['arn']}")
 
@@ -77,6 +87,9 @@ def main(arguments):
             arn_components = args.run_arn.split(":")[-1].split("/")
             run_url = f"https://us-west-2.console.aws.amazon.com/devicefarm/home#/mobile/projects/{arn_components[0]}/runs/{arn_components[1]}/jobs/00000"
             debug_messaging = f"You can find the detailed logs and output files at {run_url}"
+
+            # Run through the parser results and translate them into the junit_xml data classes
+            # while also constructing the CloudWatch metrics
             for test_suite_name, test_suite in parser.test_run.test_suites.items():
                 test_cases = []
                 for test_name, test in test_suite.tests.items():
@@ -100,6 +113,8 @@ def main(arguments):
 
                     test_cases.append(tc)
 
+                # Because a test run can have N number of test jobs, we need to distinguish each job's
+                # test result so we'll append an integer to it.
                 ts = TestSuite(test_suite_name + "-" + str(job_no), test_cases=test_cases)
                 ts_output = TestSuite.to_xml_string([ts])
                 LOGGER.info(f"Saving test suite {test_suite_name} report.")
@@ -159,6 +174,9 @@ def main(arguments):
             exception_dimensions = [ get_dimension("Exception", exception_value), get_dimension("Line Number", exception_location) ]
             metrics.append(get_metric("Test Run Reporting Error", exception_dimensions, 1, "Count"))
             print(f"Adding metric [{get_metric('Test Run Reporting Error', exception_dimensions, 1, 'Count')}]")
+
+        # Now that the logs have been parsed and metrics have been gathered, we publish the metrics
+        # to CloudWatch.
         try:
             cw_client = boto3.client(
                 'cloudwatch',
