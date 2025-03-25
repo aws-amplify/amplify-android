@@ -36,9 +36,8 @@ internal class TransferStatusUpdater(
             AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
         )
     private val mainHandler = Handler(Looper.getMainLooper())
-    private val transferStatusListenerMap: ConcurrentHashMap<Int, ConcurrentHashMap<TransferListener, Boolean>> by lazy {
-        ConcurrentHashMap()
-    }
+    private val transferStatusListenerMap:
+        ConcurrentHashMap<Int, ConcurrentHashMap<TransferListener, Boolean>> by lazy { ConcurrentHashMap() }
     private val transferWorkInfoIdMap: ConcurrentHashMap<String, Int> by lazy { ConcurrentHashMap() }
     private val multiPartTransferStatusListener: ConcurrentHashMap<Int, MultiPartUploadTaskListener> by lazy {
         ConcurrentHashMap()
