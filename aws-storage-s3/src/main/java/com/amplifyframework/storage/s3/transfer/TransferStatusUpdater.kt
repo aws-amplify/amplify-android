@@ -36,11 +36,11 @@ internal class TransferStatusUpdater(
             AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
         )
     private val mainHandler = Handler(Looper.getMainLooper())
-    private val transferStatusListenerMap: MutableMap<Int, MutableList<TransferListener>> by lazy {
+    private val transferStatusListenerMap: ConcurrentHashMap<Int, ConcurrentHashMap<TransferListener, Boolean>> by lazy {
         ConcurrentHashMap()
     }
-    private val transferWorkInfoIdMap: MutableMap<String, Int> by lazy { ConcurrentHashMap() }
-    private val multiPartTransferStatusListener: MutableMap<Int, MultiPartUploadTaskListener> by lazy {
+    private val transferWorkInfoIdMap: ConcurrentHashMap<String, Int> by lazy { ConcurrentHashMap() }
+    private val multiPartTransferStatusListener: ConcurrentHashMap<Int, MultiPartUploadTaskListener> by lazy {
         ConcurrentHashMap()
     }
     val activeTransferMap = object : AbstractMutableMap<Int, TransferRecord>() {
@@ -101,7 +101,7 @@ internal class TransferStatusUpdater(
                 removeTransferRecord(transferRecord.id)
             }
 
-            transferStatusListenerMap[transferRecord.id]?.forEach { listener ->
+            transferStatusListenerMap[transferRecord.id]?.forEach { (listener, _) ->
                 mainHandler.post {
                     transferRecord.key?.let { key ->
                         listener.onStateChanged(
@@ -135,9 +135,9 @@ internal class TransferStatusUpdater(
             transferDB.updateBytesTransferred(transferRecordId, bytesCurrent, bytesTotal)
         }
         if (notifyListener) {
-            transferStatusListenerMap[transferRecordId]?.forEach {
+            transferStatusListenerMap[transferRecordId]?.forEach { (listener, _) ->
                 mainHandler.post {
-                    it.onProgressChanged(
+                    listener.onProgressChanged(
                         transferRecordId,
                         bytesCurrent,
                         bytesTotal
@@ -149,8 +149,8 @@ internal class TransferStatusUpdater(
 
     @Synchronized
     fun updateOnError(transferRecordId: Int, exception: Exception) {
-        transferStatusListenerMap[transferRecordId]?.forEach {
-            mainHandler.post { it.onError(transferRecordId, exception) }
+        transferStatusListenerMap[transferRecordId]?.forEach { (listener, _) ->
+            mainHandler.post { listener.onError(transferRecordId, exception) }
         }
     }
 
@@ -162,13 +162,8 @@ internal class TransferStatusUpdater(
 
     @Synchronized
     fun registerListener(transferRecordId: Int, transferListener: TransferListener) {
-        transferStatusListenerMap[transferRecordId]?.let {
-            val transferListener = transferListener
-            if (!it.contains(transferListener)) {
-                it.add(transferListener)
-            }
-        } ?: run {
-            transferStatusListenerMap[transferRecordId] = mutableListOf(transferListener)
+        transferStatusListenerMap[transferRecordId]?.putIfAbsent(transferListener, true) ?: run {
+            transferStatusListenerMap[transferRecordId] = ConcurrentHashMap()
         }
     }
 
