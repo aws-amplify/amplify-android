@@ -162,7 +162,7 @@ internal class TransferStatusUpdater(
     @Synchronized
     fun registerListener(transferRecordId: Int, transferListener: TransferListener) {
         transferStatusListenerMap[transferRecordId]?.putIfAbsent(transferListener, true) ?: run {
-            transferStatusListenerMap[transferRecordId] = ConcurrentHashMap()
+            transferStatusListenerMap[transferRecordId] = ConcurrentHashMap(mapOf(Pair(transferListener, true)))
         }
     }
 
