@@ -163,7 +163,7 @@ internal class TransferStatusUpdater(
     fun registerListener(transferRecordId: Int, transferListener: TransferListener) {
         mainHandler.post {
             transferStatusListenerMap[transferRecordId]?.add(transferListener) ?: run {
-                val transferRecordMap = ConcurrentHashMap.newKeySet<TransferListener?>().apply {
+                val transferRecordMap = ConcurrentHashMap.newKeySet<TransferListener>().apply {
                     add(transferListener)
                 }
                 transferStatusListenerMap[transferRecordId] = transferRecordMap
