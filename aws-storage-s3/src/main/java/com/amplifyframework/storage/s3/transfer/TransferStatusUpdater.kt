@@ -37,7 +37,7 @@ internal class TransferStatusUpdater(
         )
     private val mainHandler = Handler(Looper.getMainLooper())
     private val transferStatusListenerMap:
-        ConcurrentHashMap<Int, ConcurrentHashMap.KeySetView<TransferListener, Boolean>> by lazy { ConcurrentHashMap() }
+        ConcurrentHashMap<Int, ConcurrentHashMap<TransferListener, Boolean>> by lazy { ConcurrentHashMap() }
     private val transferWorkInfoIdMap: ConcurrentHashMap<String, Int> by lazy { ConcurrentHashMap() }
     private val multiPartTransferStatusListener: ConcurrentHashMap<Int, MultiPartUploadTaskListener> by lazy {
         ConcurrentHashMap()
@@ -100,7 +100,7 @@ internal class TransferStatusUpdater(
                 removeTransferRecord(transferRecord.id)
             }
 
-            transferStatusListenerMap[transferRecord.id]?.forEach { listener ->
+            transferStatusListenerMap[transferRecord.id]?.forEach { (listener, _) ->
                 mainHandler.post {
                     transferRecord.key?.let { key ->
                         listener.onStateChanged(
@@ -134,7 +134,7 @@ internal class TransferStatusUpdater(
             transferDB.updateBytesTransferred(transferRecordId, bytesCurrent, bytesTotal)
         }
         if (notifyListener) {
-            transferStatusListenerMap[transferRecordId]?.forEach { listener ->
+            transferStatusListenerMap[transferRecordId]?.forEach { (listener, _) ->
                 mainHandler.post {
                     listener.onProgressChanged(
                         transferRecordId,
@@ -148,7 +148,7 @@ internal class TransferStatusUpdater(
 
     @Synchronized
     fun updateOnError(transferRecordId: Int, exception: Exception) {
-        transferStatusListenerMap[transferRecordId]?.forEach { listener ->
+        transferStatusListenerMap[transferRecordId]?.forEach { (listener, _) ->
             mainHandler.post { listener.onError(transferRecordId, exception) }
         }
     }
@@ -162,11 +162,8 @@ internal class TransferStatusUpdater(
     @Synchronized
     fun registerListener(transferRecordId: Int, transferListener: TransferListener) {
         mainHandler.post {
-            transferStatusListenerMap[transferRecordId]?.add(transferListener) ?: run {
-                val transferRecordMap = ConcurrentHashMap.newKeySet<TransferListener?>().apply {
-                    add(transferListener)
-                }
-                transferStatusListenerMap[transferRecordId] = transferRecordMap
+            transferStatusListenerMap[transferRecordId]?.put(transferListener, true) ?: run {
+                transferStatusListenerMap[transferRecordId] = ConcurrentHashMap(mapOf(Pair(transferListener, true)))
             }
         }
     }
