@@ -22,7 +22,6 @@ import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
 import java.io.File
-import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 
 /**
