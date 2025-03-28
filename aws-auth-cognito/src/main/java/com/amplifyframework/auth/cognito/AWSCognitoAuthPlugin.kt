@@ -526,7 +526,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         enqueue(onSuccess, onError) { queueFacade.clearFederationToIdentityPool() }
 
     fun fetchMFAPreference(onSuccess: Consumer<UserMFAPreference>, onError: Consumer<AuthException>) =
-        enqueue(onSuccess, onError) { queueFacade.fetchMFAPreference() }
+        enqueue(onSuccess, onError) { useCaseFactory.fetchMfaPreference().execute() }
 
     @Deprecated("Use updateMFAPreference(sms, totp, email, onSuccess, onError) instead")
     fun updateMFAPreference(
@@ -534,7 +534,13 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         totp: MFAPreference?,
         onSuccess: Action,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.updateMFAPreference(sms, totp, null) }
+    ) = enqueue(onSuccess, onError) {
+        useCaseFactory.updateMfaPreference().execute(
+            sms = sms,
+            totp = totp,
+            email = null
+        )
+    }
 
     fun updateMFAPreference(
         sms: MFAPreference? = null,
@@ -542,7 +548,13 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         email: MFAPreference? = null,
         onSuccess: Action,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.updateMFAPreference(sms, totp, email) }
+    ) = enqueue(onSuccess, onError) {
+        useCaseFactory.updateMfaPreference().execute(
+            sms = sms,
+            totp = totp,
+            email = email
+        )
+    }
 
     private fun enqueue(onSuccess: Action, onError: Consumer<AuthException>, block: suspend () -> Unit) =
         enqueue({ onSuccess.call() }, onError::accept, block)
