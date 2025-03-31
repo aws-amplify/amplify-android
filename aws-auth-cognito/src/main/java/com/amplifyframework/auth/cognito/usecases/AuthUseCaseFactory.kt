@@ -139,4 +139,17 @@ internal class AuthUseCaseFactory(
         environment = authEnvironment,
         stateMachine = stateMachine
     )
+
+    fun fetchMfaPreference() = FetchMfaPreferenceUseCase(
+        client = authEnvironment.requireIdentityProviderClient(),
+        fetchAuthSession = fetchAuthSession(),
+        stateMachine = stateMachine
+    )
+
+    fun updateMfaPreference() = UpdateMfaPreferenceUseCase(
+        client = authEnvironment.requireIdentityProviderClient(),
+        fetchAuthSession = fetchAuthSession(),
+        fetchMfaPreference = fetchMfaPreference(),
+        stateMachine = stateMachine
+    )
 }
