@@ -18,12 +18,7 @@ package com.amplifyframework.auth.cognito
 import android.app.Activity
 import android.content.Intent
 import androidx.annotation.WorkerThread
-import aws.sdk.kotlin.services.cognitoidentityprovider.getUser
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.EmailMfaSettingsType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.SmsMfaSettingsType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.SoftwareTokenMfaSettingsType
-import aws.sdk.kotlin.services.cognitoidentityprovider.setUserMfaPreference
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.AWSCognitoAuthMetadataType
@@ -47,7 +42,6 @@ import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.cognito.helpers.getAllowedMFATypesFromChallengeParameters
 import com.amplifyframework.auth.cognito.helpers.getMFASetupTypeOrNull
-import com.amplifyframework.auth.cognito.helpers.getMFAType
 import com.amplifyframework.auth.cognito.helpers.getMFATypeOrNull
 import com.amplifyframework.auth.cognito.helpers.identityProviderName
 import com.amplifyframework.auth.cognito.helpers.isMfaSetupSelectionChallenge
@@ -1564,139 +1558,6 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             }
         }
-    }
-
-    fun fetchMFAPreference(onSuccess: Consumer<UserMFAPreference>, onError: Consumer<AuthException>) {
-        authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                is AuthenticationState.SignedIn -> {
-                    GlobalScope.launch {
-                        try {
-                            val accessToken = getSession().userPoolTokensResult.value?.accessToken
-                            accessToken?.let { token ->
-                                authEnvironment.cognitoAuthService
-                                    .cognitoIdentityProviderClient?.getUser {
-                                        this.accessToken = token
-                                    }?.also { response ->
-                                        var enabledSet: MutableSet<MFAType>? = null
-                                        var preferred: MFAType? = null
-                                        if (!response.userMfaSettingList.isNullOrEmpty()) {
-                                            enabledSet = mutableSetOf()
-                                            response.userMfaSettingList?.forEach { mfaType ->
-                                                enabledSet.add(getMFAType(mfaType))
-                                            }
-                                        }
-                                        response.preferredMfaSetting?.let { preferredMFA ->
-                                            preferred = getMFAType(preferredMFA)
-                                        }
-                                        onSuccess.accept(UserMFAPreference(enabledSet, preferred))
-                                    }
-                            } ?: onError.accept(SignedOutException())
-                        } catch (error: Exception) {
-                            onError.accept(
-                                CognitoAuthExceptionConverter.lookup(
-                                    error,
-                                    "Cannot update the MFA preferences"
-                                )
-                            )
-                        }
-                    }
-                }
-
-                else -> onError.accept(InvalidStateException())
-            }
-        }
-    }
-
-    fun updateMFAPreference(
-        sms: MFAPreference?,
-        totp: MFAPreference?,
-        email: MFAPreference?,
-        onSuccess: Action,
-        onError: Consumer<AuthException>
-    ) {
-        if (sms == null && totp == null && email == null) {
-            onError.accept(InvalidParameterException("No mfa settings given"))
-            return
-        }
-        // If either of the params have preferred setting set then ignore fetched preference preferred property
-        val overridePreferredSetting: Boolean = !(sms?.mfaPreferred == true || totp?.mfaPreferred == true)
-        fetchMFAPreference({ userPreference ->
-            authStateMachine.getCurrentState { authState ->
-                when (authState.authNState) {
-                    is AuthenticationState.SignedIn -> {
-                        GlobalScope.launch {
-                            try {
-                                val accessToken = getSession().userPoolTokensResult.value?.accessToken
-                                accessToken?.let { token ->
-                                    authEnvironment
-                                        .cognitoAuthService
-                                        .cognitoIdentityProviderClient
-                                        ?.setUserMfaPreference {
-                                            this.accessToken = token
-                                            this.smsMfaSettings = sms?.let {
-                                                val preferredMFASetting = it.mfaPreferred
-                                                    ?: (
-                                                        overridePreferredSetting &&
-                                                            userPreference.preferred == MFAType.SMS &&
-                                                            it.mfaEnabled
-                                                        )
-                                                SmsMfaSettingsType.invoke {
-                                                    enabled = it.mfaEnabled
-                                                    preferredMfa = preferredMFASetting
-                                                }
-                                            }
-                                            this.softwareTokenMfaSettings = totp?.let {
-                                                val preferredMFASetting = it.mfaPreferred
-                                                    ?: (
-                                                        overridePreferredSetting &&
-                                                            userPreference.preferred == MFAType.TOTP &&
-                                                            it.mfaEnabled
-                                                        )
-                                                SoftwareTokenMfaSettingsType.invoke {
-                                                    enabled = it.mfaEnabled
-                                                    preferredMfa = preferredMFASetting
-                                                }
-                                            }
-                                            this.emailMfaSettings = email?.let {
-                                                val preferredMFASetting = it.mfaPreferred
-                                                    ?: (
-                                                        overridePreferredSetting &&
-                                                            userPreference.preferred == MFAType.EMAIL &&
-                                                            it.mfaEnabled
-                                                        )
-                                                EmailMfaSettingsType.invoke {
-                                                    enabled = it.mfaEnabled
-                                                    preferredMfa = preferredMFASetting
-                                                }
-                                            }
-                                        }?.also {
-                                            onSuccess.call()
-                                        }
-                                } ?: onError.accept(SignedOutException())
-                            } catch (error: Exception) {
-                                onError.accept(
-                                    CognitoAuthExceptionConverter.lookup(
-                                        error,
-                                        "Amazon Cognito cannot update the MFA preferences"
-                                    )
-                                )
-                            }
-                        }
-                    }
-                    else -> onError.accept(InvalidStateException())
-                }
-            }
-        }, {
-            onError.accept(
-                AuthException(
-                    message = "Failed to fetch current MFA preferences " +
-                        "which is a pre-requisite to update MFA preferences",
-                    recoverySuggestion = AmplifyException.TODO_RECOVERY_SUGGESTION,
-                    cause = it
-                )
-            )
-        })
     }
 
     private fun _clearFederationToIdentityPool(onSuccess: Action, onError: Consumer<AuthException>) {
