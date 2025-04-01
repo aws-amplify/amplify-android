@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2025 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ project.setProperty("VERSION_NAME", readVersion())
 group = properties["POM_GROUP"].toString()
 
 android {
-    namespace = "com.amplifyframework.aws.appsync.events"
+    namespace = "com.amplifyframework.aws.appsync.events.amplify"
     defaultConfig {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
