@@ -740,8 +740,11 @@ class AWSCognitoAuthPluginTest {
     fun fetchMFAPreferences() {
         val expectedOnSuccess = Consumer<UserMFAPreference> { }
         val expectedOnError = Consumer<AuthException> { }
+
+        val useCase = authPlugin.useCaseFactory.fetchMfaPreference()
+
         authPlugin.fetchMFAPreference(expectedOnSuccess, expectedOnError)
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.fetchMFAPreference(any(), any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute() }
     }
 
     @Test
@@ -750,9 +753,12 @@ class AWSCognitoAuthPluginTest {
         val totpPreference = MFAPreference.PREFERRED
         val onSuccess = Action { }
         val onError = Consumer<AuthException> { }
+
+        val useCase = authPlugin.useCaseFactory.updateMfaPreference()
+
         authPlugin.updateMFAPreference(smsPreference, totpPreference, onSuccess, onError)
-        verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.updateMFAPreference(smsPreference, totpPreference, null, any(), any())
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute(smsPreference, totpPreference, null)
         }
     }
 
@@ -763,9 +769,12 @@ class AWSCognitoAuthPluginTest {
         val emailPreference = MFAPreference.NOT_PREFERRED
         val onSuccess = Action { }
         val onError = Consumer<AuthException> { }
+
+        val useCase = authPlugin.useCaseFactory.updateMfaPreference()
+
         authPlugin.updateMFAPreference(smsPreference, totpPreference, emailPreference, onSuccess, onError)
-        verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.updateMFAPreference(smsPreference, totpPreference, emailPreference, any(), any())
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute(smsPreference, totpPreference, emailPreference)
         }
     }
 

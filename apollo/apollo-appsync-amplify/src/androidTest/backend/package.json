@@ -10,17 +10,17 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@aws-amplify/backend": "^1.0.2",
-    "@aws-amplify/backend-cli": "^1.0.3",
-    "aws-cdk": "^2.143.0",
-    "aws-cdk-lib": "^2.177.0",
-    "constructs": "^10.3.0",
-    "esbuild": "^0.25.0",
-    "tsx": "^4.11.0",
-    "typescript": "^5.4.5"
+    "@aws-amplify/backend": "^1.14.3",
+    "@aws-amplify/backend-cli": "^1.5.0",
+    "aws-cdk": "^2.1005.0",
+    "aws-cdk-lib": "^2.187.0",
+    "constructs": "^10.4.2",
+    "esbuild": "^0.25.1",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
   },
   "dependencies": {
-    "aws-amplify": "^6.3.4",
+    "aws-amplify": "^6.13.6",
     "aws-lambda": "^1.0.7"
   }
 }
