@@ -35,14 +35,9 @@ import com.amplifyframework.auth.cognito.exceptions.service.InvalidAccountTypeEx
 import com.amplifyframework.auth.cognito.exceptions.service.UserCancelledException
 import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
 import com.amplifyframework.auth.cognito.helpers.identityProviderName
-import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignOutOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
-import com.amplifyframework.auth.cognito.result.AWSCognitoAuthSignOutResult
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
-import com.amplifyframework.auth.cognito.result.GlobalSignOutError
-import com.amplifyframework.auth.cognito.result.HostedUIError
-import com.amplifyframework.auth.cognito.result.RevokeTokenError
 import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.exceptions.NotAuthorizedException
@@ -51,13 +46,10 @@ import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
-import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthSignInResult
-import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.auth.result.step.AuthNextSignInStep
 import com.amplifyframework.auth.result.step.AuthSignInStep
-import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.hub.HubChannel
@@ -69,7 +61,6 @@ import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.HostedUIErrorData
 import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
-import com.amplifyframework.statemachine.codegen.data.SignOutData
 import com.amplifyframework.statemachine.codegen.errors.SessionError
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
@@ -493,114 +484,6 @@ internal class RealAWSCognitoAuthPlugin(
         )
     }
 
-    fun signOut(onComplete: Consumer<AuthSignOutResult>) {
-        signOut(AuthSignOutOptions.builder().build(), onComplete)
-    }
-
-    fun signOut(options: AuthSignOutOptions, onComplete: Consumer<AuthSignOutResult>) {
-        authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                is AuthenticationState.NotConfigured ->
-                    onComplete.accept(AWSCognitoAuthSignOutResult.CompleteSignOut)
-                // Continue sign out and clear auth or guest credentials
-                is AuthenticationState.SignedIn, is AuthenticationState.SignedOut -> {
-                    // Send SignOut event here instead of OnSubscribedCallback handler to ensure we do not fire
-                    // onComplete immediately, which would happen if calling signOut while signed out
-                    val event = AuthenticationEvent(
-                        AuthenticationEvent.EventType.SignOutRequested(
-                            SignOutData(
-                                options.isGlobalSignOut,
-                                (options as? AWSCognitoAuthSignOutOptions)?.browserPackage
-                            )
-                        )
-                    )
-                    authStateMachine.send(event)
-                    _signOut(onComplete = onComplete)
-                }
-                is AuthenticationState.FederatedToIdentityPool -> {
-                    onComplete.accept(
-                        AWSCognitoAuthSignOutResult.FailedSignOut(
-                            InvalidStateException(
-                                "The user is currently federated to identity pool. " +
-                                    "You must call clearFederationToIdentityPool to clear credentials."
-                            )
-                        )
-                    )
-                }
-                else -> onComplete.accept(
-                    AWSCognitoAuthSignOutResult.FailedSignOut(InvalidStateException())
-                )
-            }
-        }
-    }
-
-    private fun _signOut(sendHubEvent: Boolean = true, onComplete: Consumer<AuthSignOutResult>) {
-        val token = StateChangeListenerToken()
-        var cancellationException: UserCancelledException? = null
-        authStateMachine.listen(
-            token,
-            { authState ->
-                if (authState is AuthState.Configured) {
-                    val (authNState, authZState) = authState
-                    when {
-                        authNState is AuthenticationState.SignedOut && authZState is AuthorizationState.Configured -> {
-                            authStateMachine.cancel(token)
-                            if (authNState.signedOutData.hasError) {
-                                val signedOutData = authNState.signedOutData
-                                onComplete.accept(
-                                    AWSCognitoAuthSignOutResult.PartialSignOut(
-                                        hostedUIError = signedOutData.hostedUIErrorData?.let { HostedUIError(it) },
-                                        globalSignOutError = signedOutData.globalSignOutErrorData?.let {
-                                            GlobalSignOutError(it)
-                                        },
-                                        revokeTokenError = signedOutData.revokeTokenErrorData?.let {
-                                            RevokeTokenError(
-                                                it
-                                            )
-                                        }
-                                    )
-                                )
-                                if (sendHubEvent) {
-                                    sendHubEvent(AuthChannelEventName.SIGNED_OUT.toString())
-                                }
-                            } else {
-                                onComplete.accept(AWSCognitoAuthSignOutResult.CompleteSignOut)
-                                if (sendHubEvent) {
-                                    sendHubEvent(AuthChannelEventName.SIGNED_OUT.toString())
-                                }
-                            }
-                        }
-                        authNState is AuthenticationState.Error -> {
-                            authStateMachine.cancel(token)
-                            onComplete.accept(
-                                AWSCognitoAuthSignOutResult.FailedSignOut(
-                                    CognitoAuthExceptionConverter.lookup(authNState.exception, "Sign out failed.")
-                                )
-                            )
-                        }
-                        authNState is AuthenticationState.SigningOut -> {
-                            val state = authNState.signOutState
-                            if (state is SignOutState.Error && state.exception is UserCancelledException) {
-                                cancellationException = state.exception
-                            }
-                        }
-                        authNState is AuthenticationState.SignedIn && cancellationException != null -> {
-                            authStateMachine.cancel(token)
-                            cancellationException?.let {
-                                onComplete.accept(AWSCognitoAuthSignOutResult.FailedSignOut(it))
-                            }
-                        }
-                        else -> {
-                            // No - op
-                        }
-                    }
-                }
-            },
-            {
-            }
-        )
-    }
-
     private fun addAuthStateChangeListener() {
         authStateMachine.listen(
             StateChangeListenerToken(),
@@ -730,46 +613,6 @@ internal class RealAWSCognitoAuthPlugin(
             {
             }
         )
-    }
-
-    fun clearFederationToIdentityPool(onSuccess: Action, onError: Consumer<AuthException>) {
-        authStateMachine.getCurrentState { authState ->
-            val authNState = authState.authNState
-            val authZState = authState.authZState
-            when {
-                authState is AuthState.Configured &&
-                    (
-                        authNState is AuthenticationState.FederatedToIdentityPool &&
-                            authZState is AuthorizationState.SessionEstablished
-                        ) ||
-                    (
-                        authZState is AuthorizationState.Error &&
-                            authZState.exception is SessionError &&
-                            authZState.exception.amplifyCredential is AmplifyCredential.IdentityPoolFederated
-                        ) -> {
-                    val event = AuthenticationEvent(AuthenticationEvent.EventType.ClearFederationToIdentityPool())
-                    authStateMachine.send(event)
-                    _clearFederationToIdentityPool(onSuccess, onError)
-                }
-                else -> {
-                    onError.accept(InvalidStateException("Clearing of federation failed."))
-                }
-            }
-        }
-    }
-
-    private fun _clearFederationToIdentityPool(onSuccess: Action, onError: Consumer<AuthException>) {
-        _signOut(sendHubEvent = false) {
-            when (it) {
-                is AWSCognitoAuthSignOutResult.FailedSignOut -> {
-                    onError.accept(it.exception)
-                }
-                else -> {
-                    onSuccess.call()
-                    sendHubEvent(AWSCognitoAuthChannelEventName.FEDERATION_TO_IDENTITY_POOL_CLEARED.toString())
-                }
-            }
-        }
     }
 
     private fun sendHubEvent(eventName: String) {
