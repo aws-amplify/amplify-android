@@ -26,6 +26,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.UserNotFoundExcepti
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.featuretest.generators.authstategenerators.AuthStateJsonGenerator.DUMMY_TOKEN
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
+import com.amplifyframework.auth.cognito.usecases.SignOutUseCase
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.logging.Logger
@@ -132,6 +133,10 @@ class AuthValidationTest {
         authEnvironment = environment,
         authStateMachine = stateMachine,
         logger = logger
+    )
+
+    private val signOutUseCase = SignOutUseCase(
+        stateMachine = stateMachine
     )
 
     private val mainThreadSurrogate = newSingleThreadContext("Main thread")
@@ -453,9 +458,7 @@ class AuthValidationTest {
         }
     }
 
-    private fun signOut() = blockForResult { complete ->
-        plugin.signOut(complete)
-    }
+    private fun signOut() = runBlocking { withTimeout(10000L) { signOutUseCase.execute() } }
 
     private fun signInHostedUi(): AuthSignInResult {
         every { hostedUIClient.launchCustomTabsSignIn(any()) } answers {
@@ -470,9 +473,7 @@ class AuthValidationTest {
         }
     }
 
-    private fun signOutHostedUi() = blockForResult { complete ->
-        plugin.signOut(complete)
-    }
+    private fun signOutHostedUi() = signOut()
 
     private fun assertSignedOut() {
         val result = blockForResult { continuation -> stateMachine.getCurrentState { continuation.accept(it) } }
