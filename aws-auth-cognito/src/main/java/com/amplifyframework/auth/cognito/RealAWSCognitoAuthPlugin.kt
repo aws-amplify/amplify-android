@@ -93,7 +93,6 @@ import com.amplifyframework.statemachine.codegen.errors.SessionError
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
-import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.HostedUIEvent
 import com.amplifyframework.statemachine.codegen.events.SetupTOTPEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
@@ -102,7 +101,6 @@ import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
-import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SetupTOTPState
@@ -1234,68 +1232,6 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             },
             {
-            }
-        )
-    }
-
-    fun deleteUser(onSuccess: Action, onError: Consumer<AuthException>) {
-        authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                is AuthenticationState.SignedIn -> {
-                    GlobalScope.launch {
-                        try {
-                            val accessToken = getSession().userPoolTokensResult.value?.accessToken
-                            accessToken?.let {
-                                _deleteUser(accessToken, onSuccess, onError)
-                            } ?: onError.accept(SignedOutException())
-                        } catch (error: Exception) {
-                            onError.accept(SignedOutException())
-                        }
-                    }
-                }
-                is AuthenticationState.SignedOut -> onError.accept(SignedOutException())
-                else -> onError.accept(InvalidStateException())
-            }
-        }
-    }
-
-    private fun _deleteUser(token: String, onSuccess: Action, onError: Consumer<AuthException>) {
-        val listenerToken = StateChangeListenerToken()
-        var deleteUserException: Exception? = null
-        authStateMachine.listen(
-            listenerToken,
-            { authState ->
-                if (authState is AuthState.Configured) {
-                    val (authNState, authZState) = authState
-                    val exception = deleteUserException
-                    when {
-                        authZState is AuthorizationState.DeletingUser &&
-                            authZState.deleteUserState is DeleteUserState.Error -> {
-                            deleteUserException = authZState.deleteUserState.exception
-                        }
-                        authNState is AuthenticationState.SignedOut && authZState is AuthorizationState.Configured -> {
-                            sendHubEvent(AuthChannelEventName.USER_DELETED.toString())
-                            authStateMachine.cancel(listenerToken)
-                            onSuccess.call()
-                        }
-                        authZState is AuthorizationState.SessionEstablished && exception != null -> {
-                            authStateMachine.cancel(listenerToken)
-                            onError.accept(
-                                CognitoAuthExceptionConverter.lookup(
-                                    exception,
-                                    "Request to delete user may have failed. Please check exception stack"
-                                )
-                            )
-                        }
-                        else -> {
-                            // No - op
-                        }
-                    }
-                }
-            },
-            {
-                val event = DeleteUserEvent(DeleteUserEvent.EventType.DeleteUser(accessToken = token))
-                authStateMachine.send(event)
             }
         )
     }

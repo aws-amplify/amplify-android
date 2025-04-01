@@ -412,7 +412,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     ) { queueFacade.signOut(options) }
 
     override fun deleteUser(onSuccess: Action, onError: Consumer<AuthException>) = enqueue(onSuccess, onError) {
-        queueFacade.deleteUser()
+        useCaseFactory.deleteUser().execute()
     }
 
     override fun setUpTOTP(onSuccess: Consumer<TOTPSetupDetails>, onError: Consumer<AuthException>) =
