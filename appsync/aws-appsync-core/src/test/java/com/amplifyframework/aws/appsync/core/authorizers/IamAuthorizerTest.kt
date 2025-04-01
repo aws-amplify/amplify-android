@@ -32,7 +32,6 @@ class IamAuthorizerTest {
         AppSyncRequest
     ) -> Map<String, String> = { mapOf("header1" to "header1Value", "header2" to "header2Value") }
 
-
     @Test
     fun `returns authorization header for requests`() = runTest {
         val authorizer = IamAuthorizer(delegate)
