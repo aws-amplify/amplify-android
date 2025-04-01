@@ -180,7 +180,7 @@ def main(arguments):
         try:
             cw_client = boto3.client(
                 'cloudwatch',
-                region_name='us-west-2'
+                region_name='us-east-1'
             )
 
             response = cw_client.put_metric_data(
