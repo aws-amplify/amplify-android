@@ -63,13 +63,11 @@ include(":aws-logging-cloudwatch")
 
 // Events API
 include(":aws-appsync-core")
-include(":aws-appsync-core-amplify")
+include(":aws-appsync-amplify")
 include(":aws-appsync-events")
-include(":aws-appsync-events-amplify")
 project(":aws-appsync-core").projectDir = file("appsync/aws-appsync-core")
-project(":aws-appsync-core-amplify").projectDir = file("appsync/aws-appsync-core-amplify")
+project(":aws-appsync-amplify").projectDir = file("appsync/aws-appsync-amplify")
 project(":aws-appsync-events").projectDir = file("appsync/aws-appsync-events")
-project(":aws-appsync-events-amplify").projectDir = file("appsync/aws-appsync-events-amplify")
 
 
 // Apollo Extensions
