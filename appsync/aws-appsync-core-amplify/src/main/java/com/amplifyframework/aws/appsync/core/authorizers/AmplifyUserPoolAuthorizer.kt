@@ -21,11 +21,12 @@ import com.amplifyframework.aws.appsync.core.AppSyncRequest
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
+import org.jetbrains.annotations.VisibleForTesting
 
 /**
  * Authorizer implementation that provides Cognito User Pool tokens via Amplify Auth.
  */
-class AmplifyUserPoolAuthorizer internal constructor(
+class AmplifyUserPoolAuthorizer @VisibleForTesting internal constructor(
     private val accessTokenProvider: AccessTokenProvider
 ) : AppSyncAuthorizer {
 
