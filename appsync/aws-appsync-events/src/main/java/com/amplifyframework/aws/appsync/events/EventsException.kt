@@ -39,7 +39,7 @@ class ConnectException internal constructor(cause: Throwable?) : EventsException
 /**
  * Thrown when call is unauthorized.
  */
-class UnauthorizedException internal constructor(): EventsException(
+class UnauthorizedException internal constructor() : EventsException(
     message = "Unauthorized",
     recoverySuggestion = "Check your authorizer and Event configuration values and try again"
 )
@@ -56,7 +56,7 @@ class ConnectionClosedException internal constructor(cause: Throwable? = null) :
 /**
  * Thrown when rate limit is exceeded.
  */
-internal class RateLimitExceededException internal constructor(): EventsException(
+internal class RateLimitExceededException internal constructor() : EventsException(
     message = "Rate limit exceeded",
     recoverySuggestion = "Try again later"
 )
@@ -64,7 +64,7 @@ internal class RateLimitExceededException internal constructor(): EventsExceptio
 /**
  * Thrown when operation is unsupported.
  */
-internal class UnsupportedOperationException internal constructor(): EventsException(
+internal class UnsupportedOperationException internal constructor() : EventsException(
     message = "WebSocket did not understand the operation",
     recoverySuggestion = "This is not expected to occur. Contact AWS"
 )
@@ -72,7 +72,7 @@ internal class UnsupportedOperationException internal constructor(): EventsExcep
 /**
  * Thrown when resource is not found.
  */
-internal class ResourceNotFoundException internal constructor(): EventsException(
+internal class ResourceNotFoundException internal constructor() : EventsException(
     message = "Resource not found",
     recoverySuggestion = "Check Event configuration values and try again"
 )
@@ -88,7 +88,7 @@ class MaxSubscriptionsReachedException internal constructor(throwable: Throwable
 /**
  * Thrown when attempting to send too many events or invalid request.
  */
-class BadRequestException internal constructor(): EventsException(
+class BadRequestException internal constructor() : EventsException(
     message = "Input exceeded 5 event limit",
     recoverySuggestion = "Submit 5 events or less."
 )

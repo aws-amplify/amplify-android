@@ -43,7 +43,7 @@ class Events(
         channelName: String,
         event: JsonElement,
         authorizer: AppSyncAuthorizer = this.defaultChannelAuthorizers.publishAuthorizer
-    ) : PublishResult {
+    ): PublishResult {
         TODO("Need to implement")
     }
 
@@ -60,7 +60,7 @@ class Events(
         channelName: String,
         events: List<JsonElement>,
         authorizer: AppSyncAuthorizer = this.defaultChannelAuthorizers.publishAuthorizer
-    ) : PublishResult {
+    ): PublishResult {
         TODO("Need to implement")
     }
 
@@ -75,7 +75,7 @@ class Events(
     fun channel(
         channelName: String,
         authorizers: ChannelAuthorizers = this.defaultChannelAuthorizers,
-    ) : EventsChannel {
+    ): EventsChannel {
         TODO("Need to implement")
     }
 

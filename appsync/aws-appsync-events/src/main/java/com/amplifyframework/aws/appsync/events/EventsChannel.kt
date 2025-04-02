@@ -38,9 +38,8 @@ class EventsChannel internal constructor(
     @Throws(EventsException::class)
     fun subscribe(
         authorizer: AppSyncAuthorizer = this.authorizers.subscribeAuthorizer
-    ) : Flow<EventsMessage> {
+    ): Flow<EventsMessage> {
         TODO("Need to implement")
-
     }
 
     /**
@@ -54,7 +53,7 @@ class EventsChannel internal constructor(
     suspend fun publish(
         event: JsonElement,
         authorizer: AppSyncAuthorizer = this.authorizers.publishAuthorizer
-    ) : PublishResult {
+    ): PublishResult {
         TODO("Need to implement")
     }
 
@@ -69,7 +68,7 @@ class EventsChannel internal constructor(
     suspend fun publish(
         events: List<JsonElement>,
         authorizer: AppSyncAuthorizer = this.authorizers.publishAuthorizer
-    ) : PublishResult {
+    ): PublishResult {
         TODO("Need to implement")
     }
 }
