@@ -12,7 +12,7 @@
  *  express or implied. See the License for the specific language governing
  *  permissions and limitations under the License.
  */
-package com.amplifyframework.aws.appsync.events
+package com.amplifyframework.aws.appsync.events.data
 
 /**
  * Contains the result of an event(s) publish call.
@@ -38,7 +38,8 @@ data class PublishResult internal constructor(
         data object PartialSuccess: Status()
     }
 
-    val status: Status get() {
+    val status: Status
+        get() {
         return when {
             successfulEvents.isNotEmpty() && failedEvents.isNotEmpty() -> Status.PartialSuccess
             failedEvents.isNotEmpty() -> Status.Failed

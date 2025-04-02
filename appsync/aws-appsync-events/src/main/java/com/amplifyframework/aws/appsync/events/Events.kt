@@ -15,6 +15,9 @@
 package com.amplifyframework.aws.appsync.events
 
 import com.amplifyframework.aws.appsync.core.AppSyncAuthorizer
+import com.amplifyframework.aws.appsync.events.data.ChannelAuthorizers
+import com.amplifyframework.aws.appsync.events.data.EventsException
+import com.amplifyframework.aws.appsync.events.data.PublishResult
 import kotlinx.serialization.json.JsonElement
 
 /**

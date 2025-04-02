@@ -12,13 +12,18 @@
  *  express or implied. See the License for the specific language governing
  *  permissions and limitations under the License.
  */
-package com.amplifyframework.aws.appsync.events
+package com.amplifyframework.aws.appsync.events.data
 
-import kotlinx.serialization.json.JsonElement
+import com.amplifyframework.aws.appsync.core.AppSyncAuthorizer
 
 /**
- * An event received through a subscription.
+ * Authorizers passed to a channel to manage subscriptions and publishes.
  *
- * @property data of the received event, formatted in json.
+ * @property subscribeAuthorizer used for subscription requests.
+ * @property publishAuthorizer used for publish requests.
+ * @constructor Pass subscribe and publisher authorizer types.
  */
-data class EventsMessage(val data: JsonElement)
+data class ChannelAuthorizers(
+    val subscribeAuthorizer: AppSyncAuthorizer,
+    val publishAuthorizer: AppSyncAuthorizer
+)
