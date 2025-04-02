@@ -65,6 +65,7 @@ sourceSets.main {
 }
 
 dependencies {
+    implementation(libs.test.jetbrains.annotations)
 
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockk)
