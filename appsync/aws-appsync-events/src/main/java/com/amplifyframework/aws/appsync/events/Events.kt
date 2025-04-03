@@ -21,7 +21,7 @@ import com.amplifyframework.aws.appsync.events.data.PublishResult
 import kotlinx.serialization.json.JsonElement
 
 /**
- * Publish a single event to a channel.
+ * The main class for interacting with AWS AppSync Events
  *
  * @property endpoint AWS AppSync Events endpoint.
  * @param connectAuthorizer for AWS AppSync Websocket Pub/Sub connection.
