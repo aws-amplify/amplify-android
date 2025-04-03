@@ -87,7 +87,6 @@ import com.amplifyframework.statemachine.codegen.data.HostedUIErrorData
 import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignOutData
-import com.amplifyframework.statemachine.codegen.data.SignUpData
 import com.amplifyframework.statemachine.codegen.data.WebAuthnSignInContext
 import com.amplifyframework.statemachine.codegen.data.challengeNameType
 import com.amplifyframework.statemachine.codegen.errors.SessionError
@@ -110,7 +109,6 @@ import com.amplifyframework.statemachine.codegen.states.SetupTOTPState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
-import com.amplifyframework.statemachine.codegen.states.SignUpState
 import com.amplifyframework.statemachine.codegen.states.WebAuthnSignInState
 import java.lang.ref.WeakReference
 import java.util.concurrent.CountDownLatch
@@ -172,107 +170,6 @@ internal class RealAWSCognitoAuthPlugin(
 
     internal suspend fun suspendWhileConfiguring() {
         authStateMachine.state.takeWhile { it !is AuthState.Configured && it !is AuthState.Error }.collect()
-    }
-
-    fun autoSignIn(onSuccess: Consumer<AuthSignInResult>, onError: Consumer<AuthException>) {
-        authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                is AuthenticationState.NotConfigured -> onError.accept(
-                    InvalidUserPoolConfigurationException()
-                )
-                is AuthenticationState.SignedIn -> {
-                    onError.accept(InvalidStateException())
-                }
-                is AuthenticationState.SignedOut -> GlobalScope.launch {
-                    when (val signUpState = authState.authSignUpState) {
-                        is SignUpState.SignedUp -> {
-                            _autoSignIn(signUpState.signUpData, onSuccess, onError)
-                        }
-                        else -> onError.accept(InvalidStateException())
-                    }
-                }
-                is AuthenticationState.SigningIn -> {
-                    val token = StateChangeListenerToken()
-                    authStateMachine.listen(
-                        token,
-                        { authState ->
-                            when (authState.authNState) {
-                                is AuthenticationState.SignedOut -> {
-                                    authStateMachine.cancel(token)
-                                    when (val signUpState = authState.authSignUpState) {
-                                        is SignUpState.SignedUp -> GlobalScope.launch {
-                                            _autoSignIn(signUpState.signUpData, onSuccess, onError)
-                                        }
-                                        else -> onError.accept(InvalidStateException())
-                                    }
-                                }
-                                else -> Unit
-                            }
-                        },
-                        {
-                            authStateMachine.send(AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn()))
-                        }
-                    )
-                }
-                else -> onError.accept(InvalidStateException())
-            }
-        }
-    }
-
-    private suspend fun _autoSignIn(
-        signUpData: SignUpData,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
-    ) {
-        val token = StateChangeListenerToken()
-        authStateMachine.listen(
-            token,
-            { authState ->
-                val authNState = authState.authNState
-                val authZState = authState.authZState
-                when {
-                    authNState is AuthenticationState.SigningIn -> {
-                        val signInState = authNState.signInState
-                        when {
-                            signInState is SignInState.Error -> {
-                                authStateMachine.cancel(token)
-                                onError.accept(
-                                    CognitoAuthExceptionConverter.lookup(signInState.exception, "Sign in failed.")
-                                )
-                            }
-                        }
-                    }
-                    authNState is AuthenticationState.SignedIn &&
-                        authZState is AuthorizationState.SessionEstablished -> {
-                        authStateMachine.cancel(token)
-                        val authSignInResult = AuthSignInResult(
-                            true,
-                            AuthNextSignInStep(
-                                AuthSignInStep.DONE,
-                                mapOf(),
-                                null,
-                                null,
-                                null,
-                                null
-                            )
-                        )
-                        onSuccess.accept(authSignInResult)
-                        sendHubEvent(AuthChannelEventName.SIGNED_IN.toString())
-                    }
-                    else -> Unit
-                }
-            },
-            {
-                val signInData = SignInData.AutoSignInData(
-                    signUpData.username,
-                    signUpData.session,
-                    signUpData.clientMetadata ?: mapOf(),
-                    signUpData.userId
-                )
-                val event = AuthenticationEvent(AuthenticationEvent.EventType.SignInRequested(signInData))
-                authStateMachine.send(event)
-            }
-        )
     }
 
     fun signIn(

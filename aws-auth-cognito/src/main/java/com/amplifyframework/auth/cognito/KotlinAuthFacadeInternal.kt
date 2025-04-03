@@ -168,11 +168,4 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
             { continuation.resumeWithException(it) }
         )
     }
-
-    suspend fun autoSignIn(): AuthSignInResult = suspendCoroutine { continuation ->
-        delegate.autoSignIn(
-            { continuation.resume(it) },
-            { continuation.resumeWithException(it) }
-        )
-    }
 }
