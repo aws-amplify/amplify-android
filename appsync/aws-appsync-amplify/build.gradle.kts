@@ -31,7 +31,7 @@ project.setProperty("VERSION_NAME", readVersion())
 group = properties["POM_GROUP"].toString()
 
 android {
-    namespace = "com.amplifyframework.aws.appsync.events.amplify"
+    namespace = "com.amplifyframework.aws.appsync.amplify"
     defaultConfig {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -42,7 +42,13 @@ android {
 }
 
 dependencies {
-    api(project(":aws-appsync-events"))
+
+    api(project(":aws-appsync-core"))
+    api(project(":core"))
+
+    implementation(project(":aws-auth-cognito"))
+    implementation(project(":aws-core"))
+    implementation(libs.aws.signing)
 
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockk)
