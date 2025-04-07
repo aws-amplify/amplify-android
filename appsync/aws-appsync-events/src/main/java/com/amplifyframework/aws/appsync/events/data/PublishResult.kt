@@ -14,6 +14,9 @@
  */
 package com.amplifyframework.aws.appsync.events.data
 
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
 /**
  * Contains the result of an event(s) publish call.
  *
@@ -24,28 +27,29 @@ package com.amplifyframework.aws.appsync.events.data
  *  Failed = All events failed to publish
  *  PartialSuccess = Mix of successful and failed events. Check event indexes to determine individual states.
  */
+@Serializable
 data class PublishResult internal constructor(
-    val successfulEvents: List<SuccessfulEvent>,
-    val failedEvents: List<FailedEvent>
+    @SerialName("successful") val successfulEvents: List<SuccessfulEvent>,
+    @SerialName("failed") val failedEvents: List<FailedEvent>
 ) {
 
     /**
      * Contains identifying information of an event AWS AppSync failed to process.
      */
     sealed class Status {
-        data object Successful: Status()
-        data object Failed: Status()
-        data object PartialSuccess: Status()
+        data object Successful : Status()
+        data object Failed : Status()
+        data object PartialSuccess : Status()
     }
 
     val status: Status
         get() {
-        return when {
-            successfulEvents.isNotEmpty() && failedEvents.isNotEmpty() -> Status.PartialSuccess
-            failedEvents.isNotEmpty() -> Status.Failed
-            else -> Status.Successful
+            return when {
+                successfulEvents.isNotEmpty() && failedEvents.isNotEmpty() -> Status.PartialSuccess
+                failedEvents.isNotEmpty() -> Status.Failed
+                else -> Status.Successful
+            }
         }
-    }
 }
 
 /**
@@ -54,6 +58,7 @@ data class PublishResult internal constructor(
  * @property identifier identifier of event used for logging purposes.
  * @property index of the event as it was sent in the publish.
  */
+@Serializable
 data class SuccessfulEvent internal constructor(
     val identifier: String,
     val index: Int
@@ -67,9 +72,10 @@ data class SuccessfulEvent internal constructor(
  * @property errorCode for the failed event.
  * @property errorMessage for the failed event.
  */
+@Serializable
 data class FailedEvent internal constructor(
     val identifier: String,
     val index: Int,
-    val errorCode: Int?,
-    val errorMessage: String?
+    @SerialName("code") val errorCode: Int? = null,
+    @SerialName("message") val errorMessage: String? = null
 )
