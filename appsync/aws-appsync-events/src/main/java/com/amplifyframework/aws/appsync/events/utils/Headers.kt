@@ -12,13 +12,16 @@
  *  express or implied. See the License for the specific language governing
  *  permissions and limitations under the License.
  */
-package com.amplifyframework.aws.appsync.events.data
 
-import kotlinx.serialization.json.JsonElement
+package com.amplifyframework.aws.appsync.events.utils
 
-/**
- * An event received through a subscription.
- *
- * @property data of the received event, formatted in json.
- */
-data class EventsMessage(val data: JsonElement)
+internal object HeaderKeys {
+    const val HOST = "host"
+    const val ACCEPT = "accept"
+    const val CONTENT_TYPE = "content-type"
+}
+
+internal object HeaderValues {
+    const val ACCEPT_APPLICATION_JSON = "application/json, text/javascript"
+    const val CONTENT_TYPE_APPLICATION_JSON = "application/json; charset=UTF-8"
+}

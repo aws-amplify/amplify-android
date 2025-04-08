@@ -18,7 +18,10 @@ import com.amplifyframework.aws.appsync.core.AppSyncAuthorizer
 import com.amplifyframework.aws.appsync.events.data.ChannelAuthorizers
 import com.amplifyframework.aws.appsync.events.data.EventsException
 import com.amplifyframework.aws.appsync.events.data.PublishResult
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import okhttp3.OkHttpClient
+import org.jetbrains.annotations.VisibleForTesting
 
 /**
  * The main class for interacting with AWS AppSync Events
@@ -27,11 +30,32 @@ import kotlinx.serialization.json.JsonElement
  * @param connectAuthorizer for AWS AppSync Websocket Pub/Sub connection.
  * @param defaultChannelAuthorizers passed to created channels if not overridden.
  */
-class Events(
+class Events @VisibleForTesting internal constructor(
     val endpoint: String,
     val connectAuthorizer: AppSyncAuthorizer,
-    val defaultChannelAuthorizers: ChannelAuthorizers
+    val defaultChannelAuthorizers: ChannelAuthorizers,
+    okHttpClient: OkHttpClient
 ) {
+
+    /**
+     * The main class for interacting with AWS AppSync Events
+     *
+     * @property endpoint AWS AppSync Events endpoint.
+     * @param connectAuthorizer for AWS AppSync Websocket Pub/Sub connection.
+     * @param defaultChannelAuthorizers passed to created channels if not overridden.
+     */
+    constructor(
+        endpoint: String,
+        connectAuthorizer: AppSyncAuthorizer,
+        defaultChannelAuthorizers: ChannelAuthorizers
+    ) : this(endpoint, connectAuthorizer, defaultChannelAuthorizers, OkHttpClient.Builder().build())
+
+    private val json = Json {
+        encodeDefaults = true
+        ignoreUnknownKeys = true
+    }
+    private val endpoints = EventsEndpoints(endpoint)
+    private val httpClient = RestClient(endpoints.restEndpoint, okHttpClient, json)
 
     /**
      * Publish a single event to a channel.
@@ -47,7 +71,7 @@ class Events(
         event: JsonElement,
         authorizer: AppSyncAuthorizer = this.defaultChannelAuthorizers.publishAuthorizer
     ): PublishResult {
-        TODO("Need to implement")
+        return httpClient.post(channelName, authorizer, event)
     }
 
     /**
@@ -64,7 +88,7 @@ class Events(
         events: List<JsonElement>,
         authorizer: AppSyncAuthorizer = this.defaultChannelAuthorizers.publishAuthorizer
     ): PublishResult {
-        TODO("Need to implement")
+        return httpClient.post(channelName, authorizer, events)
     }
 
     /**
