@@ -56,6 +56,7 @@ class Events @VisibleForTesting internal constructor(
     }
     private val endpoints = EventsEndpoints(endpoint)
     private val httpClient = RestClient(endpoints.restEndpoint, okHttpClient, json)
+    private val eventsWebSocket = EventsWebSocket(endpoints, connectAuthorizer, okHttpClient, json)
 
     /**
      * Publish a single event to a channel.
@@ -98,13 +99,10 @@ class Events @VisibleForTesting internal constructor(
      * @param authorizers for the channel to use for subscriptions and publishes.
      * @return a channel to manage subscriptions and publishes.
      */
-    @Throws(EventsException::class)
     fun channel(
         channelName: String,
         authorizers: ChannelAuthorizers = this.defaultChannelAuthorizers,
-    ): EventsChannel {
-        TODO("Need to implement")
-    }
+    ) = EventsChannel(channelName, authorizers, endpoints, eventsWebSocket)
 
     /**
      * Method to disconnect from all channels.
@@ -114,8 +112,7 @@ class Events @VisibleForTesting internal constructor(
      * @param authorizers for the channel to use for subscriptions and publishes.
      * @return a channel to manage subscriptions and publishes.
      */
-    @Throws(EventsException::class)
     suspend fun disconnect(flushEvents: Boolean = true) {
-        TODO("Need to implement")
+        eventsWebSocket.disconnect(flushEvents)
     }
 }

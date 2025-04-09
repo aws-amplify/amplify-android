@@ -30,7 +30,9 @@ import kotlinx.serialization.json.JsonElement
  */
 class EventsChannel internal constructor(
     val name: String,
-    val authorizers: ChannelAuthorizers
+    val authorizers: ChannelAuthorizers,
+    private val endpoints: EventsEndpoints,
+    private val eventsWebSocket: EventsWebSocket
 ) {
 
     /**
