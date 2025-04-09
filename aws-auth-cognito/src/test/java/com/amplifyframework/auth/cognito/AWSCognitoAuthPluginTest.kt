@@ -842,6 +842,15 @@ class AWSCognitoAuthPluginTest {
     }
 
     @Test
+    fun `auto sign in`() {
+        val useCase = authPlugin.useCaseFactory.autoSignIn()
+        authPlugin.autoSignIn({}, {})
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute()
+        }
+    }
+
+    @Test
     fun verifyPluginKey() {
         assertEquals("awsCognitoAuthPlugin", authPlugin.pluginKey)
     }
