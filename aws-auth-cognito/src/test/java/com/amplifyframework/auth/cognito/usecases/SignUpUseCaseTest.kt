@@ -18,6 +18,7 @@ package com.amplifyframework.auth.cognito.usecases
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AuthStateMachine
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
+import com.amplifyframework.auth.cognito.testUtil.withSignUpEvent
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.step.AuthNextSignUpStep
@@ -82,10 +83,9 @@ class SignUpUseCaseTest {
 
         coVerify {
             stateMachine.send(
-                withArg { event ->
-                    val type = (event as SignUpEvent).eventType as SignUpEvent.EventType.InitiateSignUp
-                    type.signUpData.username shouldBe "user"
-                    type.password shouldBe "pass"
+                withSignUpEvent<SignUpEvent.EventType.InitiateSignUp> { event ->
+                    event.signUpData.username shouldBe "user"
+                    event.password shouldBe "pass"
                 }
             )
         }

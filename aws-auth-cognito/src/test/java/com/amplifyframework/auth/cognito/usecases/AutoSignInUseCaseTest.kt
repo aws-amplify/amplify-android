@@ -17,6 +17,7 @@ package com.amplifyframework.auth.cognito.usecases
 
 import com.amplifyframework.auth.cognito.AuthStateMachine
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
+import com.amplifyframework.auth.cognito.testUtil.withAuthEvent
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.plugins.core.AuthHubEventEmitter
 import com.amplifyframework.auth.result.step.AuthSignInStep
@@ -28,7 +29,6 @@ import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
@@ -95,12 +95,7 @@ class AutoSignInUseCaseTest {
         runCurrent()
 
         verify {
-            stateMachine.send(
-                withArg {
-                    it.shouldBeInstanceOf<AuthenticationEvent>()
-                    it.eventType.shouldBeInstanceOf<AuthenticationEvent.EventType.CancelSignIn>()
-                }
-            )
+            stateMachine.send(withAuthEvent<AuthenticationEvent.EventType.CancelSignIn>())
         }
     }
 
@@ -115,12 +110,7 @@ class AutoSignInUseCaseTest {
         runCurrent()
 
         verify {
-            stateMachine.send(
-                withArg {
-                    it.shouldBeInstanceOf<AuthenticationEvent>()
-                    it.eventType.shouldBeInstanceOf<AuthenticationEvent.EventType.SignInRequested>()
-                }
-            )
+            stateMachine.send(withAuthEvent<AuthenticationEvent.EventType.SignInRequested>())
         }
     }
 
