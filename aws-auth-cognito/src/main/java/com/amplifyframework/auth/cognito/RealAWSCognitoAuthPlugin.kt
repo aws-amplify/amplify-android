@@ -29,13 +29,11 @@ import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthFactorType
 import com.amplifyframework.auth.AuthProvider
-import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.MFAType
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
 import com.amplifyframework.auth.cognito.exceptions.service.HostedUISignOutException
-import com.amplifyframework.auth.cognito.exceptions.service.InvalidAccountTypeException
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidParameterException
 import com.amplifyframework.auth.cognito.exceptions.service.UserCancelledException
 import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
@@ -57,15 +55,9 @@ import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
 import com.amplifyframework.auth.cognito.result.GlobalSignOutError
 import com.amplifyframework.auth.cognito.result.HostedUIError
 import com.amplifyframework.auth.cognito.result.RevokeTokenError
-import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.auth.exceptions.InvalidStateException
-import com.amplifyframework.auth.exceptions.NotAuthorizedException
-import com.amplifyframework.auth.exceptions.ServiceException
-import com.amplifyframework.auth.exceptions.SessionExpiredException
-import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
-import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
@@ -112,9 +104,6 @@ import java.lang.ref.WeakReference
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.takeWhile
 
@@ -988,142 +977,6 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             }
         }
-    }
-
-    private suspend fun getSession(): AWSCognitoAuthSession = suspendCoroutine { continuation ->
-        fetchAuthSession(
-            { authSession ->
-                if (authSession is AWSCognitoAuthSession) {
-                    continuation.resume(authSession)
-                } else {
-                    continuation.resumeWithException(
-                        UnknownException(
-                            message = "fetchAuthSession did not return a type of AWSCognitoAuthSession"
-                        )
-                    )
-                }
-            },
-            { continuation.resumeWithException(it) }
-        )
-    }
-
-    fun fetchAuthSession(onSuccess: Consumer<AuthSession>, onError: Consumer<AuthException>) {
-        fetchAuthSession(AuthFetchSessionOptions.defaults(), onSuccess, onError)
-    }
-
-    fun fetchAuthSession(
-        options: AuthFetchSessionOptions,
-        onSuccess: Consumer<AuthSession>,
-        onError: Consumer<AuthException>
-    ) {
-        val forceRefresh = options.forceRefresh
-        authStateMachine.getCurrentState { authState ->
-            when (val authZState = authState.authZState) {
-                is AuthorizationState.Configured -> {
-                    authStateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchUnAuthSession))
-                    _fetchAuthSession(onSuccess)
-                }
-                is AuthorizationState.SessionEstablished -> {
-                    val credential = authZState.amplifyCredential
-                    if (!credential.isValid() || forceRefresh) {
-                        if (credential is AmplifyCredential.IdentityPoolFederated) {
-                            authStateMachine.send(
-                                AuthorizationEvent(
-                                    AuthorizationEvent.EventType.StartFederationToIdentityPool(
-                                        credential.federatedToken,
-                                        credential.identityId,
-                                        credential
-                                    )
-                                )
-                            )
-                        } else {
-                            authStateMachine.send(
-                                AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(credential))
-                            )
-                        }
-                        _fetchAuthSession(onSuccess)
-                    } else {
-                        onSuccess.accept(credential.getCognitoSession())
-                    }
-                }
-                is AuthorizationState.Error -> {
-                    val error = authZState.exception
-                    if (error is SessionError) {
-                        val amplifyCredential = error.amplifyCredential
-                        if (amplifyCredential is AmplifyCredential.IdentityPoolFederated) {
-                            authStateMachine.send(
-                                AuthorizationEvent(
-                                    AuthorizationEvent.EventType.StartFederationToIdentityPool(
-                                        amplifyCredential.federatedToken,
-                                        amplifyCredential.identityId,
-                                        amplifyCredential
-                                    )
-                                )
-                            )
-                        } else {
-                            authStateMachine.send(
-                                AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(amplifyCredential))
-                            )
-                        }
-                        _fetchAuthSession(onSuccess)
-                    } else {
-                        onError.accept(InvalidStateException())
-                    }
-                }
-                else -> onError.accept(InvalidStateException())
-            }
-        }
-    }
-
-    private fun _fetchAuthSession(onSuccess: Consumer<AuthSession>) {
-        val token = StateChangeListenerToken()
-        authStateMachine.listen(
-            token,
-            { authState ->
-                when (val authZState = authState.authZState) {
-                    is AuthorizationState.SessionEstablished -> {
-                        authStateMachine.cancel(token)
-                        onSuccess.accept(authZState.amplifyCredential.getCognitoSession())
-                    }
-                    is AuthorizationState.Error -> {
-                        authStateMachine.cancel(token)
-                        when (val error = authZState.exception) {
-                            is SessionError -> {
-                                when (val innerException = error.exception) {
-                                    is SignedOutException -> {
-                                        onSuccess.accept(error.amplifyCredential.getCognitoSession(innerException))
-                                    }
-                                    is SessionExpiredException -> {
-                                        onSuccess.accept(error.amplifyCredential.getCognitoSession(innerException))
-                                        sendHubEvent(AuthChannelEventName.SESSION_EXPIRED.toString())
-                                    }
-                                    is ServiceException -> {
-                                        onSuccess.accept(error.amplifyCredential.getCognitoSession(innerException))
-                                    }
-                                    is NotAuthorizedException -> {
-                                        onSuccess.accept(error.amplifyCredential.getCognitoSession(innerException))
-                                    }
-                                    else -> {
-                                        val errorResult = UnknownException("Fetch auth session failed.", innerException)
-                                        onSuccess.accept(error.amplifyCredential.getCognitoSession(errorResult))
-                                    }
-                                }
-                            }
-                            is ConfigurationException -> {
-                                val errorResult = InvalidAccountTypeException(error)
-                                onSuccess.accept(AmplifyCredential.Empty.getCognitoSession(errorResult))
-                            }
-                            else -> {
-                                val errorResult = UnknownException("Fetch auth session failed.", error)
-                                onSuccess.accept(AmplifyCredential.Empty.getCognitoSession(errorResult))
-                            }
-                        }
-                    }
-                    else -> Unit
-                }
-            },
-            null
-        )
     }
 
     fun signOut(onComplete: Consumer<AuthSignOutResult>) {

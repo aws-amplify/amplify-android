@@ -313,9 +313,11 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthSession> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.fetchAuthSession()
+
         authPlugin.fetchAuthSession(expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.fetchAuthSession(expectedOptions, any(), any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute(expectedOptions) }
     }
 
     @Test
@@ -323,9 +325,11 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthSession> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.fetchAuthSession()
+
         authPlugin.fetchAuthSession(expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.fetchAuthSession(any(), any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute() }
     }
 
     @Test
