@@ -47,14 +47,15 @@ class EventsTest {
         HeaderKeys.CONTENT_TYPE to HeaderValues.CONTENT_TYPE_APPLICATION_JSON,
         HeaderKeys.ACCEPT to HeaderValues.ACCEPT_APPLICATION_JSON,
     )
+    private val expectedChannelAuthorizers = ChannelAuthorizers(
+        subscribeAuthorizer = ApiKeyAuthorizer("123"),
+        publishAuthorizer = TestAuthorizer()
+    )
     private val interceptor = ConvertToMockRequestInterceptor(mockWebServer.url("/event"))
     private val events = Events(
         endpoint = expectedEndpoint,
         connectAuthorizer = ApiKeyAuthorizer("abc"),
-        defaultChannelAuthorizers = ChannelAuthorizers(
-            subscribeAuthorizer = ApiKeyAuthorizer("123"),
-            publishAuthorizer = TestAuthorizer()
-        ),
+        defaultChannelAuthorizers = expectedChannelAuthorizers,
         okHttpClient = OkHttpClient.Builder()
             .addInterceptor(interceptor)
             .build()
@@ -303,6 +304,46 @@ class EventsTest {
             failedEvents.size shouldBe 0
             successfulEvents.size shouldBe 1
         }
+    }
+
+    @Test
+    fun `test channel creation with default authorizers`() = runTest {
+        // GIVEN
+        val expectedChannel = "default/testChannel"
+
+        // WHEN
+        val channel = events.channel(expectedChannel)
+
+        // THEN
+        channel.name shouldBe expectedChannel
+        channel.authorizers shouldBe expectedChannelAuthorizers
+    }
+
+    @Test
+    fun `test channel creation with override authorizers`() = runTest {
+        // GIVEN
+        val expectedChannel = "default/testChannel"
+        val overrideChannelAuthorizers = ChannelAuthorizers(
+            subscribeAuthorizer = ApiKeyAuthorizer("override"),
+            publishAuthorizer = TestAuthorizer("override")
+        )
+
+        // WHEN
+        val channel = events.channel(expectedChannel, overrideChannelAuthorizers)
+
+        // THEN
+        channel.name shouldBe expectedChannel
+        channel.authorizers shouldBe overrideChannelAuthorizers
+    }
+
+    @Test
+    fun `test disconnect with flushEvents`() {
+        // TODO: Write test once disconnect implemented within websocket
+    }
+
+    @Test
+    fun `test disconnect without flushEvents`() {
+        // TODO: Write test once disconnect implemented within websocket
     }
 }
 
