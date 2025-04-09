@@ -17,7 +17,8 @@ package com.amplifyframework.auth.cognito.usecases
 
 import com.amplifyframework.auth.cognito.AuthStateMachine
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
-import com.amplifyframework.auth.cognito.testUtils.authState
+import com.amplifyframework.auth.cognito.testUtil.authState
+import com.amplifyframework.auth.cognito.testUtil.withDeleteEvent
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.plugins.core.AuthHubEventEmitter
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
@@ -95,10 +96,8 @@ class DeleteUserUseCaseTest {
 
         verify {
             stateMachine.send(
-                withArg {
-                    it is DeleteUserEvent &&
-                        it.eventType is DeleteUserEvent.EventType.DeleteUser &&
-                        it.eventType.accessToken == "access token"
+                withDeleteEvent<DeleteUserEvent.EventType.DeleteUser> { event ->
+                    event.accessToken shouldBe "access token"
                 }
             )
         }

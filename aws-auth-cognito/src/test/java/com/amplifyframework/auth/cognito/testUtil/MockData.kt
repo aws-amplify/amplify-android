@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.auth.cognito.testUtils
+package com.amplifyframework.auth.cognito.testUtil
 
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
