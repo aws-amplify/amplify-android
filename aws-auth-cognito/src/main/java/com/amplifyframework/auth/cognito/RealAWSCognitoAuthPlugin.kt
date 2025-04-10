@@ -115,10 +115,8 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.takeWhile
-import kotlinx.coroutines.launch
 
 internal class RealAWSCognitoAuthPlugin(
     val configuration: AuthConfiguration,
