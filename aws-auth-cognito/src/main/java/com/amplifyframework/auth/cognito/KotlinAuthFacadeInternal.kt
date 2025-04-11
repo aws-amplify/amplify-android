@@ -18,11 +18,9 @@ package com.amplifyframework.auth.cognito
 import android.app.Activity
 import android.content.Intent
 import com.amplifyframework.auth.AuthProvider
-import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
-import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
@@ -116,21 +114,6 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
 
     fun handleWebUISignInResponse(intent: Intent?) {
         delegate.handleWebUISignInResponse(intent)
-    }
-
-    suspend fun fetchAuthSession(): AuthSession = suspendCoroutine { continuation ->
-        delegate.fetchAuthSession(
-            { continuation.resume(it) },
-            { continuation.resumeWithException(it) }
-        )
-    }
-
-    suspend fun fetchAuthSession(options: AuthFetchSessionOptions): AuthSession = suspendCoroutine { continuation ->
-        delegate.fetchAuthSession(
-            options,
-            { continuation.resume(it) },
-            { continuation.resumeWithException(it) }
-        )
     }
 
     suspend fun signOut(): AuthSignOutResult = suspendCoroutine { continuation ->
