@@ -15,6 +15,7 @@
 package com.amplifyframework.aws.appsync.events
 
 import com.amplifyframework.aws.appsync.core.AppSyncAuthorizer
+import com.amplifyframework.aws.appsync.core.util.Logger
 import com.amplifyframework.aws.appsync.events.data.ChannelAuthorizers
 import com.amplifyframework.aws.appsync.events.data.EventsException
 import com.amplifyframework.aws.appsync.events.data.PublishResult
@@ -34,8 +35,13 @@ class Events @VisibleForTesting internal constructor(
     val endpoint: String,
     val connectAuthorizer: AppSyncAuthorizer,
     val defaultChannelAuthorizers: ChannelAuthorizers,
+    options: Options,
     okHttpClient: OkHttpClient
 ) {
+
+    data class Options(
+        val logger: Logger? = null
+    )
 
     /**
      * The main class for interacting with AWS AppSync Events
@@ -47,8 +53,15 @@ class Events @VisibleForTesting internal constructor(
     constructor(
         endpoint: String,
         connectAuthorizer: AppSyncAuthorizer,
-        defaultChannelAuthorizers: ChannelAuthorizers
-    ) : this(endpoint, connectAuthorizer, defaultChannelAuthorizers, OkHttpClient.Builder().build())
+        defaultChannelAuthorizers: ChannelAuthorizers,
+        options: Options = Options()
+    ) : this(
+        endpoint,
+        connectAuthorizer,
+        defaultChannelAuthorizers,
+        options,
+        OkHttpClient.Builder().build()
+    )
 
     private val json = Json {
         encodeDefaults = true
@@ -56,7 +69,13 @@ class Events @VisibleForTesting internal constructor(
     }
     private val endpoints = EventsEndpoints(endpoint)
     private val httpClient = RestClient(endpoints.restEndpoint, okHttpClient, json)
-    private val eventsWebSocket = EventsWebSocket(endpoints, connectAuthorizer, okHttpClient, json)
+    private val eventsWebSocket = EventsWebSocket(
+        endpoints,
+        connectAuthorizer,
+        okHttpClient,
+        json,
+        options.logger
+    )
 
     /**
      * Publish a single event to a channel.
