@@ -64,7 +64,7 @@ class EventsChannel internal constructor(
                 subscriptionHolder.webSocket = newWebSocket
                 // + send subscription. Returns true if successfully subscribed
                 subscriptionHolder.isSubscribed = initiateSubscription(newWebSocket, subscriptionHolder.id, authorizer)
-             }.flowOn(Dispatchers.IO) // io used for authorizers to pull headers asynchronously
+            }.flowOn(Dispatchers.IO) // io used for authorizers to pull headers asynchronously
             .onCompletion {
                 // only unsubscribe if already subscribed and websocket is still open
                 val currentWebSocket = subscriptionHolder.webSocket
@@ -212,7 +212,6 @@ internal data class SubscriptionHolder(
 ) {
     val id = UUID.randomUUID().toString()
 }
-
 
 /**
  * Extension function that catches only UserClosedConnectionException and re-throws all other exceptions.
