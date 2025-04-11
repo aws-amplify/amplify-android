@@ -25,7 +25,17 @@ open class EventsException internal constructor(
     message: String,
     cause: Throwable? = null,
     val recoverySuggestion: String? = null
-) : Exception(message, cause)
+) : Exception(message, cause) {
+
+    internal companion object {
+        internal fun unknown(message: String? = null): EventsException {
+            return EventsException(
+                message = message ?: "An unknown error occurred",
+                recoverySuggestion = "This is not expected to occur. Contact AWS"
+            )
+        }
+    }
+}
 
 /**
  * Thrown when failing to connect to Events WebSocket.
@@ -39,8 +49,8 @@ class ConnectException internal constructor(cause: Throwable?) : EventsException
 /**
  * Thrown when call is unauthorized.
  */
-class UnauthorizedException internal constructor() : EventsException(
-    message = "Unauthorized",
+class UnauthorizedException internal constructor(message: String? = null) : EventsException(
+    message = message ?: "You are not authorized to make this call",
     recoverySuggestion = "Check your authorizer and Event configuration values and try again"
 )
 
@@ -91,4 +101,8 @@ class MaxSubscriptionsReachedException internal constructor(throwable: Throwable
 class BadRequestException internal constructor() : EventsException(
     message = "Input exceeded 5 event limit",
     recoverySuggestion = "Submit 5 events or less."
+)
+
+internal class UserClosedConnectionException internal constructor() : EventsException(
+    message = "The websocket connection was closed normally"
 )
