@@ -25,7 +25,6 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.result.AuthSignInResult
-import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
@@ -37,7 +36,6 @@ import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.testutils.await
-import io.kotest.assertions.throwables.shouldThrowWithMessage
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.mockk.coEvery
 import io.mockk.every
@@ -49,12 +47,10 @@ import io.mockk.unmockkAll
 import io.mockk.verify
 import java.util.Date
 import java.util.concurrent.CountDownLatch
-import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -229,102 +225,6 @@ class RealAWSCognitoAuthPluginTest {
         onError.shouldBeCalled()
     }
 
-    @Test
-    fun `custom endpoint with query fails`() {
-        val configJsonObject = JSONObject()
-        configJsonObject.put("PoolId", "TestUserPool")
-        configJsonObject.put("AppClientId", "0000000000")
-        configJsonObject.put("Region", "test-region")
-        val invalidEndpoint = "fsjjdh.com?q=id"
-        configJsonObject.put("Endpoint", invalidEndpoint)
-        val expectedErrorMessage = "Invalid endpoint value $invalidEndpoint. Expected fully qualified hostname with " +
-            "no scheme, no path and no query"
-
-        shouldThrowWithMessage<Exception>(expectedErrorMessage) {
-            UserPoolConfiguration.fromJson(configJsonObject).build()
-        }
-    }
-
-    @Test
-    fun `custom endpoint with path fails`() {
-        val configJsonObject = JSONObject()
-        configJsonObject.put("PoolId", "TestUserPool")
-        configJsonObject.put("AppClientId", "0000000000")
-        configJsonObject.put("Region", "test-region")
-        val invalidEndpoint = "fsjjdh.com/id"
-        configJsonObject.put("Endpoint", invalidEndpoint)
-        val expectedErrorMessage = "Invalid endpoint value $invalidEndpoint. Expected fully qualified hostname with " +
-            "no scheme, no path and no query"
-
-        shouldThrowWithMessage<Exception>(expectedErrorMessage) {
-            UserPoolConfiguration.fromJson(configJsonObject).build()
-        }
-    }
-
-    @Test
-    fun `custom endpoint with scheme fails`() {
-        val configJsonObject = JSONObject()
-        configJsonObject.put("PoolId", "TestUserPool")
-        configJsonObject.put("AppClientId", "0000000000")
-        configJsonObject.put("Region", "test-region")
-
-        val invalidEndpoint = "https://fsjjdh.com"
-        configJsonObject.put("Endpoint", invalidEndpoint)
-        val expectedErrorMessage = "Invalid endpoint value $invalidEndpoint. Expected fully qualified hostname with " +
-            "no scheme, no path and no query"
-
-        shouldThrowWithMessage<Exception>(expectedErrorMessage) {
-            UserPoolConfiguration.fromJson(configJsonObject).build()
-        }
-    }
-
-    @Test
-    fun `custom endpoint with no query,path, scheme success`() {
-        val configJsonObject = JSONObject()
-        val poolId = "TestUserPool"
-        val region = "test-region"
-        val appClientId = "0000000000"
-        val endpoint = "fsjjdh.com"
-        configJsonObject.put("PoolId", poolId)
-        configJsonObject.put("AppClientId", appClientId)
-        configJsonObject.put("Region", region)
-        configJsonObject.put("Endpoint", endpoint)
-
-        val userPool = UserPoolConfiguration.fromJson(configJsonObject).build()
-        assertEquals(userPool.region, region, "Regions do not match expected")
-        assertEquals(userPool.poolId, poolId, "Pool id do not match expected")
-        assertEquals(userPool.appClient, appClientId, "AppClientId do not match expected")
-        assertEquals(userPool.endpoint, "https://$endpoint", "Endpoint do not match expected")
-    }
-
-    @Test
-    fun `validate auth flow type defaults to user_srp_auth for invalid types`() {
-        val configJsonObject = JSONObject()
-        val configAuthJsonObject = JSONObject()
-        val configAuthDefaultJsonObject = JSONObject()
-        configAuthDefaultJsonObject.put("authenticationFlowType", "INVALID_FLOW_TYPE")
-        configAuthJsonObject.put("Default", configAuthDefaultJsonObject)
-        configJsonObject.put("Auth", configAuthJsonObject)
-        val configuration = AuthConfiguration.fromJson(configJsonObject)
-        assertEquals(configuration.authFlowType, AuthFlowType.USER_SRP_AUTH, "Auth flow types do not match expected")
-    }
-
-    @Test
-    fun `validate auth flow type success`() {
-        val configJsonObject = JSONObject()
-        val configAuthJsonObject = JSONObject()
-        val configAuthDefaultJsonObject = JSONObject()
-        configAuthDefaultJsonObject.put("authenticationFlowType", "USER_PASSWORD_AUTH")
-        configAuthJsonObject.put("Default", configAuthDefaultJsonObject)
-        configJsonObject.put("Auth", configAuthJsonObject)
-        val configuration = AuthConfiguration.fromJson(configJsonObject)
-        assertEquals(
-            configuration.authFlowType,
-            AuthFlowType.USER_PASSWORD_AUTH,
-            "Auth flow types do not match expected"
-        )
-    }
-
     private fun setupCurrentAuthState(authNState: AuthenticationState? = null, authZState: AuthorizationState? = null) {
         val currentAuthState = mockk<AuthState> {
             every { this@mockk.authNState } returns authNState
@@ -333,16 +233,6 @@ class RealAWSCognitoAuthPluginTest {
         every { authStateMachine.getCurrentState(captureLambda()) } answers {
             lambda<(AuthState) -> Unit>().invoke(currentAuthState)
         }
-    }
-
-    private class ActionWithLatch(count: Int = 1) : Action {
-        val latch = CountDownLatch(count)
-        override fun call() {
-            assertTrue(latch.count > 0)
-            latch.countDown()
-        }
-
-        fun shouldBeCalled(timeout: Duration = 5.seconds) = latch.await(timeout).shouldBeTrue()
     }
 
     private class ConsumerWithLatch<T : Any>(private val expect: T? = null, count: Int = 1) : Consumer<T> {

@@ -159,4 +159,9 @@ internal class AuthUseCaseFactory(
         fetchMfaPreference = fetchMfaPreference(),
         stateMachine = stateMachine
     )
+
+    fun deleteUser() = DeleteUserUseCase(
+        fetchAuthSession = fetchAuthSession(),
+        stateMachine = stateMachine
+    )
 }
