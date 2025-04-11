@@ -28,9 +28,9 @@ open class EventsException internal constructor(
 ) : Exception(message, cause) {
 
     internal companion object {
-        internal fun unknown(): EventsException {
+        internal fun unknown(message: String? = null): EventsException {
             return EventsException(
-                message = "An unknown error occurred",
+                message = message ?: "An unknown error occurred",
                 recoverySuggestion = "This is not expected to occur. Contact AWS"
             )
         }

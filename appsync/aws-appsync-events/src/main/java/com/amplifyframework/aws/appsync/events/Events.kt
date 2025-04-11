@@ -19,6 +19,9 @@ import com.amplifyframework.aws.appsync.core.util.Logger
 import com.amplifyframework.aws.appsync.events.data.ChannelAuthorizers
 import com.amplifyframework.aws.appsync.events.data.EventsException
 import com.amplifyframework.aws.appsync.events.data.PublishResult
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import okhttp3.OkHttpClient
@@ -69,7 +72,7 @@ class Events @VisibleForTesting internal constructor(
     }
     private val endpoints = EventsEndpoints(endpoint)
     private val httpClient = RestClient(endpoints.restEndpoint, okHttpClient, json)
-    private val eventsWebSocket = EventsWebSocket(
+    private val eventsWebSocketProvider = EventsWebSocketProvider(
         endpoints,
         connectAuthorizer,
         okHttpClient,
@@ -121,7 +124,7 @@ class Events @VisibleForTesting internal constructor(
     fun channel(
         channelName: String,
         authorizers: ChannelAuthorizers = this.defaultChannelAuthorizers,
-    ) = EventsChannel(channelName, authorizers, endpoints, eventsWebSocket)
+    ) = EventsChannel(channelName, authorizers, endpoints, eventsWebSocketProvider)
 
     /**
      * Method to disconnect from all channels.
@@ -131,7 +134,10 @@ class Events @VisibleForTesting internal constructor(
      * @param authorizers for the channel to use for subscriptions and publishes.
      * @return a channel to manage subscriptions and publishes.
      */
-    suspend fun disconnect(flushEvents: Boolean = true) {
-        eventsWebSocket.disconnect(flushEvents)
+    suspend fun disconnect(flushEvents: Boolean = true): Unit = coroutineScope {
+        val existingWebSocket = eventsWebSocketProvider.getExistingWebSocket()
+        withContext(Dispatchers.IO) {
+            existingWebSocket?.disconnect(flushEvents)
+        }
     }
 }

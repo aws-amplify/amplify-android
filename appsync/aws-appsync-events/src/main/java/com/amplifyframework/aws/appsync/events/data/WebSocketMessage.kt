@@ -101,12 +101,9 @@ internal sealed class WebSocketMessage {
 
         @Serializable @SerialName("error")
         data class Error(val errors: List<WebSocketError>)
-
-        data class FailureException(val throwable: Throwable) : Received()
     }
 
-    @Serializable
-    internal data object Closed : WebSocketMessage()
+    internal data class Closed(val userInitiated: Boolean, val throwable: Throwable? = null) : WebSocketMessage()
 }
 
 @Serializable
