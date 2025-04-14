@@ -21,8 +21,10 @@ import com.amplifyframework.aws.appsync.core.util.Logger
 import com.amplifyframework.aws.appsync.events.data.ConnectException
 import com.amplifyframework.aws.appsync.events.data.EventsException
 import com.amplifyframework.aws.appsync.events.data.WebSocketMessage
+import com.amplifyframework.aws.appsync.events.utils.ConnectionTimeoutTimer
 import com.amplifyframework.aws.appsync.events.utils.HeaderKeys
 import com.amplifyframework.aws.appsync.events.utils.HeaderValues
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -35,7 +37,6 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
-import java.util.concurrent.atomic.AtomicBoolean
 
 internal class EventsWebSocket(
     private val eventsEndpoints: EventsEndpoints,
@@ -50,7 +51,8 @@ internal class EventsWebSocket(
 
     private lateinit var webSocket: WebSocket
     internal val isClosed = AtomicBoolean(false)
-    private var userInitiatedDisconnect = false
+    private var disconnectReason: DisconnectReason? = null
+    private val connectionTimeoutTimer = ConnectionTimeoutTimer(onTimeout = ::onTimeout)
 
     @Throws(ConnectException::class)
     suspend fun connect() = coroutineScope {
@@ -71,7 +73,7 @@ internal class EventsWebSocket(
         when (val connectionResponse = deferredConnectResponse.await()) {
             is WebSocketMessage.Closed -> {
                 webSocket.cancel()
-                throw ConnectException(connectionResponse.throwable)
+                throw ConnectException(connectionResponse.reason.throwable)
             }
             is WebSocketMessage.Received.ConnectionError -> {
                 webSocket.cancel()
@@ -80,13 +82,16 @@ internal class EventsWebSocket(
                         ?: EventsException.unknown()
                 )
             }
-            else -> Unit // It isn't obvious here, but only other connect response type is ConnectionAck
+            is WebSocketMessage.Received.ConnectionAck -> {
+                connectionTimeoutTimer.resetTimeoutTimer(connectionResponse.connectionTimeoutMs)
+            }
+            else -> Unit // Not obvious here but this block should never run
         }
         logger?.debug("Websocket Connection Open")
     }
 
     suspend fun disconnect(flushEvents: Boolean) = coroutineScope {
-        userInitiatedDisconnect = true
+        disconnectReason = DisconnectReason.UserInitiated
         val deferredClosedResponse = async { getClosedResponse() }
         when (flushEvents) {
             true -> webSocket.close(NORMAL_CLOSE_CODE, "User initiated disconnect")
@@ -102,6 +107,7 @@ internal class EventsWebSocket(
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
+        connectionTimeoutTimer.resetTimeoutTimer()
         logger?.debug { "Websocket onMessage: $text" }
         try {
             val eventMessage = json.decodeFromString<WebSocketMessage.Received>(text)
@@ -113,7 +119,7 @@ internal class EventsWebSocket(
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
         logger?.error(t) { "$TAG onFailure" }
-        notifyClosed() // onClosed doesn't get called in failure. Treat this block the same as onClosed
+        handleClosed() // onClosed doesn't get called in failure. Treat this block the same as onClosed
     }
 
     override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
@@ -123,12 +129,20 @@ internal class EventsWebSocket(
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
         // Events api sends normal close code even in failure
         // so inspecting code/reason isn't helpful as it should be
-        logger?.debug("$TAG onClosed: userInitiated = $userInitiatedDisconnect")
-        notifyClosed()
+        logger?.debug("$TAG onClosed: reason = $disconnectReason")
+        handleClosed()
     }
 
-    private fun notifyClosed() {
-        _events.tryEmit(WebSocketMessage.Closed(userInitiated = userInitiatedDisconnect))
+    private fun onTimeout() {
+        disconnectReason = DisconnectReason.Timeout
+        webSocket.cancel()
+    }
+
+    private fun handleClosed() {
+        connectionTimeoutTimer.stop()
+        _events.tryEmit(
+            WebSocketMessage.Closed(reason = disconnectReason ?: DisconnectReason.Service())
+        )
         isClosed.set(true)
     }
 
@@ -192,4 +206,10 @@ private class ConnectAppSyncRequest(
         get() = preAuthRequest.headers.toMap()
     override val body: String
         get() = "{}"
+}
+
+internal sealed class DisconnectReason(val throwable: Throwable?) {
+    data object UserInitiated : DisconnectReason(null)
+    data object Timeout : DisconnectReason(EventsException("Connection timed out."))
+    class Service(throwable: Throwable? = null) : DisconnectReason(throwable)
 }

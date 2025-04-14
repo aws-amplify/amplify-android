@@ -15,6 +15,7 @@
 
 package com.amplifyframework.aws.appsync.events.data
 
+import com.amplifyframework.aws.appsync.events.DisconnectReason
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -103,7 +104,7 @@ internal sealed class WebSocketMessage {
         data class Error(val errors: List<WebSocketError>)
     }
 
-    internal data class Closed(val userInitiated: Boolean, val throwable: Throwable? = null) : WebSocketMessage()
+    internal data class Closed(val reason: DisconnectReason) : WebSocketMessage()
 }
 
 @Serializable
