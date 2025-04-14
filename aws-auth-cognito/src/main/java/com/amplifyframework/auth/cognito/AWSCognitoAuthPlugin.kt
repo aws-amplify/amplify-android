@@ -176,7 +176,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             logger
         )
 
-        useCaseFactory = AuthUseCaseFactory(realPlugin, authEnvironment, authStateMachine)
+        useCaseFactory = AuthUseCaseFactory(authEnvironment, authStateMachine)
 
         blockQueueChannelWhileConfiguring()
     }
@@ -291,10 +291,10 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         options: AuthFetchSessionOptions,
         onSuccess: Consumer<AuthSession>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.fetchAuthSession(options) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.fetchAuthSession().execute(options) }
 
     override fun fetchAuthSession(onSuccess: Consumer<AuthSession>, onError: Consumer<AuthException>) =
-        enqueue(onSuccess, onError) { queueFacade.fetchAuthSession() }
+        enqueue(onSuccess, onError) { useCaseFactory.fetchAuthSession().execute() }
 
     override fun rememberDevice(onSuccess: Action, onError: Consumer<AuthException>) =
         enqueue(onSuccess, onError) { useCaseFactory.rememberDevice().execute() }

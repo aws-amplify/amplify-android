@@ -66,9 +66,7 @@ internal fun AmplifyCredential.isValid(): Boolean = when (this) {
     else -> false
 }
 
-internal fun AmplifyCredential.getCognitoSession(
-    exception: AuthException? = null
-): AWSAuthSessionBehavior<AWSCognitoUserPoolTokens> {
+internal fun AmplifyCredential.getCognitoSession(exception: AuthException? = null): AWSCognitoAuthSession {
     fun getCredentialsResult(
         awsCredentials: CognitoCredentials,
         exception: AuthException?
