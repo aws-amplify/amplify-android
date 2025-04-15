@@ -101,7 +101,7 @@ internal class EventsWebSocket(
     }
 
     override fun onOpen(webSocket: WebSocket, response: Response) {
-        logger?.debug { "onOpen: sending connection init" }
+        logger?.debug ("onOpen: sending connection init")
         send(WebSocketMessage.Send.ConnectionInit())
     }
 
@@ -128,7 +128,7 @@ internal class EventsWebSocket(
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
         // Events api sends normal close code even in failure
         // so inspecting code/reason isn't helpful as it should be
-        logger?.debug("onClosed: reason = $disconnectReason")
+        logger?.debug {"onClosed: reason = $disconnectReason" }
         handleClosed()
     }
 
@@ -147,7 +147,7 @@ internal class EventsWebSocket(
 
     inline fun <reified T : WebSocketMessage> send(webSocketMessage: T) {
         val message = json.encodeToString(webSocketMessage)
-        logger?.debug("send: $message")
+        logger?.debug { "send: ${webSocketMessage::class.java}" }
         webSocket.send(message)
     }
 
