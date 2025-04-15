@@ -17,7 +17,7 @@ package com.amplifyframework.aws.appsync.events
 
 import com.amplifyframework.aws.appsync.core.AppSyncAuthorizer
 import com.amplifyframework.aws.appsync.core.AppSyncRequest
-import com.amplifyframework.aws.appsync.core.util.Logger
+import com.amplifyframework.aws.appsync.core.LoggerProvider
 import com.amplifyframework.aws.appsync.events.data.ConnectException
 import com.amplifyframework.aws.appsync.events.data.EventsException
 import com.amplifyframework.aws.appsync.events.data.WebSocketMessage
@@ -42,7 +42,7 @@ internal class EventsWebSocket(
     private val authorizer: AppSyncAuthorizer,
     private val okHttpClient: OkHttpClient,
     private val json: Json,
-    private val logger: Logger?
+    loggerProvider: LoggerProvider?
 ) : WebSocketListener() {
 
     private val _events = MutableSharedFlow<WebSocketMessage>(extraBufferCapacity = Int.MAX_VALUE)
@@ -52,6 +52,7 @@ internal class EventsWebSocket(
     @Volatile internal var isClosed = false
     private var disconnectReason: DisconnectReason? = null
     private val connectionTimeoutTimer = ConnectionTimeoutTimer(onTimeout = ::onTimeout)
+    private val logger = loggerProvider?.getLogger(TAG)
 
     @Throws(ConnectException::class)
     suspend fun connect() = coroutineScope {
@@ -100,7 +101,7 @@ internal class EventsWebSocket(
     }
 
     override fun onOpen(webSocket: WebSocket, response: Response) {
-        logger?.debug { "$TAG onOpen: sending connection init" }
+        logger?.debug { "onOpen: sending connection init" }
         send(WebSocketMessage.Send.ConnectionInit())
     }
 
@@ -116,18 +117,18 @@ internal class EventsWebSocket(
     }
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-        logger?.error(t) { "$TAG onFailure" }
+        logger?.error(t) { "onFailure" }
         handleClosed() // onClosed doesn't get called in failure. Treat this block the same as onClosed
     }
 
     override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-        logger?.debug("$TAG onClosing")
+        logger?.debug("onClosing")
     }
 
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
         // Events api sends normal close code even in failure
         // so inspecting code/reason isn't helpful as it should be
-        logger?.debug("$TAG onClosed: reason = $disconnectReason")
+        logger?.debug("onClosed: reason = $disconnectReason")
         handleClosed()
     }
 
@@ -146,7 +147,7 @@ internal class EventsWebSocket(
 
     inline fun <reified T : WebSocketMessage> send(webSocketMessage: T) {
         val message = json.encodeToString(webSocketMessage)
-        logger?.debug("$TAG send: $message")
+        logger?.debug("send: $message")
         webSocket.send(message)
     }
 

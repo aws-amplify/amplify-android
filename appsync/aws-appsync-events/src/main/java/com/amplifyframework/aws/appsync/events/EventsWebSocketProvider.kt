@@ -16,7 +16,7 @@
 package com.amplifyframework.aws.appsync.events
 
 import com.amplifyframework.aws.appsync.core.AppSyncAuthorizer
-import com.amplifyframework.aws.appsync.core.util.Logger
+import com.amplifyframework.aws.appsync.core.LoggerProvider
 import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -31,7 +31,7 @@ internal class EventsWebSocketProvider(
     private val authorizer: AppSyncAuthorizer,
     private val okHttpClient: OkHttpClient,
     private val json: Json,
-    private val logger: Logger?
+    private val loggerProvider: LoggerProvider?
 ) {
     private val mutex = Mutex()
     private val connectionResultReference = AtomicReference<Result<EventsWebSocket>?>(null)
@@ -92,7 +92,7 @@ internal class EventsWebSocketProvider(
                 authorizer,
                 okHttpClient,
                 json,
-                logger
+                loggerProvider
             )
             eventsWebSocket.connect()
             Result.success(eventsWebSocket)
