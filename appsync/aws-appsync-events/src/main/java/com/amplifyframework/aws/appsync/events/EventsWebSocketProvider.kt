@@ -34,53 +34,53 @@ internal class EventsWebSocketProvider(
     private val logger: Logger?
 ) {
     private val mutex = Mutex()
-    private val _connectResult = AtomicReference<Result<EventsWebSocket>?>(null)
-    private val _connectionInProgress = AtomicReference<Deferred<Result<EventsWebSocket>>?>(null)
+    private val connectionResultReference = AtomicReference<Result<EventsWebSocket>?>(null)
+    private val connectionInProgressReference = AtomicReference<Deferred<Result<EventsWebSocket>>?>(null)
 
-    fun getExistingWebSocket(): EventsWebSocket? = _connectResult.get()?.getOrNull()
+    fun getExistingWebSocket(): EventsWebSocket? = connectionResultReference.get()?.getOrNull()
 
     suspend fun getConnectedWebSocket(): EventsWebSocket = getConnectedWebSocketResult().getOrThrow()
 
     private suspend fun getConnectedWebSocketResult(): Result<EventsWebSocket> = coroutineScope {
         // If connection is already established, return it
         mutex.withLock {
-            val existingResult = _connectResult.get()
+            val existingResult = connectionResultReference.get()
             val existingWebSocket = existingResult?.getOrNull()
             if (existingWebSocket != null) {
-                if (existingWebSocket.isClosed.get()) {
-                    _connectResult.set(null)
+                if (existingWebSocket.isClosed) {
+                    connectionResultReference.set(null)
                 } else {
                     return@coroutineScope existingResult
                 }
             }
         }
 
-        val deferredInProgressConnection = _connectionInProgress.get()
+        val deferredInProgressConnection = connectionInProgressReference.get()
         if (deferredInProgressConnection != null && !deferredInProgressConnection.isCompleted) {
             return@coroutineScope deferredInProgressConnection.await()
         }
 
         mutex.withLock {
-            val existingResultInLock = _connectResult.get()
+            val existingResultInLock = connectionResultReference.get()
             val existingWebSocket = existingResultInLock?.getOrNull()
             if (existingWebSocket != null) {
-                if (existingWebSocket.isClosed.get()) {
-                    _connectResult.set(null)
+                if (existingWebSocket.isClosed) {
+                    connectionResultReference.set(null)
                 } else {
                     return@coroutineScope existingResultInLock
                 }
             }
 
-            val deferredInProgressConnectionInLock = _connectionInProgress.get()
+            val deferredInProgressConnectionInLock = connectionInProgressReference.get()
             if (deferredInProgressConnectionInLock != null && !deferredInProgressConnectionInLock.isCompleted) {
                 return@coroutineScope deferredInProgressConnectionInLock.await()
             }
 
             val newDeferredInProgressConnection = async { attemptConnection() }
-            _connectionInProgress.set(newDeferredInProgressConnection)
+            connectionInProgressReference.set(newDeferredInProgressConnection)
             val connectionResult = newDeferredInProgressConnection.await()
-            _connectResult.set(connectionResult)
-            _connectionInProgress.set(null)
+            connectionResultReference.set(connectionResult)
+            connectionInProgressReference.set(null)
             connectionResult
         }
     }

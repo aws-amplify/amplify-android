@@ -18,6 +18,7 @@ package com.amplifyframework.aws.appsync.events.data
 import com.amplifyframework.aws.appsync.events.DisconnectReason
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 
 @Serializable
@@ -52,7 +53,8 @@ internal sealed class WebSocketMessage {
             internal data class Publish(
                 val id: String,
                 val channel: String,
-                val events: List<Boolean>
+                val events: JsonArray,
+                val authorization: Map<String, String>
             ) : Send() {
                 override val type = "publish"
             }
@@ -98,6 +100,13 @@ internal sealed class WebSocketMessage {
                 override val id: String,
                 val errors: List<WebSocketError>
             ) : Subscription()
+
+            @Serializable @SerialName("publish_success")
+            internal data class PublishSuccess(
+                override val id: String,
+                @SerialName("successful") val successfulEvents: List<SuccessfulEvent>,
+                @SerialName("failed") val failedEvents: List<FailedEvent>
+            ) : Subscription()
         }
 
         @Serializable @SerialName("error")
@@ -112,8 +121,9 @@ data class WebSocketError(val errorType: String, val message: String? = null) {
 
     // fallback message is only used if WebSocketError didn't provide a message
     fun toEventsException(fallbackMessage: String? = null): EventsException {
+        val message = this.message ?: fallbackMessage
         return when (errorType) {
-            "UnauthorizedException" -> UnauthorizedException(message ?: fallbackMessage)
+            "UnauthorizedException" -> UnauthorizedException(message)
             else -> EventsException(message = "$errorType: $message")
         }
     }

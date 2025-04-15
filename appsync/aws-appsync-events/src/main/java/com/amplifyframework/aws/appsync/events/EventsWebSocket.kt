@@ -24,7 +24,6 @@ import com.amplifyframework.aws.appsync.events.data.WebSocketMessage
 import com.amplifyframework.aws.appsync.events.utils.ConnectionTimeoutTimer
 import com.amplifyframework.aws.appsync.events.utils.HeaderKeys
 import com.amplifyframework.aws.appsync.events.utils.HeaderValues
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -50,7 +49,7 @@ internal class EventsWebSocket(
     val events = _events.asSharedFlow() // publicly exposed as read-only shared flow
 
     private lateinit var webSocket: WebSocket
-    internal val isClosed = AtomicBoolean(false)
+    @Volatile internal var isClosed = false
     private var disconnectReason: DisconnectReason? = null
     private val connectionTimeoutTimer = ConnectionTimeoutTimer(onTimeout = ::onTimeout)
 
@@ -101,9 +100,8 @@ internal class EventsWebSocket(
     }
 
     override fun onOpen(webSocket: WebSocket, response: Response) {
-        val connectionInitMessage = json.encodeToString(WebSocketMessage.Send.ConnectionInit())
         logger?.debug { "$TAG onOpen: sending connection init" }
-        webSocket.send(connectionInitMessage)
+        send(WebSocketMessage.Send.ConnectionInit())
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
@@ -143,7 +141,7 @@ internal class EventsWebSocket(
         _events.tryEmit(
             WebSocketMessage.Closed(reason = disconnectReason ?: DisconnectReason.Service())
         )
-        isClosed.set(true)
+        isClosed = true
     }
 
     inline fun <reified T : WebSocketMessage> send(webSocketMessage: T) {
