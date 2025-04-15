@@ -133,6 +133,6 @@ class Events @VisibleForTesting internal constructor(
      * @return a channel to manage subscriptions and publishes.
      */
     suspend fun disconnect(flushEvents: Boolean = true): Unit = coroutineScope {
-        eventsWebSocketProvider.getExistingWebSocket()?.disconnect(flushEvents)
+        eventsWebSocketProvider.existingWebSocket?.disconnect(flushEvents)
     }
 }

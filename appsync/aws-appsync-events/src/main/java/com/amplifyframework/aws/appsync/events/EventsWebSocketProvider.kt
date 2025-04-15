@@ -37,7 +37,7 @@ internal class EventsWebSocketProvider(
     private val connectionResultReference = AtomicReference<Result<EventsWebSocket>?>(null)
     private val connectionInProgressReference = AtomicReference<Deferred<Result<EventsWebSocket>>?>(null)
 
-    fun getExistingWebSocket(): EventsWebSocket? = connectionResultReference.get()?.getOrNull()
+    val existingWebSocket: EventsWebSocket? = connectionResultReference.get()?.getOrNull()
 
     suspend fun getConnectedWebSocket(): EventsWebSocket = getConnectedWebSocketResult().getOrThrow()
 
