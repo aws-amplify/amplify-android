@@ -138,6 +138,10 @@ public final class LoggingCategoryTest {
         firstLog.assertEquals(LogLevel.WARN, message, issue);
     }
 
+    /**
+     * Category should initialize as normal when using a Gen2 configuration.
+     * @throws AmplifyException Not expected; possible from addPlugin() call
+     */
     @Test
     public void initializationSucceedsForGen2() throws AmplifyException {
         FakeLogger userLogger = FakeLogger.instance(RandomString.string(), LogLevel.VERBOSE);
