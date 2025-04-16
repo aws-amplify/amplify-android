@@ -47,9 +47,8 @@ import org.junit.Test
  * to the underlying DataStoreCategoryBehavior delegate.
  */
 @FlowPreview
-@Suppress("UNCHECKED_CAST")
+@Suppress("UNCHECKED_CAST", "ktlint:standard:comment-wrapping")
 @ExperimentalCoroutinesApi
-@Suppress("ktlint:standard:comment-wrapping")
 class KotlinDataStoreFacadeTest {
     private val delegate = mockk<DataStoreCategoryBehavior>()
     private val dataStore = KotlinDataStoreFacade(delegate)

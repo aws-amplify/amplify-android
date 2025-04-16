@@ -43,8 +43,7 @@ import org.junit.Test
  */
 @FlowPreview
 @ExperimentalCoroutinesApi
-@Suppress("UNCHECKED_CAST")
-@Suppress("ktlint:standard:comment-wrapping")
+@Suppress("UNCHECKED_CAST", "ktlint:standard:comment-wrapping")
 class KotlinApiFacadeTest {
     private val delegate = mockk<ApiCategoryBehavior>()
     private val api = KotlinApiFacade(delegate)
