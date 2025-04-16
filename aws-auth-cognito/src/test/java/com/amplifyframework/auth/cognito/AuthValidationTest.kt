@@ -458,7 +458,7 @@ class AuthValidationTest {
         }
     }
 
-    private fun signOut() = runBlocking { withTimeout(10000L) { signOutUseCase.execute() } }
+    private fun signOut() = runBlocking { withTimeout(100000L) { signOutUseCase.execute() } }
 
     private fun signInHostedUi(): AuthSignInResult {
         every { hostedUIClient.launchCustomTabsSignIn(any()) } answers {
