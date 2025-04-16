@@ -175,9 +175,7 @@ internal class AWSS3StoragePathDownloadFileOperation(
         }
     }
 
-    override fun getTransferState(): TransferState {
-        return transferObserver?.transferState ?: TransferState.UNKNOWN
-    }
+    override fun getTransferState(): TransferState = transferObserver?.transferState ?: TransferState.UNKNOWN
 
     override fun setOnSuccess(onSuccess: Consumer<StorageDownloadFileResult>?) {
         super.setOnSuccess(onSuccess)

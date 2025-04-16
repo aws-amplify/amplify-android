@@ -29,14 +29,12 @@ internal data class AWSCredentialsInternal(
     val accessKeyId: String?,
     val secretAccessKey: String?,
     val sessionToken: String?,
-    val expiration: Long?,
+    val expiration: Long?
 ) {
-    override fun toString(): String {
-        return "AWSCredentials(" +
-            "accessKeyId = ${accessKeyId?.substring(0..4)}***, " +
-            "secretAccessKey = ${secretAccessKey?.substring(0..4)}***, " +
-            "sessionToken = ${sessionToken?.substring(0..4)}***, " +
-            "expiration = $expiration" +
-            ")"
-    }
+    override fun toString(): String = "AWSCredentials(" +
+        "accessKeyId = ${accessKeyId?.substring(0..4)}***, " +
+        "secretAccessKey = ${secretAccessKey?.substring(0..4)}***, " +
+        "sessionToken = ${sessionToken?.substring(0..4)}***, " +
+        "expiration = $expiration" +
+        ")"
 }

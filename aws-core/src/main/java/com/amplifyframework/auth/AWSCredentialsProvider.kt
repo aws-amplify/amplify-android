@@ -38,24 +38,16 @@ import kotlin.coroutines.suspendCoroutine
  */
 interface AWSCredentialsProvider<out T : AWSCredentials> {
 
-    fun fetchAWSCredentials(
-        onSuccess: Consumer<@UnsafeVariance T>,
-        onError: Consumer<AuthException>
-    )
+    fun fetchAWSCredentials(onSuccess: Consumer<@UnsafeVariance T>, onError: Consumer<AuthException>)
 }
 
 fun <T : AWSCredentials> convertToSdkCredentialsProvider(
     awsCredentialsProvider: AWSCredentialsProvider<T>
-): CredentialsProvider {
-
-    return object : CredentialsProvider {
-        override suspend fun resolve(attributes: Attributes): Credentials {
-            return suspendCoroutine { continuation ->
-                awsCredentialsProvider.fetchAWSCredentials(
-                    { continuation.resume(it.toSdkCredentials()) },
-                    { continuation.resumeWithException(it) }
-                )
-            }
-        }
+): CredentialsProvider = object : CredentialsProvider {
+    override suspend fun resolve(attributes: Attributes): Credentials = suspendCoroutine { continuation ->
+        awsCredentialsProvider.fetchAWSCredentials(
+            { continuation.resume(it.toSdkCredentials()) },
+            { continuation.resumeWithException(it) }
+        )
     }
 }

@@ -44,58 +44,58 @@ class AWSCognitoLegacyCredentialStoreTest {
         private const val IDENTITY_POOL_ID: String = "identityPoolID"
         private const val USER_POOL_ID: String = "userPoolID"
 
-        private const val prefix = "CognitoIdentityProvider"
-        private const val deviceCachePrefix = "CognitoIdentityProviderDeviceCache"
-        private const val appClient = "appClientId"
-        private const val userId = "username"
+        private const val PREFIX = "CognitoIdentityProvider"
+        private const val DEVICE_CACHE_PREFIX = "CognitoIdentityProviderDeviceCache"
+        private const val APP_CLIENT = "appClientId"
+        private const val USER_ID = "username"
         private val userIdTokenKey = String.format(
             Locale.US,
             "%s.%s.%s",
-            prefix,
-            appClient,
+            PREFIX,
+            APP_CLIENT,
             "LastAuthUser"
         )
         private val cachedIdTokenKey = String.format(
             Locale.US,
             "%s.%s.%s.%s",
-            prefix,
-            appClient,
-            userId,
+            PREFIX,
+            APP_CLIENT,
+            USER_ID,
             "idToken"
         )
         private val cachedAccessTokenKey = String.format(
             Locale.US,
             "%s.%s.%s.%s",
-            prefix,
-            appClient,
-            userId,
+            PREFIX,
+            APP_CLIENT,
+            USER_ID,
             "accessToken"
         )
         private val cachedRefreshTokenKey = String.format(
             Locale.US,
             "%s.%s.%s.%s",
-            prefix,
-            appClient,
-            userId,
+            PREFIX,
+            APP_CLIENT,
+            USER_ID,
             "refreshToken"
         )
         private val cachedTokenExpirationKey = String.format(
             Locale.US,
             "%s.%s.%s.%s",
-            prefix,
-            appClient,
-            userId,
+            PREFIX,
+            APP_CLIENT,
+            USER_ID,
             "tokenExpiration"
         )
 
-        private const val dummyToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwidXNlcm5hbW" +
+        private const val DUMMY_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwidXNlcm5hbW" +
             "UiOiJhbXBsaWZ5X3VzZXIiLCJpYXQiOjE1MTYyMzkwMjJ9.zBiQ0guLRX34pUEYLPyDxQAyDDlXmL0JY7kgPWAHZos"
 
-        private const val userDeviceDetailsCacheKey = "$deviceCachePrefix.$USER_POOL_ID.%s"
-        private val deviceDetailsCacheKey = String.format(userDeviceDetailsCacheKey, userId)
+        private const val USER_DEVICE_DETAILS_CACHE_KEY = "$DEVICE_CACHE_PREFIX.$USER_POOL_ID.%s"
+        private val deviceDetailsCacheKey = String.format(USER_DEVICE_DETAILS_CACHE_KEY, USER_ID)
 
-        private const val expirationTimestampInSec: Long = 1714431706
-        private const val expirationTimestampInMs: Long = 1714431706486
+        private const val EXPIRATION_TIMESTAMP_IN_SEC: Long = 1714431706
+        private const val EXPIRATION_TIMESTAMP_IN_MS: Long = 1714431706486
     }
 
     @Mock
@@ -179,9 +179,9 @@ class AWSCognitoLegacyCredentialStoreTest {
         // Tokens
         `when`(mockKeyValue.get(userIdTokenKey)).thenReturn("username")
         `when`(mockKeyValue.get(cachedIdTokenKey)).thenReturn("idToken")
-        `when`(mockKeyValue.get(cachedAccessTokenKey)).thenReturn(dummyToken)
+        `when`(mockKeyValue.get(cachedAccessTokenKey)).thenReturn(DUMMY_TOKEN)
         `when`(mockKeyValue.get(cachedRefreshTokenKey)).thenReturn("refreshToken")
-        `when`(mockKeyValue.get(cachedTokenExpirationKey)).thenReturn(expirationTimestampInMs.toString())
+        `when`(mockKeyValue.get(cachedTokenExpirationKey)).thenReturn(EXPIRATION_TIMESTAMP_IN_MS.toString())
 
         // Device Metadata
         `when`(mockKeyValue.get("DeviceKey")).thenReturn("someDeviceKey")
@@ -192,7 +192,9 @@ class AWSCognitoLegacyCredentialStoreTest {
         `when`(mockKeyValue.get("$IDENTITY_POOL_ID.${"accessKey"}")).thenReturn("accessKeyId")
         `when`(mockKeyValue.get("$IDENTITY_POOL_ID.${"secretKey"}")).thenReturn("secretAccessKey")
         `when`(mockKeyValue.get("$IDENTITY_POOL_ID.${"sessionToken"}")).thenReturn("sessionToken")
-        `when`(mockKeyValue.get("$IDENTITY_POOL_ID.${"expirationDate"}")).thenReturn(expirationTimestampInMs.toString())
+        `when`(
+            mockKeyValue.get("$IDENTITY_POOL_ID.${"expirationDate"}")
+        ).thenReturn(EXPIRATION_TIMESTAMP_IN_MS.toString())
 
         // Identity ID
         `when`(mockKeyValue.get("$IDENTITY_POOL_ID.${"identityId"}")).thenReturn("identityPool")
@@ -213,46 +215,40 @@ class AWSCognitoLegacyCredentialStoreTest {
         `when`(mockConfig.userPool).thenReturn(
             UserPoolConfiguration {
                 this.poolId = USER_POOL_ID
-                this.appClientId = appClient
+                this.appClientId = APP_CLIENT
             }
         )
     }
 
-    private fun getSRPCredential(): AmplifyCredential {
-        return AmplifyCredential.UserAndIdentityPool(
-            SignedInData(
-                "1234567890",
-                "amplify_user",
-                Date(0),
-                SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
-                CognitoUserPoolTokens("idToken", dummyToken, "refreshToken", expirationTimestampInSec)
-            ),
-            "identityPool",
-            AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", expirationTimestampInSec)
-        )
-    }
+    private fun getSRPCredential(): AmplifyCredential = AmplifyCredential.UserAndIdentityPool(
+        SignedInData(
+            "1234567890",
+            "amplify_user",
+            Date(0),
+            SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
+            CognitoUserPoolTokens("idToken", DUMMY_TOKEN, "refreshToken", EXPIRATION_TIMESTAMP_IN_SEC)
+        ),
+        "identityPool",
+        AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", EXPIRATION_TIMESTAMP_IN_SEC)
+    )
 
-    private fun getDeviceMetaData(): DeviceMetadata {
-        return AmplifyCredential.DeviceData(
-            DeviceMetadata.Metadata(
-                "someDeviceKey",
-                "someDeviceGroupKey",
-                "someSecret"
-            )
-        ).deviceMetadata
-    }
-
-    private fun getHostedUICredential(): AmplifyCredential {
-        return AmplifyCredential.UserAndIdentityPool(
-            SignedInData(
-                "1234567890",
-                "amplify_user",
-                Date(0),
-                SignInMethod.HostedUI(),
-                CognitoUserPoolTokens("idToken", dummyToken, "refreshToken", expirationTimestampInSec)
-            ),
-            "identityPool",
-            AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", expirationTimestampInSec)
+    private fun getDeviceMetaData(): DeviceMetadata = AmplifyCredential.DeviceData(
+        DeviceMetadata.Metadata(
+            "someDeviceKey",
+            "someDeviceGroupKey",
+            "someSecret"
         )
-    }
+    ).deviceMetadata
+
+    private fun getHostedUICredential(): AmplifyCredential = AmplifyCredential.UserAndIdentityPool(
+        SignedInData(
+            "1234567890",
+            "amplify_user",
+            Date(0),
+            SignInMethod.HostedUI(),
+            CognitoUserPoolTokens("idToken", DUMMY_TOKEN, "refreshToken", EXPIRATION_TIMESTAMP_IN_SEC)
+        ),
+        "identityPool",
+        AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", EXPIRATION_TIMESTAMP_IN_SEC)
+    )
 }

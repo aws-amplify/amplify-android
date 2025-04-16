@@ -58,6 +58,7 @@ import org.junit.Test
  * to the delegate AuthCategoryBehavior correctly.
  */
 @Suppress("UNCHECKED_CAST") // The more things change, the more they stay the same.
+@Suppress("ktlint:standard:comment-wrapping")
 class KotlinAuthFacadeTest {
     private val delegate = mockk<AuthCategoryBehavior>()
     private val auth = KotlinAuthFacade(delegate)

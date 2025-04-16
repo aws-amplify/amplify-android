@@ -34,13 +34,13 @@ import com.amplifyframework.auth.cognito.featuretest.generators.toJsonElement
 import kotlinx.serialization.json.JsonObject
 
 object ConfirmSignInTestCaseGenerator : SerializableProvider {
-    private const val challengeCode = "000000"
-    private const val userId = "userId"
-    private const val username = "username"
-    private const val password = "password"
-    private const val phone = "+12345678900"
-    private const val email = "test@****.com"
-    private const val session = "someSession"
+    private const val CHALLENGE_CODE = "000000"
+    private const val USER_ID = "userId"
+    private const val USERNAME = "username"
+    private const val PASSWORD = "password"
+    private const val PHONE = "+12345678900"
+    private const val EMAIL = "test@****.com"
+    private const val SESSION = "someSession"
 
     private val mockedRespondToAuthChallengeResponse = MockResponse(
         CognitoType.CognitoIdentityProvider,
@@ -48,9 +48,9 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
         ResponseType.Success,
         mapOf(
             "authenticationResult" to mapOf(
-                "idToken" to AuthStateJsonGenerator.dummyToken,
-                "accessToken" to AuthStateJsonGenerator.dummyToken,
-                "refreshToken" to AuthStateJsonGenerator.dummyToken,
+                "idToken" to AuthStateJsonGenerator.DUMMY_TOKEN,
+                "accessToken" to AuthStateJsonGenerator.DUMMY_TOKEN,
+                "refreshToken" to AuthStateJsonGenerator.DUMMY_TOKEN,
                 "expiresIn" to 300
             )
         ).toJsonElement()
@@ -81,17 +81,17 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
                 "SALT" to "abc",
                 "SECRET_BLOCK" to "secretBlock",
                 "SRP_B" to "def",
-                "USERNAME" to username,
-                "USER_ID_FOR_SRP" to userId
+                "USERNAME" to USERNAME,
+                "USER_ID_FOR_SRP" to USER_ID
             )
         ).toJsonElement()
     )
 
     private fun mockedRespondToAuthEmailOrSmsResponse(challengeNameType: ChallengeNameType): MockResponse {
         val (medium, destination) = if (challengeNameType == ChallengeNameType.EmailOtp) {
-            Pair("EMAIL", email)
+            Pair("EMAIL", EMAIL)
         } else {
-            Pair("SMS", phone)
+            Pair("SMS", PHONE)
         }
 
         return MockResponse(
@@ -100,7 +100,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
             ResponseType.Success,
             mapOf(
                 "challengeName" to challengeNameType.value,
-                "session" to session,
+                "session" to SESSION,
                 "parameters" to JsonObject(emptyMap()),
                 "challengeParameters" to mapOf(
                     "CODE_DELIVERY_DELIVERY_MEDIUM" to medium,
@@ -125,7 +125,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
             "credentials" to mapOf(
                 "accessKeyId" to "someAccessKey",
                 "secretKey" to "someSecretKey",
-                "sessionToken" to AuthStateJsonGenerator.dummyToken,
+                "sessionToken" to AuthStateJsonGenerator.DUMMY_TOKEN,
                 "expiration" to 2342134
             )
         ).toJsonElement()
@@ -138,7 +138,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
             "isSignedIn" to true,
             "nextStep" to mapOf(
                 "signInStep" to "DONE",
-                "additionalInfo" to JsonObject(emptyMap()),
+                "additionalInfo" to JsonObject(emptyMap())
             )
         ).toJsonElement()
     )
@@ -154,7 +154,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
                     "SALT" to "abc",
                     "SECRET_BLOCK" to "secretBlock",
                     "SRP_B" to "def"
-                ),
+                )
             )
         ).toJsonElement()
     )
@@ -184,7 +184,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
             cause = NotAuthorizedException.invoke {
                 message = "Incorrect username or password."
             }
-        ).toJsonElement(),
+        ).toJsonElement()
     )
 
     private val codeMismatchExceptionExpectation = ExpectationShapes.Amplify(
@@ -200,9 +200,9 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
 
     private fun mockedConfirmSignInWithOtpExpectation(challengeNameType: ChallengeNameType): ExpectationShapes.Amplify {
         val (medium, destination) = if (challengeNameType == ChallengeNameType.EmailOtp) {
-            Pair("EMAIL", email)
+            Pair("EMAIL", EMAIL)
         } else {
-            Pair("SMS", phone)
+            Pair("SMS", PHONE)
         }
         return ExpectationShapes.Amplify(
             apiName = AuthAPI.signIn,
@@ -214,7 +214,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
                     "additionalInfo" to JsonObject(emptyMap()),
                     "codeDeliveryDetails" to mapOf(
                         "destination" to destination,
-                        "deliveryMedium" to medium,
+                        "deliveryMedium" to medium
                     )
                 )
             ).toJsonElement()
@@ -229,13 +229,13 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
             mockedResponses = listOf(
                 mockedRespondToAuthChallengeResponse,
                 mockedIdentityIdResponse,
-                mockedAWSCredentialsResponse,
+                mockedAWSCredentialsResponse
             )
         ),
         api = API(
             AuthAPI.confirmSignIn,
             params = mapOf(
-                "challengeResponse" to challengeCode
+                "challengeResponse" to CHALLENGE_CODE
             ).toJsonElement(),
             options = JsonObject(emptyMap())
         ),
@@ -289,7 +289,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
         api = API(
             AuthAPI.confirmSignIn,
             params = mapOf(
-                "challengeResponse" to challengeCode
+                "challengeResponse" to CHALLENGE_CODE
             ).toJsonElement(),
             options = JsonObject(emptyMap())
         ),
@@ -331,13 +331,13 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
             mockedResponses = listOf(
                 mockedRespondToAuthChallengeResponse,
                 mockedIdentityIdResponse,
-                mockedAWSCredentialsResponse,
+                mockedAWSCredentialsResponse
             )
         ),
         api = API(
             AuthAPI.confirmSignIn,
             params = mapOf(
-                "challengeResponse" to challengeCode
+                "challengeResponse" to CHALLENGE_CODE
             ).toJsonElement(),
             options = JsonObject(emptyMap())
         ),
@@ -360,7 +360,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
         api = API(
             AuthAPI.confirmSignIn,
             params = mapOf(
-                "challengeResponse" to challengeCode
+                "challengeResponse" to CHALLENGE_CODE
             ).toJsonElement(),
             options = JsonObject(emptyMap())
         ),
@@ -401,13 +401,13 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
             mockedResponses = listOf(
                 mockedRespondToAuthChallengeResponse,
                 mockedIdentityIdResponse,
-                mockedAWSCredentialsResponse,
+                mockedAWSCredentialsResponse
             )
         ),
         api = API(
             AuthAPI.confirmSignIn,
             params = mapOf(
-                "challengeResponse" to challengeCode
+                "challengeResponse" to CHALLENGE_CODE
             ).toJsonElement(),
             options = JsonObject(emptyMap())
         ),
@@ -430,7 +430,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
         api = API(
             AuthAPI.confirmSignIn,
             params = mapOf(
-                "challengeResponse" to challengeCode
+                "challengeResponse" to CHALLENGE_CODE
             ).toJsonElement(),
             options = JsonObject(emptyMap())
         ),
@@ -454,7 +454,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
         api = API(
             AuthAPI.confirmSignIn,
             params = mapOf(
-                "challengeResponse" to password
+                "challengeResponse" to PASSWORD
             ).toJsonElement(),
             options = JsonObject(emptyMap())
         ),
@@ -477,7 +477,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
         api = API(
             AuthAPI.confirmSignIn,
             params = mapOf(
-                "challengeResponse" to password
+                "challengeResponse" to PASSWORD
             ).toJsonElement(),
             options = JsonObject(emptyMap())
         ),
@@ -496,13 +496,13 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
                 mockedRespondToAuthSrpResponse,
                 mockedRespondToAuthChallengeResponse,
                 mockedIdentityIdResponse,
-                mockedAWSCredentialsResponse,
+                mockedAWSCredentialsResponse
             )
         ),
         api = API(
             AuthAPI.confirmSignIn,
             params = mapOf(
-                "challengeResponse" to password
+                "challengeResponse" to PASSWORD
             ).toJsonElement(),
             options = JsonObject(emptyMap())
         ),
@@ -525,7 +525,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
         api = API(
             AuthAPI.confirmSignIn,
             params = mapOf(
-                "challengeResponse" to password
+                "challengeResponse" to PASSWORD
             ).toJsonElement(),
             options = JsonObject(emptyMap())
         ),
@@ -547,6 +547,6 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
         userAuthSelectPasswordChallengeSucceeds,
         userAuthSelectPasswordChallengeFails,
         userAuthSelectPasswordSrpChallengeSucceeds,
-        userAuthSelectPasswordSrpChallengeFails,
+        userAuthSelectPasswordSrpChallengeFails
     )
 }

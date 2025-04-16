@@ -274,7 +274,7 @@ class UserAuthSignInCognitoActionsTest {
                     parameters = challengeParams
                 ),
                 SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
-            ),
+            )
         )
 
         UserAuthSignInCognitoActions.initiateUserAuthSignIn(

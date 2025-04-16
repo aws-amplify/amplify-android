@@ -69,9 +69,7 @@ class AWSPinpointAnalyticsPlugin @JvmOverloads constructor(
         awsPinpointAnalyticsPluginBehavior.flushEvents()
     }
 
-    override fun getPluginKey(): String {
-        return pluginKey
-    }
+    override fun getPluginKey(): String = pluginKey
 
     override fun configure(pluginConfiguration: JSONObject?, context: Context) {
         requireNotNull(pluginConfiguration)
@@ -127,13 +125,9 @@ class AWSPinpointAnalyticsPlugin @JvmOverloads constructor(
         )
     }
 
-    override fun getEscapeHatch(): PinpointClient {
-        return pinpointManager.pinpointClient
-    }
+    override fun getEscapeHatch(): PinpointClient = pinpointManager.pinpointClient
 
-    override fun getVersion(): String {
-        return BuildConfig.VERSION_NAME
-    }
+    override fun getVersion(): String = BuildConfig.VERSION_NAME
 
     /**
      * Options that can be specified to fine-tune the behavior of the Pinpoint Analytics Plugin.

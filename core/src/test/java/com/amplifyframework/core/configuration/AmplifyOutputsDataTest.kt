@@ -312,9 +312,7 @@ class AmplifyOutputsDataTest {
         outputs.custom?.get("foo")?.jsonPrimitive?.content shouldBe "bar"
     }
 
-    private fun createJson(
-        vararg entries: Pair<String, Any>
-    ): String {
+    private fun createJson(vararg entries: Pair<String, Any>): String {
         val data = mutableMapOf(*entries).apply {
             put("\$schema", "./schema.json")
             if (!containsKey("version")) {
@@ -346,6 +344,7 @@ class AmplifyOutputsDataTest {
             return builder.toString()
         }
 
+    @Suppress("ktlint:standard:property-naming")
     object Keys {
         const val version = "version"
         const val region = "aws_region"

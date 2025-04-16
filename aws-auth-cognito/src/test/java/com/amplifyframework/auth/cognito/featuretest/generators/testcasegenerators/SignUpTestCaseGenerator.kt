@@ -116,19 +116,17 @@ object SignUpTestCaseGenerator : SerializableProvider {
     )
 // mock error responses flow region starts
 
-    private fun expectedCognitoSignUpRequest(
-        username: String,
-        password: String?
-    ) = ExpectationShapes.Cognito.CognitoIdentityProvider(
-        apiName = "signUp",
-        // see [https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SignUp.html]
-        request = mapOf(
-            "clientId" to "testAppClientId", // This should be pulled from configuration
-            "username" to username,
-            "password" to password,
-            "userAttributes" to listOf(mapOf("name" to "email", "value" to email))
-        ).toJsonElement()
-    )
+    private fun expectedCognitoSignUpRequest(username: String, password: String?) =
+        ExpectationShapes.Cognito.CognitoIdentityProvider(
+            apiName = "signUp",
+            // see [https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SignUp.html]
+            request = mapOf(
+                "clientId" to "testAppClientId", // This should be pulled from configuration
+                "username" to username,
+                "password" to password,
+                "userAttributes" to listOf(mapOf("name" to "email", "value" to email))
+            ).toJsonElement()
+        )
 
     val baseCase = FeatureTestCase(
         description = "Test that signup invokes proper cognito request and returns success",

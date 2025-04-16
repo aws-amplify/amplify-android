@@ -72,9 +72,7 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
         dispatcher.send(evt)
     }
 
-    override fun verifyChallengeAnswer(
-        eventType: SetupTOTPEvent.EventType.VerifyChallengeAnswer
-    ): Action =
+    override fun verifyChallengeAnswer(eventType: SetupTOTPEvent.EventType.VerifyChallengeAnswer): Action =
         Action<AuthEnvironment>("verifyChallengeAnswer") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             val evt = try {
@@ -131,9 +129,7 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
             dispatcher.send(evt)
         }
 
-    override fun respondToAuthChallenge(
-        eventType: SetupTOTPEvent.EventType.RespondToAuthChallenge
-    ): Action =
+    override fun respondToAuthChallenge(eventType: SetupTOTPEvent.EventType.RespondToAuthChallenge): Action =
         Action<AuthEnvironment>("RespondToAuthChallenge") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             val evt = try {
@@ -173,7 +169,10 @@ internal object SetupTOTPCognitoActions : SetupTOTPActions {
             } catch (exception: Exception) {
                 SetupTOTPEvent(
                     SetupTOTPEvent.EventType.ThrowAuthError(
-                        exception, eventType.username, eventType.session, eventType.signInMethod
+                        exception,
+                        eventType.username,
+                        eventType.session,
+                        eventType.signInMethod
                     )
                 )
             }

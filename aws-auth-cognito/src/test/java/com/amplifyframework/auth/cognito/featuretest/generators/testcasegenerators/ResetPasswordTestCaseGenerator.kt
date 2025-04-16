@@ -72,7 +72,7 @@ object ResetPasswordTestCaseGenerator : SerializableProvider {
     private val apiReturnValidation = ExpectationShapes.Amplify(
         AuthAPI.resetPassword,
         ResponseType.Success,
-        expectedSuccess,
+        expectedSuccess
     )
     private val finalStateValidation = ExpectationShapes.State("AuthenticationState_SignedIn.json")
 
@@ -118,7 +118,7 @@ object ResetPasswordTestCaseGenerator : SerializableProvider {
                         ResponseType.Failure,
                         com.amplifyframework.auth.exceptions.NotAuthorizedException(
                             cause = errorResponse
-                        ).toJsonElement(),
+                        ).toJsonElement()
                     )
                 )
             )

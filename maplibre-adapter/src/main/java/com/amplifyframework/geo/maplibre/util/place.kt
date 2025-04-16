@@ -32,9 +32,7 @@ private fun <T> JsonObject.addStringProperty(ref: T, property: KProperty1<T, Str
     }
 }
 
-private fun JsonElement.asOptionalString(): String? {
-    return if (isJsonNull) null else asString
-}
+private fun JsonElement.asOptionalString(): String? = if (isJsonNull) null else asString
 
 fun JsonElement.toPlace(): AmazonLocationPlace {
     val obj = asJsonObject
@@ -52,7 +50,7 @@ fun JsonElement.toPlace(): AmazonLocationPlace {
         postalCode = obj[AmazonLocationPlace::postalCode.name].asOptionalString(),
         region = obj[AmazonLocationPlace::region.name].asOptionalString(),
         street = obj[AmazonLocationPlace::street.name].asOptionalString(),
-        subRegion = obj[AmazonLocationPlace::subRegion.name].asOptionalString(),
+        subRegion = obj[AmazonLocationPlace::subRegion.name].asOptionalString()
     )
 }
 
@@ -77,6 +75,6 @@ fun AmazonLocationPlace.toJsonElement(): JsonElement {
     return place
 }
 
-fun Symbol.getPlaceData(): AmazonLocationPlace {
-    return data?.let { it.toPlace() } ?: throw IllegalStateException("Symbol place data missing")
-}
+fun Symbol.getPlaceData(): AmazonLocationPlace = data?.let {
+    it.toPlace()
+} ?: throw IllegalStateException("Symbol place data missing")

@@ -40,7 +40,7 @@ internal sealed class SetupTOTPState : State {
         val username: String,
         val session: String?,
         val signInMethod: SignInMethod,
-        var hasNewResponse: Boolean = false,
+        var hasNewResponse: Boolean = false
     ) : SetupTOTPState()
 
     class Resolver(private val setupTOTPActions: SetupTOTPActions) : StateMachineResolver<SetupTOTPState> {

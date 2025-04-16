@@ -169,17 +169,17 @@ class StateMachineTests {
 
     @Test
     fun testCombinedState() {
-        val startState = ColorCounter(Color.red, Counter(0), false)
-        val resolvedState = ColorCounter.Resolver().logging().resolve(startState, Color.Event.next)
-        val expected = ColorCounter(Color.green, Counter(0), false)
+        val startState = ColorCounter(Color.Red, Counter(0), false)
+        val resolvedState = ColorCounter.Resolver().logging().resolve(startState, Color.Event.Next)
+        val expected = ColorCounter(Color.Green, Counter(0), false)
         resolvedState.newState shouldBe expected
     }
 
     @Test
     fun testCombinedResolve() {
-        val startState = ColorCounter(Color.blue, Counter(2), false)
-        val resolvedState = ColorCounter.Resolver().logging().resolve(startState, Color.Event.next)
-        val expected = ColorCounter(Color.yellow, Counter(2), true)
+        val startState = ColorCounter(Color.Blue, Counter(2), false)
+        val resolvedState = ColorCounter.Resolver().logging().resolve(startState, Color.Event.Next)
+        val expected = ColorCounter(Color.Yellow, Counter(2), true)
         resolvedState.newState shouldBe expected
     }
 }

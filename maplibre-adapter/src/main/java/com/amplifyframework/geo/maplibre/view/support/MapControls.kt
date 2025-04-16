@@ -38,7 +38,7 @@ internal class MapControls(
         MapControl(
             context,
             iconResource = R.drawable.ic_baseline_navigation_24,
-            accessibilityLabel = R.string.map_control_compassIndicator,
+            accessibilityLabel = R.string.map_control_compassIndicator
         )
     }
 
@@ -46,7 +46,7 @@ internal class MapControls(
         MapControl(
             context,
             iconResource = R.drawable.ic_baseline_add_24,
-            accessibilityLabel = R.string.map_control_zoomIn,
+            accessibilityLabel = R.string.map_control_zoomIn
         )
     }
 
@@ -54,7 +54,7 @@ internal class MapControls(
         MapControl(
             context,
             iconResource = R.drawable.ic_baseline_minus_24,
-            accessibilityLabel = R.string.map_control_zoomOut,
+            accessibilityLabel = R.string.map_control_zoomOut
         )
     }
 

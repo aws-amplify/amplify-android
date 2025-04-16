@@ -40,9 +40,8 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 
 class KotlinApiFacade(private val delegate: Delegate = Amplify.API) : Api {
     @Throws(ApiException::class)
-    override suspend fun <R> query(request: GraphQLRequest<R>, apiName: String?):
-        GraphQLResponse<R> {
-        return suspendCancellableCoroutine { continuation ->
+    override suspend fun <R> query(request: GraphQLRequest<R>, apiName: String?): GraphQLResponse<R> =
+        suspendCancellableCoroutine { continuation ->
             val operation = if (apiName != null) {
                 delegate.query(
                     apiName,
@@ -59,12 +58,10 @@ class KotlinApiFacade(private val delegate: Delegate = Amplify.API) : Api {
             }
             continuation.invokeOnCancellation { operation?.cancel() }
         }
-    }
 
     @Throws(ApiException::class)
-    override suspend fun <T> mutate(request: GraphQLRequest<T>, apiName: String?):
-        GraphQLResponse<T> {
-        return suspendCancellableCoroutine { continuation ->
+    override suspend fun <T> mutate(request: GraphQLRequest<T>, apiName: String?): GraphQLResponse<T> =
+        suspendCancellableCoroutine { continuation ->
             val operation = if (apiName != null) {
                 delegate.mutate(
                     apiName,
@@ -81,14 +78,10 @@ class KotlinApiFacade(private val delegate: Delegate = Amplify.API) : Api {
             }
             continuation.invokeOnCancellation { operation?.cancel() }
         }
-    }
 
     @ExperimentalCoroutinesApi
     @FlowPreview
-    override suspend fun <T> subscribe(
-        request: GraphQLRequest<T>,
-        apiName: String?
-    ): Flow<GraphQLResponse<T>> {
+    override suspend fun <T> subscribe(request: GraphQLRequest<T>, apiName: String?): Flow<GraphQLResponse<T>> {
         val subscription = Subscription<GraphQLResponse<T>>()
         val operation = if (apiName != null) {
             delegate.subscribe(
@@ -114,8 +107,8 @@ class KotlinApiFacade(private val delegate: Delegate = Amplify.API) : Api {
     }
 
     @Throws(ApiException::class)
-    override suspend fun get(request: RestOptions, apiName: String?): RestResponse {
-        return suspendCancellableCoroutine { continuation ->
+    override suspend fun get(request: RestOptions, apiName: String?): RestResponse =
+        suspendCancellableCoroutine { continuation ->
             val operation = if (apiName != null) {
                 delegate.get(
                     apiName,
@@ -132,11 +125,10 @@ class KotlinApiFacade(private val delegate: Delegate = Amplify.API) : Api {
             }
             continuation.invokeOnCancellation { operation?.cancel() }
         }
-    }
 
     @Throws(ApiException::class)
-    override suspend fun put(request: RestOptions, apiName: String?): RestResponse {
-        return suspendCancellableCoroutine { continuation ->
+    override suspend fun put(request: RestOptions, apiName: String?): RestResponse =
+        suspendCancellableCoroutine { continuation ->
             val operation = if (apiName != null) {
                 delegate.put(
                     apiName,
@@ -153,11 +145,10 @@ class KotlinApiFacade(private val delegate: Delegate = Amplify.API) : Api {
             }
             continuation.invokeOnCancellation { operation?.cancel() }
         }
-    }
 
     @Throws(ApiException::class)
-    override suspend fun post(request: RestOptions, apiName: String?): RestResponse {
-        return suspendCancellableCoroutine { continuation ->
+    override suspend fun post(request: RestOptions, apiName: String?): RestResponse =
+        suspendCancellableCoroutine { continuation ->
             val operation = if (apiName != null) {
                 delegate.post(
                     apiName,
@@ -174,11 +165,10 @@ class KotlinApiFacade(private val delegate: Delegate = Amplify.API) : Api {
             }
             continuation.invokeOnCancellation { operation?.cancel() }
         }
-    }
 
     @Throws(ApiException::class)
-    override suspend fun delete(request: RestOptions, apiName: String?): RestResponse {
-        return suspendCancellableCoroutine { continuation ->
+    override suspend fun delete(request: RestOptions, apiName: String?): RestResponse =
+        suspendCancellableCoroutine { continuation ->
             val operation = if (apiName != null) {
                 delegate.delete(
                     apiName,
@@ -195,11 +185,10 @@ class KotlinApiFacade(private val delegate: Delegate = Amplify.API) : Api {
             }
             continuation.invokeOnCancellation { operation?.cancel() }
         }
-    }
 
     @Throws(ApiException::class)
-    override suspend fun head(request: RestOptions, apiName: String?): RestResponse {
-        return suspendCancellableCoroutine { continuation ->
+    override suspend fun head(request: RestOptions, apiName: String?): RestResponse =
+        suspendCancellableCoroutine { continuation ->
             val operation = if (apiName != null) {
                 delegate.head(
                     apiName,
@@ -216,11 +205,10 @@ class KotlinApiFacade(private val delegate: Delegate = Amplify.API) : Api {
             }
             continuation.invokeOnCancellation { operation?.cancel() }
         }
-    }
 
     @Throws(ApiException::class)
-    override suspend fun patch(request: RestOptions, apiName: String?): RestResponse {
-        return suspendCancellableCoroutine { continuation ->
+    override suspend fun patch(request: RestOptions, apiName: String?): RestResponse =
+        suspendCancellableCoroutine { continuation ->
             val operation = if (apiName != null) {
                 delegate.patch(
                     apiName,
@@ -237,7 +225,6 @@ class KotlinApiFacade(private val delegate: Delegate = Amplify.API) : Api {
             }
             continuation.invokeOnCancellation { operation?.cancel() }
         }
-    }
 
     /**
      * Models an ongoing subscription to a GraphQL API.

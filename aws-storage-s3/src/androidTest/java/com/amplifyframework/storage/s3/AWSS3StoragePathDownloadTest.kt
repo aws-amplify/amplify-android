@@ -58,6 +58,7 @@ class AWSS3StoragePathDownloadTest {
     // Create a file to download to
     private val downloadFile: File = RandomTempFile()
     private val options = StorageDownloadFileOptions.defaultInstance()
+
     // Create a set to remember all the subscriptions
     private val subscriptions = mutableSetOf<SubscriptionToken>()
 

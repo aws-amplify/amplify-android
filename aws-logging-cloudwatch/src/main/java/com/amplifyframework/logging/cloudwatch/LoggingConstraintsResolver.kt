@@ -48,11 +48,13 @@ internal class LoggingConstraintsResolver internal constructor(
     }
 
     fun resolveLogLevel(namespace: String, categoryType: CategoryType?): LogLevel {
-        return remoteLoggingConstraint?.let { loggingConstraint -> // look first in remote config
+        return remoteLoggingConstraint?.let { loggingConstraint ->
+            // look first in remote config
             loggingConstraint.userLogLevel[userId]?.let { userLogLevel ->
                 userLogLevel.categoryLogLevel[categoryType] ?: userLogLevel.defaultLogLevel
             } ?: loggingConstraint.categoryLogLevel[categoryType] ?: loggingConstraint.defaultLogLevel
-        } ?: localLoggingConstraint?.let { loggingConstraint -> // then in local config
+        } ?: localLoggingConstraint?.let { loggingConstraint ->
+            // then in local config
             loggingConstraint.userLogLevel[userId]?.let { userLogLevel ->
                 userLogLevel.categoryLogLevel[categoryType] ?: userLogLevel.defaultLogLevel
             } ?: loggingConstraint.categoryLogLevel[categoryType] ?: loggingConstraint.defaultLogLevel
@@ -115,16 +117,14 @@ internal class LoggingConstraintsResolver internal constructor(
         }
     }
 
-    private fun getRemoteConstraintsFromSharedPreference(): LoggingConstraints? {
-        return context?.let {
-            val remoteConstraints = it.getSharedPreferences(
-                AWSCloudWatchLoggingPlugin.SHARED_PREFERENCE_FILENAME,
-                Context.MODE_PRIVATE
-            )
-                .getString(REMOTE_LOGGING_CONSTRAINTS_KEY, null)
-            remoteConstraints?.let {
-                LoggingConstraints.fromString(remoteConstraints)
-            }
+    private fun getRemoteConstraintsFromSharedPreference(): LoggingConstraints? = context?.let {
+        val remoteConstraints = it.getSharedPreferences(
+            AWSCloudWatchLoggingPlugin.SHARED_PREFERENCE_FILENAME,
+            Context.MODE_PRIVATE
+        )
+            .getString(REMOTE_LOGGING_CONSTRAINTS_KEY, null)
+        remoteConstraints?.let {
+            LoggingConstraints.fromString(remoteConstraints)
         }
     }
 }

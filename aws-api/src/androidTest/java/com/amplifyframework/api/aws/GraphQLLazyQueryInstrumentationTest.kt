@@ -57,6 +57,7 @@ class GraphQLLazyQueryInstrumentationTest {
         const val PARENT2_ID = "GraphQLLazyQueryInstrumentationTest-Parent2"
         const val HAS_ONE_CHILD1_ID = "GraphQLLazyQueryInstrumentationTest-HasOneChild1"
         const val HAS_ONE_CHILD2_ID = "GraphQLLazyQueryInstrumentationTest-HasOneChild2"
+
         @JvmStatic
         @BeforeClass
         fun setUp() {
@@ -177,7 +178,8 @@ class GraphQLLazyQueryInstrumentationTest {
     fun query_parent_with_includes() = runTest {
         // GIVEN
         val request = ModelQuery.get<Parent, ParentPath>(
-            Parent::class.java, Parent.ParentIdentifier(PARENT1_ID)
+            Parent::class.java,
+            Parent.ParentIdentifier(PARENT1_ID)
         ) {
             includes(it.child, it.children)
         }
@@ -199,7 +201,6 @@ class GraphQLLazyQueryInstrumentationTest {
 
     @Test
     fun query_list_with_no_includes() = runTest(timeout = LONG_TIMEOUT) {
-
         val request = ModelQuery.list(
             Parent::class.java,
             Parent.ID.beginsWith("GraphQLLazyQueryInstrumentationTest-Parent")
@@ -258,7 +259,6 @@ class GraphQLLazyQueryInstrumentationTest {
 
     @Test
     fun query_list_with_includes() = runTest {
-
         val request = ModelQuery.list<Parent, ParentPath>(
             Parent::class.java,
             Parent.ID.beginsWith("GraphQLLazyQueryInstrumentationTest-Parent")
@@ -302,7 +302,8 @@ class GraphQLLazyQueryInstrumentationTest {
     fun query_parent_with_no_child_with_includes() = runTest {
         // GIVEN
         val request = ModelQuery.get<Parent, ParentPath>(
-            Parent::class.java, Parent.ParentIdentifier("GraphQLLazyQueryInstrumentationTest.ParentWithNoChildren")
+            Parent::class.java,
+            Parent.ParentIdentifier("GraphQLLazyQueryInstrumentationTest.ParentWithNoChildren")
         ) {
             includes(it.child, it.children)
         }
@@ -362,7 +363,8 @@ class GraphQLLazyQueryInstrumentationTest {
     fun query_child_belongsTo_parent_with_includes() = runTest {
         // GIVEN
         val request = ModelQuery.get<HasManyChild, HasManyChildPath>(
-            HasManyChild::class.java, HasManyChildIdentifier("GraphQLLazyQueryInstrumentationTest-HasManyChild1")
+            HasManyChild::class.java,
+            HasManyChildIdentifier("GraphQLLazyQueryInstrumentationTest-HasManyChild1")
         ) {
             includes(it.parent)
         }

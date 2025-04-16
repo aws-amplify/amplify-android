@@ -21,11 +21,9 @@ internal data class SignInTOTPSetupData(
     val session: String?,
     val username: String
 ) {
-    override fun toString(): String {
-        return "SignInTOTPSetupData(" +
-            "secretCode = ${secretCode.mask()}, " +
-            "session = ${session.mask()}, " +
-            "username = $username}" +
-            ")"
-    }
+    override fun toString(): String = "SignInTOTPSetupData(" +
+        "secretCode = ${secretCode.mask()}, " +
+        "session = ${session.mask()}, " +
+        "username = $username}" +
+        ")"
 }

@@ -97,12 +97,10 @@ enum class TransferState {
 
     companion object {
         @JvmStatic
-        fun getState(state: String): TransferState {
-            return try {
-                valueOf(state)
-            } catch (exception: IllegalArgumentException) {
-                UNKNOWN
-            }
+        fun getState(state: String): TransferState = try {
+            valueOf(state)
+        } catch (exception: IllegalArgumentException) {
+            UNKNOWN
         }
 
         @JvmStatic
@@ -117,11 +115,9 @@ enum class TransferState {
             setOf(COMPLETED, CANCELED, FAILED, PART_COMPLETED).contains(state)
 
         @JvmStatic
-        fun isPaused(state: TransferState?) =
-            setOf(PENDING_PAUSE, PAUSED).contains(state)
+        fun isPaused(state: TransferState?) = setOf(PENDING_PAUSE, PAUSED).contains(state)
 
         @JvmStatic
-        fun isCancelled(state: TransferState?) =
-            setOf(PENDING_CANCEL, CANCELED).contains(state)
+        fun isCancelled(state: TransferState?) = setOf(PENDING_CANCEL, CANCELED).contains(state)
     }
 }

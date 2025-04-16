@@ -28,8 +28,8 @@ object LandmarkTypeAdapter {
      * @return Amplify's [LandmarkType] enum
      */
     @JvmStatic
-    fun fromRekognition(landmark: String): com.amplifyframework.predictions.models.LandmarkType {
-        return when (LandmarkType.fromValue(landmark)) {
+    fun fromRekognition(landmark: String): com.amplifyframework.predictions.models.LandmarkType =
+        when (LandmarkType.fromValue(landmark)) {
             LandmarkType.EyeLeft, LandmarkType.LeftEyeLeft, LandmarkType.LeftEyeRight, LandmarkType.LeftEyeUp,
             LandmarkType.LeftEyeDown -> com.amplifyframework.predictions.models.LandmarkType.LEFT_EYE
             LandmarkType.EyeRight, LandmarkType.RightEyeLeft, LandmarkType.RightEyeRight, LandmarkType.RightEyeUp,
@@ -50,5 +50,4 @@ object LandmarkTypeAdapter {
                 com.amplifyframework.predictions.models.LandmarkType.FACE_CONTOUR
             else -> com.amplifyframework.predictions.models.LandmarkType.UNKNOWN
         }
-    }
 }
