@@ -13,9 +13,13 @@
  *  permissions and limitations under the License.
  */
 
-package com.amplifyframework.aws.appsync.core.util
+package com.amplifyframework.aws.appsync.core
 
 import java.util.function.Supplier
+
+fun interface LoggerProvider {
+    fun getLogger(namespace: String): Logger
+}
 
 /**
  * A component which can emit logs.
@@ -27,12 +31,6 @@ interface Logger {
      * @return The minimum permissible LogLevel for which logs will be emitted
      */
     val thresholdLevel: LogLevel
-
-    /**
-     * Gets the namespace of the logger.
-     * @return namespace for logger
-     */
-    val namespace: String
 
     /**
      * Logs a message at the [LogLevel.ERROR] level.

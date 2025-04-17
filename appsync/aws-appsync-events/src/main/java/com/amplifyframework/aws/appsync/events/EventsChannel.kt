@@ -116,10 +116,10 @@ class EventsChannel internal constructor(
                         emit(EventsMessage(it.event))
                     }
                     it is WebSocketMessage.Closed -> {
-                        if (it.userInitiated) {
+                        if (it.reason is DisconnectReason.UserInitiated) {
                             throw UserClosedConnectionException()
                         } else {
-                            throw ConnectionClosedException(it.throwable)
+                            throw ConnectionClosedException(it.reason.throwable)
                         }
                     }
                     else -> Unit

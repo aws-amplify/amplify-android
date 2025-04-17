@@ -15,7 +15,7 @@
 package com.amplifyframework.aws.appsync.events
 
 import com.amplifyframework.aws.appsync.core.AppSyncAuthorizer
-import com.amplifyframework.aws.appsync.core.util.Logger
+import com.amplifyframework.aws.appsync.core.LoggerProvider
 import com.amplifyframework.aws.appsync.events.data.ChannelAuthorizers
 import com.amplifyframework.aws.appsync.events.data.EventsException
 import com.amplifyframework.aws.appsync.events.data.PublishResult
@@ -41,7 +41,7 @@ class Events @VisibleForTesting internal constructor(
 ) {
 
     data class Options(
-        val logger: Logger? = null
+        val loggerProvider: LoggerProvider? = null
     )
 
     /**
@@ -75,7 +75,7 @@ class Events @VisibleForTesting internal constructor(
         connectAuthorizer,
         okHttpClient,
         json,
-        options.logger
+        options.loggerProvider
     )
 
     /**
@@ -133,6 +133,6 @@ class Events @VisibleForTesting internal constructor(
      * @return a channel to manage subscriptions and publishes.
      */
     suspend fun disconnect(flushEvents: Boolean = true): Unit = coroutineScope {
-        eventsWebSocketProvider.getExistingWebSocket()?.disconnect(flushEvents)
+        eventsWebSocketProvider.existingWebSocket?.disconnect(flushEvents)
     }
 }
