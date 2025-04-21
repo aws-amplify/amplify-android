@@ -250,11 +250,7 @@ internal class TransferManager(
         } ?: false
     }
 
-    fun getTransferOperationById(
-        transferId: String
-    ): TransferRecord? {
-        return transferDB.getTransferByTransferId(transferId)
-    }
+    fun getTransferOperationById(transferId: String): TransferRecord? = transferDB.getTransferByTransferId(transferId)
 
     private fun createMultipartUploadRecords(
         transferId: String,
@@ -327,7 +323,5 @@ internal class TransferManager(
         return file
     }
 
-    private fun shouldUploadInMultipart(file: File): Boolean {
-        return file.length() > TransferRecord.MINIMUM_UPLOAD_PART_SIZE
-    }
+    private fun shouldUploadInMultipart(file: File): Boolean = file.length() > TransferRecord.MINIMUM_UPLOAD_PART_SIZE
 }

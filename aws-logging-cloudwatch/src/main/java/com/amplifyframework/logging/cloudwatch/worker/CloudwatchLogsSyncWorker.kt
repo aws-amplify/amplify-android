@@ -29,14 +29,12 @@ internal class CloudwatchLogsSyncWorker(
         internal const val WORKER_NAME_TAG = "CloudwatchLogsSyncWorker"
     }
 
-    override suspend fun doWork(): Result {
-        return try {
-            cloudWatchLogManager.syncLogEventsWithCloudwatch()
-            Result.success()
-        } catch (exception: Exception) {
-            Result.retry()
-        } finally {
-            cloudWatchLogManager.enqueueSync()
-        }
+    override suspend fun doWork(): Result = try {
+        cloudWatchLogManager.syncLogEventsWithCloudwatch()
+        Result.success()
+    } catch (exception: Exception) {
+        Result.retry()
+    } finally {
+        cloudWatchLogManager.enqueueSync()
     }
 }

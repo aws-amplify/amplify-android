@@ -17,25 +17,22 @@ package com.amplifyframework.logging.cloudwatch.db
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
-import io.kotest.matchers.MatcherResult
 import io.kotest.matchers.Matcher
+import io.kotest.matchers.MatcherResult
 import io.kotest.matchers.collections.shouldBeEmpty
-import io.kotest.matchers.collections.shouldExist
 import io.kotest.matchers.collections.shouldMatchEach
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
+import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import org.junit.Assert.*
-
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.time.Instant
 
 @RunWith(AndroidJUnit4::class)
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -122,7 +119,7 @@ class CloudWatchLoggingDatabaseInstrumentationTest {
         loggingDbClass.saveLogEvent(testCloudWatchLogEvent2)
         loggingDbClass.saveLogEvent(testCloudWatchLogEvent3)
         loggingDbClass.saveLogEvent(testCloudWatchLogEvent4)
-        val deleteTargetLogs = loggingDbClass.queryAllEvents().map { it.id } .toMutableList()
+        val deleteTargetLogs = loggingDbClass.queryAllEvents().map { it.id }.toMutableList()
         deleteTargetLogs.removeAt(1)
         deleteTargetLogs.removeAt(2)
 

@@ -88,10 +88,7 @@ internal class DownloadWorker(
         }
     }
 
-    private suspend fun writeStreamToFile(
-        stream: ByteStream,
-        file: File
-    ) {
+    private suspend fun writeStreamToFile(stream: ByteStream, file: File) {
         withContext(Dispatchers.IO) {
             when (stream) {
                 is ByteStream.ChannelStream, is ByteStream.Buffer -> {

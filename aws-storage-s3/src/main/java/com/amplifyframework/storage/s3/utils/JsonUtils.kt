@@ -19,11 +19,7 @@ import com.google.gson.Gson
 
 internal object JsonUtils {
 
-    fun mapToString(input: Map<String, String>): String {
-        return Gson().toJson(input).toString()
-    }
+    fun mapToString(input: Map<String, String>): String = Gson().toJson(input).toString()
 
-    fun jsonToMap(input: String): Map<*, *> {
-        return Gson().fromJson(input, Map::class.java)
-    }
+    fun jsonToMap(input: String): Map<*, *> = Gson().fromJson(input, Map::class.java)
 }

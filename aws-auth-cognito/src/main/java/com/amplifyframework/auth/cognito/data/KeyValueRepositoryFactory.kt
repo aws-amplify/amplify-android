@@ -16,7 +16,7 @@
 package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
-import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore.Companion.awsKeyValueStoreIdentifier
+import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore.Companion.AWS_KEY_VALUE_STORE_IDENTIFIER
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore.Companion.APP_DEVICE_INFO_CACHE
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore.Companion.APP_TOKENS_INFO_CACHE
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore.Companion.AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER
@@ -26,17 +26,15 @@ import com.amplifyframework.core.store.InMemoryKeyValueRepository
 import com.amplifyframework.core.store.KeyValueRepository
 
 internal class KeyValueRepositoryFactory {
-    fun create(context: Context, keyValueRepoID: String): KeyValueRepository {
-        return when {
-            keyValueRepoID == awsKeyValueStoreIdentifier -> AmplifyKeyValueRepository(context, keyValueRepoID)
+    fun create(context: Context, keyValueRepoID: String): KeyValueRepository = when {
+        keyValueRepoID == AWS_KEY_VALUE_STORE_IDENTIFIER -> AmplifyKeyValueRepository(context, keyValueRepoID)
 
-            keyValueRepoID == AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER ||
-                keyValueRepoID == APP_TOKENS_INFO_CACHE ||
-                keyValueRepoID == AWS_MOBILE_CLIENT_PROVIDER ||
-                keyValueRepoID.startsWith(APP_DEVICE_INFO_CACHE) ->
-                LegacyKeyValueRepository(context, keyValueRepoID)
+        keyValueRepoID == AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER ||
+            keyValueRepoID == APP_TOKENS_INFO_CACHE ||
+            keyValueRepoID == AWS_MOBILE_CLIENT_PROVIDER ||
+            keyValueRepoID.startsWith(APP_DEVICE_INFO_CACHE) ->
+            LegacyKeyValueRepository(context, keyValueRepoID)
 
-            else -> InMemoryKeyValueRepository()
-        }
+        else -> InMemoryKeyValueRepository()
     }
 }

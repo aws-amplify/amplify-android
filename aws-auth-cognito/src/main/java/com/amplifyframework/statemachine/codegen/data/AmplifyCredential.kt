@@ -80,12 +80,10 @@ internal sealed class AmplifyCredential {
  */
 @Serializable
 internal data class FederatedToken(val token: String, val providerName: String) {
-    override fun toString(): String {
-        return "FederatedToken(" +
-            "token = ${token.substring(0..4)}***, " +
-            "providerName = $providerName" +
-            ")"
-    }
+    override fun toString(): String = "FederatedToken(" +
+        "token = ${token.substring(0..4)}***, " +
+        "providerName = $providerName" +
+        ")"
 }
 
 /**
@@ -100,24 +98,20 @@ internal data class CognitoUserPoolTokens(
     val idToken: String?,
     val accessToken: String?,
     val refreshToken: String?,
-    val expiration: Long?,
+    val expiration: Long?
 ) {
-    override fun toString(): String {
-        return "CognitoUserPoolTokens(" +
-            "idToken = ${idToken?.substring(0..4)}***, " +
-            "accessToken = ${accessToken?.substring(0..4)}***, " +
-            "refreshToken = ${refreshToken?.substring(0..4)}***" +
-            ")"
-    }
+    override fun toString(): String = "CognitoUserPoolTokens(" +
+        "idToken = ${idToken?.substring(0..4)}***, " +
+        "accessToken = ${accessToken?.substring(0..4)}***, " +
+        "refreshToken = ${refreshToken?.substring(0..4)}***" +
+        ")"
 
-    override fun equals(other: Any?): Boolean {
-        return if (super.equals(other)) {
-            true
-        } else if (other == null || javaClass != other.javaClass || other !is CognitoUserPoolTokens) {
-            false
-        } else {
-            idToken == other.idToken && accessToken == other.accessToken && refreshToken == other.refreshToken
-        }
+    override fun equals(other: Any?): Boolean = if (super.equals(other)) {
+        true
+    } else if (other == null || javaClass != other.javaClass || other !is CognitoUserPoolTokens) {
+        false
+    } else {
+        idToken == other.idToken && accessToken == other.accessToken && refreshToken == other.refreshToken
     }
 }
 
@@ -133,20 +127,18 @@ internal data class AWSCredentials(
     val accessKeyId: String?,
     val secretAccessKey: String?,
     val sessionToken: String?,
-    val expiration: Long?,
+    val expiration: Long?
 ) {
     companion object {
         val empty = AWSCredentials(null, null, null, 0)
     }
 
-    override fun toString(): String {
-        return "AWSCredentials(" +
-            "accessKeyId = ${accessKeyId?.substring(0..4)}***, " +
-            "secretAccessKey = ${secretAccessKey?.substring(0..4)}***, " +
-            "sessionToken = ${sessionToken?.substring(0..4)}***, " +
-            "expiration = $expiration" +
-            ")"
-    }
+    override fun toString(): String = "AWSCredentials(" +
+        "accessKeyId = ${accessKeyId?.substring(0..4)}***, " +
+        "secretAccessKey = ${secretAccessKey?.substring(0..4)}***, " +
+        "sessionToken = ${sessionToken?.substring(0..4)}***, " +
+        "expiration = $expiration" +
+        ")"
 }
 
 internal sealed class CredentialType {

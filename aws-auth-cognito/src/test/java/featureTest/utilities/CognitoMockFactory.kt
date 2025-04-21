@@ -78,7 +78,9 @@ class CognitoMockFactory(
                         this.codeDeliveryDetails = parseCodeDeliveryDetails(responseObject)
                         this.userConfirmed = if (responseObject.containsKey("userConfirmed")) {
                             (responseObject["userConfirmed"] as? JsonPrimitive)?.boolean ?: false
-                        } else false
+                        } else {
+                            false
+                        }
                         // session will be null in non-user-auth flow
                         this.session = (responseObject["session"] as? JsonPrimitive)?.content
                         this.userSub = ""
@@ -230,10 +232,7 @@ class CognitoMockFactory(
         }
     }
 
-    private fun setupError(
-        mockResponse: MockResponse,
-        responseObject: JsonObject
-    ) {
+    private fun setupError(mockResponse: MockResponse, responseObject: JsonObject) {
         if (mockResponse.responseType == ResponseType.Failure) {
             val response = Json.decodeFromString(
                 when (mockResponse.type) {
@@ -246,29 +245,26 @@ class CognitoMockFactory(
         }
     }
 
-    private fun parseChallengeParams(params: JsonObject): Map<String, String> {
-        return params.mapValues { (k, v) -> (v as JsonPrimitive).content }
+    private fun parseChallengeParams(params: JsonObject): Map<String, String> = params.mapValues { (k, v) ->
+        (v as JsonPrimitive).content
     }
 
     private fun parseAvailableChallenges(availableChallenges: JsonArray) =
         availableChallenges.map { ChallengeNameType.fromValue(it.toString().replace("\"", "")) }
 
-    private fun parseAuthenticationResult(result: JsonObject): AuthenticationResultType {
-        return AuthenticationResultType.invoke {
+    private fun parseAuthenticationResult(result: JsonObject): AuthenticationResultType =
+        AuthenticationResultType.invoke {
             idToken = (result["idToken"] as JsonPrimitive).content
             accessToken = (result["accessToken"] as JsonPrimitive).content
             refreshToken = (result["refreshToken"] as JsonPrimitive).content
             expiresIn = (result["expiresIn"] as JsonPrimitive).content.toInt()
         }
-    }
 
-    private fun parseCredentials(result: JsonObject): Credentials {
-        return Credentials.invoke {
-            accessKeyId = (result["accessKeyId"] as JsonPrimitive).content
-            secretKey = (result["secretKey"] as JsonPrimitive).content
-            sessionToken = (result["sessionToken"] as JsonPrimitive).content
-            expiration = Instant.fromEpochSeconds((result["expiration"] as JsonPrimitive).content)
-        }
+    private fun parseCredentials(result: JsonObject): Credentials = Credentials.invoke {
+        accessKeyId = (result["accessKeyId"] as JsonPrimitive).content
+        secretKey = (result["secretKey"] as JsonPrimitive).content
+        sessionToken = (result["sessionToken"] as JsonPrimitive).content
+        expiration = Instant.fromEpochSeconds((result["expiration"] as JsonPrimitive).content)
     }
 
     private fun parseCodeDeliveryDetails(response: JsonObject): CodeDeliveryDetailsType {

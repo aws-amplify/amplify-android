@@ -38,6 +38,7 @@ abstract class AuthListWebAuthnCredentialsOptions protected constructor() {
          * @return the type of builder this is
          */
         abstract fun getThis(): T
+
         /**
          * Build an instance of AuthListWebAuthnCredentialsOptions (or one of its subclasses).
          * @return an instance of AuthListWebAuthnCredentialsOptions (or one of its subclasses)

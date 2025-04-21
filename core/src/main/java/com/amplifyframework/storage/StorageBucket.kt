@@ -20,6 +20,7 @@ abstract class StorageBucket {
     companion object {
         @JvmStatic
         fun fromOutputs(name: String): StorageBucket = OutputsStorageBucket(name)
+
         @JvmStatic
         fun fromBucketInfo(bucketInfo: BucketInfo): StorageBucket = ResolvedStorageBucket(bucketInfo)
     }

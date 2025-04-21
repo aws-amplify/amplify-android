@@ -134,29 +134,27 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
         dispatcher.send(evt)
     }
 
-    private fun getChallengeResponseKey(challenge: AuthChallenge): String? {
-        return when (challenge.challengeNameType) {
-            is ChallengeNameType.SmsMfa -> "SMS_MFA_CODE"
-            is ChallengeNameType.EmailOtp -> "EMAIL_OTP_CODE"
-            is ChallengeNameType.SmsOtp -> "SMS_OTP_CODE"
-            is ChallengeNameType.NewPasswordRequired -> "NEW_PASSWORD"
-            is ChallengeNameType.CustomChallenge,
-            is ChallengeNameType.SelectMfaType,
-            is ChallengeNameType.SelectChallenge -> {
-                "ANSWER"
-            }
-            is ChallengeNameType.SoftwareTokenMfa -> "SOFTWARE_TOKEN_MFA_CODE"
-            // TOTP is not part of this because, it follows a completely different setup path
-            is ChallengeNameType.MfaSetup -> {
-                if (isMfaSetupSelectionChallenge(challenge)) {
-                    "MFA_SETUP"
-                } else if (isEmailMfaSetupChallenge(challenge)) {
-                    "EMAIL"
-                } else {
-                    null
-                }
-            }
-            else -> null
+    private fun getChallengeResponseKey(challenge: AuthChallenge): String? = when (challenge.challengeNameType) {
+        is ChallengeNameType.SmsMfa -> "SMS_MFA_CODE"
+        is ChallengeNameType.EmailOtp -> "EMAIL_OTP_CODE"
+        is ChallengeNameType.SmsOtp -> "SMS_OTP_CODE"
+        is ChallengeNameType.NewPasswordRequired -> "NEW_PASSWORD"
+        is ChallengeNameType.CustomChallenge,
+        is ChallengeNameType.SelectMfaType,
+        is ChallengeNameType.SelectChallenge -> {
+            "ANSWER"
         }
+        is ChallengeNameType.SoftwareTokenMfa -> "SOFTWARE_TOKEN_MFA_CODE"
+        // TOTP is not part of this because, it follows a completely different setup path
+        is ChallengeNameType.MfaSetup -> {
+            if (isMfaSetupSelectionChallenge(challenge)) {
+                "MFA_SETUP"
+            } else if (isEmailMfaSetupChallenge(challenge)) {
+                "EMAIL"
+            } else {
+                null
+            }
+        }
+        else -> null
     }
 }

@@ -26,7 +26,7 @@ import com.amplifyframework.statemachine.codegen.states.CredentialStoreState
 
 internal class CredentialStoreStateMachine(
     resolver: StateMachineResolver<CredentialStoreState>,
-    environment: Environment,
+    environment: Environment
 ) : StateMachine<CredentialStoreState, Environment>(resolver, environment) {
     constructor(environment: Environment) : this(
         CredentialStoreState.Resolver(CredentialStoreCognitoActions),

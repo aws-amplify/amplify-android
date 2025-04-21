@@ -28,15 +28,14 @@ internal data class SignedInData(
     val signInMethod: SignInMethod,
     val cognitoUserPoolTokens: CognitoUserPoolTokens
 ) {
-    override fun equals(other: Any?): Boolean {
-        return if (super.equals(other)) {
-            true
-        } else if (other == null || javaClass != other.javaClass || other !is SignedInData) {
-            false
-        } else {
-            userId == other.userId && username == other.username &&
-                signInMethod == other.signInMethod &&
-                cognitoUserPoolTokens == other.cognitoUserPoolTokens
-        }
+    override fun equals(other: Any?): Boolean = if (super.equals(other)) {
+        true
+    } else if (other == null || javaClass != other.javaClass || other !is SignedInData) {
+        false
+    } else {
+        userId == other.userId &&
+            username == other.username &&
+            signInMethod == other.signInMethod &&
+            cognitoUserPoolTokens == other.cognitoUserPoolTokens
     }
 }

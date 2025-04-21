@@ -41,11 +41,12 @@ internal class CredentialStoreClientTest {
                 if (timesFired.incrementAndGet() != 1) {
                     timesFailed += 1
                 }
-            }, {
-            if (timesFired.incrementAndGet() != 1) {
-                timesFailed += 1
-            }
-        },
+            },
+            {
+                if (timesFired.incrementAndGet() != 1) {
+                    timesFailed += 1
+                }
+            },
             mockk(relaxed = true)
         )
 

@@ -23,6 +23,7 @@ class AmazonLocationSearchByTextOptions private constructor(
 ) : GeoSearchByTextOptions(builder) {
     companion object {
         @JvmStatic fun builder() = Builder()
+
         @JvmStatic fun defaults() = builder().build()
     }
 

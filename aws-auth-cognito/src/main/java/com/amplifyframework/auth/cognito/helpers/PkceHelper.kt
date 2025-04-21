@@ -45,19 +45,17 @@ internal object PkceHelper {
      * @return the hash as a [String].
      */
     @Throws(Exception::class)
-    fun generateHash(data: String): String {
-        return try {
-            val bytes = data.toByteArray(charset("US-ASCII"))
-            val digest = MessageDigest.getInstance("SHA-256")
-            digest.update(bytes, 0, bytes.size)
-            val digestBytes = digest.digest()
-            Base64.encodeToString(
-                digestBytes,
-                Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING
-            )
-        } catch (e: Exception) {
-            throw e
-        }
+    fun generateHash(data: String): String = try {
+        val bytes = data.toByteArray(charset("US-ASCII"))
+        val digest = MessageDigest.getInstance("SHA-256")
+        digest.update(bytes, 0, bytes.size)
+        val digestBytes = digest.digest()
+        Base64.encodeToString(
+            digestBytes,
+            Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING
+        )
+    } catch (e: Exception) {
+        throw e
     }
 
     /**

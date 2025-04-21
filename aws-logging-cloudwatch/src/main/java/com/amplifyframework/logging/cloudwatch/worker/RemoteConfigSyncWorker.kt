@@ -32,14 +32,12 @@ internal class RemoteConfigSyncWorker(
         internal const val WORKER_NAME_TAG = "RemoteConfigSyncWorker"
     }
 
-    override suspend fun doWork(): Result {
-        return try {
-            loggingConstraintsResolver.loadRemoteConfig()
-            Result.success()
-        } catch (exception: Exception) {
-            Result.retry()
-        } finally {
-            loggingConstraintsResolver.enqueueConfigSyncWorker()
-        }
+    override suspend fun doWork(): Result = try {
+        loggingConstraintsResolver.loadRemoteConfig()
+        Result.success()
+    } catch (exception: Exception) {
+        Result.retry()
+    } finally {
+        loggingConstraintsResolver.enqueueConfigSyncWorker()
     }
 }

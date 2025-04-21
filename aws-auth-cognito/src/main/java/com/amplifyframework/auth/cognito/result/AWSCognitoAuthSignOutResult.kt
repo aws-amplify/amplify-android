@@ -65,7 +65,7 @@ sealed class AWSCognitoAuthSignOutResult : AuthSignOutResult() {
     data class PartialSignOut internal constructor(
         val hostedUIError: HostedUIError? = null,
         val globalSignOutError: GlobalSignOutError? = null,
-        val revokeTokenError: RevokeTokenError? = null,
+        val revokeTokenError: RevokeTokenError? = null
     ) : AWSCognitoAuthSignOutResult() {
 
         /**

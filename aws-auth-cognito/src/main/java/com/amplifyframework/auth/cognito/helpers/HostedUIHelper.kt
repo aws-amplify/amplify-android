@@ -28,15 +28,13 @@ internal object HostedUIHelper {
         callingActivity: Activity,
         authProvider: AuthProvider?,
         options: AuthWebUISignInOptions
-    ): HostedUIOptions {
-        return HostedUIOptions(
-            callingActivity = callingActivity,
-            scopes = options.scopes,
-            providerInfo = HostedUIProviderInfo(
-                authProvider = authProvider,
-                idpIdentifier = (options as? AWSCognitoAuthWebUISignInOptions)?.idpIdentifier,
-            ),
-            browserPackage = (options as? AWSCognitoAuthWebUISignInOptions)?.browserPackage
-        )
-    }
+    ): HostedUIOptions = HostedUIOptions(
+        callingActivity = callingActivity,
+        scopes = options.scopes,
+        providerInfo = HostedUIProviderInfo(
+            authProvider = authProvider,
+            idpIdentifier = (options as? AWSCognitoAuthWebUISignInOptions)?.idpIdentifier
+        ),
+        browserPackage = (options as? AWSCognitoAuthWebUISignInOptions)?.browserPackage
+    )
 }

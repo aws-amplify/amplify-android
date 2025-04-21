@@ -33,20 +33,18 @@ class CognitoJWTParser {
          * @param jwt       REQUIRED: valid JSON Web Token as String.
          * @return payload as a JSONObject.
          */
-        fun getPayload(jwt: String): JSONObject {
-            return try {
-                validateJWT(jwt)
-                val payload = jwt.split(".")[PAYLOAD]
-                val sectionDecoded = Base64.decode(payload, Base64.URL_SAFE)
-                val jwtSection = String(sectionDecoded, Charset.forName("UTF-8"))
-                JSONObject(jwtSection)
-            } catch (e: UnsupportedEncodingException) {
-                throw CognitoParameterInvalidException(e.message)
-            } catch (e: JSONException) {
-                throw CognitoParameterInvalidException(e.message)
-            } catch (e: Exception) {
-                throw CognitoParameterInvalidException("error in parsing JSON")
-            }
+        fun getPayload(jwt: String): JSONObject = try {
+            validateJWT(jwt)
+            val payload = jwt.split(".")[PAYLOAD]
+            val sectionDecoded = Base64.decode(payload, Base64.URL_SAFE)
+            val jwtSection = String(sectionDecoded, Charset.forName("UTF-8"))
+            JSONObject(jwtSection)
+        } catch (e: UnsupportedEncodingException) {
+            throw CognitoParameterInvalidException(e.message)
+        } catch (e: JSONException) {
+            throw CognitoParameterInvalidException(e.message)
+        } catch (e: Exception) {
+            throw CognitoParameterInvalidException("error in parsing JSON")
         }
 
         /**
@@ -69,12 +67,10 @@ class CognitoJWTParser {
          * @param claim     claim name as String.
          * @return claim from the JWT as a String.
          */
-        fun getClaim(jwt: String, claim: String): String? {
-            return try {
-                getPayload(jwt)[claim].toString()
-            } catch (exception: Exception) {
-                throw CognitoParameterInvalidException("invalid token")
-            }
+        fun getClaim(jwt: String, claim: String): String? = try {
+            getPayload(jwt)[claim].toString()
+        } catch (exception: Exception) {
+            throw CognitoParameterInvalidException("invalid token")
         }
 
         private const val PAYLOAD = 1

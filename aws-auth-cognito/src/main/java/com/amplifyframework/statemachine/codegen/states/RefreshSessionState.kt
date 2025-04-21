@@ -47,13 +47,11 @@ internal sealed class RefreshSessionState : State {
     ) : StateMachineResolver<RefreshSessionState> {
         override val defaultState = NotStarted()
 
-        private fun asFetchAuthSessionEvent(event: StateMachineEvent): FetchAuthSessionEvent.EventType? {
-            return (event as? FetchAuthSessionEvent)?.eventType
-        }
+        private fun asFetchAuthSessionEvent(event: StateMachineEvent): FetchAuthSessionEvent.EventType? =
+            (event as? FetchAuthSessionEvent)?.eventType
 
-        private fun asRefreshSessionEvent(event: StateMachineEvent): RefreshSessionEvent.EventType? {
-            return (event as? RefreshSessionEvent)?.eventType
-        }
+        private fun asRefreshSessionEvent(event: StateMachineEvent): RefreshSessionEvent.EventType? =
+            (event as? RefreshSessionEvent)?.eventType
 
         override fun resolve(
             oldState: RefreshSessionState,

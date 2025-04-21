@@ -19,5 +19,5 @@ import com.amplifyframework.auth.AuthProvider
 
 internal data class HostedUIProviderInfo(
     val authProvider: AuthProvider? = null,
-    val idpIdentifier: String? = null,
+    val idpIdentifier: String? = null
 )

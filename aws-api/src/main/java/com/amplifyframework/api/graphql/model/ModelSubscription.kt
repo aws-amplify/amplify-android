@@ -34,12 +34,8 @@ object ModelSubscription {
      * @return a valid [GraphQLRequest] instance.
      </M> */
     @JvmStatic
-    fun <M : Model> of(
-        modelType: Class<M>,
-        type: SubscriptionType,
-    ): GraphQLRequest<M> {
-        return buildSubscription(modelType, type)
-    }
+    fun <M : Model> of(modelType: Class<M>, type: SubscriptionType): GraphQLRequest<M> =
+        buildSubscription(modelType, type)
 
     /**
      * Builds a subscriptions request of a given `type` for a `modelType`.
@@ -55,9 +51,7 @@ object ModelSubscription {
         modelType: Class<M>,
         type: SubscriptionType,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<M> {
-        return buildSubscription(modelType, type, includes)
-    }
+    ): GraphQLRequest<M> = buildSubscription(modelType, type, includes)
 
     /**
      * Creates a subscription request of type [SubscriptionType.ON_CREATE].
@@ -67,9 +61,7 @@ object ModelSubscription {
      * @see .of
      </M> */
     @JvmStatic
-    fun <M : Model> onCreate(modelType: Class<M>): GraphQLRequest<M> {
-        return of(modelType, SubscriptionType.ON_CREATE)
-    }
+    fun <M : Model> onCreate(modelType: Class<M>): GraphQLRequest<M> = of(modelType, SubscriptionType.ON_CREATE)
 
     /**
      * Creates a subscription request of type [SubscriptionType.ON_CREATE].
@@ -84,9 +76,7 @@ object ModelSubscription {
     fun <M : Model, P : ModelPath<M>> onCreate(
         modelType: Class<M>,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<M> {
-        return of(modelType, SubscriptionType.ON_CREATE, includes)
-    }
+    ): GraphQLRequest<M> = of(modelType, SubscriptionType.ON_CREATE, includes)
 
     /**
      * Creates a subscription request of type [SubscriptionType.ON_DELETE].
@@ -96,9 +86,7 @@ object ModelSubscription {
      * @see .of
      </M> */
     @JvmStatic
-    fun <M : Model> onDelete(modelType: Class<M>): GraphQLRequest<M> {
-        return of(modelType, SubscriptionType.ON_DELETE)
-    }
+    fun <M : Model> onDelete(modelType: Class<M>): GraphQLRequest<M> = of(modelType, SubscriptionType.ON_DELETE)
 
     /**
      * Creates a subscription request of type [SubscriptionType.ON_DELETE].
@@ -113,9 +101,7 @@ object ModelSubscription {
     fun <M : Model, P : ModelPath<M>> onDelete(
         modelType: Class<M>,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<M> {
-        return of(modelType, SubscriptionType.ON_DELETE, includes)
-    }
+    ): GraphQLRequest<M> = of(modelType, SubscriptionType.ON_DELETE, includes)
 
     /**
      * Creates a subscription request of type [SubscriptionType.ON_UPDATE].
@@ -125,9 +111,7 @@ object ModelSubscription {
      * @see .of
      </M> */
     @JvmStatic
-    fun <M : Model> onUpdate(modelType: Class<M>): GraphQLRequest<M> {
-        return of(modelType, SubscriptionType.ON_UPDATE)
-    }
+    fun <M : Model> onUpdate(modelType: Class<M>): GraphQLRequest<M> = of(modelType, SubscriptionType.ON_UPDATE)
 
     /**
      * Creates a subscription request of type [SubscriptionType.ON_UPDATE].
@@ -142,7 +126,5 @@ object ModelSubscription {
     fun <M : Model, P : ModelPath<M>> onUpdate(
         modelType: Class<M>,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<M> {
-        return of(modelType, SubscriptionType.ON_UPDATE, includes)
-    }
+    ): GraphQLRequest<M> = of(modelType, SubscriptionType.ON_UPDATE, includes)
 }

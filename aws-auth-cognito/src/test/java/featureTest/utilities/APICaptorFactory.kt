@@ -38,7 +38,8 @@ import java.util.concurrent.CountDownLatch
  */
 class APICaptorFactory(
     private val authApi: ExpectationShapes.Amplify,
-    private val latch: CountDownLatch, // ToDo: Remove this param
+    // ToDo: Remove this param
+    private val latch: CountDownLatch
 ) {
     companion object {
         val onSuccess = mapOf(
@@ -67,8 +68,11 @@ class APICaptorFactory(
         successCaptors.clear()
         completeCaptors.clear()
         if (authApi.responseType == ResponseType.Success) setupOnSuccess()
-        if (authApi.responseType == ResponseType.Complete) setupOnComplete()
-        else setupOnError()
+        if (authApi.responseType == ResponseType.Complete) {
+            setupOnComplete()
+        } else {
+            setupOnError()
+        }
     }
 
     private fun setupOnSuccess() {

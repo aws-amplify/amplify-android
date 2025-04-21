@@ -35,9 +35,8 @@ class AmazonPollyPresigningClient(private val pollyClient: PollyClient) : PollyC
      * @return a presigned URL for a SynthesizeSpeech request.
      */
     @WorkerThread
-    fun getPresignedSynthesizeSpeechUrl(synthesizeSpeechRequest: SynthesizeSpeechRequest): URL {
-        return getPresignedSynthesizeSpeechUrl(synthesizeSpeechRequest, PresignedSynthesizeSpeechUrlOptions.defaults())
-    }
+    fun getPresignedSynthesizeSpeechUrl(synthesizeSpeechRequest: SynthesizeSpeechRequest): URL =
+        getPresignedSynthesizeSpeechUrl(synthesizeSpeechRequest, PresignedSynthesizeSpeechUrlOptions.defaults())
 
     /**
      * Creates a presigned URL for a SynthesizeSpeech request with the given options.

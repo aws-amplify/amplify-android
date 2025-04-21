@@ -25,15 +25,15 @@ import androidx.core.content.ContextCompat
 import java.util.UUID
 import kotlinx.coroutines.flow.first
 
-internal const val PermissionRequiredApiLevel = 33
-internal const val PermissionName = "android.permission.POST_NOTIFICATIONS"
-internal const val PermissionRequestId = "com.amplifyframework.permissions.requestId"
+internal const val PERMISSION_REQUIRED_API_LEVEL = 33
+internal const val PERMISSION_NAME = "android.permission.POST_NOTIFICATIONS"
+internal const val PERMISSION_REQUEST_ID = "com.amplifyframework.permissions.requestId"
 
 class PushNotificationPermission(private val context: Context) {
 
     val hasRequiredPermission: Boolean
-        get() = Build.VERSION.SDK_INT < PermissionRequiredApiLevel ||
-            ContextCompat.checkSelfPermission(context, PermissionName) == PackageManager.PERMISSION_GRANTED
+        get() = Build.VERSION.SDK_INT < PERMISSION_REQUIRED_API_LEVEL ||
+            ContextCompat.checkSelfPermission(context, PERMISSION_NAME) == PackageManager.PERMISSION_GRANTED
 
     /**
      * Launches an Activity to request notification permissions and suspends until the user makes a selection or
@@ -57,7 +57,7 @@ class PushNotificationPermission(private val context: Context) {
 
         // Start the activity
         val intent = Intent(context, PermissionsRequestActivity::class.java).apply {
-            putExtra(PermissionRequestId, requestId)
+            putExtra(PERMISSION_REQUEST_ID, requestId)
         }
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         context.startActivity(intent)
