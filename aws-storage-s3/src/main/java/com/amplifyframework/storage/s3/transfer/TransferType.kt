@@ -23,12 +23,14 @@ enum class TransferType {
      * An Upload operation.
      */
     UPLOAD,
+
     /**
      * An Download operation.
      */
     DOWNLOAD,
+
     /**
      * Upload and Download operation.
      */
-    ANY;
+    ANY
 }

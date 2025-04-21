@@ -136,11 +136,10 @@ internal object CredentialStoreCognitoActions : CredentialStoreActions {
             dispatcher.send(evt)
         }
 
-    override fun moveToIdleStateAction() =
-        Action<CredentialStoreEnvironment>("MoveToIdleState") { id, dispatcher ->
-            logger.verbose("$id Starting execution")
-            val evt = CredentialStoreEvent(CredentialStoreEvent.EventType.MoveToIdleState())
-            logger.verbose("$id Sending event ${evt.type}")
-            dispatcher.send(evt)
-        }
+    override fun moveToIdleStateAction() = Action<CredentialStoreEnvironment>("MoveToIdleState") { id, dispatcher ->
+        logger.verbose("$id Starting execution")
+        val evt = CredentialStoreEvent(CredentialStoreEvent.EventType.MoveToIdleState())
+        logger.verbose("$id Sending event ${evt.type}")
+        dispatcher.send(evt)
+    }
 }

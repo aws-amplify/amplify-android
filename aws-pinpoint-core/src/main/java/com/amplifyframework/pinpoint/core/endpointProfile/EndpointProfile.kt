@@ -105,9 +105,7 @@ class EndpointProfile(
      * @return true if this [EndpointProfile] has a custom attribute with the
      * specified name, false otherwise
      */
-    fun hasAttribute(attributeName: String): Boolean {
-        return attributes.containsKey(attributeName)
-    }
+    fun hasAttribute(attributeName: String): Boolean = attributes.containsKey(attributeName)
 
     /**
      * Returns the array of values of the custom attribute with the specified name.
@@ -116,9 +114,7 @@ class EndpointProfile(
      * @return The array of custom attributes with the specified name, or null if attribute does
      * not exist
      */
-    fun getAttribute(name: String): List<String>? {
-        return attributes[name]
-    }
+    fun getAttribute(name: String): List<String>? = attributes[name]
 
     /**
      * Adds a custom attribute to this [EndpointProfile] with the specified key.
@@ -188,9 +184,7 @@ class EndpointProfile(
      * @return true if this [EndpointProfile] has a metric with the
      * specified name, false otherwise
      */
-    fun hasMetric(metricName: String): Boolean {
-        return metrics.containsKey(metricName)
-    }
+    fun hasMetric(metricName: String): Boolean = metrics.containsKey(metricName)
 
     /**
      * Returns the value of the metric with the specified name.
@@ -199,9 +193,7 @@ class EndpointProfile(
      * @return The metric with the specified name, or null if metric does not
      * exist
      */
-    fun getMetric(name: String): Double? {
-        return metrics[name]
-    }
+    fun getMetric(name: String): Double? = metrics[name]
 
     /**
      * Adds a metric to this [EndpointProfile] with the specified key. Only
@@ -229,51 +221,47 @@ class EndpointProfile(
     val allMetrics: Map<String, Double>
         get() = Collections.unmodifiableMap(metrics)
 
-    override fun toString(): String {
-        return toJSONObject().toString()
-    }
+    override fun toString(): String = toJSONObject().toString()
 
-    private fun toJSONObject(): JsonObject {
-        return buildJsonObject {
-            put("Address", address)
-            put("ApplicationId", applicationId)
-            put("EndpointId", endpointId)
-            put("Location", Json.encodeToString(EndpointProfileLocation.serializer(), location))
-            put("Demographic", Json.encodeToString(EndpointProfileDemographic.serializer(), demographic))
-            put("EffectiveDate", effectiveDate.millisToIsoDate())
-            val attributesJson = buildJsonObject {
-                for ((key, value) in allAttributes) {
-                    try {
-                        put(key, JsonArray(value.map { JsonPrimitive(it) }))
-                    } catch (e: Exception) {
-                        // Do not log e due to potentially sensitive information
-                        LOG.warn("Error serializing attributes.")
-                    }
+    private fun toJSONObject(): JsonObject = buildJsonObject {
+        put("Address", address)
+        put("ApplicationId", applicationId)
+        put("EndpointId", endpointId)
+        put("Location", Json.encodeToString(EndpointProfileLocation.serializer(), location))
+        put("Demographic", Json.encodeToString(EndpointProfileDemographic.serializer(), demographic))
+        put("EffectiveDate", effectiveDate.millisToIsoDate())
+        val attributesJson = buildJsonObject {
+            for ((key, value) in allAttributes) {
+                try {
+                    put(key, JsonArray(value.map { JsonPrimitive(it) }))
+                } catch (e: Exception) {
+                    // Do not log e due to potentially sensitive information
+                    LOG.warn("Error serializing attributes.")
                 }
             }
-            // If there are any attributes put then add the attributes to the structure
-            if (attributesJson.isNotEmpty()) {
-                put("Attributes", attributesJson)
-            }
-
-            val metricsJson = buildJsonObject {
-                for ((key, value) in allMetrics) {
-                    try {
-                        put(key, value)
-                    } catch (e: Exception) {
-                        // Do not log e due to potentially sensitive information
-                        LOG.error("Error serializing metric.")
-                    }
-                }
-            }
-
-            // If there are any metrics put then add the attributes to the structure
-            if (metricsJson.isNotEmpty()) {
-                put("Metrics", metricsJson)
-            }
-
-            put("User", Json.encodeToString(EndpointProfileUser.serializer(), user))
         }
+        // If there are any attributes put then add the attributes to the structure
+        if (attributesJson.isNotEmpty()) {
+            put("Attributes", attributesJson)
+        }
+
+        val metricsJson = buildJsonObject {
+            for ((key, value) in allMetrics) {
+                try {
+                    put(key, value)
+                } catch (e: Exception) {
+                    // Do not log e due to potentially sensitive information
+                    LOG.error("Error serializing metric.")
+                }
+            }
+        }
+
+        // If there are any metrics put then add the attributes to the structure
+        if (metricsJson.isNotEmpty()) {
+            put("Metrics", metricsJson)
+        }
+
+        put("User", Json.encodeToString(EndpointProfileUser.serializer(), user))
     }
 
     companion object {

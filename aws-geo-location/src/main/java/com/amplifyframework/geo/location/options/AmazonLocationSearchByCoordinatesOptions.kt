@@ -23,6 +23,7 @@ class AmazonLocationSearchByCoordinatesOptions private constructor(
 ) : GeoSearchByCoordinatesOptions(builder) {
     companion object {
         @JvmStatic fun builder() = Builder()
+
         @JvmStatic fun defaults() = builder().build()
     }
 

@@ -42,6 +42,7 @@ class AWSS3StorageServiceContainerTest {
 
     private lateinit var serviceContainerHashMap: ConcurrentHashMap<String, AWSS3StorageService>
     private lateinit var serviceContainer: AWSS3StorageServiceContainer
+
     @Before
     fun setUp() {
         serviceContainerHashMap = ConcurrentHashMap()
@@ -105,7 +106,6 @@ class AWSS3StorageServiceContainerTest {
 
     @Test
     fun `get WSS3Service in container multiple times with bucket name and region creates only one service`() {
-
         val service = serviceContainer.get(bucketName, region)
         val service2 = serviceContainer.get(bucketName, region)
 

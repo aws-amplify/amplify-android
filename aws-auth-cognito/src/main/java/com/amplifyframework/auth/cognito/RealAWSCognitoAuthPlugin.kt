@@ -107,6 +107,7 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.takeWhile
 
+@Suppress("ktlint:standard:function-naming")
 internal class RealAWSCognitoAuthPlugin(
     val configuration: AuthConfiguration,
     private val authEnvironment: AuthEnvironment,

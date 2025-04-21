@@ -31,7 +31,7 @@ import javax.crypto.spec.GCMParameterSpec
 internal class LegacyKeyValueRepository(
     context: Context,
     private val sharedPreferencesName: String,
-    private var isPersistenceEnabled: Boolean = true,
+    private var isPersistenceEnabled: Boolean = true
 ) : KeyValueRepository {
 
     // TODO
@@ -83,9 +83,7 @@ internal class LegacyKeyValueRepository(
         )
     }
 
-    private fun getCacheForKey(key: String): MutableMap<String, String> {
-        return cacheFactory.getOrPut(key) { mutableMapOf() }
-    }
+    private fun getCacheForKey(key: String): MutableMap<String, String> = cacheFactory.getOrPut(key) { mutableMapOf() }
 
     /**
      * Store the key and value pair in memory and in Shared Preferences
@@ -220,21 +218,15 @@ internal class LegacyKeyValueRepository(
         return GCMParameterSpec(CIPHER_AES_GCM_NOPADDING_TAG_LENGTH_LENGTH_IN_BITS, base64DecodedIV)
     }
 
-    private fun decrypt(
-        decryptionKey: Key,
-        ivSpec: AlgorithmParameterSpec,
-        encryptedData: String?,
-    ): String? {
-        return try {
-            val encryptedDecodedData: ByteArray = Base64.decode(encryptedData, Base64.DEFAULT)
-            val cipher = Cipher.getInstance(CIPHER_AES_GCM_NOPADDING)
-            cipher.init(Cipher.DECRYPT_MODE, decryptionKey, ivSpec)
-            val decryptedData = cipher.doFinal(encryptedDecodedData)
-            String(decryptedData, Charset.forName(CHARSET_NAME))
-        } catch (ex: java.lang.Exception) {
-            // TODO Log Error in decrypting data
-            null
-        }
+    private fun decrypt(decryptionKey: Key, ivSpec: AlgorithmParameterSpec, encryptedData: String?): String? = try {
+        val encryptedDecodedData: ByteArray = Base64.decode(encryptedData, Base64.DEFAULT)
+        val cipher = Cipher.getInstance(CIPHER_AES_GCM_NOPADDING)
+        cipher.init(Cipher.DECRYPT_MODE, decryptionKey, ivSpec)
+        val decryptedData = cipher.doFinal(encryptedDecodedData)
+        String(decryptedData, Charset.forName(CHARSET_NAME))
+    } catch (ex: java.lang.Exception) {
+        // TODO Log Error in decrypting data
+        null
     }
 
     private fun generateInitializationVector(): ByteArray {
@@ -260,40 +252,35 @@ internal class LegacyKeyValueRepository(
         }
     }
 
-    private fun getDataKeyUsedInPersistentStore(key: String): String =
-        "$key$SHARED_PREFERENCES_DATA_IDENTIFIER_SUFFIX"
+    private fun getDataKeyUsedInPersistentStore(key: String): String = "$key$SHARED_PREFERENCES_DATA_IDENTIFIER_SUFFIX"
 
     @Synchronized
-    private fun retrieveEncryptionKey(encryptionKeyAlias: String): Result<Key> {
-        return LegacyKeyProvider
-            .retrieveKey(encryptionKeyAlias)
-            .onFailure {
-                LegacyKeyProvider.deleteKey(encryptionKeyAlias)
-                Result.failure<Key>(
-                    CredentialStoreError(
-                        "Key cannot be retrieved. " +
-                            "Deleting the encryption key identified by the keyAlias: $encryptionKeyAlias"
-                    )
+    private fun retrieveEncryptionKey(encryptionKeyAlias: String): Result<Key> = LegacyKeyProvider
+        .retrieveKey(encryptionKeyAlias)
+        .onFailure {
+            LegacyKeyProvider.deleteKey(encryptionKeyAlias)
+            Result.failure<Key>(
+                CredentialStoreError(
+                    "Key cannot be retrieved. " +
+                        "Deleting the encryption key identified by the keyAlias: $encryptionKeyAlias"
                 )
-            }
-    }
+            )
+        }
 
     @Synchronized
     private fun generateEncryptionKey(encryptionKeyAlias: String): Result<Key> =
         LegacyKeyProvider.generateKey(encryptionKeyAlias)
 
-    private fun encrypt(encryptionKey: Key, ivSpec: AlgorithmParameterSpec, data: String): String? {
-        return try {
-            val cipher = Cipher.getInstance(CIPHER_AES_GCM_NOPADDING)
-            cipher.init(Cipher.ENCRYPT_MODE, encryptionKey, ivSpec)
+    private fun encrypt(encryptionKey: Key, ivSpec: AlgorithmParameterSpec, data: String): String? = try {
+        val cipher = Cipher.getInstance(CIPHER_AES_GCM_NOPADDING)
+        cipher.init(Cipher.ENCRYPT_MODE, encryptionKey, ivSpec)
 
-            val encryptedData = cipher.doFinal(data.toByteArray(charset(CHARSET_NAME)))
+        val encryptedData = cipher.doFinal(data.toByteArray(charset(CHARSET_NAME)))
 
-            // TODO : Check the correct flags
-            Base64.encodeToString(encryptedData, Base64.DEFAULT)
-        } catch (ex: Exception) {
-            Log.e("Error in encrypting data. ", ex.toString())
-            null
-        }
+        // TODO : Check the correct flags
+        Base64.encodeToString(encryptedData, Base64.DEFAULT)
+    } catch (ex: Exception) {
+        Log.e("Error in encrypting data. ", ex.toString())
+        null
     }
 }

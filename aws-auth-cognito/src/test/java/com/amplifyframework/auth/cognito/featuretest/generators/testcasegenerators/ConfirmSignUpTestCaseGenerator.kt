@@ -35,8 +35,8 @@ import com.amplifyframework.auth.result.step.AuthSignUpStep
 import kotlinx.serialization.json.JsonObject
 
 object ConfirmSignUpTestCaseGenerator : SerializableProvider {
-    private val username = AuthStateJsonGenerator.username
-    private val session = AuthStateJsonGenerator.session
+    private val username = AuthStateJsonGenerator.USERNAME
+    private val session = AuthStateJsonGenerator.SESSION
     private val confirmationCode = "123"
 
     private val unregisteredUserException = UserNotFoundException.invoke {}

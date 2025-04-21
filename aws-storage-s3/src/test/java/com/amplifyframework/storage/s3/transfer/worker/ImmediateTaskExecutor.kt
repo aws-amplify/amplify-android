@@ -26,15 +26,11 @@ class ImmediateTaskExecutor : TaskExecutor {
         runnable?.run()
     }
 
-    override fun getMainThreadExecutor(): Executor {
-        return mSynchronousExecutor
-    }
+    override fun getMainThreadExecutor(): Executor = mSynchronousExecutor
 
     override fun executeOnBackgroundThread(runnable: Runnable?) {
         runnable?.let { mSerialExecutor.execute(it) }
     }
 
-    override fun getBackgroundExecutor(): SerialExecutor {
-        return mSerialExecutor
-    }
+    override fun getBackgroundExecutor(): SerialExecutor = mSerialExecutor
 }

@@ -148,16 +148,14 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     private fun createTargetingClient(
         androidAppDetails: AndroidAppDetails,
         androidDeviceDetails: AndroidDeviceDetails
-    ): TargetingClient {
-        return TargetingClient(
-            context,
-            pinpointClient,
-            store,
-            preferences,
-            androidAppDetails,
-            androidDeviceDetails
-        )
-    }
+    ): TargetingClient = TargetingClient(
+        context,
+        pinpointClient,
+        store,
+        preferences,
+        androidAppDetails,
+        androidDeviceDetails
+    )
 
     private fun createAnalyticsClient(
         androidAppDetails: AndroidAppDetails,
@@ -200,20 +198,17 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         }
     }
 
-    override fun identifyUser(
-        userId: String,
-        onSuccess: Action,
-        onError: Consumer<PushNotificationsException>
-    ) = _identifyUser(userId, null, onSuccess, onError)
+    override fun identifyUser(userId: String, onSuccess: Action, onError: Consumer<PushNotificationsException>) =
+        doIdentifyUser(userId, null, onSuccess, onError)
 
     override fun identifyUser(
         userId: String,
         profile: UserProfile,
         onSuccess: Action,
         onError: Consumer<PushNotificationsException>
-    ) = _identifyUser(userId, profile, onSuccess, onError)
+    ) = doIdentifyUser(userId, profile, onSuccess, onError)
 
-    private fun _identifyUser(
+    private fun doIdentifyUser(
         userId: String,
         profile: UserProfile?,
         onSuccess: Action,
@@ -308,9 +303,8 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         }
     }
 
-    override fun shouldHandleNotification(
-        payload: NotificationPayload
-    ) = PinpointNotificationPayload.isPinpointNotificationPayload(payload)
+    override fun shouldHandleNotification(payload: NotificationPayload) =
+        PinpointNotificationPayload.isPinpointNotificationPayload(payload)
 
     override fun handleNotificationReceived(
         payload: NotificationPayload,

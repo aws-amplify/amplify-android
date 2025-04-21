@@ -34,9 +34,8 @@ internal sealed class FetchAuthSessionState : State {
         private val fetchAuthSessionActions: FetchAuthSessionActions
     ) : StateMachineResolver<FetchAuthSessionState> {
         override val defaultState = NotStarted()
-        private fun asFetchAuthSessionEvent(event: StateMachineEvent): FetchAuthSessionEvent.EventType? {
-            return (event as? FetchAuthSessionEvent)?.eventType
-        }
+        private fun asFetchAuthSessionEvent(event: StateMachineEvent): FetchAuthSessionEvent.EventType? =
+            (event as? FetchAuthSessionEvent)?.eventType
 
         override fun resolve(
             oldState: FetchAuthSessionState,

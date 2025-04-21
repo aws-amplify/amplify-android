@@ -136,18 +136,16 @@ internal class CloudWatchLoggingDatabase(
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    fun getDatabasePassphrase(): String {
-        return amplifyKeyValueRepository.get(passphraseKey) ?: kotlin.run {
-            val passphrase = UUID.randomUUID().toString()
-            // If the database is restored from backup and the passphrase key is not present,
-            // this would result in the database file not getting loaded.
-            // To avoid this error, check to see if the database file exists and, if so, delete it and then recreate the database.
-            val path = context.getDatabasePath(CloudWatchDatabaseHelper.DATABASE_NAME)
-            if (path.exists()) {
-                path.delete()
-            }
-            amplifyKeyValueRepository.put(passphraseKey, passphrase)
-            passphrase
+    fun getDatabasePassphrase(): String = amplifyKeyValueRepository.get(passphraseKey) ?: kotlin.run {
+        val passphrase = UUID.randomUUID().toString()
+        // If the database is restored from backup and the passphrase key is not present,
+        // this would result in the database file not getting loaded.
+        // To avoid this error, check to see if the database file exists and, if so, delete it and then recreate the database.
+        val path = context.getDatabasePath(CloudWatchDatabaseHelper.DATABASE_NAME)
+        if (path.exists()) {
+            path.delete()
         }
+        amplifyKeyValueRepository.put(passphraseKey, passphrase)
+        passphrase
     }
 }

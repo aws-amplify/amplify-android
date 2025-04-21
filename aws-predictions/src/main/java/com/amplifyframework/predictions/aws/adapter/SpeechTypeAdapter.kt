@@ -30,25 +30,23 @@ object SpeechTypeAdapter {
      * @return Amplify's [SpeechType] enum
      */
     @JvmStatic
-    fun fromComprehend(tag: String): SpeechType {
-        return when (PartOfSpeechTagType.fromValue(tag)) {
-            PartOfSpeechTagType.Adj -> SpeechType.ADJECTIVE
-            PartOfSpeechTagType.Adp -> SpeechType.ADPOSITION
-            PartOfSpeechTagType.Adv -> SpeechType.ADVERB
-            PartOfSpeechTagType.Aux -> SpeechType.AUXILIARY
-            PartOfSpeechTagType.Cconj -> SpeechType.COORDINATING_CONJUNCTION
-            PartOfSpeechTagType.Det -> SpeechType.DETERMINER
-            PartOfSpeechTagType.Intj -> SpeechType.INTERJECTION
-            PartOfSpeechTagType.Noun -> SpeechType.NOUN
-            PartOfSpeechTagType.Num -> SpeechType.NUMERAL
-            PartOfSpeechTagType.Part -> SpeechType.PARTICLE
-            PartOfSpeechTagType.Pron -> SpeechType.PRONOUN
-            PartOfSpeechTagType.Propn -> SpeechType.PROPER_NOUN
-            PartOfSpeechTagType.Punct -> SpeechType.PUNCTUATION
-            PartOfSpeechTagType.Sconj -> SpeechType.SUBORDINATING_CONJUNCTION
-            PartOfSpeechTagType.Sym -> SpeechType.SYMBOL
-            PartOfSpeechTagType.Verb -> SpeechType.VERB
-            else -> SpeechType.UNKNOWN
-        }
+    fun fromComprehend(tag: String): SpeechType = when (PartOfSpeechTagType.fromValue(tag)) {
+        PartOfSpeechTagType.Adj -> SpeechType.ADJECTIVE
+        PartOfSpeechTagType.Adp -> SpeechType.ADPOSITION
+        PartOfSpeechTagType.Adv -> SpeechType.ADVERB
+        PartOfSpeechTagType.Aux -> SpeechType.AUXILIARY
+        PartOfSpeechTagType.Cconj -> SpeechType.COORDINATING_CONJUNCTION
+        PartOfSpeechTagType.Det -> SpeechType.DETERMINER
+        PartOfSpeechTagType.Intj -> SpeechType.INTERJECTION
+        PartOfSpeechTagType.Noun -> SpeechType.NOUN
+        PartOfSpeechTagType.Num -> SpeechType.NUMERAL
+        PartOfSpeechTagType.Part -> SpeechType.PARTICLE
+        PartOfSpeechTagType.Pron -> SpeechType.PRONOUN
+        PartOfSpeechTagType.Propn -> SpeechType.PROPER_NOUN
+        PartOfSpeechTagType.Punct -> SpeechType.PUNCTUATION
+        PartOfSpeechTagType.Sconj -> SpeechType.SUBORDINATING_CONJUNCTION
+        PartOfSpeechTagType.Sym -> SpeechType.SYMBOL
+        PartOfSpeechTagType.Verb -> SpeechType.VERB
+        else -> SpeechType.UNKNOWN
     }
 }

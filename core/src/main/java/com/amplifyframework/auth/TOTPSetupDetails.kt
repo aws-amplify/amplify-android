@@ -35,10 +35,6 @@ data class TOTPSetupDetails(
      * @param accountName for TOTP manager. Defaults to stored username value.
      */
     @JvmOverloads
-    fun getSetupURI(
-        appName: String,
-        accountName: String = username
-    ): Uri {
-        return Uri.parse("otpauth://totp/$appName:$accountName?secret=$sharedSecret&issuer=$appName")
-    }
+    fun getSetupURI(appName: String, accountName: String = username): Uri =
+        Uri.parse("otpauth://totp/$appName:$accountName?secret=$sharedSecret&issuer=$appName")
 }

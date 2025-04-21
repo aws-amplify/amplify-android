@@ -36,9 +36,5 @@ interface Hub {
      *               if not provided, a "match all" criteria is used
      * @return A flow of matching Hub events
      */
-    fun subscribe(
-        channel: HubChannel,
-        filter: HubEventFilter = HubEventFilters.always()
-    ):
-        Flow<HubEvent<*>>
+    fun subscribe(channel: HubChannel, filter: HubEventFilter = HubEventFilters.always()): Flow<HubEvent<*>>
 }

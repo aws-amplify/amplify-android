@@ -19,10 +19,7 @@ import android.content.Context
 import com.amplifyframework.core.store.AmplifyKeyValueRepository
 import com.amplifyframework.core.store.KeyValueRepository
 
-internal class AuthCredentialStore(
-    context: Context,
-    keyValueStoreIdentifierSuffix: String
-) {
+internal class AuthCredentialStore(context: Context, keyValueStoreIdentifierSuffix: String) {
     private val keyValueStoreIdentifier = "com.amplify.credentialStore.$keyValueStoreIdentifierSuffix"
 
     private val keyValue: KeyValueRepository = AmplifyKeyValueRepository(context, keyValueStoreIdentifier)

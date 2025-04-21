@@ -23,15 +23,12 @@ internal class S3StorageTransferClientProvider(
 ) : StorageTransferClientProvider {
     companion object {
         @JvmStatic
-        fun getS3Client(region: String, authCredentialsProvider: AuthCredentialsProvider): S3Client {
-            return S3Client {
-                setHttpEngine()
-                this.region = region
-                this.credentialsProvider = authCredentialsProvider
-            }
+        fun getS3Client(region: String, authCredentialsProvider: AuthCredentialsProvider): S3Client = S3Client {
+            setHttpEngine()
+            this.region = region
+            this.credentialsProvider = authCredentialsProvider
         }
     }
-    override fun getStorageTransferClient(region: String?, bucketName: String?): S3Client {
-        return createS3Client(region, bucketName)
-    }
+    override fun getStorageTransferClient(region: String?, bucketName: String?): S3Client =
+        createS3Client(region, bucketName)
 }

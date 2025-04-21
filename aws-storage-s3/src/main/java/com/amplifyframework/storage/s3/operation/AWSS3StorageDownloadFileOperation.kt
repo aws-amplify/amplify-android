@@ -177,9 +177,7 @@ class AWSS3StorageDownloadFileOperation @JvmOverloads internal constructor(
         }
     }
 
-    override fun getTransferState(): TransferState {
-        return transferObserver?.transferState ?: TransferState.UNKNOWN
-    }
+    override fun getTransferState(): TransferState = transferObserver?.transferState ?: TransferState.UNKNOWN
 
     override fun setOnSuccess(onSuccess: Consumer<StorageDownloadFileResult>?) {
         super.setOnSuccess(onSuccess)

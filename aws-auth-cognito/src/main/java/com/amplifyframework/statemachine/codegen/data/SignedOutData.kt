@@ -18,14 +18,15 @@ package com.amplifyframework.statemachine.codegen.data
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
+// TODO: Define Serializer for Errors
 @Serializable
 internal data class SignedOutData(
     val lastKnownUsername: String? = null,
-    @Transient // TODO: Define Serializer for Errors
+    @Transient
     val hostedUIErrorData: HostedUIErrorData? = null,
-    @Transient // TODO: Define Serializer for Errors
+    @Transient
     val globalSignOutErrorData: GlobalSignOutErrorData? = null,
-    @Transient // TODO: Define Serializer for Errors
+    @Transient
     val revokeTokenErrorData: RevokeTokenErrorData? = null
 ) {
     val hasError: Boolean = hostedUIErrorData != null || globalSignOutErrorData != null || revokeTokenErrorData != null

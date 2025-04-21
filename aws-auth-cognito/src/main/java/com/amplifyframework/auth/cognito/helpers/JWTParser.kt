@@ -35,16 +35,14 @@ internal object JWTParser {
      * @param jwt valid JSON Web Token as String.
      * @return header as a JSONObject.
      */
-    fun getHeader(jwt: String): JSONObject {
-        return try {
-            validateJWT(jwt)
-            val sectionDecoded =
-                Base64.decode(jwt.split(".").toTypedArray()[HEADER], Base64.URL_SAFE)
-            val jwtSection = String(sectionDecoded, UTF_8)
-            JSONObject(jwtSection)
-        } catch (e: Exception) {
-            throw UnknownException("${e.localizedMessage ?: ""}, error in parsing JSON")
-        }
+    fun getHeader(jwt: String): JSONObject = try {
+        validateJWT(jwt)
+        val sectionDecoded =
+            Base64.decode(jwt.split(".").toTypedArray()[HEADER], Base64.URL_SAFE)
+        val jwtSection = String(sectionDecoded, UTF_8)
+        JSONObject(jwtSection)
+    } catch (e: Exception) {
+        throw UnknownException("${e.localizedMessage ?: ""}, error in parsing JSON")
     }
 
     /**
@@ -53,16 +51,14 @@ internal object JWTParser {
      * @param jwt valid JSON Web Token as String.
      * @return payload as a JSONObject.
      */
-    fun getPayload(jwt: String): JSONObject {
-        return try {
-            validateJWT(jwt)
-            val payload = jwt.split(".").toTypedArray()[PAYLOAD]
-            val sectionDecoded = Base64.decode(payload, Base64.URL_SAFE)
-            val jwtSection = String(sectionDecoded, UTF_8)
-            JSONObject(jwtSection)
-        } catch (e: Exception) {
-            throw UnknownException("${e.localizedMessage ?: ""}, error in parsing JSON")
-        }
+    fun getPayload(jwt: String): JSONObject = try {
+        validateJWT(jwt)
+        val payload = jwt.split(".").toTypedArray()[PAYLOAD]
+        val sectionDecoded = Base64.decode(payload, Base64.URL_SAFE)
+        val jwtSection = String(sectionDecoded, UTF_8)
+        JSONObject(jwtSection)
+    } catch (e: Exception) {
+        throw UnknownException("${e.localizedMessage ?: ""}, error in parsing JSON")
     }
 
     /**
@@ -71,15 +67,13 @@ internal object JWTParser {
      * @param jwt valid JSON Web Token as String.
      * @return signature as a String.
      */
-    fun getSignature(jwt: String): String {
-        return try {
-            validateJWT(jwt)
-            val sectionDecoded =
-                Base64.decode(jwt.split(".").toTypedArray()[SIGNATURE], Base64.URL_SAFE)
-            String(sectionDecoded, UTF_8)
-        } catch (e: Exception) {
-            throw UnknownException("${e.localizedMessage ?: ""}, error in parsing JSON")
-        }
+    fun getSignature(jwt: String): String = try {
+        validateJWT(jwt)
+        val sectionDecoded =
+            Base64.decode(jwt.split(".").toTypedArray()[SIGNATURE], Base64.URL_SAFE)
+        String(sectionDecoded, UTF_8)
+    } catch (e: Exception) {
+        throw UnknownException("${e.localizedMessage ?: ""}, error in parsing JSON")
     }
 
     /**
@@ -108,12 +102,10 @@ internal object JWTParser {
      * @param key Key for a claim, e.g., "jti" or "aud"
      * @return True if JWT is a valid JWT and contains the requested claim, false otherwise
      */
-    fun hasClaim(jwt: String, key: String?): Boolean {
-        return try {
-            getPayload(jwt).has(key)
-        } catch (e: Exception) {
-            false
-        }
+    fun hasClaim(jwt: String, key: String?): Boolean = try {
+        getPayload(jwt).has(key)
+    } catch (e: Exception) {
+        false
     }
 
     /**

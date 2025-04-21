@@ -36,17 +36,13 @@ internal object SessionHelper {
      * Returns the username set in the access token.
      * @return Username.
      */
-    fun getUsername(token: String): String? {
-        return JWTParser.getClaim(token, "username")
-    }
+    fun getUsername(token: String): String? = JWTParser.getClaim(token, "username")
 
     /**
      * Returns the usersub set in the access token.
      * @return usersub
      */
-    fun getUserSub(token: String): String? {
-        return JWTParser.getClaim(token, "sub")
-    }
+    fun getUserSub(token: String): String? = JWTParser.getClaim(token, "sub")
 
     /**
      * Returns true if the access and id tokens have not expired.
@@ -57,9 +53,10 @@ internal object SessionHelper {
         return when {
             userPoolTokens.idToken == null -> false
             userPoolTokens.accessToken == null -> false
-            else -> currentTimeStamp < getExpiration(userPoolTokens.idToken) && currentTimeStamp < getExpiration(
-                userPoolTokens.accessToken
-            )
+            else -> currentTimeStamp < getExpiration(userPoolTokens.idToken) &&
+                currentTimeStamp < getExpiration(
+                    userPoolTokens.accessToken
+                )
         }
     }
 

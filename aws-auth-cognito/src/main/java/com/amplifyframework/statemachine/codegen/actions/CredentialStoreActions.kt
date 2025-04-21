@@ -23,9 +23,6 @@ internal interface CredentialStoreActions {
     fun migrateLegacyCredentialStoreAction(): Action
     fun clearCredentialStoreAction(credentialType: CredentialType): Action
     fun loadCredentialStoreAction(credentialType: CredentialType): Action
-    fun storeCredentialsAction(
-        credentialType: CredentialType,
-        credentials: AmplifyCredential
-    ): Action
+    fun storeCredentialsAction(credentialType: CredentialType, credentials: AmplifyCredential): Action
     fun moveToIdleStateAction(): Action
 }
