@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 
 internal class ConnectionTimeoutTimer(val onTimeout: () -> Unit) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    private var timeoutInMillis: Long = 30_000L
+    private var timeoutInMillis: Long = 300_000L
     private var timeoutJob: Job? = null
 
     fun resetTimeoutTimer(timeoutInMillis: Long = this.timeoutInMillis) {
@@ -35,7 +35,7 @@ internal class ConnectionTimeoutTimer(val onTimeout: () -> Unit) {
         timeoutJob?.cancel() // Cancel existing timer if any
         timeoutJob = scope.launch {
             delay(timeoutInMillis)
-            // If this code executes, it means no events were received for 30 seconds
+            // If this code executes, it means no events were received for the duration of timeoutInMillis
             onTimeout()
         }
     }

@@ -31,6 +31,10 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -50,8 +54,9 @@ internal class EventsWebSocket(
 
     private lateinit var webSocket: WebSocket
     @Volatile internal var isClosed = false
-    private var disconnectReason: DisconnectReason? = null
+    internal var disconnectReason: WebSocketDisconnectReason? = null
     private val connectionTimeoutTimer = ConnectionTimeoutTimer(onTimeout = ::onTimeout)
+    val preAuthPublishHeaders: Map<String, String> by lazy { mapOf(HeaderKeys.HOST to eventsEndpoints.host) }
     private val logger = loggerProvider?.getLogger(TAG)
 
     @Throws(ConnectException::class)
@@ -75,7 +80,7 @@ internal class EventsWebSocket(
                 webSocket.cancel()
                 throw ConnectException(connectionResponse.reason.throwable)
             }
-            is WebSocketMessage.Received.ConnectionError -> {
+            is WebSocketMessage.ErrorContainer -> {
                 webSocket.cancel()
                 throw ConnectException(
                     connectionResponse.errors.firstOrNull()?.toEventsException()
@@ -91,7 +96,7 @@ internal class EventsWebSocket(
     }
 
     suspend fun disconnect(flushEvents: Boolean) = coroutineScope {
-        disconnectReason = DisconnectReason.UserInitiated
+        disconnectReason = WebSocketDisconnectReason.UserInitiated
         val deferredClosedResponse = async { getClosedResponse() }
         when (flushEvents) {
             true -> webSocket.close(NORMAL_CLOSE_CODE, "User initiated disconnect")
@@ -101,8 +106,12 @@ internal class EventsWebSocket(
     }
 
     override fun onOpen(webSocket: WebSocket, response: Response) {
-        logger?.debug ("onOpen: sending connection init")
-        send(WebSocketMessage.Send.ConnectionInit())
+        logger?.debug("onOpen: sending connection init")
+        try {
+            send(WebSocketMessage.Send.ConnectionInit())
+        } catch (e: Exception) {
+            logger?.error(e) { "onOpen: exception encountered" } // do nothing. closure will handle error
+        }
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
@@ -110,7 +119,7 @@ internal class EventsWebSocket(
         logger?.debug { "Websocket onMessage: $text" }
         try {
             val eventMessage = json.decodeFromString<WebSocketMessage.Received>(text)
-            _events.tryEmit(eventMessage)
+            emitEvent(eventMessage)
         } catch (e: Exception) {
             logger?.error(e) { "Websocket onMessage: exception encountered" }
         }
@@ -128,27 +137,69 @@ internal class EventsWebSocket(
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
         // Events api sends normal close code even in failure
         // so inspecting code/reason isn't helpful as it should be
-        logger?.debug {"onClosed: reason = $disconnectReason" }
+        logger?.debug { "onClosed: reason = $disconnectReason" }
         handleClosed()
     }
 
     private fun onTimeout() {
-        disconnectReason = DisconnectReason.Timeout
+        disconnectReason = WebSocketDisconnectReason.Timeout
         webSocket.cancel()
     }
 
     private fun handleClosed() {
         connectionTimeoutTimer.stop()
-        _events.tryEmit(
-            WebSocketMessage.Closed(reason = disconnectReason ?: DisconnectReason.Service())
-        )
+        emitEvent(WebSocketMessage.Closed(reason = disconnectReason ?: WebSocketDisconnectReason.Service()))
         isClosed = true
     }
 
-    inline fun <reified T : WebSocketMessage> send(webSocketMessage: T) {
-        val message = json.encodeToString(webSocketMessage)
-        logger?.debug { "send: ${webSocketMessage::class.java}" }
-        webSocket.send(message)
+    // returns true if websocket queued up event. false if failed
+    internal suspend inline fun <reified T : WebSocketMessage.Send> sendWithAuthorizer(
+        webSocketMessage: T,
+        authorizer: AppSyncAuthorizer
+    ): Boolean {
+        // The base message will not include id, type, or authorization fields
+        val baseMessageJson = json.encodeToJsonElement(webSocketMessage).jsonObject
+
+        // Create the authorization headers first
+        val authHeaders = authorizer.getAuthorizationHeaders(object : AppSyncRequest {
+            override val method: AppSyncRequest.HttpMethod = AppSyncRequest.HttpMethod.POST
+            override val url: String = eventsEndpoints.restEndpoint.toString()
+            override val headers: Map<String, String> = preAuthPublishHeaders
+            override val body: String = json.encodeToString(baseMessageJson)
+        })
+
+        // We reconstruct the message, adding in the id, type, and authorization fields
+        val message = json.encodeToString(
+            JsonObject(
+                buildMap {
+                    putAll(baseMessageJson)
+                    put("id", JsonPrimitive(webSocketMessage.id))
+                    put("type", JsonPrimitive(webSocketMessage.type))
+                    put(
+                        "authorization",
+                        JsonObject((preAuthPublishHeaders + authHeaders).mapValues { JsonPrimitive(it.value) })
+                    )
+                }
+            )
+        )
+
+        return send(message)
+    }
+
+    // returns true if websocket queued up event. false if failed
+    inline fun <reified T : WebSocketMessage> send(webSocketMessage: T): Boolean {
+        return send(json.encodeToString(webSocketMessage))
+    }
+
+    // returns true if websocket queued up event. false if failed
+    private fun send(eventJson: String): Boolean {
+        logger?.debug { "send: $eventJson" }
+        return webSocket.send(eventJson)
+    }
+
+    private fun emitEvent(event: WebSocketMessage) {
+        logger?.debug("emit $event")
+        _events.tryEmit(event)
     }
 
     companion object {
@@ -205,10 +256,4 @@ private class ConnectAppSyncRequest(
         get() = preAuthRequest.headers.toMap()
     override val body: String
         get() = "{}"
-}
-
-internal sealed class DisconnectReason(val throwable: Throwable?) {
-    data object UserInitiated : DisconnectReason(null)
-    data object Timeout : DisconnectReason(EventsException("Connection timed out."))
-    class Service(throwable: Throwable? = null) : DisconnectReason(throwable)
 }
