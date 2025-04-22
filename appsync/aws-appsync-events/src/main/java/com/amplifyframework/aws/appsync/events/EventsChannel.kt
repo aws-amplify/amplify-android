@@ -15,7 +15,6 @@
 package com.amplifyframework.aws.appsync.events
 
 import com.amplifyframework.aws.appsync.core.AppSyncAuthorizer
-import com.amplifyframework.aws.appsync.core.AppSyncRequest
 import com.amplifyframework.aws.appsync.events.data.ChannelAuthorizers
 import com.amplifyframework.aws.appsync.events.data.ConnectionClosedException
 import com.amplifyframework.aws.appsync.events.data.EventsException
@@ -34,7 +33,9 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * A class to manage channel subscriptions and publishes
@@ -45,7 +46,6 @@ import kotlinx.serialization.json.JsonElement
 class EventsChannel internal constructor(
     val name: String,
     val authorizers: ChannelAuthorizers,
-    private val endpoints: EventsEndpoints,
     private val eventsWebSocketProvider: EventsWebSocketProvider
 ) {
 
@@ -83,12 +83,12 @@ class EventsChannel internal constructor(
      * @param authorizer for the publish call. If not provided, the EventChannel publish authorizer will be used.
      * @return result of publish.
      */
-    @Throws(EventsException::class)
+    @Throws(Exception::class)
     suspend fun publish(
         event: JsonElement,
         authorizer: AppSyncAuthorizer = this.authorizers.publishAuthorizer
     ): PublishResult {
-        TODO("Need to implement")
+        return publish(listOf(event), authorizer)
     }
 
     /**
@@ -98,12 +98,43 @@ class EventsChannel internal constructor(
      * @param authorizer for the publish call. If not provided, the EventChannel publish authorizer will be used.
      * @return result of publish.
      */
-    @Throws(EventsException::class)
+    @Throws(Exception::class)
     suspend fun publish(
         events: List<JsonElement>,
         authorizer: AppSyncAuthorizer = this.authorizers.publishAuthorizer
-    ): PublishResult {
-        TODO("Need to implement")
+    ): PublishResult = coroutineScope {
+        val publishId = UUID.randomUUID().toString()
+        val publishMessage = WebSocketMessage.Send.Publish(
+            id = publishId,
+            channel = name,
+            events = JsonArray(events.map { JsonPrimitive(it.toString()) }),
+        )
+
+        val webSocket = eventsWebSocketProvider.getConnectedWebSocket()
+        val deferredResponse = async { getPublishResponse(webSocket, publishId) }
+
+        val queued = webSocket.sendWithAuthorizer(publishMessage, authorizer)
+        if (!queued) {
+            throw webSocket.disconnectReason?.toCloseException() ?: ConnectionClosedException()
+        }
+
+        return@coroutineScope when (val response = deferredResponse.await()) {
+            is WebSocketMessage.Received.PublishSuccess -> {
+                PublishResult(response.successfulEvents, response.failedEvents)
+            }
+
+            is WebSocketMessage.ErrorContainer -> {
+                val fallbackMessage = "Failed to publish event(s)"
+                throw response.errors.firstOrNull()?.toEventsException(fallbackMessage)
+                    ?: EventsException(fallbackMessage)
+            }
+
+            is WebSocketMessage.Closed -> {
+                throw response.reason.toCloseException()
+            }
+
+            else -> throw EventsException("Received unexpected publish response of type: ${response::class}")
+        }
     }
 
     private fun createSubscriptionEventDataFlow(subscriptionHolder: SubscriptionHolder): Flow<EventsMessage> {
@@ -116,11 +147,12 @@ class EventsChannel internal constructor(
                         emit(EventsMessage(it.event))
                     }
                     it is WebSocketMessage.Closed -> {
-                        if (it.reason is DisconnectReason.UserInitiated) {
-                            throw UserClosedConnectionException()
-                        } else {
-                            throw ConnectionClosedException(it.reason.throwable)
-                        }
+                        throw it.reason.toCloseException()
+                    }
+                    it is WebSocketMessage.ErrorContainer && it.id == subscriptionHolder.id -> {
+                        val exceptionMessage = "Received error for subscription"
+                        throw it.errors.firstOrNull()?.toEventsException(exceptionMessage)
+                            ?: EventsException(exceptionMessage)
                     }
                     else -> Unit
                 }
@@ -133,24 +165,31 @@ class EventsChannel internal constructor(
         subscriptionId: String,
         authorizer: AppSyncAuthorizer
     ): Boolean = coroutineScope {
+        // create a deferred holder for subscription response
         val deferredSubscriptionResponse = async { getSubscriptionResponse(webSocket, subscriptionId) }
 
         // Publish subscription to websocket
-        publishSubscription(webSocket, subscriptionId, authorizer)
+        val queued = webSocket.sendWithAuthorizer(
+            webSocketMessage = WebSocketMessage.Send.Subscription.Subscribe(id = subscriptionId, channel = name),
+            authorizer = authorizer
+        )
+        if (!queued) {
+            throw webSocket.disconnectReason?.toCloseException() ?: ConnectionClosedException()
+        }
 
         // Wait for subscription result to return
         when (val response = deferredSubscriptionResponse.await()) {
             is WebSocketMessage.Received.Subscription.SubscribeSuccess -> {
                 return@coroutineScope true
             }
-            is WebSocketMessage.Received.Subscription.SubscribeError -> {
+            is WebSocketMessage.ErrorContainer -> {
                 val exceptionMessage = "Subscribe failed for channel: $name"
                 throw response.errors.firstOrNull()
                     ?.toEventsException(exceptionMessage)
                     ?: EventsException(exceptionMessage)
             }
-            is WebSocketMessage.Received.ConnectionClosed -> {
-                throw ConnectionClosedException()
+            is WebSocketMessage.Closed -> {
+                throw response.reason.toCloseException()
             }
             else -> throw EventsException("Received unexpected subscription response of type: ${response::class}")
         }
@@ -160,34 +199,22 @@ class EventsChannel internal constructor(
         return webSocket.events.first {
             when {
                 it is WebSocketMessage.Received.Subscription && it.id == subscriptionId -> true
-                it is WebSocketMessage.Received.ConnectionClosed -> true
+                it is WebSocketMessage.ErrorContainer && it.id == subscriptionId -> true
+                it is WebSocketMessage.Closed -> true
                 else -> false
             }
         }
     }
 
-    private suspend fun publishSubscription(
-        webSocket: EventsWebSocket,
-        subscriptionId: String,
-        authorizer: AppSyncAuthorizer
-    ) {
-        val subscribeMessage = WebSocketMessage.Send.Subscription.Subscribe(
-            id = subscriptionId,
-            channel = name,
-            authorization = authorizer.getAuthorizationHeaders(
-                object : AppSyncRequest {
-                    override val url: String
-                        get() = endpoints.restEndpoint.toString()
-                    override val body: String?
-                        get() = null
-                    override val headers: Map<String, String>
-                        get() = emptyMap()
-                    override val method: AppSyncRequest.HttpMethod
-                        get() = AppSyncRequest.HttpMethod.GET
-                }
-            )
-        )
-        webSocket.send(subscribeMessage)
+    private suspend fun getPublishResponse(webSocket: EventsWebSocket, publishId: String): WebSocketMessage {
+        return webSocket.events.first {
+            when {
+                it is WebSocketMessage.Received.PublishSuccess && it.id == publishId -> true
+                it is WebSocketMessage.ErrorContainer && it.id == publishId -> true
+                it is WebSocketMessage.Closed -> true
+                else -> false
+            }
+        }
     }
 
     private fun completeSubscription(subscriptionHolder: SubscriptionHolder, throwable: Throwable?) {
@@ -198,7 +225,11 @@ class EventsChannel internal constructor(
 
         if (currentWebSocket != null && isSubscribed && !isDisconnected) {
             // Unsubscribe from channel when flow is completed
-            currentWebSocket.send(WebSocketMessage.Send.Subscription.Unsubscribe(subscriptionHolder.id))
+            try {
+                currentWebSocket.send(WebSocketMessage.Send.Subscription.Unsubscribe(subscriptionHolder.id))
+            } catch (e: Exception) {
+                // do nothing with a failed unsubscribe post
+            }
         }
     }
 }

@@ -15,49 +15,61 @@
 
 package com.amplifyframework.aws.appsync.events.data
 
-import com.amplifyframework.aws.appsync.events.DisconnectReason
+import com.amplifyframework.aws.appsync.events.WebSocketDisconnectReason
+import java.util.UUID
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 
 @Serializable
 internal sealed class WebSocketMessage {
     internal sealed class Send : WebSocketMessage() {
+        abstract val id: String
         abstract val type: String
 
+        /**
+         * id is not necessary for ConnectionInit. Marked transient so that it isn't included in serialized json
+         */
         @Serializable
         internal class ConnectionInit : Send() {
             override val type = "connection_init"
+            @Transient override val id = UUID.randomUUID().toString()
         }
 
         @Serializable
         sealed class Subscription : Send() {
-            abstract val id: String
 
+            /**
+             * We mark id and type as transient because they can't be included when provided for sigv4 signature
+             * We will later add id and type in addition to authorization values needed to send over the websocket
+             */
             @Serializable
             internal data class Subscribe(
-                override val id: String,
+                @Transient override val id: String = UUID.randomUUID().toString(),
                 val channel: String,
-                val authorization: Map<String, String>
             ) : Subscription() {
-                override val type = "subscribe"
+                @Transient override val type = "subscribe"
             }
 
             @Serializable
             internal data class Unsubscribe(override val id: String) : Subscription() {
                 override val type = "unsubscribe"
             }
+        }
 
-            @Serializable
-            internal data class Publish(
-                val id: String,
-                val channel: String,
-                val events: JsonArray,
-                val authorization: Map<String, String>
-            ) : Send() {
-                override val type = "publish"
-            }
+        /**
+         * We mark id and type as transient because they can't be included when provided for sigv4 signature
+         * We will later add id and type in addition to authorization values needed to send over the websocket
+         */
+        @Serializable
+        internal data class Publish(
+            @Transient override val id: String = UUID.randomUUID().toString(),
+            val channel: String,
+            val events: JsonArray,
+        ) : Send() {
+            @Transient override val type = "publish"
         }
     }
 
@@ -72,9 +84,6 @@ internal sealed class WebSocketMessage {
 
         @Serializable @SerialName("connection_error")
         internal data class ConnectionError(val errors: List<WebSocketError>) : Received()
-
-        @Serializable @SerialName("connection_closed")
-        internal data object ConnectionClosed : Received()
 
         @Serializable
         internal sealed class Subscription : Received() {
@@ -92,28 +101,43 @@ internal sealed class WebSocketMessage {
             @Serializable @SerialName("subscribe_error")
             internal data class SubscribeError(
                 override val id: String,
-                val errors: List<WebSocketError>
-            ) : Subscription()
+                override val errors: List<WebSocketError>
+            ) : Subscription(), ErrorContainer
 
             @Serializable @SerialName("unsubscribe_error")
             internal data class UnsubscribeError(
                 override val id: String,
-                val errors: List<WebSocketError>
-            ) : Subscription()
-
-            @Serializable @SerialName("publish_success")
-            internal data class PublishSuccess(
-                override val id: String,
-                @SerialName("successful") val successfulEvents: List<SuccessfulEvent>,
-                @SerialName("failed") val failedEvents: List<FailedEvent>
-            ) : Subscription()
+                override val errors: List<WebSocketError>
+            ) : Subscription(), ErrorContainer
         }
 
+        @Serializable @SerialName("publish_success")
+        internal data class PublishSuccess(
+            override val id: String,
+            @SerialName("successful") val successfulEvents: List<SuccessfulEvent>,
+            @SerialName("failed") val failedEvents: List<FailedEvent>
+        ) : Subscription()
+
+        @Serializable @SerialName("publish_error")
+        data class PublishError(
+            override val id: String? = null,
+            override val errors: List<WebSocketError>
+        ) : Received(), ErrorContainer
+
         @Serializable @SerialName("error")
-        data class Error(val errors: List<WebSocketError>)
+        data class Error(
+            override val id: String? = null,
+            override val errors: List<WebSocketError>
+        ) : Received(), ErrorContainer
     }
 
-    internal data class Closed(val reason: DisconnectReason) : WebSocketMessage()
+    internal data class Closed(val reason: WebSocketDisconnectReason) : WebSocketMessage()
+
+    // All errors contain an id and errors list
+    internal interface ErrorContainer {
+        val id: String?
+        val errors: List<WebSocketError>
+    }
 }
 
 @Serializable

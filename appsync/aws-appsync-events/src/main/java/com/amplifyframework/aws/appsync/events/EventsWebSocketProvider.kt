@@ -40,7 +40,6 @@ internal class EventsWebSocketProvider(
     val existingWebSocket: EventsWebSocket?
         get() = connectionResultReference.get()?.getOrNull()
 
-
     suspend fun getConnectedWebSocket(): EventsWebSocket = getConnectedWebSocketResult().getOrThrow()
 
     private suspend fun getConnectedWebSocketResult(): Result<EventsWebSocket> = coroutineScope {

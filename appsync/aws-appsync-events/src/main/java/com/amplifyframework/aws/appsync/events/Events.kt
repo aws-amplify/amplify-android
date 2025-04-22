@@ -122,7 +122,7 @@ class Events @VisibleForTesting internal constructor(
     fun channel(
         channelName: String,
         authorizers: ChannelAuthorizers = this.defaultChannelAuthorizers,
-    ) = EventsChannel(channelName, authorizers, endpoints, eventsWebSocketProvider)
+    ) = EventsChannel(channelName, authorizers, eventsWebSocketProvider)
 
     /**
      * Method to disconnect from all channels.
