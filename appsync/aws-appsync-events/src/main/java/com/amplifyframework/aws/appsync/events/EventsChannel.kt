@@ -22,6 +22,7 @@ import com.amplifyframework.aws.appsync.events.data.EventsMessage
 import com.amplifyframework.aws.appsync.events.data.PublishResult
 import com.amplifyframework.aws.appsync.events.data.UserClosedConnectionException
 import com.amplifyframework.aws.appsync.events.data.WebSocketMessage
+import com.amplifyframework.aws.appsync.events.data.toEventsException
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -83,12 +84,16 @@ class EventsChannel internal constructor(
      * @param authorizer for the publish call. If not provided, the EventChannel publish authorizer will be used.
      * @return result of publish.
      */
-    @Throws(Exception::class)
+    @Throws(EventsException::class)
     suspend fun publish(
         event: JsonElement,
         authorizer: AppSyncAuthorizer = this.authorizers.publishAuthorizer
     ): PublishResult {
-        return publish(listOf(event), authorizer)
+        return try {
+            publishToWebSocket(listOf(event), authorizer)
+        } catch (exception: Exception) {
+            throw exception.toEventsException()
+        }
     }
 
     /**
@@ -102,6 +107,17 @@ class EventsChannel internal constructor(
     suspend fun publish(
         events: List<JsonElement>,
         authorizer: AppSyncAuthorizer = this.authorizers.publishAuthorizer
+    ): PublishResult {
+        return try {
+            publishToWebSocket(events, authorizer)
+        } catch (exception: Exception) {
+            throw exception.toEventsException()
+        }
+    }
+
+    private suspend fun publishToWebSocket(
+        events: List<JsonElement>,
+        authorizer: AppSyncAuthorizer
     ): PublishResult = coroutineScope {
         val publishId = UUID.randomUUID().toString()
         val publishMessage = WebSocketMessage.Send.Publish(

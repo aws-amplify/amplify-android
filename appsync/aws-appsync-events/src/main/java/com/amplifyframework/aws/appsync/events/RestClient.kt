@@ -17,7 +17,10 @@ package com.amplifyframework.aws.appsync.events
 
 import com.amplifyframework.aws.appsync.core.AppSyncAuthorizer
 import com.amplifyframework.aws.appsync.core.AppSyncRequest
+import com.amplifyframework.aws.appsync.events.data.EventsErrors
+import com.amplifyframework.aws.appsync.events.data.EventsException
 import com.amplifyframework.aws.appsync.events.data.PublishResult
+import com.amplifyframework.aws.appsync.events.data.toEventsException
 import com.amplifyframework.aws.appsync.events.utils.HeaderKeys
 import com.amplifyframework.aws.appsync.events.utils.HeaderValues
 import kotlinx.serialization.json.Json
@@ -74,15 +77,17 @@ internal class RestClient(
             }
         }.build()
 
-        try {
-            val result = okHttpClient.newCall(authRequest).execute()
-            return if (result.isSuccessful) {
-                json.decodeFromString<PublishResult>(result.body.string())
-            } else {
-                TODO("Convert to proper exception type")
+        val result = okHttpClient.newCall(authRequest).execute()
+        val body = result.body.string()
+        return if (result.isSuccessful) {
+            json.decodeFromString<PublishResult>(body)
+        } else {
+            throw try {
+                val errors = json.decodeFromString<EventsErrors>(body)
+                errors.toEventsException("Failed to post event(s)")
+            } catch (e: Exception) {
+                EventsException.unknown("Failed to post event(s)", e)
             }
-        } catch (e: Exception) {
-            TODO("Convert to proper exception type")
         }
     }
 }

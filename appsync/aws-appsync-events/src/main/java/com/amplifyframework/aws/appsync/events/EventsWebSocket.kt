@@ -21,6 +21,7 @@ import com.amplifyframework.aws.appsync.core.LoggerProvider
 import com.amplifyframework.aws.appsync.events.data.ConnectException
 import com.amplifyframework.aws.appsync.events.data.EventsException
 import com.amplifyframework.aws.appsync.events.data.WebSocketMessage
+import com.amplifyframework.aws.appsync.events.data.toEventsException
 import com.amplifyframework.aws.appsync.events.utils.ConnectionTimeoutTimer
 import com.amplifyframework.aws.appsync.events.utils.HeaderKeys
 import com.amplifyframework.aws.appsync.events.utils.HeaderValues
