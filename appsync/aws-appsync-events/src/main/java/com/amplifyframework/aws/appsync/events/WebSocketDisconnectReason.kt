@@ -14,6 +14,7 @@
  */
 package com.amplifyframework.aws.appsync.events
 
+import com.amplifyframework.aws.appsync.events.WebSocketDisconnectReason.UserInitiated
 import com.amplifyframework.aws.appsync.events.data.ConnectionClosedException
 import com.amplifyframework.aws.appsync.events.data.EventsException
 import com.amplifyframework.aws.appsync.events.data.UserClosedConnectionException
@@ -22,11 +23,11 @@ internal sealed class WebSocketDisconnectReason(val throwable: Throwable?) {
     data object UserInitiated : WebSocketDisconnectReason(null)
     data object Timeout : WebSocketDisconnectReason(EventsException("Connection timed out."))
     class Service(throwable: Throwable? = null) : WebSocketDisconnectReason(throwable)
+}
 
-    internal fun toCloseException(): EventsException {
-        return when (this) {
-            is UserInitiated -> UserClosedConnectionException()
-            else -> ConnectionClosedException(throwable)
-        }
+internal fun WebSocketDisconnectReason.toCloseException(): EventsException {
+    return when (this) {
+        is UserInitiated -> UserClosedConnectionException()
+        else -> ConnectionClosedException(throwable)
     }
 }

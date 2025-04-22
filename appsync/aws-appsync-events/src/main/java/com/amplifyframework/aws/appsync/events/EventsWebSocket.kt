@@ -110,7 +110,7 @@ internal class EventsWebSocket(
         try {
             send(WebSocketMessage.Send.ConnectionInit())
         } catch (e: Exception) {
-            logger?.error(e) { "onOpen: exception encountered" } // do nothing. closure will handle error
+            logger?.error("onOpen: exception encountered", e) // do nothing. closure will handle error
         }
     }
 
@@ -162,10 +162,10 @@ internal class EventsWebSocket(
 
         // Create the authorization headers first
         val authHeaders = authorizer.getAuthorizationHeaders(object : AppSyncRequest {
-            override val method: AppSyncRequest.HttpMethod = AppSyncRequest.HttpMethod.POST
-            override val url: String = eventsEndpoints.restEndpoint.toString()
-            override val headers: Map<String, String> = preAuthPublishHeaders
-            override val body: String = json.encodeToString(baseMessageJson)
+            override val method = AppSyncRequest.HttpMethod.POST
+            override val url = eventsEndpoints.restEndpoint.toString()
+            override val headers = preAuthPublishHeaders
+            override val body = json.encodeToString(baseMessageJson)
         })
 
         // We reconstruct the message, adding in the id, type, and authorization fields
@@ -198,7 +198,7 @@ internal class EventsWebSocket(
     }
 
     private fun emitEvent(event: WebSocketMessage) {
-        logger?.debug("emit $event")
+        logger?.debug { "emit ${event::class.java}" }
         _events.tryEmit(event)
     }
 
