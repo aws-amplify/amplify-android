@@ -83,7 +83,7 @@ internal sealed class WebSocketMessage {
         internal data object KeepAlive : Received()
 
         @Serializable @SerialName("connection_error")
-        internal data class ConnectionError(val errors: List<WebSocketError>) : Received()
+        internal data class ConnectionError(val errors: List<EventsError>) : Received()
 
         @Serializable
         internal sealed class Subscription : Received() {
@@ -101,13 +101,13 @@ internal sealed class WebSocketMessage {
             @Serializable @SerialName("subscribe_error")
             internal data class SubscribeError(
                 override val id: String,
-                override val errors: List<WebSocketError>
+                override val errors: List<EventsError>
             ) : Subscription(), ErrorContainer
 
             @Serializable @SerialName("unsubscribe_error")
             internal data class UnsubscribeError(
                 override val id: String,
-                override val errors: List<WebSocketError>
+                override val errors: List<EventsError>
             ) : Subscription(), ErrorContainer
         }
 
@@ -121,13 +121,13 @@ internal sealed class WebSocketMessage {
         @Serializable @SerialName("publish_error")
         data class PublishError(
             override val id: String? = null,
-            override val errors: List<WebSocketError>
+            override val errors: List<EventsError>
         ) : Received(), ErrorContainer
 
         @Serializable @SerialName("error")
         data class Error(
             override val id: String? = null,
-            override val errors: List<WebSocketError>
+            override val errors: List<EventsError>
         ) : Received(), ErrorContainer
     }
 
@@ -136,19 +136,6 @@ internal sealed class WebSocketMessage {
     // All errors contain an id and errors list
     internal interface ErrorContainer {
         val id: String?
-        val errors: List<WebSocketError>
-    }
-}
-
-@Serializable
-data class WebSocketError(val errorType: String, val message: String? = null) {
-
-    // fallback message is only used if WebSocketError didn't provide a message
-    fun toEventsException(fallbackMessage: String? = null): EventsException {
-        val message = this.message ?: fallbackMessage
-        return when (errorType) {
-            "UnauthorizedException" -> UnauthorizedException(message)
-            else -> EventsException(message = "$errorType: $message")
-        }
+        val errors: List<EventsError>
     }
 }

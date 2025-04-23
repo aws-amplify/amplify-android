@@ -14,6 +14,8 @@
  */
 package com.amplifyframework.aws.appsync.events.data
 
+import java.net.UnknownHostException
+
 /**
  * Base class for exceptions thrown in Events library
  *
@@ -28,12 +30,24 @@ open class EventsException internal constructor(
 ) : Exception(message, cause) {
 
     internal companion object {
-        internal fun unknown(message: String? = null): EventsException {
+        internal fun unknown(
+            message: String? = null,
+            cause: Throwable? = null
+        ): EventsException {
             return EventsException(
                 message = message ?: "An unknown error occurred",
+                cause = cause,
                 recoverySuggestion = "This is not expected to occur. Contact AWS"
             )
         }
+    }
+}
+
+fun Exception.toEventsException(): EventsException {
+    return when (this) {
+        is EventsException -> this
+        is UnknownHostException -> NetworkException(throwable = this)
+        else -> EventsException.unknown(cause = this)
     }
 }
 
@@ -66,43 +80,64 @@ class ConnectionClosedException internal constructor(cause: Throwable? = null) :
 /**
  * Thrown when rate limit is exceeded.
  */
-internal class RateLimitExceededException internal constructor() : EventsException(
-    message = "Rate limit exceeded",
+class RateLimitExceededException internal constructor(message: String?) : EventsException(
+    message = message ?: "Rate limit exceeded",
     recoverySuggestion = "Try again later"
 )
 
 /**
  * Thrown when operation is unsupported.
  */
-internal class UnsupportedOperationException internal constructor() : EventsException(
-    message = "WebSocket did not understand the operation",
+class UnsupportedOperationException internal constructor(message: String?) : EventsException(
+    message = message ?: "WebSocket did not understand the operation",
     recoverySuggestion = "This is not expected to occur. Contact AWS"
 )
 
 /**
  * Thrown when resource is not found.
  */
-internal class ResourceNotFoundException internal constructor() : EventsException(
-    message = "Resource not found",
-    recoverySuggestion = "Check Event configuration values and try again"
+class ResourceNotFoundException internal constructor(message: String?) : EventsException(
+    message = message ?: "Namespace not found",
+    recoverySuggestion = "Check resource values and try again"
 )
 
 /**
  * Thrown when hitting max subscription limit.
  */
-class MaxSubscriptionsReachedException internal constructor(throwable: Throwable) : EventsException(
-    message = "Max number of subscriptions reached",
+class MaxSubscriptionsReachedException internal constructor(message: String?) : EventsException(
+    message = message ?: "Max number of subscriptions reached",
     recoverySuggestion = "Unsubscribe from existing channels before attempting to subscribe."
 )
 
 /**
  * Thrown when attempting to send too many events or invalid request.
  */
-class BadRequestException internal constructor() : EventsException(
-    message = "Input exceeded 5 event limit",
-    recoverySuggestion = "Submit 5 events or less."
+class BadRequestException internal constructor(message: String?) : EventsException(
+    message = message ?: "An unknown error occurred"
 )
 
+/**
+ * Thrown when attempting to send too many events or invalid request over websocket.
+ */
+class InvalidInputException internal constructor(message: String?) : EventsException(
+    message = message ?: "An unknown error occurred"
+)
+
+/**
+ * Thrown when we detect a failure in the network.
+ * See the cause for the underlying error.
+ */
+class NetworkException internal constructor(throwable: Throwable) : EventsException(
+    message = "Network error",
+    cause = throwable,
+    recoverySuggestion = "Check your internet connection and try again. See the cause for more details."
+)
+
+/**
+ * An internal exception that is not provided to the customer.
+ * We use this exception so that we can differentiate between a connection being closed unexpectedly or by the user.
+ * If the connection is closed by the user, we catch this exception and don't propagate it to the customer.
+ */
 internal class UserClosedConnectionException internal constructor() : EventsException(
     message = "The websocket connection was closed normally"
 )

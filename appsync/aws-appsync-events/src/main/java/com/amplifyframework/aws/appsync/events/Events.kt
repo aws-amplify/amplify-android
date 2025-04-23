@@ -19,6 +19,7 @@ import com.amplifyframework.aws.appsync.core.LoggerProvider
 import com.amplifyframework.aws.appsync.events.data.ChannelAuthorizers
 import com.amplifyframework.aws.appsync.events.data.EventsException
 import com.amplifyframework.aws.appsync.events.data.PublishResult
+import com.amplifyframework.aws.appsync.events.data.toEventsException
 import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -92,7 +93,11 @@ class Events @VisibleForTesting internal constructor(
         event: JsonElement,
         authorizer: AppSyncAuthorizer = this.defaultChannelAuthorizers.publishAuthorizer
     ): PublishResult {
-        return httpClient.post(channelName, authorizer, event)
+        return try {
+            httpClient.post(channelName, authorizer, event)
+        } catch (exception: Exception) {
+            throw exception.toEventsException()
+        }
     }
 
     /**
@@ -109,7 +114,11 @@ class Events @VisibleForTesting internal constructor(
         events: List<JsonElement>,
         authorizer: AppSyncAuthorizer = this.defaultChannelAuthorizers.publishAuthorizer
     ): PublishResult {
-        return httpClient.post(channelName, authorizer, events)
+        return try {
+            httpClient.post(channelName, authorizer, events)
+        } catch (exception: Exception) {
+            throw exception.toEventsException()
+        }
     }
 
     /**
@@ -129,8 +138,6 @@ class Events @VisibleForTesting internal constructor(
      *
      * @param flushEvents set to true (default) to allow all pending publish calls to succeed before disconnecting.
      * Setting to false will immediately disconnect, cancelling any in-progress or queued event publishes.
-     * @param authorizers for the channel to use for subscriptions and publishes.
-     * @return a channel to manage subscriptions and publishes.
      */
     suspend fun disconnect(flushEvents: Boolean = true): Unit = coroutineScope {
         eventsWebSocketProvider.existingWebSocket?.disconnect(flushEvents)
