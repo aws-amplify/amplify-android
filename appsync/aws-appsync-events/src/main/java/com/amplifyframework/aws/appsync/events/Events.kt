@@ -37,12 +37,13 @@ class Events @VisibleForTesting internal constructor(
     val endpoint: String,
     val connectAuthorizer: AppSyncAuthorizer,
     val defaultChannelAuthorizers: ChannelAuthorizers,
-    options: Options,
-    okHttpClient: OkHttpClient
+    okHttpClient: OkHttpClient,
+    loggerProvider: LoggerProvider?,
 ) {
 
     data class Options(
-        val loggerProvider: LoggerProvider? = null
+        val loggerProvider: LoggerProvider? = null,
+        val okHttpConfigurationProvider: OkHttpConfigurationProvider? = null
     )
 
     /**
@@ -58,11 +59,13 @@ class Events @VisibleForTesting internal constructor(
         defaultChannelAuthorizers: ChannelAuthorizers,
         options: Options = Options()
     ) : this(
-        endpoint,
-        connectAuthorizer,
-        defaultChannelAuthorizers,
-        options,
-        OkHttpClient.Builder().build()
+        endpoint = endpoint,
+        connectAuthorizer = connectAuthorizer,
+        defaultChannelAuthorizers = defaultChannelAuthorizers,
+        okHttpClient = OkHttpClient.Builder().also {
+            options.okHttpConfigurationProvider?.applyConfiguration(it)
+        }.build(),
+        loggerProvider = options.loggerProvider
     )
 
     private val json = Json {
@@ -76,7 +79,7 @@ class Events @VisibleForTesting internal constructor(
         connectAuthorizer,
         okHttpClient,
         json,
-        options.loggerProvider
+        loggerProvider
     )
 
     /**

@@ -18,38 +18,51 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Contains the result of an event(s) publish call.
+ * Sealed Result type of an event(s) publish call.
+ * PublishResult.Success = The publish call was successfully processed by the service
+ * PublishResult.Failure = The publish call did not succeed
  *
- * @property successfulEvents list of events successfully processed by AWS AppSync.
- * @property failedEvents list of events that AWS AppSync failed to process.
- * @property status of the publish call.
- *  Successful = All events published successfully
- *  Failed = All events failed to publish
- *  PartialSuccess = Mix of successful and failed events. Check event indexes to determine individual states.
  */
-@Serializable
-data class PublishResult internal constructor(
-    @SerialName("successful") val successfulEvents: List<SuccessfulEvent>,
-    @SerialName("failed") val failedEvents: List<FailedEvent>
-) {
+sealed class PublishResult {
 
     /**
-     * Contains identifying information of an event AWS AppSync failed to process.
-     */
-    sealed class Status {
-        data object Successful : Status()
-        data object Failed : Status()
-        data object PartialSuccess : Status()
-    }
+     * Represents a successful response, which may contain both
+     * successful and failed events. A Success case indicates the publish
+     * itself succeeded, not that all events were processed successfully.
+     *
+     * @property successfulEvents list of events successfully processed by AWS AppSync.
+     * @property failedEvents list of events that AWS AppSync failed to process.
+     * @property status of the publish call.
+     *  Successful = All events published successfully
+     *  Failed = All events failed to publish
+     *  PartialSuccess = Mix of successful and failed events. Check event indexes to determine individual states.     */
+    @Serializable
+    data class Response internal constructor(
+        @SerialName("successful") val successfulEvents: List<SuccessfulEvent>,
+        @SerialName("failed") val failedEvents: List<FailedEvent>
+    ) : PublishResult() {
 
-    val status: Status
-        get() {
-            return when {
+        /**
+         * Contains identifying information of an event AWS AppSync failed to process.
+         */
+        sealed class Status {
+            data object Successful : Status()
+            data object Failed : Status()
+            data object PartialSuccess : Status()
+        }
+
+        val status: Status
+            get() = when {
                 successfulEvents.isNotEmpty() && failedEvents.isNotEmpty() -> Status.PartialSuccess
                 failedEvents.isNotEmpty() -> Status.Failed
                 else -> Status.Successful
             }
-        }
+    }
+
+    /**
+     * Represents a failed response where the publish was not successful
+     */
+    data class Failure internal constructor(val error: EventsException) : PublishResult()
 }
 
 /**
