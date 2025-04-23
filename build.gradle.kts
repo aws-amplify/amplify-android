@@ -148,15 +148,15 @@ fun Project.configureAndroid() {
                 testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
                 testInstrumentationRunnerArguments += "clearPackageData" to "true"
                 consumerProguardFiles += rootProject.file("configuration/consumer-rules.pro")
-
-                testOptions {
-                    animationsDisabled = true
-                    unitTests {
-                        isIncludeAndroidResources = true
-                    }
-                }
-
                 buildConfigField("String", "VERSION_NAME", "\"$sdkVersionName\"")
+            }
+
+            testOptions {
+                animationsDisabled = true
+                unitTests {
+                    isIncludeAndroidResources = true
+                }
+                execution = "ANDROIDX_TEST_ORCHESTRATOR"
             }
 
             lint {
