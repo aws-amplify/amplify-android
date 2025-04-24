@@ -15,15 +15,20 @@
 
 package com.amplifyframework.aws.appsync.events.utils
 
+import com.amplifyframework.aws.appsync.events.BuildConfig
+
 internal object HeaderKeys {
     const val HOST = "host"
     const val ACCEPT = "accept"
     const val CONTENT_TYPE = "content-type"
     const val SEC_WEBSOCKET_PROTOCOL = "Sec-WebSocket-Protocol"
+    const val USER_AGENT = "User-Agent"
+    const val X_AMZ_USER_AGENT = "x-amz-user-agent"
 }
 
 internal object HeaderValues {
     const val ACCEPT_APPLICATION_JSON = "application/json, text/javascript"
     const val CONTENT_TYPE_APPLICATION_JSON = "application/json; charset=UTF-8"
     const val SEC_WEBSOCKET_PROTOCOL_APPSYNC_EVENTS = "aws-appsync-event-ws"
+    const val USER_AGENT = "aws-appsync-events-android#${BuildConfig.VERSION_NAME}"
 }

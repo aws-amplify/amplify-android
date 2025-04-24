@@ -47,6 +47,8 @@ class EventsTest {
         HeaderKeys.HOST to expectedHost,
         HeaderKeys.CONTENT_TYPE to HeaderValues.CONTENT_TYPE_APPLICATION_JSON,
         HeaderKeys.ACCEPT to HeaderValues.ACCEPT_APPLICATION_JSON,
+        HeaderKeys.USER_AGENT to HeaderValues.USER_AGENT,
+        HeaderKeys.X_AMZ_USER_AGENT to HeaderValues.USER_AGENT
     )
     private val expectedChannelAuthorizers = ChannelAuthorizers(
         subscribeAuthorizer = ApiKeyAuthorizer("123"),

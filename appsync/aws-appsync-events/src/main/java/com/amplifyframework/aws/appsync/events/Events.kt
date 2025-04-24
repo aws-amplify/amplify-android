@@ -62,8 +62,8 @@ class Events @VisibleForTesting internal constructor(
         endpoint = endpoint,
         connectAuthorizer = connectAuthorizer,
         defaultChannelAuthorizers = defaultChannelAuthorizers,
-        okHttpClient = OkHttpClient.Builder().also {
-            options.okHttpConfigurationProvider?.applyConfiguration(it)
+        okHttpClient = OkHttpClient.Builder().apply {
+            options.okHttpConfigurationProvider?.applyConfiguration(this)
         }.build(),
         loggerProvider = options.loggerProvider
     )

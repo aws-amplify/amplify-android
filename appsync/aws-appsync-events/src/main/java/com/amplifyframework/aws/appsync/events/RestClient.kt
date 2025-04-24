@@ -70,6 +70,8 @@ internal class RestClient(
             addHeader(HeaderKeys.ACCEPT, HeaderValues.ACCEPT_APPLICATION_JSON)
             addHeader(HeaderKeys.CONTENT_TYPE, HeaderValues.CONTENT_TYPE_APPLICATION_JSON)
             addHeader(HeaderKeys.HOST, url.host)
+            addHeader(HeaderKeys.USER_AGENT, HeaderValues.USER_AGENT)
+            addHeader(HeaderKeys.X_AMZ_USER_AGENT, HeaderValues.USER_AGENT)
             post(postBody.toRequestBody(HeaderValues.CONTENT_TYPE_APPLICATION_JSON.toMediaType()))
         }.build()
 
