@@ -31,7 +31,6 @@ import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import okhttp3.HttpUrl
 import okhttp3.Interceptor
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import okio.Buffer
@@ -59,10 +58,10 @@ class EventsTest {
         endpoint = expectedEndpoint,
         connectAuthorizer = ApiKeyAuthorizer("abc"),
         defaultChannelAuthorizers = expectedChannelAuthorizers,
-        okHttpClient = OkHttpClient.Builder()
-            .addInterceptor(interceptor)
-            .build(),
-        loggerProvider = null
+        options = Events.Options(
+            okHttpConfigurationProvider = { it.addInterceptor(interceptor) },
+            loggerProvider = null
+        )
     )
 
     @Before
