@@ -16,10 +16,19 @@
 package com.amplifyframework.aws.appsync.events.data
 
 import com.amplifyframework.aws.appsync.events.WebSocketDisconnectReason
+import com.amplifyframework.aws.appsync.events.utils.JsonUtils
 import java.util.UUID
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.Transient
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.encoding.CompositeDecoder
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 
@@ -89,7 +98,8 @@ internal sealed class WebSocketMessage {
         internal sealed class Subscription : Received() {
             abstract val id: String
 
-            @Serializable @SerialName("data")
+            @Serializable(with = DataSerializer::class)
+            @SerialName("data")
             internal data class Data(override val id: String, val event: JsonElement) : Subscription()
 
             @Serializable @SerialName("subscribe_success")
@@ -109,6 +119,41 @@ internal sealed class WebSocketMessage {
                 override val id: String,
                 override val errors: List<EventsError>
             ) : Subscription(), ErrorContainer
+
+            internal object DataSerializer : KSerializer<Data> {
+
+                private val json = JsonUtils.createJsonForLibrary()
+
+                override val descriptor: SerialDescriptor = buildClassSerialDescriptor("data") {
+                    element("id", String.serializer().descriptor)
+                    element("event", JsonElement.serializer().descriptor)
+                }
+
+                override fun deserialize(decoder: Decoder): Data {
+                    val composite = decoder.beginStructure(descriptor)
+                    var id: String? = null
+                    var event: JsonElement? = null
+                    while (true) {
+                        when (composite.decodeElementIndex(descriptor)) {
+                            CompositeDecoder.DECODE_DONE -> break
+                            0 -> id = composite.decodeStringElement(descriptor, 0)
+                            1 -> {
+                                val eventString = composite.decodeStringElement(descriptor, 1)
+                                event = json.parseToJsonElement(eventString)
+                            }
+                        }
+                    }
+                    composite.endStructure(descriptor)
+                    return Data(
+                        id = id ?: throw SerializationException("Required field 'id' is missing"),
+                        event = event ?: throw SerializationException("Required field 'event' is missing")
+                    )
+                }
+
+                override fun serialize(encoder: Encoder, value: WebSocketMessage.Received.Subscription.Data) {
+                    throw NotImplementedError("This class should not be used for serialization")
+                }
+            }
         }
 
         @Serializable @SerialName("publish_success")

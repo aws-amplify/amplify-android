@@ -16,14 +16,15 @@
 package com.amplifyframework.aws.appsync.events.utils
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-internal class ConnectionTimeoutTimer(val onTimeout: () -> Unit) {
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+internal class ConnectionTimeoutTimer(
+    private val scope: CoroutineScope,
+    val onTimeout: () -> Unit,
+) {
+
     private var timeoutInMillis: Long = 300_000L
     private var timeoutJob: Job? = null
 

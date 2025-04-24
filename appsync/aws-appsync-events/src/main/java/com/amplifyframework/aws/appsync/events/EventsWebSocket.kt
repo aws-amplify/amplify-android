@@ -25,6 +25,8 @@ import com.amplifyframework.aws.appsync.events.data.toEventsException
 import com.amplifyframework.aws.appsync.events.utils.ConnectionTimeoutTimer
 import com.amplifyframework.aws.appsync.events.utils.HeaderKeys
 import com.amplifyframework.aws.appsync.events.utils.HeaderValues
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -56,7 +58,10 @@ internal class EventsWebSocket(
     private lateinit var webSocket: WebSocket
     @Volatile internal var isClosed = false
     internal var disconnectReason: WebSocketDisconnectReason? = null
-    private val connectionTimeoutTimer = ConnectionTimeoutTimer(onTimeout = ::onTimeout)
+    private val connectionTimeoutTimer = ConnectionTimeoutTimer(
+        scope = CoroutineScope(Dispatchers.IO),
+        onTimeout = ::onTimeout
+    )
     val preAuthPublishHeaders: Map<String, String> by lazy { mapOf(HeaderKeys.HOST to eventsEndpoints.host) }
     private val logger = loggerProvider?.getLogger(TAG)
 
