@@ -84,16 +84,11 @@ class EventsChannel internal constructor(
      * @param authorizer for the publish call. If not provided, the EventChannel publish authorizer will be used.
      * @return result of publish.
      */
-    @Throws(EventsException::class)
     suspend fun publish(
         event: JsonElement,
         authorizer: AppSyncAuthorizer = this.authorizers.publishAuthorizer
     ): PublishResult {
-        return try {
-            publishToWebSocket(listOf(event), authorizer)
-        } catch (exception: Exception) {
-            throw exception.toEventsException()
-        }
+        return publish(listOf(event), authorizer)
     }
 
     /**
@@ -103,22 +98,27 @@ class EventsChannel internal constructor(
      * @param authorizer for the publish call. If not provided, the EventChannel publish authorizer will be used.
      * @return result of publish.
      */
-    @Throws(Exception::class)
     suspend fun publish(
         events: List<JsonElement>,
         authorizer: AppSyncAuthorizer = this.authorizers.publishAuthorizer
     ): PublishResult {
         return try {
-            publishToWebSocket(events, authorizer)
+            publishToWebSocket(events, authorizer).let {
+                PublishResult.Response(
+                    successfulEvents = it.successfulEvents,
+                    failedEvents = it.failedEvents
+                )
+            }
         } catch (exception: Exception) {
-            throw exception.toEventsException()
+            PublishResult.Failure(exception.toEventsException())
         }
     }
 
+    @Throws(Exception::class)
     private suspend fun publishToWebSocket(
         events: List<JsonElement>,
         authorizer: AppSyncAuthorizer
-    ): PublishResult = coroutineScope {
+    ): WebSocketMessage.Received.PublishSuccess = coroutineScope {
         val publishId = UUID.randomUUID().toString()
         val publishMessage = WebSocketMessage.Send.Publish(
             id = publishId,
@@ -136,19 +136,16 @@ class EventsChannel internal constructor(
 
         return@coroutineScope when (val response = deferredResponse.await()) {
             is WebSocketMessage.Received.PublishSuccess -> {
-                PublishResult(response.successfulEvents, response.failedEvents)
+                response
             }
-
             is WebSocketMessage.ErrorContainer -> {
                 val fallbackMessage = "Failed to publish event(s)"
                 throw response.errors.firstOrNull()?.toEventsException(fallbackMessage)
                     ?: EventsException(fallbackMessage)
             }
-
             is WebSocketMessage.Closed -> {
                 throw response.reason.toCloseException()
             }
-
             else -> throw EventsException("Received unexpected publish response of type: ${response::class}")
         }
     }

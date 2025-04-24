@@ -45,6 +45,19 @@ internal class RestClient(
     }
 
     suspend fun post(channelName: String, authorizer: AppSyncAuthorizer, events: List<JsonElement>): PublishResult {
+        return try {
+            executePost(channelName, authorizer, events)
+        } catch (exception: Exception) {
+            PublishResult.Failure(exception.toEventsException())
+        }
+    }
+
+    @Throws(Exception::class)
+    internal suspend fun executePost(
+        channelName: String,
+        authorizer: AppSyncAuthorizer,
+        events: List<JsonElement>
+    ): PublishResult.Response {
         val postBody = JsonObject(
             content = mapOf(
                 "channel" to JsonPrimitive(channelName),
@@ -57,6 +70,8 @@ internal class RestClient(
             addHeader(HeaderKeys.ACCEPT, HeaderValues.ACCEPT_APPLICATION_JSON)
             addHeader(HeaderKeys.CONTENT_TYPE, HeaderValues.CONTENT_TYPE_APPLICATION_JSON)
             addHeader(HeaderKeys.HOST, url.host)
+            addHeader(HeaderKeys.USER_AGENT, HeaderValues.USER_AGENT)
+            addHeader(HeaderKeys.X_AMZ_USER_AGENT, HeaderValues.USER_AGENT)
             post(postBody.toRequestBody(HeaderValues.CONTENT_TYPE_APPLICATION_JSON.toMediaType()))
         }.build()
 
@@ -80,7 +95,7 @@ internal class RestClient(
         val result = okHttpClient.newCall(authRequest).execute()
         val body = result.body.string()
         return if (result.isSuccessful) {
-            json.decodeFromString<PublishResult>(body)
+            json.decodeFromString<PublishResult.Response>(body)
         } else {
             throw try {
                 val errors = json.decodeFromString<EventsErrors>(body)

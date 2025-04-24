@@ -24,7 +24,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import okhttp3.OkHttpClient
-import org.jetbrains.annotations.VisibleForTesting
 
 /**
  * The main class for interacting with AWS AppSync Events
@@ -33,16 +32,16 @@ import org.jetbrains.annotations.VisibleForTesting
  * @param connectAuthorizer for AWS AppSync Websocket Pub/Sub connection.
  * @param defaultChannelAuthorizers passed to created channels if not overridden.
  */
-class Events @VisibleForTesting internal constructor(
+class Events(
     val endpoint: String,
     val connectAuthorizer: AppSyncAuthorizer,
     val defaultChannelAuthorizers: ChannelAuthorizers,
-    options: Options,
-    okHttpClient: OkHttpClient
+    options: Options = Options()
 ) {
 
     data class Options(
-        val loggerProvider: LoggerProvider? = null
+        val loggerProvider: LoggerProvider? = null,
+        val okHttpConfigurationProvider: OkHttpConfigurationProvider? = null
     )
 
     /**
@@ -52,24 +51,15 @@ class Events @VisibleForTesting internal constructor(
      * @param connectAuthorizer for AWS AppSync Websocket Pub/Sub connection.
      * @param defaultChannelAuthorizers passed to created channels if not overridden.
      */
-    constructor(
-        endpoint: String,
-        connectAuthorizer: AppSyncAuthorizer,
-        defaultChannelAuthorizers: ChannelAuthorizers,
-        options: Options = Options()
-    ) : this(
-        endpoint,
-        connectAuthorizer,
-        defaultChannelAuthorizers,
-        options,
-        OkHttpClient.Builder().build()
-    )
 
     private val json = Json {
         encodeDefaults = true
         ignoreUnknownKeys = true
     }
     private val endpoints = EventsEndpoints(endpoint)
+    private val okHttpClient = OkHttpClient.Builder().apply {
+        options.okHttpConfigurationProvider?.applyConfiguration(this)
+    }.build()
     private val httpClient = RestClient(endpoints.restEndpoint, okHttpClient, json)
     private val eventsWebSocketProvider = EventsWebSocketProvider(
         endpoints,

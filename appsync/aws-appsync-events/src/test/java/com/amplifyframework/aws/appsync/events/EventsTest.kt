@@ -21,6 +21,7 @@ import com.amplifyframework.aws.appsync.events.data.ChannelAuthorizers
 import com.amplifyframework.aws.appsync.events.data.PublishResult
 import com.amplifyframework.aws.appsync.events.utils.HeaderKeys
 import com.amplifyframework.aws.appsync.events.utils.HeaderValues
+import io.kotest.assertions.fail
 import io.kotest.matchers.maps.shouldContainAll
 import io.kotest.matchers.shouldBe
 import java.io.IOException
@@ -30,7 +31,6 @@ import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import okhttp3.HttpUrl
 import okhttp3.Interceptor
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import okio.Buffer
@@ -46,6 +46,8 @@ class EventsTest {
         HeaderKeys.HOST to expectedHost,
         HeaderKeys.CONTENT_TYPE to HeaderValues.CONTENT_TYPE_APPLICATION_JSON,
         HeaderKeys.ACCEPT to HeaderValues.ACCEPT_APPLICATION_JSON,
+        HeaderKeys.USER_AGENT to HeaderValues.USER_AGENT,
+        HeaderKeys.X_AMZ_USER_AGENT to HeaderValues.USER_AGENT
     )
     private val expectedChannelAuthorizers = ChannelAuthorizers(
         subscribeAuthorizer = ApiKeyAuthorizer("123"),
@@ -56,9 +58,10 @@ class EventsTest {
         endpoint = expectedEndpoint,
         connectAuthorizer = ApiKeyAuthorizer("abc"),
         defaultChannelAuthorizers = expectedChannelAuthorizers,
-        okHttpClient = OkHttpClient.Builder()
-            .addInterceptor(interceptor)
-            .build()
+        options = Events.Options(
+            okHttpConfigurationProvider = { it.addInterceptor(interceptor) },
+            loggerProvider = null
+        )
     )
 
     @Before
@@ -102,8 +105,13 @@ class EventsTest {
             }
             actualRequestBody shouldBe expectedRequestBody
         }
+
+        if (response !is PublishResult.Response) {
+            fail("Unexpected PublishResult type")
+        }
+
         response.apply {
-            status shouldBe PublishResult.Status.Successful
+            status shouldBe PublishResult.Response.Status.Successful
             failedEvents.size shouldBe 0
             successfulEvents.size shouldBe 1
         }
@@ -141,8 +149,13 @@ class EventsTest {
             }
             actualRequestBody shouldBe expectedRequestBody
         }
+
+        if (response !is PublishResult.Response) {
+            fail("Unexpected PublishResult type")
+        }
+
         response.apply {
-            status shouldBe PublishResult.Status.Successful
+            status shouldBe PublishResult.Response.Status.Successful
             failedEvents.size shouldBe 0
             successfulEvents.size shouldBe 1
         }
@@ -179,8 +192,13 @@ class EventsTest {
             }
             actualRequestBody shouldBe expectedRequestBody
         }
+
+        if (response !is PublishResult.Response) {
+            fail("Unexpected PublishResult type")
+        }
+
         response.apply {
-            status shouldBe PublishResult.Status.Successful
+            status shouldBe PublishResult.Response.Status.Successful
             failedEvents.size shouldBe 0
             successfulEvents.size shouldBe 1
         }
@@ -217,8 +235,11 @@ class EventsTest {
             }
             actualRequestBody shouldBe expectedRequestBody
         }
+        if (response !is PublishResult.Response) {
+            fail("Unexpected PublishResult type")
+        }
         response.apply {
-            status shouldBe PublishResult.Status.PartialSuccess
+            status shouldBe PublishResult.Response.Status.PartialSuccess
             failedEvents.size shouldBe 1
             successfulEvents.size shouldBe 1
         }
@@ -255,8 +276,11 @@ class EventsTest {
             }
             actualRequestBody shouldBe expectedRequestBody
         }
+        if (response !is PublishResult.Response) {
+            fail("Unexpected PublishResult type")
+        }
         response.apply {
-            status shouldBe PublishResult.Status.Failed
+            status shouldBe PublishResult.Response.Status.Failed
             failedEvents.size shouldBe 2
             failedEvents[0].errorMessage shouldBe "error1"
             failedEvents[1].errorMessage shouldBe "error2"
@@ -299,8 +323,11 @@ class EventsTest {
             }
             actualRequestBody shouldBe expectedRequestBody
         }
+        if (response !is PublishResult.Response) {
+            fail("Unexpected PublishResult type")
+        }
         response.apply {
-            status shouldBe PublishResult.Status.Successful
+            status shouldBe PublishResult.Response.Status.Successful
             failedEvents.size shouldBe 0
             successfulEvents.size shouldBe 1
         }
