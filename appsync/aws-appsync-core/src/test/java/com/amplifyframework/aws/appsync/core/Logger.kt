@@ -32,6 +32,19 @@ class LoggerTest {
     private val verboseLog = "verbose"
 
     @Test
+    fun `test suppliers with none threshold`() {
+        val logger = TestSupplierLogger(LogLevel.NONE)
+
+        writeTestLogs(logger)
+
+        logger.warnLogs shouldHaveSize 0
+        logger.warnLogs shouldHaveSize 0
+        logger.infoLogs shouldHaveSize 0
+        logger.debugLogs shouldHaveSize 0
+        logger.verboseLogs shouldHaveSize 0
+    }
+
+    @Test
     fun `test suppliers with error threshold`() {
         val logger = TestSupplierLogger(LogLevel.ERROR)
 

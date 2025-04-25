@@ -16,6 +16,7 @@ package com.amplifyframework.aws.appsync.core.authorizers
 
 import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.core.Consumer
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.maps.shouldContainExactly
 import io.mockk.CapturingSlot
 import io.mockk.every
@@ -38,5 +39,18 @@ class AmplifyUserPoolAuthorizerTest {
         val authorizer = AmplifyUserPoolAuthorizer(accessTokenProvider)
 
         authorizer.getAuthorizationHeaders(mockk()) shouldContainExactly mapOf("Authorization" to expectedValue)
+    }
+
+    @Test
+    fun `user pool authorizer throws if failed to fetch token from amplify`() = runTest {
+        val cognitoCredentialsProvider = mockk<AuthCredentialsProvider> {
+            every { getAccessToken(any(), any()) } throws IllegalStateException()
+        }
+        val accessTokenProvider = AccessTokenProvider(cognitoCredentialsProvider)
+        val authorizer = AmplifyUserPoolAuthorizer(accessTokenProvider)
+
+        shouldThrow<IllegalStateException> {
+            authorizer.getAuthorizationHeaders(mockk())
+        }
     }
 }
