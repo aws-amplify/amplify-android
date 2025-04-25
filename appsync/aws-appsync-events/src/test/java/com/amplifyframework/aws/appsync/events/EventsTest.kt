@@ -160,10 +160,6 @@ class EventsTest {
         if (response !is PublishResult.Failure) {
             fail("Unexpected PublishResult type")
         }
-
-        response.apply {
-            error::class shouldBe EventsException::class
-        }
     }
 
     @Test

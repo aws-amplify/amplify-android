@@ -44,6 +44,7 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
+import org.jetbrains.annotations.VisibleForTesting
 
 internal class EventsWebSocket(
     private val eventsEndpoints: EventsEndpoints,
@@ -253,9 +254,10 @@ internal class EventsWebSocket(
     }
 }
 
-private class ConnectAppSyncRequest(
-    val eventsEndpoints: EventsEndpoints,
-    val preAuthRequest: Request
+@VisibleForTesting
+internal class ConnectAppSyncRequest(
+    private val eventsEndpoints: EventsEndpoints,
+    private val preAuthRequest: Request
 ) : AppSyncRequest {
     override val method: AppSyncRequest.HttpMethod
         get() = AppSyncRequest.HttpMethod.POST
