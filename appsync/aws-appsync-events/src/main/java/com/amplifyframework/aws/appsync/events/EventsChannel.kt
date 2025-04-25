@@ -105,17 +105,15 @@ class EventsChannel internal constructor(
         events: List<JsonElement>,
         authorizer: AppSyncAuthorizer = this.authorizers.publishAuthorizer
     ): PublishResult {
-         return withContext(Dispatchers.IO) {
-             try {
-                publishToWebSocket(events, authorizer).let {
-                    PublishResult.Response(
-                        successfulEvents = it.successfulEvents,
-                        failedEvents = it.failedEvents
-                    )
-                }
-            } catch (exception: Exception) {
-                PublishResult.Failure(exception.toEventsException())
+        return try {
+            publishToWebSocket(events, authorizer).let {
+                PublishResult.Response(
+                    successfulEvents = it.successfulEvents,
+                    failedEvents = it.failedEvents
+                )
             }
+        } catch (exception: Exception) {
+            PublishResult.Failure(exception.toEventsException())
         }
     }
 
@@ -123,7 +121,7 @@ class EventsChannel internal constructor(
     private suspend fun publishToWebSocket(
         events: List<JsonElement>,
         authorizer: AppSyncAuthorizer
-    ): WebSocketMessage.Received.PublishSuccess = coroutineScope {
+    ): WebSocketMessage.Received.PublishSuccess = withContext(Dispatchers.IO) {
         val publishId = UUID.randomUUID().toString()
         val publishMessage = WebSocketMessage.Send.Publish(
             id = publishId,
@@ -139,7 +137,7 @@ class EventsChannel internal constructor(
             throw webSocket.disconnectReason?.toCloseException() ?: ConnectionClosedException()
         }
 
-        return@coroutineScope when (val response = deferredResponse.await()) {
+        return@withContext when (val response = deferredResponse.await()) {
             is WebSocketMessage.Received.PublishSuccess -> {
                 response
             }

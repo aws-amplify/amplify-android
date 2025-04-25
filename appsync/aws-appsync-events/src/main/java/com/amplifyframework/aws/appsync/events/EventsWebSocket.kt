@@ -32,6 +32,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -101,7 +102,7 @@ internal class EventsWebSocket(
         logger?.debug("Websocket Connection Open")
     }
 
-    suspend fun disconnect(flushEvents: Boolean) = coroutineScope {
+    suspend fun disconnect(flushEvents: Boolean) = withContext(Dispatchers.IO) {
         disconnectReason = WebSocketDisconnectReason.UserInitiated
         val deferredClosedResponse = async { getClosedResponse() }
         when (flushEvents) {

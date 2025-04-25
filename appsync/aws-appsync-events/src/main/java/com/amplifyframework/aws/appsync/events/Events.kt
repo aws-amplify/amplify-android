@@ -21,8 +21,6 @@ import com.amplifyframework.aws.appsync.events.data.EventsException
 import com.amplifyframework.aws.appsync.events.data.PublishResult
 import com.amplifyframework.aws.appsync.events.data.toEventsException
 import com.amplifyframework.aws.appsync.events.utils.JsonUtils
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonElement
 import okhttp3.OkHttpClient
 
@@ -81,14 +79,11 @@ class Events(
         event: JsonElement,
         authorizer: AppSyncAuthorizer = this.defaultChannelAuthorizers.publishAuthorizer
     ): PublishResult {
-        return withContext(Dispatchers.IO) {
-            try {
-                httpClient.post(channelName, authorizer, event)
-            } catch (exception: Exception) {
-                throw exception.toEventsException()
-            }
+        return try {
+            httpClient.post(channelName, authorizer, event)
+        } catch (exception: Exception) {
+            throw exception.toEventsException()
         }
-
     }
 
     /**
@@ -105,12 +100,10 @@ class Events(
         events: List<JsonElement>,
         authorizer: AppSyncAuthorizer = this.defaultChannelAuthorizers.publishAuthorizer
     ): PublishResult {
-        return withContext(Dispatchers.IO) {
-            try {
-                httpClient.post(channelName, authorizer, events)
-            } catch (exception: Exception) {
-                throw exception.toEventsException()
-            }
+        return try {
+            httpClient.post(channelName, authorizer, events)
+        } catch (exception: Exception) {
+            throw exception.toEventsException()
         }
     }
 
@@ -133,8 +126,6 @@ class Events(
      * Setting to false will immediately disconnect, cancelling any in-progress or queued event publishes.
      */
     suspend fun disconnect(flushEvents: Boolean = true) {
-        withContext(Dispatchers.IO) {
-            eventsWebSocketProvider.existingWebSocket?.disconnect(flushEvents)
-        }
+        eventsWebSocketProvider.existingWebSocket?.disconnect(flushEvents)
     }
 }
