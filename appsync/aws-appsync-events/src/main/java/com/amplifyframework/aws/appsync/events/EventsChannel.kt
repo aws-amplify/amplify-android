@@ -34,6 +34,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -104,15 +105,17 @@ class EventsChannel internal constructor(
         events: List<JsonElement>,
         authorizer: AppSyncAuthorizer = this.authorizers.publishAuthorizer
     ): PublishResult {
-        return try {
-            publishToWebSocket(events, authorizer).let {
-                PublishResult.Response(
-                    successfulEvents = it.successfulEvents,
-                    failedEvents = it.failedEvents
-                )
+         return withContext(Dispatchers.IO) {
+             try {
+                publishToWebSocket(events, authorizer).let {
+                    PublishResult.Response(
+                        successfulEvents = it.successfulEvents,
+                        failedEvents = it.failedEvents
+                    )
+                }
+            } catch (exception: Exception) {
+                PublishResult.Failure(exception.toEventsException())
             }
-        } catch (exception: Exception) {
-            PublishResult.Failure(exception.toEventsException())
         }
     }
 
