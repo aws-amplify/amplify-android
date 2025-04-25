@@ -14,6 +14,7 @@
  */
 package com.amplifyframework.aws.appsync.events.data
 
+import java.net.SocketException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 
@@ -47,7 +48,7 @@ open class EventsException internal constructor(
 internal fun Exception.toEventsException(): EventsException {
     return when (this) {
         is EventsException -> this
-        is UnknownHostException, is SocketTimeoutException -> NetworkException(throwable = this)
+        is UnknownHostException, is SocketTimeoutException, is SocketException -> NetworkException(throwable = this)
         else -> EventsException.unknown(cause = this)
     }
 }
