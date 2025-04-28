@@ -30,12 +30,14 @@ import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.plugins.core.AuthHubEventEmitter
+import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.errors.SessionError
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.onStart
 
 internal class FetchAuthSessionUseCase(
     private val stateMachine: AuthStateMachine,
@@ -44,14 +46,14 @@ internal class FetchAuthSessionUseCase(
     suspend fun execute(options: AuthFetchSessionOptions = AuthFetchSessionOptions.defaults()): AWSCognitoAuthSession =
         when (val authZState = stateMachine.getCurrentState().authZState) {
             is AuthorizationState.Configured -> {
-                stateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.FetchUnAuthSession))
-                listenForSessionEstablished()
+                listenForSessionEstablished(
+                    eventToSend = AuthorizationEvent(AuthorizationEvent.EventType.FetchUnAuthSession)
+                )
             }
             is AuthorizationState.SessionEstablished -> {
                 val credential = authZState.amplifyCredential
                 if (!credential.isValid() || options.forceRefresh) {
-                    sendRefreshSessionEvent(credential)
-                    listenForSessionEstablished()
+                    listenForSessionEstablished(eventToSend = refreshSessionEvent(credential))
                 } else {
                     credential.getCognitoSession()
                 }
@@ -59,8 +61,7 @@ internal class FetchAuthSessionUseCase(
             is AuthorizationState.Error -> {
                 val error = authZState.exception
                 if (error is SessionError) {
-                    sendRefreshSessionEvent(error.amplifyCredential)
-                    listenForSessionEstablished()
+                    listenForSessionEstablished(eventToSend = refreshSessionEvent(error.amplifyCredential))
                 } else {
                     throw InvalidStateException()
                 }
@@ -68,56 +69,59 @@ internal class FetchAuthSessionUseCase(
             else -> throw InvalidStateException()
         }
 
-    private fun sendRefreshSessionEvent(credential: AmplifyCredential) {
+    private fun refreshSessionEvent(credential: AmplifyCredential): StateMachineEvent =
         if (credential is AmplifyCredential.IdentityPoolFederated) {
-            stateMachine.send(
-                AuthorizationEvent(
-                    AuthorizationEvent.EventType.StartFederationToIdentityPool(
-                        credential.federatedToken,
-                        credential.identityId,
-                        credential
-                    )
+            AuthorizationEvent(
+                AuthorizationEvent.EventType.StartFederationToIdentityPool(
+                    credential.federatedToken,
+                    credential.identityId,
+                    credential
                 )
             )
         } else {
-            stateMachine.send(AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(credential)))
+            AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(credential))
         }
-    }
 
-    private suspend fun listenForSessionEstablished(): AWSCognitoAuthSession {
-        val session = stateMachine.stateTransitions.mapNotNull { authState ->
-            when (val authZState = authState.authZState) {
-                is AuthorizationState.SessionEstablished -> authZState.amplifyCredential.getCognitoSession()
-                is AuthorizationState.Error -> {
-                    when (val error = authZState.exception) {
-                        is SessionError -> {
-                            when (val innerException = error.exception) {
-                                is SignedOutException -> error.amplifyCredential.getCognitoSession(innerException)
-                                is ServiceException -> error.amplifyCredential.getCognitoSession(innerException)
-                                is NotAuthorizedException -> error.amplifyCredential.getCognitoSession(innerException)
-                                is SessionExpiredException -> {
-                                    emitter.sendHubEvent(AuthChannelEventName.SESSION_EXPIRED.toString())
-                                    error.amplifyCredential.getCognitoSession(innerException)
-                                }
-                                else -> {
-                                    val errorResult = UnknownException("Fetch auth session failed.", innerException)
-                                    error.amplifyCredential.getCognitoSession(errorResult)
+    private suspend fun listenForSessionEstablished(eventToSend: StateMachineEvent): AWSCognitoAuthSession {
+        val session = stateMachine.stateTransitions
+            .onStart {
+                stateMachine.send(eventToSend)
+            }
+            .mapNotNull { authState ->
+                when (val authZState = authState.authZState) {
+                    is AuthorizationState.SessionEstablished -> authZState.amplifyCredential.getCognitoSession()
+                    is AuthorizationState.Error -> {
+                        when (val error = authZState.exception) {
+                            is SessionError -> {
+                                when (val innerException = error.exception) {
+                                    is SignedOutException -> error.amplifyCredential.getCognitoSession(innerException)
+                                    is ServiceException -> error.amplifyCredential.getCognitoSession(innerException)
+                                    is NotAuthorizedException -> error.amplifyCredential.getCognitoSession(
+                                        innerException
+                                    )
+                                    is SessionExpiredException -> {
+                                        emitter.sendHubEvent(AuthChannelEventName.SESSION_EXPIRED.toString())
+                                        error.amplifyCredential.getCognitoSession(innerException)
+                                    }
+                                    else -> {
+                                        val errorResult = UnknownException("Fetch auth session failed.", innerException)
+                                        error.amplifyCredential.getCognitoSession(errorResult)
+                                    }
                                 }
                             }
-                        }
-                        is ConfigurationException -> {
-                            val errorResult = InvalidAccountTypeException(error)
-                            AmplifyCredential.Empty.getCognitoSession(errorResult)
-                        }
-                        else -> {
-                            val errorResult = UnknownException("Fetch auth session failed.", error)
-                            AmplifyCredential.Empty.getCognitoSession(errorResult)
+                            is ConfigurationException -> {
+                                val errorResult = InvalidAccountTypeException(error)
+                                AmplifyCredential.Empty.getCognitoSession(errorResult)
+                            }
+                            else -> {
+                                val errorResult = UnknownException("Fetch auth session failed.", error)
+                                AmplifyCredential.Empty.getCognitoSession(errorResult)
+                            }
                         }
                     }
+                    else -> null // no-op
                 }
-                else -> null // no-op
-            }
-        }.first()
+            }.first()
 
         return session
     }
