@@ -17,6 +17,7 @@ package com.amplifyframework.auth.cognito
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
@@ -139,6 +140,24 @@ class RealAWSCognitoAuthPluginTest {
     @After
     fun teardown() {
         unmockkAll()
+    }
+
+    @Test
+    fun testFetchAuthSessionSucceedsIfSignedOut() {
+        // GIVEN
+        val onSuccess = mockk<Consumer<AuthSession>>()
+        val onError = mockk<Consumer<AuthException>>(relaxed = true)
+
+        setupCurrentAuthState(
+            authNState = AuthenticationState.SignedOut(mockk()),
+            authZState = AuthorizationState.Configured()
+        )
+
+        // WHEN
+        plugin.fetchAuthSession(onSuccess, onError)
+
+        // THEN
+        verify(exactly = 0) { onSuccess.accept(any()) }
     }
 
     @Test
