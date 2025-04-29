@@ -17,7 +17,6 @@ package com.amplifyframework.auth.cognito.testUtil
 
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
-import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignUpEvent
@@ -54,14 +53,6 @@ internal inline fun <reified T : AuthenticationEvent.EventType> MockKVerificatio
     noinline assertions: MockKAssertScope.(T) -> Unit = { }
 ) = withArg<StateMachineEvent> {
     val event = it.shouldBeInstanceOf<AuthenticationEvent>()
-    val type = event.eventType.shouldBeInstanceOf<T>()
-    assertions(type)
-}
-
-internal inline fun <reified T : AuthorizationEvent.EventType> MockKVerificationScope.withAuthZEvent(
-    noinline assertions: MockKAssertScope.(T) -> Unit = { }
-) = withArg<StateMachineEvent> {
-    val event = it.shouldBeInstanceOf<AuthorizationEvent>()
     val type = event.eventType.shouldBeInstanceOf<T>()
     assertions(type)
 }
