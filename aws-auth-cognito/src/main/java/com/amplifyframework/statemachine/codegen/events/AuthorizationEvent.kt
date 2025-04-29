@@ -21,10 +21,12 @@ import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import java.util.Date
 
-internal class AuthorizationEvent(val eventType: EventType, override val time: Date? = null) : StateMachineEvent {
+internal class AuthorizationEvent(val eventType: EventType, override val time: Date? = null) :
+    StateMachineEvent {
     sealed class EventType {
-        data object Configure : EventType()
-        data object FetchUnAuthSession : EventType()
+        object Configure : EventType()
+        object FetchAuthSession : EventType()
+        object FetchUnAuthSession : EventType()
         data class Fetched(val identityId: String, val awsCredentials: AWSCredentials) : EventType()
         data class RefreshSession(val amplifyCredential: AmplifyCredential) : EventType()
         data class Refreshed(val amplifyCredential: AmplifyCredential) : EventType()
