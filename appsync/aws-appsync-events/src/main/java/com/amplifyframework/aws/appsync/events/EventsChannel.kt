@@ -34,6 +34,8 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
@@ -47,7 +49,8 @@ import kotlinx.serialization.json.JsonPrimitive
 class EventsChannel internal constructor(
     val name: String,
     val authorizers: ChannelAuthorizers,
-    private val eventsWebSocketProvider: EventsWebSocketProvider
+    private val eventsWebSocketProvider: EventsWebSocketProvider,
+    private val json: Json
 ) {
 
     /**
@@ -118,7 +121,7 @@ class EventsChannel internal constructor(
     private suspend fun publishToWebSocket(
         events: List<JsonElement>,
         authorizer: AppSyncAuthorizer
-    ): WebSocketMessage.Received.PublishSuccess = coroutineScope {
+    ): WebSocketMessage.Received.PublishSuccess = withContext(Dispatchers.IO) {
         val publishId = UUID.randomUUID().toString()
         val publishMessage = WebSocketMessage.Send.Publish(
             id = publishId,
@@ -134,7 +137,7 @@ class EventsChannel internal constructor(
             throw webSocket.disconnectReason?.toCloseException() ?: ConnectionClosedException()
         }
 
-        return@coroutineScope when (val response = deferredResponse.await()) {
+        return@withContext when (val response = deferredResponse.await()) {
             is WebSocketMessage.Received.PublishSuccess -> {
                 response
             }

@@ -25,11 +25,14 @@ import com.amplifyframework.aws.appsync.events.data.toEventsException
 import com.amplifyframework.aws.appsync.events.utils.ConnectionTimeoutTimer
 import com.amplifyframework.aws.appsync.events.utils.HeaderKeys
 import com.amplifyframework.aws.appsync.events.utils.HeaderValues
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -41,6 +44,7 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
+import org.jetbrains.annotations.VisibleForTesting
 
 internal class EventsWebSocket(
     private val eventsEndpoints: EventsEndpoints,
@@ -56,7 +60,10 @@ internal class EventsWebSocket(
     private lateinit var webSocket: WebSocket
     @Volatile internal var isClosed = false
     internal var disconnectReason: WebSocketDisconnectReason? = null
-    private val connectionTimeoutTimer = ConnectionTimeoutTimer(onTimeout = ::onTimeout)
+    private val connectionTimeoutTimer = ConnectionTimeoutTimer(
+        scope = CoroutineScope(Dispatchers.IO),
+        onTimeout = ::onTimeout
+    )
     val preAuthPublishHeaders: Map<String, String> by lazy { mapOf(HeaderKeys.HOST to eventsEndpoints.host) }
     private val logger = loggerProvider?.getLogger(TAG)
 
@@ -96,7 +103,7 @@ internal class EventsWebSocket(
         logger?.debug("Websocket Connection Open")
     }
 
-    suspend fun disconnect(flushEvents: Boolean) = coroutineScope {
+    suspend fun disconnect(flushEvents: Boolean) = withContext(Dispatchers.IO) {
         disconnectReason = WebSocketDisconnectReason.UserInitiated
         val deferredClosedResponse = async { getClosedResponse() }
         when (flushEvents) {
@@ -247,9 +254,10 @@ internal class EventsWebSocket(
     }
 }
 
-private class ConnectAppSyncRequest(
-    val eventsEndpoints: EventsEndpoints,
-    val preAuthRequest: Request
+@VisibleForTesting
+internal class ConnectAppSyncRequest(
+    private val eventsEndpoints: EventsEndpoints,
+    private val preAuthRequest: Request
 ) : AppSyncRequest {
     override val method: AppSyncRequest.HttpMethod
         get() = AppSyncRequest.HttpMethod.POST

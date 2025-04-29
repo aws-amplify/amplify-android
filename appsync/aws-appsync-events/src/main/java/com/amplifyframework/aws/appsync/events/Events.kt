@@ -20,8 +20,7 @@ import com.amplifyframework.aws.appsync.events.data.ChannelAuthorizers
 import com.amplifyframework.aws.appsync.events.data.EventsException
 import com.amplifyframework.aws.appsync.events.data.PublishResult
 import com.amplifyframework.aws.appsync.events.data.toEventsException
-import kotlinx.coroutines.coroutineScope
-import kotlinx.serialization.json.Json
+import com.amplifyframework.aws.appsync.events.utils.JsonUtils
 import kotlinx.serialization.json.JsonElement
 import okhttp3.OkHttpClient
 
@@ -52,10 +51,7 @@ class Events(
      * @param defaultChannelAuthorizers passed to created channels if not overridden.
      */
 
-    private val json = Json {
-        encodeDefaults = true
-        ignoreUnknownKeys = true
-    }
+    private val json = JsonUtils.createJsonForLibrary()
     private val endpoints = EventsEndpoints(endpoint)
     private val okHttpClient = OkHttpClient.Builder().apply {
         options.okHttpConfigurationProvider?.applyConfiguration(this)
@@ -121,7 +117,7 @@ class Events(
     fun channel(
         channelName: String,
         authorizers: ChannelAuthorizers = this.defaultChannelAuthorizers,
-    ) = EventsChannel(channelName, authorizers, eventsWebSocketProvider)
+    ) = EventsChannel(channelName, authorizers, eventsWebSocketProvider, json)
 
     /**
      * Method to disconnect from all channels.
@@ -129,7 +125,7 @@ class Events(
      * @param flushEvents set to true (default) to allow all pending publish calls to succeed before disconnecting.
      * Setting to false will immediately disconnect, cancelling any in-progress or queued event publishes.
      */
-    suspend fun disconnect(flushEvents: Boolean = true): Unit = coroutineScope {
+    suspend fun disconnect(flushEvents: Boolean = true) {
         eventsWebSocketProvider.existingWebSocket?.disconnect(flushEvents)
     }
 }

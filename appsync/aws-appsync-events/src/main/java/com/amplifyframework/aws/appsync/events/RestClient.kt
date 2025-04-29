@@ -23,6 +23,8 @@ import com.amplifyframework.aws.appsync.events.data.PublishResult
 import com.amplifyframework.aws.appsync.events.data.toEventsException
 import com.amplifyframework.aws.appsync.events.utils.HeaderKeys
 import com.amplifyframework.aws.appsync.events.utils.HeaderValues
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -57,7 +59,7 @@ internal class RestClient(
         channelName: String,
         authorizer: AppSyncAuthorizer,
         events: List<JsonElement>
-    ): PublishResult.Response {
+    ): PublishResult.Response = withContext(Dispatchers.IO) {
         val postBody = JsonObject(
             content = mapOf(
                 "channel" to JsonPrimitive(channelName),
@@ -94,7 +96,7 @@ internal class RestClient(
 
         val result = okHttpClient.newCall(authRequest).execute()
         val body = result.body.string()
-        return if (result.isSuccessful) {
+        return@withContext if (result.isSuccessful) {
             json.decodeFromString<PublishResult.Response>(body)
         } else {
             throw try {

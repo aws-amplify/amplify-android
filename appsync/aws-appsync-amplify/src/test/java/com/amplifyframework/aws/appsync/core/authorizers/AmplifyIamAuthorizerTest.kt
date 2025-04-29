@@ -16,6 +16,7 @@ package com.amplifyframework.aws.appsync.core.authorizers
 
 import com.amplifyframework.aws.appsync.core.AppSyncRequest
 import com.amplifyframework.aws.appsync.core.util.AppSyncRequestSigner
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.maps.shouldContainExactly
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -37,5 +38,21 @@ class AmplifyIamAuthorizerTest {
         val authorizer = AmplifyIamAuthorizer(region, signer)
 
         authorizer.getAuthorizationHeaders(request) shouldContainExactly mapOf("Authorization" to "test-signature")
+    }
+
+    @Test
+    fun `iam authorizer throws if failed to fetch token from amplify`() = runTest {
+        val request = mockk<AppSyncRequest>()
+        val signer = mockk<AppSyncRequestSigner> {
+            coEvery {
+                signAppSyncRequest(request, region)
+            } throws IllegalStateException()
+        }
+
+        val authorizer = AmplifyIamAuthorizer(region, signer)
+
+        shouldThrow<IllegalStateException> {
+            authorizer.getAuthorizationHeaders(request)
+        }
     }
 }

@@ -33,14 +33,4 @@ internal object HeaderKeys {
     const val AMAZON_DATE = "x-amz-date"
     const val API_KEY = "x-api-key"
     const val AUTHORIZATION = "Authorization"
-    const val HOST = "host"
-    const val ACCEPT = "accept"
-    const val CONTENT_TYPE = "content-type"
-    const val SEC_WEBSOCKET_PROTOCOL = "Sec-WebSocket-Protocol"
-}
-
-internal object HeaderValues {
-    const val ACCEPT_APPLICATION_JSON = "application/json, text/javascript"
-    const val CONTENT_TYPE_APPLICATION_JSON = "application/json; charset=UTF-8"
-    const val SEC_WEBSOCKET_PROTOCOL_APPSYNC_EVENTS = "aws-appsync-event-ws"
 }
