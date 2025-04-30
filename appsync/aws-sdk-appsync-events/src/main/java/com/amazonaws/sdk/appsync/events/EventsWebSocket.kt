@@ -124,7 +124,7 @@ internal class EventsWebSocket(
 
     override fun onMessage(webSocket: WebSocket, text: String) {
         connectionTimeoutTimer.resetTimeoutTimer()
-        logger?.debug { "Websocket onMessage: $text" }
+        logger?.debug("Websocket onMessage received")
         try {
             val eventMessage = json.decodeFromString<WebSocketMessage.Received>(text)
             emitEvent(eventMessage)
@@ -201,7 +201,7 @@ internal class EventsWebSocket(
 
     // returns true if websocket queued up event. false if failed
     private fun send(eventJson: String): Boolean {
-        logger?.debug { "send: $eventJson" }
+        logger?.debug("sending event over websocket")
         return webSocket.send(eventJson)
     }
 
