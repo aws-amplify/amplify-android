@@ -181,12 +181,12 @@ class AnalyticsClient(
     }
 
     /*
-    * adding for testing
-    * */
+     * adding for testing
+     * */
     internal fun getGlobalAttributes() = globalAttributes
 
     /*
-    * adding for testing
-    * */
+     * adding for testing
+     * */
     internal fun getGlobalMetrics() = globalMetrics
 }

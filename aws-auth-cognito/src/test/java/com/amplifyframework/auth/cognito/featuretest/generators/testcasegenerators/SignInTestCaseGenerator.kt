@@ -35,12 +35,12 @@ import com.amplifyframework.auth.exceptions.InvalidStateException
 import kotlinx.serialization.json.JsonObject
 
 object SignInTestCaseGenerator : SerializableProvider {
-    private const val userId = "userId"
-    private const val username = "username"
-    private const val password = "password"
-    private const val phone = "+12345678900"
-    private const val email = "test@****.com"
-    private const val session = "someSession"
+    private const val USER_ID = "userId"
+    private const val USERNAME = "username"
+    private const val PASSWORD = "password"
+    private const val PHONE = "+12345678900"
+    private const val EMAIL = "test@****.com"
+    private const val SESSION = "someSession"
 
     private val mockedInitiateAuthResponse = MockResponse(
         CognitoType.CognitoIdentityProvider,
@@ -52,8 +52,8 @@ object SignInTestCaseGenerator : SerializableProvider {
                 "SALT" to "abc",
                 "SECRET_BLOCK" to "secretBlock",
                 "SRP_B" to "def",
-                "USERNAME" to username,
-                "USER_ID_FOR_SRP" to userId
+                "USERNAME" to USERNAME,
+                "USER_ID_FOR_SRP" to USER_ID
             )
         ).toJsonElement()
     )
@@ -64,9 +64,9 @@ object SignInTestCaseGenerator : SerializableProvider {
         ResponseType.Success,
         mapOf(
             "authenticationResult" to mapOf(
-                "idToken" to AuthStateJsonGenerator.dummyToken,
-                "accessToken" to AuthStateJsonGenerator.dummyToken,
-                "refreshToken" to AuthStateJsonGenerator.dummyToken,
+                "idToken" to AuthStateJsonGenerator.DUMMY_TOKEN,
+                "accessToken" to AuthStateJsonGenerator.DUMMY_TOKEN,
+                "refreshToken" to AuthStateJsonGenerator.DUMMY_TOKEN,
                 "expiresIn" to 300
             )
         ).toJsonElement()
@@ -78,7 +78,7 @@ object SignInTestCaseGenerator : SerializableProvider {
         ResponseType.Success,
         mapOf(
             "challengeName" to ChallengeNameType.SelectChallenge.value,
-            "session" to session,
+            "session" to SESSION,
             "parameters" to JsonObject(emptyMap()),
             "availableChallenges" to listOf(
                 ChallengeNameType.Password.value,
@@ -90,9 +90,9 @@ object SignInTestCaseGenerator : SerializableProvider {
 
     private fun mockedInitiateAuthEmailOrSmsResponse(challengeNameType: ChallengeNameType): MockResponse {
         val (medium, destination) = if (challengeNameType == ChallengeNameType.EmailOtp) {
-            Pair("EMAIL", email)
+            Pair("EMAIL", EMAIL)
         } else {
-            Pair("SMS", phone)
+            Pair("SMS", PHONE)
         }
 
         return MockResponse(
@@ -101,7 +101,7 @@ object SignInTestCaseGenerator : SerializableProvider {
             ResponseType.Success,
             mapOf(
                 "challengeName" to challengeNameType.value,
-                "session" to session,
+                "session" to SESSION,
                 "parameters" to JsonObject(emptyMap()),
                 "challengeParameters" to mapOf(
                     "CODE_DELIVERY_DELIVERY_MEDIUM" to medium,
@@ -121,7 +121,7 @@ object SignInTestCaseGenerator : SerializableProvider {
                 "SALT" to "abc",
                 "SECRET_BLOCK" to "secretBlock",
                 "SRP_B" to "def",
-                "USERNAME" to username
+                "USERNAME" to USERNAME
             )
         ).toJsonElement()
     )
@@ -132,9 +132,9 @@ object SignInTestCaseGenerator : SerializableProvider {
         ResponseType.Success,
         mapOf(
             "authenticationResult" to mapOf(
-                "idToken" to AuthStateJsonGenerator.dummyToken,
-                "accessToken" to AuthStateJsonGenerator.dummyToken,
-                "refreshToken" to AuthStateJsonGenerator.dummyToken,
+                "idToken" to AuthStateJsonGenerator.DUMMY_TOKEN,
+                "accessToken" to AuthStateJsonGenerator.DUMMY_TOKEN,
+                "refreshToken" to AuthStateJsonGenerator.DUMMY_TOKEN,
                 "expiresIn" to 300
             )
         ).toJsonElement()
@@ -178,9 +178,9 @@ object SignInTestCaseGenerator : SerializableProvider {
         ResponseType.Success,
         mapOf(
             "authenticationResult" to mapOf(
-                "idToken" to AuthStateJsonGenerator.dummyToken,
-                "accessToken" to AuthStateJsonGenerator.dummyToken,
-                "refreshToken" to AuthStateJsonGenerator.dummyToken,
+                "idToken" to AuthStateJsonGenerator.DUMMY_TOKEN,
+                "accessToken" to AuthStateJsonGenerator.DUMMY_TOKEN,
+                "refreshToken" to AuthStateJsonGenerator.DUMMY_TOKEN,
                 "expiresIn" to 300,
                 "newDeviceMetadata" to mapOf(
                     "deviceKey" to "someDeviceKey",
@@ -199,7 +199,7 @@ object SignInTestCaseGenerator : SerializableProvider {
             "challengeName" to "SMS_MFA",
             "challengeParameters" to mapOf(
                 "CODE_DELIVERY_DELIVERY_MEDIUM" to "SMS",
-                "CODE_DELIVERY_DESTINATION" to phone
+                "CODE_DELIVERY_DESTINATION" to PHONE
             )
         ).toJsonElement()
     )
@@ -215,7 +215,7 @@ object SignInTestCaseGenerator : SerializableProvider {
                 "SALT" to "abc",
                 "SECRET_BLOCK" to "secretBlock",
                 "SRP_B" to "def",
-                "USERNAME" to username
+                "USERNAME" to USERNAME
             )
         ).toJsonElement()
     )
@@ -251,7 +251,7 @@ object SignInTestCaseGenerator : SerializableProvider {
             "credentials" to mapOf(
                 "accessKeyId" to "someAccessKey",
                 "secretKey" to "someSecretKey",
-                "sessionToken" to AuthStateJsonGenerator.dummyToken,
+                "sessionToken" to AuthStateJsonGenerator.DUMMY_TOKEN,
                 "expiration" to 2342134
             )
         ).toJsonElement()
@@ -278,7 +278,7 @@ object SignInTestCaseGenerator : SerializableProvider {
                 "signInStep" to "CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE",
                 "additionalInfo" to JsonObject(emptyMap()),
                 "codeDeliveryDetails" to mapOf(
-                    "destination" to phone,
+                    "destination" to PHONE,
                     "deliveryMedium" to "SMS"
                 )
             )
@@ -304,9 +304,9 @@ object SignInTestCaseGenerator : SerializableProvider {
 
     private fun mockedConfirmSignInWithOtpExpectation(challengeNameType: ChallengeNameType): ExpectationShapes.Amplify {
         val (medium, destination) = if (challengeNameType == ChallengeNameType.EmailOtp) {
-            Pair("EMAIL", email)
+            Pair("EMAIL", EMAIL)
         } else {
-            Pair("SMS", phone)
+            Pair("SMS", PHONE)
         }
         return ExpectationShapes.Amplify(
             apiName = AuthAPI.signIn,
@@ -336,7 +336,7 @@ object SignInTestCaseGenerator : SerializableProvider {
                     "SALT" to "abc",
                     "SECRET_BLOCK" to "secretBlock",
                     "SRP_B" to "def",
-                    "USERNAME" to username
+                    "USERNAME" to USERNAME
                 )
             )
         ).toJsonElement()
@@ -365,11 +365,11 @@ object SignInTestCaseGenerator : SerializableProvider {
             "authFlow" to aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType.UserAuth,
             "clientId" to "testAppClientId", // This should be pulled from configuration
             "authParameters" to mapOf(
-                "USERNAME" to AuthStateJsonGenerator.username, // pulled from loaded SignedUp state
+                "USERNAME" to AuthStateJsonGenerator.USERNAME, // pulled from loaded SignedUp state
                 "SECRET_HASH" to "a hash"
             ),
             "clientMetadata" to emptyMap<String, String>(),
-            "session" to AuthStateJsonGenerator.session // pulled from loaded SignedUp state
+            "session" to AuthStateJsonGenerator.SESSION // pulled from loaded SignedUp state
         ).toJsonElement()
     )
 
@@ -395,8 +395,8 @@ object SignInTestCaseGenerator : SerializableProvider {
         api = API(
             AuthAPI.signIn,
             params = mapOf(
-                "username" to username,
-                "password" to password
+                "username" to USERNAME,
+                "password" to PASSWORD
             ).toJsonElement(),
             options = JsonObject(emptyMap())
         ),
@@ -419,7 +419,7 @@ object SignInTestCaseGenerator : SerializableProvider {
         api = API(
             AuthAPI.signIn,
             params = mapOf(
-                "username" to username,
+                "username" to USERNAME,
                 "password" to ""
             ).toJsonElement(),
             options = mapOf(
@@ -450,7 +450,7 @@ object SignInTestCaseGenerator : SerializableProvider {
         api = API(
             AuthAPI.signIn,
             params = mapOf(
-                "username" to username,
+                "username" to USERNAME,
                 "password" to ""
             ).toJsonElement(),
             options = mapOf(
@@ -481,7 +481,7 @@ object SignInTestCaseGenerator : SerializableProvider {
         api = API(
             AuthAPI.signIn,
             params = mapOf(
-                "username" to username,
+                "username" to USERNAME,
                 "password" to ""
             ).toJsonElement(),
             options = mapOf(
@@ -512,7 +512,7 @@ object SignInTestCaseGenerator : SerializableProvider {
         api = API(
             AuthAPI.signIn,
             params = mapOf(
-                "username" to username,
+                "username" to USERNAME,
                 "password" to ""
             ).toJsonElement(),
             options = mapOf(
@@ -546,8 +546,8 @@ object SignInTestCaseGenerator : SerializableProvider {
         api = API(
             AuthAPI.signIn,
             params = mapOf(
-                "username" to username,
-                "password" to password
+                "username" to USERNAME,
+                "password" to PASSWORD
             ).toJsonElement(),
             options = mapOf(
                 "signInOptions" to
@@ -577,8 +577,8 @@ object SignInTestCaseGenerator : SerializableProvider {
         api = API(
             AuthAPI.signIn,
             params = mapOf(
-                "username" to username,
-                "password" to password
+                "username" to USERNAME,
+                "password" to PASSWORD
             ).toJsonElement(),
             options = mapOf(
                 "signInOptions" to
@@ -609,8 +609,8 @@ object SignInTestCaseGenerator : SerializableProvider {
         api = API(
             AuthAPI.signIn,
             params = mapOf(
-                "username" to username,
-                "password" to password
+                "username" to USERNAME,
+                "password" to PASSWORD
             ).toJsonElement(),
             options = mapOf(
                 "signInOptions" to
@@ -640,8 +640,8 @@ object SignInTestCaseGenerator : SerializableProvider {
         api = API(
             AuthAPI.signIn,
             params = mapOf(
-                "username" to username,
-                "password" to password
+                "username" to USERNAME,
+                "password" to PASSWORD
             ).toJsonElement(),
             options = mapOf(
                 "signInOptions" to
@@ -711,8 +711,8 @@ object SignInTestCaseGenerator : SerializableProvider {
         api = API(
             AuthAPI.signIn,
             params = mapOf(
-                "username" to username,
-                "password" to password
+                "username" to USERNAME,
+                "password" to PASSWORD
             ).toJsonElement(),
             options = JsonObject(emptyMap())
         ),
@@ -738,8 +738,8 @@ object SignInTestCaseGenerator : SerializableProvider {
         api = API(
             AuthAPI.signIn,
             params = mapOf(
-                "username" to username,
-                "password" to password
+                "username" to USERNAME,
+                "password" to PASSWORD
             ).toJsonElement(),
             options = JsonObject(emptyMap())
         ),
@@ -778,8 +778,8 @@ object SignInTestCaseGenerator : SerializableProvider {
         api = API(
             AuthAPI.signIn,
             params = mapOf(
-                "username" to username,
-                "password" to password
+                "username" to USERNAME,
+                "password" to PASSWORD
             ).toJsonElement(),
             options = JsonObject(emptyMap())
         ),
@@ -802,7 +802,7 @@ object SignInTestCaseGenerator : SerializableProvider {
         api = API(
             AuthAPI.signIn,
             params = mapOf(
-                "username" to username,
+                "username" to USERNAME,
                 "password" to ""
             ).toJsonElement(),
             options = mapOf(
@@ -831,7 +831,7 @@ object SignInTestCaseGenerator : SerializableProvider {
         api = API(
             AuthAPI.signIn,
             params = mapOf(
-                "username" to username,
+                "username" to USERNAME,
                 "password" to ""
             ).toJsonElement(),
             options = mapOf(
@@ -858,7 +858,7 @@ object SignInTestCaseGenerator : SerializableProvider {
         api = API(
             AuthAPI.signIn,
             params = mapOf(
-                "username" to username,
+                "username" to USERNAME,
                 "password" to ""
             ).toJsonElement(),
             options = mapOf(
@@ -885,7 +885,7 @@ object SignInTestCaseGenerator : SerializableProvider {
         api = API(
             AuthAPI.signIn,
             params = mapOf(
-                "username" to username,
+                "username" to USERNAME,
                 "password" to ""
             ).toJsonElement(),
             options = mapOf(
@@ -913,7 +913,7 @@ object SignInTestCaseGenerator : SerializableProvider {
         api = API(
             AuthAPI.signIn,
             params = mapOf(
-                "username" to username,
+                "username" to USERNAME,
                 "password" to ""
             ).toJsonElement(),
             options = mapOf(

@@ -46,9 +46,8 @@ internal sealed class SignInChallengeState : State {
     class Resolver(private val challengeActions: SignInChallengeActions) : StateMachineResolver<SignInChallengeState> {
         override val defaultState: SignInChallengeState = NotStarted()
 
-        private fun asSignInChallengeEvent(event: StateMachineEvent): SignInChallengeEvent.EventType? {
-            return (event as? SignInChallengeEvent)?.eventType
-        }
+        private fun asSignInChallengeEvent(event: StateMachineEvent): SignInChallengeEvent.EventType? =
+            (event as? SignInChallengeEvent)?.eventType
 
         override fun resolve(
             oldState: SignInChallengeState,

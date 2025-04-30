@@ -25,9 +25,9 @@ import aws.smithy.kotlin.runtime.http.HttpBody
 import aws.smithy.kotlin.runtime.http.request.HttpRequest
 import aws.smithy.kotlin.runtime.http.toHttpBody
 import aws.smithy.kotlin.runtime.net.url.Url
+import com.amazonaws.sdk.appsync.core.AppSyncRequest
 import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.auth.CognitoCredentialsProvider
-import com.amazonaws.sdk.appsync.core.AppSyncRequest
 
 internal class AppSyncRequestSigner(
     private val credentialsProvider: AuthCredentialsProvider = CognitoCredentialsProvider(),

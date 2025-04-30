@@ -87,14 +87,12 @@ import com.amplifyframework.statemachine.codegen.data.HostedUIErrorData
 import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignOutData
-import com.amplifyframework.statemachine.codegen.data.SignUpData
 import com.amplifyframework.statemachine.codegen.data.WebAuthnSignInContext
 import com.amplifyframework.statemachine.codegen.data.challengeNameType
 import com.amplifyframework.statemachine.codegen.errors.SessionError
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
-import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.HostedUIEvent
 import com.amplifyframework.statemachine.codegen.events.SetupTOTPEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
@@ -103,14 +101,12 @@ import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
-import com.amplifyframework.statemachine.codegen.states.DeleteUserState
 import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
 import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SetupTOTPState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
-import com.amplifyframework.statemachine.codegen.states.SignUpState
 import com.amplifyframework.statemachine.codegen.states.WebAuthnSignInState
 import java.lang.ref.WeakReference
 import java.util.concurrent.CountDownLatch
@@ -119,11 +115,10 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.takeWhile
-import kotlinx.coroutines.launch
 
+@Suppress("ktlint:standard:function-naming")
 internal class RealAWSCognitoAuthPlugin(
     val configuration: AuthConfiguration,
     private val authEnvironment: AuthEnvironment,
@@ -172,107 +167,6 @@ internal class RealAWSCognitoAuthPlugin(
 
     internal suspend fun suspendWhileConfiguring() {
         authStateMachine.state.takeWhile { it !is AuthState.Configured && it !is AuthState.Error }.collect()
-    }
-
-    fun autoSignIn(onSuccess: Consumer<AuthSignInResult>, onError: Consumer<AuthException>) {
-        authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                is AuthenticationState.NotConfigured -> onError.accept(
-                    InvalidUserPoolConfigurationException()
-                )
-                is AuthenticationState.SignedIn -> {
-                    onError.accept(InvalidStateException())
-                }
-                is AuthenticationState.SignedOut -> GlobalScope.launch {
-                    when (val signUpState = authState.authSignUpState) {
-                        is SignUpState.SignedUp -> {
-                            _autoSignIn(signUpState.signUpData, onSuccess, onError)
-                        }
-                        else -> onError.accept(InvalidStateException())
-                    }
-                }
-                is AuthenticationState.SigningIn -> {
-                    val token = StateChangeListenerToken()
-                    authStateMachine.listen(
-                        token,
-                        { authState ->
-                            when (authState.authNState) {
-                                is AuthenticationState.SignedOut -> {
-                                    authStateMachine.cancel(token)
-                                    when (val signUpState = authState.authSignUpState) {
-                                        is SignUpState.SignedUp -> GlobalScope.launch {
-                                            _autoSignIn(signUpState.signUpData, onSuccess, onError)
-                                        }
-                                        else -> onError.accept(InvalidStateException())
-                                    }
-                                }
-                                else -> Unit
-                            }
-                        },
-                        {
-                            authStateMachine.send(AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn()))
-                        }
-                    )
-                }
-                else -> onError.accept(InvalidStateException())
-            }
-        }
-    }
-
-    private suspend fun _autoSignIn(
-        signUpData: SignUpData,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
-    ) {
-        val token = StateChangeListenerToken()
-        authStateMachine.listen(
-            token,
-            { authState ->
-                val authNState = authState.authNState
-                val authZState = authState.authZState
-                when {
-                    authNState is AuthenticationState.SigningIn -> {
-                        val signInState = authNState.signInState
-                        when {
-                            signInState is SignInState.Error -> {
-                                authStateMachine.cancel(token)
-                                onError.accept(
-                                    CognitoAuthExceptionConverter.lookup(signInState.exception, "Sign in failed.")
-                                )
-                            }
-                        }
-                    }
-                    authNState is AuthenticationState.SignedIn &&
-                        authZState is AuthorizationState.SessionEstablished -> {
-                        authStateMachine.cancel(token)
-                        val authSignInResult = AuthSignInResult(
-                            true,
-                            AuthNextSignInStep(
-                                AuthSignInStep.DONE,
-                                mapOf(),
-                                null,
-                                null,
-                                null,
-                                null
-                            )
-                        )
-                        onSuccess.accept(authSignInResult)
-                        sendHubEvent(AuthChannelEventName.SIGNED_IN.toString())
-                    }
-                    else -> Unit
-                }
-            },
-            {
-                val signInData = SignInData.AutoSignInData(
-                    signUpData.username,
-                    signUpData.session,
-                    signUpData.clientMetadata ?: mapOf(),
-                    signUpData.userId
-                )
-                val event = AuthenticationEvent(AuthenticationEvent.EventType.SignInRequested(signInData))
-                authStateMachine.send(event)
-            }
-        )
     }
 
     fun signIn(
@@ -1337,68 +1231,6 @@ internal class RealAWSCognitoAuthPlugin(
                 }
             },
             {
-            }
-        )
-    }
-
-    fun deleteUser(onSuccess: Action, onError: Consumer<AuthException>) {
-        authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                is AuthenticationState.SignedIn -> {
-                    GlobalScope.launch {
-                        try {
-                            val accessToken = getSession().userPoolTokensResult.value?.accessToken
-                            accessToken?.let {
-                                _deleteUser(accessToken, onSuccess, onError)
-                            } ?: onError.accept(SignedOutException())
-                        } catch (error: Exception) {
-                            onError.accept(SignedOutException())
-                        }
-                    }
-                }
-                is AuthenticationState.SignedOut -> onError.accept(SignedOutException())
-                else -> onError.accept(InvalidStateException())
-            }
-        }
-    }
-
-    private fun _deleteUser(token: String, onSuccess: Action, onError: Consumer<AuthException>) {
-        val listenerToken = StateChangeListenerToken()
-        var deleteUserException: Exception? = null
-        authStateMachine.listen(
-            listenerToken,
-            { authState ->
-                if (authState is AuthState.Configured) {
-                    val (authNState, authZState) = authState
-                    val exception = deleteUserException
-                    when {
-                        authZState is AuthorizationState.DeletingUser &&
-                            authZState.deleteUserState is DeleteUserState.Error -> {
-                            deleteUserException = authZState.deleteUserState.exception
-                        }
-                        authNState is AuthenticationState.SignedOut && authZState is AuthorizationState.Configured -> {
-                            sendHubEvent(AuthChannelEventName.USER_DELETED.toString())
-                            authStateMachine.cancel(listenerToken)
-                            onSuccess.call()
-                        }
-                        authZState is AuthorizationState.SessionEstablished && exception != null -> {
-                            authStateMachine.cancel(listenerToken)
-                            onError.accept(
-                                CognitoAuthExceptionConverter.lookup(
-                                    exception,
-                                    "Request to delete user may have failed. Please check exception stack"
-                                )
-                            )
-                        }
-                        else -> {
-                            // No - op
-                        }
-                    }
-                }
-            },
-            {
-                val event = DeleteUserEvent(DeleteUserEvent.EventType.DeleteUser(accessToken = token))
-                authStateMachine.send(event)
             }
         )
     }

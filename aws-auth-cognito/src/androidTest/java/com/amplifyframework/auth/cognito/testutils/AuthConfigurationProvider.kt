@@ -22,31 +22,27 @@ import kotlinx.serialization.Serializable
 import org.json.JSONObject
 
 object AuthConfigurationProvider {
-    internal fun getAuthConfigurationObject(): Configuration {
-        return Configuration(
-            CredentialsProvider(
-                CognitoIdentity(
-                    CognitoIdentityData("identityPoolId", "cognitoIdRegion")
-                )
-            ),
-            CognitoUserPool(
-                // Warning com.amplifyframework.auth.cognito.AWSCognitoLegacyCredentialStoreInstrumentationTest.setup
-                // depends on hardcoded value of AppClientId here.
-                UserPoolData(
-                    "userPoolId",
-                    "userPoolRegion",
-                    "userPoolAppClientId",
-                    "AppClientSecret"
-                )
+    internal fun getAuthConfigurationObject(): Configuration = Configuration(
+        CredentialsProvider(
+            CognitoIdentity(
+                CognitoIdentityData("identityPoolId", "cognitoIdRegion")
+            )
+        ),
+        CognitoUserPool(
+            // Warning com.amplifyframework.auth.cognito.AWSCognitoLegacyCredentialStoreInstrumentationTest.setup
+            // depends on hardcoded value of AppClientId here.
+            UserPoolData(
+                "userPoolId",
+                "userPoolRegion",
+                "userPoolAppClientId",
+                "AppClientSecret"
             )
         )
-    }
+    )
 
-    internal fun getAuthConfiguration(): AuthConfiguration {
-        return AuthConfiguration.fromJson(
-            JSONObject(Gson().toJson(getAuthConfigurationObject()))
-        )
-    }
+    internal fun getAuthConfiguration(): AuthConfiguration = AuthConfiguration.fromJson(
+        JSONObject(Gson().toJson(getAuthConfigurationObject()))
+    )
 }
 
 // TODO refactor this to use UserPool IdentityPool Configuration
@@ -54,21 +50,17 @@ object AuthConfigurationProvider {
 @Serializable
 internal data class Configuration(
     @SerializedName("CredentialsProvider") val credentials: CredentialsProvider,
-    @SerializedName("CognitoUserPool") val userPool: CognitoUserPool,
+    @SerializedName("CognitoUserPool") val userPool: CognitoUserPool
 )
 
 @Serializable
-internal data class CredentialsProvider(
-    @SerializedName("CognitoIdentity") val cognitoIdentity: CognitoIdentity
-)
+internal data class CredentialsProvider(@SerializedName("CognitoIdentity") val cognitoIdentity: CognitoIdentity)
 
 @Serializable
 internal data class CognitoUserPool(@SerializedName("Default") val userPool: UserPoolData)
 
 @Serializable
-internal data class CognitoIdentity(
-    @SerializedName("Default") val identityData: CognitoIdentityData
-)
+internal data class CognitoIdentity(@SerializedName("Default") val identityData: CognitoIdentityData)
 
 @Serializable
 internal data class UserPoolData(

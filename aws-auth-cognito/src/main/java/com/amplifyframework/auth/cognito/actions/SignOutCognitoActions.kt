@@ -119,7 +119,7 @@ internal object SignOutCognitoActions : SignOutActions {
                     logger.debug("Access Token does not contain `origin_jti` claim. Skip revoking tokens.")
                     val error = RevokeTokenErrorData(
                         refreshToken = refreshToken,
-                        error = Exception("Access Token does not contain `origin_jti` claim. Skip revoking tokens."),
+                        error = Exception("Access Token does not contain `origin_jti` claim. Skip revoking tokens.")
                     )
 
                     SignOutEvent(

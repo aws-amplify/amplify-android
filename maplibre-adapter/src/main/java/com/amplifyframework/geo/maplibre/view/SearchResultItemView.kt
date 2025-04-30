@@ -27,7 +27,7 @@ import com.amplifyframework.geo.maplibre.view.support.setSelectableBackground
 
 @SuppressLint("ViewConstructor")
 internal class SearchResultItemView(
-    context: Context,
+    context: Context
 ) : LinearLayout(context) {
 
     internal val label: TextView by lazy {

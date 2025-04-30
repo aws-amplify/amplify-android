@@ -20,11 +20,13 @@ import com.amplifyframework.auth.cognito.AuthStateMachine
 import com.amplifyframework.auth.cognito.RealAWSCognitoAuthPlugin
 import com.amplifyframework.auth.cognito.helpers.WebAuthnHelper
 import com.amplifyframework.auth.cognito.requireIdentityProviderClient
+import com.amplifyframework.auth.plugins.core.AuthHubEventEmitter
 
 internal class AuthUseCaseFactory(
     private val plugin: RealAWSCognitoAuthPlugin,
     private val authEnvironment: AuthEnvironment,
-    private val stateMachine: AuthStateMachine
+    private val stateMachine: AuthStateMachine,
+    private val hubEmitter: AuthHubEventEmitter = AuthHubEventEmitter()
 ) {
 
     fun fetchAuthSession() = FetchAuthSessionUseCase(plugin)
@@ -140,6 +142,11 @@ internal class AuthUseCaseFactory(
         stateMachine = stateMachine
     )
 
+    fun autoSignIn() = AutoSignInUseCase(
+        stateMachine = stateMachine,
+        hubEmitter = hubEmitter
+    )
+
     fun fetchMfaPreference() = FetchMfaPreferenceUseCase(
         client = authEnvironment.requireIdentityProviderClient(),
         fetchAuthSession = fetchAuthSession(),
@@ -150,6 +157,11 @@ internal class AuthUseCaseFactory(
         client = authEnvironment.requireIdentityProviderClient(),
         fetchAuthSession = fetchAuthSession(),
         fetchMfaPreference = fetchMfaPreference(),
+        stateMachine = stateMachine
+    )
+
+    fun deleteUser() = DeleteUserUseCase(
+        fetchAuthSession = fetchAuthSession(),
         stateMachine = stateMachine
     )
 }

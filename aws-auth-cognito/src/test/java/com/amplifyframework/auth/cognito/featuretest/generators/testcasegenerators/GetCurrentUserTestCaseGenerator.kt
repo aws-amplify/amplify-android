@@ -34,7 +34,7 @@ object GetCurrentUserTestCaseGenerator : SerializableProvider {
     private val apiReturnValidation = ExpectationShapes.Amplify(
         AuthAPI.getCurrentUser,
         ResponseType.Success,
-        expectedSuccess,
+        expectedSuccess
     )
 
     private val baseCase = FeatureTestCase(
@@ -64,7 +64,7 @@ object GetCurrentUserTestCaseGenerator : SerializableProvider {
                     ExpectationShapes.Amplify(
                         AuthAPI.getCurrentUser,
                         ResponseType.Failure,
-                        com.amplifyframework.auth.exceptions.SignedOutException().toJsonElement(),
+                        com.amplifyframework.auth.exceptions.SignedOutException().toJsonElement()
                     )
                 )
             )

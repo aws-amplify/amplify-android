@@ -57,7 +57,7 @@ class JsonGenerator {
         RememberDeviceTestCaseGenerator,
         ForgetDeviceTestCaseGenerator,
         FetchDevicesTestCaseGenerator,
-        FetchUserAttributesTestCaseGenerator,
+        FetchUserAttributesTestCaseGenerator
     )
 
     @Ignore("Uncomment and run to clean feature test directory")

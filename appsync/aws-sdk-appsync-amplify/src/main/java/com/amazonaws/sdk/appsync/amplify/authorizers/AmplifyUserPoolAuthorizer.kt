@@ -14,11 +14,11 @@
  */
 package com.amazonaws.sdk.appsync.amplify.authorizers
 
-import com.amplifyframework.auth.AuthCredentialsProvider
-import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amazonaws.sdk.appsync.core.AppSyncAuthorizer
 import com.amazonaws.sdk.appsync.core.AppSyncRequest
 import com.amazonaws.sdk.appsync.core.authorizers.AuthTokenAuthorizer
+import com.amplifyframework.auth.AuthCredentialsProvider
+import com.amplifyframework.auth.CognitoCredentialsProvider
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine

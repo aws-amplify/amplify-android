@@ -32,9 +32,8 @@ internal class ContextDataAggregator(deviceId: String) {
      * @param context Android application context.
      * @return key-value pair of the collected user context data.
      */
-    fun getAggregatedData(context: Context): Map<String, String?> =
-        dataCollectors
-            .flatMap { it.collect(context).entries }
-            .associate { it.key to it.value }
-            .filterValues { !it.isNullOrEmpty() }
+    fun getAggregatedData(context: Context): Map<String, String?> = dataCollectors
+        .flatMap { it.collect(context).entries }
+        .associate { it.key to it.value }
+        .filterValues { !it.isNullOrEmpty() }
 }

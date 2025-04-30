@@ -14,9 +14,9 @@
  */
 package com.amazonaws.sdk.appsync.amplify.authorizers
 
+import com.amazonaws.sdk.appsync.amplify.util.AppSyncRequestSigner
 import com.amazonaws.sdk.appsync.core.AppSyncAuthorizer
 import com.amazonaws.sdk.appsync.core.AppSyncRequest
-import com.amazonaws.sdk.appsync.amplify.util.AppSyncRequestSigner
 import com.amazonaws.sdk.appsync.core.authorizers.IamAuthorizer
 import org.jetbrains.annotations.VisibleForTesting
 

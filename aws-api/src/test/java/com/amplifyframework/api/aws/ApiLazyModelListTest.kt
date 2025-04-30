@@ -90,7 +90,7 @@ class ApiLazyModelListTest {
 
     private val items = listOf<Post>(
         Post.builder().name("p1").blog(Blog.justId("b1")).build(),
-        Post.builder().name("p2").blog(Blog.justId("b1")).build(),
+        Post.builder().name("p2").blog(Blog.justId("b1")).build()
     )
 
     @Test

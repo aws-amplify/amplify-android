@@ -145,8 +145,7 @@ class AmazonPollyPresigningClientTest {
     }
 
     open class TestCredentialsProvider : CredentialsProvider {
-        override suspend fun resolve(attributes: Attributes): Credentials {
-            return Credentials("testAccessKey", "testSecretKey")
-        }
+        override suspend fun resolve(attributes: Attributes): Credentials =
+            Credentials("testAccessKey", "testSecretKey")
     }
 }

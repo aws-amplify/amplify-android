@@ -51,11 +51,17 @@ internal class AWSTranslateService(
         execute(
             {
                 val source =
-                    if (LanguageType.UNKNOWN != sourceLanguage) sourceLanguage else
+                    if (LanguageType.UNKNOWN != sourceLanguage) {
+                        sourceLanguage
+                    } else {
                         pluginConfiguration.translateTextConfiguration.sourceLanguage
+                    }
                 val target =
-                    if (LanguageType.UNKNOWN != targetLanguage) targetLanguage else
+                    if (LanguageType.UNKNOWN != targetLanguage) {
+                        targetLanguage
+                    } else {
                         pluginConfiguration.translateTextConfiguration.targetLanguage
+                    }
                 val result = client.translateText {
                     this.text = textToTranslate
                     this.sourceLanguageCode = source.languageCode

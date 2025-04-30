@@ -127,13 +127,11 @@ internal abstract class SuspendingTransferWorker(
         )
     }
 
-    private fun isRetryableError(e: Throwable?): Boolean {
-        return !isNetworkAvailable(applicationContext) ||
-            runAttemptCount < maxRetryCount ||
-            e is CancellationException ||
-            // SocketException is thrown when download is terminated due to network disconnection.
-            e is SocketException
-    }
+    private fun isRetryableError(e: Throwable?): Boolean = !isNetworkAvailable(applicationContext) ||
+        runAttemptCount < maxRetryCount ||
+        e is CancellationException ||
+        // SocketException is thrown when download is terminated due to network disconnection.
+        e is SocketException
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createChannel() {

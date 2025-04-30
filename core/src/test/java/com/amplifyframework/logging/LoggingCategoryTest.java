@@ -20,6 +20,8 @@ import android.util.Log;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.category.CategoryConfiguration;
+import com.amplifyframework.core.category.CategoryInitializationResult;
+import com.amplifyframework.core.configuration.AmplifyOutputsData;
 import com.amplifyframework.testutils.random.RandomString;
 
 import org.json.JSONException;
@@ -27,6 +29,7 @@ import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 
 import java.util.List;
@@ -133,6 +136,28 @@ public final class LoggingCategoryTest {
         assertEquals(1, capturedLogs.size());
         FakeLogger.Log firstLog = capturedLogs.get(0);
         firstLog.assertEquals(LogLevel.WARN, message, issue);
+    }
+
+    /**
+     * Category should initialize as normal when using a Gen2 configuration.
+     * @throws AmplifyException Not expected; possible from addPlugin() call
+     */
+    @Test
+    public void initializationSucceedsForGen2() throws AmplifyException {
+        FakeLogger userLogger = FakeLogger.instance(RandomString.string(), LogLevel.VERBOSE);
+        FakeLoggingPlugin<Void> userPlugin = FakeLoggingPlugin.instance(userLogger);
+        realLoggingCategory.addPlugin(userPlugin);
+
+        AmplifyOutputsData data = Mockito.mock(AmplifyOutputsData.class);
+        realLoggingCategory.configure(data, getApplicationContext());
+
+        // Ensure initialization succeeds
+        CategoryInitializationResult result = realLoggingCategory.initialize(getApplicationContext());
+        assertTrue(result.isSuccess());
+
+        // Ensure we can fetch the plugin
+        LoggingPlugin<?> plugin = realLoggingCategory.getPlugin(userPlugin.getPluginKey());
+        assertEquals(userPlugin, plugin);
     }
 
     private static LoggingCategoryConfiguration loggingConfiguration() {

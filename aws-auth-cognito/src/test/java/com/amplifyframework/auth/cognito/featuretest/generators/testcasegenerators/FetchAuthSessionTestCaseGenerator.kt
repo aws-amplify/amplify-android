@@ -56,9 +56,9 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
         ResponseType.Success,
         mapOf(
             "authenticationResult" to mapOf(
-                "idToken" to AuthStateJsonGenerator.dummyToken2,
-                "accessToken" to AuthStateJsonGenerator.dummyToken2,
-                "refreshToken" to AuthStateJsonGenerator.dummyToken,
+                "idToken" to AuthStateJsonGenerator.DUMMY_TOKEN_2,
+                "accessToken" to AuthStateJsonGenerator.DUMMY_TOKEN_2,
+                "refreshToken" to AuthStateJsonGenerator.DUMMY_TOKEN,
                 "expiresIn" to 300
             )
         ).toJsonElement()
@@ -88,7 +88,7 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
             "credentials" to mapOf(
                 "accessKeyId" to "someAccessKey",
                 "secretKey" to "someSecretKey",
-                "sessionToken" to AuthStateJsonGenerator.dummyToken2,
+                "sessionToken" to AuthStateJsonGenerator.DUMMY_TOKEN_2,
                 "expiration" to 2342134
             )
         ).toJsonElement()
@@ -117,18 +117,18 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
         identityIdResult = AuthSessionResult.success("someIdentityId"),
         awsCredentialsResult = AuthSessionResult.success(
             AWSCredentials.createAWSCredentials(
-                AuthStateJsonGenerator.accessKeyId,
-                AuthStateJsonGenerator.secretAccessKey,
-                AuthStateJsonGenerator.dummyToken,
-                AuthStateJsonGenerator.expiration
+                AuthStateJsonGenerator.ACCESS_KEY_ID,
+                AuthStateJsonGenerator.SECRET_ACCESS_KEY,
+                AuthStateJsonGenerator.DUMMY_TOKEN,
+                AuthStateJsonGenerator.EXPIRATION
             )
         ),
-        userSubResult = AuthSessionResult.success(AuthStateJsonGenerator.userId),
+        userSubResult = AuthSessionResult.success(AuthStateJsonGenerator.USER_ID),
         userPoolTokensResult = AuthSessionResult.success(
             AWSCognitoUserPoolTokens(
-                accessToken = AuthStateJsonGenerator.dummyToken,
-                idToken = AuthStateJsonGenerator.dummyToken,
-                refreshToken = AuthStateJsonGenerator.dummyToken
+                accessToken = AuthStateJsonGenerator.DUMMY_TOKEN,
+                idToken = AuthStateJsonGenerator.DUMMY_TOKEN,
+                refreshToken = AuthStateJsonGenerator.DUMMY_TOKEN
             )
         )
     ).toJsonElement()
@@ -138,18 +138,18 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
         identityIdResult = AuthSessionResult.success("someIdentityId"),
         awsCredentialsResult = AuthSessionResult.success(
             AWSCredentials.createAWSCredentials(
-                AuthStateJsonGenerator.accessKeyId,
-                AuthStateJsonGenerator.secretAccessKey,
-                AuthStateJsonGenerator.dummyToken2,
-                AuthStateJsonGenerator.expiration
+                AuthStateJsonGenerator.ACCESS_KEY_ID,
+                AuthStateJsonGenerator.SECRET_ACCESS_KEY,
+                AuthStateJsonGenerator.DUMMY_TOKEN_2,
+                AuthStateJsonGenerator.EXPIRATION
             )
         ),
-        userSubResult = AuthSessionResult.success(AuthStateJsonGenerator.userId),
+        userSubResult = AuthSessionResult.success(AuthStateJsonGenerator.USER_ID),
         userPoolTokensResult = AuthSessionResult.success(
             AWSCognitoUserPoolTokens(
-                accessToken = AuthStateJsonGenerator.dummyToken2,
-                idToken = AuthStateJsonGenerator.dummyToken2,
-                refreshToken = AuthStateJsonGenerator.dummyToken
+                accessToken = AuthStateJsonGenerator.DUMMY_TOKEN_2,
+                idToken = AuthStateJsonGenerator.DUMMY_TOKEN_2,
+                refreshToken = AuthStateJsonGenerator.DUMMY_TOKEN
             )
         )
     ).toJsonElement()
@@ -183,25 +183,25 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
     private val apiReturnValidation = ExpectationShapes.Amplify(
         AuthAPI.fetchAuthSession,
         ResponseType.Success,
-        expectedSuccess,
+        expectedSuccess
     )
 
     private val apiRefreshReturnValidation = ExpectationShapes.Amplify(
         AuthAPI.fetchAuthSession,
         ResponseType.Success,
-        expectedRefreshSuccess,
+        expectedRefreshSuccess
     )
 
     private val apiRefreshFailureReturnValidation = ExpectationShapes.Amplify(
         AuthAPI.fetchAuthSession,
         ResponseType.Success,
-        expectedRefreshFailure,
+        expectedRefreshFailure
     )
 
     private val apiRefreshIdentityFailureReturnValidation = ExpectationShapes.Amplify(
         AuthAPI.fetchAuthSession,
         ResponseType.Success,
-        expectedRefreshIdentityFailure,
+        expectedRefreshIdentityFailure
     )
 
     private val baseCase = FeatureTestCase(
@@ -287,10 +287,10 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
                     identityIdResult = AuthSessionResult.success("someIdentityId"),
                     awsCredentialsResult = AuthSessionResult.success(
                         AWSCredentials.createAWSCredentials(
-                            AuthStateJsonGenerator.accessKeyId,
-                            AuthStateJsonGenerator.secretAccessKey,
-                            AuthStateJsonGenerator.dummyToken,
-                            AuthStateJsonGenerator.expiration
+                            AuthStateJsonGenerator.ACCESS_KEY_ID,
+                            AuthStateJsonGenerator.SECRET_ACCESS_KEY,
+                            AuthStateJsonGenerator.DUMMY_TOKEN,
+                            AuthStateJsonGenerator.EXPIRATION
                         )
                     ),
                     userSubResult = AuthSessionResult.failure(SignedOutException()),
@@ -324,12 +324,12 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
                             "Cognito Identity not configured. Please check amplifyconfiguration.json file."
                         )
                     ),
-                    userSubResult = AuthSessionResult.success(AuthStateJsonGenerator.userId),
+                    userSubResult = AuthSessionResult.success(AuthStateJsonGenerator.USER_ID),
                     userPoolTokensResult = AuthSessionResult.success(
                         AWSCognitoUserPoolTokens(
-                            accessToken = AuthStateJsonGenerator.dummyToken,
-                            idToken = AuthStateJsonGenerator.dummyToken,
-                            refreshToken = AuthStateJsonGenerator.dummyToken
+                            accessToken = AuthStateJsonGenerator.DUMMY_TOKEN,
+                            idToken = AuthStateJsonGenerator.DUMMY_TOKEN,
+                            refreshToken = AuthStateJsonGenerator.DUMMY_TOKEN
                         )
                     )
                 ).toJsonElement()

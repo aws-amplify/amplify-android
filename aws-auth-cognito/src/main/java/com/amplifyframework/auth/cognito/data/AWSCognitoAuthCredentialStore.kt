@@ -31,52 +31,52 @@ internal class AWSCognitoAuthCredentialStore(
 ) : AuthCredentialStore {
 
     companion object {
-        const val awsKeyValueStoreIdentifier = "com.amplify.credentialStore"
-        private const val Key_Session = "session"
-        private const val Key_DeviceMetadata = "deviceMetadata"
-        private const val Key_ASFDevice = "asfDevice"
+        const val AWS_KEY_VALUE_STORE_IDENTIFIER = "com.amplify.credentialStore"
+        private const val KEY_SESSION = "session"
+        private const val KEY_DEVICE_METADATA = "deviceMetadata"
+        private const val KEY_ASF_DEVICE = "asfDevice"
     }
 
     private var keyValue: KeyValueRepository =
-        keyValueRepoFactory.create(context, awsKeyValueStoreIdentifier)
+        keyValueRepoFactory.create(context, AWS_KEY_VALUE_STORE_IDENTIFIER)
 
     //region Save Credentials
     override fun saveCredential(credential: AmplifyCredential) = keyValue.put(
-        generateKey(Key_Session),
+        generateKey(KEY_SESSION),
         serializeCredential(credential)
     )
 
     override fun saveDeviceMetadata(username: String, deviceMetadata: DeviceMetadata) = keyValue.put(
-        generateKey("$username.$Key_DeviceMetadata"),
+        generateKey("$username.$KEY_DEVICE_METADATA"),
         serializeMetaData(deviceMetadata)
     )
 
     override fun saveASFDevice(device: AmplifyCredential.ASFDevice) = keyValue.put(
-        generateKey(Key_ASFDevice),
+        generateKey(KEY_ASF_DEVICE),
         serializeASFDevice(device)
     )
     //endregion
 
     //region Retrieve Credentials
-    override fun retrieveCredential(): AmplifyCredential = deserializeCredential(keyValue.get(generateKey(Key_Session)))
+    override fun retrieveCredential(): AmplifyCredential = deserializeCredential(keyValue.get(generateKey(KEY_SESSION)))
 
     override fun retrieveDeviceMetadata(username: String): DeviceMetadata = deserializeMetadata(
-        keyValue.get(generateKey("$username.$Key_DeviceMetadata"))
+        keyValue.get(generateKey("$username.$KEY_DEVICE_METADATA"))
     )
 
     override fun retrieveASFDevice(): AmplifyCredential.ASFDevice = deserializeASFDevice(
-        keyValue.get(generateKey(Key_ASFDevice))
+        keyValue.get(generateKey(KEY_ASF_DEVICE))
     )
     //endregion
 
     //region Delete Credentials
-    override fun deleteCredential() = keyValue.remove(generateKey(Key_Session))
+    override fun deleteCredential() = keyValue.remove(generateKey(KEY_SESSION))
 
     override fun deleteDeviceKeyCredential(username: String) = keyValue.remove(
-        generateKey("$username.$Key_DeviceMetadata")
+        generateKey("$username.$KEY_DEVICE_METADATA")
     )
 
-    override fun deleteASFDevice() = keyValue.remove(generateKey(Key_ASFDevice))
+    override fun deleteASFDevice() = keyValue.remove(generateKey(KEY_ASF_DEVICE))
     //endregion
 
     private fun generateKey(keySuffix: String): String {
@@ -93,45 +93,33 @@ internal class AWSCognitoAuthCredentialStore(
     }
 
     //region Deserialization
-    private fun deserializeCredential(encodedCredential: String?): AmplifyCredential {
-        return try {
-            val credentials = encodedCredential?.let { Json.decodeFromString(it) as AmplifyCredential }
-            credentials ?: AmplifyCredential.Empty
-        } catch (e: Exception) {
-            AmplifyCredential.Empty
-        }
+    private fun deserializeCredential(encodedCredential: String?): AmplifyCredential = try {
+        val credentials = encodedCredential?.let { Json.decodeFromString(it) as AmplifyCredential }
+        credentials ?: AmplifyCredential.Empty
+    } catch (e: Exception) {
+        AmplifyCredential.Empty
     }
 
-    private fun deserializeMetadata(encodedDeviceMetadata: String?): DeviceMetadata {
-        return try {
-            val deviceMetadata = encodedDeviceMetadata?.let { Json.decodeFromString(it) as DeviceMetadata }
-            deviceMetadata ?: DeviceMetadata.Empty
-        } catch (e: Exception) {
-            DeviceMetadata.Empty
-        }
+    private fun deserializeMetadata(encodedDeviceMetadata: String?): DeviceMetadata = try {
+        val deviceMetadata = encodedDeviceMetadata?.let { Json.decodeFromString(it) as DeviceMetadata }
+        deviceMetadata ?: DeviceMetadata.Empty
+    } catch (e: Exception) {
+        DeviceMetadata.Empty
     }
 
-    private fun deserializeASFDevice(encodedASFDevice: String?): AmplifyCredential.ASFDevice {
-        return try {
-            val asfDevice = encodedASFDevice?.let { Json.decodeFromString(it) as AmplifyCredential.ASFDevice }
-            asfDevice ?: AmplifyCredential.ASFDevice(null)
-        } catch (e: Exception) {
-            AmplifyCredential.ASFDevice(null)
-        }
+    private fun deserializeASFDevice(encodedASFDevice: String?): AmplifyCredential.ASFDevice = try {
+        val asfDevice = encodedASFDevice?.let { Json.decodeFromString(it) as AmplifyCredential.ASFDevice }
+        asfDevice ?: AmplifyCredential.ASFDevice(null)
+    } catch (e: Exception) {
+        AmplifyCredential.ASFDevice(null)
     }
     //endregion
 
     //region Serialization
-    private fun serializeCredential(credential: AmplifyCredential): String {
-        return Json.encodeToString(credential)
-    }
+    private fun serializeCredential(credential: AmplifyCredential): String = Json.encodeToString(credential)
 
-    private fun serializeMetaData(deviceMetadata: DeviceMetadata): String {
-        return Json.encodeToString(deviceMetadata)
-    }
+    private fun serializeMetaData(deviceMetadata: DeviceMetadata): String = Json.encodeToString(deviceMetadata)
 
-    private fun serializeASFDevice(device: AmplifyCredential.ASFDevice): String {
-        return Json.encodeToString(device)
-    }
+    private fun serializeASFDevice(device: AmplifyCredential.ASFDevice): String = Json.encodeToString(device)
     //endregion
 }

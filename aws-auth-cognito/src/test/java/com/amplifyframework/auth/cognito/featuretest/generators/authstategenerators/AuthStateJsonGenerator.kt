@@ -42,43 +42,43 @@ import java.util.Date
  *
  */
 object AuthStateJsonGenerator : SerializableProvider {
-    const val dummyToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1l" +
+    const val DUMMY_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1l" +
         "IiwiZXhwIjoxNTE2MjM5MDIyLCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.Xqa-vjJe5wwwsqeRAdHf8kTBn_rYSkDn2lB7xj9Z1xU"
 
-    const val dummyToken2 = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1l" +
+    const val DUMMY_TOKEN_2 = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1l" +
         "IiwiZXhwIjoxNTE2MjM5MDI0LCJvcmlnaW5fanRpIjoib3JpZ2luX2p0aSJ9.po__hnGh2KF0ibpp--a2YZA9oBAKXc9BkX1IwdhvJp8"
 
-    const val accessKeyId = "someAccessKey"
-    const val secretAccessKey = "someSecretKey"
-    const val identityId = "someIdentityId"
-    const val expiration: Long = 2342134
-    const val userId = "userId"
+    const val ACCESS_KEY_ID = "someAccessKey"
+    const val SECRET_ACCESS_KEY = "someSecretKey"
+    const val IDENTITY_ID = "someIdentityId"
+    const val EXPIRATION: Long = 2342134
+    const val USER_ID = "userId"
 
-    const val username = "username"
-    const val session = "session-id"
+    const val USERNAME = "username"
+    const val SESSION = "session-id"
     val emptySession = null
 
     private val signedInData = SignedInData(
-        userId = userId,
-        username = username,
+        userId = USER_ID,
+        username = USERNAME,
         signedInDate = Date(1707022800000),
         signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
         cognitoUserPoolTokens = CognitoUserPoolTokens(
-            idToken = dummyToken,
-            accessToken = dummyToken,
-            refreshToken = dummyToken,
+            idToken = DUMMY_TOKEN,
+            accessToken = DUMMY_TOKEN,
+            refreshToken = DUMMY_TOKEN,
             expiration = 300
         )
     )
 
     internal val signedInAmplifyCredential = AmplifyCredential.UserAndIdentityPool(
         signedInData,
-        identityId = identityId,
+        identityId = IDENTITY_ID,
         AWSCredentials(
-            accessKeyId = accessKeyId,
-            secretAccessKey = secretAccessKey,
-            sessionToken = dummyToken,
-            expiration = expiration
+            accessKeyId = ACCESS_KEY_ID,
+            secretAccessKey = SECRET_ACCESS_KEY,
+            sessionToken = DUMMY_TOKEN,
+            expiration = EXPIRATION
         )
     )
 
@@ -89,7 +89,7 @@ object AuthStateJsonGenerator : SerializableProvider {
     )
 
     private val signedOutState = AuthState.Configured(
-        AuthenticationState.SignedOut(SignedOutData(username)),
+        AuthenticationState.SignedOut(SignedOutData(USERNAME)),
         AuthorizationState.Configured(),
         SignUpState.NotStarted()
     )
@@ -100,12 +100,12 @@ object AuthStateJsonGenerator : SerializableProvider {
                 SignInChallengeState.WaitingForAnswer(
                     AuthChallenge(
                         challengeName = "SMS_MFA",
-                        username = username,
+                        username = USERNAME,
                         session = "someSession",
                         parameters = mapOf(
                             "CODE_DELIVERY_DELIVERY_MEDIUM" to "SMS",
                             "CODE_DELIVERY_DESTINATION" to "+12345678900"
-                        ),
+                        )
                     ),
                     SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
                 )
@@ -116,14 +116,14 @@ object AuthStateJsonGenerator : SerializableProvider {
     )
 
     private val passwordlessSignUpAwaitingUserConfirmationState = AuthState.Configured(
-        AuthenticationState.SignedOut(SignedOutData(username)),
+        AuthenticationState.SignedOut(SignedOutData(USERNAME)),
         AuthorizationState.Configured(),
         SignUpState.AwaitingUserConfirmation(
             SignUpData(
-                username,
+                USERNAME,
                 null,
                 null,
-                session,
+                SESSION,
                 ""
             ),
             AuthSignUpResult(
@@ -143,11 +143,11 @@ object AuthStateJsonGenerator : SerializableProvider {
     )
 
     private val nonPasswordlessSignUpAwaitingUserConfirmationState = AuthState.Configured(
-        AuthenticationState.SignedOut(SignedOutData(username)),
+        AuthenticationState.SignedOut(SignedOutData(USERNAME)),
         AuthorizationState.SessionEstablished(signedInAmplifyCredential),
         SignUpState.AwaitingUserConfirmation(
             SignUpData(
-                username,
+                USERNAME,
                 null,
                 null,
                 emptySession,
@@ -170,14 +170,14 @@ object AuthStateJsonGenerator : SerializableProvider {
     )
 
     private val passwordlessSignedUpState = AuthState.Configured(
-        AuthenticationState.SignedOut(SignedOutData(username)),
+        AuthenticationState.SignedOut(SignedOutData(USERNAME)),
         AuthorizationState.SessionEstablished(signedInAmplifyCredential),
         SignUpState.SignedUp(
             SignUpData(
-                username,
+                USERNAME,
                 null,
                 null,
-                session,
+                SESSION,
                 ""
             ),
             AuthSignUpResult(
@@ -198,7 +198,7 @@ object AuthStateJsonGenerator : SerializableProvider {
                 SignInChallengeState.WaitingForAnswer(
                     AuthChallenge(
                         challengeName = "CUSTOM_CHALLENGE",
-                        username = username,
+                        username = USERNAME,
                         session = "someSession",
                         parameters = mapOf(
                             "SALT" to "abc",

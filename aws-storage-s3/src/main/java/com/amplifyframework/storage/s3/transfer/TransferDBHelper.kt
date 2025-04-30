@@ -173,12 +173,7 @@ internal class TransferDBHelper(private val context: Context) : SQLiteOpenHelper
      * @return Number of rows updated.
      */
     @Synchronized
-    internal fun update(
-        uri: Uri,
-        values: ContentValues,
-        whereClause: String?,
-        whereArgs: Array<String>?
-    ): Int {
+    internal fun update(uri: Uri, values: ContentValues, whereClause: String?, whereArgs: Array<String>?): Int {
         val uriType = uriMatcher.match(uri)
         ensureDatabaseOpen()
         return when (uriType) {
@@ -218,11 +213,7 @@ internal class TransferDBHelper(private val context: Context) : SQLiteOpenHelper
      * @param selectionArgs Strings in the "where" clause.
      * @return Number of rows deleted.
      */
-    internal fun delete(
-        uri: Uri,
-        selection: String? = null,
-        selectionArgs: Array<String>? = null
-    ): Int {
+    internal fun delete(uri: Uri, selection: String? = null, selectionArgs: Array<String>? = null): Int {
         val uriType = uriMatcher.match(uri)
         ensureDatabaseOpen()
         return when (uriType) {
@@ -233,9 +224,15 @@ internal class TransferDBHelper(private val context: Context) : SQLiteOpenHelper
             )
             TRANSFER_ID, TRANSFER_PART, TRANSFER_RECORD_ID -> {
                 val columnName = when (uriType) {
-                    TRANSFER_PART -> { TransferTable.COLUMN_MAIN_UPLOAD_ID }
-                    TRANSFER_RECORD_ID -> { TransferTable.COLUMN_TRANSFER_ID }
-                    else -> { TransferTable.COLUMN_ID }
+                    TRANSFER_PART -> {
+                        TransferTable.COLUMN_MAIN_UPLOAD_ID
+                    }
+                    TRANSFER_RECORD_ID -> {
+                        TransferTable.COLUMN_TRANSFER_ID
+                    }
+                    else -> {
+                        TransferTable.COLUMN_ID
+                    }
                 }
                 val id = uri.lastPathSegment
                 if (TextUtils.isEmpty(selection)) {

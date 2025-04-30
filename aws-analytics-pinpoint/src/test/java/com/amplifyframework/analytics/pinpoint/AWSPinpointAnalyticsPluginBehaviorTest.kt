@@ -57,7 +57,7 @@ class AWSPinpointAnalyticsPluginBehaviorTest {
 
         awsPinpointAnalyticsPluginBehavior = AWSPinpointAnalyticsPluginBehavior(
             analyticsClientMock,
-            targetingClientMock,
+            targetingClientMock
         )
     }
 

@@ -20,8 +20,8 @@ import aws.smithy.kotlin.runtime.http.Headers
 import aws.smithy.kotlin.runtime.http.HttpMethod
 import aws.smithy.kotlin.runtime.http.request.HttpRequest
 import aws.smithy.kotlin.runtime.http.toHttpBody
-import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amazonaws.sdk.appsync.core.AppSyncRequest
+import com.amplifyframework.auth.AuthCredentialsProvider
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.maps.shouldContain
 import io.mockk.CapturingSlot

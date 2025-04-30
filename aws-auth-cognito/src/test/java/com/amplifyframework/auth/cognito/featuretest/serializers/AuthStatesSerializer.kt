@@ -78,176 +78,172 @@ internal data class AuthStatesProxy(
     val signInMethod: SignInMethod? = null
 ) {
 
-    internal fun <T> toRealAuthState(): T {
-        return when (type) {
-            "AuthState.Configured" -> AuthState.Configured(authNState, authZState, signUpState) as T
-            "AuthenticationState.SignedOut" -> signedOutData?.let { AuthenticationState.SignedOut(it) } as T
-            "AuthenticationState.SignedIn" -> signedInData?.let {
-                AuthenticationState.SignedIn(it, DeviceMetadata.Empty)
+    internal fun <T> toRealAuthState(): T = when (type) {
+        "AuthState.Configured" -> AuthState.Configured(authNState, authZState, signUpState) as T
+        "AuthenticationState.SignedOut" -> signedOutData?.let { AuthenticationState.SignedOut(it) } as T
+        "AuthenticationState.SignedIn" -> signedInData?.let {
+            AuthenticationState.SignedIn(it, DeviceMetadata.Empty)
+        } as T
+        "AuthenticationState.SigningIn" -> AuthenticationState.SigningIn(signInState) as T
+        "AuthorizationState.Configured" -> AuthorizationState.Configured() as T
+        "AuthorizationState.SessionEstablished" -> amplifyCredential?.let {
+            AuthorizationState.SessionEstablished(it)
+        } as T
+        "SignUpState.NotStarted" -> SignUpState.NotStarted("") as T
+        "SignUpState.InitiatingSignUp" -> signUpData?.let { SignUpState.InitiatingSignUp(it) } as T
+        "SignUpState.ConfirmingSignUp" -> signUpData?.let { SignUpState.ConfirmingSignUp(it) } as T
+        "SignUpState.AwaitingUserConfirmation" -> {
+            signUpData?.let { data ->
+                signUpResult?.let { result ->
+                    SignUpState.AwaitingUserConfirmation(data, result)
+                }
             } as T
-            "AuthenticationState.SigningIn" -> AuthenticationState.SigningIn(signInState) as T
-            "AuthorizationState.Configured" -> AuthorizationState.Configured() as T
-            "AuthorizationState.SessionEstablished" -> amplifyCredential?.let {
-                AuthorizationState.SessionEstablished(it)
+        }
+        "SignUpState.SignedUp" -> {
+            signUpData?.let { data ->
+                signUpResult?.let { result ->
+                    SignUpState.SignedUp(data, result)
+                }
             } as T
-            "SignUpState.NotStarted" -> SignUpState.NotStarted("") as T
-            "SignUpState.InitiatingSignUp" -> signUpData?.let { SignUpState.InitiatingSignUp(it) } as T
-            "SignUpState.ConfirmingSignUp" -> signUpData?.let { SignUpState.ConfirmingSignUp(it) } as T
-            "SignUpState.AwaitingUserConfirmation" -> {
-                signUpData?.let { data ->
-                    signUpResult?.let { result ->
-                        SignUpState.AwaitingUserConfirmation(data, result)
-                    }
-                } as T
-            }
-            "SignUpState.SignedUp" -> {
-                signUpData?.let { data ->
-                    signUpResult?.let { result ->
-                        SignUpState.SignedUp(data, result)
-                    }
-                } as T
-            }
-            "AuthorizationState.SigningIn" -> AuthorizationState.SigningIn() as T
-            "SignInState.ResolvingChallenge" -> SignInState.ResolvingChallenge(signInChallengeState) as T
-            "SignInChallengeState.WaitingForAnswer" -> authChallenge?.let {
-                SignInChallengeState.WaitingForAnswer(it, signInMethod!!)
-            } as T
-            else -> {
-                error("Cannot get real type!")
-            }
+        }
+        "AuthorizationState.SigningIn" -> AuthorizationState.SigningIn() as T
+        "SignInState.ResolvingChallenge" -> SignInState.ResolvingChallenge(signInChallengeState) as T
+        "SignInChallengeState.WaitingForAnswer" -> authChallenge?.let {
+            SignInChallengeState.WaitingForAnswer(it, signInMethod!!)
+        } as T
+        else -> {
+            error("Cannot get real type!")
         }
     }
 
     companion object {
-        fun <T> toProxy(authState: T): AuthStatesProxy {
-            return when (authState) {
-                is AuthState -> {
-                    when (authState) {
-                        is AuthState.Configured -> AuthStatesProxy(
-                            type = "AuthState.Configured",
-                            authNState = authState.authNState,
-                            authZState = authState.authZState,
-                            signUpState = authState.authSignUpState,
-                        )
-                        is AuthState.ConfiguringAuth -> TODO()
-                        is AuthState.ConfiguringAuthentication -> TODO()
-                        is AuthState.ConfiguringAuthorization -> TODO()
-                        is AuthState.Error -> TODO()
-                        is AuthState.NotConfigured -> TODO()
-                    }
+        fun <T> toProxy(authState: T): AuthStatesProxy = when (authState) {
+            is AuthState -> {
+                when (authState) {
+                    is AuthState.Configured -> AuthStatesProxy(
+                        type = "AuthState.Configured",
+                        authNState = authState.authNState,
+                        authZState = authState.authZState,
+                        signUpState = authState.authSignUpState
+                    )
+                    is AuthState.ConfiguringAuth -> TODO()
+                    is AuthState.ConfiguringAuthentication -> TODO()
+                    is AuthState.ConfiguringAuthorization -> TODO()
+                    is AuthState.Error -> TODO()
+                    is AuthState.NotConfigured -> TODO()
                 }
-                is AuthenticationState -> {
-                    when (authState) {
-                        is AuthenticationState.Configured -> TODO()
-                        is AuthenticationState.Error -> TODO()
-                        is AuthenticationState.NotConfigured -> TODO()
-                        is AuthenticationState.SignedIn -> AuthStatesProxy(
-                            type = "AuthenticationState.SignedIn",
-                            signedInData = authState.signedInData
-                        )
-                        is AuthenticationState.SignedOut -> AuthStatesProxy(
-                            type = "AuthenticationState.SignedOut",
-                            signedOutData = authState.signedOutData
-                        )
-                        is AuthenticationState.SigningIn -> AuthStatesProxy(
-                            type = "AuthenticationState.SigningIn",
-                            signInState = authState.signInState
-                        )
-                        is AuthenticationState.SigningOut -> TODO()
-                        is AuthenticationState.FederatingToIdentityPool -> TODO()
-                        is AuthenticationState.FederatedToIdentityPool -> TODO()
-                    }
+            }
+            is AuthenticationState -> {
+                when (authState) {
+                    is AuthenticationState.Configured -> TODO()
+                    is AuthenticationState.Error -> TODO()
+                    is AuthenticationState.NotConfigured -> TODO()
+                    is AuthenticationState.SignedIn -> AuthStatesProxy(
+                        type = "AuthenticationState.SignedIn",
+                        signedInData = authState.signedInData
+                    )
+                    is AuthenticationState.SignedOut -> AuthStatesProxy(
+                        type = "AuthenticationState.SignedOut",
+                        signedOutData = authState.signedOutData
+                    )
+                    is AuthenticationState.SigningIn -> AuthStatesProxy(
+                        type = "AuthenticationState.SigningIn",
+                        signInState = authState.signInState
+                    )
+                    is AuthenticationState.SigningOut -> TODO()
+                    is AuthenticationState.FederatingToIdentityPool -> TODO()
+                    is AuthenticationState.FederatedToIdentityPool -> TODO()
                 }
-                is AuthorizationState -> {
-                    when (authState) {
-                        is AuthorizationState.Configured -> AuthStatesProxy(
-                            type = "AuthorizationState.Configured"
-                        )
-                        is AuthorizationState.DeletingUser -> AuthStatesProxy(
-                            type = "AuthorizationState.DeletingUser"
-                        )
-                        is AuthorizationState.Error -> TODO()
-                        is AuthorizationState.FetchingAuthSession -> TODO()
-                        is AuthorizationState.FetchingUnAuthSession -> TODO()
-                        is AuthorizationState.RefreshingSession -> TODO()
-                        is AuthorizationState.NotConfigured -> TODO()
-                        is AuthorizationState.SessionEstablished -> AuthStatesProxy(
-                            type = "AuthorizationState.SessionEstablished",
-                            amplifyCredential = authState.amplifyCredential
-                        )
-                        is AuthorizationState.SigningIn -> AuthStatesProxy(
-                            type = "AuthorizationState.SigningIn"
-                        )
-                        is AuthorizationState.SigningOut -> TODO()
-                        is AuthorizationState.StoringCredentials -> TODO()
-                        is AuthorizationState.FederatingToIdentityPool -> TODO()
-                    }
+            }
+            is AuthorizationState -> {
+                when (authState) {
+                    is AuthorizationState.Configured -> AuthStatesProxy(
+                        type = "AuthorizationState.Configured"
+                    )
+                    is AuthorizationState.DeletingUser -> AuthStatesProxy(
+                        type = "AuthorizationState.DeletingUser"
+                    )
+                    is AuthorizationState.Error -> TODO()
+                    is AuthorizationState.FetchingAuthSession -> TODO()
+                    is AuthorizationState.FetchingUnAuthSession -> TODO()
+                    is AuthorizationState.RefreshingSession -> TODO()
+                    is AuthorizationState.NotConfigured -> TODO()
+                    is AuthorizationState.SessionEstablished -> AuthStatesProxy(
+                        type = "AuthorizationState.SessionEstablished",
+                        amplifyCredential = authState.amplifyCredential
+                    )
+                    is AuthorizationState.SigningIn -> AuthStatesProxy(
+                        type = "AuthorizationState.SigningIn"
+                    )
+                    is AuthorizationState.SigningOut -> TODO()
+                    is AuthorizationState.StoringCredentials -> TODO()
+                    is AuthorizationState.FederatingToIdentityPool -> TODO()
                 }
-                is SignInState -> {
-                    when (authState) {
-                        is SignInState.NotStarted -> TODO()
-                        is SignInState.ConfirmingDevice -> TODO()
-                        is SignInState.Done -> TODO()
-                        is SignInState.Error -> TODO()
-                        is SignInState.ResolvingChallenge -> AuthStatesProxy(
-                            type = "SignInState.ResolvingChallenge",
-                            signInChallengeState = authState.challengeState
-                        )
-                        is SignInState.ResolvingDeviceSRP -> TODO()
-                        is SignInState.SignedIn -> TODO()
-                        is SignInState.SigningInViaMigrateAuth -> TODO()
-                        is SignInState.SigningInWithCustom -> TODO()
-                        is SignInState.SigningInWithHostedUI -> TODO()
-                        is SignInState.SigningInWithSRP -> TODO()
-                        is SignInState.SigningInWithSRPCustom -> TODO()
-                        is SignInState.ResolvingTOTPSetup -> TODO()
-                        is SignInState.SigningInWithUserAuth -> TODO()
-                        is SignInState.SigningInWithWebAuthn -> TODO()
-                        is SignInState.AutoSigningIn -> TODO()
-                    }
+            }
+            is SignInState -> {
+                when (authState) {
+                    is SignInState.NotStarted -> TODO()
+                    is SignInState.ConfirmingDevice -> TODO()
+                    is SignInState.Done -> TODO()
+                    is SignInState.Error -> TODO()
+                    is SignInState.ResolvingChallenge -> AuthStatesProxy(
+                        type = "SignInState.ResolvingChallenge",
+                        signInChallengeState = authState.challengeState
+                    )
+                    is SignInState.ResolvingDeviceSRP -> TODO()
+                    is SignInState.SignedIn -> TODO()
+                    is SignInState.SigningInViaMigrateAuth -> TODO()
+                    is SignInState.SigningInWithCustom -> TODO()
+                    is SignInState.SigningInWithHostedUI -> TODO()
+                    is SignInState.SigningInWithSRP -> TODO()
+                    is SignInState.SigningInWithSRPCustom -> TODO()
+                    is SignInState.ResolvingTOTPSetup -> TODO()
+                    is SignInState.SigningInWithUserAuth -> TODO()
+                    is SignInState.SigningInWithWebAuthn -> TODO()
+                    is SignInState.AutoSigningIn -> TODO()
                 }
-                is SignInChallengeState -> {
-                    when (authState) {
-                        is SignInChallengeState.NotStarted -> TODO()
-                        is SignInChallengeState.Verified -> TODO()
-                        is SignInChallengeState.Verifying -> TODO()
-                        is SignInChallengeState.WaitingForAnswer -> AuthStatesProxy(
-                            type = "SignInChallengeState.WaitingForAnswer",
-                            authChallenge = authState.challenge,
-                            signInMethod = authState.signInMethod
-                        )
-                        is SignInChallengeState.Error -> TODO()
-                    }
+            }
+            is SignInChallengeState -> {
+                when (authState) {
+                    is SignInChallengeState.NotStarted -> TODO()
+                    is SignInChallengeState.Verified -> TODO()
+                    is SignInChallengeState.Verifying -> TODO()
+                    is SignInChallengeState.WaitingForAnswer -> AuthStatesProxy(
+                        type = "SignInChallengeState.WaitingForAnswer",
+                        authChallenge = authState.challenge,
+                        signInMethod = authState.signInMethod
+                    )
+                    is SignInChallengeState.Error -> TODO()
                 }
-                is SignUpState -> {
-                    when (authState) {
-                        is SignUpState.NotStarted -> AuthStatesProxy(
-                            type = "SignUpState.NotStarted"
-                        )
-                        is SignUpState.AwaitingUserConfirmation -> AuthStatesProxy(
-                            type = "SignUpState.AwaitingUserConfirmation",
-                            signUpData = authState.signUpData,
-                            signUpResult = authState.signUpResult
-                        )
-                        is SignUpState.ConfirmingSignUp -> AuthStatesProxy(
-                            type = "SignUpState.ConfirmingSignUp",
-                            signUpData = authState.signUpData
-                        )
-                        is SignUpState.Error -> TODO()
-                        is SignUpState.InitiatingSignUp -> AuthStatesProxy(
-                            type = "SignUpState.InitiatingSignUp",
-                            signUpData = authState.signUpData
-                        )
-                        is SignUpState.SignedUp -> AuthStatesProxy(
-                            type = "SignUpState.SignedUp",
-                            signUpData = authState.signUpData,
-                            signUpResult = authState.signUpResult
-                        )
-                    }
+            }
+            is SignUpState -> {
+                when (authState) {
+                    is SignUpState.NotStarted -> AuthStatesProxy(
+                        type = "SignUpState.NotStarted"
+                    )
+                    is SignUpState.AwaitingUserConfirmation -> AuthStatesProxy(
+                        type = "SignUpState.AwaitingUserConfirmation",
+                        signUpData = authState.signUpData,
+                        signUpResult = authState.signUpResult
+                    )
+                    is SignUpState.ConfirmingSignUp -> AuthStatesProxy(
+                        type = "SignUpState.ConfirmingSignUp",
+                        signUpData = authState.signUpData
+                    )
+                    is SignUpState.Error -> TODO()
+                    is SignUpState.InitiatingSignUp -> AuthStatesProxy(
+                        type = "SignUpState.InitiatingSignUp",
+                        signUpData = authState.signUpData
+                    )
+                    is SignUpState.SignedUp -> AuthStatesProxy(
+                        type = "SignUpState.SignedUp",
+                        signUpData = authState.signUpData,
+                        signUpResult = authState.signUpResult
+                    )
                 }
-                else -> {
-                    error(" Cannot convert to proxy!")
-                }
+            }
+            else -> {
+                error(" Cannot convert to proxy!")
             }
         }
 

@@ -57,10 +57,7 @@ interface DataStore {
      *               If no filter is specified, an "allow all" predicate is used.
      */
     @Throws(DataStoreException::class)
-    suspend fun <T : Model> delete(
-        byClass: KClass<T>,
-        filter: QueryPredicate = QueryPredicates.all()
-    )
+    suspend fun <T : Model> delete(byClass: KClass<T>, filter: QueryPredicate = QueryPredicates.all())
 
     /**
      * Query the DataStore for items meeting certain criteria.
@@ -95,10 +92,7 @@ interface DataStore {
      */
     @ExperimentalCoroutinesApi
     @Throws(DataStoreException::class)
-    suspend fun <T : Model> observe(
-        itemClass: KClass<T>,
-        itemId: String
-    ): Flow<DataStoreItemChange<T>>
+    suspend fun <T : Model> observe(itemClass: KClass<T>, itemId: String): Flow<DataStoreItemChange<T>>
 
     /**
      * Query and Observe all changes to any/all item(s) in the DataStore.

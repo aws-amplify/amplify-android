@@ -49,8 +49,8 @@ internal class VersionRepository(private val localStorageAdapter: LocalStorageAd
      * @param <T> Type of model
      * @return Current version known locally
      </T> */
-    fun <T : Model> findModelVersion(model: T): Single<Optional<Int>> {
-        return Single.create { emitter: SingleEmitter<Optional<Int>> ->
+    fun <T : Model> findModelVersion(model: T): Single<Optional<Int>> =
+        Single.create { emitter: SingleEmitter<Optional<Int>> ->
             // The ModelMetadata for the model uses the same ID as an identifier.
             localStorageAdapter.query(
                 ModelMetadata::class.java,
@@ -70,7 +70,6 @@ internal class VersionRepository(private val localStorageAdapter: LocalStorageAd
                 }
             )
         }
-    }
 
     suspend fun <T : Model> fetchModelVersions(modelsWithMetadata: List<ModelWithMetadata<T>>): Map<String, Int> {
         // Create query field once, to be used for building QueryOptions
@@ -133,10 +132,7 @@ internal class VersionRepository(private val localStorageAdapter: LocalStorageAd
      * @throws DataStoreException If there is no metadata for the model
      </T> */
     @Throws(DataStoreException::class)
-    private fun <T : Model> extractVersion(
-        model: T,
-        metadataIterator: Iterator<ModelMetadata>
-    ): Optional<Int> {
+    private fun <T : Model> extractVersion(model: T, metadataIterator: Iterator<ModelMetadata>): Optional<Int> {
         val results: MutableList<ModelMetadata> =
             ArrayList()
         while (metadataIterator.hasNext()) {
@@ -155,6 +151,7 @@ internal class VersionRepository(private val localStorageAdapter: LocalStorageAd
 
     companion object {
         private val LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore")
+
         // Keep safely below 1k to prevent SQLite issues
         private const val DEFAULT_CHUNK_SIZE = 950
     }

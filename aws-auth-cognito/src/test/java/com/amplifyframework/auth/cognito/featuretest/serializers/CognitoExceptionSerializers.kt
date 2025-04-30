@@ -70,19 +70,17 @@ private data class CognitoExceptionSurrogate(
     }
 
     companion object {
-        fun <T> toSurrogate(exception: T): CognitoExceptionSurrogate {
-            return when (exception) {
-                is CognitoIdentityProviderException -> CognitoExceptionSurrogate(
-                    exception!!::class.java.simpleName,
-                    exception.message
-                )
-                is CognitoIdentityException -> CognitoExceptionSurrogate(
-                    exception!!::class.java.simpleName,
-                    exception.message
-                )
-                else -> {
-                    error("Exception for $exception not defined!")
-                }
+        fun <T> toSurrogate(exception: T): CognitoExceptionSurrogate = when (exception) {
+            is CognitoIdentityProviderException -> CognitoExceptionSurrogate(
+                exception!!::class.java.simpleName,
+                exception.message
+            )
+            is CognitoIdentityException -> CognitoExceptionSurrogate(
+                exception!!::class.java.simpleName,
+                exception.message
+            )
+            else -> {
+                error("Exception for $exception not defined!")
             }
         }
     }
@@ -96,9 +94,7 @@ object CognitoIdentityExceptionSerializer : KSerializer<CognitoIdentityException
 private class CognitoExceptionSerializer<T> : KSerializer<T> {
     private val strategy = CognitoExceptionSurrogate.serializer()
 
-    override fun deserialize(decoder: Decoder): T {
-        return decoder.decodeSerializableValue(strategy).toRealException() as T
-    }
+    override fun deserialize(decoder: Decoder): T = decoder.decodeSerializableValue(strategy).toRealException() as T
 
     override val descriptor: SerialDescriptor = strategy.descriptor
 

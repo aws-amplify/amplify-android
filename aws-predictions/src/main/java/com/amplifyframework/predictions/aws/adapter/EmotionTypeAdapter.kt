@@ -30,17 +30,15 @@ object EmotionTypeAdapter {
      * @return Amplify's [EmotionType] enum
      */
     @JvmStatic
-    fun fromRekognition(emotion: String): EmotionType {
-        return when (EmotionName.fromValue(emotion)) {
-            EmotionName.Happy -> EmotionType.HAPPY
-            EmotionName.Sad -> EmotionType.SAD
-            EmotionName.Angry -> EmotionType.ANGRY
-            EmotionName.Confused -> EmotionType.CONFUSED
-            EmotionName.Disgusted -> EmotionType.DISGUSTED
-            EmotionName.Surprised -> EmotionType.SURPRISED
-            EmotionName.Calm -> EmotionType.CALM
-            EmotionName.Fear -> EmotionType.FEAR
-            else -> EmotionType.UNKNOWN
-        }
+    fun fromRekognition(emotion: String): EmotionType = when (EmotionName.fromValue(emotion)) {
+        EmotionName.Happy -> EmotionType.HAPPY
+        EmotionName.Sad -> EmotionType.SAD
+        EmotionName.Angry -> EmotionType.ANGRY
+        EmotionName.Confused -> EmotionType.CONFUSED
+        EmotionName.Disgusted -> EmotionType.DISGUSTED
+        EmotionName.Surprised -> EmotionType.SURPRISED
+        EmotionName.Calm -> EmotionType.CALM
+        EmotionName.Fear -> EmotionType.FEAR
+        else -> EmotionType.UNKNOWN
     }
 }
