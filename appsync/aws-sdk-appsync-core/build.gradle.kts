@@ -41,7 +41,7 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 
 val packageInfoGenerator by tasks.registering {
     val constantsDir = project.layout.buildDirectory.dir("generated/sources/constants/java")
-    val outputFile = constantsDir.get().file("com/amplifyframework/aws/appsync/core/util/PackageInfo.kt").asFile
+    val outputFile = constantsDir.get().file("com/amazonaws/sdk/appsync/core/util/PackageInfo.kt").asFile
     inputs.property("version", version)
     outputs.dir(constantsDir)
     doLast {
@@ -49,7 +49,7 @@ val packageInfoGenerator by tasks.registering {
         val properties = inputs.properties
         val version by properties
         outputFile.writeText(
-            """package com.amplifyframework.aws.appsync.core.util
+            """package com.amazonaws.sdk.appsync.core.util
                 |
                 |internal object PackageInfo {
                 |    const val version = "$version"

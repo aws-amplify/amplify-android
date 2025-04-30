@@ -32,7 +32,7 @@ project.setProperty("VERSION_NAME", readVersion())
 group = properties["POM_GROUP"].toString()
 
 android {
-    namespace = "com.amplifyframework.aws.appsync.events"
+    namespace = "com.amazonaws.sdk.appsync.events"
     defaultConfig {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
