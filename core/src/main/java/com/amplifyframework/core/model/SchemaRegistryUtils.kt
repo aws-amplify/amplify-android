@@ -27,7 +27,7 @@ internal object SchemaRegistryUtils {
     @JvmStatic
     fun registerSchemas(
         modelSchemaMap: MutableMap<String, ModelSchema>,
-        modelSchemas: Map<String, ModelSchema>? = null,
+        modelSchemas: Map<String, ModelSchema>? = null
     ) {
         modelSchemas?.forEach { (name, schema) ->
             registerSchema(modelSchemaMap, name, schema)
@@ -38,12 +38,7 @@ internal object SchemaRegistryUtils {
      * Registers the ModelSchema while filtering out unsupported lazy types
      */
     @JvmStatic
-    fun registerSchema(
-        modelSchemaMap: MutableMap<String, ModelSchema>,
-        modelName: String,
-        modelSchema: ModelSchema
-    ) {
-
+    fun registerSchema(modelSchemaMap: MutableMap<String, ModelSchema>, modelName: String, modelSchema: ModelSchema) {
         try {
             if (modelSchema.modelClass.getAnnotation(ModelConfig::class.java)?.hasLazySupport == true) {
                 throw IrRecoverableException(
@@ -57,7 +52,7 @@ internal object SchemaRegistryUtils {
             This is likely not a valid scenario, as modelClass should be required, but
             we have a number of test cases that don't provide one. Since the builder is public and
             modelClass isn't a mandatory builder param, we add this block for additional safety.
-            */
+             */
         }
 
         modelSchemaMap[modelName] = modelSchema

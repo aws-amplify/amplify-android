@@ -32,5 +32,5 @@ enum class MFAType {
     /**
      * Receives MFA codes with an email
      */
-    EMAIL;
+    EMAIL
 }

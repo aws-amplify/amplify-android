@@ -26,7 +26,5 @@ enum class AnalyticsChannelEventName(val eventName: String) {
      */
     FLUSH_EVENTS("flushEvents");
 
-    override fun toString(): String {
-        return eventName
-    }
+    override fun toString(): String = eventName
 }

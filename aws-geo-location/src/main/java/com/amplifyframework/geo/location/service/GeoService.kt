@@ -50,9 +50,5 @@ internal interface GeoService<T> {
     /**
      * Searches index for the location details given a set of coordinates.
      */
-    suspend fun reverseGeocode(
-        index: String,
-        position: Coordinates,
-        limit: Int
-    ): List<Place>
+    suspend fun reverseGeocode(index: String, position: Coordinates, limit: Int): List<Place>
 }

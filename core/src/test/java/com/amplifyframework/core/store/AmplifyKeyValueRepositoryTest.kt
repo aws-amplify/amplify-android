@@ -95,16 +95,20 @@ class AmplifyKeyValueRepositoryTest {
     }
 
     class FakeAndroidKeyStoreProvider(androidKeyStoreClassName: String) : Provider(
-        "AndroidKeyStore", 1.0, "Fake AndroidKeyStore provider"
+        "AndroidKeyStore",
+        1.0,
+        "Fake AndroidKeyStore provider"
     ) {
-        init { put("KeyStore.AndroidKeyStore", androidKeyStoreClassName) }
+        init {
+            put("KeyStore.AndroidKeyStore", androidKeyStoreClassName)
+        }
     }
 
     open class FakeKeyStore : KeyStoreSpi() {
         override fun engineIsKeyEntry(alias: String?) = true
         override fun engineIsCertificateEntry(alias: String?) = true
-        override fun engineGetCertificate(alias: String?): Certificate { throw NotImplementedError() }
-        override fun engineGetCreationDate(alias: String?): Date { return Date() }
+        override fun engineGetCertificate(alias: String?): Certificate = throw NotImplementedError()
+        override fun engineGetCreationDate(alias: String?): Date = Date()
         override fun engineDeleteEntry(alias: String?) {}
         override fun engineSetKeyEntry(
             alias: String?,
@@ -112,9 +116,8 @@ class AmplifyKeyValueRepositoryTest {
             password: CharArray?,
             chain: Array<out Certificate>?
         ) {}
-        override fun engineGetEntry(alias: String?, protParam: KeyStore.ProtectionParameter?): KeyStore.Entry {
+        override fun engineGetEntry(alias: String?, protParam: KeyStore.ProtectionParameter?): KeyStore.Entry =
             throw NotImplementedError()
-        }
         override fun engineSetKeyEntry(alias: String?, key: ByteArray?, chain: Array<out Certificate>?) {}
         override fun engineStore(stream: OutputStream?, password: CharArray?) {}
         override fun engineSize() = 1
@@ -124,9 +127,8 @@ class AmplifyKeyValueRepositoryTest {
         override fun engineGetCertificateChain(alias: String?) = emptyArray<Certificate>()
         override fun engineSetCertificateEntry(alias: String?, cert: Certificate?) {}
         override fun engineGetCertificateAlias(cert: Certificate?) = null
-        override fun engineGetKey(alias: String?, password: CharArray?): Key? {
+        override fun engineGetKey(alias: String?, password: CharArray?): Key? =
             throw NotImplementedError("No Need to implement for testing")
-        }
     }
 
     class GoodFakeKeyStore : FakeKeyStore() {

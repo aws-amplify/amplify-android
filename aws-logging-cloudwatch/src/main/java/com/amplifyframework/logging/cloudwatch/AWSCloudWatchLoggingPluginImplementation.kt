@@ -38,9 +38,7 @@ internal class AWSCloudWatchLoggingPluginImplementation(
     private val coroutineScope = CoroutineScope(dispatcher)
     internal var isPluginEnabled = awsCloudWatchLoggingPluginConfig?.enable ?: true
 
-    internal fun configure(
-        awsPluginConfig: AWSCloudWatchLoggingPluginConfiguration
-    ) {
+    internal fun configure(awsPluginConfig: AWSCloudWatchLoggingPluginConfiguration) {
         awsCloudWatchLoggingPluginConfig = awsPluginConfig
         loggingConstraintsResolver.localLoggingConstraint = awsPluginConfig.loggingConstraints
         isPluginEnabled = awsPluginConfig.enable
@@ -64,23 +62,19 @@ internal class AWSCloudWatchLoggingPluginImplementation(
         return logger(resolvedNameSpace)
     }
 
-    internal fun logger(namespace: String): Logger {
-        return CloudWatchLogger(
-            namespace,
-            null,
-            loggingConstraintsResolver,
-            this
-        )
-    }
+    internal fun logger(namespace: String): Logger = CloudWatchLogger(
+        namespace,
+        null,
+        loggingConstraintsResolver,
+        this
+    )
 
-    internal fun logger(categoryType: CategoryType, namespace: String): Logger {
-        return CloudWatchLogger(
-            namespace,
-            categoryType,
-            loggingConstraintsResolver,
-            this
-        )
-    }
+    internal fun logger(categoryType: CategoryType, namespace: String): Logger = CloudWatchLogger(
+        namespace,
+        categoryType,
+        loggingConstraintsResolver,
+        this
+    )
 
     fun enable() {
         isPluginEnabled = true
@@ -96,10 +90,7 @@ internal class AWSCloudWatchLoggingPluginImplementation(
         }
     }
 
-    internal fun flushLogs(
-        onSuccess: Action,
-        onError: Consumer<AmplifyException>
-    ) {
+    internal fun flushLogs(onSuccess: Action, onError: Consumer<AmplifyException>) {
         coroutineScope.launch {
             try {
                 cloudWatchLogManager?.syncLogEventsWithCloudwatch()

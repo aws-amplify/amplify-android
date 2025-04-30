@@ -197,9 +197,7 @@ class AWSS3StorageUploadInputStreamOperation @JvmOverloads internal constructor(
         }
     }
 
-    override fun getTransferState(): TransferState {
-        return transferObserver?.transferState ?: TransferState.UNKNOWN
-    }
+    override fun getTransferState(): TransferState = transferObserver?.transferState ?: TransferState.UNKNOWN
 
     override fun setOnSuccess(onSuccess: Consumer<StorageUploadInputStreamResult>?) {
         super.setOnSuccess(onSuccess)

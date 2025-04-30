@@ -94,8 +94,10 @@ class VersionRepositoryTest {
             .name("Jameson")
             .build()
         val metadata = ModelMetadata(
-            blogOwner.modelName + "|" + blogOwner.id, null,
-            null, null
+            blogOwner.modelName + "|" + blogOwner.id,
+            null,
+            null,
+            null
         )
         storageAdapter.save(blogOwner, metadata)
 
@@ -169,8 +171,8 @@ class VersionRepositoryTest {
         assertEquals(-1, result[owner2Metadata.primaryKeyString])
     }
 
-    @Test
     // This test ensures the chunking works
+    @Test
     fun fetchModelVersionReturnsMoreThanChunkSize() = runTest(timeout = 10.seconds) {
         versionRepository.chunkSize = 5
         val modelsWithMetadata = mutableListOf<ModelWithMetadata<BlogOwner>>()

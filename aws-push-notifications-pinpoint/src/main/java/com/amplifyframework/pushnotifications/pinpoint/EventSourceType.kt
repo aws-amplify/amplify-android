@@ -39,8 +39,8 @@ internal class EventSourceType private constructor(
         private const val AWS_EVENT_TYPE_RECEIVED_FOREGROUND = "received_foreground"
         private const val AWS_EVENT_TYPE_RECEIVED_BACKGROUND = "received_background"
 
-        fun getEventSourceType(payload: NotificationPayload): EventSourceType {
-            return if (payload.rawData.containsKey(PushNotificationsConstants.PINPOINT_CAMPAIGN_CAMPAIGN_ID)) {
+        fun getEventSourceType(payload: NotificationPayload): EventSourceType =
+            if (payload.rawData.containsKey(PushNotificationsConstants.PINPOINT_CAMPAIGN_CAMPAIGN_ID)) {
                 EventSourceType(
                     CAMPAIGN_EVENT_SOURCE_PREFIX,
                     PushNotificationsConstants.CAMPAIGN_ID,
@@ -59,7 +59,6 @@ internal class EventSourceType private constructor(
             } else {
                 EventSourceType()
             }
-        }
     }
 
     fun getEventTypeReceived(isAppInForeground: Boolean) = if (isAppInForeground) {

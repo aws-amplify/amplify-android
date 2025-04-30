@@ -64,11 +64,7 @@ open class NotificationsCategory : Category<NotificationsPlugin<*>>(), Notificat
      * Defer to subcategories for top level APIs.
      * Ex: subCategories.forEach { it.identifyUser(userId, onSuccess, onError) }
      */
-    override fun identifyUser(
-        userId: String,
-        onSuccess: Action,
-        onError: Consumer<PushNotificationsException>
-    ) {
+    override fun identifyUser(userId: String, onSuccess: Action, onError: Consumer<PushNotificationsException>) {
         Push.identifyUser(userId, onSuccess, onError)
     }
 

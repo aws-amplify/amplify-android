@@ -50,6 +50,7 @@ sealed interface AmplifyOutputs {
  * @return An instance of [AmplifyOutputs] that can be passed to Amplify.configure
  */
 @JvmSynthetic // Java should use AmplifyOutputs.fromResource(resourceId)
+@Suppress("ktlint:standard:function-naming")
 fun AmplifyOutputs(@RawRes resourceId: Int) = AmplifyOutputs.fromResource(resourceId)
 
 /**
@@ -58,6 +59,7 @@ fun AmplifyOutputs(@RawRes resourceId: Int) = AmplifyOutputs.fromResource(resour
  * @return An instance of [AmplifyOutputs] that can be passed to Amplify.configure
  */
 @JvmSynthetic // Java should use AmplifyOutputs.fromString(json)
+@Suppress("ktlint:standard:function-naming")
 fun AmplifyOutputs(json: String) = AmplifyOutputs.fromString(json)
 
 // Concrete classes for passing different forms of AmplifyOutputs to Amplify.configure

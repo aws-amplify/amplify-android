@@ -18,16 +18,19 @@ package com.amplifyframework.statemachine.state
 import java.util.Date
 
 internal enum class Color : com.amplifyframework.statemachine.State {
-    red, green, blue, yellow;
+    Red,
+    Green,
+    Blue,
+    Yellow;
 
     override val type = name
 
     companion object {
-        var next = Event.next
+        var next = Event.Next
     }
 
     enum class Event : com.amplifyframework.statemachine.StateMachineEvent {
-        next;
+        Next;
 
         override val id: String
             get() = "Color.Event.${this.type}"
@@ -36,7 +39,7 @@ internal enum class Color : com.amplifyframework.statemachine.State {
     }
 
     class Resolver : com.amplifyframework.statemachine.StateMachineResolver<Color> {
-        override val defaultState = red
+        override val defaultState = Red
 
         override fun resolve(
             oldState: Color,

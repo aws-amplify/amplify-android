@@ -28,7 +28,7 @@ internal object CognitoClientFactory {
     fun createIdentityClient(
         identityPool: AWSCognitoIdentityPoolConfiguration,
         pluginKey: String,
-        pluginVersion: String,
+        pluginVersion: String
     ) = CognitoIdentityClient {
         setHttpEngine()
 

@@ -94,7 +94,7 @@ internal class DeviceDataCollector(private val deviceId: String) : DataCollector
             DEVICE_AGENT to deviceId,
             DEVICE_LANGUAGE to language,
             DEVICE_HEIGHT to display.height.toString(),
-            DEVICE_WIDTH to display.width.toString(),
+            DEVICE_WIDTH to display.width.toString()
         )
     }
 }

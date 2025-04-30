@@ -46,6 +46,6 @@ class EventTable {
     enum class COLUMNINDEX(val index: Int) {
         ID(0),
         SIZE(1),
-        JSON(2);
+        JSON(2)
     }
 }

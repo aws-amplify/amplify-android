@@ -640,9 +640,10 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Action { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.deleteUser()
         authPlugin.deleteUser(expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.deleteUser(any(), any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute() }
     }
 
     @Test
@@ -838,6 +839,15 @@ class AWSCognitoAuthPluginTest {
         authPlugin.deleteWebAuthnCredential(credentialId, options, {}, {})
         coVerify(timeout = CHANNEL_TIMEOUT) {
             useCase.execute(credentialId, options)
+        }
+    }
+
+    @Test
+    fun `auto sign in`() {
+        val useCase = authPlugin.useCaseFactory.autoSignIn()
+        authPlugin.autoSignIn({}, {})
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute()
         }
     }
 

@@ -34,9 +34,7 @@ internal constructor(
          * @return a builder object.
          */
         @JvmStatic
-        fun builder(): CognitoBuilder {
-            return CognitoBuilder()
-        }
+        fun builder(): CognitoBuilder = CognitoBuilder()
 
         inline operator fun invoke(block: CognitoBuilder.() -> Unit) = CognitoBuilder().apply(block).build()
     }
@@ -51,9 +49,7 @@ internal constructor(
          * Returns the type of builder this is to support proper flow with it being an extended class.
          * @return the type of builder this is to support proper flow with it being an extended class.
          */
-        override fun getThis(): CognitoBuilder {
-            return this
-        }
+        override fun getThis(): CognitoBuilder = this
 
         /**
          * Set the metadata field for the object being built.

@@ -21,9 +21,11 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeResponse
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.helpers.WebAuthnHelper
+import com.amplifyframework.auth.cognito.testUtil.withAuthEvent
+import com.amplifyframework.auth.cognito.testUtil.withSignInEvent
+import com.amplifyframework.auth.cognito.testUtil.withWebAuthnEvent
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.statemachine.EventDispatcher
-import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.ChallengeParameter
 import com.amplifyframework.statemachine.codegen.data.WebAuthnSignInContext
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
@@ -31,8 +33,6 @@ import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import com.amplifyframework.statemachine.codegen.events.WebAuthnEvent
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import io.mockk.MockKAssertScope
-import io.mockk.MockKVerificationScope
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -191,29 +191,5 @@ class WebAuthnSignInCognitoActionsTest {
                 }
             )
         }
-    }
-
-    private inline fun <reified T : WebAuthnEvent.EventType> MockKVerificationScope.withWebAuthnEvent(
-        noinline assertions: MockKAssertScope.(T) -> Unit = { }
-    ) = withArg<StateMachineEvent> {
-        val event = it.shouldBeInstanceOf<WebAuthnEvent>()
-        val type = event.eventType.shouldBeInstanceOf<T>()
-        assertions(type)
-    }
-
-    private inline fun <reified T : SignInEvent.EventType> MockKVerificationScope.withSignInEvent(
-        noinline assertions: MockKAssertScope.(T) -> Unit = { }
-    ) = withArg<StateMachineEvent> {
-        val event = it.shouldBeInstanceOf<SignInEvent>()
-        val type = event.eventType.shouldBeInstanceOf<T>()
-        assertions(type)
-    }
-
-    private inline fun <reified T : AuthenticationEvent.EventType> MockKVerificationScope.withAuthEvent(
-        noinline assertions: MockKAssertScope.(T) -> Unit = { }
-    ) = withArg<StateMachineEvent> {
-        val event = it.shouldBeInstanceOf<AuthenticationEvent>()
-        val type = event.eventType.shouldBeInstanceOf<T>()
-        assertions(type)
     }
 }

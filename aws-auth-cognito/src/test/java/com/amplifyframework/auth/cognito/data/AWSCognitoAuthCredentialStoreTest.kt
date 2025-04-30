@@ -185,7 +185,5 @@ class AWSCognitoAuthCredentialStoreTest {
         )
     }
 
-    private fun serialized(credential: AmplifyCredential): String {
-        return Json.encodeToString(credential)
-    }
+    private fun serialized(credential: AmplifyCredential): String = Json.encodeToString(credential)
 }

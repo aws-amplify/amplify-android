@@ -58,6 +58,7 @@ import org.junit.Test
 class AWSS3StorageMultiBucketDownloadTest {
     private val downloadFile: File = RandomTempFile()
     private val options = StorageDownloadFileOptions.builder().bucket(TestStorageCategory.getStorageBucket()).build()
+
     // Create a set to remember all the subscriptions
     private val subscriptions = mutableSetOf<SubscriptionToken>()
     companion object {

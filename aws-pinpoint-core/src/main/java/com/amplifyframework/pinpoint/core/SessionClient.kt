@@ -72,7 +72,7 @@ class SessionClient(
             val pinpointEvent = it.createEvent(
                 sessionStartEvent,
                 newSession.sessionId,
-                newSession.startTime,
+                newSession.startTime
             )
             it.recordEvent(pinpointEvent)
         }
@@ -88,6 +88,8 @@ class SessionClient(
     }
 
     internal enum class SessionState {
-        INACTIVE, ACTIVE, PAUSED
+        INACTIVE,
+        ACTIVE,
+        PAUSED
     }
 }

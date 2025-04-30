@@ -58,7 +58,7 @@ object FetchUserAttributesTestCaseGenerator : SerializableProvider {
     private val apiReturnValidation = ExpectationShapes.Amplify(
         AuthAPI.fetchUserAttributes,
         ResponseType.Success,
-        expectedSuccess,
+        expectedSuccess
     )
 
     private val baseCase = FeatureTestCase(
@@ -71,7 +71,7 @@ object FetchUserAttributesTestCaseGenerator : SerializableProvider {
         api = API(
             AuthAPI.fetchUserAttributes,
             JsonObject(emptyMap()),
-            JsonObject(emptyMap()),
+            JsonObject(emptyMap())
         ),
         validations = listOf(apiReturnValidation)
     )
@@ -102,7 +102,7 @@ object FetchUserAttributesTestCaseGenerator : SerializableProvider {
                     ExpectationShapes.Amplify(
                         AuthAPI.fetchUserAttributes,
                         ResponseType.Failure,
-                        SignedOutException().toJsonElement(),
+                        SignedOutException().toJsonElement()
                     )
                 )
             )

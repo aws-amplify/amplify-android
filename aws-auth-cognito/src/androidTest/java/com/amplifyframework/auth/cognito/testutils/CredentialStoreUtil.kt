@@ -41,37 +41,30 @@ internal class CredentialStoreUtil {
                 accessToken,
                 "refreshToken",
                 1212
-            ),
+            )
         ),
         "identityId",
         AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", 1212)
     )
 
-    fun getDefaultCredential(): AmplifyCredential {
-        return credential
-    }
+    fun getDefaultCredential(): AmplifyCredential = credential
 
     val user1Username = "2924030b-54c0-48bc-8bff-948418fba949"
     val user2Username = "7e001127-5f11-41fb-9d10-ab9d6cf41dba"
 
-    fun getUser1DeviceMetadata(): DeviceMetadata.Metadata {
-        return DeviceMetadata.Metadata(
-            "DeviceKey1",
-            "DeviceGroupKey1",
-            "DeviceSecret1"
-        )
-    }
+    fun getUser1DeviceMetadata(): DeviceMetadata.Metadata = DeviceMetadata.Metadata(
+        "DeviceKey1",
+        "DeviceGroupKey1",
+        "DeviceSecret1"
+    )
 
-    fun getUser2DeviceMetadata(): DeviceMetadata.Metadata {
-        return DeviceMetadata.Metadata(
-            "DeviceKey2",
-            "DeviceGroupKey2",
-            "DeviceSecret2"
-        )
-    }
+    fun getUser2DeviceMetadata(): DeviceMetadata.Metadata = DeviceMetadata.Metadata(
+        "DeviceKey2",
+        "DeviceGroupKey2",
+        "DeviceSecret2"
+    )
 
     fun setupLegacyStore(context: Context, appClientId: String, userPoolId: String, identityPoolId: String) {
-
         clearSharedPreferences(context)
 
         AWSKeyValueStore(context, "CognitoIdentityProviderCache", true).apply {
@@ -122,7 +115,8 @@ internal class CredentialStoreUtil {
         val prefsName = "CognitoIdentityProviderDeviceCache.$userPoolId.$username"
         AWSKeyValueStore(
             context,
-            "CognitoIdentityProviderDeviceCache.$userPoolId.$username", true
+            "CognitoIdentityProviderDeviceCache.$userPoolId.$username",
+            true
         ).apply {
             put("DeviceKey", deviceMetadata.deviceKey)
             put("DeviceGroupKey", deviceMetadata.deviceGroupKey)

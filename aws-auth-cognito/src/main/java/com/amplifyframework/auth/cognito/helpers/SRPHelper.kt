@@ -46,7 +46,7 @@ internal class SRPHelper(private val password: String) {
 
     // Precomputed safe 3072-bit prime 'N', as decimal.
     // https://datatracker.ietf.org/doc/html/rfc5054#appendix-A (Page 16)
-    private val HEX_N =
+    private val hexN =
         "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A" +
             "431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5" +
             "AE9F24117C4B1FE649286651ECE45B3DC2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F83655D23DCA3AD961C62" +
@@ -56,11 +56,11 @@ internal class SRPHelper(private val password: String) {
             "CEE3D2261AD2EE6BF12FFA06D98A0864D87602733EC86A64521F2B18177B200CBBE117577A615D6C770988C0BAD946E208E2" +
             "4FA074E5AB3143DB5BFCE0FD108E4B82D120A93AD2CAFFFFFFFFFFFFFFFF"
 
-    private val N = BigInteger(HEX_N, 16)
+    private val n = BigInteger(hexN, 16)
     private val random = SecureRandom()
 
-    private val DERIVED_KEY_INFO = "Caldera Derived Key"
-    private val DERIVED_KEY_SIZE = 16
+    private val derivedKeyInfo = "Caldera Derived Key"
+    private val derivedKeySize = 16
 
     private val k: BigInteger
     private var privateA: BigInteger
@@ -72,14 +72,14 @@ internal class SRPHelper(private val password: String) {
     init {
         // Generate client private 'a' and public 'A' values
         do {
-            privateA = BigInteger(EPHEMERAL_KEY_LENGTH, random).mod(N)
+            privateA = BigInteger(EPHEMERAL_KEY_LENGTH, random).mod(n)
             // A = (g ^ a) % N
-            publicA = g.modPow(privateA, N)
-        } while (publicA.mod(N) == BigInteger.ZERO)
+            publicA = g.modPow(privateA, n)
+        } while (publicA.mod(n) == BigInteger.ZERO)
 
         // compute k = H(g|N)
         digest.reset()
-        digest.update(N.toByteArray())
+        digest.update(n.toByteArray())
         k = BigInteger(1, digest.digest(g.toByteArray()))
 
         val simpleDateFormat = SimpleDateFormat("EEE MMM d HH:mm:ss z yyyy", Locale.US)
@@ -99,9 +99,7 @@ internal class SRPHelper(private val password: String) {
     }
 
     @TestOnly
-    fun modN(value: BigInteger): BigInteger {
-        return value.mod(N)
-    }
+    fun modN(value: BigInteger): BigInteger = value.mod(n)
 
     @TestOnly
     fun setAValues(privateA: BigInteger, publicA: BigInteger) {
@@ -109,9 +107,7 @@ internal class SRPHelper(private val password: String) {
         this.publicA = publicA
     }
 
-    fun getPublicA(): String {
-        return publicA.toString(16)
-    }
+    fun getPublicA(): String = publicA.toString(16)
 
     // u = H(A, B)
     internal fun computeU(srpB: BigInteger): BigInteger {
@@ -136,13 +132,12 @@ internal class SRPHelper(private val password: String) {
     // verifier = (g ^ x) % N
     internal fun computePasswordVerifier(salt: BigInteger): BigInteger {
         val xValue = computeX(salt)
-        return g.modPow(xValue, N)
+        return g.modPow(xValue, n)
     }
 
     // s = ((B - k * (g ^ x) % N) ^ (a + u * x) % N) % N
-    internal fun computeS(uValue: BigInteger, xValue: BigInteger, srpB: BigInteger): BigInteger {
-        return (srpB.subtract(k.multiply(g.modPow(xValue, N))).modPow(privateA.add(uValue.multiply(xValue)), N)).mod(N)
-    }
+    internal fun computeS(uValue: BigInteger, xValue: BigInteger, srpB: BigInteger): BigInteger =
+        (srpB.subtract(k.multiply(g.modPow(xValue, n))).modPow(privateA.add(uValue.multiply(xValue)), n)).mod(n)
 
     // p = MAC("Caldera Derived Key" | 1, MAC(s, u))[0:16]
     internal fun computePasswordAuthenticationKey(ikm: BigInteger, salt: BigInteger): ByteArray {
@@ -154,9 +149,9 @@ internal class SRPHelper(private val password: String) {
         mac.reset()
         keySpec = SecretKeySpec(prk, HMAC_SHA_256)
         mac.init(keySpec)
-        mac.update(DERIVED_KEY_INFO.toByteArray())
+        mac.update(derivedKeyInfo.toByteArray())
         val hkdf = mac.doFinal(Char(1).toString().toByteArray())
-        return hkdf.copyOf(DERIVED_KEY_SIZE)
+        return hkdf.copyOf(derivedKeySize)
     }
 
     // M1 = MAC(poolId | userId | secret | timestamp, key)
@@ -176,12 +171,14 @@ internal class SRPHelper(private val password: String) {
         val bigIntSalt = BigInteger(salt, 16)
 
         // Check B's validity
-        if (bigIntSRPB.mod(N) == BigInteger.ZERO)
+        if (bigIntSRPB.mod(n) == BigInteger.ZERO) {
             throw Exception("Bad server public value 'B'")
+        }
 
         val uValue = computeU(bigIntSRPB)
-        if (uValue.mod(N) == BigInteger.ZERO)
+        if (uValue.mod(n) == BigInteger.ZERO) {
             throw Exception("Hash of A and B cannot be zero")
+        }
 
         val xValue = computeX(bigIntSalt)
         val sValue = computeS(uValue, xValue, bigIntSRPB)

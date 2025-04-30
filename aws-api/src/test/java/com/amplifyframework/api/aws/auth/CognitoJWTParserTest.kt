@@ -23,33 +23,33 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class CognitoJWTParserTest {
-    private val USERNAME_KEY = "username"
-    private val USERNAME = "test-user"
+    private val usernameKey = "username"
+    private val username = "test-user"
 
-    private val COGNITO_GROUPS_KEY = "cognito:groups"
-    private val COGNITO_GROUPS = JSONArray(arrayOf("Admins"))
+    private val cognitoGroupsKey = "cognito:groups"
+    private val cognitoGroups = JSONArray(arrayOf("Admins"))
 
-    private val CLAIM_KEY = "iss"
-    private val CLAIM_VAL = "cognito"
+    private val claimKey = "iss"
+    private val claimVal = "cognito"
 
     private val fakeJWTToken: FakeJWTToken = FakeJWTToken.builder()
-        .putPayload(USERNAME_KEY, USERNAME)
-        .putPayload(COGNITO_GROUPS_KEY, COGNITO_GROUPS)
-        .putPayload(CLAIM_KEY, CLAIM_VAL)
+        .putPayload(usernameKey, username)
+        .putPayload(cognitoGroupsKey, cognitoGroups)
+        .putPayload(claimKey, claimVal)
         .build()
 
     @Test
     fun `getPayload retrieves correct payload`() {
         val payload = CognitoJWTParser.getPayload(fakeJWTToken.asString())
 
-        assertEquals(USERNAME, payload.get(USERNAME_KEY))
-        assertEquals(COGNITO_GROUPS, payload.get(COGNITO_GROUPS_KEY))
+        assertEquals(username, payload.get(usernameKey))
+        assertEquals(cognitoGroups, payload.get(cognitoGroupsKey))
     }
 
     @Test
     fun `getClaim retrieves correct claim`() {
-        val claim = CognitoJWTParser.getClaim(fakeJWTToken.asString(), CLAIM_KEY)
+        val claim = CognitoJWTParser.getClaim(fakeJWTToken.asString(), claimKey)
 
-        assertEquals(CLAIM_VAL, claim)
+        assertEquals(claimVal, claim)
     }
 }

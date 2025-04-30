@@ -60,17 +60,13 @@ class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
     }
 
     @Deprecated("Deprecated in Java")
-    override fun forNamespace(namespace: String?): Logger {
-        return awsCloudWatchLoggingPluginImplementation.forNamespace(namespace)
-    }
+    override fun forNamespace(namespace: String?): Logger =
+        awsCloudWatchLoggingPluginImplementation.forNamespace(namespace)
 
-    override fun logger(namespace: String): Logger {
-        return awsCloudWatchLoggingPluginImplementation.logger(namespace)
-    }
+    override fun logger(namespace: String): Logger = awsCloudWatchLoggingPluginImplementation.logger(namespace)
 
-    override fun logger(categoryType: CategoryType, namespace: String): Logger {
-        return awsCloudWatchLoggingPluginImplementation.logger(categoryType, namespace)
-    }
+    override fun logger(categoryType: CategoryType, namespace: String): Logger =
+        awsCloudWatchLoggingPluginImplementation.logger(categoryType, namespace)
 
     override fun enable() {
         awsCloudWatchLoggingPluginImplementation.enable()
@@ -80,16 +76,11 @@ class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
         awsCloudWatchLoggingPluginImplementation.disable()
     }
 
-    public fun flushLogs(
-        onSuccess: Action,
-        onError: Consumer<AmplifyException>
-    ) {
+    public fun flushLogs(onSuccess: Action, onError: Consumer<AmplifyException>) {
         awsCloudWatchLoggingPluginImplementation.flushLogs(onSuccess, onError)
     }
 
-    override fun getPluginKey(): String {
-        return PLUGIN_NAME
-    }
+    override fun getPluginKey(): String = PLUGIN_NAME
 
     override fun configure(pluginConfiguration: JSONObject?, context: Context) {
         try {
@@ -129,9 +120,7 @@ class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
         }
     }
 
-    override fun getEscapeHatch(): CloudWatchLogsClient {
-        return cloudWatchLogsClient
-    }
+    override fun getEscapeHatch(): CloudWatchLogsClient = cloudWatchLogsClient
 
     override fun getVersion(): String = BuildConfig.VERSION_NAME
 

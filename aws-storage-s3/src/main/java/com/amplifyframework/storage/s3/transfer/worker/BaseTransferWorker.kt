@@ -46,8 +46,8 @@ internal interface BaseTransferWorker {
         internal const val MULTI_PART_UPLOAD_ID = "multipartUploadId"
         internal const val TRANSFER_RECORD_ID = "TRANSFER_RECORD_ID"
         internal const val OUTPUT_TRANSFER_RECORD_ID = "OUTPUT_TRANSFER_RECORD_ID"
-        internal const val completionRequestTag: String = "COMPLETION_REQUEST_TAG_%s"
-        internal const val initiationRequestTag: String = "INITIATION_REQUEST_TAG_%s"
+        internal const val COMPLETION_REQUEST_TAG: String = "COMPLETION_REQUEST_TAG_%s"
+        internal const val INITIATION_REQUEST_TAG: String = "INITIATION_REQUEST_TAG_%s"
         internal const val MULTIPART_UPLOAD: String = "MULTIPART_UPLOAD"
     }
 
@@ -79,10 +79,7 @@ internal interface BaseTransferWorker {
         return false
     }
 
-    fun createPutObjectRequest(
-        transferRecord: TransferRecord,
-        progressListener: ProgressListener?
-    ): PutObjectRequest {
+    fun createPutObjectRequest(transferRecord: TransferRecord, progressListener: ProgressListener?): PutObjectRequest {
         val file = File(transferRecord.file)
         return PutObjectRequest {
             bucket = transferRecord.bucketName

@@ -58,7 +58,7 @@ class TargetingClient(
     private val prefs: SharedPreferences,
     appDetails: AndroidAppDetails,
     deviceDetails: AndroidDeviceDetails,
-    coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default,
+    coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default
 ) {
     private val endpointProfile = EndpointProfile(prefs.getUniqueId(), appDetails, deviceDetails, context, store)
     private val globalAttributes: MutableMap<String, List<String>>

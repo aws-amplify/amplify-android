@@ -381,7 +381,6 @@ internal class AWSRekognitionService(
         maxEntities: Int,
         collectionId: String
     ): List<EntityMatch> {
-
         val result = try {
             client.searchFacesByImage {
                 this.image = Image {

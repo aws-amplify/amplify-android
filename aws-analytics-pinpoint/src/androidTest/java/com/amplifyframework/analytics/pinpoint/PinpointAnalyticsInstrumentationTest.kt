@@ -53,6 +53,7 @@ class PinpointAnalyticsInstrumentationTest {
     @Before
     fun flushEvents() {
         val context = ApplicationProvider.getApplicationContext<Context>()
+
         @RawRes val resourceId = Resources.getRawResourceId(context, CREDENTIALS_RESOURCE_NAME)
         val userAndPasswordPair = readCredentialsFromResource(context, resourceId)
         synchronousAuth.signOut()
@@ -286,18 +287,18 @@ class PinpointAnalyticsInstrumentationTest {
         Amplify.Analytics.identifyUser(uuid, pinpointUserProfile)
         Sleep.milliseconds(PINPOINT_ROUNDTRIP_TIMEOUT)
         var endpointResponse = fetchEndpointResponse()
-        var retry_count = 0
-        while (retry_count < MAX_RETRIES && endpointResponse.attributes.isNullOrEmpty()) {
+        var retryCount = 0
+        while (retryCount < MAX_RETRIES && endpointResponse.attributes.isNullOrEmpty()) {
             Sleep.milliseconds(DEFAULT_TIMEOUT)
             endpointResponse = fetchEndpointResponse()
-            retry_count++
+            retryCount++
         }
         assertCommonEndpointResponseProperties(endpointResponse)
         Assert.assertEquals(
             "User attribute value",
             endpointResponse.user!!
                 .userAttributes!!
-            ["SomeUserAttribute"]!!
+                ["SomeUserAttribute"]!!
             [0]
         )
     }
@@ -371,7 +372,7 @@ class PinpointAnalyticsInstrumentationTest {
     }
 
     companion object {
-        private const val EVENT_FLUSH_TIMEOUT_WAIT = 15 /* seconds */
+        private const val EVENT_FLUSH_TIMEOUT_WAIT = 15 // seconds
         private const val CREDENTIALS_RESOURCE_NAME = "credentials"
         private const val CONFIGURATION_NAME = "amplifyconfiguration"
         private const val COGNITO_CONFIGURATION_TIMEOUT = 10 * 1000L
@@ -385,10 +386,12 @@ class PinpointAnalyticsInstrumentationTest {
         private lateinit var appId: String
         private lateinit var uniqueId: String
         private lateinit var pinpointClient: PinpointClient
+
         @BeforeClass
         @JvmStatic
         fun setupBefore() {
             val context = ApplicationProvider.getApplicationContext<Context>()
+
             @RawRes val resourceId = Resources.getRawResourceId(context, CONFIGURATION_NAME)
             appId = readAppIdFromResource(context, resourceId)
             preferences = context.getSharedPreferences(

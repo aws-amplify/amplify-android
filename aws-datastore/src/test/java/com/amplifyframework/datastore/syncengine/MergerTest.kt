@@ -158,7 +158,9 @@ class MergerTest {
             .name("Jameson")
             .build()
         val metadata = ModelMetadata(
-            blogOwner.modelName + "|" + blogOwner.id, false, 1,
+            blogOwner.modelName + "|" + blogOwner.id,
+            false,
+            1,
             Temporal.Timestamp.now()
         )
         // Note that storageAdapter.save(...) is NOT called!
@@ -255,7 +257,10 @@ class MergerTest {
             BlogOwner::class.java
         )
         val pendingMutation = PendingMutation.instance(
-            blogOwner, schema, PendingMutation.Type.CREATE, QueryPredicates.all()
+            blogOwner,
+            schema,
+            PendingMutation.Type.CREATE,
+            QueryPredicates.all()
         )
         val enqueueObserver = mutationOutbox.enqueue(pendingMutation).test()
         enqueueObserver.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS)
@@ -301,7 +306,10 @@ class MergerTest {
             BlogOwner::class.java
         )
         val pendingMutation = PendingMutation.instance(
-            blogOwner, schema, PendingMutation.Type.DELETE, QueryPredicates.all()
+            blogOwner,
+            schema,
+            PendingMutation.Type.DELETE,
+            QueryPredicates.all()
         )
         val enqueueObserver = mutationOutbox.enqueue(pendingMutation).test()
         enqueueObserver.await(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS)
@@ -340,7 +348,9 @@ class MergerTest {
             .name("Cornelius Daniels")
             .build()
         val existingMetadata = ModelMetadata(
-            existingModel.id, false, 55,
+            existingModel.id,
+            false,
+            55,
             Temporal.Timestamp.now()
         )
         storageAdapter.save(existingModel, existingMetadata)
@@ -370,7 +380,8 @@ class MergerTest {
             storageAdapter.query(
                 ModelMetadata::class.java,
                 Where.identifier(
-                    ModelMetadata::class.java, existingModel.primaryKeyString
+                    ModelMetadata::class.java,
+                    existingModel.primaryKeyString
                 )
             )
         )
@@ -447,8 +458,10 @@ class MergerTest {
             .name("Cornelius Daniels")
             .build()
         val existingMetadata = ModelMetadata(
-            existingModel.id, false,
-            1, Temporal.Timestamp.now()
+            existingModel.id,
+            false,
+            1,
+            Temporal.Timestamp.now()
         )
         storageAdapter.save(existingModel, existingMetadata)
 
@@ -457,7 +470,9 @@ class MergerTest {
             .name("Cornelius Daniels, but woke af, now.")
             .build()
         val metadataWithoutVersion = ModelMetadata(
-            incomingModel.id, null, null,
+            incomingModel.id,
+            null,
+            null,
             null
         )
         val incomingModelWithMetadata = ModelWithMetadata(existingModel, metadataWithoutVersion)
@@ -479,7 +494,8 @@ class MergerTest {
             storageAdapter.query(
                 ModelMetadata::class.java,
                 Where.identifier(
-                    ModelMetadata::class.java, existingModel.id
+                    ModelMetadata::class.java,
+                    existingModel.id
                 )
             )
         )
@@ -505,7 +521,9 @@ class MergerTest {
             .owner(badOwner)
             .build()
         val metadata = ModelMetadata(
-            orphanedBlog.id, false, 1,
+            orphanedBlog.id,
+            false,
+            1,
             Temporal.Timestamp.now()
         )
 
@@ -686,27 +704,27 @@ class MergerTest {
         val blogFirstPost1ToBeDisregarded =
             ModelWithMetadata(
                 Blog.builder().name("Hideo K.").id("DS1").build(),
-                ModelMetadata(sameRandomId1, false, 1, Temporal.Timestamp.now()),
+                ModelMetadata(sameRandomId1, false, 1, Temporal.Timestamp.now())
             )
         val blogFirstPost2LatestVer =
             ModelWithMetadata(
                 Blog.builder().name("Hideo K.").id("DS1").build(),
-                ModelMetadata(sameRandomId1, true, 3, Temporal.Timestamp.now()),
+                ModelMetadata(sameRandomId1, true, 3, Temporal.Timestamp.now())
             )
         val blogFirstPost3LatestVerDuplicate =
             ModelWithMetadata(
                 Blog.builder().name("Hideo K.").id("DS1").build(),
-                ModelMetadata(sameRandomId1, false, 3, Temporal.Timestamp.now()),
+                ModelMetadata(sameRandomId1, false, 3, Temporal.Timestamp.now())
             )
         val blogFirstPost4ToBeDisregarded =
             ModelWithMetadata(
                 Blog.builder().name("Hideo K.").id("DS1").build(),
-                ModelMetadata(sameRandomId1, false, 2, Temporal.Timestamp.now()),
+                ModelMetadata(sameRandomId1, false, 2, Temporal.Timestamp.now())
             )
         val blogSecondPost1ToSurvive =
             ModelWithMetadata(
                 Blog.builder().name("Hideo K.").id("DS2").build(),
-                ModelMetadata(sameRandomId2, false, 11, Temporal.Timestamp.now()),
+                ModelMetadata(sameRandomId2, false, 11, Temporal.Timestamp.now())
             )
 
         // Input list of blog posts on remote storage
@@ -716,20 +734,20 @@ class MergerTest {
                 blogFirstPost2LatestVer,
                 blogFirstPost3LatestVerDuplicate,
                 blogFirstPost4ToBeDisregarded,
-                blogSecondPost1ToSurvive,
+                blogSecondPost1ToSurvive
             )
 
         // Expected Blog table result
         val expectedBlogResult =
             listOf(
-                blogSecondPost1ToSurvive.model,
+                blogSecondPost1ToSurvive.model
             )
 
         // Expected Metadata result
         val expectedMetadataResult =
             listOf(
                 blogFirstPost2LatestVer.syncMetadata,
-                blogSecondPost1ToSurvive.syncMetadata,
+                blogSecondPost1ToSurvive.syncMetadata
             )
 
         val observer = merger.merge(remotemodels, NoOpConsumer.create()).test()

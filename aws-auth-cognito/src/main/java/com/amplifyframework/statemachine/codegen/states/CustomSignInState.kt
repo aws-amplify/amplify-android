@@ -33,9 +33,8 @@ internal sealed class CustomSignInState : State {
     class Resolver(private val signInCustomActions: CustomSignInActions) : StateMachineResolver<CustomSignInState> {
         override val defaultState = NotStarted()
 
-        private fun asCustomSignInEvent(event: StateMachineEvent): CustomSignInEvent.EventType? {
-            return (event as? CustomSignInEvent)?.eventType
-        }
+        private fun asCustomSignInEvent(event: StateMachineEvent): CustomSignInEvent.EventType? =
+            (event as? CustomSignInEvent)?.eventType
 
         override fun resolve(
             oldState: CustomSignInState,

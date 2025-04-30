@@ -29,8 +29,8 @@ object EntityTypeAdapter {
      * @return Amplify's [EntityType] enum
      */
     @JvmStatic
-    fun fromComprehend(entity: String): EntityType {
-        return when (aws.sdk.kotlin.services.comprehend.model.EntityType.fromValue(entity)) {
+    fun fromComprehend(entity: String): EntityType =
+        when (aws.sdk.kotlin.services.comprehend.model.EntityType.fromValue(entity)) {
             aws.sdk.kotlin.services.comprehend.model.EntityType.Person -> EntityType.PERSON
             aws.sdk.kotlin.services.comprehend.model.EntityType.Location -> EntityType.LOCATION
             aws.sdk.kotlin.services.comprehend.model.EntityType.Organization -> EntityType.ORGANIZATION
@@ -42,5 +42,4 @@ object EntityTypeAdapter {
             aws.sdk.kotlin.services.comprehend.model.EntityType.Other -> EntityType.UNKNOWN
             else -> EntityType.UNKNOWN
         }
-    }
 }

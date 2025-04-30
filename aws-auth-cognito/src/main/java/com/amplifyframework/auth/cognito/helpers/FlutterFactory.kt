@@ -26,11 +26,8 @@ import com.amplifyframework.auth.result.AuthSessionResult
  */
 object FlutterFactory {
 
-    fun createAWSCognitoUserPoolTokens(
-        accessToken: String?,
-        idToken: String?,
-        refreshToken: String?
-    ) = AWSCognitoUserPoolTokens(accessToken, idToken, refreshToken)
+    fun createAWSCognitoUserPoolTokens(accessToken: String?, idToken: String?, refreshToken: String?) =
+        AWSCognitoUserPoolTokens(accessToken, idToken, refreshToken)
 
     fun createAWSCognitoAuthSession(
         isSignedIn: Boolean,

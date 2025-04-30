@@ -165,7 +165,7 @@ class MultiAuthSubscriptionOperationTest {
 
     @Test
     fun `onNext is called`() {
-        val response = mockk<GraphQLResponse<String>>() {
+        val response = mockk<GraphQLResponse<String>> {
             every { hasErrors() } returns false
         }
         val operation = createOperation()
@@ -224,7 +224,7 @@ class MultiAuthSubscriptionOperationTest {
     }
 
     private class MockSubscriptionEndpoint {
-        val endpoint = mockk<SubscriptionEndpoint>() {
+        val endpoint = mockk<SubscriptionEndpoint> {
             every { releaseSubscription(any()) } just Runs
         }
         val subscriptionId = "subId"

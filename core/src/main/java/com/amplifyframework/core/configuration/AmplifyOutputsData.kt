@@ -97,7 +97,10 @@ interface AmplifyOutputsData {
 
             @InternalAmplifyApi
             enum class IdentityProviders {
-                GOOGLE, FACEBOOK, LOGIN_WITH_AMAZON, SIGN_IN_WITH_APPLE
+                GOOGLE,
+                FACEBOOK,
+                LOGIN_WITH_AMAZON,
+                SIGN_IN_WITH_APPLE
             }
 
             @InternalAmplifyApi
