@@ -33,9 +33,7 @@ class AWSCognitoAuthVerifyTOTPSetupOptions private constructor(
          * @return a builder object.
          */
         @JvmStatic
-        fun builder(): CognitoBuilder {
-            return CognitoBuilder()
-        }
+        fun builder(): CognitoBuilder = CognitoBuilder()
 
         inline operator fun invoke(block: CognitoBuilder.() -> Unit) = CognitoBuilder()
             .apply(block).build()
@@ -51,9 +49,7 @@ class AWSCognitoAuthVerifyTOTPSetupOptions private constructor(
          * Returns the type of builder this is to support proper flow with it being an extended class.
          * @return the type of builder this is to support proper flow with it being an extended class.
          */
-        override fun getThis(): CognitoBuilder {
-            return this
-        }
+        override fun getThis(): CognitoBuilder = this
 
         /**
          * Friendly device name to be set in Cognito.
@@ -69,8 +65,7 @@ class AWSCognitoAuthVerifyTOTPSetupOptions private constructor(
          * Construct and return the object with the values set in the builder.
          * @return a new instance of AWSCognitoAuthVerifyTOTPSetupOptions with the values specified in the builder.
          */
-        override fun build(): AWSCognitoAuthVerifyTOTPSetupOptions {
-            return AWSCognitoAuthVerifyTOTPSetupOptions(friendlyDeviceName)
-        }
+        override fun build(): AWSCognitoAuthVerifyTOTPSetupOptions =
+            AWSCognitoAuthVerifyTOTPSetupOptions(friendlyDeviceName)
     }
 }

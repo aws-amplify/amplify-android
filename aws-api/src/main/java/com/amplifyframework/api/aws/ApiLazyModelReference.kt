@@ -51,9 +51,7 @@ internal class ApiLazyModelReference<M : Model> internal constructor(
         }
     }
 
-    override fun getIdentifier(): Map<String, Any> {
-        return keyMap
-    }
+    override fun getIdentifier(): Map<String, Any> = keyMap
 
     override suspend fun fetchModel(): M? {
         val cached = cachedValue.get()
@@ -85,7 +83,6 @@ internal class ApiLazyModelReference<M : Model> internal constructor(
     private suspend fun fetchInternal(): M? {
         // Use mutex to only allow 1 execution at a time
         mutex.withLock {
-
             // Quick return if value is already present
             val cached = cachedValue.get()
             if (cached != null) {

@@ -176,7 +176,9 @@ class SetupTOTPCognitoActionsTest {
         }
         val expectedEvent = SetupTOTPEvent(
             SetupTOTPEvent.EventType.RespondToAuthChallenge(
-                username, session, SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
+                username,
+                session,
+                SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
             )
         )
 

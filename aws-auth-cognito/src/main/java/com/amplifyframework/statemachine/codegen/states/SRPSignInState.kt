@@ -35,9 +35,7 @@ internal sealed class SRPSignInState : State {
     class Resolver(private val srpActions: SRPActions) : StateMachineResolver<SRPSignInState> {
         override val defaultState = NotStarted("")
 
-        private fun asSRPEvent(event: StateMachineEvent): SRPEvent.EventType? {
-            return (event as? SRPEvent)?.eventType
-        }
+        private fun asSRPEvent(event: StateMachineEvent): SRPEvent.EventType? = (event as? SRPEvent)?.eventType
 
         override fun resolve(oldState: SRPSignInState, event: StateMachineEvent): StateResolution<SRPSignInState> {
             val srpEvent = asSRPEvent(event)
@@ -60,7 +58,10 @@ internal sealed class SRPSignInState : State {
                 is InitiatingSRPA -> when (srpEvent) {
                     is SRPEvent.EventType.RespondPasswordVerifier -> {
                         val action = srpActions.verifyPasswordSRPAction(
-                            srpEvent.challengeParameters, srpEvent.metadata, srpEvent.session, oldState.signInMethod
+                            srpEvent.challengeParameters,
+                            srpEvent.metadata,
+                            srpEvent.session,
+                            oldState.signInMethod
                         )
                         StateResolution(RespondingPasswordVerifier(), listOf(action))
                     }
@@ -71,7 +72,10 @@ internal sealed class SRPSignInState : State {
                 is RespondingPasswordVerifier -> when (srpEvent) {
                     is SRPEvent.EventType.RetryRespondPasswordVerifier -> {
                         val action = srpActions.verifyPasswordSRPAction(
-                            srpEvent.challengeParameters, srpEvent.metadata, srpEvent.session, srpEvent.signInMethod
+                            srpEvent.challengeParameters,
+                            srpEvent.metadata,
+                            srpEvent.session,
+                            srpEvent.signInMethod
                         )
                         StateResolution(RespondingPasswordVerifier(), listOf(action))
                     }

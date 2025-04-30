@@ -20,7 +20,6 @@ internal object InMemoryKeyValueRepositoryProvider {
     private val inMemoryRepositories = ConcurrentHashMap<String, InMemoryKeyValueRepository>()
 
     @Synchronized
-    fun getKeyValueRepository(name: String): InMemoryKeyValueRepository {
-        return inMemoryRepositories.getOrPut(name) { InMemoryKeyValueRepository() }
-    }
+    fun getKeyValueRepository(name: String): InMemoryKeyValueRepository =
+        inMemoryRepositories.getOrPut(name) { InMemoryKeyValueRepository() }
 }

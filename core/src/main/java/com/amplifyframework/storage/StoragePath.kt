@@ -68,7 +68,5 @@ data class IdentityIdProvidedStoragePath internal constructor(
 ) : StoragePath() {
 
     @InternalAmplifyApi
-    fun resolvePath(identityId: String): String {
-        return identityIdPathResolver.invoke(identityId)
-    }
+    fun resolvePath(identityId: String): String = identityIdPathResolver.invoke(identityId)
 }

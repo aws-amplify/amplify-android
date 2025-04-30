@@ -26,7 +26,7 @@ internal data class ColorCounter(val color: Color, val counter: Counter, val has
     override val type = "${color.type}.${counter.type}"
 
     class Resolver : StateMachineResolver<ColorCounter> {
-        override val defaultState = ColorCounter(Color.red, Counter(0), false)
+        override val defaultState = ColorCounter(Color.Red, Counter(0), false)
 
         override fun resolve(oldState: ColorCounter, event: StateMachineEvent): StateResolution<ColorCounter> {
             var builder = Builder(oldState)
@@ -49,14 +49,14 @@ internal data class ColorCounter(val color: Color, val counter: Counter, val has
         }
 
         private fun resolveHasTriggered(builder: Builder) {
-            if (builder.color == Color.yellow && builder.counter.value == 2) {
+            if (builder.color == Color.Yellow && builder.counter.value == 2) {
                 builder.hasTriggered = true
             }
         }
     }
 
     class Builder(
-        var color: Color = Color.red,
+        var color: Color = Color.Red,
         var counter: Counter = Counter(0),
         var hasTriggered: Boolean = false
     ) :

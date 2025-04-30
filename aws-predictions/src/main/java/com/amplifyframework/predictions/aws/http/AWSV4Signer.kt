@@ -116,9 +116,8 @@ internal class AWSV4Signer {
         return signature
     }
 
-    private fun createCredentialScope(region: String, date: String): String {
-        return listOf(date, region, SERVICE, AWS4_REQUEST_TYPE).joinToString("/")
-    }
+    private fun createCredentialScope(region: String, date: String): String =
+        listOf(date, region, SERVICE, AWS4_REQUEST_TYPE).joinToString("/")
 
     private fun hmacSha256(data: String, key: ByteArray): ByteArray {
         val algorithm = "HmacSHA256"
@@ -201,13 +200,9 @@ internal class AWSV4Signer {
         return stringBuilder.toString().lowercase(Locale.getDefault())
     }
 
-    private fun getTimeStamp(dateMilli: Long): String {
-        return timeFormatter.format(Date(dateMilli))
-    }
+    private fun getTimeStamp(dateMilli: Long): String = timeFormatter.format(Date(dateMilli))
 
-    private fun getDateStamp(dateMilli: Long): String {
-        return dateFormatter.format(Date(dateMilli))
-    }
+    private fun getDateStamp(dateMilli: Long): String = dateFormatter.format(Date(dateMilli))
 
     private fun buildQueryParamsMap(
         uri: URI,
@@ -278,10 +273,8 @@ internal class AWSV4Signer {
         ).joinToString(NEW_LINE_DELIMITER)
     }
 
-    private fun getCanonicalUri(uri: URI): String {
-        return uri.path.ifEmpty {
-            "/"
-        }
+    private fun getCanonicalUri(uri: URI): String = uri.path.ifEmpty {
+        "/"
     }
 
     companion object {

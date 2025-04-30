@@ -63,11 +63,7 @@ internal class AWSComprehendService(
         private const val PERCENT = 100
     }
 
-    fun comprehend(
-        text: String,
-        onSuccess: Consumer<InterpretResult>,
-        onError: Consumer<PredictionsException>
-    ) {
+    fun comprehend(text: String, onSuccess: Consumer<InterpretResult>, onError: Consumer<PredictionsException>) {
         execute(
             {
                 // First obtain the dominant language to begin analysis

@@ -36,17 +36,13 @@ data class GeoConfiguration internal constructor(
          * @return fresh configuration builder instance.
          */
         @JvmStatic
-        fun builder(): Builder {
-            return Builder()
-        }
+        fun builder(): Builder = Builder()
 
         /**
          * Returns a builder object populated from JSON.
          * @return populated builder instance.
          */
-        internal fun fromJson(pluginJson: JSONObject): Builder {
-            return Builder(pluginJson)
-        }
+        internal fun fromJson(pluginJson: JSONObject): Builder = Builder(pluginJson)
 
         internal fun from(outputs: AmplifyOutputsData): GeoConfiguration {
             val geo = outputs.geo ?: throw GeoException(

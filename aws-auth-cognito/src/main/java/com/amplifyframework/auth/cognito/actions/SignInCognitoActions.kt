@@ -205,7 +205,7 @@ internal object SignInCognitoActions : SignInActions {
                 )
 
                 val authParams = mutableMapOf(
-                    KEY_USERNAME to username,
+                    KEY_USERNAME to username
                 )
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
 

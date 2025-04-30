@@ -38,15 +38,13 @@ open class FaceLivenessSessionOptions protected constructor() {
 
     override fun hashCode() = javaClass.hashCode()
 
-    override fun equals(other: Any?): Boolean {
-        return if (this === other) {
-            true
-        } else !(other == null || javaClass != other.javaClass)
+    override fun equals(other: Any?): Boolean = if (this === other) {
+        true
+    } else {
+        !(other == null || javaClass != other.javaClass)
     }
 
-    override fun toString(): String {
-        return "FaceLivenessSessionOptions()"
-    }
+    override fun toString(): String = "FaceLivenessSessionOptions()"
 
     abstract class Builder<T : Builder<T>> {
 

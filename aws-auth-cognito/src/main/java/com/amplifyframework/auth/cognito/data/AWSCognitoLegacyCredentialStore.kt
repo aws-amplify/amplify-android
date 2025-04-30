@@ -122,10 +122,14 @@ internal class AWSCognitoLegacyCredentialStore(
                             awsCredentials
                         )
                     }
-                    else -> { AmplifyCredential.IdentityPool(identityId, awsCredentials) }
+                    else -> {
+                        AmplifyCredential.IdentityPool(identityId, awsCredentials)
+                    }
                 }
             }
-            signedInData != null -> { AmplifyCredential.UserPool(signedInData) }
+            signedInData != null -> {
+                AmplifyCredential.UserPool(signedInData)
+            }
             else -> AmplifyCredential.Empty
         }
     }
@@ -335,9 +339,7 @@ internal class AWSCognitoLegacyCredentialStore(
     // prefix the key with identity pool id
     private fun namespace(key: String): String = getIdentityPoolId() + "." + key
 
-    private fun getIdentityPoolId(): String? {
-        return authConfiguration.identityPool?.poolId
-    }
+    private fun getIdentityPoolId(): String? = authConfiguration.identityPool?.poolId
 
     private fun retrieveUserPoolSignInMethod() = when (mobileClientKeyValue.get(SIGN_IN_MODE_KEY)) {
         /*

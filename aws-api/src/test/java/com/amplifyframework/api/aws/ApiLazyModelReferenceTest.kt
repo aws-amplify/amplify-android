@@ -178,10 +178,16 @@ class ApiLazyModelReferenceTest {
 
         // WHEN
         var latch = CountDownLatch(1)
-        postReference.fetchModel({ fetchedPost1 = it; latch.countDown() }, {})
+        postReference.fetchModel({
+            fetchedPost1 = it
+            latch.countDown()
+        }, {})
         latch.await(2, TimeUnit.SECONDS)
         latch = CountDownLatch(1)
-        postReference.fetchModel({ fetchedPost2 = it; latch.countDown() }, {})
+        postReference.fetchModel({
+            fetchedPost2 = it
+            latch.countDown()
+        }, {})
         latch.await(2, TimeUnit.SECONDS)
 
         // THEN

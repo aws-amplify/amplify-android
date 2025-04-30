@@ -91,10 +91,8 @@ internal abstract class BlockingTransferWorker(
 
     internal open var maxRetryCount = 0
 
-    private fun isRetryableError(e: Throwable?): Boolean {
-        return !isNetworkAvailable(applicationContext) ||
-            runAttemptCount < maxRetryCount ||
-            // SocketException is thrown when download is terminated due to network disconnection.
-            e is SocketException
-    }
+    private fun isRetryableError(e: Throwable?): Boolean = !isNetworkAvailable(applicationContext) ||
+        runAttemptCount < maxRetryCount ||
+        // SocketException is thrown when download is terminated due to network disconnection.
+        e is SocketException
 }

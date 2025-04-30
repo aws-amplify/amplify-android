@@ -65,41 +65,37 @@ class EventRecorder(
     private val defaultMaxSubmissionSize = 1024 * 100
     private val serviceDefinedMaxEventsPerBatch: Int = 100
     private val badRequestCode = 400
-    internal suspend fun recordEvent(pinpointEvent: PinpointEvent): Uri? {
-        return withContext(coroutineDispatcher) {
-            val result = runCatching {
-                pinpointDatabase.saveEvent(pinpointEvent)
-            }
-            when {
-                result.isSuccess -> result.getOrNull()
-                else -> {
-                    logger.error("Failed to record event ${result.exceptionOrNull()}")
-                    null
-                }
+    internal suspend fun recordEvent(pinpointEvent: PinpointEvent): Uri? = withContext(coroutineDispatcher) {
+        val result = runCatching {
+            pinpointDatabase.saveEvent(pinpointEvent)
+        }
+        when {
+            result.isSuccess -> result.getOrNull()
+            else -> {
+                logger.error("Failed to record event ${result.exceptionOrNull()}")
+                null
             }
         }
     }
 
-    internal suspend fun submitEvents(): List<AnalyticsEvent> {
-        return withContext(coroutineDispatcher) {
-            val result = runCatching {
-                if (isSyncInProgress.compareAndSet(false, true)) {
-                    processEvents()
-                } else {
-                    logger.info("Sync is already in progress, skipping")
-                    emptyList()
-                }
+    internal suspend fun submitEvents(): List<AnalyticsEvent> = withContext(coroutineDispatcher) {
+        val result = runCatching {
+            if (isSyncInProgress.compareAndSet(false, true)) {
+                processEvents()
+            } else {
+                logger.info("Sync is already in progress, skipping")
+                emptyList()
             }
-            when {
-                result.isSuccess -> {
-                    isSyncInProgress.set(false)
-                    result.getOrNull() ?: emptyList()
-                }
-                else -> {
-                    isSyncInProgress.set(false)
-                    logger.error("Failed to submit events ${result.exceptionOrNull()}")
-                    emptyList()
-                }
+        }
+        when {
+            result.isSuccess -> {
+                isSyncInProgress.set(false)
+                result.getOrNull() ?: emptyList()
+            }
+            else -> {
+                isSyncInProgress.set(false)
+                logger.error("Failed to submit events ${result.exceptionOrNull()}")
+                emptyList()
             }
         }
     }
@@ -201,9 +197,7 @@ class EventRecorder(
         return eventIdToDelete
     }
 
-    private fun isRetryableError(code: Int?): Boolean {
-        return code in 500..599
-    }
+    private fun isRetryableError(code: Int?): Boolean = code in 500..599
 
     private fun processEndpointResponse(endpointResponse: EndpointItemResponse?) {
         endpointResponse?.let {

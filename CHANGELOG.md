@@ -1,3 +1,10 @@
+## [Release 2.27.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.27.3)
+
+### Bug Fixes
+- **storage:** Fix rare edge case of transfer status update crash ([#3006](https://github.com/aws-amplify/amplify-android/issues/3006))
+
+[See all changes between 2.27.2 and 2.27.3](https://github.com/aws-amplify/amplify-android/compare/release_v2.27.2...release_v2.27.3)
+
 ## [Release 2.27.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.27.2)
 
 ### Bug Fixes

@@ -38,13 +38,10 @@ data class LoggingConstraints @JvmOverloads constructor(
             explicitNulls = false
             ignoreUnknownKeys = true
         }
-        internal fun fromString(jsonString: String): LoggingConstraints {
-            return json.decodeFromString(jsonString)
-        }
+        internal fun fromString(jsonString: String): LoggingConstraints = json.decodeFromString(jsonString)
 
-        internal fun toJsonString(loggingConstraints: LoggingConstraints): String {
-            return json.encodeToString(loggingConstraints)
-        }
+        internal fun toJsonString(loggingConstraints: LoggingConstraints): String =
+            json.encodeToString(loggingConstraints)
     }
 }
 

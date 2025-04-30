@@ -105,7 +105,7 @@ class SignInChallengeCognitoActionsTest {
                 "CONFIRM_SIGN_IN_WITH_NEW_PASSWORD",
                 username = username,
                 session = null,
-                parameters = null,
+                parameters = null
             ),
             SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
         ).execute(dispatcher, authEnvironment)
@@ -148,7 +148,7 @@ class SignInChallengeCognitoActionsTest {
     @Test
     fun `verify email MFA setup selection challenge is handled`() = runTest {
         val expectedChallengeResponses = mapOf(
-            "USERNAME" to username,
+            "USERNAME" to username
         )
 
         val capturedRequest = slot<RespondToAuthChallengeRequest>()

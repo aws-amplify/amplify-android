@@ -41,6 +41,7 @@ import org.junit.Test
  */
 class SearchApiTest {
     lateinit var geo: SynchronousGeo
+
     @Before
     fun setup() {
         val geoPlugin = AWSLocationGeoPlugin()

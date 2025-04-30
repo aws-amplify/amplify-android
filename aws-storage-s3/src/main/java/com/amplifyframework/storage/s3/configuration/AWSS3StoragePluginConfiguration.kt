@@ -22,18 +22,16 @@ class AWSS3StoragePluginConfiguration private constructor(builder: Builder) {
     private val awsS3PluginPrefixResolver = builder.awsS3PluginPrefixResolver
 
     companion object {
-        operator fun invoke(block: Builder.() -> Unit): AWSS3StoragePluginConfiguration =
-            Builder()
-                .apply(block)
-                .build()
+        operator fun invoke(block: Builder.() -> Unit): AWSS3StoragePluginConfiguration = Builder()
+            .apply(block)
+            .build()
     }
 
     @Deprecated("Unused for operations using StoragePath")
-    fun getAWSS3PluginPrefixResolver(authCredentialsProvider: AuthCredentialsProvider): AWSS3PluginPrefixResolver {
-        return awsS3PluginPrefixResolver ?: StorageAccessLevelAwarePrefixResolver(
+    fun getAWSS3PluginPrefixResolver(authCredentialsProvider: AuthCredentialsProvider): AWSS3PluginPrefixResolver =
+        awsS3PluginPrefixResolver ?: StorageAccessLevelAwarePrefixResolver(
             authCredentialsProvider
         )
-    }
 
     class Builder {
         @Deprecated("Unused for operations using StoragePath")
