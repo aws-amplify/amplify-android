@@ -55,10 +55,7 @@ interface LazyModelList<out M : Model> : ModelList<M> {
      * @param onSuccess called upon successfully loading the next page of models.
      * @param onError called when loading the page fails.
      */
-    fun fetchPage(
-        onSuccess: Consumer<ModelPage<@UnsafeVariance M>>,
-        onError: Consumer<AmplifyException>
-    )
+    fun fetchPage(onSuccess: Consumer<ModelPage<@UnsafeVariance M>>, onError: Consumer<AmplifyException>)
 
     /**
      * Loads the next page of models.

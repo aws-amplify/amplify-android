@@ -32,9 +32,17 @@ import java.util.function.Consumer
  * Connect Apollo to AppSync by delegating to Amplify for tokens and signing.
  */
 class ApolloAmplifyConnector internal constructor(
-    data: AmplifyOutputsData.Data,
-    private val requestSigner: ApolloRequestSigner = ApolloRequestSigner(),
-    private val accessTokenProvider: AccessTokenProvider = AccessTokenProvider()
+    endpointUrl: String,
+    /**
+     * The AWS Region for your AWS AppSync GraphQL API
+     */
+    val region: String,
+    /**
+     * The API Key configured for your AWS AppSync GraphQL API, if any
+     */
+    val apiKey: String?,
+    private val requestSigner: ApolloRequestSigner,
+    private val accessTokenProvider: AccessTokenProvider
 ) {
     /**
      * Instantiate a connector with the configuration for an Amplify Gen2 App
@@ -48,19 +56,39 @@ class ApolloAmplifyConnector internal constructor(
     ) : this(AmplifyOutputsData.deserialize(context, outputs).data ?: error("No data section in AmplifyOutputs"))
 
     /**
+     * Instantiate a connector directly with the data needed to access your AWS AppSync GraphQL API
+     * @param endpointUrl The endpoint url for your AWS AppSync GraphQL API
+     * @param region The AWS Region for your AWS AppSync GraphQL API
+     * @param apiKey The API Key configured for your AWS AppSync GraphQL API, if any
+     */
+    constructor(
+        endpointUrl: String,
+        region: String,
+        apiKey: String? = null
+    ) : this(
+        endpointUrl = endpointUrl,
+        region = region,
+        apiKey = apiKey,
+        requestSigner = ApolloRequestSigner(),
+        accessTokenProvider = AccessTokenProvider()
+    )
+
+    internal constructor(
+        data: AmplifyOutputsData.Data,
+        requestSigner: ApolloRequestSigner = ApolloRequestSigner(),
+        accessTokenProvider: AccessTokenProvider = AccessTokenProvider()
+    ) : this(
+        endpointUrl = data.url,
+        region = data.awsRegion,
+        apiKey = data.apiKey,
+        requestSigner = requestSigner,
+        accessTokenProvider = accessTokenProvider
+    )
+
+    /**
      * The [AppSyncEndpoint] instance pointing to the endpoint specified in the Amplify Outputs
      */
-    val endpoint: AppSyncEndpoint = AppSyncEndpoint(data.url)
-
-    /**
-     * The AWS Region specified in the Amplify Outputs
-     */
-    val region: String = data.awsRegion
-
-    /**
-     * The API Key specified in the Amplify Outputs, if any
-     */
-    val apiKey: String? = data.apiKey
+    val endpoint: AppSyncEndpoint = AppSyncEndpoint(endpointUrl)
 
     /**
      * Create an [AppSyncAuthorizer] instance that uses the API Key specified in your Amplify Outputs.

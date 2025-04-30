@@ -23,6 +23,4 @@ internal val outFormatter: DateTimeFormatter = DateTimeFormatter
     .ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'") // millisecond precision
     .withZone(ZoneId.of("UTC"))
 
-fun Long.millisToIsoDate(): String {
-    return outFormatter.format(Instant.ofEpochMilli(this))
-}
+fun Long.millisToIsoDate(): String = outFormatter.format(Instant.ofEpochMilli(this))

@@ -230,7 +230,7 @@ public final class RxAuthBindingTest {
         // Arrange a result on the result consumer
         AuthCodeDeliveryDetails details = new AuthCodeDeliveryDetails(RandomString.string(), DeliveryMedium.EMAIL);
         AuthSignInStep step = AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE;
-        AuthNextSignInStep nextStep = new AuthNextSignInStep(step, Collections.emptyMap(), details, null, null);
+        AuthNextSignInStep nextStep = new AuthNextSignInStep(step, Collections.emptyMap(), details, null, null, null);
         AuthSignInResult result = new AuthSignInResult(false, nextStep);
         doAnswer(invocation -> {
             // 0 = username, 1 = password, 2 = onResult, 3 = onFailure
@@ -292,7 +292,7 @@ public final class RxAuthBindingTest {
         // Arrange a successful result.
         AuthSignInStep step = AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE;
         AuthCodeDeliveryDetails details = new AuthCodeDeliveryDetails(RandomString.string(), DeliveryMedium.UNKNOWN);
-        AuthNextSignInStep nextStep = new AuthNextSignInStep(step, Collections.emptyMap(), details, null, null);
+        AuthNextSignInStep nextStep = new AuthNextSignInStep(step, Collections.emptyMap(), details, null, null, null);
         AuthSignInResult expected = new AuthSignInResult(true, nextStep);
         doAnswer(invocation -> {
             // 0 = confirm code, 1 = onResult, 2 = onFailure
@@ -342,6 +342,63 @@ public final class RxAuthBindingTest {
     }
 
     /**
+     * Validates that a successful call to auto sign-in will propagate the result
+     * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
+     */
+    @Test
+    public void testAutoSignInSucceeds() throws InterruptedException {
+        // Arrange a successful result.
+        AuthSignInStep step = AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE;
+        AuthCodeDeliveryDetails details = new AuthCodeDeliveryDetails(RandomString.string(), DeliveryMedium.UNKNOWN);
+        AuthNextSignInStep nextStep = new AuthNextSignInStep(step, Collections.emptyMap(), details, null, null, null);
+        AuthSignInResult expected = new AuthSignInResult(true, nextStep);
+        doAnswer(invocation -> {
+            // 0 = onResult, 1 = onFailure
+            int positionOfResultConsumer = 0;
+            Consumer<AuthSignInResult> onResult = invocation.getArgument(positionOfResultConsumer);
+            onResult.accept(expected);
+            return null;
+        }).when(delegate).autoSignIn(anyConsumer(), anyConsumer());
+
+        // Act: call the binding
+        TestObserver<AuthSignInResult> observer = auth.autoSignIn().test();
+
+        // Assert: result is furnished
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        observer
+                .assertNoErrors()
+                .assertValue(expected);
+    }
+
+    /**
+     * Validates that a failed call to autp sign-in will propagate the failure
+     * back through the binding.
+     * @throws InterruptedException If test observer is interrupted while awaiting terminal event
+     */
+    @Test
+    public void testAutoSignInFails() throws InterruptedException {
+        // Arrange a failure.
+        AuthException failure = new AuthException("Confirmation of sign in", " has failed.", null);
+        doAnswer(invocation -> {
+            // 0 = onResult, 1 = onFailure
+            int positionOfFailureConsumer = 1;
+            Consumer<AuthException> onResult = invocation.getArgument(positionOfFailureConsumer);
+            onResult.accept(failure);
+            return null;
+        }).when(delegate).autoSignIn(anyConsumer(), anyConsumer());
+
+        // Act: call the binding
+        TestObserver<AuthSignInResult> observer = auth.autoSignIn().test();
+
+        // Assert: failure is furnished
+        observer.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        observer
+                .assertNoValues()
+                .assertError(failure);
+    }
+
+    /**
      * Validates that a successful call to sign-in with social web UI will propagate the result
      * back through the binding.
      * @throws InterruptedException If test observer is interrupted while awaiting terminal event
@@ -354,7 +411,7 @@ public final class RxAuthBindingTest {
         // Arrange a successful result
         AuthSignInStep step = AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE;
         AuthCodeDeliveryDetails details = new AuthCodeDeliveryDetails(RandomString.string(), DeliveryMedium.PHONE);
-        AuthNextSignInStep nextStep = new AuthNextSignInStep(step, Collections.emptyMap(), details, null, null);
+        AuthNextSignInStep nextStep = new AuthNextSignInStep(step, Collections.emptyMap(), details, null, null, null);
         AuthSignInResult result = new AuthSignInResult(false, nextStep);
         doAnswer(invocation -> {
             // 0 = provider, 1 = activity, 2 = result consumer, 3 = failure consumer
@@ -417,7 +474,7 @@ public final class RxAuthBindingTest {
         // Arrange a result
         AuthSignInStep step = AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE;
         AuthCodeDeliveryDetails details = new AuthCodeDeliveryDetails(RandomString.string(), DeliveryMedium.PHONE);
-        AuthNextSignInStep nextStep = new AuthNextSignInStep(step, Collections.emptyMap(), details, null, null);
+        AuthNextSignInStep nextStep = new AuthNextSignInStep(step, Collections.emptyMap(), details, null, null, null);
         AuthSignInResult result = new AuthSignInResult(false, nextStep);
         doAnswer(invocation -> {
             // 0 = activity, 1 = result consumer, 2 = failure consumer

@@ -32,6 +32,7 @@ import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions
+import com.amplifyframework.auth.result.AuthListWebAuthnCredentialsResult
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignOutResult
@@ -39,10 +40,15 @@ import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
+import io.mockk.Answer
+import io.mockk.Call
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
@@ -51,7 +57,7 @@ import org.junit.Test
  * Tests that the various facade APIs in the KotlinAuthFacade are wired
  * to the delegate AuthCategoryBehavior correctly.
  */
-@Suppress("UNCHECKED_CAST") // The more things change, the more they stay the same.
+@Suppress("UNCHECKED_CAST", "ktlint:standard:comment-wrapping")
 class KotlinAuthFacadeTest {
     private val delegate = mockk<AuthCategoryBehavior>()
     private val auth = KotlinAuthFacade(delegate)
@@ -1036,5 +1042,61 @@ class KotlinAuthFacadeTest {
             onError.accept(error)
         }
         auth.verifyTOTPSetup(code)
+    }
+
+    @Test
+    fun `associateWebAuthnCredential succeeds`() = runTest {
+        every { delegate.associateWebAuthnCredential(any(), any(), any(), any()) } answers CallAction(2)
+        auth.associateWebAuthnCredential(mockk())
+    }
+
+    @Test
+    fun `associateWebAuthnCredential fails`() = runTest {
+        val error = AuthException("oops", "bad")
+        every { delegate.associateWebAuthnCredential(any(), any(), any(), any()) } answers Accept(3, error)
+        shouldThrow<AuthException> { auth.associateWebAuthnCredential(mockk()) } shouldBe error
+    }
+
+    @Test
+    fun `listWebAuthnCredentials succeeds`() = runTest {
+        val result = mockk<AuthListWebAuthnCredentialsResult>()
+        every { delegate.listWebAuthnCredentials(any(), any(), any()) } answers Accept(1, result)
+        auth.listWebAuthnCredentials() shouldBe result
+    }
+
+    @Test
+    fun `listWebAuthnCredentials fails`() = runTest {
+        val error = AuthException("oh", "no")
+        every { delegate.listWebAuthnCredentials(any(), any(), any()) } answers Accept(2, error)
+        shouldThrow<AuthException> { auth.listWebAuthnCredentials() } shouldBe error
+    }
+
+    @Test
+    fun `deleteWebAuthnCredential succeeds`() = runTest {
+        val credentialId = "cred"
+        every { delegate.deleteWebAuthnCredential(credentialId, any(), any(), any()) } answers CallAction(2)
+        auth.deleteWebAuthnCredential(credentialId)
+    }
+
+    @Test
+    fun `deleteWebAuthnCredential fails`() = runTest {
+        val credentialId = "cred"
+        val error = AuthException("oh", "no")
+        every { delegate.deleteWebAuthnCredential(credentialId, any(), any(), any()) } answers Accept(3, error)
+        shouldThrow<AuthException> { auth.deleteWebAuthnCredential(credentialId) } shouldBe error
+    }
+
+    private class CallAction(val index: Int) : Answer<Unit> {
+        override fun answer(call: Call) {
+            val action = call.invocation.args[index] as Action
+            action.call()
+        }
+    }
+
+    private class Accept<T : Any>(val index: Int, val answer: T) : Answer<Unit> {
+        override fun answer(call: Call) {
+            val onSuccess = call.invocation.args[index] as Consumer<T>
+            onSuccess.accept(answer)
+        }
     }
 }

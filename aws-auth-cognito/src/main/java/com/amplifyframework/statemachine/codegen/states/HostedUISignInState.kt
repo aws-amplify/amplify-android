@@ -33,9 +33,8 @@ internal sealed class HostedUISignInState : State {
     class Resolver(private val hostedUIActions: HostedUIActions) : StateMachineResolver<HostedUISignInState> {
         override val defaultState = NotStarted()
 
-        private fun asHostedUIEvent(event: StateMachineEvent): HostedUIEvent.EventType? {
-            return (event as? HostedUIEvent)?.eventType
-        }
+        private fun asHostedUIEvent(event: StateMachineEvent): HostedUIEvent.EventType? =
+            (event as? HostedUIEvent)?.eventType
 
         override fun resolve(
             oldState: HostedUISignInState,

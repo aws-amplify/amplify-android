@@ -23,5 +23,5 @@ internal data class AWSS3StoragePathGetPresignedUrlRequest(
     val path: StoragePath,
     val expires: Int,
     val useAccelerateEndpoint: Boolean,
-    val validateObjectExistence: Boolean,
+    val validateObjectExistence: Boolean
 )

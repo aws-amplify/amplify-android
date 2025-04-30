@@ -99,9 +99,9 @@ internal class ModelPostProcessingTypeAdapter(
     }
 }
 
-private fun Model.getSortedIdentifiers(): List<Serializable> {
-    return when (val identifier = resolveIdentifier()) {
-        is ModelIdentifier<*> -> { listOf(identifier.key()) + identifier.sortedKeys() }
-        else -> listOf(identifier.toString())
+private fun Model.getSortedIdentifiers(): List<Serializable> = when (val identifier = resolveIdentifier()) {
+    is ModelIdentifier<*> -> {
+        listOf(identifier.key()) + identifier.sortedKeys()
     }
+    else -> listOf(identifier.toString())
 }

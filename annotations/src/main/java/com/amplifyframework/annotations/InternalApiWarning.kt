@@ -24,7 +24,7 @@ package com.amplifyframework.annotations
 @Suppress("DEPRECATION")
 @RequiresOptIn(
     level = RequiresOptIn.Level.WARNING,
-    message = "This API is internal to Amplify and should not be used. It could be removed or changed without notice.",
+    message = "This API is internal to Amplify and should not be used. It could be removed or changed without notice."
 )
 @Target(
     AnnotationTarget.CLASS,
@@ -32,6 +32,6 @@ package com.amplifyframework.annotations
     AnnotationTarget.FUNCTION,
     AnnotationTarget.PROPERTY,
     AnnotationTarget.FIELD,
-    AnnotationTarget.CONSTRUCTOR,
+    AnnotationTarget.CONSTRUCTOR
 )
 public annotation class InternalApiWarning

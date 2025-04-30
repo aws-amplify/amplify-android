@@ -1,6 +1,8 @@
 public final class com/amplifyframework/apollo/appsync/ApolloAmplifyConnector {
 	public static final field Companion Lcom/amplifyframework/apollo/appsync/ApolloAmplifyConnector$Companion;
 	public fun <init> (Landroid/content/Context;Lcom/amplifyframework/core/configuration/AmplifyOutputs;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun apiKeyAuthorizer ()Lcom/amplifyframework/apollo/appsync/authorizers/ApiKeyAuthorizer;
 	public final fun cognitoUserPoolAuthorizer ()Lcom/amplifyframework/apollo/appsync/authorizers/AuthTokenAuthorizer;
 	public static final fun fetchLatestCognitoAuthToken (Ljava/util/function/Consumer;Ljava/util/function/Consumer;)V

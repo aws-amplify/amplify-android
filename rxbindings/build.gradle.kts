@@ -42,7 +42,3 @@ dependencies {
     testImplementation(libs.test.robolectric)
     testImplementation(project(":rxbindings"))
 }
-
-android.kotlinOptions {
-    jvmTarget = "11"
-}

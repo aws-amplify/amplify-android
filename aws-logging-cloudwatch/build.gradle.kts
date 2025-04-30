@@ -62,7 +62,3 @@ dependencies {
     androidTestImplementation(project(":aws-logging-cloudwatch"))
     androidTestImplementation(project(":testutils"))
 }
-
-android.kotlinOptions {
-    jvmTarget = "11"
-}

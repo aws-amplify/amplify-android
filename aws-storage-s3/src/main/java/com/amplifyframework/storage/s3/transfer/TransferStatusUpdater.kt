@@ -36,20 +36,17 @@ internal class TransferStatusUpdater(
             AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
         )
     private val mainHandler = Handler(Looper.getMainLooper())
-    private val transferStatusListenerMap: MutableMap<Int, MutableList<TransferListener>> by lazy {
-        ConcurrentHashMap()
-    }
-    private val transferWorkInfoIdMap: MutableMap<String, Int> by lazy { ConcurrentHashMap() }
-    private val multiPartTransferStatusListener: MutableMap<Int, MultiPartUploadTaskListener> by lazy {
+    private val transferStatusListenerMap:
+        ConcurrentHashMap<Int, ConcurrentHashMap.KeySetView<TransferListener, Boolean>> by lazy { ConcurrentHashMap() }
+    private val transferWorkInfoIdMap: ConcurrentHashMap<String, Int> by lazy { ConcurrentHashMap() }
+    private val multiPartTransferStatusListener: ConcurrentHashMap<Int, MultiPartUploadTaskListener> by lazy {
         ConcurrentHashMap()
     }
     val activeTransferMap = object : AbstractMutableMap<Int, TransferRecord>() {
 
         val transferRecordMap = ConcurrentHashMap<Int, TransferRecord>()
 
-        override fun put(key: Int, value: TransferRecord): TransferRecord? {
-            return transferRecordMap.put(key, value)
-        }
+        override fun put(key: Int, value: TransferRecord): TransferRecord? = transferRecordMap.put(key, value)
 
         override fun get(key: Int): TransferRecord? {
             if (!transferRecordMap.containsKey(key)) {
@@ -135,9 +132,9 @@ internal class TransferStatusUpdater(
             transferDB.updateBytesTransferred(transferRecordId, bytesCurrent, bytesTotal)
         }
         if (notifyListener) {
-            transferStatusListenerMap[transferRecordId]?.forEach {
+            transferStatusListenerMap[transferRecordId]?.forEach { listener ->
                 mainHandler.post {
-                    it.onProgressChanged(
+                    listener.onProgressChanged(
                         transferRecordId,
                         bytesCurrent,
                         bytesTotal
@@ -149,8 +146,8 @@ internal class TransferStatusUpdater(
 
     @Synchronized
     fun updateOnError(transferRecordId: Int, exception: Exception) {
-        transferStatusListenerMap[transferRecordId]?.forEach {
-            mainHandler.post { it.onError(transferRecordId, exception) }
+        transferStatusListenerMap[transferRecordId]?.forEach { listener ->
+            mainHandler.post { listener.onError(transferRecordId, exception) }
         }
     }
 
@@ -162,27 +159,21 @@ internal class TransferStatusUpdater(
 
     @Synchronized
     fun registerListener(transferRecordId: Int, transferListener: TransferListener) {
-        transferStatusListenerMap[transferRecordId]?.let {
-            val transferListener = transferListener
-            if (!it.contains(transferListener)) {
-                it.add(transferListener)
+        transferStatusListenerMap[transferRecordId]?.add(transferListener) ?: run {
+            val transferRecordMap = ConcurrentHashMap.newKeySet<TransferListener>().apply {
+                add(transferListener)
             }
-        } ?: run {
-            transferStatusListenerMap[transferRecordId] = mutableListOf(transferListener)
+            transferStatusListenerMap[transferRecordId] = transferRecordMap
         }
     }
 
     @Synchronized
-    fun registerMultiPartTransferListener(
-        transferRecordId: Int,
-        transferListener: MultiPartUploadTaskListener
-    ) {
+    fun registerMultiPartTransferListener(transferRecordId: Int, transferListener: MultiPartUploadTaskListener) {
         multiPartTransferStatusListener[transferRecordId] = transferListener
     }
 
-    fun getMultiPartTransferListener(transferRecordId: Int): MultiPartUploadTaskListener? {
-        return multiPartTransferStatusListener[transferRecordId]
-    }
+    fun getMultiPartTransferListener(transferRecordId: Int): MultiPartUploadTaskListener? =
+        multiPartTransferStatusListener[transferRecordId]
 
     @Synchronized
     fun addWorkRequest(workRequestId: String, transferRecordId: Int, isChainedRequest: Boolean) {
@@ -193,9 +184,7 @@ internal class TransferStatusUpdater(
         }
     }
 
-    fun getTransferRecordIdForWorkInfo(workInfoId: String): Int? {
-        return transferWorkInfoIdMap[workInfoId]
-    }
+    fun getTransferRecordIdForWorkInfo(workInfoId: String): Int? = transferWorkInfoIdMap[workInfoId]
 
     fun removeWorkInfoId(workInfoId: String) {
         transferWorkInfoIdMap.remove(workInfoId)

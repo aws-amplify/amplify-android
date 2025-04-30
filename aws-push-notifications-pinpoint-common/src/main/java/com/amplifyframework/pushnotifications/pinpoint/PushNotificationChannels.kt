@@ -36,9 +36,7 @@ class PushNotificationChannels internal constructor(private val manager: Notific
 
     constructor(context: Context) : this(NotificationManagerCompat.from(context))
 
-    fun create(
-        configure: ChannelsCreator.() -> Unit
-    ) = ChannelsCreator(manager).apply(configure)
+    fun create(configure: ChannelsCreator.() -> Unit) = ChannelsCreator(manager).apply(configure)
 
     fun channelExists(channelId: String) = manager.getNotificationChannelCompat(channelId) != null
     fun groupExists(groupId: String) = manager.getNotificationChannelGroupCompat(groupId) != null
@@ -68,11 +66,7 @@ class ChannelsCreator(private val managerCompat: NotificationManagerCompat) {
         managerCompat.createNotificationChannel(channel)
     }
 
-    fun group(
-        id: String,
-        name: String,
-        configure: ChannelGroupBuilder.() -> Unit
-    ) {
+    fun group(id: String, name: String, configure: ChannelGroupBuilder.() -> Unit) {
         val builder = ChannelGroupBuilder(id, name).apply(configure)
         val group = builder.build()
         managerCompat.createNotificationChannelGroup(group)

@@ -58,7 +58,6 @@ internal class AbortMultiPartUploadWorkerTest {
 
     @Before
     fun setup() {
-
         context = ApplicationProvider.getApplicationContext()
         workerParameters = mockk(WorkerParameters::class.java.name)
         s3Client = spyk<S3Client>(recordPrivateCalls = true)

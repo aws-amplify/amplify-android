@@ -45,23 +45,21 @@ open class AWSCredentials(
             accessKeyId: String?,
             secretAccessKey: String?,
             sessionToken: String?,
-            expiration: Long?,
-        ): AWSCredentials? {
-            return when {
-                accessKeyId == null || secretAccessKey == null -> {
-                    null
-                }
-                sessionToken != null && expiration != null -> {
-                    AWSTemporaryCredentials(
-                        accessKeyId,
-                        secretAccessKey,
-                        sessionToken,
-                        Instant.fromEpochSeconds(expiration)
-                    )
-                }
-                else -> {
-                    AWSCredentials(accessKeyId, secretAccessKey)
-                }
+            expiration: Long?
+        ): AWSCredentials? = when {
+            accessKeyId == null || secretAccessKey == null -> {
+                null
+            }
+            sessionToken != null && expiration != null -> {
+                AWSTemporaryCredentials(
+                    accessKeyId,
+                    secretAccessKey,
+                    sessionToken,
+                    Instant.fromEpochSeconds(expiration)
+                )
+            }
+            else -> {
+                AWSCredentials(accessKeyId, secretAccessKey)
             }
         }
     }

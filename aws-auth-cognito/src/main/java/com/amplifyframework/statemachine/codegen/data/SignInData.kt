@@ -15,12 +15,18 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
+import android.app.Activity
+import com.amplifyframework.auth.AuthFactorType
+import com.amplifyframework.auth.cognito.options.AuthFlowType
+import java.lang.ref.WeakReference
+
 internal sealed class SignInData {
 
     data class SRPSignInData(
         val username: String?,
         val password: String?,
-        val metadata: Map<String, String>
+        val metadata: Map<String, String>,
+        val authFlowType: AuthFlowType
     ) : SignInData()
 
     data class CustomAuthSignInData(
@@ -31,7 +37,8 @@ internal sealed class SignInData {
     data class MigrationAuthSignInData(
         val username: String?,
         val password: String?,
-        val metadata: Map<String, String>
+        val metadata: Map<String, String>,
+        val authFlowType: AuthFlowType
     ) : SignInData()
 
     data class CustomSRPAuthSignInData(
@@ -42,5 +49,19 @@ internal sealed class SignInData {
 
     data class HostedUISignInData(
         val hostedUIOptions: HostedUIOptions
+    ) : SignInData()
+
+    data class UserAuthSignInData(
+        val username: String?,
+        val preferredChallenge: AuthFactorType?,
+        val callingActivity: WeakReference<Activity>,
+        val metadata: Map<String, String>
+    ) : SignInData()
+
+    data class AutoSignInData(
+        val username: String,
+        val session: String?,
+        val metadata: Map<String, String>,
+        val userId: String?
     ) : SignInData()
 }

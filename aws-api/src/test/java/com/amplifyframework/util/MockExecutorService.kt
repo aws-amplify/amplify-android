@@ -28,7 +28,9 @@ class MockExecutorService(var autoRunTasks: Boolean = true) : ExecutorService {
     val queue = mutableListOf<Runnable>()
     var numTasksQueued = 0
 
-    override fun execute(command: Runnable) { submit(command) }
+    override fun execute(command: Runnable) {
+        submit(command)
+    }
 
     override fun <T : Any> submit(task: Callable<T>): Future<T> {
         val future = CompletableFuture<T>()
@@ -62,17 +64,11 @@ class MockExecutorService(var autoRunTasks: Boolean = true) : ExecutorService {
     override fun isTerminated() = false
     override fun awaitTermination(timeout: Long, unit: TimeUnit) = false
     override fun <T : Any> invokeAll(tasks: MutableCollection<out Callable<T>>) = emptyList<Future<T>>()
-    override fun <T : Any> invokeAll(
-        tasks: MutableCollection<out Callable<T>>,
-        timeout: Long,
-        unit: TimeUnit
-    ) = emptyList<Future<T>>()
+    override fun <T : Any> invokeAll(tasks: MutableCollection<out Callable<T>>, timeout: Long, unit: TimeUnit) =
+        emptyList<Future<T>>()
     override fun <T : Any> invokeAny(tasks: MutableCollection<out Callable<T>>): T? = null
-    override fun <T : Any> invokeAny(
-        tasks: MutableCollection<out Callable<T>>,
-        timeout: Long,
-        unit: TimeUnit?
-    ): T? = null
+    override fun <T : Any> invokeAny(tasks: MutableCollection<out Callable<T>>, timeout: Long, unit: TimeUnit?): T? =
+        null
 
     fun runNext() {
         val task = queue.removeFirstOrNull()

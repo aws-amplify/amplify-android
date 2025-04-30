@@ -57,7 +57,3 @@ dependencies {
     androidTestImplementation(libs.test.androidx.junit)
     androidTestImplementation(project(":aws-analytics-pinpoint"))
 }
-
-android.kotlinOptions {
-    jvmTarget = "11"
-}

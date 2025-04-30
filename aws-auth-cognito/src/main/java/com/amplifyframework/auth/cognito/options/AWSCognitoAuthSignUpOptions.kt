@@ -49,9 +49,7 @@ internal constructor(
          * @return a builder object.
          */
         @JvmStatic
-        fun builder(): CognitoBuilder {
-            return CognitoBuilder()
-        }
+        fun builder(): CognitoBuilder = CognitoBuilder()
 
         inline operator fun invoke(block: CognitoBuilder.() -> Unit) = CognitoBuilder().apply(block).build()
     }
@@ -67,9 +65,7 @@ internal constructor(
          * Gets the type of builder to support proper flow with this being an extended class.
          * @return the type of builder to support proper flow with this being an extended class.
          */
-        override fun getThis(): CognitoBuilder {
-            return this
-        }
+        override fun getThis(): CognitoBuilder = this
 
         /**
          * A map of custom data the user can send as part of the sign up process for validation.

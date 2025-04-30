@@ -34,14 +34,9 @@ const val NEXT_TOKEN_KEY = "nextToken"
 internal class ModelReferenceDeserializer<M : Model>(
     val apiName: String?,
     private val schemaRegistry: AWSApiSchemaRegistry
-) :
-    JsonDeserializer<ModelReference<M>> {
+) : JsonDeserializer<ModelReference<M>> {
     @Throws(JsonParseException::class)
-    override fun deserialize(
-        json: JsonElement,
-        typeOfT: Type,
-        context: JsonDeserializationContext
-    ): ModelReference<M> {
+    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): ModelReference<M> {
         val pType = typeOfT as? ParameterizedType
             ?: throw JsonParseException("Expected a parameterized type during list deserialization.")
         val type = pType.actualTypeArguments[0] as Class<M>
@@ -67,11 +62,7 @@ internal class ModelReferenceDeserializer<M : Model>(
 
 internal class ModelListDeserializer<M : Model> : JsonDeserializer<ModelList<M>> {
     @Throws(JsonParseException::class)
-    override fun deserialize(
-        json: JsonElement,
-        typeOfT: Type,
-        context: JsonDeserializationContext
-    ): ModelList<M> {
+    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): ModelList<M> {
         val items = deserializeItems<M>(json, typeOfT, context)
         return ApiLoadedModelList(items)
     }
@@ -86,11 +77,7 @@ internal class ModelListDeserializer<M : Model> : JsonDeserializer<ModelList<M>>
 
 internal class ModelPageDeserializer<M : Model> : JsonDeserializer<ModelPage<M>> {
     @Throws(JsonParseException::class)
-    override fun deserialize(
-        json: JsonElement,
-        typeOfT: Type,
-        context: JsonDeserializationContext
-    ): ModelPage<M> {
+    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): ModelPage<M> {
         val items = deserializeItems<M>(json, typeOfT, context)
         val nextToken = deserializeNextToken(json)
         return ApiModelPage(items, nextToken)
@@ -105,12 +92,10 @@ internal class ModelPageDeserializer<M : Model> : JsonDeserializer<ModelPage<M>>
 }
 
 @Throws(JsonParseException::class)
-private fun getJsonObject(json: JsonElement): JsonObject {
-    return json as? JsonObject ?: throw JsonParseException(
-        "Got a JSON value that was not an object " +
-            "Unable to deserialize the response"
-    )
-}
+private fun getJsonObject(json: JsonElement): JsonObject = json as? JsonObject ?: throw JsonParseException(
+    "Got a JSON value that was not an object " +
+        "Unable to deserialize the response"
+)
 
 @Throws(JsonParseException::class)
 private fun <M : Model> deserializeItems(
@@ -140,9 +125,8 @@ private fun <M : Model> deserializeItems(
         context.deserialize(it.asJsonObject, type)
     }
 }
+
 @Throws(JsonParseException::class)
-private fun deserializeNextToken(json: JsonElement): ApiPaginationToken? {
-    return getJsonObject(json).get(NEXT_TOKEN_KEY)
-        ?.let { if (it.isJsonPrimitive) it.asString else null }
-        ?.let { ApiPaginationToken(it) }
-}
+private fun deserializeNextToken(json: JsonElement): ApiPaginationToken? = getJsonObject(json).get(NEXT_TOKEN_KEY)
+    ?.let { if (it.isJsonPrimitive) it.asString else null }
+    ?.let { ApiPaginationToken(it) }

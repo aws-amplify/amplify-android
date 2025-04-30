@@ -1,0 +1,52 @@
+{
+    "description": "Test that selecting the email OTP challenge returns the proper state",
+    "preConditions": {
+        "amplify-configuration": "authconfiguration_userauth.json",
+        "state": "SigningIn_SelectChallenge.json",
+        "mockedResponses": [
+            {
+                "type": "cognitoIdentityProvider",
+                "apiName": "respondToAuthChallenge",
+                "responseType": "success",
+                "response": {
+                    "challengeName": "EMAIL_OTP",
+                    "session": "someSession",
+                    "parameters": {},
+                    "challengeParameters": {
+                        "CODE_DELIVERY_DELIVERY_MEDIUM": "EMAIL",
+                        "CODE_DELIVERY_DESTINATION": "test@****.com"
+                    }
+                }
+            }
+        ]
+    },
+    "api": {
+        "name": "confirmSignIn",
+        "params": {
+            "challengeResponse": "EMAIL_OTP"
+        },
+        "options": {}
+    },
+    "validations": [
+        {
+            "type": "amplify",
+            "apiName": "signIn",
+            "responseType": "success",
+            "response": {
+                "isSignedIn": false,
+                "nextStep": {
+                    "signInStep": "CONFIRM_SIGN_IN_WITH_OTP",
+                    "additionalInfo": {},
+                    "codeDeliveryDetails": {
+                        "destination": "test@****.com",
+                        "deliveryMedium": "EMAIL"
+                    }
+                }
+            }
+        },
+        {
+            "type": "state",
+            "expectedState": "SigningIn_EmailOtp.json"
+        }
+    ]
+}

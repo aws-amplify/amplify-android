@@ -34,7 +34,7 @@ internal class SinglePartUploadWorker(
     private val transferStatusUpdater: TransferStatusUpdater,
     context: Context,
     workerParameters: WorkerParameters
-) : BaseTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
+) : SuspendingTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
 
     private lateinit var uploadProgressListener: UploadProgressListener
 

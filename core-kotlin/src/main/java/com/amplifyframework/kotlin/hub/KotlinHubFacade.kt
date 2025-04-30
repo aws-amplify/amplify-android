@@ -32,9 +32,8 @@ class KotlinHubFacade(private val delegate: Delegate = Amplify.Hub) : Hub {
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun subscribe(channel: HubChannel, filter: HubEventFilter): Flow<HubEvent<*>> =
-        callbackFlow {
-            val token = delegate.subscribe(channel, filter) { trySendBlocking(it) }
-            awaitClose { delegate.unsubscribe(token) }
-        }
+    override fun subscribe(channel: HubChannel, filter: HubEventFilter): Flow<HubEvent<*>> = callbackFlow {
+        val token = delegate.subscribe(channel, filter) { trySendBlocking(it) }
+        awaitClose { delegate.unsubscribe(token) }
+    }
 }

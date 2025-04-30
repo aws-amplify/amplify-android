@@ -142,9 +142,8 @@ internal class TransferDB private constructor(context: Context) {
      * @param valuesArray An array of values to insert.
      * @return The mainUploadId of the multipart records
      */
-    fun bulkInsertTransferRecords(valuesArray: Array<ContentValues?>): Int {
-        return transferDBHelper.bulkInsert(transferDBHelper.contentUri, valuesArray)
-    }
+    fun bulkInsertTransferRecords(valuesArray: Array<ContentValues?>): Int =
+        transferDBHelper.bulkInsert(transferDBHelper.contentUri, valuesArray)
 
     /**
      * Updates the current bytes of a transfer record.
@@ -208,10 +207,7 @@ internal class TransferDB private constructor(context: Context) {
      * @param state The new state of the transfer.
      * @return Number of rows updated.
      */
-    fun updateState(
-        id: Int,
-        state: TransferState
-    ): Int {
+    fun updateState(id: Int, state: TransferState): Int {
         logger.info("update state for $id to ${state.name}")
         val values = ContentValues()
         values.put(TransferTable.COLUMN_STATE, state.toString())
@@ -327,18 +323,16 @@ internal class TransferDB private constructor(context: Context) {
      * @param type The type of transfers to query for.
      * @return A Cursor pointing to records in the database with the given type.
      */
-    fun queryAllTransfersWithType(type: TransferType): Cursor? {
-        return if (type == TransferType.ANY) {
-            transferDBHelper.query(transferDBHelper.contentUri)
-        } else {
-            transferDBHelper.query(
-                transferDBHelper.contentUri,
-                selection = TransferTable.COLUMN_TYPE + "=?",
-                selectionArgs = arrayOf(
-                    type.toString()
-                )
+    fun queryAllTransfersWithType(type: TransferType): Cursor? = if (type == TransferType.ANY) {
+        transferDBHelper.query(transferDBHelper.contentUri)
+    } else {
+        transferDBHelper.query(
+            transferDBHelper.contentUri,
+            selection = TransferTable.COLUMN_TYPE + "=?",
+            selectionArgs = arrayOf(
+                type.toString()
             )
-        }
+        )
     }
 
     /**
@@ -348,10 +342,7 @@ internal class TransferDB private constructor(context: Context) {
      * @param states The list of Transfer States whose Transfer Records are required.
      * @return A Cursor pointing to records in the database in any of the given states.
      */
-    fun queryTransfersWithTypeAndStates(
-        type: TransferType,
-        states: Array<TransferState>
-    ): Cursor? {
+    fun queryTransfersWithTypeAndStates(type: TransferType, states: Array<TransferState>): Cursor? {
         val selection: String
         val selectionArgs: Array<String?>
         var index: Int
@@ -389,9 +380,7 @@ internal class TransferDB private constructor(context: Context) {
      * @param id The id of the transfer.
      * @return The result Cursor of the query.
      */
-    fun queryTransferById(id: Int): Cursor? {
-        return transferDBHelper.query(getRecordUri(id))
-    }
+    fun queryTransferById(id: Int): Cursor? = transferDBHelper.query(getRecordUri(id))
 
     /**
      * Gets the TransferRecord by id.
@@ -462,9 +451,7 @@ internal class TransferDB private constructor(context: Context) {
      * @param id The id of the transfer to be deleted.
      * @return Number of rows deleted.
      */
-    fun deleteTransferRecords(id: Int): Int {
-        return transferDBHelper.delete(getRecordUri(id))
-    }
+    fun deleteTransferRecords(id: Int): Int = transferDBHelper.delete(getRecordUri(id))
 
     /**
      * Deletes the part transfer record with the given main id.
@@ -472,9 +459,7 @@ internal class TransferDB private constructor(context: Context) {
      * @param id The main transfer id of the transfers to be deleted.
      * @return Number of rows deleted.
      */
-    fun deletePartTransferRecords(id: Int): Int {
-        return transferDBHelper.delete(getPartUri(id))
-    }
+    fun deletePartTransferRecords(id: Int): Int = transferDBHelper.delete(getPartUri(id))
 
     /**
      * Gets the Uri of part records of a multipart upload.
@@ -483,11 +468,9 @@ internal class TransferDB private constructor(context: Context) {
      * @return The Uri of the part upload records that have the given
      * mainUploadId value.
      */
-    private fun getTransferRecordIdUri(transferId: String): Uri {
-        return Uri.parse(
-            transferDBHelper.contentUri.toString() + "/transferId/" + transferId
-        )
-    }
+    private fun getTransferRecordIdUri(transferId: String): Uri = Uri.parse(
+        transferDBHelper.contentUri.toString() + "/transferId/" + transferId
+    )
 
     /**
      * Gets the Uri of part records of a multipart upload.
@@ -496,11 +479,9 @@ internal class TransferDB private constructor(context: Context) {
      * @return The Uri of the part upload records that have the given
      * mainUploadId value.
      */
-    private fun getPartUri(mainUploadId: Int): Uri {
-        return Uri.parse(
-            transferDBHelper.contentUri.toString() + "/part/" + mainUploadId
-        )
-    }
+    private fun getPartUri(mainUploadId: Int): Uri = Uri.parse(
+        transferDBHelper.contentUri.toString() + "/part/" + mainUploadId
+    )
 
     /**
      * Gets the Uri of the records that have the given state.
@@ -509,11 +490,9 @@ internal class TransferDB private constructor(context: Context) {
      * @return The Uri that is used to query transfer records with the given
      * state.
      */
-    fun getStateUri(state: TransferState): Uri? {
-        return Uri.parse(
-            "${transferDBHelper.contentUri}/state/$state"
-        )
-    }
+    fun getStateUri(state: TransferState): Uri? = Uri.parse(
+        "${transferDBHelper.contentUri}/state/$state"
+    )
 
     /**
      * Create a string with the required number of placeholders
@@ -542,9 +521,7 @@ internal class TransferDB private constructor(context: Context) {
      * @param id The id of the transfer.
      * @return The Uri of the record specified by the id.
      */
-    private fun getRecordUri(id: Int): Uri {
-        return Uri.parse(transferDBHelper.contentUri.toString() + "/" + id)
-    }
+    private fun getRecordUri(id: Int): Uri = Uri.parse(transferDBHelper.contentUri.toString() + "/" + id)
 
     /**
      * Inserts a transfer record into database with the given values.
