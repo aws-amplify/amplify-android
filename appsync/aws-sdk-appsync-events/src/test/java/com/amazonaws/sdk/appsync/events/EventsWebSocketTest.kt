@@ -16,8 +16,8 @@ package com.amazonaws.sdk.appsync.events
 
 import com.amazonaws.sdk.appsync.core.AppSyncRequest
 import io.kotest.matchers.shouldBe
-import org.junit.Test
 import okhttp3.Request
+import org.junit.Test
 
 class EventsWebSocketTest {
     private lateinit var eventsEndpoints: EventsEndpoints
@@ -36,10 +36,9 @@ class EventsWebSocketTest {
 
         val connectRequest = ConnectAppSyncRequest(eventsEndpoints, request)
 
-        connectRequest.method shouldBe  AppSyncRequest.HttpMethod.POST
+        connectRequest.method shouldBe AppSyncRequest.HttpMethod.POST
         connectRequest.body shouldBe "{}"
         connectRequest.headers shouldBe mapOf("key" to "value")
         connectRequest.url shouldBe eventsEndpoints.websocketBaseEndpoint.toString()
     }
-
 }

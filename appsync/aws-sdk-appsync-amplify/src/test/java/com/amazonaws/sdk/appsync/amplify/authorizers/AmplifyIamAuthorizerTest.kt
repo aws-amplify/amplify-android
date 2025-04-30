@@ -14,8 +14,8 @@
  */
 package com.amazonaws.sdk.appsync.amplify.authorizers
 
-import com.amazonaws.sdk.appsync.core.AppSyncRequest
 import com.amazonaws.sdk.appsync.amplify.util.AppSyncRequestSigner
+import com.amazonaws.sdk.appsync.core.AppSyncRequest
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.maps.shouldContainExactly
 import io.mockk.coEvery
