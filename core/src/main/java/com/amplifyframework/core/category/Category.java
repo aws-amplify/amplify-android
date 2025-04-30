@@ -149,13 +149,13 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
         if (!State.CONFIGURED.equals(state.get())) {
             for (P plugin : getPlugins()) {
                 InitializationResult result = InitializationResult.failure(new AmplifyException(
-                    "Tried to init before category was not configured.",
+                    "Tried to init before category was configured.",
                     "Call configure() on category, first."
                 ));
                 pluginInitializationResults.put(plugin.getPluginKey(), result);
             }
         } else {
-            state.set(State.CONFIGURING);
+            state.set(State.INITIALIZING);
             for (P plugin : getPlugins()) {
                 InitializationResult result;
                 try {
