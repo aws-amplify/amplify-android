@@ -43,7 +43,7 @@ android {
 }
 
 dependencies {
-    api(project(":aws-appsync-core"))
+    api(project(":aws-sdk-appsync-core"))
 
     implementation(libs.okhttp)
     implementation(libs.kotlin.serializationJson)
