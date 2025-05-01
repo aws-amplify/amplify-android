@@ -1,0 +1,246 @@
+public final class com/amazonaws/sdk/appsync/events/BuildConfig {
+	public static final field BUILD_TYPE Ljava/lang/String;
+	public static final field DEBUG Z
+	public static final field LIBRARY_PACKAGE_NAME Ljava/lang/String;
+	public static final field VERSION_NAME Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public final class com/amazonaws/sdk/appsync/events/Events {
+	public fun <init> (Ljava/lang/String;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lcom/amazonaws/sdk/appsync/events/data/ChannelAuthorizers;Lcom/amazonaws/sdk/appsync/events/Events$Options;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lcom/amazonaws/sdk/appsync/events/data/ChannelAuthorizers;Lcom/amazonaws/sdk/appsync/events/Events$Options;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun channel (Ljava/lang/String;Lcom/amazonaws/sdk/appsync/events/data/ChannelAuthorizers;)Lcom/amazonaws/sdk/appsync/events/EventsChannel;
+	public static synthetic fun channel$default (Lcom/amazonaws/sdk/appsync/events/Events;Ljava/lang/String;Lcom/amazonaws/sdk/appsync/events/data/ChannelAuthorizers;ILjava/lang/Object;)Lcom/amazonaws/sdk/appsync/events/EventsChannel;
+	public final fun disconnect (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun disconnect$default (Lcom/amazonaws/sdk/appsync/events/Events;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun getConnectAuthorizer ()Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;
+	public final fun getDefaultChannelAuthorizers ()Lcom/amazonaws/sdk/appsync/events/data/ChannelAuthorizers;
+	public final fun getEndpoint ()Ljava/lang/String;
+	public final fun publish (Ljava/lang/String;Ljava/util/List;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun publish (Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun publish$default (Lcom/amazonaws/sdk/appsync/events/Events;Ljava/lang/String;Ljava/util/List;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun publish$default (Lcom/amazonaws/sdk/appsync/events/Events;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class com/amazonaws/sdk/appsync/events/Events$Options {
+	public fun <init> ()V
+	public fun <init> (Lcom/amazonaws/sdk/appsync/core/LoggerProvider;Lcom/amazonaws/sdk/appsync/events/OkHttpConfigurationProvider;)V
+	public synthetic fun <init> (Lcom/amazonaws/sdk/appsync/core/LoggerProvider;Lcom/amazonaws/sdk/appsync/events/OkHttpConfigurationProvider;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/amazonaws/sdk/appsync/core/LoggerProvider;
+	public final fun component2 ()Lcom/amazonaws/sdk/appsync/events/OkHttpConfigurationProvider;
+	public final fun copy (Lcom/amazonaws/sdk/appsync/core/LoggerProvider;Lcom/amazonaws/sdk/appsync/events/OkHttpConfigurationProvider;)Lcom/amazonaws/sdk/appsync/events/Events$Options;
+	public static synthetic fun copy$default (Lcom/amazonaws/sdk/appsync/events/Events$Options;Lcom/amazonaws/sdk/appsync/core/LoggerProvider;Lcom/amazonaws/sdk/appsync/events/OkHttpConfigurationProvider;ILjava/lang/Object;)Lcom/amazonaws/sdk/appsync/events/Events$Options;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLoggerProvider ()Lcom/amazonaws/sdk/appsync/core/LoggerProvider;
+	public final fun getOkHttpConfigurationProvider ()Lcom/amazonaws/sdk/appsync/events/OkHttpConfigurationProvider;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amazonaws/sdk/appsync/events/EventsChannel {
+	public final fun getAuthorizers ()Lcom/amazonaws/sdk/appsync/events/data/ChannelAuthorizers;
+	public final fun getName ()Ljava/lang/String;
+	public final fun publish (Ljava/util/List;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun publish (Lkotlinx/serialization/json/JsonElement;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun publish$default (Lcom/amazonaws/sdk/appsync/events/EventsChannel;Ljava/util/List;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun publish$default (Lcom/amazonaws/sdk/appsync/events/EventsChannel;Lkotlinx/serialization/json/JsonElement;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun subscribe (Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun subscribe$default (Lcom/amazonaws/sdk/appsync/events/EventsChannel;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public abstract interface class com/amazonaws/sdk/appsync/events/OkHttpConfigurationProvider {
+	public abstract fun applyConfiguration (Lokhttp3/OkHttpClient$Builder;)V
+}
+
+public final class com/amazonaws/sdk/appsync/events/data/BadRequestException : com/amazonaws/sdk/appsync/events/data/EventsException {
+}
+
+public final class com/amazonaws/sdk/appsync/events/data/ChannelAuthorizers {
+	public fun <init> (Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;)V
+	public final fun component1 ()Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;
+	public final fun component2 ()Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;
+	public final fun copy (Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;)Lcom/amazonaws/sdk/appsync/events/data/ChannelAuthorizers;
+	public static synthetic fun copy$default (Lcom/amazonaws/sdk/appsync/events/data/ChannelAuthorizers;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;ILjava/lang/Object;)Lcom/amazonaws/sdk/appsync/events/data/ChannelAuthorizers;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPublishAuthorizer ()Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;
+	public final fun getSubscribeAuthorizer ()Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amazonaws/sdk/appsync/events/data/ConnectException : com/amazonaws/sdk/appsync/events/data/EventsException {
+}
+
+public final class com/amazonaws/sdk/appsync/events/data/ConnectionClosedException : com/amazonaws/sdk/appsync/events/data/EventsException {
+	public fun <init> ()V
+}
+
+public class com/amazonaws/sdk/appsync/events/data/EventsException : java/lang/Exception {
+	public final fun getRecoverySuggestion ()Ljava/lang/String;
+}
+
+public final class com/amazonaws/sdk/appsync/events/data/EventsMessage {
+	public fun <init> (Lkotlinx/serialization/json/JsonElement;)V
+	public final fun component1 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun copy (Lkotlinx/serialization/json/JsonElement;)Lcom/amazonaws/sdk/appsync/events/data/EventsMessage;
+	public static synthetic fun copy$default (Lcom/amazonaws/sdk/appsync/events/data/EventsMessage;Lkotlinx/serialization/json/JsonElement;ILjava/lang/Object;)Lcom/amazonaws/sdk/appsync/events/data/EventsMessage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getData ()Lkotlinx/serialization/json/JsonElement;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amazonaws/sdk/appsync/events/data/FailedEvent {
+	public static final field Companion Lcom/amazonaws/sdk/appsync/events/data/FailedEvent$Companion;
+	public synthetic fun <init> (ILjava/lang/String;ILjava/lang/Integer;Ljava/lang/String;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun component3 ()Ljava/lang/Integer;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;ILjava/lang/Integer;Ljava/lang/String;)Lcom/amazonaws/sdk/appsync/events/data/FailedEvent;
+	public static synthetic fun copy$default (Lcom/amazonaws/sdk/appsync/events/data/FailedEvent;Ljava/lang/String;ILjava/lang/Integer;Ljava/lang/String;ILjava/lang/Object;)Lcom/amazonaws/sdk/appsync/events/data/FailedEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getErrorCode ()Ljava/lang/Integer;
+	public final fun getErrorMessage ()Ljava/lang/String;
+	public final fun getIdentifier ()Ljava/lang/String;
+	public final fun getIndex ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lcom/amazonaws/sdk/appsync/events/data/FailedEvent;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class com/amazonaws/sdk/appsync/events/data/FailedEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amazonaws/sdk/appsync/events/data/FailedEvent$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amazonaws/sdk/appsync/events/data/FailedEvent;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amazonaws/sdk/appsync/events/data/FailedEvent;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amazonaws/sdk/appsync/events/data/FailedEvent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amazonaws/sdk/appsync/events/data/InvalidInputException : com/amazonaws/sdk/appsync/events/data/EventsException {
+}
+
+public final class com/amazonaws/sdk/appsync/events/data/MaxSubscriptionsReachedException : com/amazonaws/sdk/appsync/events/data/EventsException {
+}
+
+public final class com/amazonaws/sdk/appsync/events/data/NetworkException : com/amazonaws/sdk/appsync/events/data/EventsException {
+}
+
+public abstract class com/amazonaws/sdk/appsync/events/data/PublishResult {
+}
+
+public final class com/amazonaws/sdk/appsync/events/data/PublishResult$Failure : com/amazonaws/sdk/appsync/events/data/PublishResult {
+	public final fun component1 ()Lcom/amazonaws/sdk/appsync/events/data/EventsException;
+	public final fun copy (Lcom/amazonaws/sdk/appsync/events/data/EventsException;)Lcom/amazonaws/sdk/appsync/events/data/PublishResult$Failure;
+	public static synthetic fun copy$default (Lcom/amazonaws/sdk/appsync/events/data/PublishResult$Failure;Lcom/amazonaws/sdk/appsync/events/data/EventsException;ILjava/lang/Object;)Lcom/amazonaws/sdk/appsync/events/data/PublishResult$Failure;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Lcom/amazonaws/sdk/appsync/events/data/EventsException;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amazonaws/sdk/appsync/events/data/PublishResult$Response : com/amazonaws/sdk/appsync/events/data/PublishResult {
+	public static final field Companion Lcom/amazonaws/sdk/appsync/events/data/PublishResult$Response$Companion;
+	public synthetic fun <init> (ILjava/util/List;Ljava/util/List;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;Ljava/util/List;)Lcom/amazonaws/sdk/appsync/events/data/PublishResult$Response;
+	public static synthetic fun copy$default (Lcom/amazonaws/sdk/appsync/events/data/PublishResult$Response;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lcom/amazonaws/sdk/appsync/events/data/PublishResult$Response;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFailedEvents ()Ljava/util/List;
+	public final fun getStatus ()Lcom/amazonaws/sdk/appsync/events/data/PublishResult$Response$Status;
+	public final fun getSuccessfulEvents ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lcom/amazonaws/sdk/appsync/events/data/PublishResult$Response;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class com/amazonaws/sdk/appsync/events/data/PublishResult$Response$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amazonaws/sdk/appsync/events/data/PublishResult$Response$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amazonaws/sdk/appsync/events/data/PublishResult$Response;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amazonaws/sdk/appsync/events/data/PublishResult$Response;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amazonaws/sdk/appsync/events/data/PublishResult$Response$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract class com/amazonaws/sdk/appsync/events/data/PublishResult$Response$Status {
+}
+
+public final class com/amazonaws/sdk/appsync/events/data/PublishResult$Response$Status$Failed : com/amazonaws/sdk/appsync/events/data/PublishResult$Response$Status {
+	public static final field INSTANCE Lcom/amazonaws/sdk/appsync/events/data/PublishResult$Response$Status$Failed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amazonaws/sdk/appsync/events/data/PublishResult$Response$Status$PartialSuccess : com/amazonaws/sdk/appsync/events/data/PublishResult$Response$Status {
+	public static final field INSTANCE Lcom/amazonaws/sdk/appsync/events/data/PublishResult$Response$Status$PartialSuccess;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amazonaws/sdk/appsync/events/data/PublishResult$Response$Status$Successful : com/amazonaws/sdk/appsync/events/data/PublishResult$Response$Status {
+	public static final field INSTANCE Lcom/amazonaws/sdk/appsync/events/data/PublishResult$Response$Status$Successful;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amazonaws/sdk/appsync/events/data/RateLimitExceededException : com/amazonaws/sdk/appsync/events/data/EventsException {
+}
+
+public final class com/amazonaws/sdk/appsync/events/data/ResourceNotFoundException : com/amazonaws/sdk/appsync/events/data/EventsException {
+}
+
+public final class com/amazonaws/sdk/appsync/events/data/SuccessfulEvent {
+	public static final field Companion Lcom/amazonaws/sdk/appsync/events/data/SuccessfulEvent$Companion;
+	public synthetic fun <init> (ILjava/lang/String;ILkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun copy (Ljava/lang/String;I)Lcom/amazonaws/sdk/appsync/events/data/SuccessfulEvent;
+	public static synthetic fun copy$default (Lcom/amazonaws/sdk/appsync/events/data/SuccessfulEvent;Ljava/lang/String;IILjava/lang/Object;)Lcom/amazonaws/sdk/appsync/events/data/SuccessfulEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getIdentifier ()Ljava/lang/String;
+	public final fun getIndex ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lcom/amazonaws/sdk/appsync/events/data/SuccessfulEvent;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class com/amazonaws/sdk/appsync/events/data/SuccessfulEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amazonaws/sdk/appsync/events/data/SuccessfulEvent$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amazonaws/sdk/appsync/events/data/SuccessfulEvent;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amazonaws/sdk/appsync/events/data/SuccessfulEvent;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amazonaws/sdk/appsync/events/data/SuccessfulEvent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amazonaws/sdk/appsync/events/data/UnauthorizedException : com/amazonaws/sdk/appsync/events/data/EventsException {
+	public fun <init> ()V
+}
+
+public final class com/amazonaws/sdk/appsync/events/data/UnsupportedOperationException : com/amazonaws/sdk/appsync/events/data/EventsException {
+}
+
