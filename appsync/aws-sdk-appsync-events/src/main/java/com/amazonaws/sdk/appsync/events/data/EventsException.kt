@@ -43,6 +43,30 @@ open class EventsException internal constructor(
             )
         }
     }
+
+    override fun toString(): String {
+        return "${javaClass.simpleName} {message=$message" +
+                (cause?.let { ", cause=$cause" } ?: "") +
+                (recoverySuggestion?.let { ", recoverSuggestion=$recoverySuggestion" } ?: "") +
+                "}"
+    }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + (message?.hashCode() ?: 0)
+        result = 31 * result + (cause?.hashCode() ?: 0)
+        result = 31 * result + (recoverySuggestion?.hashCode() ?: 0)
+        return result
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is EventsException) return false
+
+        return message == other.message &&
+                cause == other.cause &&
+                recoverySuggestion == other.recoverySuggestion
+    }
 }
 
 internal fun Exception.toEventsException(): EventsException {
