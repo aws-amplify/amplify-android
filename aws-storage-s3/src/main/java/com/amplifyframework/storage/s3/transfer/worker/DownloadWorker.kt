@@ -70,6 +70,7 @@ internal class DownloadWorker(
         return s3.withConfig {
             interceptors += DownloadProgressListenerInterceptor(downloadProgressListener)
             enableAccelerate = transferRecord.useAccelerateEndpoint == 1
+            enableAwsChunked = false
         }.getObject(getObjectRequest) { response ->
             val totalBytes = (response.body?.contentLength ?: 0L) + downloadedBytes
             transferRecord.bytesTotal = totalBytes

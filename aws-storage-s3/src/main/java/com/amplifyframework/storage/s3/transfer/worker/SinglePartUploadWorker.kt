@@ -45,6 +45,7 @@ internal class SinglePartUploadWorker(
         return s3.withConfig {
             interceptors += UploadProgressListenerInterceptor(uploadProgressListener)
             enableAccelerate = transferRecord.useAccelerateEndpoint == 1
+            enableAwsChunked = false
         }.putObject(putObjectRequest).let {
             Result.success(outputData)
         }
