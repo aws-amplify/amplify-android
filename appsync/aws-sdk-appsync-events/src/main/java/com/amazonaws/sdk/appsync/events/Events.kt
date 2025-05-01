@@ -66,45 +66,35 @@ class Events(
     )
 
     /**
-     * Publish a single event to a channel.
+     * Publish a single event to a channel over REST POST.
      *
      * @param channelName of the channel to publish to.
      * @param event formatted in json.
      * @param authorizer for the publish call. If not provided, the EventChannel publish authorizer will be used.
      * @return result of publish.
      */
-    @Throws(EventsException::class)
     suspend fun publish(
         channelName: String,
         event: JsonElement,
         authorizer: AppSyncAuthorizer = this.defaultChannelAuthorizers.publishAuthorizer
     ): PublishResult {
-        return try {
-            httpClient.post(channelName, authorizer, event)
-        } catch (exception: Exception) {
-            throw exception.toEventsException()
-        }
+        return httpClient.post(channelName, authorizer, event)
     }
 
     /**
-     * Publish a multiple events (up to 5) to a channel.
+     * Publish a multiple events (up to 5) to a channel over REST POST.
      *
      * @param channelName of the channel to publish to.
      * @param events list of formatted json events.
      * @param authorizer for the publish call. If not provided, the EventChannel publish authorizer will be used.
      * @return result of publish.
      */
-    @Throws(EventsException::class)
     suspend fun publish(
         channelName: String,
         events: List<JsonElement>,
         authorizer: AppSyncAuthorizer = this.defaultChannelAuthorizers.publishAuthorizer
     ): PublishResult {
-        return try {
-            httpClient.post(channelName, authorizer, events)
-        } catch (exception: Exception) {
-            throw exception.toEventsException()
-        }
+        return httpClient.post(channelName, authorizer, events)
     }
 
     /**
@@ -117,7 +107,7 @@ class Events(
     fun channel(
         channelName: String,
         authorizers: ChannelAuthorizers = this.defaultChannelAuthorizers,
-    ) = EventsChannel(channelName, authorizers, eventsWebSocketProvider, json)
+    ) = EventsChannel(channelName, authorizers, eventsWebSocketProvider)
 
     /**
      * Method to disconnect from all channels.

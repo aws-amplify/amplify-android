@@ -79,7 +79,7 @@ class EventsChannel internal constructor(
     }
 
     /**
-     * Publish a single event to a channel.
+     * Publish a single event to a channel over WebSocket.
      *
      * @param event formatted in json.
      * @param authorizer for the publish call. If not provided, the EventChannel publish authorizer will be used.
@@ -93,7 +93,7 @@ class EventsChannel internal constructor(
     }
 
     /**
-     * Publish a multiple events (up to 5) to a channel.
+     * Publish a multiple events (up to 5) to a channel over WebSocket.
      *
      * @param events list of formatted json events.
      * @param authorizer for the publish call. If not provided, the EventChannel publish authorizer will be used.
