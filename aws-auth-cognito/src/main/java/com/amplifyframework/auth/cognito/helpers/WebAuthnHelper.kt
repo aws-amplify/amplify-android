@@ -95,7 +95,7 @@ internal class WebAuthnHelper(
                 throw e.toAuthException()
             }
         } else {
-            throw WebAuthnNotSupportedException(cause = null)
+            throw WebAuthnNotSupportedException("Passkeys are only supported on API 28 and above")
         }
     }
 
