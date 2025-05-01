@@ -15,7 +15,6 @@
 package com.amazonaws.sdk.appsync.events
 
 import com.amazonaws.sdk.appsync.core.AppSyncAuthorizer
-import com.amazonaws.sdk.appsync.events.data.ChannelAuthorizers
 import com.amazonaws.sdk.appsync.events.data.ConnectionClosedException
 import com.amazonaws.sdk.appsync.events.data.EventsException
 import com.amazonaws.sdk.appsync.events.data.EventsMessage
@@ -23,7 +22,7 @@ import com.amazonaws.sdk.appsync.events.data.PublishResult
 import com.amazonaws.sdk.appsync.events.data.UserClosedConnectionException
 import com.amazonaws.sdk.appsync.events.data.WebSocketMessage
 import com.amazonaws.sdk.appsync.events.data.toEventsException
-import java.util.UUID
+import com.amazonaws.sdk.appsync.events.utils.JsonUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -38,26 +37,42 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
+import okhttp3.OkHttpClient
+import java.util.UUID
 
-/**
- * A class to manage channel subscriptions and publishes
- *
- * @property name of the channel
- * @property authorizers used for channel subscriptions and publishes
- */
-class EventsChannel internal constructor(
-    val name: String,
-    val authorizers: ChannelAuthorizers,
-    private val eventsWebSocketProvider: EventsWebSocketProvider
+class EventsWebSocketClient internal constructor(
+    val connectAuthorizer: AppSyncAuthorizer,
+    val subscribeAuthorizer: AppSyncAuthorizer,
+    val publishAuthorizer: AppSyncAuthorizer,
+    val options: Events.Options.WebSocket,
+    endpoints: EventsEndpoints
 ) {
+
+    private val okHttpClient = OkHttpClient.Builder().apply {
+        options.okHttpConfigurationProvider?.applyConfiguration(this)
+    }.build()
+
+    private val json = JsonUtils.createJsonForLibrary()
+
+    private val eventsWebSocketProvider = EventsWebSocketProvider(
+        endpoints,
+        connectAuthorizer,
+        okHttpClient,
+        json,
+        options.loggerProvider
+    )
 
     /**
      * Subscribe to a channel.
      *
-     * @param authorizer for the subscribe call. If not provided, the EventChannel subscribe authorizer will be used.
+     * @param channelName of the channel to subscribe to.
+     * @param authorizer for the subscribe call. The subscribeAuthorizer passed to the client will be used as default.
      * @return flow of event messages. Collect flow to receive messages.
      */
-    fun subscribe(authorizer: AppSyncAuthorizer = this.authorizers.subscribeAuthorizer): Flow<EventsMessage> {
+    fun subscribe(
+        channelName: String,
+        authorizer: AppSyncAuthorizer = this.subscribeAuthorizer
+    ): Flow<EventsMessage> {
         val subscriptionHolder = SubscriptionHolder()
         return createSubscriptionEventDataFlow(subscriptionHolder)
             .onStart { // block completes complete before event messages begin emitting through flow
@@ -65,7 +80,9 @@ class EventsChannel internal constructor(
                 val newWebSocket = eventsWebSocketProvider.getConnectedWebSocket()
                 subscriptionHolder.webSocket = newWebSocket
                 // + send subscription. Returns true if successfully subscribed
-                subscriptionHolder.isSubscribed = initiateSubscription(newWebSocket, subscriptionHolder.id, authorizer)
+                subscriptionHolder.isSubscribed = initiateSubscription(
+                    channelName, newWebSocket, subscriptionHolder.id, authorizer
+                )
             }.flowOn(Dispatchers.IO) // io used for authorizers to pull headers asynchronously
             .onCompletion {
                 // only unsubscribe if already subscribed and websocket is still open
@@ -81,30 +98,34 @@ class EventsChannel internal constructor(
     /**
      * Publish a single event to a channel over WebSocket.
      *
+     * @param channelName of the channel to publish to.
      * @param event formatted in json.
-     * @param authorizer for the publish call. If not provided, the EventChannel publish authorizer will be used.
+     * @param authorizer for the publish call. The publishAuthorizer passed to the client is the default value.
      * @return result of publish.
      */
     suspend fun publish(
+        channelName: String,
         event: JsonElement,
-        authorizer: AppSyncAuthorizer = this.authorizers.publishAuthorizer
+        authorizer: AppSyncAuthorizer = publishAuthorizer
     ): PublishResult {
-        return publish(listOf(event), authorizer)
+        return publish(channelName, listOf(event), authorizer)
     }
 
     /**
      * Publish a multiple events (up to 5) to a channel over WebSocket.
      *
+     * @param channelName of the channel to publish to.
      * @param events list of formatted json events.
-     * @param authorizer for the publish call. If not provided, the EventChannel publish authorizer will be used.
+     * @param authorizer for the publish call. The publishAuthorizer passed to the client is the default value.
      * @return result of publish.
      */
     suspend fun publish(
+        channelName: String,
         events: List<JsonElement>,
-        authorizer: AppSyncAuthorizer = this.authorizers.publishAuthorizer
+        authorizer: AppSyncAuthorizer = publishAuthorizer
     ): PublishResult {
         return try {
-            publishToWebSocket(events, authorizer).let {
+            publishToWebSocket(channelName, events, authorizer).let {
                 PublishResult.Response(
                     successfulEvents = it.successfulEvents,
                     failedEvents = it.failedEvents
@@ -115,15 +136,26 @@ class EventsChannel internal constructor(
         }
     }
 
+    /**
+     * Method to disconnect from the websocket. This will result in all subscriptions completing.
+     *
+     * @param flushEvents set to true (default) to allow all pending publish calls to succeed before disconnecting.
+     * Setting to false will immediately disconnect, cancelling any in-progress or queued event publishes.
+     */
+    suspend fun disconnect(flushEvents: Boolean = true) {
+        eventsWebSocketProvider.existingWebSocket?.disconnect(flushEvents)
+    }
+
     @Throws(Exception::class)
     private suspend fun publishToWebSocket(
+        channelName: String,
         events: List<JsonElement>,
         authorizer: AppSyncAuthorizer
     ): WebSocketMessage.Received.PublishSuccess = withContext(Dispatchers.IO) {
         val publishId = UUID.randomUUID().toString()
         val publishMessage = WebSocketMessage.Send.Publish(
             id = publishId,
-            channel = name,
+            channel = channelName,
             events = JsonArray(events.map { JsonPrimitive(it.toString()) }),
         )
 
@@ -139,14 +171,17 @@ class EventsChannel internal constructor(
             is WebSocketMessage.Received.PublishSuccess -> {
                 response
             }
+
             is WebSocketMessage.ErrorContainer -> {
                 val fallbackMessage = "Failed to publish event(s)"
                 throw response.errors.firstOrNull()?.toEventsException(fallbackMessage)
                     ?: EventsException(fallbackMessage)
             }
+
             is WebSocketMessage.Closed -> {
                 throw response.reason.toCloseException()
             }
+
             else -> throw EventsException("Received unexpected publish response of type: ${response::class}")
         }
     }
@@ -160,31 +195,40 @@ class EventsChannel internal constructor(
                     it is WebSocketMessage.Received.Subscription.Data && it.id == subscriptionHolder.id -> {
                         emit(EventsMessage(it.event))
                     }
+
                     it is WebSocketMessage.Closed -> {
                         throw it.reason.toCloseException()
                     }
+
                     it is WebSocketMessage.ErrorContainer && it.id == subscriptionHolder.id -> {
                         val exceptionMessage = "Received error for subscription"
                         throw it.errors.firstOrNull()?.toEventsException(exceptionMessage)
                             ?: EventsException(exceptionMessage)
                     }
+
                     else -> Unit
                 }
-            } ?: throw EventsException.unknown("EventsWebSocket was null when attempting to collect.")
+            }
+                ?: throw EventsException.unknown("EventsWebSocket was null when attempting to collect.")
         }
     }
 
     private suspend fun initiateSubscription(
+        channelName: String,
         webSocket: EventsWebSocket,
         subscriptionId: String,
         authorizer: AppSyncAuthorizer
     ): Boolean = coroutineScope {
         // create a deferred holder for subscription response
-        val deferredSubscriptionResponse = async { getSubscriptionResponse(webSocket, subscriptionId) }
+        val deferredSubscriptionResponse =
+            async { getSubscriptionResponse(webSocket, subscriptionId) }
 
         // Publish subscription to websocket
         val queued = webSocket.sendWithAuthorizer(
-            webSocketMessage = WebSocketMessage.Send.Subscription.Subscribe(id = subscriptionId, channel = name),
+            webSocketMessage = WebSocketMessage.Send.Subscription.Subscribe(
+                id = subscriptionId,
+                channel = channelName
+            ),
             authorizer = authorizer
         )
         if (!queued) {
@@ -196,15 +240,18 @@ class EventsChannel internal constructor(
             is WebSocketMessage.Received.Subscription.SubscribeSuccess -> {
                 return@coroutineScope true
             }
+
             is WebSocketMessage.ErrorContainer -> {
-                val exceptionMessage = "Subscribe failed for channel: $name"
+                val exceptionMessage = "Subscribe failed for channel: $channelName"
                 throw response.errors.firstOrNull()
                     ?.toEventsException(exceptionMessage)
                     ?: EventsException(exceptionMessage)
             }
+
             is WebSocketMessage.Closed -> {
                 throw response.reason.toCloseException()
             }
+
             else -> throw EventsException("Received unexpected subscription response of type: ${response::class}")
         }
     }
@@ -240,32 +287,36 @@ class EventsChannel internal constructor(
         if (currentWebSocket != null && isSubscribed && !isDisconnected) {
             // Unsubscribe from channel when flow is completed
             try {
-                currentWebSocket.send(WebSocketMessage.Send.Subscription.Unsubscribe(subscriptionHolder.id))
+                currentWebSocket.send(
+                    WebSocketMessage.Send.Subscription.Unsubscribe(
+                        subscriptionHolder.id
+                    )
+                )
             } catch (e: Exception) {
                 // do nothing with a failed unsubscribe post
             }
         }
     }
-}
 
-/**
- * Holds mutable details about a subscription including the websocket and whether or not subscribe was successful
- */
-internal data class SubscriptionHolder(
-    var webSocket: EventsWebSocket? = null,
-    var isSubscribed: Boolean = false
-) {
-    val id = UUID.randomUUID().toString()
-}
+    /**
+     * Holds mutable details about a subscription including the websocket and whether or not subscribe was successful
+     */
+    internal data class SubscriptionHolder(
+        var webSocket: EventsWebSocket? = null,
+        var isSubscribed: Boolean = false
+    ) {
+        val id = UUID.randomUUID().toString()
+    }
 
-/**
- * Extension function that catches only UserClosedConnectionException and re-throws all other exceptions.
- *
- * @return Flow that ignores UserClosedConnectionException but propagates all other exceptions
- */
-private fun <T> Flow<T>.catchUserClosedException(): Flow<T> = catch { throwable ->
-    // Only swallow UserClosedConnectionException, propagate all others
-    if (throwable !is UserClosedConnectionException) {
-        throw throwable
+    /**
+     * Extension function that catches only UserClosedConnectionException and re-throws all other exceptions.
+     *
+     * @return Flow that ignores UserClosedConnectionException but propagates all other exceptions
+     */
+    private fun <T> Flow<T>.catchUserClosedException(): Flow<T> = catch { throwable ->
+        // Only swallow UserClosedConnectionException, propagate all others
+        if (throwable !is UserClosedConnectionException) {
+            throw throwable
+        }
     }
 }

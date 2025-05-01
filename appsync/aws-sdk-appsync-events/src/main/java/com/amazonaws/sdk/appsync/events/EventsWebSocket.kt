@@ -219,7 +219,6 @@ internal class EventsWebSocket(
                 url(eventsEndpoints.websocketRealtimeEndpoint)
                 addHeader(HeaderKeys.SEC_WEBSOCKET_PROTOCOL, HeaderValues.SEC_WEBSOCKET_PROTOCOL_APPSYNC_EVENTS)
                 addHeader(HeaderKeys.HOST, eventsEndpoints.restEndpoint.host)
-                addHeader(HeaderKeys.USER_AGENT, HeaderValues.USER_AGENT)
                 addHeader(HeaderKeys.X_AMZ_USER_AGENT, HeaderValues.USER_AGENT)
             }.build()
         }

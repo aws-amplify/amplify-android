@@ -22,7 +22,6 @@ internal object HeaderKeys {
     const val ACCEPT = "accept"
     const val CONTENT_TYPE = "content-type"
     const val SEC_WEBSOCKET_PROTOCOL = "Sec-WebSocket-Protocol"
-    const val USER_AGENT = "User-Agent"
     const val X_AMZ_USER_AGENT = "x-amz-user-agent"
 }
 

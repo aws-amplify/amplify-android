@@ -16,9 +16,7 @@ package com.amazonaws.sdk.appsync.events
 
 import com.amazonaws.sdk.appsync.core.AppSyncAuthorizer
 import com.amazonaws.sdk.appsync.core.AppSyncRequest
-import com.amazonaws.sdk.appsync.core.authorizers.ApiKeyAuthorizer
 import com.amazonaws.sdk.appsync.events.data.BadRequestException
-import com.amazonaws.sdk.appsync.events.data.ChannelAuthorizers
 import com.amazonaws.sdk.appsync.events.data.EventsException
 import com.amazonaws.sdk.appsync.events.data.PublishResult
 import com.amazonaws.sdk.appsync.events.utils.HeaderKeys
@@ -42,7 +40,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-class EventsTest {
+class EventsRestClientTest {
     private val mockWebServer = MockWebServer()
     private val expectedEndpoint = "https://abc.appsync-api.us-east-1.amazonaws.com/event"
     private val expectedHost = "abc.appsync-api.us-east-1.amazonaws.com"
@@ -50,19 +48,13 @@ class EventsTest {
         HeaderKeys.HOST to expectedHost,
         HeaderKeys.CONTENT_TYPE to HeaderValues.CONTENT_TYPE_APPLICATION_JSON,
         HeaderKeys.ACCEPT to HeaderValues.ACCEPT_APPLICATION_JSON,
-        HeaderKeys.USER_AGENT to HeaderValues.USER_AGENT,
         HeaderKeys.X_AMZ_USER_AGENT to HeaderValues.USER_AGENT
     )
-    private val expectedChannelAuthorizers = ChannelAuthorizers(
-        subscribeAuthorizer = ApiKeyAuthorizer("123"),
-        publishAuthorizer = TestAuthorizer()
-    )
     private val interceptor = ConvertToMockRequestInterceptor(mockWebServer.url("/event"))
-    private val events = Events(
-        endpoint = expectedEndpoint,
-        connectAuthorizer = ApiKeyAuthorizer("abc"),
-        defaultChannelAuthorizers = expectedChannelAuthorizers,
-        options = Events.Options(
+    private val events = Events(endpoint = expectedEndpoint,)
+    private val client = events.createRestClient(
+        TestAuthorizer(),
+        Events.Options.Rest(
             okHttpConfigurationProvider = {
                 it.addInterceptor(interceptor)
                 it.writeTimeout(100, TimeUnit.MILLISECONDS)
@@ -97,7 +89,7 @@ class EventsTest {
         )
 
         // WHEN
-        val response = events.publish(expectedChannel, JsonPrimitive(1))
+        val response = client.publish(expectedChannel, JsonPrimitive(1))
 
         // THEN
         interceptor.originalRequests.first().let {
@@ -141,7 +133,7 @@ class EventsTest {
                 .setBody(responseBody)
         )
 
-        val response = events.publish(expectedChannel, JsonPrimitive(1))
+        val response = client.publish(expectedChannel, JsonPrimitive(1))
 
         // THEN
         interceptor.originalRequests.first().let {
@@ -178,7 +170,7 @@ class EventsTest {
                 .setBody(responseBody)
         )
 
-        val response = events.publish(expectedChannel, JsonPrimitive(1))
+        val response = client.publish(expectedChannel, JsonPrimitive(1))
 
         // THEN
         interceptor.originalRequests.first().let {
@@ -217,7 +209,7 @@ class EventsTest {
                 .setBody(responseBody)
         )
 
-        val response = events.publish(expectedChannel, JsonPrimitive(1))
+        val response = client.publish(expectedChannel, JsonPrimitive(1))
 
         // THEN
         interceptor.originalRequests.first().let {
@@ -260,7 +252,7 @@ class EventsTest {
         )
 
         // WHEN
-        val response = events.publish(expectedChannel, JsonPrimitive(1), overrideAuthorizer)
+        val response = client.publish(expectedChannel, JsonPrimitive(1), overrideAuthorizer)
 
         // THEN
         interceptor.originalRequests.first().let {
@@ -303,7 +295,7 @@ class EventsTest {
         )
 
         // WHEN
-        val response = events.publish(expectedChannel, listOf(JsonPrimitive(1), JsonPrimitive(2)))
+        val response = client.publish(expectedChannel, listOf(JsonPrimitive(1), JsonPrimitive(2)))
 
         // THEN
         interceptor.originalRequests.first().let {
@@ -346,7 +338,7 @@ class EventsTest {
         )
 
         // WHEN
-        val response = events.publish(expectedChannel, listOf(JsonPrimitive(1), JsonPrimitive(2)))
+        val response = client.publish(expectedChannel, listOf(JsonPrimitive(1), JsonPrimitive(2)))
 
         // THEN
         interceptor.originalRequests.first().let {
@@ -387,7 +379,7 @@ class EventsTest {
         )
 
         // WHEN
-        val response = events.publish(expectedChannel, listOf(JsonPrimitive(1), JsonPrimitive(2)))
+        val response = client.publish(expectedChannel, listOf(JsonPrimitive(1), JsonPrimitive(2)))
 
         // THEN
         interceptor.originalRequests.first().let {
@@ -430,7 +422,7 @@ class EventsTest {
         )
 
         // WHEN
-        val response = events.publish(
+        val response = client.publish(
             expectedChannel,
             listOf(JsonPrimitive(1), JsonPrimitive(2)),
             overrideAuthorizer
@@ -457,46 +449,6 @@ class EventsTest {
             failedEvents.size shouldBe 0
             successfulEvents.size shouldBe 1
         }
-    }
-
-    @Test
-    fun `test channel creation with default authorizers`() = runTest {
-        // GIVEN
-        val expectedChannel = "default/testChannel"
-
-        // WHEN
-        val channel = events.channel(expectedChannel)
-
-        // THEN
-        channel.name shouldBe expectedChannel
-        channel.authorizers shouldBe expectedChannelAuthorizers
-    }
-
-    @Test
-    fun `test channel creation with override authorizers`() = runTest {
-        // GIVEN
-        val expectedChannel = "default/testChannel"
-        val overrideChannelAuthorizers = ChannelAuthorizers(
-            subscribeAuthorizer = ApiKeyAuthorizer("override"),
-            publishAuthorizer = TestAuthorizer("override")
-        )
-
-        // WHEN
-        val channel = events.channel(expectedChannel, overrideChannelAuthorizers)
-
-        // THEN
-        channel.name shouldBe expectedChannel
-        channel.authorizers shouldBe overrideChannelAuthorizers
-    }
-
-    @Test
-    fun `test disconnect with flushEvents`() {
-        // TODO: Write test once disconnect implemented within websocket
-    }
-
-    @Test
-    fun `test disconnect without flushEvents`() {
-        // TODO: Write test once disconnect implemented within websocket
     }
 }
 
