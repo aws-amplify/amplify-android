@@ -55,6 +55,7 @@ internal class PartUploadTransferWorker(
             s3.withConfig {
                 interceptors += UploadProgressListenerInterceptor(partUploadProgressListener)
                 enableAccelerate = transferRecord.useAccelerateEndpoint == 1
+                enableAwsChunked = false
             }.uploadPart {
                 bucket = transferRecord.bucketName
                 key = transferRecord.key
