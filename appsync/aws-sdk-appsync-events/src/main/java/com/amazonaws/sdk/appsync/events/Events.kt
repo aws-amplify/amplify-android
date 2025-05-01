@@ -33,10 +33,8 @@ class Events(
      * @param publishAuthorizer sets the default AppSyncAuthorizer for REST publish calls
      * @param options for optional customizations to the REST client
      */
-    fun createRestClient(
-        publishAuthorizer: AppSyncAuthorizer,
-        options: Options.Rest = Options.Rest(),
-    ) = EventsRestClient(publishAuthorizer, options, endpoints.restEndpoint)
+    fun createRestClient(publishAuthorizer: AppSyncAuthorizer, options: Options.Rest = Options.Rest()) =
+        EventsRestClient(publishAuthorizer, options, endpoints.restEndpoint)
 
     /**
      * Create a WebSocket client to subscribe and publish to channels over WebSocket
@@ -50,7 +48,7 @@ class Events(
         connectAuthorizer: AppSyncAuthorizer,
         subscribeAuthorizer: AppSyncAuthorizer,
         publishAuthorizer: AppSyncAuthorizer,
-        options: Options.WebSocket = Options.WebSocket(),
+        options: Options.WebSocket = Options.WebSocket()
     ) = EventsWebSocketClient(connectAuthorizer, subscribeAuthorizer, publishAuthorizer, options, endpoints)
 
     /**
@@ -88,4 +86,3 @@ class Events(
         ) : Options(loggerProvider, okHttpConfigurationProvider)
     }
 }
-

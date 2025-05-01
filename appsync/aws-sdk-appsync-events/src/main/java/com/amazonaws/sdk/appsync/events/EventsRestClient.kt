@@ -71,12 +71,10 @@ class EventsRestClient internal constructor(
         channelName: String,
         events: List<JsonElement>,
         authorizer: AppSyncAuthorizer = publishAuthorizer
-    ): PublishResult {
-        return try {
-            executePost(channelName, authorizer, events)
-        } catch (exception: Exception) {
-            PublishResult.Failure(exception.toEventsException())
-        }
+    ): PublishResult = try {
+        executePost(channelName, authorizer, events)
+    } catch (exception: Exception) {
+        PublishResult.Failure(exception.toEventsException())
     }
 
     @Throws(Exception::class)

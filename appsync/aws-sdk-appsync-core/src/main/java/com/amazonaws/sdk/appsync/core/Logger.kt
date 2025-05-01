@@ -214,7 +214,5 @@ enum class LogLevel {
      * @return true if the current level is above the threshold level
      * @throws NullPointerException if threshold is null
      */
-    fun above(threshold: LogLevel): Boolean {
-        return this.ordinal > threshold.ordinal
-    }
+    fun above(threshold: LogLevel) = this.ordinal > threshold.ordinal
 }

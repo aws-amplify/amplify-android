@@ -25,7 +25,8 @@ interface AppSyncRequest {
     val body: String?
 
     enum class HttpMethod {
-        GET, POST
+        GET,
+        POST
     }
 }
 

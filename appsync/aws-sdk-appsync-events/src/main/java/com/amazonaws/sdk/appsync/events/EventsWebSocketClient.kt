@@ -23,6 +23,7 @@ import com.amazonaws.sdk.appsync.events.data.UserClosedConnectionException
 import com.amazonaws.sdk.appsync.events.data.WebSocketMessage
 import com.amazonaws.sdk.appsync.events.data.toEventsException
 import com.amazonaws.sdk.appsync.events.utils.JsonUtils
+import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -38,7 +39,6 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import okhttp3.OkHttpClient
-import java.util.UUID
 
 class EventsWebSocketClient internal constructor(
     val connectAuthorizer: AppSyncAuthorizer,
@@ -69,19 +69,20 @@ class EventsWebSocketClient internal constructor(
      * @param authorizer for the subscribe call. The subscribeAuthorizer passed to the client will be used as default.
      * @return flow of event messages. Collect flow to receive messages.
      */
-    fun subscribe(
-        channelName: String,
-        authorizer: AppSyncAuthorizer = this.subscribeAuthorizer
-    ): Flow<EventsMessage> {
+    fun subscribe(channelName: String, authorizer: AppSyncAuthorizer = this.subscribeAuthorizer): Flow<EventsMessage> {
         val subscriptionHolder = SubscriptionHolder()
         return createSubscriptionEventDataFlow(subscriptionHolder)
-            .onStart { // block completes complete before event messages begin emitting through flow
+            .onStart {
+                // block completes complete before event messages begin emitting through flow
                 // get a connected websocket
                 val newWebSocket = eventsWebSocketProvider.getConnectedWebSocket()
                 subscriptionHolder.webSocket = newWebSocket
                 // + send subscription. Returns true if successfully subscribed
                 subscriptionHolder.isSubscribed = initiateSubscription(
-                    channelName, newWebSocket, subscriptionHolder.id, authorizer
+                    channelName,
+                    newWebSocket,
+                    subscriptionHolder.id,
+                    authorizer
                 )
             }.flowOn(Dispatchers.IO) // io used for authorizers to pull headers asynchronously
             .onCompletion {
@@ -107,9 +108,7 @@ class EventsWebSocketClient internal constructor(
         channelName: String,
         event: JsonElement,
         authorizer: AppSyncAuthorizer = publishAuthorizer
-    ): PublishResult {
-        return publish(channelName, listOf(event), authorizer)
-    }
+    ): PublishResult = publish(channelName, listOf(event), authorizer)
 
     /**
      * Publish a multiple events (up to 5) to a channel over WebSocket.
@@ -123,17 +122,15 @@ class EventsWebSocketClient internal constructor(
         channelName: String,
         events: List<JsonElement>,
         authorizer: AppSyncAuthorizer = publishAuthorizer
-    ): PublishResult {
-        return try {
-            publishToWebSocket(channelName, events, authorizer).let {
-                PublishResult.Response(
-                    successfulEvents = it.successfulEvents,
-                    failedEvents = it.failedEvents
-                )
-            }
-        } catch (exception: Exception) {
-            PublishResult.Failure(exception.toEventsException())
+    ): PublishResult = try {
+        publishToWebSocket(channelName, events, authorizer).let {
+            PublishResult.Response(
+                successfulEvents = it.successfulEvents,
+                failedEvents = it.failedEvents
+            )
         }
+    } catch (exception: Exception) {
+        PublishResult.Failure(exception.toEventsException())
     }
 
     /**
@@ -156,7 +153,7 @@ class EventsWebSocketClient internal constructor(
         val publishMessage = WebSocketMessage.Send.Publish(
             id = publishId,
             channel = channelName,
-            events = JsonArray(events.map { JsonPrimitive(it.toString()) }),
+            events = JsonArray(events.map { JsonPrimitive(it.toString()) })
         )
 
         val webSocket = eventsWebSocketProvider.getConnectedWebSocket()
@@ -186,31 +183,29 @@ class EventsWebSocketClient internal constructor(
         }
     }
 
-    private fun createSubscriptionEventDataFlow(subscriptionHolder: SubscriptionHolder): Flow<EventsMessage> {
-        return flow {
-            subscriptionHolder.webSocket?.events?.collect {
-                // First part of chained flow which not only receives Data message, but also detects
-                // ConnectionClosed. This allows us to complete the flow when the websocket closes
-                when {
-                    it is WebSocketMessage.Received.Subscription.Data && it.id == subscriptionHolder.id -> {
-                        emit(EventsMessage(it.event))
-                    }
-
-                    it is WebSocketMessage.Closed -> {
-                        throw it.reason.toCloseException()
-                    }
-
-                    it is WebSocketMessage.ErrorContainer && it.id == subscriptionHolder.id -> {
-                        val exceptionMessage = "Received error for subscription"
-                        throw it.errors.firstOrNull()?.toEventsException(exceptionMessage)
-                            ?: EventsException(exceptionMessage)
-                    }
-
-                    else -> Unit
+    private fun createSubscriptionEventDataFlow(subscriptionHolder: SubscriptionHolder): Flow<EventsMessage> = flow {
+        subscriptionHolder.webSocket?.events?.collect {
+            // First part of chained flow which not only receives Data message, but also detects
+            // ConnectionClosed. This allows us to complete the flow when the websocket closes
+            when {
+                it is WebSocketMessage.Received.Subscription.Data && it.id == subscriptionHolder.id -> {
+                    emit(EventsMessage(it.event))
                 }
+
+                it is WebSocketMessage.Closed -> {
+                    throw it.reason.toCloseException()
+                }
+
+                it is WebSocketMessage.ErrorContainer && it.id == subscriptionHolder.id -> {
+                    val exceptionMessage = "Received error for subscription"
+                    throw it.errors.firstOrNull()?.toEventsException(exceptionMessage)
+                        ?: EventsException(exceptionMessage)
+                }
+
+                else -> Unit
             }
-                ?: throw EventsException.unknown("EventsWebSocket was null when attempting to collect.")
         }
+            ?: throw EventsException.unknown("EventsWebSocket was null when attempting to collect.")
     }
 
     private suspend fun initiateSubscription(
@@ -256,8 +251,8 @@ class EventsWebSocketClient internal constructor(
         }
     }
 
-    private suspend fun getSubscriptionResponse(webSocket: EventsWebSocket, subscriptionId: String): WebSocketMessage {
-        return webSocket.events.first {
+    private suspend fun getSubscriptionResponse(webSocket: EventsWebSocket, subscriptionId: String): WebSocketMessage =
+        webSocket.events.first {
             when {
                 it is WebSocketMessage.Received.Subscription && it.id == subscriptionId -> true
                 it is WebSocketMessage.ErrorContainer && it.id == subscriptionId -> true
@@ -265,10 +260,9 @@ class EventsWebSocketClient internal constructor(
                 else -> false
             }
         }
-    }
 
-    private suspend fun getPublishResponse(webSocket: EventsWebSocket, publishId: String): WebSocketMessage {
-        return webSocket.events.first {
+    private suspend fun getPublishResponse(webSocket: EventsWebSocket, publishId: String): WebSocketMessage =
+        webSocket.events.first {
             when {
                 it is WebSocketMessage.Received.PublishSuccess && it.id == publishId -> true
                 it is WebSocketMessage.ErrorContainer && it.id == publishId -> true
@@ -276,7 +270,6 @@ class EventsWebSocketClient internal constructor(
                 else -> false
             }
         }
-    }
 
     private fun completeSubscription(subscriptionHolder: SubscriptionHolder, throwable: Throwable?) {
         // only unsubscribe if already subscribed and websocket is still open

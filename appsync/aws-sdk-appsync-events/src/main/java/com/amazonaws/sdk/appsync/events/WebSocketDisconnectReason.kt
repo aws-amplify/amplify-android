@@ -25,9 +25,7 @@ internal sealed class WebSocketDisconnectReason(val throwable: Throwable?) {
     class Service(throwable: Throwable? = null) : WebSocketDisconnectReason(throwable)
 }
 
-internal fun WebSocketDisconnectReason.toCloseException(): EventsException {
-    return when (this) {
-        is UserInitiated -> UserClosedConnectionException()
-        else -> ConnectionClosedException(throwable)
-    }
+internal fun WebSocketDisconnectReason.toCloseException(): EventsException = when (this) {
+    is UserInitiated -> UserClosedConnectionException()
+    else -> ConnectionClosedException(throwable)
 }

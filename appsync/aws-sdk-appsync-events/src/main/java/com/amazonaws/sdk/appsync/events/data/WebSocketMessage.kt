@@ -44,6 +44,7 @@ internal sealed class WebSocketMessage {
         @Serializable
         internal class ConnectionInit : Send() {
             override val type = "connection_init"
+
             @Transient override val id = UUID.randomUUID().toString()
         }
 
@@ -57,7 +58,7 @@ internal sealed class WebSocketMessage {
             @Serializable
             internal data class Subscribe(
                 @Transient override val id: String = UUID.randomUUID().toString(),
-                val channel: String,
+                val channel: String
             ) : Subscription() {
                 @Transient override val type = "subscribe"
             }
@@ -76,22 +77,26 @@ internal sealed class WebSocketMessage {
         internal data class Publish(
             @Transient override val id: String = UUID.randomUUID().toString(),
             val channel: String,
-            val events: JsonArray,
+            val events: JsonArray
         ) : Send() {
             @Transient override val type = "publish"
         }
     }
 
-    @Serializable @SerialName("received")
+    @Serializable
+    @SerialName("received")
     internal sealed class Received : WebSocketMessage() {
 
-        @Serializable @SerialName("connection_ack")
+        @Serializable
+        @SerialName("connection_ack")
         internal data class ConnectionAck(val connectionTimeoutMs: Long) : Received()
 
-        @Serializable @SerialName("ka")
+        @Serializable
+        @SerialName("ka")
         internal data object KeepAlive : Received()
 
-        @Serializable @SerialName("connection_error")
+        @Serializable
+        @SerialName("connection_error")
         internal data class ConnectionError(val errors: List<EventsError>) : Received()
 
         @Serializable
@@ -102,19 +107,23 @@ internal sealed class WebSocketMessage {
             @SerialName("data")
             internal data class Data(override val id: String, val event: JsonElement) : Subscription()
 
-            @Serializable @SerialName("subscribe_success")
+            @Serializable
+            @SerialName("subscribe_success")
             internal data class SubscribeSuccess(override val id: String) : Subscription()
 
-            @Serializable @SerialName("unsubscribe_success")
+            @Serializable
+            @SerialName("unsubscribe_success")
             internal data class UnsubscribeSuccess(override val id: String) : Subscription()
 
-            @Serializable @SerialName("subscribe_error")
+            @Serializable
+            @SerialName("subscribe_error")
             internal data class SubscribeError(
                 override val id: String,
                 override val errors: List<EventsError>
             ) : Subscription(), ErrorContainer
 
-            @Serializable @SerialName("unsubscribe_error")
+            @Serializable
+            @SerialName("unsubscribe_error")
             internal data class UnsubscribeError(
                 override val id: String,
                 override val errors: List<EventsError>
@@ -150,26 +159,28 @@ internal sealed class WebSocketMessage {
                     )
                 }
 
-                override fun serialize(encoder: Encoder, value: WebSocketMessage.Received.Subscription.Data) {
+                override fun serialize(encoder: Encoder, value: WebSocketMessage.Received.Subscription.Data): Unit =
                     throw NotImplementedError("This class should not be used for serialization")
-                }
             }
         }
 
-        @Serializable @SerialName("publish_success")
+        @Serializable
+        @SerialName("publish_success")
         internal data class PublishSuccess(
             override val id: String,
             @SerialName("successful") val successfulEvents: List<SuccessfulEvent>,
             @SerialName("failed") val failedEvents: List<FailedEvent>
         ) : Subscription()
 
-        @Serializable @SerialName("publish_error")
+        @Serializable
+        @SerialName("publish_error")
         data class PublishError(
             override val id: String? = null,
             override val errors: List<EventsError>
         ) : Received(), ErrorContainer
 
-        @Serializable @SerialName("error")
+        @Serializable
+        @SerialName("error")
         data class Error(
             override val id: String? = null,
             override val errors: List<EventsError>

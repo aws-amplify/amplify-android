@@ -26,7 +26,7 @@ class EventsErrorTest {
         "LimitExceededError" to RateLimitExceededException::class,
         "ResourceNotFound" to ResourceNotFoundException::class,
         "UnsupportedOperation" to UnsupportedOperationException::class,
-        "InvalidInputError" to InvalidInputException::class,
+        "InvalidInputError" to InvalidInputException::class
     )
 
     @Test

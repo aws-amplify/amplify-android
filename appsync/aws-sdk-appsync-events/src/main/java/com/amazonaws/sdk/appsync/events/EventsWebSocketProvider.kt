@@ -86,19 +86,17 @@ internal class EventsWebSocketProvider(
         }
     }
 
-    private suspend fun attemptConnection(): Result<EventsWebSocket> {
-        return try {
-            val eventsWebSocket = EventsWebSocket(
-                eventsEndpoints,
-                authorizer,
-                okHttpClient,
-                json,
-                loggerProvider
-            )
-            eventsWebSocket.connect()
-            Result.success(eventsWebSocket)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    private suspend fun attemptConnection(): Result<EventsWebSocket> = try {
+        val eventsWebSocket = EventsWebSocket(
+            eventsEndpoints,
+            authorizer,
+            okHttpClient,
+            json,
+            loggerProvider
+        )
+        eventsWebSocket.connect()
+        Result.success(eventsWebSocket)
+    } catch (e: Exception) {
+        Result.failure(e)
     }
 }

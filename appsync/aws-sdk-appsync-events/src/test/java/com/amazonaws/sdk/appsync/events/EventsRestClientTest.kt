@@ -51,7 +51,7 @@ class EventsRestClientTest {
         HeaderKeys.X_AMZ_USER_AGENT to HeaderValues.USER_AGENT
     )
     private val interceptor = ConvertToMockRequestInterceptor(mockWebServer.url("/event"))
-    private val events = Events(endpoint = expectedEndpoint,)
+    private val events = Events(endpoint = expectedEndpoint)
     private val client = events.createRestClient(
         TestAuthorizer(),
         Events.Options.Rest(
