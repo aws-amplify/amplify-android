@@ -17,6 +17,7 @@ package com.amplifyframework.auth.cognito.helpers
 
 import android.app.Activity
 import android.content.Context
+import android.os.Build
 import androidx.credentials.CreateCredentialResponse
 import androidx.credentials.CreatePublicKeyCredentialRequest
 import androidx.credentials.CreatePublicKeyCredentialResponse
@@ -75,22 +76,26 @@ internal class WebAuthnHelper(
     }
 
     suspend fun createCredential(requestJson: String, callingActivity: Activity): String {
-        try {
-            // Create the request for CredentialManager
-            val request = CreatePublicKeyCredentialRequest(requestJson)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            try {
+                // Create the request for CredentialManager
+                val request = CreatePublicKeyCredentialRequest(requestJson)
 
-            // Create the credential
-            logger.verbose("Prompting user to create a PassKey")
-            val result: CreateCredentialResponse = credentialManager.createCredential(callingActivity, request)
+                // Create the credential
+                logger.verbose("Prompting user to create a PassKey")
+                val result: CreateCredentialResponse = credentialManager.createCredential(callingActivity, request)
 
-            // Extract the Public Key registration response. This is what we send to Cognito.
-            val publicKeyResult = result as? CreatePublicKeyCredentialResponse ?: throw WebAuthnFailedException(
-                "Android created wrong credential type",
-                AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
-            )
-            return publicKeyResult.registrationResponseJson
-        } catch (e: CreateCredentialException) {
-            throw e.toAuthException()
+                // Extract the Public Key registration response. This is what we send to Cognito.
+                val publicKeyResult = result as? CreatePublicKeyCredentialResponse ?: throw WebAuthnFailedException(
+                    "Android created wrong credential type",
+                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
+                )
+                return publicKeyResult.registrationResponseJson
+            } catch (e: CreateCredentialException) {
+                throw e.toAuthException()
+            }
+        } else {
+            throw WebAuthnNotSupportedException()
         }
     }
 
