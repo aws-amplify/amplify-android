@@ -191,6 +191,11 @@ fun Project.configureAndroid() {
 
         dependencies {
             add("coreLibraryDesugaring", libs.android.desugartools)
+            constraints {
+                add("implementation", libs.androidx.annotation.experimental) {
+                    because("Fixes a lint bug with RequiresOptIn")
+                }
+            }
         }
     }
 }

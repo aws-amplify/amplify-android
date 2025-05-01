@@ -95,7 +95,7 @@ internal class WebAuthnHelper(
                 throw e.toAuthException()
             }
         } else {
-            throw WebAuthnNotSupportedException()
+            throw WebAuthnNotSupportedException(cause = null)
         }
     }
 
