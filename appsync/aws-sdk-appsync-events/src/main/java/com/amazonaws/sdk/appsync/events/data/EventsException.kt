@@ -35,7 +35,7 @@ open class EventsException internal constructor(
         internal fun unknown(message: String? = null, cause: Throwable? = null): EventsException = EventsException(
             message = message ?: "An unknown error occurred",
             cause = cause,
-            recoverySuggestion = "This is not expected to occur. Contact AWS"
+            recoverySuggestion = if (cause != null) "This is not expected to occur. Contact AWS" else null
         )
     }
 
