@@ -14,27 +14,22 @@
  */
 package com.amazonaws.sdk.appsync.events
 
-import com.amazonaws.sdk.appsync.core.AppSyncAuthorizer
-import com.amazonaws.sdk.appsync.core.AppSyncRequest
 import com.amazonaws.sdk.appsync.events.data.BadRequestException
 import com.amazonaws.sdk.appsync.events.data.EventsException
 import com.amazonaws.sdk.appsync.events.data.PublishResult
+import com.amazonaws.sdk.appsync.events.mocks.ConvertToMockRequestInterceptor
+import com.amazonaws.sdk.appsync.events.mocks.TestAuthorizer
 import com.amazonaws.sdk.appsync.events.utils.HeaderKeys
 import com.amazonaws.sdk.appsync.events.utils.HeaderValues
 import io.kotest.assertions.fail
 import io.kotest.matchers.maps.shouldContainAll
 import io.kotest.matchers.shouldBe
-import java.io.IOException
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonPrimitive
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import mockwebserver3.SocketPolicy
-import okhttp3.HttpUrl
-import okhttp3.Interceptor
-import okhttp3.Request
-import okhttp3.Response
 import okio.Buffer
 import org.junit.After
 import org.junit.Before
@@ -450,20 +445,4 @@ class EventsRestClientTest {
             successfulEvents.size shouldBe 1
         }
     }
-}
-
-private class ConvertToMockRequestInterceptor(private val mockUrl: HttpUrl) : Interceptor {
-    val originalRequests = mutableListOf<Request>()
-
-    @Throws(IOException::class)
-    override fun intercept(chain: Interceptor.Chain): Response {
-        val request = chain.request()
-        originalRequests.add(request)
-        return chain.proceed(request.newBuilder().url(mockUrl).build())
-    }
-}
-
-private class TestAuthorizer(testKeyValue: String = "default") : AppSyncAuthorizer {
-    val expectedHeaders = mapOf("testKey" to testKeyValue)
-    override suspend fun getAuthorizationHeaders(request: AppSyncRequest) = expectedHeaders
 }
