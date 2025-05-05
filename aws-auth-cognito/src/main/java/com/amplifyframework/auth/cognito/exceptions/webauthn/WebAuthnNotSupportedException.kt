@@ -19,9 +19,15 @@ package com.amplifyframework.auth.cognito.exceptions.webauthn
  * Exception that is thrown because WebAuthn is not supported on the device. This indicates that either the device
  * did not ship with WebAuthn support, or that your application is missing a required dependency or service.
  */
-class WebAuthnNotSupportedException internal constructor(cause: Throwable?) :
-    WebAuthnFailedException(
-        message = "WebAuthn is not supported on this device",
-        recoverySuggestion = TODO_RECOVERY_SUGGESTION,
-        cause = cause
-    )
+class WebAuthnNotSupportedException internal constructor(
+    message: String,
+    cause: Throwable? = null
+) : WebAuthnFailedException(
+    message = message,
+    recoverySuggestion = TODO_RECOVERY_SUGGESTION,
+    cause = cause
+) {
+    internal constructor(
+        cause: Throwable?
+    ) : this(message = "WebAuthn is not supported on this device", cause = cause)
+}
