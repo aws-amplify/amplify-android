@@ -36,6 +36,7 @@ import androidx.credentials.exceptions.GetCredentialUnsupportedException
 import androidx.credentials.exceptions.domerrors.DataError
 import androidx.credentials.exceptions.domerrors.InvalidStateError
 import androidx.credentials.exceptions.domerrors.NotAllowedError
+import androidx.credentials.exceptions.domerrors.NotSupportedError
 import androidx.credentials.exceptions.publickeycredential.CreatePublicKeyCredentialDomException
 import androidx.credentials.exceptions.publickeycredential.CreatePublicKeyCredentialException
 import androidx.credentials.exceptions.publickeycredential.GetPublicKeyCredentialDomException
@@ -123,6 +124,7 @@ internal class WebAuthnHelper(
                 is NotAllowedError -> userCancelledException()
                 is InvalidStateError -> alreadyExists()
                 is DataError -> rpMismatch()
+                is NotSupportedError -> notSupported()
                 else -> unknownException()
             }
         }
@@ -137,6 +139,7 @@ internal class WebAuthnHelper(
             when (this.domError) {
                 is NotAllowedError -> userCancelledException()
                 is DataError -> rpMismatch()
+                is NotSupportedError -> notSupported()
                 else -> unknownException()
             }
         }

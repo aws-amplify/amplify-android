@@ -17,11 +17,18 @@ package com.amplifyframework.auth.cognito.helpers
 
 import android.app.Activity
 import android.content.Context
+import androidx.credentials.CreatePublicKeyCredentialRequest
 import androidx.credentials.CreatePublicKeyCredentialResponse
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.PublicKeyCredential
+import androidx.credentials.exceptions.domerrors.NotSupportedError
+import androidx.credentials.exceptions.publickeycredential.CreatePublicKeyCredentialDomException
+import androidx.credentials.exceptions.publickeycredential.GetPublicKeyCredentialDomException
+import com.amplifyframework.auth.cognito.exceptions.webauthn.WebAuthnNotSupportedException
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.assertions.throwables.shouldThrowWithMessage
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -31,6 +38,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 class WebAuthnHelperTest {
@@ -73,8 +81,36 @@ class WebAuthnHelperTest {
     }
 
     @Test
+    fun `throws WebAuthnNotSupportedException for NotSupported error for get`() = runTest {
+        coEvery { credentialManager.getCredential(any(), any<GetCredentialRequest>()) } throws
+            GetPublicKeyCredentialDomException(NotSupportedError())
+
+        shouldThrow<WebAuthnNotSupportedException> {
+            helper.getCredential(requestJson, mockk())
+        }
+    }
+
+    @Test
     fun `creates credential`() = runTest {
         val result = helper.createCredential(requestJson, mockk())
         result shouldBe responseJson
+    }
+
+    @Test
+    fun `throws WebAuthnNotSupportedException for NotSupported error for create`() = runTest {
+        coEvery { credentialManager.createCredential(any(), any<CreatePublicKeyCredentialRequest>()) } throws
+            CreatePublicKeyCredentialDomException(NotSupportedError())
+
+        shouldThrow<WebAuthnNotSupportedException> {
+            helper.createCredential(requestJson, mockk())
+        }
+    }
+
+    @Config(sdk = [27])
+    @Test
+    fun `throws WebAuthnNotSupportedException for devices below API 28`() = runTest {
+        shouldThrowWithMessage<WebAuthnNotSupportedException>("Passkeys are only supported on API 28 and above") {
+            helper.createCredential(requestJson, mockk())
+        }
     }
 }
