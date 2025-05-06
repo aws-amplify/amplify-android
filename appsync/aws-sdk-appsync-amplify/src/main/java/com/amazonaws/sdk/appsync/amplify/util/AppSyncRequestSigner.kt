@@ -69,27 +69,21 @@ internal class AppSyncRequestSigner(
         return awsSigner.sign(request, signingConfig).output
     }
 
-    private fun AppSyncRequest.toSmithyRequest(): HttpRequest {
-        return HttpRequest(
-            method = method.toSmithyMethod(),
-            url = Url.parse(url),
-            headers = createSmithyHeaders(headers),
-            body = body?.toHttpBody() ?: HttpBody.Empty
-        )
+    private fun AppSyncRequest.toSmithyRequest() = HttpRequest(
+        method = method.toSmithyMethod(),
+        url = Url.parse(url),
+        headers = createSmithyHeaders(headers),
+        body = body?.toHttpBody() ?: HttpBody.Empty
+    )
+
+    private fun AppSyncRequest.HttpMethod.toSmithyMethod() = when (this) {
+        AppSyncRequest.HttpMethod.GET -> aws.smithy.kotlin.runtime.http.HttpMethod.GET
+        AppSyncRequest.HttpMethod.POST -> aws.smithy.kotlin.runtime.http.HttpMethod.POST
     }
 
-    private fun AppSyncRequest.HttpMethod.toSmithyMethod(): aws.smithy.kotlin.runtime.http.HttpMethod {
-        return when (this) {
-            AppSyncRequest.HttpMethod.GET -> aws.smithy.kotlin.runtime.http.HttpMethod.GET
-            AppSyncRequest.HttpMethod.POST -> aws.smithy.kotlin.runtime.http.HttpMethod.POST
-        }
-    }
-
-    private fun createSmithyHeaders(headers: Map<String, String>): Headers {
-        return Headers {
-            headers.forEach {
-                this.append(it.key, it.value)
-            }
+    private fun createSmithyHeaders(headers: Map<String, String>) = Headers {
+        headers.forEach {
+            this.append(it.key, it.value)
         }
     }
 }

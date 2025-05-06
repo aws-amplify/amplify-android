@@ -32,7 +32,6 @@ class AmplifyIamAuthorizer @VisibleForTesting internal constructor(
 
     private val iamAuthorizer = IamAuthorizer { requestSigner.signAppSyncRequest(it, region) }
 
-    override suspend fun getAuthorizationHeaders(request: AppSyncRequest): Map<String, String> {
-        return iamAuthorizer.getAuthorizationHeaders(request)
-    }
+    override suspend fun getAuthorizationHeaders(request: AppSyncRequest) =
+        iamAuthorizer.getAuthorizationHeaders(request)
 }

@@ -22,12 +22,18 @@ import com.amazonaws.sdk.appsync.events.data.UserClosedConnectionException
 internal sealed class WebSocketDisconnectReason(val throwable: Throwable?) {
     data object UserInitiated : WebSocketDisconnectReason(null)
     data object Timeout : WebSocketDisconnectReason(EventsException("Connection timed out."))
-    class Service(throwable: Throwable? = null) : WebSocketDisconnectReason(throwable)
+    class Service(throwable: Throwable? = null) : WebSocketDisconnectReason(throwable) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is Service) return false
+            return true
+        }
+
+        override fun hashCode() = javaClass.hashCode()
+    }
 }
 
-internal fun WebSocketDisconnectReason.toCloseException(): EventsException {
-    return when (this) {
-        is UserInitiated -> UserClosedConnectionException()
-        else -> ConnectionClosedException(throwable)
-    }
+internal fun WebSocketDisconnectReason.toCloseException(): EventsException = when (this) {
+    is UserInitiated -> UserClosedConnectionException()
+    else -> ConnectionClosedException(throwable)
 }

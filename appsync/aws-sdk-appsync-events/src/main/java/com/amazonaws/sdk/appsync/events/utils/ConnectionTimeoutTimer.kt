@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 
 internal class ConnectionTimeoutTimer(
     private val scope: CoroutineScope,
-    val onTimeout: () -> Unit,
+    val onTimeout: () -> Unit
 ) {
 
     private var timeoutInMillis: Long = 300_000L

@@ -12,18 +12,12 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amazonaws.sdk.appsync.events.data
+package com.amazonaws.sdk.appsync.events.mocks
 
 import com.amazonaws.sdk.appsync.core.AppSyncAuthorizer
+import com.amazonaws.sdk.appsync.core.AppSyncRequest
 
-/**
- * Authorizers passed to a channel to manage subscriptions and publishes.
- *
- * @property subscribeAuthorizer used for subscription requests.
- * @property publishAuthorizer used for publish requests.
- * @constructor Pass subscribe and publisher authorizer types.
- */
-data class ChannelAuthorizers(
-    val subscribeAuthorizer: AppSyncAuthorizer,
-    val publishAuthorizer: AppSyncAuthorizer
-)
+internal class TestAuthorizer(testKeyValue: String = "default") : AppSyncAuthorizer {
+    val expectedHeaders = mapOf("testKey" to testKeyValue)
+    override suspend fun getAuthorizationHeaders(request: AppSyncRequest) = expectedHeaders
+}

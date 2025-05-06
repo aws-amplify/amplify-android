@@ -12,26 +12,21 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amazonaws.sdk.appsync.core
+package com.amazonaws.sdk.appsync.events.mocks
 
-/**
- * Request Interface that is passed into an [AppSyncAuthorizer] to generate auth headers.
- * Mainly used for IAM signing, but could be used for custom user-provided authorizers as well
- */
-interface AppSyncRequest {
-    val method: HttpMethod
-    val url: String
-    val headers: Map<String, String>
-    val body: String?
+import java.io.IOException
+import okhttp3.HttpUrl
+import okhttp3.Interceptor
+import okhttp3.Request
+import okhttp3.Response
 
-    enum class HttpMethod {
-        GET,
-        POST
+internal class ConvertToMockRequestInterceptor(private val mockUrl: HttpUrl) : Interceptor {
+    val originalRequests = mutableListOf<Request>()
+
+    @Throws(IOException::class)
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val request = chain.request()
+        originalRequests.add(request)
+        return chain.proceed(request.newBuilder().url(mockUrl).build())
     }
-}
-
-internal object HeaderKeys {
-    const val AMAZON_DATE = "x-amz-date"
-    const val API_KEY = "x-api-key"
-    const val AUTHORIZATION = "Authorization"
 }

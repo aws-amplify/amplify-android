@@ -37,9 +37,8 @@ class AmplifyUserPoolAuthorizer @VisibleForTesting internal constructor(
         fetchLatestAuthToken = accessTokenProvider::fetchLatestCognitoAuthToken
     )
 
-    override suspend fun getAuthorizationHeaders(request: AppSyncRequest): Map<String, String> {
-        return authTokenAuthorizer.getAuthorizationHeaders(request)
-    }
+    override suspend fun getAuthorizationHeaders(request: AppSyncRequest) =
+        authTokenAuthorizer.getAuthorizationHeaders(request)
 }
 
 internal class AccessTokenProvider(

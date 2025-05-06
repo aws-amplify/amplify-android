@@ -32,24 +32,17 @@ open class EventsException internal constructor(
 ) : Exception(message, cause) {
 
     internal companion object {
-        internal fun unknown(
-            message: String? = null,
-            cause: Throwable? = null
-        ): EventsException {
-            return EventsException(
-                message = message ?: "An unknown error occurred",
-                cause = cause,
-                recoverySuggestion = "This is not expected to occur. Contact AWS"
-            )
-        }
+        internal fun unknown(message: String? = null, cause: Throwable? = null): EventsException = EventsException(
+            message = message ?: "An unknown error occurred",
+            cause = cause,
+            recoverySuggestion = if (cause != null) "This is not expected to occur. Contact AWS" else null
+        )
     }
 
-    override fun toString(): String {
-        return "${javaClass.simpleName} {message=$message" +
-                (cause?.let { ", cause=$cause" } ?: "") +
-                (recoverySuggestion?.let { ", recoverSuggestion=$recoverySuggestion" } ?: "") +
-                "}"
-    }
+    override fun toString(): String = "${javaClass.simpleName} {message=$message" +
+        (cause?.let { ", cause=$cause" } ?: "") +
+        (recoverySuggestion?.let { ", recoverSuggestion=$recoverySuggestion" } ?: "") +
+        "}"
 
     override fun hashCode(): Int {
         var result = super.hashCode()
@@ -64,17 +57,15 @@ open class EventsException internal constructor(
         if (other !is EventsException) return false
 
         return message == other.message &&
-                cause == other.cause &&
-                recoverySuggestion == other.recoverySuggestion
+            cause == other.cause &&
+            recoverySuggestion == other.recoverySuggestion
     }
 }
 
-internal fun Exception.toEventsException(): EventsException {
-    return when (this) {
-        is EventsException -> this
-        is UnknownHostException, is SocketTimeoutException, is SocketException -> NetworkException(throwable = this)
-        else -> EventsException.unknown(cause = this)
-    }
+internal fun Exception.toEventsException(): EventsException = when (this) {
+    is EventsException -> this
+    is UnknownHostException, is SocketTimeoutException, is SocketException -> NetworkException(throwable = this)
+    else -> EventsException.unknown(cause = this)
 }
 
 /**

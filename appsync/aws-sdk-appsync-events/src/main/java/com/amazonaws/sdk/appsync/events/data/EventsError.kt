@@ -20,9 +20,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 internal data class EventsErrors(val errors: List<EventsError>) : Received()
 
-internal fun EventsErrors.toEventsException(fallbackMessage: String? = null): EventsException {
-    return errors.firstOrNull()?.toEventsException(fallbackMessage) ?: EventsException.unknown(fallbackMessage)
-}
+internal fun EventsErrors.toEventsException(fallbackMessage: String? = null): EventsException =
+    errors.firstOrNull()?.toEventsException(fallbackMessage) ?: EventsException.unknown(fallbackMessage)
 
 @Serializable
 internal data class EventsError(val errorType: String, val message: String? = null)

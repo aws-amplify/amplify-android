@@ -7,45 +7,55 @@ public final class com/amazonaws/sdk/appsync/events/BuildConfig {
 }
 
 public final class com/amazonaws/sdk/appsync/events/Events {
-	public fun <init> (Ljava/lang/String;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lcom/amazonaws/sdk/appsync/events/data/ChannelAuthorizers;Lcom/amazonaws/sdk/appsync/events/Events$Options;)V
-	public synthetic fun <init> (Ljava/lang/String;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lcom/amazonaws/sdk/appsync/events/data/ChannelAuthorizers;Lcom/amazonaws/sdk/appsync/events/Events$Options;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun channel (Ljava/lang/String;Lcom/amazonaws/sdk/appsync/events/data/ChannelAuthorizers;)Lcom/amazonaws/sdk/appsync/events/EventsChannel;
-	public static synthetic fun channel$default (Lcom/amazonaws/sdk/appsync/events/Events;Ljava/lang/String;Lcom/amazonaws/sdk/appsync/events/data/ChannelAuthorizers;ILjava/lang/Object;)Lcom/amazonaws/sdk/appsync/events/EventsChannel;
-	public final fun disconnect (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun disconnect$default (Lcom/amazonaws/sdk/appsync/events/Events;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public final fun getConnectAuthorizer ()Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;
-	public final fun getDefaultChannelAuthorizers ()Lcom/amazonaws/sdk/appsync/events/data/ChannelAuthorizers;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun createRestClient (Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lcom/amazonaws/sdk/appsync/events/Events$Options$Rest;)Lcom/amazonaws/sdk/appsync/events/EventsRestClient;
+	public static synthetic fun createRestClient$default (Lcom/amazonaws/sdk/appsync/events/Events;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lcom/amazonaws/sdk/appsync/events/Events$Options$Rest;ILjava/lang/Object;)Lcom/amazonaws/sdk/appsync/events/EventsRestClient;
+	public final fun createWebSocketClient (Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lcom/amazonaws/sdk/appsync/events/Events$Options$WebSocket;)Lcom/amazonaws/sdk/appsync/events/EventsWebSocketClient;
+	public static synthetic fun createWebSocketClient$default (Lcom/amazonaws/sdk/appsync/events/Events;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lcom/amazonaws/sdk/appsync/events/Events$Options$WebSocket;ILjava/lang/Object;)Lcom/amazonaws/sdk/appsync/events/EventsWebSocketClient;
 	public final fun getEndpoint ()Ljava/lang/String;
-	public final fun publish (Ljava/lang/String;Ljava/util/List;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public final fun publish (Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun publish$default (Lcom/amazonaws/sdk/appsync/events/Events;Ljava/lang/String;Ljava/util/List;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static synthetic fun publish$default (Lcom/amazonaws/sdk/appsync/events/Events;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
 
-public final class com/amazonaws/sdk/appsync/events/Events$Options {
+public abstract class com/amazonaws/sdk/appsync/events/Events$Options {
+	public synthetic fun <init> (Lcom/amazonaws/sdk/appsync/core/LoggerProvider;Lcom/amazonaws/sdk/appsync/events/OkHttpConfigurationProvider;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lcom/amazonaws/sdk/appsync/core/LoggerProvider;Lcom/amazonaws/sdk/appsync/events/OkHttpConfigurationProvider;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getLoggerProvider ()Lcom/amazonaws/sdk/appsync/core/LoggerProvider;
+	public final fun getOkHttpConfigurationProvider ()Lcom/amazonaws/sdk/appsync/events/OkHttpConfigurationProvider;
+}
+
+public final class com/amazonaws/sdk/appsync/events/Events$Options$Rest : com/amazonaws/sdk/appsync/events/Events$Options {
 	public fun <init> ()V
 	public fun <init> (Lcom/amazonaws/sdk/appsync/core/LoggerProvider;Lcom/amazonaws/sdk/appsync/events/OkHttpConfigurationProvider;)V
 	public synthetic fun <init> (Lcom/amazonaws/sdk/appsync/core/LoggerProvider;Lcom/amazonaws/sdk/appsync/events/OkHttpConfigurationProvider;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Lcom/amazonaws/sdk/appsync/core/LoggerProvider;
-	public final fun component2 ()Lcom/amazonaws/sdk/appsync/events/OkHttpConfigurationProvider;
-	public final fun copy (Lcom/amazonaws/sdk/appsync/core/LoggerProvider;Lcom/amazonaws/sdk/appsync/events/OkHttpConfigurationProvider;)Lcom/amazonaws/sdk/appsync/events/Events$Options;
-	public static synthetic fun copy$default (Lcom/amazonaws/sdk/appsync/events/Events$Options;Lcom/amazonaws/sdk/appsync/core/LoggerProvider;Lcom/amazonaws/sdk/appsync/events/OkHttpConfigurationProvider;ILjava/lang/Object;)Lcom/amazonaws/sdk/appsync/events/Events$Options;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getLoggerProvider ()Lcom/amazonaws/sdk/appsync/core/LoggerProvider;
-	public final fun getOkHttpConfigurationProvider ()Lcom/amazonaws/sdk/appsync/events/OkHttpConfigurationProvider;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
 }
 
-public final class com/amazonaws/sdk/appsync/events/EventsChannel {
-	public final fun getAuthorizers ()Lcom/amazonaws/sdk/appsync/events/data/ChannelAuthorizers;
-	public final fun getName ()Ljava/lang/String;
-	public final fun publish (Ljava/util/List;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public final fun publish (Lkotlinx/serialization/json/JsonElement;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun publish$default (Lcom/amazonaws/sdk/appsync/events/EventsChannel;Ljava/util/List;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public static synthetic fun publish$default (Lcom/amazonaws/sdk/appsync/events/EventsChannel;Lkotlinx/serialization/json/JsonElement;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public final fun subscribe (Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;)Lkotlinx/coroutines/flow/Flow;
-	public static synthetic fun subscribe$default (Lcom/amazonaws/sdk/appsync/events/EventsChannel;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+public final class com/amazonaws/sdk/appsync/events/Events$Options$WebSocket : com/amazonaws/sdk/appsync/events/Events$Options {
+	public fun <init> ()V
+	public fun <init> (Lcom/amazonaws/sdk/appsync/core/LoggerProvider;Lcom/amazonaws/sdk/appsync/events/OkHttpConfigurationProvider;)V
+	public synthetic fun <init> (Lcom/amazonaws/sdk/appsync/core/LoggerProvider;Lcom/amazonaws/sdk/appsync/events/OkHttpConfigurationProvider;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/amazonaws/sdk/appsync/events/EventsRestClient {
+	public final fun getOptions ()Lcom/amazonaws/sdk/appsync/events/Events$Options$Rest;
+	public final fun getPublishAuthorizer ()Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;
+	public final fun publish (Ljava/lang/String;Ljava/util/List;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun publish (Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun publish$default (Lcom/amazonaws/sdk/appsync/events/EventsRestClient;Ljava/lang/String;Ljava/util/List;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun publish$default (Lcom/amazonaws/sdk/appsync/events/EventsRestClient;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class com/amazonaws/sdk/appsync/events/EventsWebSocketClient {
+	public final fun disconnect (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun disconnect$default (Lcom/amazonaws/sdk/appsync/events/EventsWebSocketClient;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun getConnectAuthorizer ()Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;
+	public final fun getOptions ()Lcom/amazonaws/sdk/appsync/events/Events$Options$WebSocket;
+	public final fun getPublishAuthorizer ()Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;
+	public final fun getSubscribeAuthorizer ()Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;
+	public final fun publish (Ljava/lang/String;Ljava/util/List;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun publish (Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun publish$default (Lcom/amazonaws/sdk/appsync/events/EventsWebSocketClient;Ljava/lang/String;Ljava/util/List;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun publish$default (Lcom/amazonaws/sdk/appsync/events/EventsWebSocketClient;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun subscribe (Ljava/lang/String;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun subscribe$default (Lcom/amazonaws/sdk/appsync/events/EventsWebSocketClient;Ljava/lang/String;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
 }
 
 public abstract interface class com/amazonaws/sdk/appsync/events/OkHttpConfigurationProvider {
@@ -53,19 +63,6 @@ public abstract interface class com/amazonaws/sdk/appsync/events/OkHttpConfigura
 }
 
 public final class com/amazonaws/sdk/appsync/events/data/BadRequestException : com/amazonaws/sdk/appsync/events/data/EventsException {
-}
-
-public final class com/amazonaws/sdk/appsync/events/data/ChannelAuthorizers {
-	public fun <init> (Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;)V
-	public final fun component1 ()Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;
-	public final fun component2 ()Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;
-	public final fun copy (Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;)Lcom/amazonaws/sdk/appsync/events/data/ChannelAuthorizers;
-	public static synthetic fun copy$default (Lcom/amazonaws/sdk/appsync/events/data/ChannelAuthorizers;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;ILjava/lang/Object;)Lcom/amazonaws/sdk/appsync/events/data/ChannelAuthorizers;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getPublishAuthorizer ()Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;
-	public final fun getSubscribeAuthorizer ()Lcom/amazonaws/sdk/appsync/core/AppSyncAuthorizer;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
 }
 
 public final class com/amazonaws/sdk/appsync/events/data/ConnectException : com/amazonaws/sdk/appsync/events/data/EventsException {

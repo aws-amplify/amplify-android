@@ -58,6 +58,7 @@ internal class EventsWebSocket(
     val events = _events.asSharedFlow() // publicly exposed as read-only shared flow
 
     private lateinit var webSocket: WebSocket
+
     @Volatile internal var isClosed = false
     internal var disconnectReason: WebSocketDisconnectReason? = null
     private val connectionTimeoutTimer = ConnectionTimeoutTimer(
@@ -195,9 +196,8 @@ internal class EventsWebSocket(
     }
 
     // returns true if websocket queued up event. false if failed
-    inline fun <reified T : WebSocketMessage> send(webSocketMessage: T): Boolean {
-        return send(json.encodeToString(webSocketMessage))
-    }
+    inline fun <reified T : WebSocketMessage> send(webSocketMessage: T): Boolean =
+        send(json.encodeToString(webSocketMessage))
 
     // returns true if websocket queued up event. false if failed
     private fun send(eventJson: String): Boolean {
@@ -214,42 +214,34 @@ internal class EventsWebSocket(
         const val TAG = "EventsWebSocket"
         const val NORMAL_CLOSE_CODE = 1000
 
-        private fun createPreAuthConnectRequest(eventsEndpoints: EventsEndpoints): Request {
-            return Request.Builder().apply {
-                url(eventsEndpoints.websocketRealtimeEndpoint)
-                addHeader(HeaderKeys.SEC_WEBSOCKET_PROTOCOL, HeaderValues.SEC_WEBSOCKET_PROTOCOL_APPSYNC_EVENTS)
-                addHeader(HeaderKeys.HOST, eventsEndpoints.restEndpoint.host)
-                addHeader(HeaderKeys.USER_AGENT, HeaderValues.USER_AGENT)
-                addHeader(HeaderKeys.X_AMZ_USER_AGENT, HeaderValues.USER_AGENT)
-            }.build()
-        }
+        private fun createPreAuthConnectRequest(eventsEndpoints: EventsEndpoints): Request = Request.Builder().apply {
+            url(eventsEndpoints.websocketRealtimeEndpoint)
+            addHeader(HeaderKeys.SEC_WEBSOCKET_PROTOCOL, HeaderValues.SEC_WEBSOCKET_PROTOCOL_APPSYNC_EVENTS)
+            addHeader(HeaderKeys.HOST, eventsEndpoints.restEndpoint.host)
+            addHeader(HeaderKeys.X_AMZ_USER_AGENT, HeaderValues.USER_AGENT)
+        }.build()
 
-        private fun createAuthConnectRequest(preAuthRequest: Request, authorizerHeaders: Map<String, String>): Request {
-            return preAuthRequest.newBuilder().apply {
+        private fun createAuthConnectRequest(preAuthRequest: Request, authorizerHeaders: Map<String, String>): Request =
+            preAuthRequest.newBuilder().apply {
                 authorizerHeaders.forEach {
                     header(it.key, it.value)
                 }
             }.build()
+    }
+
+    private suspend fun getConnectResponse(): WebSocketMessage = events.first {
+        when (it) {
+            is WebSocketMessage.Received.ConnectionAck -> true
+            is WebSocketMessage.Received.ConnectionError -> true
+            is WebSocketMessage.Closed -> true
+            else -> false
         }
     }
 
-    private suspend fun getConnectResponse(): WebSocketMessage {
-        return events.first {
-            when (it) {
-                is WebSocketMessage.Received.ConnectionAck -> true
-                is WebSocketMessage.Received.ConnectionError -> true
-                is WebSocketMessage.Closed -> true
-                else -> false
-            }
-        }
-    }
-
-    private suspend fun getClosedResponse(): WebSocketMessage {
-        return events.first {
-            when (it) {
-                is WebSocketMessage.Closed -> true
-                else -> false
-            }
+    private suspend fun getClosedResponse(): WebSocketMessage = events.first {
+        when (it) {
+            is WebSocketMessage.Closed -> true
+            else -> false
         }
     }
 }
