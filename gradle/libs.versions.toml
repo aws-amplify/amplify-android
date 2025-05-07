@@ -2,6 +2,7 @@
 agp = "8.4.0"
 androidx-activity = "1.2.0"
 androidx-annotation = "1.9.1"
+androidx-annotation-experimental = "1.4.1"
 androidx-appcompat = "1.2.0"
 androidx-browser = "1.4.0"
 androidx-concurrent = "1.1.0"
@@ -57,11 +58,13 @@ turbine = "1.1.0"
 android-desugartools = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar" }
 androidx-activity = { module = "androidx.activity:activity", version.ref = "androidx-activity" }
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidx-annotation" }
+androidx-annotation-experimental = { module = "androidx.annotation:annotation-experimental", version.ref = "androidx-annotation-experimental" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref="androidx-appcompat" }
 androidx-browser = { module = "androidx.browser:browser", version.ref = "androidx-browser" }
 androidx-core = { module = "androidx.core:core", version.ref = "androidx-core" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref="androidx-credentials" }
+androidx-credentials-play-services = { module = "androidx.credentials:credentials-play-services-auth", version.ref="androidx-credentials" }
 androidx-junit-ktx = { module = "androidx.test.ext:junit-ktx", version.ref = "junit-ktx" }
 androidx-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime", version.ref = "androidx-lifecycle" }
 androidx-nav-fragment = { module = "androidx.navigation:navigation-fragment", version.ref = "navigation" }

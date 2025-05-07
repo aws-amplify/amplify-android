@@ -30,7 +30,9 @@ body:
           | `com.amplifyframework:core`                            | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/core)                               |
           | `com.amplifyframework:core-kotlin`                     | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/core-kotlin)                        |
           | `com.amplifyframework:rxbindings`                      | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/rxbindings)                         |
-
+          | `com.amplifyframework:apollo-appsync`                  | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/apollo-appsync)                     |
+          | `com.amplifyframework:apollo-appsync-amplify`          | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/apollo-appsync-amplify)             |
+        
         </details>
 
   - type: checkboxes
@@ -85,7 +87,7 @@ body:
       value: |
         <details>
 
-        ```groovy
+        ```kotlin
         // Put output below this line
 
 
@@ -145,7 +147,7 @@ body:
 
         **Be sure to remove any sensitive data.**
       value: |
-        ```java
+        ```kotlin
         // Put your code below this line.
 
         ```
@@ -155,8 +157,8 @@ body:
         ## Configuration
   - type: textarea
     attributes:
-      label: amplifyconfiguration.json
-      description: If applicable to the new feature, please provide your `amplifyconfiguration.json` file with sensitive information removed.
+      label: Configuration File
+      description: If applicable, please provide your `amplifyconfiguration.json` (Gen1) or `amplify_outputs.json` (Gen2) file with sensitive information removed.
       placeholder: |
         ```json
           {

@@ -17,6 +17,7 @@ package com.amplifyframework.auth.cognito.helpers
 
 import android.app.Activity
 import android.content.Context
+import android.os.Build
 import androidx.credentials.CreateCredentialResponse
 import androidx.credentials.CreatePublicKeyCredentialRequest
 import androidx.credentials.CreatePublicKeyCredentialResponse
@@ -35,6 +36,7 @@ import androidx.credentials.exceptions.GetCredentialUnsupportedException
 import androidx.credentials.exceptions.domerrors.DataError
 import androidx.credentials.exceptions.domerrors.InvalidStateError
 import androidx.credentials.exceptions.domerrors.NotAllowedError
+import androidx.credentials.exceptions.domerrors.NotSupportedError
 import androidx.credentials.exceptions.publickeycredential.CreatePublicKeyCredentialDomException
 import androidx.credentials.exceptions.publickeycredential.CreatePublicKeyCredentialException
 import androidx.credentials.exceptions.publickeycredential.GetPublicKeyCredentialDomException
@@ -75,22 +77,26 @@ internal class WebAuthnHelper(
     }
 
     suspend fun createCredential(requestJson: String, callingActivity: Activity): String {
-        try {
-            // Create the request for CredentialManager
-            val request = CreatePublicKeyCredentialRequest(requestJson)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            try {
+                // Create the request for CredentialManager
+                val request = CreatePublicKeyCredentialRequest(requestJson)
 
-            // Create the credential
-            logger.verbose("Prompting user to create a PassKey")
-            val result: CreateCredentialResponse = credentialManager.createCredential(callingActivity, request)
+                // Create the credential
+                logger.verbose("Prompting user to create a PassKey")
+                val result: CreateCredentialResponse = credentialManager.createCredential(callingActivity, request)
 
-            // Extract the Public Key registration response. This is what we send to Cognito.
-            val publicKeyResult = result as? CreatePublicKeyCredentialResponse ?: throw WebAuthnFailedException(
-                "Android created wrong credential type",
-                AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
-            )
-            return publicKeyResult.registrationResponseJson
-        } catch (e: CreateCredentialException) {
-            throw e.toAuthException()
+                // Extract the Public Key registration response. This is what we send to Cognito.
+                val publicKeyResult = result as? CreatePublicKeyCredentialResponse ?: throw WebAuthnFailedException(
+                    "Android created wrong credential type",
+                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
+                )
+                return publicKeyResult.registrationResponseJson
+            } catch (e: CreateCredentialException) {
+                throw e.toAuthException()
+            }
+        } else {
+            throw WebAuthnNotSupportedException("Passkeys are only supported on API 28 and above")
         }
     }
 
@@ -118,6 +124,7 @@ internal class WebAuthnHelper(
                 is NotAllowedError -> userCancelledException()
                 is InvalidStateError -> alreadyExists()
                 is DataError -> rpMismatch()
+                is NotSupportedError -> notSupported()
                 else -> unknownException()
             }
         }
@@ -132,6 +139,7 @@ internal class WebAuthnHelper(
             when (this.domError) {
                 is NotAllowedError -> userCancelledException()
                 is DataError -> rpMismatch()
+                is NotSupportedError -> notSupported()
                 else -> unknownException()
             }
         }

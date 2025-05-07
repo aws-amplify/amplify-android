@@ -1,2 +1,0 @@
-include ':amplify-tools-gradle-plugin'
-rootProject.name='AmplifyTools'

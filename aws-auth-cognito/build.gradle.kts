@@ -41,6 +41,7 @@ dependencies {
     implementation(libs.androidx.security)
     implementation(libs.androidx.browser)
     implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services)
 
     implementation(libs.aws.http)
     implementation(libs.aws.cognitoidentity)
