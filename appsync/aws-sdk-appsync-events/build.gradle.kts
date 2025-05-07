@@ -33,6 +33,13 @@ group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amazonaws.sdk.appsync.events"
+    defaultConfig {
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    testOptions {
+        execution = "ANDROIDX_TEST_ORCHESTRATOR"
+    }
 }
 
 dependencies {
@@ -49,4 +56,15 @@ dependencies {
     testImplementation(libs.test.kotest.assertions.json)
     testImplementation(libs.test.mockwebserver)
     testImplementation(libs.test.turbine)
+
+    androidTestApi(project(":aws-sdk-appsync-amplify"))
+    androidTestImplementation(project(":aws-auth-cognito"))
+    androidTestImplementation(project(":core-kotlin"))
+    androidTestImplementation(libs.test.androidx.runner)
+    androidTestImplementation(libs.test.androidx.junit)
+    androidTestImplementation(libs.test.kotlin.coroutines)
+    androidTestImplementation(libs.test.kotest.assertions)
+    androidTestImplementation(libs.test.turbine)
+
+    androidTestUtil(libs.test.androidx.orchestrator)
 }
