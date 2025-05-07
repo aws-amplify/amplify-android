@@ -35,7 +35,6 @@ internal fun getEventsConfig(context: Context): EventsConfig {
     }
 }
 
-
 @Serializable
 internal data class AmplifyConfig(
     @SerialName("custom") val customConfig: CustomConfig

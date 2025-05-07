@@ -26,6 +26,7 @@ import com.amazonaws.sdk.appsync.events.utils.EventsLibraryLogCapture
 import com.amazonaws.sdk.appsync.events.utils.JsonUtils
 import com.amazonaws.sdk.appsync.events.utils.getEventsConfig
 import io.kotest.matchers.shouldBe
+import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.runBlocking
@@ -37,7 +38,6 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.encodeToJsonElement
 import org.junit.After
 import org.junit.Test
-import java.util.UUID
 
 internal class EventsRestClientTests {
     private val eventsConfig = getEventsConfig(InstrumentationRegistry.getInstrumentation().targetContext)
@@ -230,7 +230,6 @@ internal class EventsRestClientTests {
     }
 }
 
-
 @Serializable
 data class TestMessage(
     val messageId: String = UUID.randomUUID().toString(),
@@ -242,10 +241,9 @@ data class TestMessage(
     ),
     val author: TestUser = TestUser()
 )
+
 @Serializable
 data class TestUser(
     val name: String = "John Doe",
     val handle: String = "@johndoe"
 )
-
-

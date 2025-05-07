@@ -19,7 +19,7 @@ import com.amazonaws.sdk.appsync.core.Logger
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
-internal class EventsLibraryLogCapture: Logger {
+internal class EventsLibraryLogCapture : Logger {
 
     private val _messages = MutableSharedFlow<String>(replay = 100, extraBufferCapacity = Int.MAX_VALUE)
     val messages = _messages.asSharedFlow() // publicly exposed as read-only shared flow

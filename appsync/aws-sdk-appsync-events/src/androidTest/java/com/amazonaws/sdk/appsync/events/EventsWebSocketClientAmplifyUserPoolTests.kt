@@ -1,6 +1,5 @@
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
-import com.amazonaws.sdk.appsync.amplify.authorizers.AmplifyIamAuthorizer
 import com.amazonaws.sdk.appsync.amplify.authorizers.AmplifyUserPoolAuthorizer
 import com.amazonaws.sdk.appsync.events.Events
 import com.amazonaws.sdk.appsync.events.data.EventsException
@@ -13,11 +12,11 @@ import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.configuration.AmplifyOutputs
 import io.kotest.matchers.shouldBe
+import java.util.UUID
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.BeforeClass
 import org.junit.Test
-import java.util.UUID
 
 internal class EventsWebSocketClientAmplifyUserPoolTests {
     private val eventsConfig = getEventsConfig(InstrumentationRegistry.getInstrumentation().targetContext)
@@ -32,7 +31,8 @@ internal class EventsWebSocketClientAmplifyUserPoolTests {
             Amplify.addPlugin(AWSCognitoAuthPlugin())
             Amplify.configure(
                 AmplifyOutputs.fromResource(R.raw.amplify_outputs),
-                ApplicationProvider.getApplicationContext())
+                ApplicationProvider.getApplicationContext()
+            )
         }
     }
 
@@ -78,4 +78,3 @@ internal class EventsWebSocketClientAmplifyUserPoolTests {
         }
     }
 }
-

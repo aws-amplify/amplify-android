@@ -19,21 +19,21 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.amazonaws.sdk.appsync.amplify.authorizers.AmplifyUserPoolAuthorizer
 import com.amazonaws.sdk.appsync.events.data.EventsException
 import com.amazonaws.sdk.appsync.events.data.PublishResult
-import com.amazonaws.sdk.appsync.events.utils.getEventsConfig
-import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
-import com.amplifyframework.kotlin.core.Amplify
-import com.amplifyframework.core.configuration.AmplifyOutputs
-import io.kotest.matchers.shouldBe
-import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.json.JsonPrimitive
-import org.junit.BeforeClass
-import org.junit.Test
-import java.util.UUID
 import com.amazonaws.sdk.appsync.events.test.R
 import com.amazonaws.sdk.appsync.events.utils.Credentials
+import com.amazonaws.sdk.appsync.events.utils.getEventsConfig
 import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
+import com.amplifyframework.core.configuration.AmplifyOutputs
+import com.amplifyframework.kotlin.core.Amplify
+import io.kotest.matchers.shouldBe
+import java.util.UUID
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.JsonPrimitive
 import org.junit.After
+import org.junit.BeforeClass
+import org.junit.Test
 
 internal class EventsRestClientAmplifyUserPoolTests {
     private val eventsConfig = getEventsConfig(InstrumentationRegistry.getInstrumentation().targetContext)
@@ -48,7 +48,8 @@ internal class EventsRestClientAmplifyUserPoolTests {
             Amplify.addPlugin(AWSCognitoAuthPlugin())
             Amplify.configure(
                 AmplifyOutputs.fromResource(R.raw.amplify_outputs),
-                ApplicationProvider.getApplicationContext())
+                ApplicationProvider.getApplicationContext()
+            )
         }
     }
 
@@ -99,4 +100,3 @@ internal class EventsRestClientAmplifyUserPoolTests {
         }
     }
 }
-

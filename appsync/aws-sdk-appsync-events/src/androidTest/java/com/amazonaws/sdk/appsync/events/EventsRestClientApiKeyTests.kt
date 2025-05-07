@@ -18,17 +18,17 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import com.amazonaws.sdk.appsync.core.authorizers.ApiKeyAuthorizer
 import com.amazonaws.sdk.appsync.events.data.PublishResult
+import com.amazonaws.sdk.appsync.events.test.R
 import com.amazonaws.sdk.appsync.events.utils.getEventsConfig
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.configuration.AmplifyOutputs
 import io.kotest.matchers.shouldBe
+import java.util.UUID
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.BeforeClass
 import org.junit.Test
-import java.util.UUID
-import com.amazonaws.sdk.appsync.events.test.R
 
 internal class EventsRestClientApiKeyTests {
     private val eventsConfig = getEventsConfig(InstrumentationRegistry.getInstrumentation().targetContext)
@@ -43,7 +43,8 @@ internal class EventsRestClientApiKeyTests {
             Amplify.addPlugin(AWSCognitoAuthPlugin())
             Amplify.configure(
                 AmplifyOutputs.fromResource(R.raw.amplify_outputs),
-                ApplicationProvider.getApplicationContext())
+                ApplicationProvider.getApplicationContext()
+            )
         }
     }
 
@@ -67,4 +68,3 @@ internal class EventsRestClientApiKeyTests {
         }
     }
 }
-

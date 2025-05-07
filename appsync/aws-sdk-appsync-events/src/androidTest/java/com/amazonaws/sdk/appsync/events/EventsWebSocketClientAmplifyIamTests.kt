@@ -9,11 +9,11 @@ import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.configuration.AmplifyOutputs
 import io.kotest.matchers.shouldBe
+import java.util.UUID
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.BeforeClass
 import org.junit.Test
-import java.util.UUID
 
 internal class EventsWebSocketClientAmplifyIamTests {
     private val eventsConfig = getEventsConfig(InstrumentationRegistry.getInstrumentation().targetContext)
@@ -28,7 +28,8 @@ internal class EventsWebSocketClientAmplifyIamTests {
             Amplify.addPlugin(AWSCognitoAuthPlugin())
             Amplify.configure(
                 AmplifyOutputs.fromResource(R.raw.amplify_outputs),
-                ApplicationProvider.getApplicationContext())
+                ApplicationProvider.getApplicationContext()
+            )
         }
     }
 
@@ -52,4 +53,3 @@ internal class EventsWebSocketClientAmplifyIamTests {
         }
     }
 }
-

@@ -18,7 +18,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import app.cash.turbine.test
 import app.cash.turbine.turbineScope
 import com.amazonaws.sdk.appsync.core.authorizers.ApiKeyAuthorizer
-import com.amazonaws.sdk.appsync.events.data.BadRequestException
 import com.amazonaws.sdk.appsync.events.data.InvalidInputException
 import com.amazonaws.sdk.appsync.events.data.PublishResult
 import com.amazonaws.sdk.appsync.events.data.UnauthorizedException
@@ -27,6 +26,7 @@ import com.amazonaws.sdk.appsync.events.utils.EventsLibraryLogCapture
 import com.amazonaws.sdk.appsync.events.utils.JsonUtils
 import com.amazonaws.sdk.appsync.events.utils.getEventsConfig
 import io.kotest.matchers.shouldBe
+import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.runBlocking
@@ -37,7 +37,6 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.encodeToJsonElement
 import org.junit.After
 import org.junit.Test
-import java.util.UUID
 
 internal class EventsWebSocketClientTests {
     private val eventsConfig = getEventsConfig(InstrumentationRegistry.getInstrumentation().targetContext)
@@ -209,12 +208,11 @@ internal class EventsWebSocketClientTests {
 
         turbineScope {
             webSocketClient.subscribe(defaultChannel).test {
-
                 webSocketClient.subscribe(customChannel).test {
-
                     // Wait for subscription to return success
                     webSocketLogCapture.messages.filter {
-                        it == "onMessage: processed ${WebSocketMessage.Received.Subscription.SubscribeSuccess::class.java}"
+                        it ==
+                            "onMessage: processed ${WebSocketMessage.Received.Subscription.SubscribeSuccess::class.java}"
                     }.testIn(backgroundScope).apply {
                         awaitItem() // subscription 1
                         awaitItem() // subscription 2
@@ -328,4 +326,3 @@ internal class EventsWebSocketClientTests {
         }
     }
 }
-
