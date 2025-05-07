@@ -105,6 +105,7 @@ internal class EventsWebSocket(
     }
 
     suspend fun disconnect(flushEvents: Boolean) = withContext(Dispatchers.IO) {
+        if (isClosed) return@withContext
         disconnectReason = WebSocketDisconnectReason.UserInitiated
         val deferredClosedResponse = async { getClosedResponse() }
         when (flushEvents) {
@@ -125,10 +126,11 @@ internal class EventsWebSocket(
 
     override fun onMessage(webSocket: WebSocket, text: String) {
         connectionTimeoutTimer.resetTimeoutTimer()
-        logger?.debug("Websocket onMessage received")
+        logger?.debug("onMessage: received")
         try {
             val eventMessage = json.decodeFromString<WebSocketMessage.Received>(text)
             emitEvent(eventMessage)
+            logger?.debug("onMessage: processed ${eventMessage::class.java}")
         } catch (e: Exception) {
             logger?.error(e) { "Websocket onMessage: exception encountered" }
         }
