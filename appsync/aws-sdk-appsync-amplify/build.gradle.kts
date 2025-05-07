@@ -32,13 +32,6 @@ group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amazonaws.sdk.appsync.amplify"
-    defaultConfig {
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    testOptions {
-        execution = "ANDROIDX_TEST_ORCHESTRATOR"
-    }
 }
 
 dependencies {

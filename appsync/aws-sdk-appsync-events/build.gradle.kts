@@ -33,13 +33,6 @@ group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amazonaws.sdk.appsync.events"
-    defaultConfig {
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    testOptions {
-        execution = "ANDROIDX_TEST_ORCHESTRATOR"
-    }
 }
 
 dependencies {
@@ -55,4 +48,5 @@ dependencies {
     testImplementation(libs.test.kotest.assertions)
     testImplementation(libs.test.kotest.assertions.json)
     testImplementation(libs.test.mockwebserver)
+    testImplementation(libs.test.turbine)
 }
