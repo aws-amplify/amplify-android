@@ -39,6 +39,7 @@ import okhttp3.WebSocketListener
 import org.junit.Test
 
 internal class EventsWebSocketTest {
+    private val url = "https://11111111111111111111111111.appsync-api.us-east-1.amazonaws.com/event"
     private val eventsEndpoints = EventsEndpoints(
         "https://11111111111111111111111111.appsync-api.us-east-1.amazonaws.com/event"
     )
