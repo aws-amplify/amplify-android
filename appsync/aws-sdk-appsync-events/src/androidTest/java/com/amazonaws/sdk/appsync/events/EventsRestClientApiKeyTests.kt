@@ -30,7 +30,7 @@ import org.junit.Test
 import java.util.UUID
 import com.amazonaws.sdk.appsync.events.test.R
 
-internal class EventsRestClientAmplifyApiKeyTests {
+internal class EventsRestClientApiKeyTests {
     private val eventsConfig = getEventsConfig(InstrumentationRegistry.getInstrumentation().targetContext)
     private val apiKeyAuthorizer = ApiKeyAuthorizer(eventsConfig.apiKey)
     private val defaultChannel = "default/${UUID.randomUUID()}"
