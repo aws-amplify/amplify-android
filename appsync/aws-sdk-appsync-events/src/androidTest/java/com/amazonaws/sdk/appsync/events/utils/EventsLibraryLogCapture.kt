@@ -16,6 +16,7 @@ package com.amazonaws.sdk.appsync.events.utils
 
 import com.amazonaws.sdk.appsync.core.LogLevel
 import com.amazonaws.sdk.appsync.core.Logger
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
@@ -52,5 +53,10 @@ internal class EventsLibraryLogCapture : Logger {
 
     override fun verbose(message: String) {
         _messages.tryEmit(message)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun resetCache() {
+        _messages.resetReplayCache()
     }
 }

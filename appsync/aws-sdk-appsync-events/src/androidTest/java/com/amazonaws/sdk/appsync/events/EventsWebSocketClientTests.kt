@@ -14,6 +14,7 @@
  */
 package com.amazonaws.sdk.appsync.events
 
+import android.util.Log
 import androidx.test.platform.app.InstrumentationRegistry
 import app.cash.turbine.test
 import app.cash.turbine.turbineScope
@@ -28,7 +29,9 @@ import com.amazonaws.sdk.appsync.events.utils.getEventsConfig
 import io.kotest.matchers.shouldBe
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonArray
@@ -36,6 +39,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.encodeToJsonElement
 import org.junit.After
+import org.junit.Before
 import org.junit.Test
 
 internal class EventsWebSocketClientTests {
@@ -244,13 +248,20 @@ internal class EventsWebSocketClientTests {
     @Test
     fun testWebSocketRecreateScenario(): Unit = runTest {
         testSinglePublish(JsonPrimitive(true), backgroundScope)
-        // websocket has disconnected at this point
-        testSinglePublish(JsonPrimitive(false), backgroundScope)
 
-        // Ensure 2 websockets were used
+        // websocket has disconnected at this point
+        // ensure connect is tracked, then reset cache
         webSocketLogCapture.messages.replayCache.filter {
             it == "Opening Websocket Connection"
-        }.size shouldBe 2
+        }.size shouldBe 1
+        webSocketLogCapture.resetCache() // reset cache
+        webSocketLogCapture.messages.replayCache.size shouldBe 0 // ensure cache is reset
+
+        testSinglePublish(JsonPrimitive(false), backgroundScope)
+
+        webSocketLogCapture.messages.replayCache.filter {
+            it == "Opening Websocket Connection"
+        }.size shouldBe 1
     }
 
     private suspend fun testSinglePublish(jsonItem: JsonElement, backgroundScope: CoroutineScope) {
