@@ -43,7 +43,7 @@ internal class EventsWebSocketClientTests {
     private val apiKeyAuthorizer = ApiKeyAuthorizer(eventsConfig.apiKey)
     private val webSocketLogCapture = EventsLibraryLogCapture()
     private val defaultChannel = "default/${UUID.randomUUID()}"
-    private val customChannel = "default/${UUID.randomUUID()}"
+    private val customChannel = "custom/${UUID.randomUUID()}"
     private val json = JsonUtils.createJsonForLibrary()
     private val events = Events(eventsConfig.url)
     private val webSocketClient = events.createWebSocketClient(
