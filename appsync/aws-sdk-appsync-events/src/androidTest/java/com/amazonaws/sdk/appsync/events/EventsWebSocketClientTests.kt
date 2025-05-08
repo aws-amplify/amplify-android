@@ -14,7 +14,6 @@
  */
 package com.amazonaws.sdk.appsync.events
 
-import android.util.Log
 import androidx.test.platform.app.InstrumentationRegistry
 import app.cash.turbine.test
 import app.cash.turbine.turbineScope
@@ -29,9 +28,7 @@ import com.amazonaws.sdk.appsync.events.utils.getEventsConfig
 import io.kotest.matchers.shouldBe
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonArray
@@ -39,7 +36,6 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.encodeToJsonElement
 import org.junit.After
-import org.junit.Before
 import org.junit.Test
 
 internal class EventsWebSocketClientTests {
