@@ -28,6 +28,7 @@ import io.mockk.slot
 import io.mockk.verify
 import java.net.UnknownHostException
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonArray
@@ -77,7 +78,11 @@ internal class EventsWebSocketTest {
         val ack = """ { "type": "connection_ack", "connectionTimeoutMs": 10000 } """
         every { okHttpClient.newWebSocket(capture(requestSlot), any()) } answers {
             val listener = arg<WebSocketListener>(1)
-            launch { listener.onMessage(websocket, ack) }
+
+            launch {
+                delay(1) // on virtual timer, just moves to back of queue
+                listener.onMessage(websocket, ack)
+            }
             websocket
         }
 
@@ -255,6 +260,7 @@ internal class EventsWebSocketTest {
         every { okHttpClient.newWebSocket(any(), any()) } answers {
             val listener = arg<WebSocketListener>(1)
             launch {
+                delay(1) // on virtual timer, just moves to back of queue
                 listener.onMessage(websocket, ack)
             }
             websocket
@@ -267,6 +273,7 @@ internal class EventsWebSocketTest {
         every { okHttpClient.newWebSocket(any(), any()) } answers {
             val listener = arg<WebSocketListener>(1)
             launch {
+                delay(1) // on virtual timer, just moves to back of queue
                 listener.onFailure(websocket, cause, null)
             }
             websocket
