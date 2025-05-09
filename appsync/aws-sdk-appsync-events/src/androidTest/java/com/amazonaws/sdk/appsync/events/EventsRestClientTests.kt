@@ -22,16 +22,19 @@ import com.amazonaws.sdk.appsync.events.data.BadRequestException
 import com.amazonaws.sdk.appsync.events.data.PublishResult
 import com.amazonaws.sdk.appsync.events.data.UnauthorizedException
 import com.amazonaws.sdk.appsync.events.data.WebSocketMessage
+import com.amazonaws.sdk.appsync.events.testmodels.TestMessage
 import com.amazonaws.sdk.appsync.events.utils.EventsLibraryLogCapture
 import com.amazonaws.sdk.appsync.events.utils.JsonUtils
 import com.amazonaws.sdk.appsync.events.utils.getEventsConfig
+import com.amplifyframework.testutils.coroutines.runBlockingWithTimeout
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
@@ -54,58 +57,57 @@ internal class EventsRestClientTests {
             loggerProvider = { _ -> webSocketLogCapture }
         )
     )
+    private val backgroundScope = CoroutineScope(Dispatchers.IO)
 
     @After
     fun tearDown() {
-        runBlocking {
+        runBlockingWithTimeout {
             webSocketClient.disconnect(flushEvents = false)
         }
     }
 
     @Test
-    fun testSinglePrimitivePublish() = runTest {
-        testSinglePublish(JsonPrimitive(true), backgroundScope)
+    fun testSinglePrimitivePublish() = runBlockingWithTimeout {
+        testSinglePublish(JsonPrimitive(true))
     }
 
     @Test
-    fun testSingleArrayPublish() = runTest {
-        testSinglePublish(JsonArray(listOf(JsonPrimitive(true), JsonPrimitive(false))), backgroundScope)
+    fun testSingleArrayPublish() = runBlockingWithTimeout {
+        testSinglePublish(JsonArray(listOf(JsonPrimitive(true), JsonPrimitive(false))))
     }
 
     @Test
-    fun testSingleObjectPublish() = runTest {
-        testSinglePublish(json.encodeToJsonElement(TestMessage()), backgroundScope)
+    fun testSingleObjectPublish() = runBlockingWithTimeout {
+        testSinglePublish(json.encodeToJsonElement(TestMessage()))
     }
 
     @Test
-    fun testMultiplePrimitivePublish() = runTest {
-        testMultiplePublish(listOf(JsonPrimitive(true), JsonPrimitive(false)), backgroundScope)
+    fun testMultiplePrimitivePublish() = runBlockingWithTimeout {
+        testMultiplePublish(listOf(JsonPrimitive(true), JsonPrimitive(false)))
     }
 
     @Test
-    fun testMultipleArrayPublish() = runTest {
+    fun testMultipleArrayPublish() = runBlockingWithTimeout {
         testMultiplePublish(
             listOf(
                 JsonArray(listOf(JsonPrimitive(true), JsonPrimitive(false))),
                 JsonArray(listOf(JsonPrimitive(true), JsonPrimitive(false)))
-            ),
-            backgroundScope
+            )
         )
     }
 
     @Test
-    fun testMultipleObjectPublish() = runTest {
+    fun testMultipleObjectPublish() = runBlockingWithTimeout {
         testMultiplePublish(
             listOf(
                 json.encodeToJsonElement(TestMessage(messageId = "1", content = "hi")),
                 json.encodeToJsonElement(TestMessage(messageId = "2", content = "hello"))
-            ),
-            backgroundScope
+            )
         )
     }
 
     @Test
-    fun testPublishWithBadAuth(): Unit = runTest {
+    fun testPublishWithBadAuth(): Unit = runBlockingWithTimeout {
         // Publish the REST message
         val restClient = events.createRestClient(publishAuthorizer = apiKeyAuthorizer)
         val result = restClient.publish(
@@ -119,10 +121,12 @@ internal class EventsRestClientTests {
         (result as PublishResult.Failure).apply {
             error shouldBe UnauthorizedException("You are not authorized to make this call.")
         }
+        val response = result.shouldBeInstanceOf<PublishResult.Failure>()
+        response.error shouldBe UnauthorizedException("You are not authorized to make this call.")
     }
 
     @Test
-    fun testPublishWithTooManyEvents(): Unit = runTest {
+    fun testPublishWithTooManyEvents(): Unit = runBlockingWithTimeout {
         val sendEvents = (0 until 6).map { JsonPrimitive(true) }
         // Publish the REST message
         val restClient = events.createRestClient(publishAuthorizer = apiKeyAuthorizer)
@@ -139,7 +143,7 @@ internal class EventsRestClientTests {
     }
 
     @Test
-    fun testPublishToNonConfiguredChannel(): Unit = runTest {
+    fun testPublishToNonConfiguredChannel(): Unit = runBlockingWithTimeout {
         // Publish the REST message
         val restClient = events.createRestClient(publishAuthorizer = apiKeyAuthorizer)
         val result = restClient.publish(
@@ -154,7 +158,7 @@ internal class EventsRestClientTests {
         }
     }
 
-    private suspend fun testSinglePublish(jsonItem: JsonElement, backgroundScope: CoroutineScope) {
+    private suspend fun testSinglePublish(jsonItem: JsonElement) {
         turbineScope {
             webSocketClient.subscribe(defaultChannel).test {
                 // Wait for subscription to return success
@@ -170,14 +174,10 @@ internal class EventsRestClientTests {
                 val result = restClient.publish(defaultChannel, jsonItem)
 
                 // Assert expected REST response
-                (result is PublishResult.Response) shouldBe true
-                (result as PublishResult.Response).apply {
-                    failedEvents.size shouldBe 0
-                    successfulEvents.size shouldBe 1
-                    successfulEvents[0].apply {
-                        index shouldBe 0
-                    }
-                }
+                val response = result.shouldBeInstanceOf<PublishResult.Response>()
+                response.failedEvents.shouldBeEmpty()
+                response.successfulEvents.shouldHaveSize(1)
+                response.successfulEvents.first().index shouldBe 0
 
                 // Wait for message to be provided in subscription
                 val receivedMessage = awaitItem()
@@ -192,7 +192,7 @@ internal class EventsRestClientTests {
         }
     }
 
-    private suspend fun testMultiplePublish(jsonItems: List<JsonElement>, backgroundScope: CoroutineScope) {
+    private suspend fun testMultiplePublish(jsonItems: List<JsonElement>) {
         turbineScope {
             webSocketClient.subscribe(defaultChannel).test {
                 // Wait for subscription to return success
@@ -208,11 +208,9 @@ internal class EventsRestClientTests {
                 val result = restClient.publish(defaultChannel, jsonItems)
 
                 // Assert expected REST response
-                (result is PublishResult.Response) shouldBe true
-                (result as PublishResult.Response).apply {
-                    failedEvents.size shouldBe 0
-                    successfulEvents.size shouldBe jsonItems.size
-                }
+                val response = result.shouldBeInstanceOf<PublishResult.Response>()
+                response.failedEvents.shouldBeEmpty()
+                response.successfulEvents.shouldHaveSize(jsonItems.size)
 
                 // Wait for message to be provided in subscription
                 val receivedMessages = jsonItems.indices.map {
@@ -229,21 +227,3 @@ internal class EventsRestClientTests {
         }
     }
 }
-
-@Serializable
-data class TestMessage(
-    val messageId: String = UUID.randomUUID().toString(),
-    val content: String = "Hello World",
-    val likes: Int = 2,
-    val likedBy: List<TestUser> = listOf(
-        TestUser("Jane Doe", "@janedoe"),
-        TestUser("Jim Doe", "@jimdoe")
-    ),
-    val author: TestUser = TestUser()
-)
-
-@Serializable
-data class TestUser(
-    val name: String = "John Doe",
-    val handle: String = "@johndoe"
-)

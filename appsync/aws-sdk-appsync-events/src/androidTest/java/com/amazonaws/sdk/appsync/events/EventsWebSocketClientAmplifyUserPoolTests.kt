@@ -11,9 +11,12 @@ import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.configuration.AmplifyOutputs
+import com.amplifyframework.testutils.coroutines.runBlockingWithTimeout
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import java.util.UUID
-import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.BeforeClass
 import org.junit.Test
@@ -37,7 +40,7 @@ internal class EventsWebSocketClientAmplifyUserPoolTests {
     }
 
     @Test
-    fun testFailedPublishWithUnauthenticatedUserPool(): Unit = runTest {
+    fun testFailedPublishWithUnauthenticatedUserPool(): Unit = runBlockingWithTimeout {
         // Publish the message
         val webSocketClient = events.createWebSocketClient(userPoolAuthorizer, userPoolAuthorizer, userPoolAuthorizer)
         val result = webSocketClient.publish(
@@ -56,7 +59,7 @@ internal class EventsWebSocketClientAmplifyUserPoolTests {
     }
 
     @Test
-    fun testPublishWithAuthenticatedUserPool(): Unit = runTest {
+    fun testPublishWithAuthenticatedUserPool(): Unit = runBlockingWithTimeout {
         val credentials = Credentials.load(InstrumentationRegistry.getInstrumentation().targetContext)
         com.amplifyframework.kotlin.core.Amplify.Auth.signIn(credentials.first, credentials.second)
 
@@ -68,13 +71,9 @@ internal class EventsWebSocketClientAmplifyUserPoolTests {
         )
 
         // Assert expected response
-        (result is PublishResult.Response) shouldBe true
-        (result as PublishResult.Response).apply {
-            failedEvents.size shouldBe 0
-            successfulEvents.size shouldBe 1
-            successfulEvents[0].apply {
-                index shouldBe 0
-            }
-        }
+        val response = result.shouldBeInstanceOf<PublishResult.Response>()
+        response.failedEvents.shouldBeEmpty()
+        response.successfulEvents.shouldHaveSize(1)
+        response.successfulEvents.first().index shouldBe 0
     }
 }

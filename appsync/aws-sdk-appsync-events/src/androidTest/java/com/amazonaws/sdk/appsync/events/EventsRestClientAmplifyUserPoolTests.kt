@@ -26,10 +26,13 @@ import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.configuration.AmplifyOutputs
 import com.amplifyframework.kotlin.core.Amplify
+import com.amplifyframework.testutils.coroutines.runBlockingWithTimeout
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.After
 import org.junit.BeforeClass
@@ -59,7 +62,7 @@ internal class EventsRestClientAmplifyUserPoolTests {
     }
 
     @Test
-    fun testFailedPublishWithUnauthenticatedUserPool(): Unit = runTest {
+    fun testFailedPublishWithUnauthenticatedUserPool(): Unit = runBlockingWithTimeout {
         // Publish the REST message
         val restClient = events.createRestClient(publishAuthorizer = userPoolAuthorizer)
         val result = restClient.publish(
@@ -75,10 +78,15 @@ internal class EventsRestClientAmplifyUserPoolTests {
                 cause = AuthException("Token is null", "Token received but is null. Check if you are signed in")
             )
         }
+        val response = result.shouldBeInstanceOf<PublishResult.Failure>()
+        response.error shouldBe EventsException(
+            "An unknown error occurred",
+            cause = AuthException("Token is null", "Token received but is null. Check if you are signed in")
+        )
     }
 
     @Test
-    fun testPublishWithAuthenticatedUserPool(): Unit = runTest {
+    fun testPublishWithAuthenticatedUserPool(): Unit = runBlockingWithTimeout {
         val credentials = Credentials.load(InstrumentationRegistry.getInstrumentation().targetContext)
         Amplify.Auth.signIn(credentials.first, credentials.second)
 
@@ -90,13 +98,9 @@ internal class EventsRestClientAmplifyUserPoolTests {
         )
 
         // Assert expected REST response
-        (result is PublishResult.Response) shouldBe true
-        (result as PublishResult.Response).apply {
-            failedEvents.size shouldBe 0
-            successfulEvents.size shouldBe 1
-            successfulEvents[0].apply {
-                index shouldBe 0
-            }
-        }
+        val response = result.shouldBeInstanceOf<PublishResult.Response>()
+        response.failedEvents.shouldBeEmpty()
+        response.successfulEvents.shouldHaveSize(1)
+        response.successfulEvents.first().index shouldBe 0
     }
 }

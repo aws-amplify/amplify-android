@@ -8,9 +8,12 @@ import com.amazonaws.sdk.appsync.events.utils.getEventsConfig
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.configuration.AmplifyOutputs
+import com.amplifyframework.testutils.coroutines.runBlockingWithTimeout
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import java.util.UUID
-import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.BeforeClass
 import org.junit.Test
@@ -34,7 +37,7 @@ internal class EventsWebSocketClientAmplifyIamTests {
     }
 
     @Test
-    fun testPublishWithIam(): Unit = runTest {
+    fun testPublishWithIam(): Unit = runBlockingWithTimeout {
         // Publish the message
         val webSocketClient = events.createWebSocketClient(iamAuthorizer, iamAuthorizer, iamAuthorizer)
         val result = webSocketClient.publish(
@@ -43,13 +46,9 @@ internal class EventsWebSocketClientAmplifyIamTests {
         )
 
         // Assert expected REST response
-        (result is PublishResult.Response) shouldBe true
-        (result as PublishResult.Response).apply {
-            failedEvents.size shouldBe 0
-            successfulEvents.size shouldBe 1
-            successfulEvents[0].apply {
-                index shouldBe 0
-            }
-        }
+        val response = result.shouldBeInstanceOf<PublishResult.Response>()
+        response.failedEvents.shouldBeEmpty()
+        response.successfulEvents.shouldHaveSize(1)
+        response.successfulEvents.first().index shouldBe 0
     }
 }

@@ -60,6 +60,7 @@ dependencies {
     androidTestApi(project(":aws-sdk-appsync-amplify"))
     androidTestImplementation(project(":aws-auth-cognito"))
     androidTestImplementation(project(":core-kotlin"))
+    androidTestImplementation(project(":testutils"))
     androidTestImplementation(libs.test.androidx.runner)
     androidTestImplementation(libs.test.androidx.junit)
     androidTestImplementation(libs.test.kotlin.coroutines)
