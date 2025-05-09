@@ -125,7 +125,8 @@ internal class EventsWebSocketTest {
         val expectedInit = """{"type":"connection_init"}"""
 
         every { websocket.close(any(), any()) } answers {
-            backgroundScope.launch {
+            launch {
+                delay(1)
                 eventsWebSocket.onClosed(websocket, 1000, "User initiated disconnect")
             }
             true
@@ -151,7 +152,8 @@ internal class EventsWebSocketTest {
         val expectedInit = """{"type":"connection_init"}"""
 
         every { websocket.cancel() } answers {
-            backgroundScope.launch {
+            launch {
+                delay(1)
                 eventsWebSocket.onClosed(websocket, 1000, "User initiated disconnect")
             }
         }
