@@ -1,0 +1,18 @@
+public final class com/amazonaws/sdk/appsync/amplify/BuildConfig {
+	public static final field BUILD_TYPE Ljava/lang/String;
+	public static final field DEBUG Z
+	public static final field LIBRARY_PACKAGE_NAME Ljava/lang/String;
+	public static final field VERSION_NAME Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public final class com/amazonaws/sdk/appsync/amplify/authorizers/AmplifyIamAuthorizer : com/amazonaws/sdk/appsync/core/AppSyncAuthorizer {
+	public fun <init> (Ljava/lang/String;)V
+	public fun getAuthorizationHeaders (Lcom/amazonaws/sdk/appsync/core/AppSyncRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/amazonaws/sdk/appsync/amplify/authorizers/AmplifyUserPoolAuthorizer : com/amazonaws/sdk/appsync/core/AppSyncAuthorizer {
+	public fun <init> ()V
+	public fun getAuthorizationHeaders (Lcom/amazonaws/sdk/appsync/core/AppSyncRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+

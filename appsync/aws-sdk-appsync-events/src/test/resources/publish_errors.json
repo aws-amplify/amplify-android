@@ -1,0 +1,6 @@
+{
+  "errors" : [ {
+    "errorType" : "BadRequestException",
+    "message" : "Input exceeded 5 event limit"
+  } ]
+}

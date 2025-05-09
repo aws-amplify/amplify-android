@@ -1,0 +1,80 @@
+public abstract interface class com/amazonaws/sdk/appsync/core/AppSyncAuthorizer {
+	public abstract fun getAuthorizationHeaders (Lcom/amazonaws/sdk/appsync/core/AppSyncRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class com/amazonaws/sdk/appsync/core/AppSyncRequest {
+	public abstract fun getBody ()Ljava/lang/String;
+	public abstract fun getHeaders ()Ljava/util/Map;
+	public abstract fun getMethod ()Lcom/amazonaws/sdk/appsync/core/AppSyncRequest$HttpMethod;
+	public abstract fun getUrl ()Ljava/lang/String;
+}
+
+public final class com/amazonaws/sdk/appsync/core/AppSyncRequest$HttpMethod : java/lang/Enum {
+	public static final field GET Lcom/amazonaws/sdk/appsync/core/AppSyncRequest$HttpMethod;
+	public static final field POST Lcom/amazonaws/sdk/appsync/core/AppSyncRequest$HttpMethod;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amazonaws/sdk/appsync/core/AppSyncRequest$HttpMethod;
+	public static fun values ()[Lcom/amazonaws/sdk/appsync/core/AppSyncRequest$HttpMethod;
+}
+
+public final class com/amazonaws/sdk/appsync/core/LogLevel : java/lang/Enum {
+	public static final field DEBUG Lcom/amazonaws/sdk/appsync/core/LogLevel;
+	public static final field ERROR Lcom/amazonaws/sdk/appsync/core/LogLevel;
+	public static final field INFO Lcom/amazonaws/sdk/appsync/core/LogLevel;
+	public static final field NONE Lcom/amazonaws/sdk/appsync/core/LogLevel;
+	public static final field VERBOSE Lcom/amazonaws/sdk/appsync/core/LogLevel;
+	public static final field WARN Lcom/amazonaws/sdk/appsync/core/LogLevel;
+	public final fun above (Lcom/amazonaws/sdk/appsync/core/LogLevel;)Z
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amazonaws/sdk/appsync/core/LogLevel;
+	public static fun values ()[Lcom/amazonaws/sdk/appsync/core/LogLevel;
+}
+
+public abstract interface class com/amazonaws/sdk/appsync/core/Logger {
+	public abstract fun debug (Ljava/lang/String;)V
+	public abstract fun debug (Ljava/util/function/Supplier;)V
+	public abstract fun error (Ljava/lang/String;)V
+	public abstract fun error (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public abstract fun error (Ljava/lang/Throwable;Ljava/util/function/Supplier;)V
+	public abstract fun error (Ljava/util/function/Supplier;)V
+	public abstract fun getThresholdLevel ()Lcom/amazonaws/sdk/appsync/core/LogLevel;
+	public abstract fun info (Ljava/lang/String;)V
+	public abstract fun info (Ljava/util/function/Supplier;)V
+	public abstract fun verbose (Ljava/lang/String;)V
+	public abstract fun verbose (Ljava/util/function/Supplier;)V
+	public abstract fun warn (Ljava/lang/String;)V
+	public abstract fun warn (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public abstract fun warn (Ljava/lang/Throwable;Ljava/util/function/Supplier;)V
+	public abstract fun warn (Ljava/util/function/Supplier;)V
+}
+
+public final class com/amazonaws/sdk/appsync/core/Logger$DefaultImpls {
+	public static fun debug (Lcom/amazonaws/sdk/appsync/core/Logger;Ljava/util/function/Supplier;)V
+	public static fun error (Lcom/amazonaws/sdk/appsync/core/Logger;Ljava/lang/Throwable;Ljava/util/function/Supplier;)V
+	public static fun error (Lcom/amazonaws/sdk/appsync/core/Logger;Ljava/util/function/Supplier;)V
+	public static fun info (Lcom/amazonaws/sdk/appsync/core/Logger;Ljava/util/function/Supplier;)V
+	public static fun verbose (Lcom/amazonaws/sdk/appsync/core/Logger;Ljava/util/function/Supplier;)V
+	public static fun warn (Lcom/amazonaws/sdk/appsync/core/Logger;Ljava/lang/Throwable;Ljava/util/function/Supplier;)V
+	public static fun warn (Lcom/amazonaws/sdk/appsync/core/Logger;Ljava/util/function/Supplier;)V
+}
+
+public abstract interface class com/amazonaws/sdk/appsync/core/LoggerProvider {
+	public abstract fun getLogger (Ljava/lang/String;)Lcom/amazonaws/sdk/appsync/core/Logger;
+}
+
+public final class com/amazonaws/sdk/appsync/core/authorizers/ApiKeyAuthorizer : com/amazonaws/sdk/appsync/core/AppSyncAuthorizer {
+	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Lkotlin/jvm/functions/Function1;)V
+	public fun getAuthorizationHeaders (Lcom/amazonaws/sdk/appsync/core/AppSyncRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/amazonaws/sdk/appsync/core/authorizers/AuthTokenAuthorizer : com/amazonaws/sdk/appsync/core/AppSyncAuthorizer {
+	public fun <init> (Lkotlin/jvm/functions/Function1;)V
+	public fun getAuthorizationHeaders (Lcom/amazonaws/sdk/appsync/core/AppSyncRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/amazonaws/sdk/appsync/core/authorizers/IamAuthorizer : com/amazonaws/sdk/appsync/core/AppSyncAuthorizer {
+	public fun <init> (Lkotlin/jvm/functions/Function2;)V
+	public fun getAuthorizationHeaders (Lcom/amazonaws/sdk/appsync/core/AppSyncRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
