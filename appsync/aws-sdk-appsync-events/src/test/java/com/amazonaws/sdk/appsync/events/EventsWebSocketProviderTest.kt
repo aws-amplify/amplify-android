@@ -26,11 +26,9 @@ import io.mockk.unmockkAll
 import java.net.SocketTimeoutException
 import junit.framework.TestCase.fail
 import kotlin.random.Random
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
@@ -56,11 +54,8 @@ class EventsWebSocketProviderTest {
         unmockkAll()
     }
 
-    /**
-     * Using runBlocking to test with IO launches to test introduced connect delay
-     */
     @Test
-    fun `multiple calls return same instance when not closed`() = runBlocking {
+    fun `multiple calls return same instance when not closed`() = runTest {
         every { anyConstructed<EventsWebSocket>().isClosed } returns false
         // introduce small random connect delay to mimic real scenario
         coEvery { anyConstructed<EventsWebSocket>().connect() } coAnswers {
@@ -70,9 +65,7 @@ class EventsWebSocketProviderTest {
 
         // launch multiple calls at once
         val calls = IntRange(1, 10).map {
-            async(Dispatchers.IO) {
-                provider.getConnectedWebSocket()
-            }
+            backgroundScope.async { provider.getConnectedWebSocket() }
         }
 
         // verify that all connections have the same instance and that we didn't end up with multiple websockets
