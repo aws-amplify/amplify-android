@@ -8,11 +8,9 @@ on:
   push:
     branches:
       - 'main'
-      - 'v1'
   pull_request:
     branches:
       - 'main'
-      - 'v1'
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -42,7 +40,9 @@ jobs:
         run: cp -r /home/runner/work/amplify-android/amplify-android/**/build/reports/kover/xml/*.xml /home/runner/work/amplify-android/amplify-android/code-coverage/
 
       - name: Upload Test Report
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           name: report
           files: code-coverage/*.xml
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
