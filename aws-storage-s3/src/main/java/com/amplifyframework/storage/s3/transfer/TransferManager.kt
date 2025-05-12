@@ -24,7 +24,6 @@ import aws.sdk.kotlin.services.s3.model.ObjectCannedAcl
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.storage.ObjectMetadata
-import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.StorageFilePermissionException
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
 import com.amplifyframework.storage.s3.TransferOperations
