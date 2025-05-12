@@ -24,6 +24,5 @@ class StorageFilePermissionException @InternalAmplifyApi constructor(
     message: String,
     recoverySuggestion: String
 ) : AmplifyException(message, recoverySuggestion) {
-    @InternalAmplifyApi
-    companion object
+    @InternalAmplifyApi companion object
 }
