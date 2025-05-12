@@ -14,10 +14,15 @@
  */
 package com.amazonaws.sdk.appsync.events
 
+import app.cash.turbine.test
+import app.cash.turbine.turbineScope
 import com.amazonaws.sdk.appsync.events.data.BadRequestException
 import com.amazonaws.sdk.appsync.events.data.ConnectionClosedException
 import com.amazonaws.sdk.appsync.events.data.PublishResult
+import com.amazonaws.sdk.appsync.events.data.WebSocketMessage
+import com.amazonaws.sdk.appsync.events.mocks.EventsLibraryLogCapture
 import com.amazonaws.sdk.appsync.events.mocks.TestAuthorizer
+import io.kotest.assertions.fail
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
@@ -27,7 +32,10 @@ import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.slot
 import io.mockk.unmockkConstructor
+import kotlin.time.Duration
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
@@ -43,6 +51,7 @@ import org.junit.Before
 import org.junit.Test
 
 internal class EventsWebSocketClientTest {
+    private val webSocketLogCapture = EventsLibraryLogCapture()
     private val eventsEndpoints = EventsEndpoints(
         "https://11111111111111111111111111.appsync-api.us-east-1.amazonaws.com/event"
     )
@@ -52,7 +61,9 @@ internal class EventsWebSocketClientTest {
     private val publishAuthorizer = TestAuthorizer()
     private val websocket = mockk<WebSocket>(relaxed = true)
     private val websocketListenerSlot = slot<WebSocketListener>()
-    private val options = Events.Options.WebSocket()
+    private val options = Events.Options.WebSocket(
+        loggerProvider = { _ -> webSocketLogCapture }
+    )
 
     @Before
     fun setUp() {
@@ -68,7 +79,7 @@ internal class EventsWebSocketClientTest {
     fun `successful publish with default authorizer`() = runTest {
         val client = createClient()
 
-        setupSendResult { successResult(it) }
+        setupSendResult { type, id -> successPublishResult(id) }
 
         val result = client.publish(
             "default/channel",
@@ -86,7 +97,7 @@ internal class EventsWebSocketClientTest {
 
         val customAuthorizer = TestAuthorizer("c1")
 
-        setupSendResult(authKey = "c1") { successResult(it) }
+        setupSendResult(authKey = "c1") { type, id -> successPublishResult(id) }
 
         val result = client.publish(
             "default/channel",
@@ -103,8 +114,11 @@ internal class EventsWebSocketClientTest {
     fun `failed publish with connection closed`() = runTest {
         val client = createClient()
 
-        setupSendResult {
-            websocketListenerSlot.captured.onClosed(websocket, 1000, "User initiated disconnect")
+        setupSendResult { _, _ ->
+            launch {
+                delay(1)
+                websocketListenerSlot.captured.onClosed(websocket, 1000, "User initiated disconnect")
+            }
         }
 
         val result = client.publish(
@@ -120,7 +134,7 @@ internal class EventsWebSocketClientTest {
     fun `failed publish with bad request error`() = runTest {
         val client = createClient()
 
-        setupSendResult(channel = "default/*") { id ->
+        setupSendResult(channel = "default/*") { _, id ->
             val failedResult = """
                 {
                     "id": $id,
@@ -134,6 +148,7 @@ internal class EventsWebSocketClientTest {
                 }
             """.trimIndent()
             backgroundScope.launch {
+                delay(1)
                 websocketListenerSlot.captured.onMessage(websocket, failedResult)
             }
         }
@@ -147,11 +162,177 @@ internal class EventsWebSocketClientTest {
         failure.error.shouldBeInstanceOf<BadRequestException>()
     }
 
+    @Test
+    fun `successful subscribe with default authorizer`() = runTest {
+        val client = createClient()
+        val channel = "default/channel"
+        var receivedSubscriptionResult = false
+
+        setupSendResult { sendType, id ->
+            when (sendType) {
+                "subscribe" -> {
+                    receivedSubscriptionResult = true
+                    subscribeSuccessResult(id)
+                }
+                "publish" -> {
+                    if (!receivedSubscriptionResult) {
+                        fail("Subscription result not received before publish")
+                    }
+                    successPublishResult(id)
+                }
+            }
+        }
+
+        client.subscribe(channel).test {
+            webSocketLogCapture.messages.filter {
+                it == "emit ${WebSocketMessage.Received.Subscription.SubscribeSuccess::class.java}"
+            }.testIn(backgroundScope).apply {
+                awaitItem()
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            val result = client.publish(
+                channel,
+                JsonPrimitive("test")
+            )
+
+            val response = result.shouldBeInstanceOf<PublishResult.Response>()
+            response.successfulEvents.shouldHaveSize(1)
+            response.failedEvents.shouldBeEmpty()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `successful subscribe with custom authorizer`() = runTest {
+        val client = createClient()
+        val channel = "default/channel"
+        var receivedSubscriptionResult = false
+        val customAuthorizer = TestAuthorizer("c1")
+
+        setupSendResult(authKey = "c1") { sendType, id ->
+            when (sendType) {
+                "subscribe" -> {
+                    receivedSubscriptionResult = true
+                    subscribeSuccessResult(id)
+                }
+                "publish" -> {
+                    if (!receivedSubscriptionResult) {
+                        fail("Subscription result not received before publish")
+                    }
+                    successPublishResult(id)
+                }
+            }
+        }
+
+        client.subscribe(channel, customAuthorizer).test {
+            webSocketLogCapture.messages.filter {
+                it == "emit ${WebSocketMessage.Received.Subscription.SubscribeSuccess::class.java}"
+            }.testIn(backgroundScope).apply {
+                awaitItem()
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            val result = client.publish(
+                channel,
+                JsonPrimitive("test"),
+                customAuthorizer
+            )
+
+            val response = result.shouldBeInstanceOf<PublishResult.Response>()
+            response.successfulEvents.shouldHaveSize(1)
+            response.failedEvents.shouldBeEmpty()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `failed subscribe bad format`() = runTest {
+        turbineScope {
+            val client = createClient()
+            val channel = "default/channel"
+
+            setupSendResult { _, id -> subscribeErrorResult(id) }
+
+            val error = client.subscribe(channel).testIn(backgroundScope, timeout = Duration.INFINITE).awaitError()
+
+            error shouldBe BadRequestException("Invalid Channel Format")
+        }
+    }
+
+    @Test
+    fun `failed subscribe connection closed`() = runTest {
+        turbineScope {
+            val client = createClient()
+            val channel = "default/channel"
+
+            setupSendResult { _, id ->
+                launch {
+                    delay(1)
+                    websocketListenerSlot.captured.onClosed(websocket, 1000, "User initiated disconnect")
+                }
+            }
+
+            val error = client.subscribe(channel).testIn(backgroundScope).awaitError()
+            error shouldBe ConnectionClosedException()
+        }
+    }
+
+    @Test
+    fun `disconnect with flush`() = runTest {
+        val client = createClient()
+        val channel = "default/channel"
+        setupSendResult { _, id -> subscribeSuccessResult(id) }
+        every { websocket.close(any(), any()) } answers {
+            launch {
+                delay(1)
+                websocketListenerSlot.captured.onClosed(websocket, 1000, "User initiated disconnect")
+            }
+            true
+        }
+
+        client.subscribe(channel).test {
+            webSocketLogCapture.messages.filter {
+                it == "emit ${WebSocketMessage.Received.Subscription.SubscribeSuccess::class.java}"
+            }.testIn(backgroundScope).apply {
+                awaitItem()
+                cancelAndIgnoreRemainingEvents()
+            }
+            client.disconnect(true)
+            awaitComplete()
+        }
+    }
+
+    @Test
+    fun `disconnect without flush`() = runTest {
+        val client = createClient()
+        val channel = "default/channel"
+        setupSendResult { _, id -> subscribeSuccessResult(id) }
+        every { websocket.cancel() } answers {
+            launch {
+                delay(1)
+                websocketListenerSlot.captured.onFailure(websocket, Throwable("Cancelled"), null)
+            }
+        }
+
+        client.subscribe(channel).test {
+            webSocketLogCapture.messages.filter {
+                it == "emit ${WebSocketMessage.Received.Subscription.SubscribeSuccess::class.java}"
+            }.testIn(backgroundScope).apply {
+                awaitItem()
+                cancelAndIgnoreRemainingEvents()
+            }
+            client.disconnect(false)
+            awaitComplete()
+        }
+    }
+
     private suspend fun TestScope.createClient() = coroutineScope {
         every { constructedWith<OkHttpClient.Builder>().build() } returns mockk<OkHttpClient>(relaxed = true) {
             every { newWebSocket(any(), capture(websocketListenerSlot)) } answers {
                 val ack = """ { "type": "connection_ack", "connectionTimeoutMs": 10000 } """
                 backgroundScope.launch {
+                    delay(1)
                     websocketListenerSlot.captured.onMessage(websocket, ack)
                 }
                 websocket
@@ -170,8 +351,21 @@ internal class EventsWebSocketClientTest {
     private fun setupSendResult(
         authKey: String = "default",
         channel: String = "default/channel",
-        func: (String) -> Unit
+        func: (sendType: String, id: String) -> Unit
     ) {
+        val expectedSubscribeData = Json.parseToJsonElement(
+            """
+                {
+                    "channel":"$channel",
+                    "type":"subscribe",
+                    "authorization":{
+                        "host":"11111111111111111111111111.appsync-api.us-east-1.amazonaws.com",
+                        "testKey":"$authKey"
+                    }
+                }
+            """.trimIndent()
+        ).jsonObject
+
         val expectedSendData = Json.parseToJsonElement(
             """
                 {
@@ -190,14 +384,23 @@ internal class EventsWebSocketClientTest {
             val json = firstArg<String>()
             val sendObject = Json.parseToJsonElement(json).jsonObject
             val compareSendObject = JsonObject(sendObject.filterKeys { it != "id" })
-            compareSendObject shouldBe expectedSendData
             val id = sendObject["id"]
-            func(id.toString())
+            when (compareSendObject["type"]) {
+                JsonPrimitive("subscribe") -> {
+                    compareSendObject shouldBe expectedSubscribeData
+                    func("subscribe", id.toString())
+                }
+                JsonPrimitive("publish") -> {
+                    compareSendObject shouldBe expectedSendData
+                    func("publish", id.toString())
+                }
+                else -> throw IllegalArgumentException("Unexpected send type")
+            }
             true
         }
     }
 
-    private fun TestScope.successResult(id: String) {
+    private fun TestScope.successPublishResult(id: String) {
         val result = """
             {
                 "id": $id,
@@ -212,6 +415,39 @@ internal class EventsWebSocketClientTest {
             }
         """.trimIndent()
         backgroundScope.launch {
+            delay(1)
+            websocketListenerSlot.captured.onMessage(websocket, result)
+        }
+    }
+
+    private fun TestScope.subscribeSuccessResult(id: String) {
+        val result = """
+            {
+                "id": $id,
+                "type": "subscribe_success"
+            }
+        """.trimIndent()
+        backgroundScope.launch {
+            delay(1)
+            websocketListenerSlot.captured.onMessage(websocket, result)
+        }
+    }
+
+    private fun TestScope.subscribeErrorResult(id: String) {
+        val result = """
+            {
+                "id": $id,
+                "type": "subscribe_error",
+                "errors": [
+                    {
+                      "errorType": "BadRequestException",
+                      "message": "Invalid Channel Format"
+                    }
+                ]
+            }
+        """.trimIndent()
+        backgroundScope.launch {
+            delay(1)
             websocketListenerSlot.captured.onMessage(websocket, result)
         }
     }
