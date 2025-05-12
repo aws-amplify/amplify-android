@@ -4212,6 +4212,9 @@ public final class com/amplifyframework/storage/StorageException : com/amplifyfr
 	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
 }
 
+public final class com/amplifyframework/storage/StorageFilePermissionException : com/amplifyframework/AmplifyException {
+}
+
 public final class com/amplifyframework/storage/StorageItem {
 	public fun <init> (Ljava/lang/String;JLjava/util/Date;Ljava/lang/String;Ljava/lang/Object;)V
 	public final fun component1 ()Ljava/lang/String;
