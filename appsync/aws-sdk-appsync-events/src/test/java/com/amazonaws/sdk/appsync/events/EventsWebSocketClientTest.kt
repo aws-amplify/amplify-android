@@ -32,11 +32,13 @@ import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.slot
 import io.mockk.unmockkConstructor
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlin.time.Duration
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -77,7 +79,7 @@ internal class EventsWebSocketClientTest {
 
     @Test
     fun `successful publish with default authorizer`() = runTest {
-        val client = createClient()
+        val client = createClient(StandardTestDispatcher(testScheduler))
 
         setupSendResult { type, id -> successPublishResult(id) }
 
@@ -93,7 +95,7 @@ internal class EventsWebSocketClientTest {
 
     @Test
     fun `successful publish with custom authorizer`() = runTest {
-        val client = createClient()
+        val client = createClient(StandardTestDispatcher(testScheduler))
 
         val customAuthorizer = TestAuthorizer("c1")
 
@@ -112,7 +114,7 @@ internal class EventsWebSocketClientTest {
 
     @Test
     fun `failed publish with connection closed`() = runTest {
-        val client = createClient()
+        val client = createClient(StandardTestDispatcher(testScheduler))
 
         setupSendResult { _, _ ->
             launch {
@@ -132,7 +134,7 @@ internal class EventsWebSocketClientTest {
 
     @Test
     fun `failed publish with bad request error`() = runTest {
-        val client = createClient()
+        val client = createClient(StandardTestDispatcher(testScheduler))
 
         setupSendResult(channel = "default/*") { _, id ->
             val failedResult = """
@@ -164,7 +166,7 @@ internal class EventsWebSocketClientTest {
 
     @Test
     fun `successful subscribe with default authorizer`() = runTest {
-        val client = createClient()
+        val client = createClient(StandardTestDispatcher(testScheduler))
         val channel = "default/channel"
         var receivedSubscriptionResult = false
 
@@ -205,7 +207,7 @@ internal class EventsWebSocketClientTest {
 
     @Test
     fun `successful subscribe with custom authorizer`() = runTest {
-        val client = createClient()
+        val client = createClient(StandardTestDispatcher(testScheduler))
         val channel = "default/channel"
         var receivedSubscriptionResult = false
         val customAuthorizer = TestAuthorizer("c1")
@@ -249,7 +251,7 @@ internal class EventsWebSocketClientTest {
     @Test
     fun `failed subscribe bad format`() = runTest {
         turbineScope {
-            val client = createClient()
+            val client = createClient(StandardTestDispatcher(testScheduler))
             val channel = "default/channel"
 
             setupSendResult { _, id -> subscribeErrorResult(id) }
@@ -263,7 +265,7 @@ internal class EventsWebSocketClientTest {
     @Test
     fun `failed subscribe connection closed`() = runTest {
         turbineScope {
-            val client = createClient()
+            val client = createClient(StandardTestDispatcher(testScheduler))
             val channel = "default/channel"
 
             setupSendResult { _, id ->
@@ -280,7 +282,7 @@ internal class EventsWebSocketClientTest {
 
     @Test
     fun `disconnect with flush`() = runTest {
-        val client = createClient()
+        val client = createClient(StandardTestDispatcher(testScheduler))
         val channel = "default/channel"
         setupSendResult { _, id -> subscribeSuccessResult(id) }
         every { websocket.close(any(), any()) } answers {
@@ -305,7 +307,7 @@ internal class EventsWebSocketClientTest {
 
     @Test
     fun `disconnect without flush`() = runTest {
-        val client = createClient()
+        val client = createClient(StandardTestDispatcher(testScheduler))
         val channel = "default/channel"
         setupSendResult { _, id -> subscribeSuccessResult(id) }
         every { websocket.cancel() } answers {
@@ -327,7 +329,7 @@ internal class EventsWebSocketClientTest {
         }
     }
 
-    private suspend fun TestScope.createClient() = coroutineScope {
+    private suspend fun TestScope.createClient(testDispatcher: CoroutineDispatcher) = coroutineScope {
         every { constructedWith<OkHttpClient.Builder>().build() } returns mockk<OkHttpClient>(relaxed = true) {
             every { newWebSocket(any(), capture(websocketListenerSlot)) } answers {
                 val ack = """ { "type": "connection_ack", "connectionTimeoutMs": 10000 } """
@@ -344,7 +346,8 @@ internal class EventsWebSocketClientTest {
             subscribeAuthorizer,
             publishAuthorizer,
             options,
-            eventsEndpoints
+            eventsEndpoints,
+            testDispatcher
         )
     }
 

@@ -41,6 +41,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.encodeToJsonElement
 import org.junit.After
 import org.junit.Test
+import kotlin.time.Duration.Companion.seconds
 
 internal class EventsWebSocketClientTests {
     private val eventsConfig = getEventsConfig(InstrumentationRegistry.getInstrumentation().targetContext)
@@ -160,7 +161,7 @@ internal class EventsWebSocketClientTests {
     }
 
     @Test
-    fun testWebSocketFlowLifecycle(): Unit = runBlockingWithTimeout {
+    fun testWebSocketFlowLifecycle(): Unit = runBlockingWithTimeout(10.seconds) {
         val expectedLogs = listOf(
             "Opening Websocket Connection",
             "onOpen: sending connection init",
@@ -170,8 +171,8 @@ internal class EventsWebSocketClientTests {
             "emit ${WebSocketMessage.Closed::class.java}"
         )
 
-        turbineScope {
-            webSocketClient.subscribe(defaultChannel).test {
+        turbineScope(timeout = 10.seconds) {
+            webSocketClient.subscribe(defaultChannel).test(timeout = 10.seconds) {
                 // Wait for subscription to return success
                 webSocketLogCapture.messages.filter {
                     it == "onMessage: processed ${WebSocketMessage.Received.Subscription.SubscribeSuccess::class.java}"
@@ -186,7 +187,7 @@ internal class EventsWebSocketClientTests {
             // Wait for websocket to unsubscribe
             webSocketLogCapture.messages.filter {
                 it == "onMessage: processed ${WebSocketMessage.Received.Subscription.UnsubscribeSuccess::class.java}"
-            }.testIn(backgroundScope).apply {
+            }.testIn(backgroundScope, timeout = 10.seconds).apply {
                 awaitItem()
                 cancelAndIgnoreRemainingEvents()
             }
@@ -196,7 +197,7 @@ internal class EventsWebSocketClientTests {
             // Wait for channel to unsubscribe
             webSocketLogCapture.messages.filter {
                 it == "emit ${WebSocketMessage.Closed::class.java}"
-            }.testIn(backgroundScope).apply {
+            }.testIn(backgroundScope, timeout = 10.seconds).apply {
                 awaitItem()
                 cancelAndIgnoreRemainingEvents()
             }

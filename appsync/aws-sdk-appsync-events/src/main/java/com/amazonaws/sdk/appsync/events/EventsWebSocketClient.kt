@@ -23,6 +23,7 @@ import com.amazonaws.sdk.appsync.events.data.UserClosedConnectionException
 import com.amazonaws.sdk.appsync.events.data.WebSocketMessage
 import com.amazonaws.sdk.appsync.events.data.toEventsException
 import com.amazonaws.sdk.appsync.events.utils.JsonUtils
+import kotlinx.coroutines.CoroutineDispatcher
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -45,7 +46,8 @@ class EventsWebSocketClient internal constructor(
     val subscribeAuthorizer: AppSyncAuthorizer,
     val publishAuthorizer: AppSyncAuthorizer,
     val options: Events.Options.WebSocket,
-    endpoints: EventsEndpoints
+    endpoints: EventsEndpoints,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
 
     private val okHttpClient = OkHttpClient.Builder().apply {
@@ -84,7 +86,7 @@ class EventsWebSocketClient internal constructor(
                     subscriptionHolder.id,
                     authorizer
                 )
-            }.flowOn(Dispatchers.IO) // io used for authorizers to pull headers asynchronously
+            }.flowOn(ioDispatcher) // io used for authorizers to pull headers asynchronously
             .onCompletion {
                 // only unsubscribe if already subscribed and websocket is still open
                 val currentWebSocket = subscriptionHolder.webSocket
@@ -148,7 +150,7 @@ class EventsWebSocketClient internal constructor(
         channelName: String,
         events: List<JsonElement>,
         authorizer: AppSyncAuthorizer
-    ): WebSocketMessage.Received.PublishSuccess = withContext(Dispatchers.IO) {
+    ): WebSocketMessage.Received.PublishSuccess = withContext(ioDispatcher) {
         val publishId = UUID.randomUUID().toString()
         val publishMessage = WebSocketMessage.Send.Publish(
             id = publishId,
