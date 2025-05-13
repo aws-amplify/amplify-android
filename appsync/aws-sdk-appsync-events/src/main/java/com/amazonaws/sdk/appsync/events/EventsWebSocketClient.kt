@@ -50,6 +50,10 @@ class EventsWebSocketClient internal constructor(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
 
+    companion object {
+        const val TAG = "EventsWebSocketClient"
+    }
+
     private val okHttpClient = OkHttpClient.Builder().apply {
         options.okHttpConfigurationProvider?.applyConfiguration(this)
     }.build()
@@ -63,6 +67,8 @@ class EventsWebSocketClient internal constructor(
         json,
         options.loggerProvider
     )
+
+    private val logger = options.loggerProvider?.getLogger(TAG)
 
     /**
      * Subscribe to a channel.
@@ -80,17 +86,26 @@ class EventsWebSocketClient internal constructor(
                 val newWebSocket = eventsWebSocketProvider.getConnectedWebSocket()
                 subscriptionHolder.webSocket = newWebSocket
                 // + send subscription. Returns true if successfully subscribed
-                subscriptionHolder.isSubscribed = initiateSubscription(
+                val isSubscribed = initiateSubscription(
                     channelName,
                     newWebSocket,
                     subscriptionHolder.id,
                     authorizer
                 )
+
+                subscriptionHolder.subscriptionState = if (isSubscribed) {
+                    logger?.debug("Successfully subscribed to: $channelName")
+                    SubscriptionHolder.SubscriptionState.SUBSCRIBED
+                } else {
+                    SubscriptionHolder.SubscriptionState.CLOSED
+                }
             }.flowOn(ioDispatcher) // io used for authorizers to pull headers asynchronously
             .onCompletion {
                 // only unsubscribe if already subscribed and websocket is still open
                 val currentWebSocket = subscriptionHolder.webSocket
-                if (subscriptionHolder.isSubscribed && currentWebSocket != null) {
+                if (subscriptionHolder.subscriptionState != SubscriptionHolder.SubscriptionState.CLOSED &&
+                    currentWebSocket != null
+                ) {
                     completeSubscription(subscriptionHolder, it)
                 }
                 subscriptionHolder.webSocket = null
@@ -276,10 +291,10 @@ class EventsWebSocketClient internal constructor(
     private fun completeSubscription(subscriptionHolder: SubscriptionHolder, throwable: Throwable?) {
         // only unsubscribe if already subscribed and websocket is still open
         val currentWebSocket = subscriptionHolder.webSocket
-        val isSubscribed = subscriptionHolder.isSubscribed
+        val isSubscriptionClosed = subscriptionHolder.subscriptionState == SubscriptionHolder.SubscriptionState.CLOSED
         val isDisconnected = throwable is ConnectionClosedException || throwable is UserClosedConnectionException
 
-        if (currentWebSocket != null && isSubscribed && !isDisconnected) {
+        if (currentWebSocket != null && !isSubscriptionClosed && !isDisconnected) {
             // Unsubscribe from channel when flow is completed
             try {
                 currentWebSocket.send(
@@ -298,9 +313,15 @@ class EventsWebSocketClient internal constructor(
      */
     internal data class SubscriptionHolder(
         var webSocket: EventsWebSocket? = null,
-        var isSubscribed: Boolean = false
+        var subscriptionState: SubscriptionState = SubscriptionState.PENDING
     ) {
         val id = UUID.randomUUID().toString()
+
+        enum class SubscriptionState {
+            PENDING,
+            SUBSCRIBED,
+            CLOSED
+        }
     }
 
     /**
