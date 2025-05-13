@@ -27,22 +27,27 @@ internal class ConnectionTimeoutTimer(
 
     private var timeoutInMillis: Long = 300_000L
     private var timeoutJob: Job? = null
+    private val lock = Object()
 
     fun resetTimeoutTimer(timeoutInMillis: Long = this.timeoutInMillis) {
-        if (this.timeoutInMillis != timeoutInMillis) {
-            this.timeoutInMillis = timeoutInMillis
-        }
+        synchronized(lock) {
+            if (this.timeoutInMillis != timeoutInMillis) {
+                this.timeoutInMillis = timeoutInMillis
+            }
 
-        timeoutJob?.cancel() // Cancel existing timer if any
-        timeoutJob = scope.launch {
-            delay(timeoutInMillis)
-            // If this code executes, it means no events were received for the duration of timeoutInMillis
-            onTimeout()
+            timeoutJob?.cancel() // Cancel existing timer if any
+            timeoutJob = scope.launch {
+                delay(timeoutInMillis)
+                // If this code executes, it means no events were received for the duration of timeoutInMillis
+                onTimeout()
+            }
         }
     }
 
     fun stop() {
-        timeoutJob?.cancel()
-        timeoutJob = null
+        synchronized(lock) {
+            timeoutJob?.cancel()
+            timeoutJob = null
+        }
     }
 }
