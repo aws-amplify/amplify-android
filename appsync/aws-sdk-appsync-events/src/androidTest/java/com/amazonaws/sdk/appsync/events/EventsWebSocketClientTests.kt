@@ -172,11 +172,11 @@ internal class EventsWebSocketClientTests {
         )
 
         turbineScope(timeout = 10.seconds) {
-            webSocketClient.subscribe(defaultChannel).test(timeout = 10.seconds) {
+            webSocketClient.subscribe(defaultChannel).test(timeout = 5.seconds) {
                 // Wait for subscription to return success
                 webSocketLogCapture.messages.filter {
                     it == "onMessage: processed ${WebSocketMessage.Received.Subscription.SubscribeSuccess::class.java}"
-                }.testIn(backgroundScope, timeout = 10.seconds).apply {
+                }.testIn(backgroundScope, timeout = 5.seconds).apply {
                     awaitItem()
                     cancelAndIgnoreRemainingEvents()
                 }
@@ -187,7 +187,7 @@ internal class EventsWebSocketClientTests {
             // Wait for websocket to unsubscribe
             webSocketLogCapture.messages.filter {
                 it == "onMessage: processed ${WebSocketMessage.Received.Subscription.UnsubscribeSuccess::class.java}"
-            }.testIn(backgroundScope, timeout = 10.seconds).apply {
+            }.testIn(backgroundScope, timeout = 5.seconds).apply {
                 awaitItem()
                 cancelAndIgnoreRemainingEvents()
             }
@@ -197,7 +197,7 @@ internal class EventsWebSocketClientTests {
             // Wait for channel to unsubscribe
             webSocketLogCapture.messages.filter {
                 it == "emit ${WebSocketMessage.Closed::class.java}"
-            }.testIn(backgroundScope, timeout = 10.seconds).apply {
+            }.testIn(backgroundScope, timeout = 5.seconds).apply {
                 awaitItem()
                 cancelAndIgnoreRemainingEvents()
             }
