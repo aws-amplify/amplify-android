@@ -23,8 +23,8 @@ import com.amazonaws.sdk.appsync.events.data.UserClosedConnectionException
 import com.amazonaws.sdk.appsync.events.data.WebSocketMessage
 import com.amazonaws.sdk.appsync.events.data.toEventsException
 import com.amazonaws.sdk.appsync.events.utils.JsonUtils
-import kotlinx.coroutines.CoroutineDispatcher
 import java.util.UUID
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
