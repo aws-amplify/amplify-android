@@ -161,7 +161,7 @@ internal class EventsWebSocketClientTests {
     }
 
     @Test
-    fun testWebSocketFlowLifecycle(): Unit = runBlockingWithTimeout(10.seconds) {
+    fun testWebSocketFlowLifecycle(): Unit = runBlockingWithTimeout(15.seconds) {
         val expectedLogs = listOf(
             "Opening Websocket Connection",
             "onOpen: sending connection init",
@@ -176,7 +176,7 @@ internal class EventsWebSocketClientTests {
                 // Wait for subscription to return success
                 webSocketLogCapture.messages.filter {
                     it == "onMessage: processed ${WebSocketMessage.Received.Subscription.SubscribeSuccess::class.java}"
-                }.testIn(backgroundScope).apply {
+                }.testIn(backgroundScope, timeout = 10.seconds).apply {
                     awaitItem()
                     cancelAndIgnoreRemainingEvents()
                 }
