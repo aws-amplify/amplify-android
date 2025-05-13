@@ -50,7 +50,7 @@ class EventsWebSocketClient internal constructor(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
 
-    companion object {
+    internal companion object {
         const val TAG = "EventsWebSocketClient"
     }
 
