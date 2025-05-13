@@ -11,7 +11,7 @@ def module_backends = [
         'aws-predictions'       : 'NONE',
         'core'                  : 'NONE',
         'aws-auth-cognito'      : 'AuthIntegrationTests',
-        'aws-sdk-appsync-events': 'NONE'
+        'appsync/aws-sdk-appsync-events': 'NONE'
 ]
 
 def canaryTests = [
