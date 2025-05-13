@@ -32,6 +32,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import java.util.UUID
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filter
@@ -41,7 +42,6 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.encodeToJsonElement
 import org.junit.After
 import org.junit.Test
-import kotlin.time.Duration.Companion.seconds
 
 internal class EventsWebSocketClientTests {
     private val eventsConfig = getEventsConfig(InstrumentationRegistry.getInstrumentation().targetContext)
