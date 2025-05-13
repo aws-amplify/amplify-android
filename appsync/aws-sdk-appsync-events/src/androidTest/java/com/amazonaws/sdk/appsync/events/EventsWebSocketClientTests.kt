@@ -167,6 +167,7 @@ internal class EventsWebSocketClientTests {
             "onOpen: sending connection init",
             "onMessage: processed ${WebSocketMessage.Received.ConnectionAck::class.java}",
             "onMessage: processed ${WebSocketMessage.Received.Subscription.SubscribeSuccess::class.java}",
+            "Successfully subscribed to: $defaultChannel",
             "onMessage: processed ${WebSocketMessage.Received.Subscription.UnsubscribeSuccess::class.java}",
             "emit ${WebSocketMessage.Closed::class.java}"
         )
@@ -175,7 +176,7 @@ internal class EventsWebSocketClientTests {
             webSocketClient.subscribe(defaultChannel).test(timeout = 5.seconds) {
                 // Wait for subscription to return success
                 webSocketLogCapture.messages.filter {
-                    it == "onMessage: processed ${WebSocketMessage.Received.Subscription.SubscribeSuccess::class.java}"
+                    it == "Successfully subscribed to: $defaultChannel"
                 }.testIn(backgroundScope, timeout = 5.seconds).apply {
                     awaitItem()
                     cancelAndIgnoreRemainingEvents()
@@ -217,8 +218,8 @@ internal class EventsWebSocketClientTests {
                 webSocketClient.subscribe(customChannel).test {
                     // Wait for subscription to return success
                     webSocketLogCapture.messages.filter {
-                        it ==
-                            "onMessage: processed ${WebSocketMessage.Received.Subscription.SubscribeSuccess::class.java}"
+                        it == "Successfully subscribed to: $defaultChannel" ||
+                            it == "Successfully subscribed to: $customChannel"
                     }.testIn(backgroundScope).apply {
                         awaitItem() // subscription 1
                         awaitItem() // subscription 2
@@ -271,7 +272,7 @@ internal class EventsWebSocketClientTests {
             webSocketClient.subscribe(defaultChannel).test {
                 // Wait for subscription to return success
                 webSocketLogCapture.messages.filter {
-                    it == "onMessage: processed ${WebSocketMessage.Received.Subscription.SubscribeSuccess::class.java}"
+                    it == "Successfully subscribed to: $defaultChannel"
                 }.testIn(backgroundScope).apply {
                     awaitItem()
                     cancelAndIgnoreRemainingEvents()
@@ -304,7 +305,7 @@ internal class EventsWebSocketClientTests {
             webSocketClient.subscribe(defaultChannel).test {
                 // Wait for subscription to return success
                 webSocketLogCapture.messages.filter {
-                    it == "onMessage: processed ${WebSocketMessage.Received.Subscription.SubscribeSuccess::class.java}"
+                    it == "Successfully subscribed to: $defaultChannel"
                 }.testIn(backgroundScope).apply {
                     awaitItem()
                     cancelAndIgnoreRemainingEvents()

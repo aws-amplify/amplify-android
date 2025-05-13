@@ -19,7 +19,6 @@ import app.cash.turbine.turbineScope
 import com.amazonaws.sdk.appsync.events.data.BadRequestException
 import com.amazonaws.sdk.appsync.events.data.ConnectionClosedException
 import com.amazonaws.sdk.appsync.events.data.PublishResult
-import com.amazonaws.sdk.appsync.events.data.WebSocketMessage
 import com.amazonaws.sdk.appsync.events.mocks.EventsLibraryLogCapture
 import com.amazonaws.sdk.appsync.events.mocks.TestAuthorizer
 import io.kotest.assertions.fail
@@ -187,7 +186,7 @@ internal class EventsWebSocketClientTest {
 
         client.subscribe(channel).test {
             webSocketLogCapture.messages.filter {
-                it == "emit ${WebSocketMessage.Received.Subscription.SubscribeSuccess::class.java}"
+                it == "Successfully subscribed to: $channel"
             }.testIn(backgroundScope).apply {
                 awaitItem()
                 cancelAndIgnoreRemainingEvents()
@@ -229,7 +228,7 @@ internal class EventsWebSocketClientTest {
 
         client.subscribe(channel, customAuthorizer).test {
             webSocketLogCapture.messages.filter {
-                it == "emit ${WebSocketMessage.Received.Subscription.SubscribeSuccess::class.java}"
+                it == "Successfully subscribed to: $channel"
             }.testIn(backgroundScope).apply {
                 awaitItem()
                 cancelAndIgnoreRemainingEvents()
@@ -295,7 +294,7 @@ internal class EventsWebSocketClientTest {
 
         client.subscribe(channel).test {
             webSocketLogCapture.messages.filter {
-                it == "emit ${WebSocketMessage.Received.Subscription.SubscribeSuccess::class.java}"
+                it == "Successfully subscribed to: $channel"
             }.testIn(backgroundScope).apply {
                 awaitItem()
                 cancelAndIgnoreRemainingEvents()
@@ -319,7 +318,7 @@ internal class EventsWebSocketClientTest {
 
         client.subscribe(channel).test {
             webSocketLogCapture.messages.filter {
-                it == "emit ${WebSocketMessage.Received.Subscription.SubscribeSuccess::class.java}"
+                it == "Successfully subscribed to: $channel"
             }.testIn(backgroundScope).apply {
                 awaitItem()
                 cancelAndIgnoreRemainingEvents()
