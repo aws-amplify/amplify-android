@@ -51,7 +51,7 @@ class EventsWebSocketClient internal constructor(
 ) {
 
     internal companion object {
-        const val TAG = "EventsWebSocketClient"
+        internal const val TAG = "EventsWebSocketClient"
     }
 
     private val okHttpClient = OkHttpClient.Builder().apply {
