@@ -101,13 +101,7 @@ class EventsWebSocketClient internal constructor(
                 }
             }.flowOn(ioDispatcher) // io used for authorizers to pull headers asynchronously
             .onCompletion {
-                // only unsubscribe if already subscribed and websocket is still open
-                val currentWebSocket = subscriptionHolder.webSocket
-                if (subscriptionHolder.subscriptionState != SubscriptionHolder.SubscriptionState.CLOSED &&
-                    currentWebSocket != null
-                ) {
-                    completeSubscription(subscriptionHolder, it)
-                }
+                completeSubscription(subscriptionHolder, it)
                 subscriptionHolder.webSocket = null
             }
             .catchUserClosedException() // allow emitting all exceptions but user initiated close
@@ -297,11 +291,7 @@ class EventsWebSocketClient internal constructor(
         if (currentWebSocket != null && !isSubscriptionClosed && !isDisconnected) {
             // Unsubscribe from channel when flow is completed
             try {
-                currentWebSocket.send(
-                    WebSocketMessage.Send.Subscription.Unsubscribe(
-                        subscriptionHolder.id
-                    )
-                )
+                currentWebSocket.send(WebSocketMessage.Send.Subscription.Unsubscribe(subscriptionHolder.id))
             } catch (e: Exception) {
                 // do nothing with a failed unsubscribe post
             }
