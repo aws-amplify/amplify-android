@@ -17,8 +17,6 @@ package com.amplifyframework.auth.cognito.asf
 
 import android.content.Context
 import android.provider.Settings
-import android.view.Display
-import android.view.WindowManager
 import java.util.Locale
 import java.util.TimeZone
 import java.util.concurrent.TimeUnit
@@ -77,24 +75,19 @@ internal class DeviceDataCollector(private val deviceId: String) : DataCollector
             return (if (hours < 0) "-" else "") + String.format(Locale.US, "%02d:%02d", abs(hours), minutes)
         }
 
-    private fun getDisplay(context: Context): Display {
-        val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        return windowManager.defaultDisplay
-    }
-
     /**
      * {@inheritDoc}
      */
     override fun collect(context: Context): Map<String, String?> {
-        val display = getDisplay(context)
+        val displayMetrics = context.resources.displayMetrics
         return mapOf(
             TIMEZONE to timezoneOffset,
             PLATFORM_KEY to PLATFORM_VALUE,
             THIRD_PARTY_DEVICE_AGENT to thirdPartyDeviceAgent,
             DEVICE_AGENT to deviceId,
             DEVICE_LANGUAGE to language,
-            DEVICE_HEIGHT to display.height.toString(),
-            DEVICE_WIDTH to display.width.toString()
+            DEVICE_HEIGHT to displayMetrics.heightPixels.toString(),
+            DEVICE_WIDTH to displayMetrics.widthPixels.toString()
         )
     }
 }
