@@ -24,7 +24,7 @@ platform :android do |options|
           release_title: 'Amplify Android',
           component_name: "AmplifyAndroid",
           changelog_path: "#{project_root}/CHANGELOG.md",
-          changelog_ignore_scopes: ["Apollo", "apollo"]
+          changelog_ignore_scopes: ["Apollo", "apollo", "Events", "events"]
         },
         {
           release_tag_prefix: 'release_apollo_v',
