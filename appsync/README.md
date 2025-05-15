@@ -4,7 +4,7 @@
 
 # AWS AppSync Events for Android
 
-These libraries allows you to connect [AWS AppSync Events](https://docs.aws.amazon.com/appsync/latest/eventapi/event-api-welcome.html).
+These libraries allow you to connect to [AWS AppSync Events](https://docs.aws.amazon.com/appsync/latest/eventapi/event-api-welcome.html).
 AWS AppSync Events lets you create secure and performant serverless WebSocket APIs that can broadcast real-time event data to millions of subscribers, without you having to manage connections or resource scaling. With this feature, you can build multi-user features such as a collaborative document editors, chat apps, and live polling systems.
 
 Learn more about AWS AppSync Events by visiting the [Developer Guide](https://docs.aws.amazon.com/appsync/latest/eventapi/event-api-welcome.html).
