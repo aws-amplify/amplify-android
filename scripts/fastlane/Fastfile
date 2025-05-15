@@ -42,7 +42,7 @@ platform :android do |options|
           release_title: 'AWS AppSync Events for Android',
           component_name: "AppSyncEvents",
           changelog_path: "#{project_root}/appsync/CHANGELOG.md",
-          changelog_include_scopes: ["AppSync", "appsync", "Appsync", "Events", "events"]
+          changelog_include_scopes: ["Events", "events"]
         }
       ]
     }
