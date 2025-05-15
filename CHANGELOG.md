@@ -1,3 +1,12 @@
+## [Release 2.27.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.27.4)
+
+### Bug Fixes
+- **auth:** Fix passkey usage on Android < 13 devices ([#3039](https://github.com/aws-amplify/amplify-android/issues/3039))
+- **auth:** Update exception handling for devices that don't support passkeys ([#3044](https://github.com/aws-amplify/amplify-android/issues/3044))
+- **auth:** Remove WindowManager usage from DeviceDataCollector ([#3061](https://github.com/aws-amplify/amplify-android/issues/3061))
+
+[See all changes between 2.27.3 and 2.27.4](https://github.com/aws-amplify/amplify-android/compare/release_v2.27.3...release_v2.27.4)
+
 ## [Release 2.27.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.27.3)
 
 ### Bug Fixes
