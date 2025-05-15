@@ -24,8 +24,8 @@ import com.amazonaws.sdk.appsync.events.utils.Credentials
 import com.amazonaws.sdk.appsync.events.utils.getEventsConfig
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
-import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.configuration.AmplifyOutputs
+import com.amplifyframework.kotlin.core.Amplify
 import com.amplifyframework.testutils.coroutines.runBlockingWithTimeout
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
@@ -76,7 +76,7 @@ internal class EventsWebSocketClientAmplifyUserPoolTests {
     @Test
     fun testPublishWithAuthenticatedUserPool(): Unit = runBlockingWithTimeout {
         val credentials = Credentials.load(InstrumentationRegistry.getInstrumentation().targetContext)
-        com.amplifyframework.kotlin.core.Amplify.Auth.signIn(credentials.first, credentials.second)
+        Amplify.Auth.signIn(credentials.first, credentials.second)
 
         // Publish the message
         val webSocketClient = events.createWebSocketClient(userPoolAuthorizer, userPoolAuthorizer, userPoolAuthorizer)

@@ -32,8 +32,10 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import java.util.UUID
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -159,8 +161,8 @@ internal class EventsRestClientTests {
     }
 
     private suspend fun testSinglePublish(jsonItem: JsonElement) {
-        turbineScope {
-            webSocketClient.subscribe(defaultChannel).test {
+        turbineScope(timeout = 10.seconds) {
+            webSocketClient.subscribe(defaultChannel).test(timeout = 10.seconds) {
                 // Wait for subscription to return success
                 webSocketLogCapture.messages.filter {
                     it == "onMessage: processed ${WebSocketMessage.Received.Subscription.SubscribeSuccess::class.java}"
@@ -168,6 +170,10 @@ internal class EventsRestClientTests {
                     awaitItem()
                     cancelAndIgnoreRemainingEvents()
                 }
+
+                // AppSync caching means that we may have received a subscribe success, but there still may be a
+                // window right after where we don't receive events
+                delay(2.seconds)
 
                 // Publish the REST message
                 val restClient = events.createRestClient(publishAuthorizer = apiKeyAuthorizer)
@@ -193,8 +199,8 @@ internal class EventsRestClientTests {
     }
 
     private suspend fun testMultiplePublish(jsonItems: List<JsonElement>) {
-        turbineScope {
-            webSocketClient.subscribe(defaultChannel).test {
+        turbineScope(timeout = 10.seconds) {
+            webSocketClient.subscribe(defaultChannel).test(timeout = 10.seconds) {
                 // Wait for subscription to return success
                 webSocketLogCapture.messages.filter {
                     it == "onMessage: processed ${WebSocketMessage.Received.Subscription.SubscribeSuccess::class.java}"
@@ -202,6 +208,10 @@ internal class EventsRestClientTests {
                     awaitItem()
                     cancelAndIgnoreRemainingEvents()
                 }
+
+                // AppSync caching means that we may have received a subscribe success, but there still may be a
+                // window right after where we don't receive events
+                delay(2.seconds)
 
                 // Publish the REST message
                 val restClient = events.createRestClient(publishAuthorizer = apiKeyAuthorizer)

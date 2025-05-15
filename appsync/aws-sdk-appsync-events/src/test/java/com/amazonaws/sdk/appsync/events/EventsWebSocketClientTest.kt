@@ -332,7 +332,7 @@ internal class EventsWebSocketClientTest {
         every { constructedWith<OkHttpClient.Builder>().build() } returns mockk<OkHttpClient>(relaxed = true) {
             every { newWebSocket(any(), capture(websocketListenerSlot)) } answers {
                 val ack = """ { "type": "connection_ack", "connectionTimeoutMs": 10000 } """
-                backgroundScope.launch {
+                backgroundScope.launch(testDispatcher) {
                     delay(1)
                     websocketListenerSlot.captured.onMessage(websocket, ack)
                 }

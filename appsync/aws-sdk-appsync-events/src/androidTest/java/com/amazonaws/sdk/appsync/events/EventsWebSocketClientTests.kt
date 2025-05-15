@@ -35,6 +35,7 @@ import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -173,7 +174,7 @@ internal class EventsWebSocketClientTests {
         )
 
         turbineScope(timeout = 10.seconds) {
-            webSocketClient.subscribe(defaultChannel).test(timeout = 5.seconds) {
+            webSocketClient.subscribe(defaultChannel).test(timeout = 10.seconds) {
                 // Wait for subscription to return success
                 webSocketLogCapture.messages.filter {
                     it == "Successfully subscribed to: $defaultChannel"
@@ -184,6 +185,10 @@ internal class EventsWebSocketClientTests {
                 // Cleanup
                 cancelAndIgnoreRemainingEvents()
             }
+
+            // AppSync caching means that we may have received a subscribe success, but there still may be a
+            // window right after where we don't receive events
+            delay(2.seconds)
 
             // Wait for websocket to unsubscribe
             webSocketLogCapture.messages.filter {
@@ -225,6 +230,10 @@ internal class EventsWebSocketClientTests {
                         awaitItem() // subscription 2
                         cancelAndIgnoreRemainingEvents()
                     }
+
+                    // AppSync caching means that we may have received a subscribe success, but there still may be a
+                    // window right after where we don't receive events
+                    delay(2.seconds)
 
                     // Publish the messages
                     webSocketClient.publish(defaultChannel, expectedDefaultMessage)
@@ -268,8 +277,8 @@ internal class EventsWebSocketClientTests {
     }
 
     private suspend fun testSinglePublish(jsonItem: JsonElement) {
-        turbineScope {
-            webSocketClient.subscribe(defaultChannel).test {
+        turbineScope(timeout = 10.seconds) {
+            webSocketClient.subscribe(defaultChannel).test(timeout = 10.seconds) {
                 // Wait for subscription to return success
                 webSocketLogCapture.messages.filter {
                     it == "Successfully subscribed to: $defaultChannel"
@@ -277,6 +286,10 @@ internal class EventsWebSocketClientTests {
                     awaitItem()
                     cancelAndIgnoreRemainingEvents()
                 }
+
+                // AppSync caching means that we may have received a subscribe success, but there still may be a
+                // window right after where we don't receive events
+                delay(2.seconds)
 
                 // Publish the message
                 val result = webSocketClient.publish(defaultChannel, jsonItem)
@@ -301,8 +314,8 @@ internal class EventsWebSocketClientTests {
     }
 
     private suspend fun testMultiplePublish(jsonItems: List<JsonElement>) {
-        turbineScope {
-            webSocketClient.subscribe(defaultChannel).test {
+        turbineScope(timeout = 10.seconds) {
+            webSocketClient.subscribe(defaultChannel).test(timeout = 10.seconds) {
                 // Wait for subscription to return success
                 webSocketLogCapture.messages.filter {
                     it == "Successfully subscribed to: $defaultChannel"
@@ -310,6 +323,10 @@ internal class EventsWebSocketClientTests {
                     awaitItem()
                     cancelAndIgnoreRemainingEvents()
                 }
+
+                // AppSync caching means that we may have received a subscribe success, but there still may be a
+                // window right after where we don't receive events
+                delay(2.seconds)
 
                 // Publish the message
                 val result = webSocketClient.publish(defaultChannel, jsonItems)
