@@ -2,9 +2,12 @@
 project_arn=$DEVICEFARM_PROJECT_ARN
 max_devices=$NUMBER_OF_DEVICES_TO_TEST
 test_spec_arn=$DEVICEFARM_TEST_SPEC_ARN
-module_name=$1
+module_path=$1
+# Extract everything after the last "/" if it exists, otherwise use the full value
+module_name=${1##*/}
+
 file_name="$module_name-debug-androidTest.apk"
-full_path="$module_name/build/outputs/apk/androidTest/debug/$file_name"
+full_path="$module_path/build/outputs/apk/androidTest/debug/$file_name"
 
 if [[ -z "${project_arn}" ]]; then
   echo "DEVICEFARM_PROJECT_ARN environment variable not set."

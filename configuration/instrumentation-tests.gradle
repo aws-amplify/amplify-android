@@ -10,7 +10,12 @@ def module_backends = [
         'aws-analytics-pinpoint': 'NONE',
         'aws-predictions'       : 'NONE',
         'core'                  : 'NONE',
-        'aws-auth-cognito'      : 'AuthIntegrationTests'
+        'aws-auth-cognito'      : 'AuthIntegrationTests',
+        'aws-sdk-appsync-events': 'NONE'
+]
+
+def module_subpaths = [
+        'aws-sdk-appsync-events': 'appsync/'
 ]
 
 def canaryTests = [
@@ -26,11 +31,13 @@ def canaryTests = [
 subprojects {
     afterEvaluate { project ->
         if (module_backends.containsKey(project.name)) {
+            def moduleWithSubPath = module_subpaths.get(project.name) ?
+                    module_subpaths.get(project.name) + project.name : project.name
             task runTestsInDeviceFarm {
                 doLast {
                     exec {
                         commandLine("$rootDir.path/scripts/run_test_in_devicefarm.sh")
-                        args([project.name])
+                        args([moduleWithSubPath])
                     }
                 }
             }
