@@ -12,7 +12,7 @@ Learn more about AWS AppSync Events by visiting the [Developer Guide](https://do
 There are two libraries available:
 
 - `aws-sdk-appsync-events`: This is a standalone library that allows developers to connect to AWS AppSync Events. It does not depend on Amplify, and instead leaves it to the application developer to supply tokens or signatures when using Owner or IAM-based authorization. This is the recommended library if your application does not already use Amplify.
-- `ws-sdk-appsync-amplify`: This library depends on `Amplify Android`, and contains some glue classes to use Amplify to implement the authorizers for `aws-sdk-appsync-events`. This additional library is recommended if your application is already using Amplify, and you want to authorize calls With AWS Cognito User Pool tokens or IAM.
+- `aws-sdk-appsync-amplify`: This library depends on `Amplify Android`, and contains some glue classes to use Amplify to implement the authorizers for `aws-sdk-appsync-events`. This additional library is recommended if your application is already using Amplify, and you want to authorize calls with AWS Cognito User Pool tokens or IAM.
 
 ## Installation
 
