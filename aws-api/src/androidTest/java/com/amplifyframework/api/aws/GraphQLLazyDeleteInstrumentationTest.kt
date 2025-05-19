@@ -31,8 +31,6 @@ import com.amplifyframework.datastore.generated.model.HasOneChild
 import com.amplifyframework.datastore.generated.model.Parent
 import com.amplifyframework.datastore.generated.model.ParentPath
 import com.amplifyframework.kotlin.core.Amplify
-import com.amplifyframework.logging.AndroidLoggingPlugin
-import com.amplifyframework.logging.LogLevel
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
@@ -47,7 +45,6 @@ class GraphQLLazyDeleteInstrumentationTest {
         fun setUp() {
             val context = ApplicationProvider.getApplicationContext<Context>()
             val config = AmplifyConfiguration.fromConfigFile(context, R.raw.amplifyconfigurationlazy)
-            Amplify.addPlugin(AndroidLoggingPlugin(LogLevel.VERBOSE))
             Amplify.addPlugin(AWSApiPlugin())
             Amplify.configure(config, context)
         }
