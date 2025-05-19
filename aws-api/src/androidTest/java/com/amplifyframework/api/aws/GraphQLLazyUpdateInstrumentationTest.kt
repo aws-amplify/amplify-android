@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.amplifyframework.api.aws.extensions.fetchAllPages
 import com.amplifyframework.api.aws.test.R
 import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.core.AmplifyConfiguration
@@ -31,6 +32,7 @@ import com.amplifyframework.datastore.generated.model.HasOneChild
 import com.amplifyframework.datastore.generated.model.Parent
 import com.amplifyframework.datastore.generated.model.ParentPath
 import com.amplifyframework.kotlin.core.Amplify
+import com.amplifyframework.testutils.Repeat
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -51,6 +53,7 @@ class GraphQLLazyUpdateInstrumentationTest {
         }
     }
 
+    @Repeat(100)
     @Test
     fun update_with_no_includes() = runTest {
         // GIVEN
@@ -78,8 +81,8 @@ class GraphQLLazyUpdateInstrumentationTest {
             assertEquals(hasOneChild2.id, it.id)
             assertEquals(hasOneChild2.content, it.content)
         } ?: fail("Response child was null or not a LazyModelReference")
-        (updatedParent.children as? LazyModelList)?.fetchPage()?.let {
-            assertEquals(1, it.items.size)
+        (updatedParent.children as? LazyModelList)?.fetchAllPages()?.let {
+            assertEquals(1, it.size)
         } ?: fail("Response child was null or not a LazyModelList")
 
         // CLEANUP

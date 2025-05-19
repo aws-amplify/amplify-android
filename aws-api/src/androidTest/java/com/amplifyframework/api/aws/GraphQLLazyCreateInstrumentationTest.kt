@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.amplifyframework.api.aws.extensions.fetchAllPages
 import com.amplifyframework.api.aws.test.R
 import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.core.AmplifyConfiguration
@@ -24,7 +25,6 @@ import com.amplifyframework.core.model.LazyModelList
 import com.amplifyframework.core.model.LazyModelReference
 import com.amplifyframework.core.model.LoadedModelList
 import com.amplifyframework.core.model.LoadedModelReference
-import com.amplifyframework.core.model.PaginationToken
 import com.amplifyframework.core.model.includes
 import com.amplifyframework.datastore.generated.model.HasManyChild
 import com.amplifyframework.datastore.generated.model.HasOneChild
@@ -72,15 +72,7 @@ class GraphQLLazyCreateInstrumentationTest {
         } ?: fail("Response child was null or not a LazyModelReference")
 
         val children = responseParent.children as LazyModelList
-        var children1HasNextPage = true
-        var children1NextToken: PaginationToken? = null
-        var hasManyChildren = mutableListOf<HasManyChild>()
-        while (children1HasNextPage) {
-            val page = children.fetchPage(children1NextToken)
-            children1HasNextPage = page.hasNextPage
-            children1NextToken = page.nextToken
-            hasManyChildren.addAll(page.items)
-        }
+        val hasManyChildren = children.fetchAllPages()
         assertEquals(1, hasManyChildren.size)
 
         // CLEANUP
