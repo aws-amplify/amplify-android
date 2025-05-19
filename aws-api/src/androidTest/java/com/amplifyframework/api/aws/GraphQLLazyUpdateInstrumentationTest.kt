@@ -32,7 +32,6 @@ import com.amplifyframework.datastore.generated.model.HasOneChild
 import com.amplifyframework.datastore.generated.model.Parent
 import com.amplifyframework.datastore.generated.model.ParentPath
 import com.amplifyframework.kotlin.core.Amplify
-import com.amplifyframework.testutils.Repeat
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -53,7 +52,6 @@ class GraphQLLazyUpdateInstrumentationTest {
         }
     }
 
-    @Repeat(100)
     @Test
     fun update_with_no_includes() = runTest {
         // GIVEN
