@@ -23,8 +23,8 @@ import com.amazonaws.sdk.appsync.events.data.UserClosedConnectionException
 import com.amazonaws.sdk.appsync.events.data.WebSocketMessage
 import com.amazonaws.sdk.appsync.events.data.toEventsException
 import com.amazonaws.sdk.appsync.events.utils.JsonUtils
-import kotlinx.coroutines.CompletableDeferred
 import java.util.UUID
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -280,11 +280,10 @@ class EventsWebSocketClient internal constructor(
         webSocket: EventsWebSocket,
         subscriptionId: String,
         onListening: () -> Unit
-    ): WebSocketMessage =
-        webSocket.events
-            .onStart { onListening.invoke() }
-            .onCompletion { onListening.invoke() } // just in case. No impact of calling onListening multiple times
-            .first {
+    ): WebSocketMessage = webSocket.events
+        .onStart { onListening.invoke() }
+        .onCompletion { onListening.invoke() } // just in case. No impact of calling onListening multiple times
+        .first {
             when {
                 it is WebSocketMessage.Received.Subscription && it.id == subscriptionId -> true
                 it is WebSocketMessage.ErrorContainer && it.id == subscriptionId -> true
@@ -297,11 +296,10 @@ class EventsWebSocketClient internal constructor(
         webSocket: EventsWebSocket,
         publishId: String,
         onListening: () -> Unit
-    ): WebSocketMessage =
-        webSocket.events
-            .onStart { onListening.invoke() }
-            .onCompletion { onListening.invoke() } // just in case. No impact of calling onListening multiple times
-            .first {
+    ): WebSocketMessage = webSocket.events
+        .onStart { onListening.invoke() }
+        .onCompletion { onListening.invoke() } // just in case. No impact of calling onListening multiple times
+        .first {
             when {
                 it is WebSocketMessage.Received.PublishSuccess && it.id == publishId -> true
                 it is WebSocketMessage.ErrorContainer && it.id == publishId -> true
