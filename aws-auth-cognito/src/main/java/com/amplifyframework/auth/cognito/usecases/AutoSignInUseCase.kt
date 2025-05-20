@@ -33,6 +33,7 @@ import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.transformWhile
 
@@ -88,7 +89,7 @@ internal class AutoSignInUseCase(
                 val event = AuthenticationEvent(AuthenticationEvent.EventType.SignInRequested(signInData))
                 stateMachine.send(event)
             }
-            .transformWhile { authState ->
+            .mapNotNull { authState ->
                 val authNState = authState.authNState
                 val authZState = authState.authZState
                 when {
@@ -97,7 +98,7 @@ internal class AutoSignInUseCase(
                         if (signInState is SignInState.Error) {
                             throw CognitoAuthExceptionConverter.lookup(signInState.exception, "Sign in failed.")
                         }
-                        true
+                        null
                     }
                     authNState is AuthenticationState.SignedIn &&
                         authZState is AuthorizationState.SessionEstablished -> {
@@ -114,11 +115,10 @@ internal class AutoSignInUseCase(
                                 null
                             )
                         )
-                        emit(authSignInResult)
                         hubEmitter.sendHubEvent(AuthChannelEventName.SIGNED_IN.toString())
-                        false
+                        authSignInResult
                     }
-                    else -> true
+                    else -> null
                 }
             }.first()
         return result
