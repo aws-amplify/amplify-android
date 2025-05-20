@@ -107,12 +107,23 @@ internal class EventsWebSocket(
     suspend fun disconnect(flushEvents: Boolean) = withContext(Dispatchers.IO) {
         if (isClosed) return@withContext
         disconnectReason = WebSocketDisconnectReason.UserInitiated
+        println("disconnecting")
         val deferredClosedResponse = async { getClosedResponse() }
+        println("deferred response set up")
         when (flushEvents) {
-            true -> webSocket.close(NORMAL_CLOSE_CODE, "User initiated disconnect")
+            true -> {
+                println("live code close called")
+                webSocket.close(NORMAL_CLOSE_CODE, "User initiated disconnect")
+            }
+
             false -> webSocket.cancel()
         }
-        deferredClosedResponse.await()
+        println("Awaiting deferred")
+        coroutineScope {
+            println("Calling await active ${deferredClosedResponse.isActive} and ${deferredClosedResponse.isCompleted}")
+            deferredClosedResponse.await()
+        }
+        println("Deferred completed")
     }
 
     override fun onOpen(webSocket: WebSocket, response: Response) {
@@ -159,6 +170,7 @@ internal class EventsWebSocket(
 
     private fun handleClosed() {
         connectionTimeoutTimer.stop()
+        println("emit closed")
         emitEvent(WebSocketMessage.Closed(reason = disconnectReason ?: WebSocketDisconnectReason.Service()))
         isClosed = true
     }
@@ -209,7 +221,8 @@ internal class EventsWebSocket(
 
     private fun emitEvent(event: WebSocketMessage) {
         logger?.debug { "emit ${event::class.java}" }
-        _events.tryEmit(event)
+        val success = _events.tryEmit(event)
+        println("try emit $success, for ${event::class.java}")
     }
 
     companion object {
@@ -240,10 +253,19 @@ internal class EventsWebSocket(
         }
     }
 
-    private suspend fun getClosedResponse(): WebSocketMessage = events.first {
-        when (it) {
-            is WebSocketMessage.Closed -> true
-            else -> false
+    private suspend fun getClosedResponse(): WebSocketMessage
+    {
+        println("calling events.first")
+        return events.first {
+            println("Check close response $it")
+            when (it) {
+                is WebSocketMessage.Closed -> {
+                    println("getClosed completing")
+                    true
+                }
+
+                else -> false
+            }
         }
     }
 }

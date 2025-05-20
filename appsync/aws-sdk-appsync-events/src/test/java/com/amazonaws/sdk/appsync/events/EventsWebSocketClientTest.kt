@@ -26,6 +26,7 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.mockk.CapturingSlot
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkConstructor
@@ -49,25 +50,36 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 internal class EventsWebSocketClientTest {
-    private val webSocketLogCapture = EventsLibraryLogCapture()
-    private val eventsEndpoints = EventsEndpoints(
-        "https://11111111111111111111111111.appsync-api.us-east-1.amazonaws.com/event"
-    )
+
+    @JvmField
+    @Rule
+    var repeatRule: RepeatRule = RepeatRule()
+
+    private lateinit var webSocketLogCapture: EventsLibraryLogCapture
+    private lateinit var eventsEndpoints: EventsEndpoints
 
     private val connectAuthorizer = TestAuthorizer()
     private val subscribeAuthorizer = TestAuthorizer()
     private val publishAuthorizer = TestAuthorizer()
-    private val websocket = mockk<WebSocket>(relaxed = true)
-    private val websocketListenerSlot = slot<WebSocketListener>()
-    private val options = Events.Options.WebSocket(
-        loggerProvider = { _ -> webSocketLogCapture }
-    )
+    private lateinit var websocket: WebSocket
+    private lateinit var websocketListenerSlot: CapturingSlot<WebSocketListener>
+    private lateinit var options: Events.Options.WebSocket
 
     @Before
     fun setUp() {
+        webSocketLogCapture = EventsLibraryLogCapture()
+        eventsEndpoints = EventsEndpoints(
+            "https://11111111111111111111111111.appsync-api.us-east-1.amazonaws.com/event"
+        )
+        websocket = mockk<WebSocket>(relaxed = true)
+        websocketListenerSlot = slot<WebSocketListener>()
+        options = Events.Options.WebSocket(
+            loggerProvider = { _ -> webSocketLogCapture }
+        )
         mockkConstructor(OkHttpClient.Builder::class)
     }
 
@@ -279,14 +291,19 @@ internal class EventsWebSocketClientTest {
         }
     }
 
+    @Repeat(1000)
     @Test
     fun `disconnect with flush`() = runTest {
         val client = createClient(StandardTestDispatcher(testScheduler))
         val channel = "default/channel"
-        setupSendResult { _, id -> subscribeSuccessResult(id) }
+        setupSendResult { _, id ->
+            println("SuccessResult")
+            subscribeSuccessResult(id)
+        }
         every { websocket.close(any(), any()) } answers {
-            launch {
+            backgroundScope.launch {
                 delay(1)
+                println("onClosed being triggered")
                 websocketListenerSlot.captured.onClosed(websocket, 1000, "User initiated disconnect")
             }
             true
@@ -296,11 +313,16 @@ internal class EventsWebSocketClientTest {
             webSocketLogCapture.messages.filter {
                 it == "Successfully subscribed to: $channel"
             }.testIn(backgroundScope).apply {
+                println("Awaiting Item")
                 awaitItem()
+                println("Cancel and Ignore Remaining")
                 cancelAndIgnoreRemainingEvents()
             }
+            println("Start disconnect")
             client.disconnect(true)
+            println("End disconnect")
             awaitComplete()
+            println("Await completed finished")
         }
     }
 
@@ -312,6 +334,7 @@ internal class EventsWebSocketClientTest {
         every { websocket.cancel() } answers {
             launch {
                 delay(1)
+                println("on Falure being triggered")
                 websocketListenerSlot.captured.onFailure(websocket, Throwable("Cancelled"), null)
             }
         }
@@ -320,11 +343,16 @@ internal class EventsWebSocketClientTest {
             webSocketLogCapture.messages.filter {
                 it == "Successfully subscribed to: $channel"
             }.testIn(backgroundScope).apply {
+                println("Awaiting Item")
                 awaitItem()
+                println("Cancel and Ignore Remaining")
                 cancelAndIgnoreRemainingEvents()
             }
+            println("Start disconnect")
             client.disconnect(false)
+            println("End disconnect")
             awaitComplete()
+            println("Await completed finished")
         }
     }
 
@@ -382,11 +410,14 @@ internal class EventsWebSocketClientTest {
             """.trimIndent()
         ).jsonObject
 
+        println("Setup send")
         every { websocket.send(any<String>()) } answers {
             val json = firstArg<String>()
             val sendObject = Json.parseToJsonElement(json).jsonObject
             val compareSendObject = JsonObject(sendObject.filterKeys { it != "id" })
             val id = sendObject["id"]
+            println("Send called with ${compareSendObject["type"]}")
+
             when (compareSendObject["type"]) {
                 JsonPrimitive("subscribe") -> {
                     compareSendObject shouldBe expectedSubscribeData
@@ -431,6 +462,7 @@ internal class EventsWebSocketClientTest {
         """.trimIndent()
         backgroundScope.launch {
             delay(1)
+            println("Subscribe Success onMessage")
             websocketListenerSlot.captured.onMessage(websocket, result)
         }
     }
