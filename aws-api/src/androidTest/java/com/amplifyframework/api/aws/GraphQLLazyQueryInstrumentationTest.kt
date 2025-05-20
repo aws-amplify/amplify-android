@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.amplifyframework.api.aws.extensions.fetchAllPages
 import com.amplifyframework.api.aws.test.R
 import com.amplifyframework.api.graphql.model.ModelQuery
 import com.amplifyframework.core.AmplifyConfiguration
@@ -24,7 +25,6 @@ import com.amplifyframework.core.model.LazyModelList
 import com.amplifyframework.core.model.LazyModelReference
 import com.amplifyframework.core.model.LoadedModelList
 import com.amplifyframework.core.model.LoadedModelReference
-import com.amplifyframework.core.model.PaginationToken
 import com.amplifyframework.core.model.includes
 import com.amplifyframework.datastore.generated.model.HasManyChild
 import com.amplifyframework.datastore.generated.model.HasManyChild.HasManyChildIdentifier
@@ -162,16 +162,8 @@ class GraphQLLazyQueryInstrumentationTest {
         } ?: fail("Response child was null or not a LazyModelReference")
 
         val children = responseParent.children as LazyModelList
-        var children1HasNextPage = true
-        var children1NextToken: PaginationToken? = null
-        var children1Count = 0
-        while (children1HasNextPage) {
-            val page = children.fetchPage(children1NextToken)
-            children1HasNextPage = page.hasNextPage
-            children1NextToken = page.nextToken
-            children1Count += page.items.size
-        }
-        assertEquals(1001, children1Count)
+        val fetchedChildren = children.fetchAllPages()
+        assertEquals(1001, fetchedChildren.size)
     }
 
     @Test
@@ -226,16 +218,8 @@ class GraphQLLazyQueryInstrumentationTest {
         } ?: fail("Response child was null or not a LazyModelReference")
 
         val childrenFromParent1 = parent1.children as LazyModelList
-        var children1HasNextPage = true
-        var children1NextToken: PaginationToken? = null
-        var children1Count = 0
-        while (children1HasNextPage) {
-            val page = childrenFromParent1.fetchPage(children1NextToken)
-            children1HasNextPage = page.hasNextPage
-            children1NextToken = page.nextToken
-            children1Count += page.items.size
-        }
-        assertEquals(1001, children1Count)
+        val fetchedChildrenFromParent1 = childrenFromParent1.fetchAllPages()
+        assertEquals(1001, fetchedChildrenFromParent1.size)
 
         assertEquals(HAS_ONE_CHILD2_ID, parent2.parentChildId)
         assertEquals(PARENT2_ID, parent2.id)
@@ -245,16 +229,8 @@ class GraphQLLazyQueryInstrumentationTest {
         } ?: fail("Response child was null or not a LazyModelReference")
 
         val childrenFromParent2 = parent2.children as LazyModelList
-        var children2HasNextPage = true
-        var children2NextToken: PaginationToken? = null
-        var children2Count = 0
-        while (children2HasNextPage) {
-            val page = childrenFromParent2.fetchPage(children2NextToken)
-            children2HasNextPage = page.hasNextPage
-            children2NextToken = page.nextToken
-            children2Count += page.items.size
-        }
-        assertEquals(0, children2Count)
+        val fetchedChildrenFromParent2 = childrenFromParent2.fetchAllPages()
+        assertEquals(0, fetchedChildrenFromParent2.size)
     }
 
     @Test
@@ -339,7 +315,7 @@ class GraphQLLazyQueryInstrumentationTest {
         } ?: fail("Response child was null or not a LoadedModelReference")
 
         val children = responseParent.children as LazyModelList
-        assertEquals(0, children.fetchPage().items.size)
+        assertEquals(0, children.fetchAllPages().size)
     }
 
     @Test
@@ -611,24 +587,24 @@ class GraphQLLazyQueryInstrumentationTest {
         // Scenario 1: Start loads from lazy reference of blog
         val s1l1Blog = (post.blog as LazyModelReference).fetchModel()!!
         assertEquals(expectedBlogName, s1l1Blog.name)
-        val s1l2Posts = (s1l1Blog.posts as LazyModelList).fetchPage().items
+        val s1l2Posts = (s1l1Blog.posts as LazyModelList).fetchAllPages()
         assertEquals(1, s1l2Posts.size)
         assertEquals(expectedPostTitle, s1l2Posts[0].title)
         val s1l3Blog = (s1l2Posts[0].blog as LazyModelReference).fetchModel()!!
         assertEquals(expectedBlogName, s1l3Blog.name)
-        val s1l3Comments = (s1l2Posts[0].comments as LazyModelList).fetchPage().items
+        val s1l3Comments = (s1l2Posts[0].comments as LazyModelList).fetchAllPages()
         assertEquals(1, s1l3Comments.size)
         assertEquals(expectedCommentConent, s1l3Comments[0].content)
 
         // Scenario 1: Start loads from model list of comments
-        val s2l1Comments = (post.comments as LazyModelList).fetchPage().items
+        val s2l1Comments = (post.comments as LazyModelList).fetchAllPages()
         assertEquals(1, s2l1Comments.size)
         assertEquals(expectedCommentConent, s2l1Comments[0].content)
         val s2l2Post = (s1l3Comments[0].post as LazyModelReference).fetchModel()!!
         assertEquals(expectedPostTitle, s2l2Post.title)
         val s2l3Blog = (s2l2Post.blog as LazyModelReference).fetchModel()!!
         assertEquals(expectedBlogName, s2l3Blog.name)
-        val s2l3Comments = (s2l2Post.comments as LazyModelList).fetchPage().items
+        val s2l3Comments = (s2l2Post.comments as LazyModelList).fetchAllPages()
         assertEquals(1, s2l3Comments.size)
         assertEquals(expectedCommentConent, s2l3Comments[0].content)
     }
