@@ -48,11 +48,11 @@ import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
+import kotlin.test.fail
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import kotlin.test.assertTrue
-import kotlin.test.fail
 
 class AWSCognitoAuthPluginUserAuthTests {
 
