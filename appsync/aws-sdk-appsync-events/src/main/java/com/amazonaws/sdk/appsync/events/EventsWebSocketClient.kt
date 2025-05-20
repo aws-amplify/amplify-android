@@ -23,6 +23,7 @@ import com.amazonaws.sdk.appsync.events.data.UserClosedConnectionException
 import com.amazonaws.sdk.appsync.events.data.WebSocketMessage
 import com.amazonaws.sdk.appsync.events.data.toEventsException
 import com.amazonaws.sdk.appsync.events.utils.JsonUtils
+import kotlinx.coroutines.CompletableDeferred
 import java.util.UUID
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -168,7 +169,14 @@ class EventsWebSocketClient internal constructor(
         )
 
         val webSocket = eventsWebSocketProvider.getConnectedWebSocket()
-        val deferredResponse = async { getPublishResponse(webSocket, publishId) }
+
+        val listeningForPublishSignal = CompletableDeferred<Unit>()
+        val deferredResponse = async {
+            getPublishResponse(webSocket, publishId) {
+                listeningForPublishSignal.complete(Unit)
+            }
+        }
+        listeningForPublishSignal.await()
 
         val queued = webSocket.sendWithAuthorizer(publishMessage, authorizer)
         if (!queued) {
@@ -226,8 +234,14 @@ class EventsWebSocketClient internal constructor(
         authorizer: AppSyncAuthorizer
     ): Boolean = coroutineScope {
         // create a deferred holder for subscription response
+        val listeningForSubscriptionSignal = CompletableDeferred<Unit>()
         val deferredSubscriptionResponse =
-            async { getSubscriptionResponse(webSocket, subscriptionId) }
+            async {
+                getSubscriptionResponse(webSocket, subscriptionId) {
+                    listeningForSubscriptionSignal.complete(Unit)
+                }
+            }
+        listeningForSubscriptionSignal.await()
 
         // Publish subscription to websocket
         val queued = webSocket.sendWithAuthorizer(
@@ -262,8 +276,15 @@ class EventsWebSocketClient internal constructor(
         }
     }
 
-    private suspend fun getSubscriptionResponse(webSocket: EventsWebSocket, subscriptionId: String): WebSocketMessage =
-        webSocket.events.first {
+    private suspend fun getSubscriptionResponse(
+        webSocket: EventsWebSocket,
+        subscriptionId: String,
+        onListening: () -> Unit
+    ): WebSocketMessage =
+        webSocket.events
+            .onStart { onListening.invoke() }
+            .onCompletion { onListening.invoke() } // just in case. No impact of calling onListening multiple times
+            .first {
             when {
                 it is WebSocketMessage.Received.Subscription && it.id == subscriptionId -> true
                 it is WebSocketMessage.ErrorContainer && it.id == subscriptionId -> true
@@ -272,8 +293,15 @@ class EventsWebSocketClient internal constructor(
             }
         }
 
-    private suspend fun getPublishResponse(webSocket: EventsWebSocket, publishId: String): WebSocketMessage =
-        webSocket.events.first {
+    private suspend fun getPublishResponse(
+        webSocket: EventsWebSocket,
+        publishId: String,
+        onListening: () -> Unit
+    ): WebSocketMessage =
+        webSocket.events
+            .onStart { onListening.invoke() }
+            .onCompletion { onListening.invoke() } // just in case. No impact of calling onListening multiple times
+            .first {
             when {
                 it is WebSocketMessage.Received.PublishSuccess && it.id == publishId -> true
                 it is WebSocketMessage.ErrorContainer && it.id == publishId -> true

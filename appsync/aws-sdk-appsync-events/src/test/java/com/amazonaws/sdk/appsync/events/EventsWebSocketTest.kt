@@ -28,7 +28,6 @@ import io.mockk.slot
 import io.mockk.verify
 import java.net.UnknownHostException
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonArray
@@ -80,7 +79,6 @@ internal class EventsWebSocketTest {
             val listener = arg<WebSocketListener>(1)
 
             launch {
-                delay(1) // on virtual timer, just moves to back of queue
                 listener.onMessage(websocket, ack)
             }
             websocket
@@ -126,7 +124,6 @@ internal class EventsWebSocketTest {
 
         every { websocket.close(any(), any()) } answers {
             launch {
-                delay(1)
                 eventsWebSocket.onClosed(websocket, 1000, "User initiated disconnect")
             }
             true
@@ -153,7 +150,6 @@ internal class EventsWebSocketTest {
 
         every { websocket.cancel() } answers {
             launch {
-                delay(1)
                 eventsWebSocket.onClosed(websocket, 1000, "User initiated disconnect")
             }
         }
@@ -262,7 +258,6 @@ internal class EventsWebSocketTest {
         every { okHttpClient.newWebSocket(any(), any()) } answers {
             val listener = arg<WebSocketListener>(1)
             launch {
-                delay(1) // on virtual timer, just moves to back of queue
                 listener.onMessage(websocket, ack)
             }
             websocket
@@ -275,7 +270,6 @@ internal class EventsWebSocketTest {
         every { okHttpClient.newWebSocket(any(), any()) } answers {
             val listener = arg<WebSocketListener>(1)
             launch {
-                delay(1) // on virtual timer, just moves to back of queue
                 listener.onFailure(websocket, cause, null)
             }
             websocket

@@ -34,7 +34,6 @@ import io.mockk.unmockkConstructor
 import kotlin.time.Duration
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -117,7 +116,6 @@ internal class EventsWebSocketClientTest {
 
         setupSendResult { _, _ ->
             launch {
-                delay(1)
                 websocketListenerSlot.captured.onClosed(websocket, 1000, "User initiated disconnect")
             }
         }
@@ -149,7 +147,6 @@ internal class EventsWebSocketClientTest {
                 }
             """.trimIndent()
             backgroundScope.launch {
-                delay(1)
                 websocketListenerSlot.captured.onMessage(websocket, failedResult)
             }
         }
@@ -269,7 +266,6 @@ internal class EventsWebSocketClientTest {
 
             setupSendResult { _, id ->
                 launch {
-                    delay(1)
                     websocketListenerSlot.captured.onClosed(websocket, 1000, "User initiated disconnect")
                 }
             }
@@ -286,7 +282,6 @@ internal class EventsWebSocketClientTest {
         setupSendResult { _, id -> subscribeSuccessResult(id) }
         every { websocket.close(any(), any()) } answers {
             launch {
-                delay(1)
                 websocketListenerSlot.captured.onClosed(websocket, 1000, "User initiated disconnect")
             }
             true
@@ -311,7 +306,6 @@ internal class EventsWebSocketClientTest {
         setupSendResult { _, id -> subscribeSuccessResult(id) }
         every { websocket.cancel() } answers {
             launch {
-                delay(1)
                 websocketListenerSlot.captured.onFailure(websocket, Throwable("Cancelled"), null)
             }
         }
@@ -333,7 +327,6 @@ internal class EventsWebSocketClientTest {
             every { newWebSocket(any(), capture(websocketListenerSlot)) } answers {
                 val ack = """ { "type": "connection_ack", "connectionTimeoutMs": 10000 } """
                 backgroundScope.launch(testDispatcher) {
-                    delay(1)
                     websocketListenerSlot.captured.onMessage(websocket, ack)
                 }
                 websocket
@@ -417,7 +410,6 @@ internal class EventsWebSocketClientTest {
             }
         """.trimIndent()
         backgroundScope.launch {
-            delay(1)
             websocketListenerSlot.captured.onMessage(websocket, result)
         }
     }
@@ -430,7 +422,6 @@ internal class EventsWebSocketClientTest {
             }
         """.trimIndent()
         backgroundScope.launch {
-            delay(1)
             websocketListenerSlot.captured.onMessage(websocket, result)
         }
     }
@@ -449,7 +440,6 @@ internal class EventsWebSocketClientTest {
             }
         """.trimIndent()
         backgroundScope.launch {
-            delay(1)
             websocketListenerSlot.captured.onMessage(websocket, result)
         }
     }
