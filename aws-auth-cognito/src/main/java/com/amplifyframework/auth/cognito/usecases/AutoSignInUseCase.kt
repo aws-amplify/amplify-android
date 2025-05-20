@@ -38,7 +38,7 @@ import kotlinx.coroutines.flow.transformWhile
 
 internal class AutoSignInUseCase(
     private val stateMachine: AuthStateMachine,
-    private val hubEmitter: AuthHubEventEmitter
+    private val hubEmitter: AuthHubEventEmitter = AuthHubEventEmitter()
 ) {
     suspend fun execute(): AuthSignInResult {
         val authState = waitForSignedOutState()
