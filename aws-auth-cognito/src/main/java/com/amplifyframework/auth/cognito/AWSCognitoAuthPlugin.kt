@@ -427,6 +427,11 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         onError = ::throwIt
     ) { queueFacade.signOut(userId) }
 
+    override fun signOut(onComplete: Consumer<AuthSignOutResult>) = enqueue(
+    onComplete,
+    onError = ::throwIt)
+    { queueFacade.signOut() }
+
     override fun signOut(
         userId: String,
         options: AuthSignOutOptions,

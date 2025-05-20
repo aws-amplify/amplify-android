@@ -123,9 +123,10 @@ internal sealed class AuthenticationState : State {
                     is AuthenticationEvent.EventType.SignOutRequested -> {
                         val action =
                             authenticationActions.initiateSignOutAction(
-                                oldState.signedInData.userId,
-                                authenticationEvent,
-                                oldState.signedInData
+                                userId = oldState.signedInData.userId,
+                                event = authenticationEvent,
+                                signedInData = oldState.signedInData,
+                                signOutAllUsers = authenticationEvent.signOutData.signOutAllUsers
                             )
                         StateResolution(SigningOut(), listOf(action))
                     }
@@ -164,9 +165,10 @@ internal sealed class AuthenticationState : State {
                         authenticationEvent is AuthenticationEvent.EventType.SignOutRequested -> {
                             val action = authenticationActions
                                 .initiateSignOutAction(
-                                    authenticationEvent.signOutData.userId,
-                                    authenticationEvent,
-                                    null
+                                    userId = authenticationEvent.signOutData.userId,
+                                    event = authenticationEvent,
+                                    signedInData = null,
+                                    signOutAllUsers = authenticationEvent.signOutData.signOutAllUsers
                                 )
                             StateResolution(SigningOut(), listOf(action))
                         }
@@ -198,9 +200,10 @@ internal sealed class AuthenticationState : State {
                     when {
                         authenticationEvent is AuthenticationEvent.EventType.ClearFederationToIdentityPool -> {
                             val action = authenticationActions.initiateSignOutAction(
-                                authenticationEvent.userId,
-                                AuthenticationEvent.EventType.SignOutRequested(SignOutData(authenticationEvent.userId)),
-                                null
+                                userId = authenticationEvent.userId,
+                                event = AuthenticationEvent.EventType.SignOutRequested(SignOutData(authenticationEvent.userId)),
+                                signedInData = null,
+                                signOutAllUsers = false
                             )
                             StateResolution(SigningOut(), listOf(action))
                         }
@@ -222,9 +225,10 @@ internal sealed class AuthenticationState : State {
 
                         authenticationEvent is AuthenticationEvent.EventType.ClearFederationToIdentityPool -> {
                             val action = authenticationActions.initiateSignOutAction(
-                                authenticationEvent.userId,
-                                AuthenticationEvent.EventType.SignOutRequested(SignOutData(authenticationEvent.userId)),
-                                null
+                                userId = authenticationEvent.userId,
+                                event = AuthenticationEvent.EventType.SignOutRequested(SignOutData(authenticationEvent.userId)),
+                                signedInData = null,
+                                signOutAllUsers = false
                             )
                             StateResolution(SigningOut(), listOf(action))
                         }

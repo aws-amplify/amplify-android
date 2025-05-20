@@ -553,13 +553,22 @@ public interface AuthCategoryBehavior {
     /**
      * Sign out with advanced options.
      *
-     * @param userId
+     * @param userId     The user ID of the user to sign out
      * @param options    Advanced options for sign out (e.g. whether to sign out of all devices globally)
      * @param onComplete Complete callback
      */
     void signOut(
             @NonNull String userId,
             @NonNull AuthSignOutOptions options,
+            @NonNull Consumer<AuthSignOutResult> onComplete
+    );
+
+    /**
+     * Sign out all users from the current device.
+     *
+     * @param onComplete Complete callback
+     */
+    void signOut(
             @NonNull Consumer<AuthSignOutResult> onComplete
     );
 

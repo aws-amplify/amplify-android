@@ -19,5 +19,6 @@ internal data class SignOutData(
     val userId: String,
     val globalSignOut: Boolean = false,
     val browserPackage: String? = null,
-    val bypassCancel: Boolean = false // When user deleted, even if sign out is cancelled, proceed to sign out locally
+    val bypassCancel: Boolean = false, // When user deleted, even if sign out is cancelled, proceed to sign out locally
+    val signOutAllUsers: Boolean = false, // If true, sign out all users in the app
 )

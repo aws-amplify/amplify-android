@@ -51,6 +51,15 @@ class EncryptedKeyValueRepository @VisibleForTesting constructor(
     override fun get(dataKey: String): String? = sharedPreferences.getString(dataKey, null)
     override fun remove(dataKey: String) = edit { remove(dataKey) }
     override fun removeAll() = edit { clear() }
+    override fun removeAll(keyRegex: String) {
+        val keysToRemove = sharedPreferences.all.keys.filter { it.matches(Regex(keyRegex)) }
+        if (keysToRemove.isEmpty()) {
+            return
+        }
+        edit {
+            keysToRemove.forEach { remove(it) }
+        }
+    }
 
     private inline fun edit(crossinline block: SharedPreferences.Editor.() -> Unit) = with(sharedPreferences.edit()) {
         block()

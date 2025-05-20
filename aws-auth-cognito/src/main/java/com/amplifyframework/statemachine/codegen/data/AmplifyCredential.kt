@@ -36,7 +36,7 @@ internal sealed class AmplifyCredential {
 
     @Serializable
     @SerialName("empty")
-    data class Empty(val userId: String?) : AmplifyCredential()
+    data class Empty(val userId: String?, val clearAllSessions: Boolean = false) : AmplifyCredential()
 
     @Serializable
     @SerialName("userPool")

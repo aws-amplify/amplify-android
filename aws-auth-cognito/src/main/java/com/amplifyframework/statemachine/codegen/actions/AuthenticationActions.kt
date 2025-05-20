@@ -25,6 +25,7 @@ internal interface AuthenticationActions {
     fun initiateSignOutAction(
         userId: String,
         event: AuthenticationEvent.EventType.SignOutRequested,
-        signedInData: SignedInData?
+        signedInData: SignedInData?,
+        signOutAllUsers: Boolean
     ): Action
 }

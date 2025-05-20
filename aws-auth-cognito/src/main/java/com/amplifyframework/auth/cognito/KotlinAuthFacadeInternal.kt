@@ -249,6 +249,7 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
             )
         }
     }
+
     suspend fun fetchAuthSession(): AuthSession {
         return suspendCoroutine { continuation ->
             delegate.fetchAuthSession(
@@ -492,6 +493,16 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
         }
     }
 
+    suspend fun signOut(): AuthSignOutResult {
+        return suspendCoroutine { continuation ->
+            delegate.signOut(
+                userId = "",
+                signOutAllUsers = true,
+                options = AuthSignOutOptions.builder().build()
+            ) { continuation.resume(it) }
+        }
+    }
+
     suspend fun signOut(userId: String, options: AuthSignOutOptions): AuthSignOutResult {
         return suspendCoroutine { continuation ->
             delegate.signOut(userId, options) { continuation.resume(it) }
@@ -541,6 +552,7 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
             )
         }
     }
+
     suspend fun verifyTOTPSetup(code: String, options: AuthVerifyTOTPSetupOptions) {
         return suspendCoroutine { continuation ->
             delegate.verifyTOTPSetup(

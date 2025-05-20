@@ -151,8 +151,9 @@ internal sealed class AuthorizationState : State {
                 }
                 is SigningOut -> when {
                     event.isSignOutEvent() is SignOutEvent.EventType.SignOutLocally -> {
-                        val action = authorizationActions.persistCredentials(AmplifyCredential.Empty((event.isSignOutEvent() as SignOutEvent.EventType.SignOutLocally).userId))
-                        StateResolution(StoringCredentials(AmplifyCredential.Empty((event.isSignOutEvent() as SignOutEvent.EventType.SignOutLocally).userId)), listOf(action))
+                        val e = (event.isSignOutEvent() as SignOutEvent.EventType.SignOutLocally)
+                        val action = authorizationActions.persistCredentials(AmplifyCredential.Empty(e.userId, e.signOutAllUsers))
+                        StateResolution(StoringCredentials(AmplifyCredential.Empty(e.userId, e.signOutAllUsers)), listOf(action))
                     }
                     authenticationEvent is AuthenticationEvent.EventType.CancelSignOut -> {
                         StateResolution(SessionEstablished(oldState.amplifyCredential))

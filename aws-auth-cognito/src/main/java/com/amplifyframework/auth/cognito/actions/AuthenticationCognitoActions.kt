@@ -30,7 +30,6 @@ import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
-import kotlinx.serialization.StringFormat
 
 internal object AuthenticationCognitoActions : AuthenticationActions {
     override fun configureAuthenticationAction(event: AuthenticationEvent.EventType.Configure) =
@@ -50,9 +49,11 @@ internal object AuthenticationCognitoActions : AuthenticationActions {
                         )
                     )
                 }
+
                 is AmplifyCredential.IdentityPoolFederated -> {
                     AuthenticationEvent(AuthenticationEvent.EventType.InitializedFederated)
                 }
+
                 else -> AuthenticationEvent(AuthenticationEvent.EventType.InitializedSignedOut(SignedOutData()))
             }
             logger.verbose("$id Sending event ${evt.type}")
@@ -88,6 +89,7 @@ internal object AuthenticationCognitoActions : AuthenticationActions {
                         )
                     }
                 }
+
                 is SignInData.CustomAuthSignInData -> {
                     if (data.username != null) {
                         SignInEvent(
@@ -101,6 +103,7 @@ internal object AuthenticationCognitoActions : AuthenticationActions {
                         )
                     }
                 }
+
                 is SignInData.CustomSRPAuthSignInData -> {
                     if (data.username != null && data.password != null) {
                         SignInEvent(
@@ -118,9 +121,11 @@ internal object AuthenticationCognitoActions : AuthenticationActions {
                         )
                     }
                 }
+
                 is SignInData.HostedUISignInData -> {
                     SignInEvent(SignInEvent.EventType.InitiateHostedUISignIn(data))
                 }
+
                 is SignInData.MigrationAuthSignInData -> {
                     if (data.username != null && data.password != null) {
                         SignInEvent(
@@ -139,6 +144,7 @@ internal object AuthenticationCognitoActions : AuthenticationActions {
                         )
                     }
                 }
+
                 is SignInData.UserAuthSignInData -> {
                     if (data.username != null) {
                         SignInEvent(
@@ -170,7 +176,8 @@ internal object AuthenticationCognitoActions : AuthenticationActions {
     override fun initiateSignOutAction(
         userId: String,
         event: AuthenticationEvent.EventType.SignOutRequested,
-        signedInData: SignedInData?
+        signedInData: SignedInData?,
+        signOutAllUsers: Boolean
     ) = Action<AuthEnvironment>("InitSignOut") { id, dispatcher ->
         logger.verbose("$id Starting execution")
 
@@ -178,9 +185,10 @@ internal object AuthenticationCognitoActions : AuthenticationActions {
             signedInData != null && signedInData.signInMethod is SignInMethod.HostedUI -> {
                 SignOutEvent(SignOutEvent.EventType.InvokeHostedUISignOut(userId, event.signOutData, signedInData))
             }
+
             signedInData != null &&
-                signedInData.signInMethod == SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.UNKNOWN) &&
-                hostedUIClient != null -> {
+                    signedInData.signInMethod == SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.UNKNOWN) &&
+                    hostedUIClient != null -> {
                 /*
                 If sign in method is unknown, this is due to SignInMethod not being tracked in Amplify v1. We try to
                 assume that hosted ui sign in may have been used if hostedUIClient is configured. This only happens if
@@ -188,13 +196,22 @@ internal object AuthenticationCognitoActions : AuthenticationActions {
                  */
                 SignOutEvent(SignOutEvent.EventType.InvokeHostedUISignOut(userId, event.signOutData, signedInData))
             }
+
             signedInData != null && event.signOutData.globalSignOut -> {
                 SignOutEvent(SignOutEvent.EventType.SignOutGlobally(userId, signedInData))
             }
+
             signedInData != null && !event.signOutData.globalSignOut -> {
                 SignOutEvent(SignOutEvent.EventType.RevokeToken(userId, signedInData))
             }
-            else -> SignOutEvent(SignOutEvent.EventType.SignOutLocally(userId, signedInData))
+
+            else -> SignOutEvent(
+                SignOutEvent.EventType.SignOutLocally(
+                    userId = userId,
+                    signedInData = signedInData,
+                    signOutAllUsers = signOutAllUsers
+                )
+            )
         }
         logger.verbose("$id Sending event ${evt.type}")
         dispatcher.send(evt)

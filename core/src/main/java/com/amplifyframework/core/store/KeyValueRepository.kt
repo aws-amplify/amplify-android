@@ -20,4 +20,5 @@ interface KeyValueRepository {
     fun get(dataKey: String): String?
     fun remove(dataKey: String)
     fun removeAll() = Unit
+    fun removeAll(keyRegex: String) = Unit
 }

@@ -405,6 +405,11 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     }
 
     @Override
+    public void signOut(@NonNull Consumer<AuthSignOutResult> onComplete) {
+        getSelectedPlugin().signOut(onComplete);
+    }
+
+    @Override
     public void deleteUser(
             @NonNull Action onSuccess,
             @NonNull Consumer<AuthException> onError) {
