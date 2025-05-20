@@ -25,6 +25,7 @@ import com.amazonaws.sdk.appsync.events.data.toEventsException
 import com.amazonaws.sdk.appsync.events.utils.ConnectionTimeoutTimer
 import com.amazonaws.sdk.appsync.events.utils.HeaderKeys
 import com.amazonaws.sdk.appsync.events.utils.HeaderValues
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -32,6 +33,8 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -71,8 +74,12 @@ internal class EventsWebSocket(
     @Throws(ConnectException::class)
     suspend fun connect() = coroutineScope {
         logger?.debug("Opening Websocket Connection")
+
         // Get deferred connect response. We need to listen before opening connection, but not block
-        val deferredConnectResponse = async { getConnectResponse() }
+        val listeningForConnectSignal = CompletableDeferred<Unit>()
+        val deferredConnectResponse = async { getConnectResponse { listeningForConnectSignal.complete(Unit) } }
+        listeningForConnectSignal.await()
+
         // Create initial request without auth headers
         val preAuthRequest = createPreAuthConnectRequest(eventsEndpoints)
         // Fetch auth headers from authorizer
@@ -107,7 +114,11 @@ internal class EventsWebSocket(
     suspend fun disconnect(flushEvents: Boolean) = withContext(Dispatchers.IO) {
         if (isClosed) return@withContext
         disconnectReason = WebSocketDisconnectReason.UserInitiated
-        val deferredClosedResponse = async { getClosedResponse() }
+
+        val listeningForClosedSignal = CompletableDeferred<Unit>()
+        val deferredClosedResponse = async { getClosedResponse { listeningForClosedSignal.complete(Unit) } }
+        listeningForClosedSignal.await()
+
         when (flushEvents) {
             true -> webSocket.close(NORMAL_CLOSE_CODE, "User initiated disconnect")
             false -> webSocket.cancel()
@@ -231,21 +242,27 @@ internal class EventsWebSocket(
             }.build()
     }
 
-    private suspend fun getConnectResponse(): WebSocketMessage = events.first {
-        when (it) {
-            is WebSocketMessage.Received.ConnectionAck -> true
-            is WebSocketMessage.Received.ConnectionError -> true
-            is WebSocketMessage.Closed -> true
-            else -> false
+    private suspend fun getConnectResponse(onListening: () -> Unit): WebSocketMessage = events
+        .onStart { onListening.invoke() }
+        .onCompletion { onListening.invoke() } // just in case. No impact of calling onListening multiple times
+        .first {
+            when (it) {
+                is WebSocketMessage.Received.ConnectionAck -> true
+                is WebSocketMessage.Received.ConnectionError -> true
+                is WebSocketMessage.Closed -> true
+                else -> false
+            }
         }
-    }
 
-    private suspend fun getClosedResponse(): WebSocketMessage = events.first {
-        when (it) {
-            is WebSocketMessage.Closed -> true
-            else -> false
+    private suspend fun getClosedResponse(onListening: () -> Unit): WebSocketMessage = events
+        .onStart { onListening.invoke() }
+        .onCompletion { onListening.invoke() } // just in case. No impact of calling onListening multiple times
+        .first {
+            when (it) {
+                is WebSocketMessage.Closed -> true
+                else -> false
+            }
         }
-    }
 }
 
 @VisibleForTesting
