@@ -30,7 +30,6 @@ buildscript {
         classpath(kotlin("gradle-plugin", version = "1.9.10"))
         classpath("com.google.gms:google-services:4.3.15")
         classpath("org.jlleitschuh.gradle:ktlint-gradle:12.2.0")
-        classpath("org.jetbrains.kotlinx:kover:0.6.1")
         classpath("app.cash.licensee:licensee-gradle-plugin:1.7.0")
     }
 }
@@ -41,6 +40,7 @@ plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.android.library) apply false
+    alias(libs.plugins.kover)
 }
 
 allprojects {
@@ -105,7 +105,10 @@ subprojects {
         }
 
         configureAndroid()
-        apply(from = rootProject.file("kover.gradle"))
+
+        if (!project.name.contains("test")) {
+            apply(from = rootProject.file("kover.gradle"))
+        }
     }
 
     tasks.withType<KotlinCompile> {
@@ -214,4 +217,12 @@ configure<ApiValidationExtension> {
     nonPublicMarkers.add("androidx.annotation.VisibleForTesting")
 
     ignoredProjects.addAll(setOf("testutils", "testmodels", "annotations"))
+}
+
+dependencies {
+    subprojects.forEach {
+        if (!it.name.contains("test")) {
+            kover(project(it.name))
+        }
+    }
 }
