@@ -147,7 +147,9 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
         subscribers[token] = listener
         onSubscribe?.invoke()
         stateMachineScope.launch(dispatcherQueue) {
-            listener.invoke(currentState)
+            if (subscribers.contains(token) && !pendingCancellations.contains(token)) {
+                listener.invoke(currentState)
+            }
         }
     }
 
@@ -156,8 +158,8 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      * @param token token of the listener to remove
      */
     private fun removeSubscription(token: StateChangeListenerToken) {
-        pendingCancellations.remove(token)
         subscribers.remove(token)
+        pendingCancellations.remove(token)
     }
 
     /**
