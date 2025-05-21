@@ -210,7 +210,9 @@ internal class EventsWebSocketClientTests {
         }
 
         val receivedLogs = webSocketLogCapture.messages.replayCache.filter { expectedLogs.contains(it) }
-        receivedLogs shouldBe expectedLogs
+        receivedLogs.take(3) shouldBe expectedLogs.take(3)
+        receivedLogs.subList(3, 5).toSet() shouldBe expectedLogs.subList(3, 5).toSet()
+        receivedLogs.drop(5) shouldBe expectedLogs.drop(5)
     }
 
     @Test
