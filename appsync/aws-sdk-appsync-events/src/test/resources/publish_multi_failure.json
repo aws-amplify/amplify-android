@@ -1,0 +1,17 @@
+{
+  "failed": [
+    {
+      "identifier": "e36a7438-d960-435f-a426-3c685d38ac92",
+      "index": 0,
+      "code": 401,
+      "message": "error1"
+    },
+    {
+      "identifier": "e36a7438-d960-435f-a426-3c685d38ac92",
+      "index": 1,
+      "code": 401,
+      "message": "error2"
+    }
+  ],
+  "successful": []
+}
