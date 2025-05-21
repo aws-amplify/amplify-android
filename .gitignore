@@ -98,6 +98,8 @@ __pycache__/
 #amplify
 .amplify/
 amplify/
+#keep amplify gen2 backend projects
+!**/androidTest/backend/amplify/
 build/
 dist/
 node_modules/

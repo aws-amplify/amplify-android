@@ -42,7 +42,7 @@ def getRepositoryPassword() {
 }
 
 Boolean useLegacyPublishingConventions(Project project) {
-    return !project.name.startsWith("apollo")
+    return !project.name.startsWith("apollo") && !project.name.startsWith("aws-sdk-appsync")
 }
 
 afterEvaluate { project ->

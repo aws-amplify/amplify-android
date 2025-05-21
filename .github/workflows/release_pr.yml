@@ -9,6 +9,7 @@ on:
         options:
           - AmplifyAndroid
           - ApolloExtensions
+          - AppSyncEvents
       release_tag:
         description: 'Previous Release Tag'
         required: false
