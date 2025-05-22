@@ -14,6 +14,13 @@ if [[ -z "${project_arn}" ]]; then
   exit 1
 fi
 
+# Check if GitHub environment variables are set
+for var in GITHUB_TOKEN GITHUB_REPO GITHUB_SHA; do
+  if [[ -z "${!var}" ]]; then
+    echo "Warning: $var environment variable not set. GitHub status checks will be skipped."
+    break
+  fi
+done
 if [[ -z "${max_devices}" ]]; then
   echo "NUMBER_OF_DEVICES_TO_TEST not set. Defaulting to 1."
   max_devices=1
@@ -149,6 +156,30 @@ echo "Status = $status Result = $result"
   -r "$run_arn" \
   -m "$module_name" \
   -o "build/allTests/$module_name/"
+
+# Update GitHub status check for this specific module
+if [ -n "$GITHUB_TOKEN" ] && [ -n "$GITHUB_REPO" ] && [ -n "$GITHUB_SHA" ]; then
+  # Set the status context to include the module name
+  STATUS_CONTEXT="DeviceFarm/$module_name"
+  
+  # Set description based on result
+  if [ "$result" = "PASSED" ]; then
+    STATUS_STATE="success"
+    STATUS_DESC="All tests passed for $module_name"
+  else
+    STATUS_STATE="failure"
+    STATUS_DESC="Tests failed for $module_name"
+  fi
+  
+  # Send status update to GitHub
+  curl -s -X POST \
+    -H "Authorization: token $GITHUB_TOKEN" \
+    -H "Accept: application/vnd.github.v3+json" \
+    -d "{\"state\":\"$STATUS_STATE\",\"context\":\"$STATUS_CONTEXT\",\"description\":\"$STATUS_DESC\"}" \
+    "https://api.github.com/repos/$GITHUB_REPO/statuses/$GITHUB_SHA"
+  
+  echo "GitHub status check updated for $module_name: $STATUS_STATE"
+fi
 
 # If the result is PASSED, then exit with a return code 0
 if [ "$result" = "PASSED" ]
