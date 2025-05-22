@@ -103,6 +103,7 @@ afterEvaluate { project ->
         }
         repositories {
             maven {
+                name = "ossrh-staging-api"
                 url = isReleaseBuild() ? getReleaseRepositoryUrl() : getSnapshotRepositoryUrl()
                 credentials {
                     username = getRepositoryUsername()
