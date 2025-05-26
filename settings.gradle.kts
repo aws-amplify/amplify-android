@@ -24,7 +24,7 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         maven {
-            url = uri("https://aws.oss.sonatype.org/content/repositories/snapshots/")
+            url = uri("https://central.sonatype.com/repository/maven-snapshots/")
         }
         google()
         mavenCentral()
@@ -60,6 +60,15 @@ include(":maplibre-adapter")
 include(":aws-pinpoint-core")
 include(":aws-push-notifications-pinpoint-common")
 include(":aws-logging-cloudwatch")
+
+// Events API
+include(":aws-sdk-appsync-core")
+include(":aws-sdk-appsync-amplify")
+include(":aws-sdk-appsync-events")
+project(":aws-sdk-appsync-core").projectDir = file("appsync/aws-sdk-appsync-core")
+project(":aws-sdk-appsync-amplify").projectDir = file("appsync/aws-sdk-appsync-amplify")
+project(":aws-sdk-appsync-events").projectDir = file("appsync/aws-sdk-appsync-events")
+
 
 // Apollo Extensions
 include(":apollo-appsync")

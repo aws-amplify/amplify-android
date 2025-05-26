@@ -28,6 +28,7 @@ desugar = "1.2.0"
 espresso = "3.3.0"
 fcm = "23.1.0"
 gson = "2.8.9"
+jetbrains-annotations = "26.0.2"
 json = "20210307"
 jsonassert = "1.5.0"
 junit = "4.13.2"
@@ -35,6 +36,7 @@ junit-ktx = "1.2.0"
 kotest = "5.9.0"
 kotlin = "1.9.10"
 kotlin-serialization = "1.6.0"
+kover = "0.9.1"
 maplibre = "9.6.0"
 maplibre-annotations = "1.0.0"
 material = "1.8.0"
@@ -119,6 +121,7 @@ test-androidx-navigation = { module = "androidx.navigation:navigation-testing", 
 test-androidx-orchestrator = { module = "androidx.test:orchestrator", version.ref="androidx-test-orchestrator" }
 test-androidx-runner = { module = "androidx.test:runner", version.ref="androidx-test-runner" }
 test-androidx-workmanager = { module = "androidx.work:work-testing", version.ref="androidx-workmanager" }
+test-jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrains-annotations" }
 test-aws-sdk-core = { module = "com.amazonaws:aws-android-sdk-core", version.ref="aws-sdk" }
 test-json = { module = "org.json:json", version.ref = "json" }
 test-jsonassert = { module = "org.skyscreamer:jsonassert", version.ref="jsonassert" }
@@ -145,3 +148,4 @@ binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibil
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
