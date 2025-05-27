@@ -15,6 +15,7 @@
 
 package com.amplifyframework.auth.cognito.usecases
 
+import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.cognito.AuthStateMachine
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.testUtil.withAuthEvent
@@ -136,5 +137,30 @@ class AutoSignInUseCaseTest {
 
         result.isSignedIn shouldBe true
         result.nextStep.signInStep shouldBe AuthSignInStep.DONE
+    }
+
+    @Test
+    fun `emits auth hub event`() = runTest {
+        stateFlow.value = authState(
+            AuthenticationState.SignedOut(mockk()),
+            authSignUpState = SignUpState.SignedUp(signUpData, mockk())
+        )
+
+        val deferred = backgroundScope.async { useCase.execute() }
+        runCurrent()
+
+        stateFlow.value = authState(AuthenticationState.SigningIn())
+        runCurrent()
+
+        stateFlow.value = authState(
+            AuthenticationState.SignedIn(mockk(), mockk()),
+            AuthorizationState.SessionEstablished(mockk())
+        )
+
+        deferred.await()
+
+        verify {
+            hubEmitter.sendHubEvent(AuthChannelEventName.SIGNED_IN.toString())
+        }
     }
 }
