@@ -36,6 +36,7 @@ junit-ktx = "1.2.0"
 kotest = "5.9.0"
 kotlin = "1.9.10"
 kotlin-serialization = "1.6.0"
+kover = "0.9.1"
 maplibre = "9.6.0"
 maplibre-annotations = "1.0.0"
 material = "1.8.0"
@@ -147,3 +148,4 @@ binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibil
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
