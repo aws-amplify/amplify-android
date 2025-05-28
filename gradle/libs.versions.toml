@@ -17,7 +17,7 @@ androidx-test-core = "1.3.0"
 androidx-test-junit = "1.1.2"
 androidx-test-orchestrator = "1.4.2"
 androidx-test-runner = "1.3.0"
-androidx-workmanager = "2.7.1"
+androidx-workmanager = "2.9.1"
 apollo = "4.0.0"
 aws-kotlin = "1.3.81" # ensure proper aws-smithy version also set
 aws-sdk = "2.62.2"
@@ -74,7 +74,7 @@ androidx-nav-ui = { module = "androidx.navigation:navigation-ui", version.ref = 
 androidx-security = { module = "androidx.security:security-crypto", version.ref = "androidx-security" }
 androidx-sqlite = { module = "androidx.sqlite:sqlite", version.ref = "androidx-sqlite" }
 androidx-v4support = { module = "androidx.legacy:legacy-support-v4", version.ref = "androidx-legacy" }
-androidx-workmanager = { module = "androidx.work:work-runtime-ktx", version.ref = "androidx-workmanager" }
+androidx-workmanager = { module = "androidx.work:work-runtime", version.ref = "androidx-workmanager" }
 apollo-runtime = { module = "com.apollographql.apollo:apollo-runtime", version.ref = "apollo" }
 aws-cloudwatchlogs = { module = "aws.sdk.kotlin:cloudwatchlogs", version.ref = "aws-kotlin" }
 aws-cognitoidentity = { module = "aws.sdk.kotlin:cognitoidentity", version.ref = "aws-kotlin" }

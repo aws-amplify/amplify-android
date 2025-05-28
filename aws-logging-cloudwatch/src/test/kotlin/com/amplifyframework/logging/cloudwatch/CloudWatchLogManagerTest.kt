@@ -42,6 +42,7 @@ import io.mockk.slot
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Before
@@ -91,6 +92,11 @@ internal class CloudWatchLogManagerTest {
             customCognitoCredentialsProvider,
             testDispatcher
         )
+    }
+
+    @After
+    fun cleanup() {
+        WorkManagerTestInitHelper.closeWorkDatabase()
     }
 
     @Test
