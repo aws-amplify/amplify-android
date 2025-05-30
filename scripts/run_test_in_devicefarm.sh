@@ -1,7 +1,6 @@
 #!/bin/bash
 project_arn=$DEVICEFARM_PROJECT_ARN
 max_devices=$NUMBER_OF_DEVICES_TO_TEST
-test_spec_arn=$DEVICEFARM_TEST_SPEC_ARN
 module_path=$1
 # Extract everything after the last "/" if it exists, otherwise use the full value
 module_name=${1##*/}
@@ -115,19 +114,19 @@ stopDuplicates
 # Schedule the test run in device farm
 echo "Scheduling test run"
 run_arn=`aws devicefarm schedule-run --project-arn=$project_arn \
-  --app-arn="$app_package_upload_arn" \
-  --device-selection-configuration='{
-      "filters": [
-        {"attribute": "ARN", "operator":"IN", "values":["'$minDevice'", "'$middleDevice'", "'$latestDevice'"]}
-      ],
-      "maxDevices": '$max_devices'
-  }' \
-  --name="$file_name-$CODEBUILD_SOURCE_VERSION" \
-  --test="testSpecArn=$test_spec_arn,type=INSTRUMENTATION,testPackageArn=$test_package_upload_arn" \
-  --execution-configuration="jobTimeoutMinutes=30,videoCapture=false" \
-  --query="run.arn" \
-  --output=text \
-  --region="us-west-2"`
+                            --app-arn="$app_package_upload_arn" \
+                            --device-selection-configuration='{
+                                "filters": [
+                                  {"attribute": "ARN", "operator":"IN", "values":["'$minDevice'", "'$middleDevice'", "'$latestDevice'"]}
+                                ],
+                                "maxDevices": '$max_devices'
+                            }' \
+                            --name="$file_name-$CODEBUILD_SOURCE_VERSION" \
+                            --test="type=INSTRUMENTATION,testPackageArn=$test_package_upload_arn" \
+                            --execution-configuration="jobTimeoutMinutes=30,videoCapture=false" \
+                            --query="run.arn" \
+                            --output=text \
+                            --region="us-west-2"`
 
 status='NONE'
 result='NONE'
@@ -145,11 +144,7 @@ while true; do
 done
 echo "Status = $status Result = $result"
 
-./scripts/python/generate_df_testrun_report.py \
-  -r "$run_arn" \
-  -m "$module_name" \
-  -o "build/allTests/$module_name/"
-
+./scripts/generate_df_testrun_report --run_arn="$run_arn" --module_name="$module_name" --pr="$CODEBUILD_SOURCE_VERSION" --output_path="build/allTests/$module_name/"
 # If the result is PASSED, then exit with a return code 0
 if [ "$result" = "PASSED" ]
 then
