@@ -2,6 +2,7 @@
 project_arn=$DEVICEFARM_PROJECT_ARN
 max_devices=$NUMBER_OF_DEVICES_TO_TEST
 test_spec_arn=$DEVICEFARM_TEST_SPEC_ARN
+commit_sha=$CODEBUILD_SOURCE_VERSION
 module_name=$1
 file_name="$module_name-debug-androidTest.apk"
 
@@ -92,7 +93,7 @@ fi
 # Function to cancel duplicate runs for same code source in device farm.
 function stopDuplicates {
   echo "Stopping duplicate runs"
-  name="$file_name-$CODEBUILD_SOURCE_VERSION"
+  name="$file_name-$commit_sha"
   read -a running_arns <<< $(aws devicefarm list-runs \
                           --arn="$project_arn" \
                           --query="runs[?(status == 'RUNNING' || status == 'PENDING')  && name == '${name}'].arn" \
@@ -118,7 +119,7 @@ run_arn=`aws devicefarm schedule-run --project-arn=$project_arn \
       ],
       "maxDevices": '$max_devices'
   }' \
-  --name="$file_name-$CODEBUILD_SOURCE_VERSION" \
+  --name="$file_name-$commit_sha" \
   --test="testSpecArn=$test_spec_arn,type=INSTRUMENTATION,testPackageArn=$test_package_upload_arn" \
   --execution-configuration="jobTimeoutMinutes=30,videoCapture=false" \
   --query="run.arn" \
