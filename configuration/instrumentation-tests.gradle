@@ -38,8 +38,6 @@ subprojects {
                     exec {
                         commandLine("$rootDir.path/scripts/run_test_in_devicefarm.sh")
                         args([moduleWithSubPath])
-                        // Allow non-zero exit code to continue with other modules
-                        ignoreExitValue = true
                     }
                 }
             }
