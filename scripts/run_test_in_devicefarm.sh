@@ -2,7 +2,7 @@
 project_arn=$DEVICEFARM_PROJECT_ARN
 max_devices=$NUMBER_OF_DEVICES_TO_TEST
 test_spec_arn=$DEVICEFARM_TEST_SPEC_ARN
-commit_sha=$CODEBUILD_SOURCE_VERSION
+commit_sha=$COMMIT_SHA
 module_name=$1
 file_name="$module_name-debug-androidTest.apk"
 
