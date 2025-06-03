@@ -48,6 +48,8 @@ import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
+import kotlin.test.fail
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -66,6 +68,10 @@ class AWSCognitoAuthPluginUserAuthTests {
     private var otpCode = ""
     private var latch: CountDownLatch? = null
 
+    internal companion object {
+        const val OTP_AWAIT_SECONDS = 30L
+    }
+
     @Before
     fun initializePlugin() {
         val context = ApplicationProvider.getApplicationContext<Context>()
@@ -80,13 +86,17 @@ class AWSCognitoAuthPluginUserAuthTests {
         apiPlugin.configure(apiConfigJson, context)
         synchronousAuth = SynchronousAuth.delegatingTo(authPlugin)
 
+        val subscriptionEstablishedLatch = CountDownLatch(1)
         subscription = apiPlugin.subscribe(
             SimpleGraphQLRequest(
                 Assets.readAsString("create-mfa-subscription.graphql"),
                 MfaInfo::class.java,
                 null
             ),
-            { println("====== Subscription Established ======") },
+            {
+                println("====== Subscription Established ======")
+                subscriptionEstablishedLatch.countDown()
+            },
             {
                 println("====== Received some MFA Info ======")
                 if (it.data.username == userName) {
@@ -94,9 +104,14 @@ class AWSCognitoAuthPluginUserAuthTests {
                     latch?.countDown()
                 }
             },
-            { println("====== Subscription Failed $it ======") },
+            {
+                println("====== Subscription Failed $it ======")
+                fail("Failed to establish subscription to listen for MFA")
+            },
             { }
         )
+
+        assertTrue(subscriptionEstablishedLatch.await(10, TimeUnit.SECONDS))
     }
 
     @After
@@ -142,7 +157,7 @@ class AWSCognitoAuthPluginUserAuthTests {
 
         // Wait until the OTP code has been received
         latch = CountDownLatch(1)
-        latch?.await(20, TimeUnit.SECONDS)
+        assertTrue(latch?.await(OTP_AWAIT_SECONDS, TimeUnit.SECONDS) ?: false)
 
         // Step 4: Input the emailed OTP code for confirmation
         signInResult = synchronousAuth.confirmSignIn(otpCode)
@@ -182,7 +197,7 @@ class AWSCognitoAuthPluginUserAuthTests {
 
         // Wait until the OTP code has been received
         latch = CountDownLatch(1)
-        latch?.await(20, TimeUnit.SECONDS)
+        assertTrue(latch?.await(OTP_AWAIT_SECONDS, TimeUnit.SECONDS) ?: false)
 
         // Step 4: Input the emailed OTP code for confirmation
         signInResult = synchronousAuth.confirmSignIn(otpCode)
@@ -219,7 +234,7 @@ class AWSCognitoAuthPluginUserAuthTests {
 
         // Wait until the OTP code has been received
         latch = CountDownLatch(1)
-        latch?.await(20, TimeUnit.SECONDS)
+        assertTrue(latch?.await(OTP_AWAIT_SECONDS, TimeUnit.SECONDS) ?: false)
 
         // Validation 3: Validate that providing an incorrect OTP code throws the proper exception
         assertFailsWith<CodeMismatchException> {
@@ -253,7 +268,7 @@ class AWSCognitoAuthPluginUserAuthTests {
 
         // Wait until the OTP code has been received
         latch = CountDownLatch(1)
-        latch?.await(20, TimeUnit.SECONDS)
+        assertTrue(latch?.await(OTP_AWAIT_SECONDS, TimeUnit.SECONDS) ?: false)
 
         // Step 3: Input the emailed OTP code for confirmation
         signInResult = synchronousAuth.confirmSignIn(otpCode)
@@ -282,7 +297,7 @@ class AWSCognitoAuthPluginUserAuthTests {
 
         // Wait until the OTP code has been received
         latch = CountDownLatch(1)
-        latch?.await(20, TimeUnit.SECONDS)
+        assertTrue(latch?.await(OTP_AWAIT_SECONDS, TimeUnit.SECONDS) ?: false)
 
         // Validation 2: Validate that providing an incorrect OTP code throws the proper exception
         assertFailsWith<CodeMismatchException> {
@@ -326,7 +341,7 @@ class AWSCognitoAuthPluginUserAuthTests {
 
         // Wait until the OTP code has been received
         latch = CountDownLatch(1)
-        latch?.await(20, TimeUnit.SECONDS)
+        assertTrue(latch?.await(OTP_AWAIT_SECONDS, TimeUnit.SECONDS) ?: false)
 
         // Step 4: Input the texted OTP code for confirmation
         signInResult = synchronousAuth.confirmSignIn(otpCode)
@@ -363,7 +378,7 @@ class AWSCognitoAuthPluginUserAuthTests {
 
         // Wait until the OTP code has been received
         latch = CountDownLatch(1)
-        latch?.await(20, TimeUnit.SECONDS)
+        assertTrue(latch?.await(OTP_AWAIT_SECONDS, TimeUnit.SECONDS) ?: false)
 
         // Validation 3: Validate that providing an incorrect OTP code throws the proper exception
         assertFailsWith<CodeMismatchException> {
@@ -399,7 +414,7 @@ class AWSCognitoAuthPluginUserAuthTests {
 
         // Wait until the OTP code has been received
         latch = CountDownLatch(1)
-        latch?.await(20, TimeUnit.SECONDS)
+        assertTrue(latch?.await(OTP_AWAIT_SECONDS, TimeUnit.SECONDS) ?: false)
 
         // Step 4: Input the texted OTP code for confirmation
         signInResult = synchronousAuth.confirmSignIn(otpCode)
@@ -430,7 +445,7 @@ class AWSCognitoAuthPluginUserAuthTests {
 
         // Wait until the OTP code has been received
         latch = CountDownLatch(1)
-        latch?.await(20, TimeUnit.SECONDS)
+        assertTrue(latch?.await(OTP_AWAIT_SECONDS, TimeUnit.SECONDS) ?: false)
 
         // Validation 2: Validate that providing an incorrect OTP code throws the proper exception
         assertFailsWith<CodeMismatchException> {
@@ -573,7 +588,7 @@ class AWSCognitoAuthPluginUserAuthTests {
 
         // Wait until the confirmation code has been received
         latch = CountDownLatch(1)
-        latch?.await(20, TimeUnit.SECONDS)
+        assertTrue(latch?.await(OTP_AWAIT_SECONDS, TimeUnit.SECONDS) ?: false)
 
         // Step 2: Confirm sign up with the correct OTP code
         signUpResult = synchronousAuth.confirmSignUp(userName, otpCode)
@@ -606,7 +621,7 @@ class AWSCognitoAuthPluginUserAuthTests {
 
         // Wait until the confirmation code has been received
         latch = CountDownLatch(1)
-        latch?.await(20, TimeUnit.SECONDS)
+        assertTrue(latch?.await(OTP_AWAIT_SECONDS, TimeUnit.SECONDS) ?: false)
 
         // Validation 3: Validate that confirm sign up fails the OTP code is incorrect
         assertFailsWith<CodeMismatchException> {
@@ -663,7 +678,7 @@ class AWSCognitoAuthPluginUserAuthTests {
 
         // Wait until the confirmation code has been received
         latch = CountDownLatch(1)
-        latch?.await(20, TimeUnit.SECONDS)
+        assertTrue(latch?.await(OTP_AWAIT_SECONDS, TimeUnit.SECONDS) ?: false)
 
         synchronousAuth.confirmSignUp(userName, otpCode)
     }
