@@ -211,7 +211,7 @@ internal class RunFaceLivenessSession(
             region.startsWith("us-isof", ignoreCase = true) -> ISO_PARTITION_BASE_DOMAIN
             else -> DEFAULT_BASE_DOMAIN
         }
-        return "wss://streaming-rekognition.$region.$baseDomain:443"
+        return "streaming-rekognition.$region.$baseDomain:443"
     }
 
     companion object {
@@ -227,7 +227,7 @@ internal class RunFaceLivenessSession(
 
         val uriBuilder = Uri.Builder()
             .scheme("wss")
-            .encodedAuthority(getStreamingEndpointForRegion(clientSessionInformation.region)
+            .encodedAuthority(getStreamingEndpointForRegion(clientSessionInformation.region))
             .appendPath("start-face-liveness-session-websocket")
             .appendQueryParameter("session-id", sessionId)
             .appendQueryParameter("video-width", clientSessionInformation.videoWidth.toInt().toString())
