@@ -10,6 +10,9 @@ public final class com/amplifyframework/auth/cognito/AWSCognitoAuthPlugin : com/
 	public static final field AWS_COGNITO_AUTH_LOG_NAMESPACE Ljava/lang/String;
 	public static final field Companion Lcom/amplifyframework/auth/cognito/AWSCognitoAuthPlugin$Companion;
 	public fun <init> ()V
+	public fun associateWebAuthnCredential (Landroid/app/Activity;Lcom/amplifyframework/auth/options/AuthAssociateWebAuthnCredentialsOptions;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
+	public fun associateWebAuthnCredential (Landroid/app/Activity;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
+	public fun autoSignIn (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public final fun clearFederationToIdentityPool (Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public fun configure (Lorg/json/JSONObject;Landroid/content/Context;)V
 	public fun confirmResetPassword (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmResetPasswordOptions;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
@@ -20,6 +23,8 @@ public final class com/amplifyframework/auth/cognito/AWSCognitoAuthPlugin : com/
 	public fun confirmSignUp (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun confirmUserAttribute (Lcom/amplifyframework/auth/AuthUserAttributeKey;Ljava/lang/String;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public fun deleteUser (Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
+	public fun deleteWebAuthnCredential (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthDeleteWebAuthnCredentialOptions;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
+	public fun deleteWebAuthnCredential (Ljava/lang/String;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public final fun federateToIdentityPool (Ljava/lang/String;Lcom/amplifyframework/auth/AuthProvider;Lcom/amplifyframework/auth/cognito/options/FederateToIdentityPoolOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public final fun federateToIdentityPool (Ljava/lang/String;Lcom/amplifyframework/auth/AuthProvider;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun fetchAuthSession (Lcom/amplifyframework/auth/options/AuthFetchSessionOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
@@ -36,6 +41,8 @@ public final class com/amplifyframework/auth/cognito/AWSCognitoAuthPlugin : com/
 	public fun getVersion ()Ljava/lang/String;
 	public fun handleWebUISignInResponse (Landroid/content/Intent;)V
 	public fun initialize (Landroid/content/Context;)V
+	public fun listWebAuthnCredentials (Lcom/amplifyframework/auth/options/AuthListWebAuthnCredentialsOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun listWebAuthnCredentials (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun rememberDevice (Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public fun resendSignUpCode (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthResendSignUpCodeOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun resendSignUpCode (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
@@ -53,7 +60,9 @@ public final class com/amplifyframework/auth/cognito/AWSCognitoAuthPlugin : com/
 	public fun signOut (Lcom/amplifyframework/auth/options/AuthSignOutOptions;Lcom/amplifyframework/core/Consumer;)V
 	public fun signOut (Lcom/amplifyframework/core/Consumer;)V
 	public fun signUp (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthSignUpOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public final fun updateMFAPreference (Lcom/amplifyframework/auth/cognito/MFAPreference;Lcom/amplifyframework/auth/cognito/MFAPreference;Lcom/amplifyframework/auth/cognito/MFAPreference;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public final fun updateMFAPreference (Lcom/amplifyframework/auth/cognito/MFAPreference;Lcom/amplifyframework/auth/cognito/MFAPreference;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
+	public static synthetic fun updateMFAPreference$default (Lcom/amplifyframework/auth/cognito/AWSCognitoAuthPlugin;Lcom/amplifyframework/auth/cognito/MFAPreference;Lcom/amplifyframework/auth/cognito/MFAPreference;Lcom/amplifyframework/auth/cognito/MFAPreference;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;ILjava/lang/Object;)V
 	public fun updatePassword (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public fun updateUserAttribute (Lcom/amplifyframework/auth/AuthUserAttribute;Lcom/amplifyframework/auth/options/AuthUpdateUserAttributeOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun updateUserAttribute (Lcom/amplifyframework/auth/AuthUserAttribute;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
@@ -236,7 +245,8 @@ public class com/amplifyframework/auth/cognito/exceptions/service/TooManyRequest
 }
 
 public class com/amplifyframework/auth/cognito/exceptions/service/UserCancelledException : com/amplifyframework/auth/exceptions/ServiceException {
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
 public class com/amplifyframework/auth/cognito/exceptions/service/UserLambdaValidationException : com/amplifyframework/auth/exceptions/ServiceException {
@@ -253,6 +263,21 @@ public class com/amplifyframework/auth/cognito/exceptions/service/UserNotFoundEx
 
 public class com/amplifyframework/auth/cognito/exceptions/service/UsernameExistsException : com/amplifyframework/auth/exceptions/ServiceException {
 	public fun <init> (Ljava/lang/Throwable;)V
+}
+
+public final class com/amplifyframework/auth/cognito/exceptions/service/WebAuthnNotEnabledException : com/amplifyframework/auth/exceptions/ServiceException {
+}
+
+public final class com/amplifyframework/auth/cognito/exceptions/webauthn/WebAuthnCredentialAlreadyExistsException : com/amplifyframework/auth/cognito/exceptions/webauthn/WebAuthnFailedException {
+}
+
+public class com/amplifyframework/auth/cognito/exceptions/webauthn/WebAuthnFailedException : com/amplifyframework/auth/AuthException {
+}
+
+public final class com/amplifyframework/auth/cognito/exceptions/webauthn/WebAuthnNotSupportedException : com/amplifyframework/auth/cognito/exceptions/webauthn/WebAuthnFailedException {
+}
+
+public final class com/amplifyframework/auth/cognito/exceptions/webauthn/WebAuthnRpMismatchException : com/amplifyframework/auth/cognito/exceptions/webauthn/WebAuthnFailedException {
 }
 
 public final class com/amplifyframework/auth/cognito/helpers/FlutterFactory {
@@ -293,9 +318,11 @@ public final class com/amplifyframework/auth/cognito/options/AWSCognitoAuthConfi
 	public final fun component1 ()Ljava/util/Map;
 	public final fun component2 ()Ljava/util/List;
 	public final fun component3 ()Ljava/lang/String;
-	public final fun copy (Ljava/util/Map;Ljava/util/List;Ljava/lang/String;)Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthConfirmSignInOptions;
-	public static synthetic fun copy$default (Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthConfirmSignInOptions;Ljava/util/Map;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthConfirmSignInOptions;
+	public final fun component4 ()Ljava/lang/ref/WeakReference;
+	public final fun copy (Ljava/util/Map;Ljava/util/List;Ljava/lang/String;Ljava/lang/ref/WeakReference;)Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthConfirmSignInOptions;
+	public static synthetic fun copy$default (Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthConfirmSignInOptions;Ljava/util/Map;Ljava/util/List;Ljava/lang/String;Ljava/lang/ref/WeakReference;ILjava/lang/Object;)Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthConfirmSignInOptions;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCallingActivity ()Ljava/lang/ref/WeakReference;
 	public final fun getFriendlyDeviceName ()Ljava/lang/String;
 	public final fun getMetadata ()Ljava/util/Map;
 	public final fun getUserAttributes ()Ljava/util/List;
@@ -307,6 +334,7 @@ public final class com/amplifyframework/auth/cognito/options/AWSCognitoAuthConfi
 	public fun <init> ()V
 	public fun build ()Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthConfirmSignInOptions;
 	public synthetic fun build ()Lcom/amplifyframework/auth/options/AuthConfirmSignInOptions;
+	public final fun callingActivity (Landroid/app/Activity;)Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthConfirmSignInOptions$CognitoBuilder;
 	public final fun friendlyDeviceName (Ljava/lang/String;)Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthConfirmSignInOptions$CognitoBuilder;
 	public fun getThis ()Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthConfirmSignInOptions$CognitoBuilder;
 	public synthetic fun getThis ()Lcom/amplifyframework/auth/options/AuthConfirmSignInOptions$Builder;
@@ -343,6 +371,41 @@ public final class com/amplifyframework/auth/cognito/options/AWSCognitoAuthConfi
 public final class com/amplifyframework/auth/cognito/options/AWSCognitoAuthConfirmSignUpOptions$Companion {
 	public final fun builder ()Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthConfirmSignUpOptions$CognitoBuilder;
 	public final fun invoke (Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthConfirmSignUpOptions;
+}
+
+public final class com/amplifyframework/auth/cognito/options/AWSCognitoAuthListWebAuthnCredentialsOptions : com/amplifyframework/auth/options/AuthListWebAuthnCredentialsOptions {
+	public static final field Companion Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthListWebAuthnCredentialsOptions$Companion;
+	public static final fun builder ()Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthListWebAuthnCredentialsOptions$Builder;
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/Integer;
+	public final fun copy (Ljava/lang/String;Ljava/lang/Integer;)Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthListWebAuthnCredentialsOptions;
+	public static synthetic fun copy$default (Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthListWebAuthnCredentialsOptions;Ljava/lang/String;Ljava/lang/Integer;ILjava/lang/Object;)Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthListWebAuthnCredentialsOptions;
+	public static final fun defaults ()Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthListWebAuthnCredentialsOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMaxResults ()Ljava/lang/Integer;
+	public final fun getNextToken ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/auth/cognito/options/AWSCognitoAuthListWebAuthnCredentialsOptions$Builder : com/amplifyframework/auth/options/AuthListWebAuthnCredentialsOptions$Builder {
+	public fun <init> ()V
+	public fun build ()Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthListWebAuthnCredentialsOptions;
+	public synthetic fun build ()Lcom/amplifyframework/auth/options/AuthListWebAuthnCredentialsOptions;
+	public final fun getMaxResults ()Ljava/lang/Integer;
+	public final fun getNextToken ()Ljava/lang/String;
+	public fun getThis ()Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthListWebAuthnCredentialsOptions$Builder;
+	public synthetic fun getThis ()Lcom/amplifyframework/auth/options/AuthListWebAuthnCredentialsOptions$Builder;
+	public final fun maxResults (Ljava/lang/Integer;)Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthListWebAuthnCredentialsOptions$Builder;
+	public final fun nextToken (Ljava/lang/String;)Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthListWebAuthnCredentialsOptions$Builder;
+	public final synthetic fun setMaxResults (Ljava/lang/Integer;)V
+	public final synthetic fun setNextToken (Ljava/lang/String;)V
+}
+
+public final class com/amplifyframework/auth/cognito/options/AWSCognitoAuthListWebAuthnCredentialsOptions$Companion {
+	public final fun builder ()Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthListWebAuthnCredentialsOptions$Builder;
+	public final fun defaults ()Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthListWebAuthnCredentialsOptions;
+	public final synthetic fun invoke (Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthListWebAuthnCredentialsOptions;
 }
 
 public final class com/amplifyframework/auth/cognito/options/AWSCognitoAuthResendSignUpCodeOptions : com/amplifyframework/auth/options/AuthResendSignUpCodeOptions {
@@ -427,7 +490,9 @@ public final class com/amplifyframework/auth/cognito/options/AWSCognitoAuthSignI
 	public static fun builder ()Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthSignInOptions$CognitoBuilder;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getAuthFlowType ()Lcom/amplifyframework/auth/cognito/options/AuthFlowType;
+	public fun getCallingActivity ()Ljava/lang/ref/WeakReference;
 	public fun getMetadata ()Ljava/util/Map;
+	public fun getPreferredFirstFactor ()Lcom/amplifyframework/auth/AuthFactorType;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -437,9 +502,11 @@ public final class com/amplifyframework/auth/cognito/options/AWSCognitoAuthSignI
 	public fun authFlowType (Lcom/amplifyframework/auth/cognito/options/AuthFlowType;)Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthSignInOptions$CognitoBuilder;
 	public fun build ()Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthSignInOptions;
 	public synthetic fun build ()Lcom/amplifyframework/auth/options/AuthSignInOptions;
+	public fun callingActivity (Landroid/app/Activity;)Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthSignInOptions$CognitoBuilder;
 	public fun getThis ()Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthSignInOptions$CognitoBuilder;
 	public synthetic fun getThis ()Lcom/amplifyframework/auth/options/AuthSignInOptions$Builder;
 	public fun metadata (Ljava/util/Map;)Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthSignInOptions$CognitoBuilder;
+	public fun preferredFirstFactor (Lcom/amplifyframework/auth/AuthFactorType;)Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthSignInOptions$CognitoBuilder;
 }
 
 public final class com/amplifyframework/auth/cognito/options/AWSCognitoAuthSignOutOptions : com/amplifyframework/auth/options/AuthSignOutOptions {
@@ -584,6 +651,7 @@ public final class com/amplifyframework/auth/cognito/options/AuthFlowType : java
 	public static final field CUSTOM_AUTH Lcom/amplifyframework/auth/cognito/options/AuthFlowType;
 	public static final field CUSTOM_AUTH_WITHOUT_SRP Lcom/amplifyframework/auth/cognito/options/AuthFlowType;
 	public static final field CUSTOM_AUTH_WITH_SRP Lcom/amplifyframework/auth/cognito/options/AuthFlowType;
+	public static final field USER_AUTH Lcom/amplifyframework/auth/cognito/options/AuthFlowType;
 	public static final field USER_PASSWORD_AUTH Lcom/amplifyframework/auth/cognito/options/AuthFlowType;
 	public static final field USER_SRP_AUTH Lcom/amplifyframework/auth/cognito/options/AuthFlowType;
 	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/auth/cognito/options/AuthFlowType;
@@ -611,6 +679,19 @@ public final class com/amplifyframework/auth/cognito/options/FederateToIdentityP
 public final class com/amplifyframework/auth/cognito/options/FederateToIdentityPoolOptions$Companion {
 	public final fun builder ()Lcom/amplifyframework/auth/cognito/options/FederateToIdentityPoolOptions$CognitoBuilder;
 	public final fun invoke (Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/auth/cognito/options/FederateToIdentityPoolOptions;
+}
+
+public final class com/amplifyframework/auth/cognito/result/AWSCognitoAuthListWebAuthnCredentialsResult : com/amplifyframework/auth/result/AuthListWebAuthnCredentialsResult {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/util/List;Ljava/lang/String;)Lcom/amplifyframework/auth/cognito/result/AWSCognitoAuthListWebAuthnCredentialsResult;
+	public static synthetic fun copy$default (Lcom/amplifyframework/auth/cognito/result/AWSCognitoAuthListWebAuthnCredentialsResult;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/auth/cognito/result/AWSCognitoAuthListWebAuthnCredentialsResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCredentials ()Ljava/util/List;
+	public final fun getNextToken ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public abstract class com/amplifyframework/auth/cognito/result/AWSCognitoAuthSignOutResult : com/amplifyframework/auth/result/AuthSignOutResult {

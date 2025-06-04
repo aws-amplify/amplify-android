@@ -45,32 +45,28 @@ import kotlinx.coroutines.flow.takeWhile
 
 class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) : DataStore {
     @Throws(DataStoreException::class)
-    override suspend fun <T : Model> save(item: T, predicate: QueryPredicate) {
-        return suspendCoroutine { continuation ->
-            delegate.save(
-                item,
-                predicate,
-                { continuation.resume(Unit) },
-                { continuation.resumeWithException(it) }
-            )
-        }
+    override suspend fun <T : Model> save(item: T, predicate: QueryPredicate) = suspendCoroutine { continuation ->
+        delegate.save(
+            item,
+            predicate,
+            { continuation.resume(Unit) },
+            { continuation.resumeWithException(it) }
+        )
     }
 
     @Throws(DataStoreException::class)
-    override suspend fun <T : Model> delete(item: T, predicate: QueryPredicate) {
-        return suspendCoroutine { continuation ->
-            delegate.delete(
-                item,
-                predicate,
-                { continuation.resume(Unit) },
-                { continuation.resumeWithException(it) }
-            )
-        }
+    override suspend fun <T : Model> delete(item: T, predicate: QueryPredicate) = suspendCoroutine { continuation ->
+        delegate.delete(
+            item,
+            predicate,
+            { continuation.resume(Unit) },
+            { continuation.resumeWithException(it) }
+        )
     }
 
     @Throws(DataStoreException::class)
-    override suspend fun <T : Model> delete(byClass: KClass<T>, filter: QueryPredicate) {
-        return suspendCoroutine { continuation ->
+    override suspend fun <T : Model> delete(byClass: KClass<T>, filter: QueryPredicate) =
+        suspendCoroutine { continuation ->
             delegate.delete(
                 byClass.java,
                 filter,
@@ -78,25 +74,22 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
                 { continuation.resumeWithException(it) }
             )
         }
-    }
 
     @ExperimentalCoroutinesApi
     @Throws(DataStoreException::class)
-    override fun <T : Model> query(itemClass: KClass<T>, options: QueryOptions): Flow<T> {
-        return callbackFlow {
-            delegate.query(
-                itemClass.java,
-                options,
-                {
-                    while (it.hasNext()) {
-                        trySendBlocking(it.next())
-                    }
-                    close()
-                },
-                { close(it) }
-            )
-            awaitClose {}
-        }
+    override fun <T : Model> query(itemClass: KClass<T>, options: QueryOptions): Flow<T> = callbackFlow {
+        delegate.query(
+            itemClass.java,
+            options,
+            {
+                while (it.hasNext()) {
+                    trySendBlocking(it.next())
+                }
+                close()
+            },
+            { close(it) }
+        )
+        awaitClose {}
     }
 
     @OptIn(FlowPreview::class)
@@ -116,8 +109,7 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
     @OptIn(FlowPreview::class)
     @ExperimentalCoroutinesApi
     @Throws(DataStoreException::class)
-    override suspend fun <T : Model> observe(itemClass: KClass<T>, itemId: String):
-        Flow<DataStoreItemChange<T>> {
+    override suspend fun <T : Model> observe(itemClass: KClass<T>, itemId: String): Flow<DataStoreItemChange<T>> {
         val observation = Observation<DataStoreItemChange<T>>()
         delegate.observe(
             itemClass.java,
@@ -168,33 +160,27 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
     }
 
     @Throws(DataStoreException::class)
-    override suspend fun start() {
-        return suspendCoroutine { continuation ->
-            delegate.start(
-                { continuation.resume(Unit) },
-                { continuation.resumeWithException(it) }
-            )
-        }
+    override suspend fun start() = suspendCoroutine { continuation ->
+        delegate.start(
+            { continuation.resume(Unit) },
+            { continuation.resumeWithException(it) }
+        )
     }
 
     @Throws(DataStoreException::class)
-    override suspend fun stop() {
-        return suspendCoroutine { continuation ->
-            delegate.stop(
-                { continuation.resume(Unit) },
-                { continuation.resumeWithException(it) }
-            )
-        }
+    override suspend fun stop() = suspendCoroutine { continuation ->
+        delegate.stop(
+            { continuation.resume(Unit) },
+            { continuation.resumeWithException(it) }
+        )
     }
 
     @Throws(DataStoreException::class)
-    override suspend fun clear() {
-        return suspendCoroutine { continuation ->
-            delegate.clear(
-                { continuation.resume(Unit) },
-                { continuation.resumeWithException(it) }
-            )
-        }
+    override suspend fun clear() = suspendCoroutine { continuation ->
+        delegate.clear(
+            { continuation.resume(Unit) },
+            { continuation.resumeWithException(it) }
+        )
     }
 
     internal class Observation<T>(

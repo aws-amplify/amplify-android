@@ -205,6 +205,20 @@ internal class RunFaceLivenessSession(
         reasonCode?.let { livenessWebSocket.destroy(it) } ?: livenessWebSocket.destroy()
     }
 
+
+    private fun getStreamingEndpointForRegion(region: String): String {
+        val baseDomain = when {
+            region.startsWith("us-isof", ignoreCase = true) -> ISO_PARTITION_BASE_DOMAIN
+            else -> DEFAULT_BASE_DOMAIN
+        }
+        return "wss://streaming-rekognition.$region.$baseDomain:443"
+    }
+
+    companion object {
+        private const val ISO_PARTITION_BASE_DOMAIN = "csp.hci.ic.gov"
+        private const val DEFAULT_BASE_DOMAIN = "amazonaws.com"
+    }
+
     @VisibleForTesting
     fun buildWebSocketEndpoint(): String {
         val challengeVersionString = clientSessionInformation.challengeVersions.joinToString(",") {
@@ -213,7 +227,7 @@ internal class RunFaceLivenessSession(
 
         val uriBuilder = Uri.Builder()
             .scheme("wss")
-            .encodedAuthority("streaming-rekognition.${clientSessionInformation.region}.amazonaws.com:443")
+            .encodedAuthority(getStreamingEndpointForRegion(clientSessionInformation.region)
             .appendPath("start-face-liveness-session-websocket")
             .appendQueryParameter("session-id", sessionId)
             .appendQueryParameter("video-width", clientSessionInformation.videoWidth.toInt().toString())

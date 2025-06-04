@@ -32,10 +32,8 @@ import com.amplifyframework.predictions.models.Table
 import com.amplifyframework.predictions.models.TextFormatType
 import com.amplifyframework.predictions.result.IdentifyDocumentTextResult
 import com.amplifyframework.predictions.result.IdentifyResult
-import java.lang.StringBuilder
+import com.amplifyframework.util.setHttpEngine
 import java.nio.ByteBuffer
-import java.util.ArrayList
-import java.util.HashMap
 import java.util.concurrent.Executors
 import kotlinx.coroutines.runBlocking
 
@@ -47,6 +45,7 @@ internal class AWSTextractService(
     private val authCredentialsProvider: CredentialsProvider
 ) {
     val client: TextractClient = TextractClient {
+        setHttpEngine()
         this.region = pluginConfiguration.defaultRegion
         this.credentialsProvider = authCredentialsProvider
     }

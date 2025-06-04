@@ -24,6 +24,7 @@ import com.amplifyframework.storage.ObjectMetadata
 
 internal data class UploadOptions @JvmOverloads constructor(
     val bucket: String,
+    val region: String,
     val objectMetadata: ObjectMetadata = ObjectMetadata(),
     val cannedAcl: ObjectCannedAcl? = null,
     val transferListener: TransferListener? = null

@@ -15,6 +15,8 @@
 
 package com.amplifyframework.rx;
 
+import android.annotation.SuppressLint;
+
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.testutils.random.RandomString;
@@ -45,6 +47,7 @@ public final class RxHubBindingTest {
     /**
      * A subscriber should receive a value published on the Hub.
      */
+    @SuppressLint("CheckResult")
     @Test
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public void publishedEventIsReceived() {

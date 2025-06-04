@@ -67,6 +67,7 @@ class PinpointAnalyticsStressTest {
         @JvmStatic
         fun setupBefore() {
             val context = ApplicationProvider.getApplicationContext<Context>()
+
             @RawRes val resourceId = Resources.getRawResourceId(context, CONFIGURATION_NAME)
             appId = readAppIdFromResource(context, resourceId)
             preferences = context.getSharedPreferences(
@@ -120,6 +121,7 @@ class PinpointAnalyticsStressTest {
     @Before
     fun flushEvents() {
         val context = ApplicationProvider.getApplicationContext<Context>()
+
         @RawRes val resourceId = Resources.getRawResourceId(context, CREDENTIALS_RESOURCE_NAME)
         val userAndPasswordPair = readCredentialsFromResource(context, resourceId)
         synchronousAuth.signOut()

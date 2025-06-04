@@ -47,10 +47,7 @@ class RepeatRule : TestRule {
         }
     }
 
-    override fun apply(
-        statement: Statement,
-        description: Description
-    ): Statement {
+    override fun apply(statement: Statement, description: Description): Statement {
         var result = statement
         val repeat: Repeat = description.getAnnotation(Repeat::class.java) as Repeat
         val times: Int = repeat.value

@@ -139,16 +139,10 @@ interface Storage {
         replaceWith = ReplaceWith("list(StoragePath, StoragePagedListOptions)")
     )
     @Throws(StorageException::class)
-    suspend fun list(
-        path: String,
-        options: StoragePagedListOptions
-    ): StorageListResult
+    suspend fun list(path: String, options: StoragePagedListOptions): StorageListResult
 
     @Throws(StorageException::class)
-    suspend fun list(
-        path: StoragePath,
-        options: StoragePagedListOptions
-    ): StorageListResult
+    suspend fun list(path: StoragePath, options: StoragePagedListOptions): StorageListResult
 
     @Throws(StorageException::class)
     suspend fun getTransfer(transferId: String): StorageTransferOperation<*, StorageTransferResult>
@@ -166,9 +160,7 @@ interface Storage {
             delegate?.cancel()
         }
 
-        fun progress(): Flow<StorageTransferProgress> {
-            return progress
-        }
+        fun progress(): Flow<StorageTransferProgress> = progress
 
         @Suppress("UNCHECKED_CAST")
         suspend fun result(): T {

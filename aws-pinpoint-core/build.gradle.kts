@@ -24,6 +24,10 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 
 group = properties["POM_GROUP"].toString()
 
+android {
+    namespace = "com.amplifyframework.pinpoint.core"
+}
+
 dependencies {
     implementation(project(":core"))
 
@@ -44,8 +48,4 @@ dependencies {
     androidTestImplementation(libs.test.androidx.core)
     androidTestImplementation(libs.test.androidx.runner)
     androidTestImplementation(libs.test.androidx.junit)
-}
-
-android.kotlinOptions {
-    jvmTarget = "11"
 }

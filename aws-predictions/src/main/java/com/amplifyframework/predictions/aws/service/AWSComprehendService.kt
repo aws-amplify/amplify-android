@@ -40,7 +40,7 @@ import com.amplifyframework.predictions.models.Sentiment
 import com.amplifyframework.predictions.models.SentimentType
 import com.amplifyframework.predictions.models.Syntax
 import com.amplifyframework.predictions.result.InterpretResult
-import java.util.ArrayList
+import com.amplifyframework.util.setHttpEngine
 import java.util.concurrent.Executors
 import kotlinx.coroutines.runBlocking
 
@@ -52,6 +52,7 @@ internal class AWSComprehendService(
     private val authCredentialsProvider: CredentialsProvider
 ) {
     val client: ComprehendClient = ComprehendClient {
+        setHttpEngine()
         this.region = pluginConfiguration.defaultRegion
         this.credentialsProvider = authCredentialsProvider
     }
@@ -62,11 +63,7 @@ internal class AWSComprehendService(
         private const val PERCENT = 100
     }
 
-    fun comprehend(
-        text: String,
-        onSuccess: Consumer<InterpretResult>,
-        onError: Consumer<PredictionsException>
-    ) {
+    fun comprehend(text: String, onSuccess: Consumer<InterpretResult>, onError: Consumer<PredictionsException>) {
         execute(
             {
                 // First obtain the dominant language to begin analysis

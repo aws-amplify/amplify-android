@@ -22,6 +22,10 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 
 group = properties["POM_GROUP"].toString()
 
+android {
+    namespace = "com.amplifyframework.geo.location"
+}
+
 dependencies {
     implementation(project(":core"))
     implementation(project(":aws-core"))
@@ -38,8 +42,4 @@ dependencies {
     androidTestImplementation(libs.test.androidx.core)
     androidTestImplementation(libs.test.androidx.runner)
     androidTestImplementation(libs.test.androidx.junit)
-}
-
-afterEvaluate {
-    android.kotlinOptions.jvmTarget = JavaVersion.VERSION_11.toString()
 }

@@ -44,9 +44,9 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class AWSCognitoIdentityPoolOperationsTest {
     private val config = AWSCognitoIdentityPoolConfiguration("poolId")
-    private val KEY_LOGINS_PROVIDER = "amplify.${config.poolId}.session.loginsProvider"
-    private val KEY_IDENTITY_ID = "amplify.${config.poolId}.session.identityId"
-    private val KEY_AWS_CREDENTIALS = "amplify.${config.poolId}.session.credential"
+    private val keyLoginsProvider = "amplify.${config.poolId}.session.loginsProvider"
+    private val keyIdentityId = "amplify.${config.poolId}.session.identityId"
+    private val keyAwsCredentials = "amplify.${config.poolId}.session.credential"
 
     private val context = mockk<Context>(relaxed = true)
     private val mockCognitoIDClient = mockk<CognitoIdentityClient>()
@@ -95,11 +95,11 @@ class AWSCognitoIdentityPoolOperationsTest {
         val logins = listOf(LoginProvider("test-provider", "test-id-token"))
         val instant = Instant.now().epochSeconds + 1000L
 
-        coEvery { anyConstructed<AuthCredentialStore>().get(KEY_LOGINS_PROVIDER) } returns Json.encodeToString(
+        coEvery { anyConstructed<AuthCredentialStore>().get(keyLoginsProvider) } returns Json.encodeToString(
             logins
         )
-        coEvery { anyConstructed<AuthCredentialStore>().get(KEY_IDENTITY_ID) } returns "test-identity-id"
-        coEvery { anyConstructed<AuthCredentialStore>().get(KEY_AWS_CREDENTIALS) } returns Json.encodeToString(
+        coEvery { anyConstructed<AuthCredentialStore>().get(keyIdentityId) } returns "test-identity-id"
+        coEvery { anyConstructed<AuthCredentialStore>().get(keyAwsCredentials) } returns Json.encodeToString(
             AWSCredentialsInternal("accessKey", "secretKey", "session", instant)
         )
 
@@ -116,11 +116,11 @@ class AWSCognitoIdentityPoolOperationsTest {
     fun testFetchAWSCognitoIdentityPoolDetailsWithCredsExpiredSucceeds() = runBlocking {
         val logins = listOf(LoginProvider("test-provider", "test-id-token"))
 
-        coEvery { anyConstructed<AuthCredentialStore>().get(KEY_LOGINS_PROVIDER) } returns Json.encodeToString(
+        coEvery { anyConstructed<AuthCredentialStore>().get(keyLoginsProvider) } returns Json.encodeToString(
             logins
         )
-        coEvery { anyConstructed<AuthCredentialStore>().get(KEY_IDENTITY_ID) } returns "test-identity-id"
-        coEvery { anyConstructed<AuthCredentialStore>().get(KEY_AWS_CREDENTIALS) } returns Json.encodeToString(
+        coEvery { anyConstructed<AuthCredentialStore>().get(keyIdentityId) } returns "test-identity-id"
+        coEvery { anyConstructed<AuthCredentialStore>().get(keyAwsCredentials) } returns Json.encodeToString(
             AWSCredentialsInternal("accessKey", "secretKey", "session", 0)
         )
 
@@ -160,7 +160,7 @@ class AWSCognitoIdentityPoolOperationsTest {
             AuthSessionResult.failure(expectedException)
         )
 
-        coEvery { mockCognitoIDClient.getId(any()) } throws(serviceException)
+        coEvery { mockCognitoIDClient.getId(any()) } throws (serviceException)
 
         val result = awsCognitoIdentityPoolOperations.fetchAWSCognitoIdentityPoolDetails(logins, false)
         assertEquals(expected, result)

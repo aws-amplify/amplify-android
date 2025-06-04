@@ -2,8 +2,16 @@ name: Prepare Next Release
 on:
   workflow_dispatch:
     inputs:
+      component:
+        type: choice
+        description: Component to release
+        required: true
+        options:
+          - AmplifyAndroid
+          - ApolloExtensions
+          - AppSyncEvents
       release_tag:
-        description: 'Release Tag'
+        description: 'Previous Release Tag'
         required: false
         type: string
 env:
@@ -24,7 +32,7 @@ jobs:
         ref: ${{ env.BASE_BRANCH }}
         fetch-depth: 0
     - name: Set up Ruby
-      uses: ruby/setup-ruby@8575951200e472d5f2d95c625da0c7bec8217c42 # v1.161.0
+      uses: ruby/setup-ruby@32110d4e311bd8996b2a82bf2a43b714ccc91777 # v1.221.0
       with:
         ruby-version: "3.0"
     - name: Install dependencies
@@ -46,9 +54,10 @@ jobs:
       env:
         RELEASE_MANAGER_TOKEN: ${{secrets.GITHUB_TOKEN}}
         RELEASE_TAG: ${{ github.event.inputs.release_tag }}
+        COMPONENT: ${{ github.event.inputs.component }}
       run: |
         cd scripts
-        bundle exec fastlane android create_next_release_pr release_tag:"$RELEASE_TAG" base_branch:"$BASE_BRANCH"
+        bundle exec fastlane android create_next_release_pr release_tag:"$RELEASE_TAG" base_branch:"$BASE_BRANCH" release_component_target:"$COMPONENT"
     - name: Check modified file content
       run: |
         cat gradle.properties

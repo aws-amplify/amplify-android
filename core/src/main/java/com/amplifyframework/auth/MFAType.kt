@@ -27,5 +27,10 @@ enum class MFAType {
     /**
      * Time-based One Time Password linked with an authenticator app
      */
-    TOTP;
+    TOTP,
+
+    /**
+     * Receives MFA codes with an email
+     */
+    EMAIL
 }

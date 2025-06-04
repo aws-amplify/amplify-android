@@ -18,30 +18,18 @@ package com.amplifyframework.auth.cognito.usecases
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeDeliveryDetailsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
-import kotlin.test.assertEquals
+import com.amplifyframework.auth.cognito.util.toAuthCodeDeliveryDetails
+import io.kotest.matchers.shouldBe
 import org.junit.Test
 
 /**
  * Tests for [CodeDeliveryDetailsType.toAuthCodeDeliveryDetails] extension
  */
 class CodeDeliveryDetailsTypeExtensionTest {
-
-    @Test(expected = IllegalArgumentException::class)
-    fun `CodeDeliveryDetailsType cannot be converted to AuthCodeDeliveryDetails without destination`() {
-        // GIVEN
-        val deliveryDetailsType = CodeDeliveryDetailsType.invoke {
-            deliveryMedium = DeliveryMediumType.Email
-            attributeName = "dummy attribute"
-        }
-
-        // WHEN
-        deliveryDetailsType.toAuthCodeDeliveryDetails()
-    }
-
     @Test
     fun `CodeDeliveryDetailsType maps to AuthCodeDeliveryDetails`() {
         // GIVEN
-        val deliveryDetailsType = CodeDeliveryDetailsType.invoke {
+        val deliveryDetailsType = CodeDeliveryDetailsType {
             deliveryMedium = DeliveryMediumType.Email
             attributeName = "dummy attribute"
             destination = "dummy destination"
@@ -56,6 +44,6 @@ class CodeDeliveryDetailsTypeExtensionTest {
         val authCodeDeliveryDetails = deliveryDetailsType.toAuthCodeDeliveryDetails()
 
         // THEN
-        assertEquals(expectedResult, authCodeDeliveryDetails)
+        authCodeDeliveryDetails shouldBe expectedResult
     }
 }

@@ -1,0 +1,7 @@
+subscription OnCreateMfaInfo {
+    onCreateMfaInfo {
+        username
+        code
+        expirationTime
+    }
+}

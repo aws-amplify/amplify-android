@@ -63,7 +63,7 @@ internal class HostedUIClient private constructor(
         launchCustomTabs(
             uri = createAuthorizeUri(hostedUIOptions),
             activity = hostedUIOptions.callingActivity,
-            customBrowserPackage = hostedUIOptions.browserPackage,
+            customBrowserPackage = hostedUIOptions.browserPackage
         )
     }
 
@@ -71,7 +71,7 @@ internal class HostedUIClient private constructor(
     fun launchCustomTabsSignOut(browserPackage: String?) {
         launchCustomTabs(
             uri = createSignOutUri(),
-            customBrowserPackage = browserPackage,
+            customBrowserPackage = browserPackage
         )
     }
 
@@ -158,15 +158,14 @@ internal class HostedUIClient private constructor(
         return builder.build()
     }
 
-    private fun createFetchTokenUrl() =
-        URL(
-            Uri.Builder()
-                .scheme("https")
-                .authority(configuration.domain)
-                .appendPath("oauth2")
-                .appendPath("token")
-                .build().toString()
-        )
+    private fun createFetchTokenUrl() = URL(
+        Uri.Builder()
+            .scheme("https")
+            .authority(configuration.domain)
+            .appendPath("oauth2")
+            .appendPath("token")
+            .build().toString()
+    )
 
     private fun createFetchTokenHeaders(): Map<String, String> =
         mutableMapOf("Content-Type" to "application/x-www-form-urlencoded").apply {
@@ -178,13 +177,12 @@ internal class HostedUIClient private constructor(
             }
         }
 
-    internal fun createSignOutUri(): Uri =
-        Uri.Builder()
-            .scheme("https")
-            .authority(configuration.domain).appendPath("logout")
-            .appendQueryParameter("client_id", configuration.appClient)
-            .appendQueryParameter("logout_uri", configuration.signOutRedirectURI)
-            .build()
+    internal fun createSignOutUri(): Uri = Uri.Builder()
+        .scheme("https")
+        .authority(configuration.domain).appendPath("logout")
+        .appendQueryParameter("client_id", configuration.appClient)
+        .appendQueryParameter("logout_uri", configuration.signOutRedirectURI)
+        .build()
 
     override fun onCustomTabsServiceConnected(name: ComponentName, client: CustomTabsClient) {
         this.client = client
@@ -210,11 +208,10 @@ internal class HostedUIClient private constructor(
     companion object {
         const val CUSTOM_TABS_ACTIVITY_CODE = 49281
 
-        fun create(context: Context, configuration: OauthConfiguration?, logger: Logger) =
-            if (configuration != null) {
-                HostedUIClient(context, configuration, logger)
-            } else {
-                null
-            }
+        fun create(context: Context, configuration: OauthConfiguration?, logger: Logger) = if (configuration != null) {
+            HostedUIClient(context, configuration, logger)
+        } else {
+            null
+        }
     }
 }

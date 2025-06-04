@@ -126,7 +126,7 @@ class AWSS3StorageSubPathStrategyListTest {
 
         val result = synchronousStorage.list(path, options)
 
-        result.items.size shouldBeExactly(6)
+        result.items.size shouldBeExactly (6)
         result.items.mapNotNull { it.path } shouldContainExactly listOf(
             "public/photos/05",
             "public/photos/202$/custom",
@@ -147,10 +147,10 @@ class AWSS3StorageSubPathStrategyListTest {
 
         var result = synchronousStorage.list(StoragePath.fromString("public/photos/"), options)
 
-        result.items.size shouldBeExactly(1)
+        result.items.size shouldBeExactly (1)
         result.items.mapNotNull { it.path } shouldContainExactly listOf("public/photos/05")
 
-        result.excludedSubpaths.size shouldBeExactly(3)
+        result.excludedSubpaths.size shouldBeExactly (3)
         result.excludedSubpaths shouldContainExactly listOf(
             "public/photos/202$/",
             "public/photos/2023/",
@@ -159,7 +159,7 @@ class AWSS3StorageSubPathStrategyListTest {
 
         result = synchronousStorage.list(StoragePath.fromString("public/photos/2023/"), options)
 
-        result.items.size shouldBeExactly(2)
+        result.items.size shouldBeExactly (2)
         result.items.mapNotNull { it.path } shouldContainExactly listOf(
             "public/photos/2023/01",
             "public/photos/2023/02"
@@ -178,7 +178,7 @@ class AWSS3StorageSubPathStrategyListTest {
 
         var result = synchronousStorage.list(StoragePath.fromString("public/photos/"), options)
 
-        result.items.size shouldBeExactly(5)
+        result.items.size shouldBeExactly (5)
         result.items.mapNotNull { it.path } shouldContainExactly listOf(
             "public/photos/05",
             "public/photos/2023/01",
@@ -187,15 +187,15 @@ class AWSS3StorageSubPathStrategyListTest {
             "public/photos/2024/04"
         )
 
-        result.excludedSubpaths.size shouldBeExactly(1)
+        result.excludedSubpaths.size shouldBeExactly (1)
         result.excludedSubpaths shouldContainExactly listOf("public/photos/202$")
 
         result = synchronousStorage.list(StoragePath.fromString("public/photos/2023/"), options)
 
-        result.items.size shouldBeExactly(2)
+        result.items.size shouldBeExactly (2)
         result.items.mapNotNull { it.path } shouldContainExactly listOf(
             "public/photos/2023/01",
-            "public/photos/2023/02",
+            "public/photos/2023/02"
         )
     }
 }

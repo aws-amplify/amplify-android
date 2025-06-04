@@ -29,26 +29,24 @@ import aws.smithy.kotlin.runtime.io.readAll
 internal open class ProgressListenerInterceptor(
     private val progressListener: ProgressListener
 ) : HttpInterceptor {
-    fun convertBodyWithProgressUpdates(httpBody: HttpBody): HttpBody {
-        return when (httpBody) {
-            is HttpBody.ChannelContent -> {
-                SdkByteReadChannelWithProgressUpdates(
-                    httpBody,
-                    progressListener
-                )
-            }
-            is HttpBody.SourceContent -> {
-                SourceContentWithProgressUpdates(
-                    httpBody,
-                    progressListener
-                )
-            }
-            is HttpBody.Bytes -> {
-                httpBody
-            }
-            is HttpBody.Empty -> {
-                httpBody
-            }
+    fun convertBodyWithProgressUpdates(httpBody: HttpBody): HttpBody = when (httpBody) {
+        is HttpBody.ChannelContent -> {
+            SdkByteReadChannelWithProgressUpdates(
+                httpBody,
+                progressListener
+            )
+        }
+        is HttpBody.SourceContent -> {
+            SourceContentWithProgressUpdates(
+                httpBody,
+                progressListener
+            )
+        }
+        is HttpBody.Bytes -> {
+            httpBody
+        }
+        is HttpBody.Empty -> {
+            httpBody
         }
     }
 
@@ -60,18 +58,14 @@ internal open class ProgressListenerInterceptor(
         override val contentLength: Long?
             get() = sourceContent.contentLength
 
-        override fun readFrom(): SdkSource {
-            return object : SdkSource {
-                override fun close() {
-                    delegate.close()
-                }
+        override fun readFrom(): SdkSource = object : SdkSource {
+            override fun close() {
+                delegate.close()
+            }
 
-                override fun read(sink: SdkBuffer, limit: Long): Long {
-                    return delegate.read(sink, limit).also {
-                        if (it > 0) {
-                            progressListener.progressChanged(it)
-                        }
-                    }
+            override fun read(sink: SdkBuffer, limit: Long): Long = delegate.read(sink, limit).also {
+                if (it > 0) {
+                    progressListener.progressChanged(it)
                 }
             }
         }
@@ -84,27 +78,21 @@ internal open class ProgressListenerInterceptor(
         val delegate = httpBody.readFrom()
         override val contentLength: Long?
             get() = httpBody.contentLength
-        override fun readFrom(): SdkByteReadChannel {
-            return object : SdkByteReadChannel by delegate {
-                override val availableForRead: Int
-                    get() = delegate.availableForRead
+        override fun readFrom(): SdkByteReadChannel = object : SdkByteReadChannel by delegate {
+            override val availableForRead: Int
+                get() = delegate.availableForRead
 
-                override val isClosedForRead: Boolean
-                    get() = delegate.isClosedForRead
+            override val isClosedForRead: Boolean
+                get() = delegate.isClosedForRead
 
-                override val isClosedForWrite: Boolean
-                    get() = delegate.isClosedForWrite
+            override val isClosedForWrite: Boolean
+                get() = delegate.isClosedForWrite
 
-                override fun cancel(cause: Throwable?): Boolean {
-                    return delegate.cancel(cause)
-                }
+            override fun cancel(cause: Throwable?): Boolean = delegate.cancel(cause)
 
-                override suspend fun read(sink: SdkBuffer, limit: Long): Long {
-                    return delegate.readAll(sink).also {
-                        if (it > 0) {
-                            progressListener.progressChanged(it)
-                        }
-                    }
+            override suspend fun read(sink: SdkBuffer, limit: Long): Long = delegate.readAll(sink).also {
+                if (it > 0) {
+                    progressListener.progressChanged(it)
                 }
             }
         }

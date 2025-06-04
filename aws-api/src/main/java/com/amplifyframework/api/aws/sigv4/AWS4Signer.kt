@@ -57,10 +57,8 @@ abstract class AWS4Signer(private val regionName: String) {
         httpRequest: HttpRequest,
         credentialsProvider: CredentialsProvider,
         serviceName: String
-    ): AwsSigningResult<HttpRequest> {
-        return runBlocking {
-            sign(httpRequest, credentialsProvider, serviceName)
-        }
+    ): AwsSigningResult<HttpRequest> = runBlocking {
+        sign(httpRequest, credentialsProvider, serviceName)
     }
 }
 

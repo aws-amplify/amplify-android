@@ -45,5 +45,8 @@
                 "expiration": 2342134
             }
         }
+    },
+    "SignUpState": {
+        "type": "SignUpState.NotStarted"
     }
 }

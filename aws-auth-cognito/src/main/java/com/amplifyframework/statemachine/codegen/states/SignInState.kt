@@ -20,6 +20,8 @@ import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.SignInActions
+import com.amplifyframework.statemachine.codegen.actions.UserAuthSignInActions
+import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
 
 internal sealed class SignInState : State {
@@ -29,6 +31,8 @@ internal sealed class SignInState : State {
     data class SigningInWithCustom(override var customSignInState: CustomSignInState?) : SignInState()
     data class SigningInWithSRPCustom(override var srpSignInState: SRPSignInState?) : SignInState()
     data class SigningInViaMigrateAuth(override var migrateSignInState: MigrateSignInState?) : SignInState()
+    data class SigningInWithUserAuth(val id: String = "") : SignInState()
+    data class SigningInWithWebAuthn(override var webAuthnSignInState: WebAuthnSignInState?) : SignInState()
     data class ResolvingDeviceSRP(override var deviceSRPSignInState: DeviceSRPSignInState?) : SignInState()
     data class ResolvingChallenge(override var challengeState: SignInChallengeState?) : SignInState()
     data class ResolvingTOTPSetup(override var setupTOTPState: SetupTOTPState?) : SignInState()
@@ -36,6 +40,7 @@ internal sealed class SignInState : State {
     data class Done(val id: String = "") : SignInState()
     data class Error(val exception: Exception) : SignInState()
     data class SignedIn(val id: String = "") : SignInState()
+    data class AutoSigningIn(val signInEventData: SignInData.AutoSignInData) : SignInState()
 
     open var srpSignInState: SRPSignInState? = SRPSignInState.NotStarted()
     open var challengeState: SignInChallengeState? = SignInChallengeState.NotStarted()
@@ -44,6 +49,7 @@ internal sealed class SignInState : State {
     open var hostedUISignInState: HostedUISignInState? = HostedUISignInState.NotStarted()
     open var deviceSRPSignInState: DeviceSRPSignInState? = DeviceSRPSignInState.NotStarted()
     open var setupTOTPState: SetupTOTPState? = SetupTOTPState.NotStarted()
+    open var webAuthnSignInState: WebAuthnSignInState? = WebAuthnSignInState.NotStarted()
 
     class Resolver(
         private val srpSignInResolver: StateMachineResolver<SRPSignInState>,
@@ -53,14 +59,13 @@ internal sealed class SignInState : State {
         private val hostedUISignInResolver: StateMachineResolver<HostedUISignInState>,
         private val deviceSRPSignInResolver: StateMachineResolver<DeviceSRPSignInState>,
         private val setupTOTPResolver: StateMachineResolver<SetupTOTPState>,
+        private val webAuthnSignInResolver: StateMachineResolver<WebAuthnSignInState>,
+        private val userAuthSignInActions: UserAuthSignInActions,
         private val signInActions: SignInActions
-    ) :
-        StateMachineResolver<SignInState> {
+    ) : StateMachineResolver<SignInState> {
         override val defaultState = NotStarted()
 
-        private fun asSignInEvent(event: StateMachineEvent): SignInEvent.EventType? {
-            return (event as? SignInEvent)?.eventType
-        }
+        private fun asSignInEvent(event: StateMachineEvent): SignInEvent.EventType? = (event as? SignInEvent)?.eventType
 
         override fun resolve(oldState: SignInState, event: StateMachineEvent): StateResolution<SignInState> {
             val resolution = resolveSignInEvent(oldState, event)
@@ -101,13 +106,16 @@ internal sealed class SignInState : State {
                 builder.setupTOTPState = it.newState
                 actions += it.actions
             }
+
+            oldState.webAuthnSignInState?.let { webAuthnSignInResolver.resolve(it, event) }?.let {
+                builder.webAuthnSignInState = it.newState
+                actions += it.actions
+            }
+
             return StateResolution(builder.build(), actions)
         }
 
-        private fun resolveSignInEvent(
-            oldState: SignInState,
-            event: StateMachineEvent
-        ): StateResolution<SignInState> {
+        private fun resolveSignInEvent(oldState: SignInState, event: StateMachineEvent): StateResolution<SignInState> {
             val signInEvent = asSignInEvent(event)
             val defaultResolution = StateResolution(oldState)
             return when (oldState) {
@@ -137,11 +145,22 @@ internal sealed class SignInState : State {
                         listOf(signInActions.startCustomAuthWithSRPAction(signInEvent))
                     )
 
+                    is SignInEvent.EventType.InitiateUserAuth -> {
+                        StateResolution(
+                            SigningInWithUserAuth(),
+                            listOf(userAuthSignInActions.initiateUserAuthSignIn(signInEvent))
+                        )
+                    }
+
+                    is SignInEvent.EventType.InitiateAutoSignIn -> StateResolution(
+                        AutoSigningIn(signInEvent.signInData),
+                        listOf(signInActions.autoSignInAction(signInEvent))
+                    )
                     else -> defaultResolution
                 }
 
                 is SigningInWithSRP, is SigningInWithCustom, is SigningInViaMigrateAuth,
-                is SigningInWithSRPCustom
+                is SigningInWithSRPCustom, is SigningInWithUserAuth, is SigningInWithWebAuthn
                 -> when (signInEvent) {
                     is SignInEvent.EventType.ReceivedChallenge -> {
                         val action = signInActions.initResolveChallenge(signInEvent)
@@ -163,6 +182,11 @@ internal sealed class SignInState : State {
                         listOf(signInActions.initiateTOTPSetupAction(signInEvent))
                     )
 
+                    is SignInEvent.EventType.InitiateWebAuthnSignIn -> StateResolution(
+                        newState = SigningInWithWebAuthn(WebAuthnSignInState.NotStarted()),
+                        actions = listOf(signInActions.initiateWebAuthnSignInAction(signInEvent))
+                    )
+
                     is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception))
                     else -> defaultResolution
                 }
@@ -181,6 +205,16 @@ internal sealed class SignInState : State {
                     is SignInEvent.EventType.InitiateTOTPSetup -> StateResolution(
                         ResolvingTOTPSetup(oldState.setupTOTPState),
                         listOf(signInActions.initiateTOTPSetupAction(signInEvent))
+                    )
+
+                    is SignInEvent.EventType.InitiateWebAuthnSignIn -> StateResolution(
+                        newState = SigningInWithWebAuthn(WebAuthnSignInState.NotStarted()),
+                        actions = listOf(signInActions.initiateWebAuthnSignInAction(signInEvent))
+                    )
+
+                    is SignInEvent.EventType.InitiateSignInWithSRP -> StateResolution(
+                        SigningInWithSRP(oldState.srpSignInState),
+                        listOf(signInActions.startSRPAuthAction(signInEvent))
                     )
 
                     is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception))
@@ -240,7 +274,18 @@ internal sealed class SignInState : State {
                     is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception))
                     else -> defaultResolution
                 }
+                is AutoSigningIn -> when (signInEvent) {
+                    is SignInEvent.EventType.FinalizeSignIn -> {
+                        StateResolution(SignedIn())
+                    }
+                    is SignInEvent.EventType.ConfirmDevice -> {
+                        val action = signInActions.confirmDevice(signInEvent)
+                        StateResolution(ConfirmingDevice(), listOf(action))
+                    }
+                    is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception))
 
+                    else -> defaultResolution
+                }
                 else -> defaultResolution
             }
         }
@@ -255,6 +300,7 @@ internal sealed class SignInState : State {
         var hostedUISignInState: HostedUISignInState? = null
         var deviceSRPSignInState: DeviceSRPSignInState? = null
         var setupTOTPState: SetupTOTPState? = null
+        var webAuthnSignInState: WebAuthnSignInState? = null
 
         override fun build(): SignInState = when (signInState) {
             is SigningInWithSRP -> SigningInWithSRP(srpSignInState)
@@ -265,6 +311,8 @@ internal sealed class SignInState : State {
             is SigningInWithSRPCustom -> SigningInWithSRPCustom(srpSignInState)
             is ResolvingDeviceSRP -> ResolvingDeviceSRP(deviceSRPSignInState)
             is ResolvingTOTPSetup -> ResolvingTOTPSetup(setupTOTPState)
+            is SigningInWithUserAuth -> SigningInWithUserAuth()
+            is SigningInWithWebAuthn -> SigningInWithWebAuthn(webAuthnSignInState)
             else -> signInState
         }
     }

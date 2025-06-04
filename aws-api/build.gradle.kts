@@ -24,14 +24,7 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 group = properties["POM_GROUP"].toString()
 
 android {
-
-    defaultConfig {
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    testOptions {
-        execution = "ANDROIDX_TEST_ORCHESTRATOR"
-    }
+    namespace = "com.amplifyframework.api.aws"
 }
 
 dependencies {
@@ -68,8 +61,4 @@ dependencies {
     androidTestImplementation(libs.test.kotlin.coroutines)
 
     androidTestUtil(libs.test.androidx.orchestrator)
-}
-
-android.kotlinOptions {
-    jvmTarget = "11"
 }

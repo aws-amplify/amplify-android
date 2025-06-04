@@ -40,9 +40,7 @@ data class FederateToIdentityPoolOptions internal constructor(val developerProvi
          * Construct and return the object with the values set in the builder.
          * @return a new instance of FederateToIdentityPoolOptions with the values specified in the builder.
          */
-        fun build(): FederateToIdentityPoolOptions {
-            return FederateToIdentityPoolOptions(developerProvidedIdentityId)
-        }
+        fun build(): FederateToIdentityPoolOptions = FederateToIdentityPoolOptions(developerProvidedIdentityId)
     }
 
     companion object {
@@ -51,9 +49,7 @@ data class FederateToIdentityPoolOptions internal constructor(val developerProvi
          * @return a builder object.
          */
         @JvmStatic
-        fun builder(): CognitoBuilder {
-            return CognitoBuilder()
-        }
+        fun builder(): CognitoBuilder = CognitoBuilder()
 
         inline operator fun invoke(block: CognitoBuilder.() -> Unit) = CognitoBuilder().apply(block).build()
     }

@@ -31,6 +31,7 @@ import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.TransferState.Companion.getState
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation
 import com.amplifyframework.storage.options.StorageDownloadFileOptions
+import com.amplifyframework.storage.options.StorageRemoveOptions
 import com.amplifyframework.storage.options.StorageUploadFileOptions
 import com.amplifyframework.storage.s3.options.AWSS3StorageDownloadFileOptions
 import com.amplifyframework.storage.s3.test.R
@@ -44,6 +45,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 import org.junit.After
+import org.junit.AfterClass
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
@@ -56,6 +58,7 @@ class AWSS3StoragePathDownloadTest {
     // Create a file to download to
     private val downloadFile: File = RandomTempFile()
     private val options = StorageDownloadFileOptions.defaultInstance()
+
     // Create a set to remember all the subscriptions
     private val subscriptions = mutableSetOf<SubscriptionToken>()
 
@@ -133,6 +136,20 @@ class AWSS3StoragePathDownloadTest {
                 userOnePrivateFile,
                 uploadOptions
             )
+
+            synchronousAuth.signOut()
+        }
+
+        @JvmStatic
+        @AfterClass
+        fun tearDownOnce() {
+            synchronousAuth.signOut()
+            synchronousAuth.signIn(userOne.username, userOne.password)
+
+            synchronousStorage.remove(LARGE_FILE_PATH, StorageRemoveOptions.defaultInstance())
+            synchronousStorage.remove(SMALL_FILE_PATH, StorageRemoveOptions.defaultInstance())
+            synchronousStorage.remove(userOnePrivateStoragePath, StorageRemoveOptions.defaultInstance())
+            synchronousStorage.remove(userOneProtectedStoragePath, StorageRemoveOptions.defaultInstance())
 
             synchronousAuth.signOut()
         }

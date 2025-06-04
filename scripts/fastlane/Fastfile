@@ -22,7 +22,27 @@ platform :android do |options|
           gradle_properties_path: "#{project_root}/gradle.properties",
           doc_files_to_update: ["#{project_root}/README.md", "#{project_root}/rxbindings/README.md"],
           release_title: 'Amplify Android',
+          component_name: "AmplifyAndroid",
           changelog_path: "#{project_root}/CHANGELOG.md",
+          changelog_ignore_scopes: ["Apollo", "apollo", "Events", "events"]
+        },
+        {
+          release_tag_prefix: 'release_apollo_v',
+          gradle_properties_path: "#{project_root}/apollo/version.properties",
+          doc_files_to_update: ["#{project_root}/apollo/README.md"],
+          release_title: 'Apollo AppSync Extensions',
+          component_name: "ApolloExtensions",
+          changelog_path: "#{project_root}/apollo/CHANGELOG.md",
+          changelog_include_scopes: ["Apollo", "apollo"]
+        },
+        {
+          release_tag_prefix: 'release_events_v',
+          gradle_properties_path: "#{project_root}/appsync/version.properties",
+          doc_files_to_update: ["#{project_root}/appsync/README.md"],
+          release_title: 'AWS AppSync Events for Android',
+          component_name: "AppSyncEvents",
+          changelog_path: "#{project_root}/appsync/CHANGELOG.md",
+          changelog_include_scopes: ["Events", "events"]
         }
       ]
     }

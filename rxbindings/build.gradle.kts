@@ -23,6 +23,10 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 
 group = properties["POM_GROUP"].toString()
 
+android {
+    namespace = "com.amplifyframework.rx"
+}
+
 dependencies {
     implementation(project(":core"))
     implementation(project(":common-core"))
@@ -37,8 +41,4 @@ dependencies {
     testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.robolectric)
     testImplementation(project(":rxbindings"))
-}
-
-android.kotlinOptions {
-    jvmTarget = "11"
 }

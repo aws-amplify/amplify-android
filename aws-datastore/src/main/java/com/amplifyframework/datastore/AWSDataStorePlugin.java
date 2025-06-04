@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -276,6 +277,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         configure(context, userProvidedConfiguration);
     }
 
+    @SuppressLint({"CheckResult", "RxLeakedSubscription", "RxSubscribeOnError"})
     private void configure(Context context, DataStoreConfiguration configuration) {
         pluginConfiguration = configuration;
         HubChannel hubChannel = HubChannel.forCategoryType(getCategoryType());
@@ -294,11 +296,13 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
                 HubEvent.create(DataStoreChannelEventName.NETWORK_STATUS, new NetworkStatusEvent(active)));
     }
 
+    @SuppressLint({"CheckResult", "RxLeakedSubscription", "RxSubscribeOnError"})
     private void observeNetworkStatus() {
         reachabilityMonitor.getObservable()
                 .subscribe(this::publishNetworkStatusEvent);
     }
 
+    @SuppressLint("CheckResult")
     @WorkerThread
     @Override
     public void initialize(@NonNull Context context) throws AmplifyException {
@@ -326,6 +330,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         ));
     }
 
+    @SuppressLint("RxDefaultScheduler")
     private Completable waitForInitialization() {
         return Completable.fromAction(() -> categoryInitializationsPending.await())
             .timeout(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
@@ -337,6 +342,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     /**
      * {@inheritDoc}
      */
+    @SuppressLint({"RxLeakedSubscription", "CheckResult"})
     @Override
     public void start(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
         waitForInitialization()
@@ -351,6 +357,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     /**
      * {@inheritDoc}
      */
+    @SuppressLint({"RxLeakedSubscription", "CheckResult"})
     @Override
     public void stop(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
         waitForInitialization()

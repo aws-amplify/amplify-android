@@ -17,13 +17,14 @@ package com.amplifyframework.analytics.pinpoint
 import android.content.Context
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
-import com.amplifyframework.core.store.EncryptedKeyValueRepository
+import com.amplifyframework.core.store.AmplifyKeyValueRepository
 import com.amplifyframework.pinpoint.core.AnalyticsClient
 import com.amplifyframework.pinpoint.core.TargetingClient
 import com.amplifyframework.pinpoint.core.data.AndroidAppDetails
 import com.amplifyframework.pinpoint.core.data.AndroidDeviceDetails
 import com.amplifyframework.pinpoint.core.database.PinpointDatabase
 import com.amplifyframework.pinpoint.core.util.getUniqueId
+import com.amplifyframework.util.setHttpEngine
 
 /**
  * PinpointManager is the entry point to Pinpoint Analytics and Targeting.
@@ -36,6 +37,7 @@ internal class PinpointManager constructor(
     val analyticsClient: AnalyticsClient
     val targetingClient: TargetingClient
     internal val pinpointClient: PinpointClient = PinpointClient {
+        setHttpEngine()
         credentialsProvider = this@PinpointManager.credentialsProvider
         region = awsPinpointConfiguration.region
     }
@@ -62,7 +64,7 @@ internal class PinpointManager constructor(
             Context.MODE_PRIVATE
         )
 
-        val encryptedStore = EncryptedKeyValueRepository(
+        val amplifyStore = AmplifyKeyValueRepository(
             context,
             "${awsPinpointConfiguration.appId}$PINPOINT_SHARED_PREFS_SUFFIX"
         )
@@ -72,7 +74,7 @@ internal class PinpointManager constructor(
         targetingClient = TargetingClient(
             context,
             pinpointClient,
-            encryptedStore,
+            amplifyStore,
             sharedPrefs,
             androidAppDetails,
             androidDeviceDetails

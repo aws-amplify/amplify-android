@@ -21,6 +21,10 @@ plugins {
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
 
+android {
+    namespace = "com.amplifyframework.testutils"
+}
+
 dependencies {
     implementation(project(":core"))
     implementation(libs.test.junit)

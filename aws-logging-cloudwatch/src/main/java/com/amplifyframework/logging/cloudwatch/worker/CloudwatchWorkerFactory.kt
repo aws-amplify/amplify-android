@@ -30,23 +30,21 @@ internal class CloudwatchWorkerFactory(
         appContext: Context,
         workerClassName: String,
         workerParameters: WorkerParameters
-    ): CoroutineWorker {
-        return when (workerClassName) {
-            CloudwatchLogsSyncWorker::class.java.simpleName -> {
-                CloudwatchLogsSyncWorker(
-                    appContext,
-                    workerParameters,
-                    cloudWatchLogManager
-                )
-            }
-            RemoteConfigSyncWorker::class.java.simpleName -> {
-                RemoteConfigSyncWorker(
-                    appContext,
-                    workerParameters,
-                    loggingConstraintsResolver
-                )
-            }
-            else -> throw IllegalStateException("Failed to find matching Worker for $workerClassName")
+    ): CoroutineWorker = when (workerClassName) {
+        CloudwatchLogsSyncWorker::class.java.simpleName -> {
+            CloudwatchLogsSyncWorker(
+                appContext,
+                workerParameters,
+                cloudWatchLogManager
+            )
         }
+        RemoteConfigSyncWorker::class.java.simpleName -> {
+            RemoteConfigSyncWorker(
+                appContext,
+                workerParameters,
+                loggingConstraintsResolver
+            )
+        }
+        else -> throw IllegalStateException("Failed to find matching Worker for $workerClassName")
     }
 }

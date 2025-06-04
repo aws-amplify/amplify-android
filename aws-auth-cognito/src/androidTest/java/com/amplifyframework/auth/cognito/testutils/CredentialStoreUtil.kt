@@ -20,13 +20,14 @@ import com.amazonaws.internal.keyvaluestore.AWSKeyValueStore
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
+import java.io.File
 import java.util.Date
 
-internal object CredentialStoreUtil {
-
-    private const val accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwidXNlcm5hbWUiO" +
+internal class CredentialStoreUtil {
+    private val accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwidXNlcm5hbWUiO" +
         "iJhbXBsaWZ5X3VzZXIiLCJpYXQiOjE1MTYyMzkwMjJ9.zBiQ0guLRX34pUEYLPyDxQAyDDlXmL0JY7kgPWAHZos"
 
     private val credential = AmplifyCredential.UserAndIdentityPool(
@@ -40,17 +41,31 @@ internal object CredentialStoreUtil {
                 accessToken,
                 "refreshToken",
                 1212
-            ),
+            )
         ),
         "identityId",
         AWSCredentials("accessKeyId", "secretAccessKey", "sessionToken", 1212)
     )
 
-    fun getDefaultCredential(): AmplifyCredential {
-        return credential
-    }
+    fun getDefaultCredential(): AmplifyCredential = credential
+
+    val user1Username = "2924030b-54c0-48bc-8bff-948418fba949"
+    val user2Username = "7e001127-5f11-41fb-9d10-ab9d6cf41dba"
+
+    fun getUser1DeviceMetadata(): DeviceMetadata.Metadata = DeviceMetadata.Metadata(
+        "DeviceKey1",
+        "DeviceGroupKey1",
+        "DeviceSecret1"
+    )
+
+    fun getUser2DeviceMetadata(): DeviceMetadata.Metadata = DeviceMetadata.Metadata(
+        "DeviceKey2",
+        "DeviceGroupKey2",
+        "DeviceSecret2"
+    )
 
     fun setupLegacyStore(context: Context, appClientId: String, userPoolId: String, identityPoolId: String) {
+        clearSharedPreferences(context)
 
         AWSKeyValueStore(context, "CognitoIdentityProviderCache", true).apply {
             put("CognitoIdentityProvider.$appClientId.testuser.idToken", "idToken")
@@ -60,10 +75,16 @@ internal object CredentialStoreUtil {
             put("CognitoIdentityProvider.$appClientId.LastAuthUser", "testuser")
         }
 
-        AWSKeyValueStore(context, "CognitoIdentityProviderDeviceCache.$userPoolId.testuser", true).apply {
-            put("DeviceKey", "someDeviceKey")
-            put("DeviceGroupKey", "someDeviceGroupKey")
-            put("DeviceSecret", "someSecret")
+        AWSKeyValueStore(context, "CognitoIdentityProviderDeviceCache.$userPoolId.$user1Username", true).apply {
+            put("DeviceKey", "DeviceKey1")
+            put("DeviceGroupKey", "DeviceGroupKey1")
+            put("DeviceSecret", "DeviceSecret1")
+        }
+
+        AWSKeyValueStore(context, "CognitoIdentityProviderDeviceCache.$userPoolId.$user2Username", true).apply {
+            put("DeviceKey", "DeviceKey2")
+            put("DeviceGroupKey", "DeviceGroupKey2")
+            put("DeviceSecret", "DeviceSecret2")
         }
 
         AWSKeyValueStore(context, "com.amazonaws.android.auth", true).apply {
@@ -73,5 +94,47 @@ internal object CredentialStoreUtil {
             put("$identityPoolId.expirationDate", "1212")
             put("$identityPoolId.identityId", "identityId")
         }
+
+        // we need to wait for shared prefs to actually hit filesystem as we always use apply instead of commit
+        val beginWait = System.currentTimeMillis()
+        while (System.currentTimeMillis() - beginWait < 3000) {
+            if ((File(context.dataDir, "shared_prefs").listFiles()?.size ?: 0) >= 4) {
+                break
+            } else {
+                Thread.sleep(50)
+            }
+        }
+    }
+
+    fun saveLegacyDeviceMetadata(
+        context: Context,
+        userPoolId: String,
+        username: String,
+        deviceMetadata: DeviceMetadata.Metadata
+    ) {
+        val prefsName = "CognitoIdentityProviderDeviceCache.$userPoolId.$username"
+        AWSKeyValueStore(
+            context,
+            "CognitoIdentityProviderDeviceCache.$userPoolId.$username",
+            true
+        ).apply {
+            put("DeviceKey", deviceMetadata.deviceKey)
+            put("DeviceGroupKey", deviceMetadata.deviceGroupKey)
+            put("DeviceSecret", deviceMetadata.deviceSecret)
+        }
+
+        // we need to wait for shared prefs to actually hit filesystem as we always use apply instead of commit
+        val beginWait = System.currentTimeMillis()
+        while (System.currentTimeMillis() - beginWait < 3000) {
+            if (File(context.dataDir, "shared_prefs/$prefsName.xml").exists()) {
+                break
+            } else {
+                Thread.sleep(50)
+            }
+        }
+    }
+
+    fun clearSharedPreferences(context: Context) {
+        File(context.dataDir, "shared_prefs").listFiles()?.forEach { it.delete() }
     }
 }

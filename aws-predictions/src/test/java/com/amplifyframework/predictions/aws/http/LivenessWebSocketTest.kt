@@ -89,15 +89,13 @@ internal class LivenessWebSocketTest {
     private val onSessionResponseReceived = mockk<Consumer<LivenessWebSocket.SessionResponse>>(relaxed = true)
     private val onErrorReceived = mockk<Consumer<PredictionsException>>(relaxed = true)
     private val credentialsProvider = object : CredentialsProvider {
-        override suspend fun resolve(attributes: Attributes): Credentials {
-            return Credentials(
-                "",
-                "",
-                "",
-                null,
-                ""
-            )
-        }
+        override suspend fun resolve(attributes: Attributes): Credentials = Credentials(
+            "",
+            "",
+            "",
+            null,
+            ""
+        )
     }
 
     private val defaultSessionInformation = createClientSessionInformation(

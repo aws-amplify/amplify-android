@@ -200,12 +200,7 @@ class SearchTextField @JvmOverloads constructor(
     private fun registerOnTextChangeListener() {
         field.addTextChangedListener(
             object : TextWatcher {
-                override fun beforeTextChanged(
-                    text: CharSequence?,
-                    start: Int,
-                    count: Int,
-                    after: Int
-                ) = Unit
+                override fun beforeTextChanged(text: CharSequence?, start: Int, count: Int, after: Int) = Unit
 
                 override fun onTextChanged(text: CharSequence?, start: Int, before: Int, after: Int) {
                     this@SearchTextField.updateClearIconVisibility()

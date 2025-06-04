@@ -32,17 +32,13 @@ data class SearchIndicesConfiguration internal constructor(
          * @return fresh configuration builder instance.
          */
         @JvmStatic
-        fun builder(): Builder {
-            return Builder()
-        }
+        fun builder(): Builder = Builder()
 
         /**
          * Returns a builder object populated from JSON.
          * @return populated builder instance.
          */
-        internal fun fromJson(configJson: JSONObject): Builder {
-            return Builder(configJson)
-        }
+        internal fun fromJson(configJson: JSONObject): Builder = Builder(configJson)
 
         internal fun from(outputs: AmplifyOutputsData.Geo.SearchIndices): SearchIndicesConfiguration {
             if (!outputs.items.contains(outputs.default)) {

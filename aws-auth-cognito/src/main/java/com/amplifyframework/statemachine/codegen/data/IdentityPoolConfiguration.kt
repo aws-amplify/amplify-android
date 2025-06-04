@@ -39,17 +39,13 @@ data class IdentityPoolConfiguration internal constructor(
          * @return fresh configuration builder instance.
          */
         @JvmStatic
-        fun builder(): Builder {
-            return Builder()
-        }
+        fun builder(): Builder = Builder()
 
         /**
          * Returns a builder object populated from JSON.
          * @return populated builder instance.
          */
-        fun fromJson(configJson: JSONObject): Builder {
-            return Builder(configJson)
-        }
+        fun fromJson(configJson: JSONObject): Builder = Builder(configJson)
 
         inline operator fun invoke(block: Builder.() -> Unit) = Builder().apply(block).build()
     }

@@ -138,6 +138,7 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
     @InternalAmplifyApi
     public synchronized void configure(@NonNull AmplifyOutputsData configuration, @NonNull Context context)
         throws AmplifyException {
+        super.configure(configuration, context);
         // Logging plugin config is read from a separate file
         configure(context);
     }

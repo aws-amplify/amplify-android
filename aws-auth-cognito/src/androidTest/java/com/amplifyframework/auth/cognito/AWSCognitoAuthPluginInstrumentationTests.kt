@@ -26,13 +26,15 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.InitializationStatus
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.testutils.HubAccumulator
+import com.amplifyframework.testutils.await
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import org.junit.After
+import kotlin.time.Duration.Companion.seconds
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -65,63 +67,51 @@ class AWSCognitoAuthPluginInstrumentationTests {
         }
     }
 
-    @After
-    fun tearDown() {
+    @Before
+    fun setup() {
         signOut()
+        Thread.sleep(1000) // ensure signout has time to complete
     }
 
     @Test
     fun signed_In_Hub_Event_Is_Published_When_Signed_In() {
-        val hubAccumulator = HubAccumulator.create(HubChannel.AUTH, AuthChannelEventName.SIGNED_IN, 1).start()
-
-        signInWithCognito()
-
-        hubAccumulator.await(10, TimeUnit.SECONDS)
-        // if we made it this far without timeout, it means hub event was received
+        withHubAccumulator(AuthChannelEventName.SIGNED_IN) { hubAccumulator ->
+            signInWithCognito()
+            hubAccumulator.await(10.seconds)
+        }
     }
 
     @Test
     fun signed_Out_Hub_Event_Is_Published_When_Signed_Out() {
-        val hubAccumulator = HubAccumulator.create(HubChannel.AUTH, AuthChannelEventName.SIGNED_OUT, 1).start()
-
-        signInWithCognito()
-        signOut()
-
-        hubAccumulator.await(10, TimeUnit.SECONDS)
-        // if we made it this far without timeout, it means hub event was received
+        withHubAccumulator(AuthChannelEventName.SIGNED_OUT) { hubAccumulator ->
+            signInWithCognito()
+            signOut()
+            hubAccumulator.await(10.seconds)
+        }
     }
 
     @Test
     fun hub_Events_Are_Received_Only_Once_Per_Change() {
-        val signInAccumulator = HubAccumulator
-            .create(HubChannel.AUTH, AuthChannelEventName.SIGNED_IN, 2)
-            .start()
-        val signOutAccumulator = HubAccumulator
-            .create(HubChannel.AUTH, AuthChannelEventName.SIGNED_OUT, 1)
-            .start()
-
-        signInWithCognito()
-        signOut()
-        signInWithCognito()
-
-        signInAccumulator.await(10, TimeUnit.SECONDS)
-        signOutAccumulator.await(10, TimeUnit.SECONDS)
-        // if we made it this far without timeout, it means hub event was received
+        withHubAccumulator(AuthChannelEventName.SIGNED_IN, quantity = 2) { signInAccumulator ->
+            withHubAccumulator(AuthChannelEventName.SIGNED_OUT) { signOutAccumulator ->
+                signInWithCognito()
+                signOut()
+                signInWithCognito()
+                signInAccumulator.await(10.seconds)
+                signOutAccumulator.await(10.seconds)
+            }
+        }
     }
 
     // This compliments the hub_Events_Are_Received_Only_Once_Per_Change test
     @Test(expected = RuntimeException::class)
     fun hub_Events_Are_Received_Only_Once_Per_Change_2() {
-        val signInAccumulatorExtra = HubAccumulator
-            .create(HubChannel.AUTH, AuthChannelEventName.SIGNED_IN, 3)
-            .start()
-
-        signInWithCognito()
-        signOut()
-        signInWithCognito()
-
-        signInAccumulatorExtra.await(10, TimeUnit.SECONDS)
-        // Execution should not reach here
+        withHubAccumulator(AuthChannelEventName.SIGNED_IN, quantity = 3) { signInAccumulatorExtra ->
+            signInWithCognito()
+            signOut()
+            signInWithCognito()
+            signInAccumulatorExtra.await(2.seconds)
+        }
     }
 
     @Test
@@ -140,7 +130,7 @@ class AWSCognitoAuthPluginInstrumentationTests {
                 latch.countDown()
             }
         )
-        latch.await(10, TimeUnit.SECONDS)
+        latch.await(10.seconds)
 
         assertTrue(session.isSignedIn)
         with(session as AWSCognitoAuthSession) {
@@ -168,7 +158,7 @@ class AWSCognitoAuthPluginInstrumentationTests {
                 latch.countDown()
             }
         )
-        latch.await(10, TimeUnit.SECONDS)
+        latch.await(10.seconds)
 
         assertFalse(session.isSignedIn)
         with(session as AWSCognitoAuthSession) {
@@ -195,7 +185,7 @@ class AWSCognitoAuthPluginInstrumentationTests {
             }
         )
 
-        rememberLatch.await(10, TimeUnit.SECONDS)
+        rememberLatch.await(10.seconds)
 
         val forgetLatch = CountDownLatch(1)
 
@@ -209,7 +199,7 @@ class AWSCognitoAuthPluginInstrumentationTests {
             }
         )
 
-        forgetLatch.await(10, TimeUnit.SECONDS)
+        forgetLatch.await(10.seconds)
 
         signOut()
         signInWithCognito()
@@ -226,7 +216,7 @@ class AWSCognitoAuthPluginInstrumentationTests {
             }
         )
 
-        rememberLatch2.await(10, TimeUnit.SECONDS)
+        rememberLatch2.await(10.seconds)
 
         val forgetLatch2 = CountDownLatch(1)
 
@@ -240,7 +230,7 @@ class AWSCognitoAuthPluginInstrumentationTests {
             }
         )
 
-        forgetLatch2.await(10, TimeUnit.SECONDS)
+        forgetLatch2.await(10.seconds)
     }
 
     private fun signInWithCognito(synchronous: Boolean = true) {
@@ -257,5 +247,19 @@ class AWSCognitoAuthPluginInstrumentationTests {
         val latch = CountDownLatch(1)
         auth.signOut { latch.countDown() }
         if (synchronous) latch.await()
+    }
+
+    // Creates and starts a HubAccumulator, runs the supplied block, and then stops the accumulator
+    private fun withHubAccumulator(
+        eventName: AuthChannelEventName,
+        quantity: Int = 1,
+        block: (HubAccumulator) -> Unit
+    ) {
+        val accumulator = HubAccumulator.create(HubChannel.AUTH, eventName, quantity).start()
+        try {
+            block(accumulator)
+        } finally {
+            accumulator.stop()
+        }
     }
 }

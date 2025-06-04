@@ -25,6 +25,7 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 group = properties["POM_GROUP"].toString()
 
 android {
+    namespace = "com.amplifyframework.core"
     kotlinOptions {
         moduleName = "com.amplifyframework.core"
     }
@@ -64,10 +65,6 @@ dependencies {
     androidTestImplementation(libs.test.androidx.espresso)
     androidTestImplementation(libs.test.androidx.navigation)
     androidTestImplementation(libs.test.androidx.fragment)
-}
-
-android.kotlinOptions {
-    jvmTarget = "11"
 }
 
 afterEvaluate {

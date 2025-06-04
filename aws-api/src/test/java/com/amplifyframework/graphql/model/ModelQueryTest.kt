@@ -215,7 +215,9 @@ class ModelQueryTest {
 
         val expectedRequest = AppSyncGraphQLRequestFactory
             .buildPaginatedResultQuery<PaginatedResult<Post>, Post>(
-                expectedClass, QueryPredicates.all(), 10
+                expectedClass,
+                QueryPredicates.all(),
+                10
             )
 
         val actualRequest = ModelQuery.list(expectedClass, expectedPagination)
@@ -230,7 +232,9 @@ class ModelQueryTest {
 
         val expectedRequest = AppSyncGraphQLRequestFactory
             .buildPaginatedResultQuery<PaginatedResult<Post>, Post, PostPath>(
-                expectedClass, QueryPredicates.all(), 10
+                expectedClass,
+                QueryPredicates.all(),
+                10
             ) {
                 includes(it.comments, it.blog)
             }

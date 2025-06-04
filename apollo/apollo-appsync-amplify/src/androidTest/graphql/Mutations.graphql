@@ -1,0 +1,11 @@
+mutation CreateTodo($createTodoInput: CreateTodoInput!) {
+    createTodo(input: $createTodoInput) {
+        ... todoFragment
+    }
+}
+
+mutation DeleteTodo($deleteTodoInput: DeleteTodoInput!) {
+    deleteTodo(input: $deleteTodoInput) {
+        ...todoFragment
+    }
+}

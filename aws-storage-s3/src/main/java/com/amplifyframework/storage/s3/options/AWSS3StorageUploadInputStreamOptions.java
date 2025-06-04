@@ -75,7 +75,8 @@ public final class AWSS3StorageUploadInputStreamOptions extends StorageUploadInp
                 .targetIdentityId(options.getTargetIdentityId())
                 .contentType(options.getContentType())
                 .serverSideEncryption(options.getServerSideEncryption())
-                .metadata(options.getMetadata());
+                .metadata(options.getMetadata())
+                .bucket(options.getBucket());
     }
 
     /**
@@ -109,7 +110,8 @@ public final class AWSS3StorageUploadInputStreamOptions extends StorageUploadInp
                     ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId()) &&
                     ObjectsCompat.equals(getContentType(), that.getContentType()) &&
                     ObjectsCompat.equals(getServerSideEncryption(), that.getServerSideEncryption()) &&
-                    ObjectsCompat.equals(getMetadata(), that.getMetadata());
+                    ObjectsCompat.equals(getMetadata(), that.getMetadata()) &&
+                    ObjectsCompat.equals(getBucket(), that.getBucket());
         }
     }
 
@@ -121,7 +123,8 @@ public final class AWSS3StorageUploadInputStreamOptions extends StorageUploadInp
                 getTargetIdentityId(),
                 getContentType(),
                 getServerSideEncryption(),
-                getMetadata()
+                getMetadata(),
+                getBucket()
         );
     }
 
@@ -135,6 +138,7 @@ public final class AWSS3StorageUploadInputStreamOptions extends StorageUploadInp
                 ", contentType=" + getContentType() +
                 ", serverSideEncryption=" + getServerSideEncryption().getName() +
                 ", metadata=" + getMetadata() +
+                ", bucket=" + getBucket() +
                 '}';
     }
 

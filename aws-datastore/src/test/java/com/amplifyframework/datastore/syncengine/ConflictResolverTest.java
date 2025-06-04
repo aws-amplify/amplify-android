@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.syncengine;
 
+import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
@@ -234,6 +235,7 @@ public final class ConflictResolverTest {
      * upon retry
      * @throws AmplifyException On failure to arrange metadata into storage
      */
+    @SuppressLint("CheckResult")
     @Test
     public void conflictIsResolvedByRetryingLocalDataWithSerializedModel() throws AmplifyException {
         // Arrange for the user-provided conflict handler to always request local retry.
@@ -292,6 +294,7 @@ public final class ConflictResolverTest {
      *    upon retry.
      * @throws AmplifyException On failure to arrange metadata into storage
      */
+    @SuppressLint("CheckResult")
     @Test
     public void conflictIsResolvedByRetryingLocalDataWithFlutterSerializedModel() throws AmplifyException {
         // Arrange for the user-provided conflict handler to always request local retry.

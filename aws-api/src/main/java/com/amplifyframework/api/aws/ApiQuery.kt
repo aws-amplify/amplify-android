@@ -27,22 +27,23 @@ import kotlin.coroutines.suspendCoroutine
  Duplicating the query Kotlin Facade method so we aren't pulling in Kotlin Core
  */
 @Throws(ApiException::class)
-internal suspend fun <R> query(apiCategory: ApiCategory, request: GraphQLRequest<R>, apiName: String?):
-    GraphQLResponse<R> {
-    return suspendCoroutine { continuation ->
-        if (apiName != null) {
-            apiCategory.query(
-                apiName,
-                request,
-                { continuation.resume(it) },
-                { continuation.resumeWithException(it) }
-            )
-        } else {
-            apiCategory.query(
-                request,
-                { continuation.resume(it) },
-                { continuation.resumeWithException(it) }
-            )
-        }
+internal suspend fun <R> query(
+    apiCategory: ApiCategory,
+    request: GraphQLRequest<R>,
+    apiName: String?
+): GraphQLResponse<R> = suspendCoroutine { continuation ->
+    if (apiName != null) {
+        apiCategory.query(
+            apiName,
+            request,
+            { continuation.resume(it) },
+            { continuation.resumeWithException(it) }
+        )
+    } else {
+        apiCategory.query(
+            request,
+            { continuation.resume(it) },
+            { continuation.resumeWithException(it) }
+        )
     }
 }

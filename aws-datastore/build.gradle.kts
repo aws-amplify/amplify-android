@@ -23,6 +23,10 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 
 group = properties["POM_GROUP"].toString()
 
+android {
+    namespace = "com.amplifyframework.datastore"
+}
+
 dependencies {
     implementation(project(":core"))
     implementation(project(":aws-core"))
@@ -57,8 +61,4 @@ dependencies {
     androidTestImplementation(libs.rxjava)
     androidTestImplementation(libs.okhttp)
     androidTestImplementation(libs.oauth2)
-}
-
-afterEvaluate {
-    android.kotlinOptions.jvmTarget = JavaVersion.VERSION_11.toString()
 }

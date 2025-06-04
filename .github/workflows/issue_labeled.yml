@@ -6,7 +6,7 @@ on:
 jobs:
   remove-pending-triage-label:
     runs-on: ubuntu-latest
-    if: ${{ contains(fromJSON('["question", "bug", "feature-request", "improvement"]'), github.event.label.name) }}
+    if: ${{ contains(fromJSON('["question", "bug", "feature-request"]'), github.event.label.name) }}
     permissions:
       issues: write
     steps:

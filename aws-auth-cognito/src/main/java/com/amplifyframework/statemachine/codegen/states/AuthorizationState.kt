@@ -84,6 +84,15 @@ internal sealed class AuthorizationState : State {
             val authorizationEvent = event.isAuthorizationEvent()
             val deleteUserEvent = event.isDeleteUserEvent()
             val defaultResolution = StateResolution(oldState)
+
+            if (authenticationEvent is AuthenticationEvent.EventType.SignInCompleted) {
+                val action = authorizationActions.initializeFetchAuthSession(authenticationEvent.signedInData)
+                return StateResolution(
+                    FetchingAuthSession(authenticationEvent.signedInData, FetchAuthSessionState.NotStarted()),
+                    listOf(action)
+                )
+            }
+
             return when (oldState) {
                 is NotConfigured -> when (authorizationEvent) {
                     is AuthorizationEvent.EventType.Configure -> {
@@ -121,8 +130,11 @@ internal sealed class AuthorizationState : State {
                 }
                 is StoringCredentials -> when (authEvent) {
                     is AuthEvent.EventType.ReceivedCachedCredentials -> {
-                        if (oldState.amplifyCredential is AmplifyCredential.Empty) StateResolution(Configured())
-                        else StateResolution(SessionEstablished(authEvent.storedCredentials))
+                        if (oldState.amplifyCredential is AmplifyCredential.Empty) {
+                            StateResolution(Configured())
+                        } else {
+                            StateResolution(SessionEstablished(authEvent.storedCredentials))
+                        }
                     }
                     is AuthEvent.EventType.CachedCredentialsFailed -> StateResolution(NotConfigured())
                     else -> defaultResolution
@@ -247,7 +259,8 @@ internal sealed class AuthorizationState : State {
                     else -> {
                         val resolution = deleteUserResolver.resolve(oldState.deleteUserState, event)
                         StateResolution(
-                            DeletingUser(resolution.newState, oldState.amplifyCredential), resolution.actions
+                            DeletingUser(resolution.newState, oldState.amplifyCredential),
+                            resolution.actions
                         )
                     }
                 }

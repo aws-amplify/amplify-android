@@ -44,7 +44,13 @@ public enum AuthFlowType {
     /**
      * type for USER_PASSWORD_AUTH.
      */
-    USER_PASSWORD_AUTH("USER_PASSWORD_AUTH");
+    USER_PASSWORD_AUTH("USER_PASSWORD_AUTH"),
+
+    /**
+     * type for USER_AUTH.
+     */
+    USER_AUTH("USER_AUTH");
+
     private String value;
 
     AuthFlowType(String value) {
