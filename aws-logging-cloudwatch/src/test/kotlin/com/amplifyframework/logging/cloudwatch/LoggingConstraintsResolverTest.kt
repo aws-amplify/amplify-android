@@ -34,6 +34,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -45,6 +46,11 @@ internal class LoggingConstraintsResolverTest {
 
     private lateinit var loggingConstraintsResolver: LoggingConstraintsResolver
     private val userId = "USER_ID"
+
+    @After
+    fun cleanup() {
+        WorkManagerTestInitHelper.closeWorkDatabase()
+    }
 
     @Test
     fun `test default logLevel`() {
