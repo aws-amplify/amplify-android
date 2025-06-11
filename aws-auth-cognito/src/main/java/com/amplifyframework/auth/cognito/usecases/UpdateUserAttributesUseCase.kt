@@ -16,16 +16,12 @@
 package com.amplifyframework.auth.cognito.usecases
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateUserAttributesResponse
-import aws.sdk.kotlin.services.cognitoidentityprovider.updateUserAttributes
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.AuthStateMachine
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthUpdateUserAttributesOptions
-import com.amplifyframework.auth.cognito.requireAccessToken
-import com.amplifyframework.auth.cognito.requireSignedInState
 import com.amplifyframework.auth.cognito.util.toAuthCodeDeliveryDetails
 import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
@@ -61,22 +57,24 @@ internal class UpdateUserAttributesUseCase(
         attributes: List<AuthUserAttribute>,
         metadata: Map<String, String>?
     ): Map<AuthUserAttributeKey, AuthUpdateAttributeResult> {
-        stateMachine.requireSignedInState()
-
-        val token = fetchAuthSession.execute().requireAccessToken()
-
-        val response = client.updateUserAttributes {
-            accessToken = token
-            clientMetadata = metadata
-            userAttributes = attributes.map {
-                AttributeType {
-                    name = it.key.keyString
-                    value = it.value
-                }
-            }
-        }
-
-        return response.mapResults(attributes)
+        throw Exception("failure!")
+//
+//        stateMachine.requireSignedInState()
+//
+//        val token = fetchAuthSession.execute().requireAccessToken()
+//
+//        val response = client.updateUserAttributes {
+//            accessToken = token
+//            clientMetadata = metadata
+//            userAttributes = attributes.map {
+//                AttributeType {
+//                    name = it.key.keyString
+//                    value = it.value
+//                }
+//            }
+//        }
+//
+//        return response.mapResults(attributes)
     }
 
     private fun UpdateUserAttributesResponse.mapResults(

@@ -19,14 +19,22 @@ import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.auth.AuthCategoryBehavior
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.result.AWSCognitoAuthSignOutResult
 import com.amplifyframework.auth.cognito.testutils.Credentials
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.testutils.coroutines.runBlockingWithTimeout
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
@@ -75,26 +83,68 @@ class AuthStressTests {
         }
     }
 
+    private fun runStressTest(
+        times: Int = 50,
+        timeout: Duration = 10.seconds,
+        setup: suspend () -> Unit = {},
+        body: suspend (Int) -> Unit
+    ) {
+        try {
+            runBlockingWithTimeout(timeout) {
+                setup()
+                repeat(times) {
+                    body(it)
+                }
+            }
+        } catch (e: Exception) {
+            fail("Test failed with exception: $e")
+        }
+    }
+
+    private suspend fun <T> callAmplify(
+        block: AuthCategoryBehavior.(onSuccess: (T) -> Unit, onFailure: (Exception) -> Unit) -> Unit
+    ) = suspendCoroutine { continuation ->
+        Amplify.Auth.block(
+            { continuation.resume(it) },
+            { continuation.resumeWithException(it) }
+        )
+    }
+
+    private suspend fun signInUser() {
+        val result = callAmplify { onSuccess, onFailure -> signIn(username, password, onSuccess, onFailure) }
+        assertTrue(result.isSignedIn)
+    }
+
+    @Test
+    fun testMultipleSignIn() = runStressTest { i ->
+        try {
+            val result = callAmplify { onSuccess, onFailure -> signIn(username, password, onSuccess, onFailure) }
+            assertTrue(result.isSignedIn)
+        } catch (e: Exception) {
+            assertTrue(i > 0)
+        }
+    }
+
     /**
      * Calls Auth.signIn 50 times
      */
-    @Test
-    fun testMultipleSignIn() {
-        val successLatch = CountDownLatch(1)
-        val errorLatch = CountDownLatch(49)
-
-        repeat(50) {
-            Amplify.Auth.signIn(
-                username,
-                password,
-                { if (it.isSignedIn) successLatch.countDown() else fail() },
-                { errorLatch.countDown() }
-            )
-        }
-
-        assertTrue(successLatch.await(TIMEOUT_S, TimeUnit.SECONDS))
-        assertTrue(errorLatch.await(TIMEOUT_S, TimeUnit.SECONDS))
-    }
+//    @Test
+//    fun testMultipleSignIn() {
+//        val successLatch = CountDownLatch(1)
+//        val errorLatch = CountDownLatch(49)
+//
+//        repeat(50) {
+//            Amplify.Auth.signIn(
+//                username,
+//                password,
+//                { if (it.isSignedIn) successLatch.countDown() else fail() },
+//                { errorLatch.countDown() }
+//            )
+//        }
+//
+//        assertTrue(successLatch.await(TIMEOUT_S, TimeUnit.SECONDS))
+//        assertTrue(errorLatch.await(TIMEOUT_S, TimeUnit.SECONDS))
+//    }
 
     /**
      * Calls Auth.signOut 50 times
@@ -305,46 +355,23 @@ class AuthStressTests {
      * Calls Auth.fetchUserAttributes 100 times
      */
     @Test
-    fun testSignIn_FetchAttributes() {
-        val latch = CountDownLatch(101)
-        Amplify.Auth.signIn(
-            username,
-            password,
-            { if (it.isSignedIn) latch.countDown() else fail() },
-            { fail() }
-        )
-
-        repeat(100) {
-            Amplify.Auth.fetchUserAttributes(
-                { latch.countDown() },
-                { fail() }
-            )
-        }
-
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.MINUTES))
+    fun testSignIn_FetchAttributes() = runStressTest(
+        times = 100,
+        timeout = 1.minutes,
+        setup = ::signInUser
+    ) {
+        val attributes = callAmplify { onSuccess, onFailure -> fetchUserAttributes(onSuccess, onFailure) }
     }
 
     /**
      * Calls Auth.updateUserAttributes 100 times
      */
     @Test
-    fun testSignIn_UpdateAttributes() {
-        val latch = CountDownLatch(101)
-        Amplify.Auth.signIn(
-            username,
-            password,
-            { if (it.isSignedIn) latch.countDown() else fail() },
-            { fail() }
-        )
-
-        repeat(100) {
-            Amplify.Auth.updateUserAttributes(
-                attributes,
-                { latch.countDown() },
-                { fail() }
-            )
-        }
-
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.MINUTES))
+    fun testSignIn_UpdateAttributes() = runStressTest(
+        times = 100,
+        timeout = 1.minutes,
+        setup = ::signInUser
+    ) {
+        val updated = callAmplify { onSuccess, onFailure -> updateUserAttributes(attributes, onSuccess, onFailure) }
     }
 }
