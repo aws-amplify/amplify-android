@@ -1,3 +1,14 @@
+## [Release 2.28.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.28.0)
+
+### Bug Fixes
+- **auth:** Emit SIGNED_IN event after autoSignIn ([#3068](https://github.com/aws-amplify/amplify-android/issues/3068))
+- **storage:** Improve exception handling when attempting to overwrite a file during download ([#3056](https://github.com/aws-amplify/amplify-android/issues/3056))
+
+### Miscellaneous
+- fix(data) Stabilize API/Auth tests ([#3065](https://github.com/aws-amplify/amplify-android/issues/3065))
+
+[See all changes between 2.27.4 and 2.28.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.27.4...release_v2.28.0)
+
 ## [Release 2.27.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.27.4)
 
 ### Bug Fixes
