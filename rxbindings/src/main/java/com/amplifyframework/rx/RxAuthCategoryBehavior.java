@@ -30,10 +30,13 @@ import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.TOTPSetupDetails;
+import com.amplifyframework.auth.options.AuthAssociateWebAuthnCredentialsOptions;
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
+import com.amplifyframework.auth.options.AuthDeleteWebAuthnCredentialOptions;
 import com.amplifyframework.auth.options.AuthFetchSessionOptions;
+import com.amplifyframework.auth.options.AuthListWebAuthnCredentialsOptions;
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions;
 import com.amplifyframework.auth.options.AuthResetPasswordOptions;
@@ -44,11 +47,13 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions;
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
+import com.amplifyframework.auth.result.AuthListWebAuthnCredentialsResult;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignOutResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult;
+import com.amplifyframework.auth.result.AuthWebAuthnCredential;
 
 import java.util.List;
 import java.util.Map;
@@ -156,7 +161,7 @@ public interface RxAuthCategoryBehavior {
      *         {@link AuthException} on failure
      */
     Single<AuthSignInResult> confirmSignIn(
-            @Nullable String challengeResponse,
+            @NonNull String challengeResponse,
             @NonNull AuthConfirmSignInOptions options
     );
 
@@ -167,6 +172,13 @@ public interface RxAuthCategoryBehavior {
      *         {@link AuthException} on failure
      */
     Single<AuthSignInResult> confirmSignIn(@NonNull String challengeResponse);
+
+    /**
+     * Sign in the user after signed up confirmation.
+     * @return An Rx {@link Single} which emits {@link AuthSignInResult} on success,
+     *         {@link AuthException} on failure
+     */
+    Single<AuthSignInResult> autoSignIn();
 
     /**
      * Launch the specified auth provider's web UI sign in experience. You should also put the
@@ -462,4 +474,62 @@ public interface RxAuthCategoryBehavior {
      */
     Completable verifyTOTPSetup(@NonNull String code, @NonNull AuthVerifyTOTPSetupOptions options);
 
+    /**
+     * Create and register a passkey on this device, enabling passwordless sign in using passkeys.
+     * The user must be signed in to call this API.
+     * @param callingActivity The current Activity instance, used for launching the CredentialManager UI
+     * @return An Rx {@link Completable} which completes upon successfully associating a new credential;
+     *         emits an {@link AuthException} otherwise
+     */
+    Completable associateWebAuthnCredential(@NonNull Activity callingActivity);
+
+    /**
+     * Create and register a passkey on this device, enabling passwordless sign in using passkeys.
+     * The user must be signed in to call this API.
+     * @param callingActivity The current Activity instance, used for launching the CredentialManager UI
+     * @param options Advanced options for associating credentials
+     * @return An Rx {@link Completable} which completes upon successfully associating a new credential;
+     *         emits an {@link AuthException} otherwise
+     */
+    Completable associateWebAuthnCredential(
+            @NonNull Activity callingActivity,
+            @NonNull AuthAssociateWebAuthnCredentialsOptions options
+    );
+
+    /**
+     * Retrieve a list of WebAuthn credentials that are associated with the user's account.
+     * The user must be signed in to call this API.
+     * @return An Rx {@link Single} which emits a list of {@link AuthWebAuthnCredential} on completion
+     */
+    Single<AuthListWebAuthnCredentialsResult> listWebAuthnCredentials();
+
+    /**
+     * Retrieve a list of WebAuthn credentials that are associated with the user's account.
+     * The user must be signed in to call this API.
+     * @param options Advanced options for listing credentials
+     * @return An Rx {@link Single} which emits a list of {@link AuthWebAuthnCredential} on completion
+     */
+    Single<AuthListWebAuthnCredentialsResult> listWebAuthnCredentials(
+            @NonNull AuthListWebAuthnCredentialsOptions options
+    );
+
+    /**
+     * Delete the credential matching the given identifier.
+     * @param credentialId The identifier for the credential to delete
+     * @return An Rx {@link Completable} which completes upon successfully deleting the credential;
+     *         emits an {@link AuthException} otherwise
+     */
+    Completable deleteWebAuthnCredential(@NonNull String credentialId);
+
+    /**
+     * Delete the credential matching the given identifier.
+     * @param credentialId The identifier for the credential to delete
+     * @param options Advanced options for deleting credentials
+     * @return An Rx {@link Completable} which completes upon successfully deleting the credential;
+     *         emits an {@link AuthException} otherwise
+     */
+    Completable deleteWebAuthnCredential(
+            @NonNull String credentialId,
+            @NonNull AuthDeleteWebAuthnCredentialOptions options
+    );
 }

@@ -26,10 +26,13 @@ import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.TOTPSetupDetails
+import com.amplifyframework.auth.options.AuthAssociateWebAuthnCredentialsOptions
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
+import com.amplifyframework.auth.options.AuthDeleteWebAuthnCredentialOptions
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
+import com.amplifyframework.auth.options.AuthListWebAuthnCredentialsOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -40,6 +43,7 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
+import com.amplifyframework.auth.result.AuthListWebAuthnCredentialsResult
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignOutResult
@@ -68,10 +72,9 @@ interface Auth {
     @Throws(AuthException::class)
     suspend fun signUp(
         username: String,
-        password: String,
+        password: String?,
         options: AuthSignUpOptions = AuthSignUpOptions.builder().build()
-    ):
-        AuthSignUpResult
+    ): AuthSignUpResult
 
     /**
      * If you have attribute confirmation enabled, this will allow the user
@@ -125,8 +128,7 @@ interface Auth {
         username: String? = null,
         password: String? = null,
         options: AuthSignInOptions = AuthSignInOptions.defaults()
-    ):
-        AuthSignInResult
+    ): AuthSignInResult
 
     /**
      * Submit the confirmation code received as part of multi-factor Authentication during sign in.
@@ -139,8 +141,14 @@ interface Auth {
     suspend fun confirmSignIn(
         challengeResponse: String,
         options: AuthConfirmSignInOptions = AuthConfirmSignInOptions.defaults()
-    ):
-        AuthSignInResult
+    ): AuthSignInResult
+
+    /**
+     * Sign in the user after signed up confirmation.
+     * @return A sign-in result; check the nextStep field for cues on additional sign-in challenges
+     */
+    @Throws(AuthException::class)
+    suspend fun autoSignIn(): AuthSignInResult
 
     /**
      * Launch the specified auth provider's web UI sign in experience. You should also put the
@@ -157,8 +165,7 @@ interface Auth {
         provider: AuthProvider,
         callingActivity: Activity,
         options: AuthWebUISignInOptions = AuthWebUISignInOptions.builder().build()
-    ):
-        AuthSignInResult
+    ): AuthSignInResult
 
     /**
      * Launch a hosted web sign in UI flow. You should also put the {@link #handleWebUISignInResponse(Intent)}
@@ -172,8 +179,7 @@ interface Auth {
     suspend fun signInWithWebUI(
         callingActivity: Activity,
         options: AuthWebUISignInOptions = AuthWebUISignInOptions.builder().build()
-    ):
-        AuthSignInResult
+    ): AuthSignInResult
 
     /**
      * Handles the response which comes back from {@link #signInWithWebUI(Activity, Consumer, Consumer)}.
@@ -346,5 +352,39 @@ interface Auth {
     suspend fun verifyTOTPSetup(
         code: String,
         options: AuthVerifyTOTPSetupOptions = AuthVerifyTOTPSetupOptions.defaults()
+    )
+
+    /**
+     * Create and register a passkey on this device, enabling passwordless sign in using passkeys.
+     * The user must be signed in to call this API.
+     * @param callingActivity The current Activity instance, used for launching the CredentialManager UI
+     * @param options Advanced options for associating credentials
+     */
+    @Throws(AuthException::class)
+    suspend fun associateWebAuthnCredential(
+        callingActivity: Activity,
+        options: AuthAssociateWebAuthnCredentialsOptions = AuthAssociateWebAuthnCredentialsOptions.defaults()
+    )
+
+    /**
+     * Retrieve a list of WebAuthn credentials that are associated with the user's account.
+     * The user must be signed in to call this API.
+     * @param options Advanced options for listing credentials
+     * @return The list of associated WebAuthn credentials
+     */
+    @Throws(AuthException::class)
+    suspend fun listWebAuthnCredentials(
+        options: AuthListWebAuthnCredentialsOptions = AuthListWebAuthnCredentialsOptions.defaults()
+    ): AuthListWebAuthnCredentialsResult
+
+    /**
+     * Delete the credential matching the given identifier.
+     * @param credentialId The identifier for the credential to delete
+     * @param options Advanced options for deleting credentials
+     */
+    @Throws(AuthException::class)
+    suspend fun deleteWebAuthnCredential(
+        credentialId: String,
+        options: AuthDeleteWebAuthnCredentialOptions = AuthDeleteWebAuthnCredentialOptions.defaults()
     )
 }

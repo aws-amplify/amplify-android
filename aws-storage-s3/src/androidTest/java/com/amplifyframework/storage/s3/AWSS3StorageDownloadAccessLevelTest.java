@@ -23,6 +23,7 @@ import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
+import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.s3.UserCredentials.Credential;
 import com.amplifyframework.storage.s3.UserCredentials.IdentityIdSource;
@@ -33,6 +34,7 @@ import com.amplifyframework.testutils.random.RandomTempFile;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousStorage;
 
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -83,6 +85,15 @@ public final class AWSS3StorageDownloadAccessLevelTest {
 
         // Upload test file in S3 ahead of time
         uploadTestFile();
+    }
+
+    /**
+     * Clean up test resources from test suite.
+     * @throws Exception from failure to remove test resources.
+     */
+    @AfterClass
+    public static void tearDownOnce() throws Exception {
+        removeUploadedTestFiles();
     }
 
     /**
@@ -262,5 +273,40 @@ public final class AWSS3StorageDownloadAccessLevelTest {
                 .accessLevel(StorageAccessLevel.PRIVATE)
                 .build();
         storage.uploadFile(key, uploadFile, options);
+    }
+
+    private static void removeUploadedTestFiles() throws Exception {
+        final String key = UPLOAD_NAME;
+
+        synchronousAuth.signOut();
+        synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
+
+        StorageRemoveOptions options;
+        options = StorageRemoveOptions.builder()
+                .accessLevel(StorageAccessLevel.PUBLIC)
+                .build();
+        storage.remove(key, options);
+
+        options = StorageRemoveOptions.builder()
+                .accessLevel(StorageAccessLevel.PROTECTED)
+                .build();
+        storage.remove(key, options);
+
+        options = StorageRemoveOptions.builder()
+                .accessLevel(StorageAccessLevel.PRIVATE)
+                .build();
+        storage.remove(key, options);
+
+        // Upload as user two
+        synchronousAuth.signOut();
+        synchronousAuth.signIn(userTwo.getUsername(), userTwo.getPassword());
+        options = StorageRemoveOptions.builder()
+                .accessLevel(StorageAccessLevel.PROTECTED)
+                .build();
+        storage.remove(key, options);
+        options = StorageRemoveOptions.builder()
+                .accessLevel(StorageAccessLevel.PRIVATE)
+                .build();
+        storage.remove(key, options);
     }
 }

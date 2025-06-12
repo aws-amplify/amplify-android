@@ -1,0 +1,26 @@
+{
+    "description": "Test that autoSignIn without ConfirmSignUp fails",
+    "preConditions": {
+        "amplify-configuration": "authconfiguration_userauth.json",
+        "state": "SignedOut_SessionEstablished_AwaitingUserConfirmation.json",
+        "mockedResponses": []
+    },
+    "api": {
+        "name": "autoSignIn",
+        "params": {},
+        "options": {}
+    },
+    "validations": [
+        {
+            "type": "amplify",
+            "apiName": "autoSignIn",
+            "responseType": "failure",
+            "response": {
+                "errorType": "InvalidStateException",
+                "errorMessage": "Auth state is an invalid state, cannot process the request.",
+                "recoverySuggestion": "Operation performed is not a valid operation for the current auth state.",
+                "cause": null
+            }
+        }
+    ]
+}

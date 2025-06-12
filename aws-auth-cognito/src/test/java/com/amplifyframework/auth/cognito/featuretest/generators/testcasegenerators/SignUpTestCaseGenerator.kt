@@ -15,6 +15,8 @@
 
 package com.amplifyframework.auth.cognito.featuretest.generators.testcasegenerators
 
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.InvalidParameterException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.UsernameExistsException
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.featuretest.API
@@ -33,8 +35,11 @@ import com.amplifyframework.auth.result.step.AuthSignUpStep
 
 object SignUpTestCaseGenerator : SerializableProvider {
     private val username = "user"
+    private val existingUsername = "anExistingUsername"
+    private val invalidUsername = "anInvalidUsername"
     private val password = "password"
     private val email = "user@domain.com"
+    private val session = "session-id"
 
     private val codeDeliveryDetails = mapOf(
         "destination" to email,
@@ -48,18 +53,88 @@ object SignUpTestCaseGenerator : SerializableProvider {
         "attributeName" to ""
     )
 
+// mock responses for non-passwordless flow region starts
+    private val mockedUnconfirmedSignUpResponse = MockResponse(
+        CognitoType.CognitoIdentityProvider,
+        "signUp",
+        ResponseType.Success,
+        mapOf(
+            "codeDeliveryDetails" to codeDeliveryDetails
+        ).toJsonElement()
+    )
+
+    private val mockedConfirmedSignUpResponse = MockResponse(
+        CognitoType.CognitoIdentityProvider,
+        "signUp",
+        ResponseType.Success,
+        mapOf(
+            "codeDeliveryDetails" to emptyCodeDeliveryDetails,
+            "userConfirmed" to true
+        ).toJsonElement()
+    )
+// mock responses for non-passwordless flow region starts
+
+// mock responses for passwordless flow region starts
+    private val mockedPasswordlessUnconfirmedSignUpResponse = MockResponse(
+        CognitoType.CognitoIdentityProvider,
+        "signUp",
+        ResponseType.Success,
+        mapOf(
+            "codeDeliveryDetails" to codeDeliveryDetails,
+            "session" to session
+        ).toJsonElement()
+    )
+
+    private val mockedPasswordlessConfirmedSignUpResponse = MockResponse(
+        CognitoType.CognitoIdentityProvider,
+        "signUp",
+        ResponseType.Success,
+        mapOf(
+            "codeDeliveryDetails" to emptyCodeDeliveryDetails,
+            "session" to session,
+            "userConfirmed" to true
+        ).toJsonElement()
+    )
+// mock responses for passwordless flow region starts
+
+// mock error responses flow region starts
+    private val usernameExistsException = UsernameExistsException.invoke {}
+    private val usernameInvalidException = InvalidParameterException.invoke {}
+
+    private val mockedSignUpWithExistingUsernameResponse = MockResponse(
+        CognitoType.CognitoIdentityProvider,
+        "signUp",
+        ResponseType.Failure,
+        usernameExistsException.toJsonElement()
+    )
+
+    private val mockedSignUpWithInvalidUsernameResponse = MockResponse(
+        CognitoType.CognitoIdentityProvider,
+        "signUp",
+        ResponseType.Failure,
+        usernameInvalidException.toJsonElement()
+    )
+// mock error responses flow region starts
+
+    private fun expectedCognitoSignUpRequest(username: String, password: String?) =
+        ExpectationShapes.Cognito.CognitoIdentityProvider(
+            apiName = "signUp",
+            // see [https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SignUp.html]
+            request = mapOf(
+                "clientId" to "testAppClientId", // This should be pulled from configuration
+                "username" to username,
+                "password" to password,
+                "userAttributes" to listOf(mapOf("name" to "email", "value" to email))
+            ).toJsonElement()
+        )
+
     val baseCase = FeatureTestCase(
         description = "Test that signup invokes proper cognito request and returns success",
         preConditions = PreConditions(
             "authconfiguration.json",
             "SignedOut_Configured.json",
             mockedResponses = listOf(
-                MockResponse(
-                    CognitoType.CognitoIdentityProvider,
-                    "signUp",
-                    ResponseType.Success,
-                    mapOf("codeDeliveryDetails" to codeDeliveryDetails).toJsonElement()
-                )
+                mockedUnconfirmedSignUpResponse
             )
         ),
         api = API(
@@ -73,16 +148,7 @@ object SignUpTestCaseGenerator : SerializableProvider {
             ).toJsonElement()
         ),
         validations = listOf(
-            ExpectationShapes.Cognito.CognitoIdentityProvider(
-                apiName = "signUp",
-                // see [https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SignUp.html]
-                request = mapOf(
-                    "clientId" to "testAppClientId", // This should be pulled from configuration
-                    "username" to username,
-                    "password" to password,
-                    "userAttributes" to listOf(mapOf("name" to "email", "value" to email))
-                ).toJsonElement()
-            ),
+            expectedCognitoSignUpRequest(username, password),
             ExpectationShapes.Amplify(
                 apiName = AuthAPI.signUp,
                 responseType = ResponseType.Success,
@@ -97,7 +163,7 @@ object SignUpTestCaseGenerator : SerializableProvider {
                             "attributeName"
                         )
                     ),
-                    null
+                    "" // aligned with mock in CognitoMockFactory
                 ).toJsonElement()
             )
         )
@@ -107,25 +173,11 @@ object SignUpTestCaseGenerator : SerializableProvider {
         description = "Sign up finishes if user is confirmed in the first step",
         preConditions = baseCase.preConditions.copy(
             mockedResponses = listOf(
-                MockResponse(
-                    CognitoType.CognitoIdentityProvider,
-                    "signUp",
-                    ResponseType.Success,
-                    mapOf("codeDeliveryDetails" to emptyCodeDeliveryDetails, "userConfirmed" to true).toJsonElement()
-                )
+                mockedConfirmedSignUpResponse
             )
         ),
         validations = listOf(
-            ExpectationShapes.Cognito.CognitoIdentityProvider(
-                apiName = "signUp",
-                // see [https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_SignUp.html]
-                request = mapOf(
-                    "clientId" to "testAppClientId", // This should be pulled from configuration
-                    "username" to username,
-                    "password" to password,
-                    "userAttributes" to listOf(mapOf("name" to "email", "value" to email))
-                ).toJsonElement()
-            ),
+            expectedCognitoSignUpRequest(username, password),
             ExpectationShapes.Amplify(
                 apiName = AuthAPI.signUp,
                 responseType = ResponseType.Success,
@@ -135,13 +187,168 @@ object SignUpTestCaseGenerator : SerializableProvider {
                     AuthNextSignUpStep(
                         AuthSignUpStep.DONE,
                         emptyMap(),
-                        null
+                        AuthCodeDeliveryDetails(
+                            "",
+                            AuthCodeDeliveryDetails.DeliveryMedium.UNKNOWN,
+                            ""
+                        )
                     ),
-                    null
+                    "" // aligned with mock in CognitoMockFactory
                 ).toJsonElement()
             )
         )
     )
 
-    override val serializables: List<Any> = listOf(baseCase, signupSuccessCase)
+    private val passwordlessUnconfirmedSignUpWithValidUsernameReturnsConfirmSignUpStep = FeatureTestCase(
+        description = "Test that passwordless uncofirmed signUp with valid username returns ConfirmSignUpStep",
+        preConditions = PreConditions(
+            "authconfiguration_userauth.json",
+            "SignedOut_Configured.json",
+            mockedResponses = listOf(
+                mockedPasswordlessUnconfirmedSignUpResponse
+            )
+        ),
+        api = API(
+            AuthAPI.signUp,
+            params = mapOf(
+                "username" to username,
+                "password" to ""
+            ).toJsonElement(),
+            options = mapOf(
+                "userAttributes" to mapOf(AuthUserAttributeKey.email().keyString to email)
+            ).toJsonElement()
+        ),
+        validations = listOf(
+            expectedCognitoSignUpRequest(username, ""),
+            ExpectationShapes.Amplify(
+                apiName = AuthAPI.signUp,
+                responseType = ResponseType.Success,
+                response = AuthSignUpResult(
+                    false,
+                    AuthNextSignUpStep(
+                        AuthSignUpStep.CONFIRM_SIGN_UP_STEP,
+                        emptyMap(),
+                        AuthCodeDeliveryDetails(
+                            email,
+                            AuthCodeDeliveryDetails.DeliveryMedium.EMAIL,
+                            "attributeName"
+                        )
+                    ),
+                    "" // aligned with mock in CognitoMockFactory
+                ).toJsonElement()
+            )
+        )
+    )
+
+    private val passwordlessConfirmedSignUpWithValidUsernameReturnsCompleteAutoSignIn = FeatureTestCase(
+        description = "Test that passwordless confirmed signUp with valid username returns CompleteAutoSignIn",
+        preConditions = PreConditions(
+            "authconfiguration_userauth.json",
+            "SignedOut_Configured.json",
+            mockedResponses = listOf(
+                mockedPasswordlessConfirmedSignUpResponse
+            )
+        ),
+        api = API(
+            AuthAPI.signUp,
+            params = mapOf(
+                "username" to username,
+                "password" to ""
+            ).toJsonElement(),
+            options = mapOf(
+                "userAttributes" to mapOf(AuthUserAttributeKey.email().keyString to email)
+            ).toJsonElement()
+        ),
+        validations = listOf(
+            expectedCognitoSignUpRequest(username, ""),
+            ExpectationShapes.Amplify(
+                apiName = AuthAPI.signUp,
+                responseType = ResponseType.Success,
+                response = AuthSignUpResult(
+                    true,
+                    AuthNextSignUpStep(
+                        AuthSignUpStep.COMPLETE_AUTO_SIGN_IN,
+                        emptyMap(),
+                        AuthCodeDeliveryDetails(
+                            "",
+                            AuthCodeDeliveryDetails.DeliveryMedium.UNKNOWN,
+                            ""
+                        )
+                    ),
+                    "" // aligned with mock in CognitoMockFactory
+                ).toJsonElement()
+            )
+        )
+    )
+
+    private val passwordlessSignUpWithExistingUsernameFails = FeatureTestCase(
+        description = "Test that passwordless signUp with an existing username fails",
+        preConditions = PreConditions(
+            "authconfiguration_userauth.json",
+            "SignedOut_Configured.json",
+            mockedResponses = listOf(
+                mockedSignUpWithExistingUsernameResponse
+            )
+        ),
+        api = API(
+            AuthAPI.signUp,
+            params = mapOf(
+                "username" to existingUsername,
+                "password" to ""
+            ).toJsonElement(),
+            options = mapOf(
+                "userAttributes" to mapOf(AuthUserAttributeKey.email().keyString to email)
+            ).toJsonElement()
+        ),
+        validations = listOf(
+            expectedCognitoSignUpRequest(existingUsername, ""),
+            ExpectationShapes.Amplify(
+                AuthAPI.signUp,
+                ResponseType.Failure,
+                com.amplifyframework.auth.cognito.exceptions.service.UsernameExistsException(
+                    usernameExistsException
+                ).toJsonElement()
+            )
+        )
+    )
+
+    private val passwordlessSignUpWithInvalidUsernameFails = FeatureTestCase(
+        description = "Test that passwordless signUp with an invalid username fails",
+        preConditions = PreConditions(
+            "authconfiguration_userauth.json",
+            "SignedOut_Configured.json",
+            mockedResponses = listOf(
+                mockedSignUpWithInvalidUsernameResponse
+            )
+        ),
+        api = API(
+            AuthAPI.signUp,
+            params = mapOf(
+                "username" to invalidUsername,
+                "password" to ""
+            ).toJsonElement(),
+            options = mapOf(
+                "userAttributes" to mapOf(AuthUserAttributeKey.email().keyString to email)
+            ).toJsonElement()
+        ),
+        validations = listOf(
+            expectedCognitoSignUpRequest(invalidUsername, ""),
+            ExpectationShapes.Amplify(
+                AuthAPI.signUp,
+                ResponseType.Failure,
+                com.amplifyframework.auth.cognito.exceptions.service.InvalidParameterException(
+                    cause = usernameInvalidException
+                ).toJsonElement()
+            )
+        )
+    )
+
+    override val serializables: List<Any> = listOf(
+        baseCase,
+        signupSuccessCase,
+        passwordlessUnconfirmedSignUpWithValidUsernameReturnsConfirmSignUpStep,
+        passwordlessConfirmedSignUpWithValidUsernameReturnsCompleteAutoSignIn,
+        passwordlessSignUpWithExistingUsernameFails,
+        passwordlessSignUpWithInvalidUsernameFails
+    )
 }

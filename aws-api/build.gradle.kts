@@ -24,13 +24,6 @@ group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.api.aws"
-    defaultConfig {
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    testOptions {
-        execution = "ANDROIDX_TEST_ORCHESTRATOR"
-    }
 }
 
 dependencies {
@@ -67,8 +60,4 @@ dependencies {
     androidTestImplementation(libs.test.kotlin.coroutines)
 
     androidTestUtil(libs.test.androidx.orchestrator)
-}
-
-android.kotlinOptions {
-    jvmTarget = "11"
 }

@@ -16,22 +16,13 @@
 package com.amplifyframework.auth.plugins.core.data
 
 import android.content.Context
-import com.amplifyframework.core.store.EncryptedKeyValueRepository
-import com.amplifyframework.core.store.InMemoryKeyValueRepository
+import com.amplifyframework.core.store.AmplifyKeyValueRepository
 import com.amplifyframework.core.store.KeyValueRepository
 
-internal class AuthCredentialStore(
-    context: Context,
-    keyValueStoreIdentifierSuffix: String,
-    isPersistenceEnabled: Boolean
-) {
+internal class AuthCredentialStore(context: Context, keyValueStoreIdentifierSuffix: String) {
     private val keyValueStoreIdentifier = "com.amplify.credentialStore.$keyValueStoreIdentifierSuffix"
 
-    private val keyValue: KeyValueRepository = if (isPersistenceEnabled) {
-        EncryptedKeyValueRepository(context, keyValueStoreIdentifier)
-    } else {
-        InMemoryKeyValueRepository()
-    }
+    private val keyValue: KeyValueRepository = AmplifyKeyValueRepository(context, keyValueStoreIdentifier)
 
     fun put(key: String, value: String) = keyValue.put(key, value)
     fun get(key: String): String? = keyValue.get(key)

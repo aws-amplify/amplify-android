@@ -20,10 +20,13 @@ import android.content.Intent;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.auth.options.AuthAssociateWebAuthnCredentialsOptions;
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
+import com.amplifyframework.auth.options.AuthDeleteWebAuthnCredentialOptions;
 import com.amplifyframework.auth.options.AuthFetchSessionOptions;
+import com.amplifyframework.auth.options.AuthListWebAuthnCredentialsOptions;
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions;
 import com.amplifyframework.auth.options.AuthResetPasswordOptions;
@@ -34,6 +37,7 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions;
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
+import com.amplifyframework.auth.result.AuthListWebAuthnCredentialsResult;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignOutResult;
@@ -61,7 +65,7 @@ public interface AuthCategoryBehavior {
      */
     void signUp(
             @NonNull String username,
-            @NonNull String password,
+            @Nullable String password,
             @NonNull AuthSignUpOptions options,
             @NonNull Consumer<AuthSignUpResult> onSuccess,
             @NonNull Consumer<AuthException> onError);
@@ -547,5 +551,93 @@ public interface AuthCategoryBehavior {
         @NonNull AuthVerifyTOTPSetupOptions options,
         @NonNull Action onSuccess,
         @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * Create and register a passkey on this device, enabling passwordless sign in using passkeys.
+     * The user must be signed in to call this API.
+     * @param callingActivity The current Activity instance, used for launching the CredentialManager UI
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void associateWebAuthnCredential(
+        @NonNull Activity callingActivity,
+        @NonNull Action onSuccess,
+        @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * Create and register a passkey on this device, enabling passwordless sign in using passkeys.
+     * The user must be signed in to call this API.
+     * @param callingActivity The current Activity instance, used for launching the CredentialManager UI
+     * @param options Advanced options for associating credentials
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void associateWebAuthnCredential(
+            @NonNull Activity callingActivity,
+            @NonNull AuthAssociateWebAuthnCredentialsOptions options,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * Retrieve a list of WebAuthn credentials that are associated with the user's account.
+     * The user must be signed in to call this API.
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void listWebAuthnCredentials(
+        @NonNull Consumer<AuthListWebAuthnCredentialsResult> onSuccess,
+        @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * Retrieve a list of WebAuthn credentials that are associated with the user's account.
+     * The user must be signed in to call this API.
+     * @param options Advanced options for listing credentials
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void listWebAuthnCredentials(
+            @NonNull AuthListWebAuthnCredentialsOptions options,
+            @NonNull Consumer<AuthListWebAuthnCredentialsResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * Delete the credential matching the given identifier.
+     * @param credentialId The identifier for the credential to delete
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void deleteWebAuthnCredential(
+        @NonNull String credentialId,
+        @NonNull Action onSuccess,
+        @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * Delete the credential matching the given identifier.
+     * @param credentialId The identifier for the credential to delete
+     * @param options Advanced options for deleting credentials
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void deleteWebAuthnCredential(
+            @NonNull String credentialId,
+            @NonNull AuthDeleteWebAuthnCredentialOptions options,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError
+    );
+
+    /**
+     * Automatically sign in the user.
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void autoSignIn(
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
     );
 }

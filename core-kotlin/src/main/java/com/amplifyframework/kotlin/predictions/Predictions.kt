@@ -33,15 +33,13 @@ interface Predictions {
     suspend fun convertTextToSpeech(
         text: String,
         options: TextToSpeechOptions = TextToSpeechOptions.defaults()
-    ):
-        TextToSpeechResult
+    ): TextToSpeechResult
 
     @Throws(PredictionsException::class)
     suspend fun translateText(
         text: String,
         options: TranslateTextOptions = TranslateTextOptions.defaults()
-    ):
-        TranslateTextResult
+    ): TranslateTextResult
 
     @Throws(PredictionsException::class)
     suspend fun translateText(
@@ -49,21 +47,15 @@ interface Predictions {
         fromLanguage: LanguageType,
         toLanguage: LanguageType,
         options: TranslateTextOptions = TranslateTextOptions.defaults()
-    ):
-        TranslateTextResult
+    ): TranslateTextResult
 
     @Throws(PredictionsException::class)
     suspend fun identify(
         actionType: IdentifyAction,
         image: Bitmap,
         options: IdentifyOptions = IdentifyOptions.defaults()
-    ):
-        IdentifyResult
+    ): IdentifyResult
 
     @Throws(PredictionsException::class)
-    suspend fun interpret(
-        text: String,
-        options: InterpretOptions = InterpretOptions.defaults()
-    ):
-        InterpretResult
+    suspend fun interpret(text: String, options: InterpretOptions = InterpretOptions.defaults()): InterpretResult
 }

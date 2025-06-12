@@ -72,9 +72,7 @@ class AWSLocationGeoPlugin(
         CognitoCredentialsProvider(authCategory)
     }
 
-    override fun getPluginKey(): String {
-        return GEO_PLUGIN_KEY
-    }
+    override fun getPluginKey(): String = GEO_PLUGIN_KEY
 
     @Throws(AmplifyException::class)
     override fun configure(pluginConfiguration: JSONObject, context: Context) {
@@ -100,18 +98,11 @@ class AWSLocationGeoPlugin(
         this.geoService = AmazonLocationService(credentialsProvider, configuration.region)
     }
 
-    override fun getEscapeHatch(): LocationClient {
-        return geoService.provider
-    }
+    override fun getEscapeHatch(): LocationClient = geoService.provider
 
-    override fun getVersion(): String {
-        return BuildConfig.VERSION_NAME
-    }
+    override fun getVersion(): String = BuildConfig.VERSION_NAME
 
-    override fun getAvailableMaps(
-        onResult: Consumer<Collection<MapStyle>>,
-        onError: Consumer<GeoException>
-    ) {
+    override fun getAvailableMaps(onResult: Consumer<Collection<MapStyle>>, onError: Consumer<GeoException>) {
         try {
             onResult.accept(configuration.maps!!.items)
         } catch (error: Exception) {
@@ -119,10 +110,7 @@ class AWSLocationGeoPlugin(
         }
     }
 
-    override fun getDefaultMap(
-        onResult: Consumer<MapStyle>,
-        onError: Consumer<GeoException>
-    ) {
+    override fun getDefaultMap(onResult: Consumer<MapStyle>, onError: Consumer<GeoException>) {
         try {
             onResult.accept(configuration.maps!!.default)
         } catch (error: Exception) {
@@ -130,10 +118,7 @@ class AWSLocationGeoPlugin(
         }
     }
 
-    override fun getMapStyleDescriptor(
-        onResult: Consumer<MapStyleDescriptor>,
-        onError: Consumer<GeoException>
-    ) {
+    override fun getMapStyleDescriptor(onResult: Consumer<MapStyleDescriptor>, onError: Consumer<GeoException>) {
         val options = GetMapStyleDescriptorOptions.defaults()
         getMapStyleDescriptor(options, onResult, onError)
     }
@@ -155,11 +140,7 @@ class AWSLocationGeoPlugin(
         )
     }
 
-    override fun searchByText(
-        query: String,
-        onResult: Consumer<GeoSearchResult>,
-        onError: Consumer<GeoException>
-    ) {
+    override fun searchByText(query: String, onResult: Consumer<GeoSearchResult>, onError: Consumer<GeoException>) {
         val options = GeoSearchByTextOptions.defaults()
         searchByText(query, options, onResult, onError)
     }

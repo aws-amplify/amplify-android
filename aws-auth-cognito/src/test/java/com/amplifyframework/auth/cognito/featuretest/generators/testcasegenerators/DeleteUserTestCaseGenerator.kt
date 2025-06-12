@@ -39,7 +39,7 @@ object DeleteUserTestCaseGenerator : SerializableProvider {
     private val apiReturnValidation = ExpectationShapes.Amplify(
         AuthAPI.deleteUser,
         ResponseType.Success,
-        JsonObject(emptyMap()),
+        JsonObject(emptyMap())
     )
 
     private val baseCase = FeatureTestCase(
@@ -84,7 +84,7 @@ object DeleteUserTestCaseGenerator : SerializableProvider {
                         ResponseType.Failure,
                         com.amplifyframework.auth.exceptions.NotAuthorizedException(
                             cause = errorResponse
-                        ).toJsonElement(),
+                        ).toJsonElement()
                     )
                 )
             )

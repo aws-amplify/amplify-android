@@ -20,7 +20,7 @@ import java.util.Date
 
 internal class DeleteUserEvent(
     val eventType: EventType,
-    override val time: Date? = null,
+    override val time: Date? = null
 ) : StateMachineEvent {
     sealed class EventType {
         data class DeleteUser(val accessToken: String) : EventType()

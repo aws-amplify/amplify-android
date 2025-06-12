@@ -7,6 +7,4 @@ import com.amplifyframework.core.model.Model
  * The returned value should only be used to construct the lookup sqlite key, and is not a value used by AppSync
  * @return the primary key that was used on the ModelMetadata table for the given model
  */
-internal fun Model.getMetadataSQLitePrimaryKey(): String {
-    return "$modelName|$primaryKeyString"
-}
+internal fun Model.getMetadataSQLitePrimaryKey() = "$modelName|$primaryKeyString"

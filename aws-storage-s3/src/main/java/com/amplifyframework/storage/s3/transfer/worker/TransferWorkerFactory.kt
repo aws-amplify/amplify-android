@@ -15,9 +15,10 @@
 package com.amplifyframework.storage.s3.transfer.worker
 
 import android.content.Context
+import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
-import aws.sdk.kotlin.services.s3.S3Client
+import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 
@@ -26,18 +27,18 @@ import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
  **/
 internal class TransferWorkerFactory(
     private val transferDB: TransferDB,
-    private val s3: S3Client,
+    private val clientProvider: StorageTransferClientProvider,
     private val transferStatusUpdater: TransferStatusUpdater
 ) : WorkerFactory() {
     override fun createWorker(
         appContext: Context,
         workerClassName: String,
         workerParameters: WorkerParameters
-    ): BaseTransferWorker {
+    ): ListenableWorker {
         when (workerClassName) {
             DownloadWorker::class.java.name ->
                 return DownloadWorker(
-                    s3,
+                    clientProvider,
                     transferDB,
                     transferStatusUpdater,
                     appContext,
@@ -45,7 +46,7 @@ internal class TransferWorkerFactory(
                 )
             SinglePartUploadWorker::class.java.name ->
                 return SinglePartUploadWorker(
-                    s3,
+                    clientProvider,
                     transferDB,
                     transferStatusUpdater,
                     appContext,
@@ -53,7 +54,7 @@ internal class TransferWorkerFactory(
                 )
             InitiateMultiPartUploadTransferWorker::class.java.name ->
                 return InitiateMultiPartUploadTransferWorker(
-                    s3,
+                    clientProvider,
                     transferDB,
                     transferStatusUpdater,
                     appContext,
@@ -61,7 +62,7 @@ internal class TransferWorkerFactory(
                 )
             PartUploadTransferWorker::class.java.name ->
                 return PartUploadTransferWorker(
-                    s3,
+                    clientProvider,
                     transferDB,
                     transferStatusUpdater,
                     appContext,
@@ -69,7 +70,7 @@ internal class TransferWorkerFactory(
                 )
             CompleteMultiPartUploadWorker::class.java.name ->
                 return CompleteMultiPartUploadWorker(
-                    s3,
+                    clientProvider,
                     transferDB,
                     transferStatusUpdater,
                     appContext,
@@ -77,7 +78,7 @@ internal class TransferWorkerFactory(
                 )
             AbortMultiPartUploadWorker::class.java.name ->
                 return AbortMultiPartUploadWorker(
-                    s3,
+                    clientProvider,
                     transferDB,
                     transferStatusUpdater,
                     appContext,

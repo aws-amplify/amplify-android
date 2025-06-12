@@ -154,13 +154,13 @@ internal class AWSRequestSignerInterceptor(
         if (body == null) {
             return "".toByteArray()
         }
-        val BUFFER_SIZE = 1024 * 4
+        val bufferSize = 1024 * 4
         try {
             ByteArrayOutputStream().use { output ->
                 // write the body to a byte array.
                 val buffer = Buffer()
                 body.writeTo(buffer)
-                val bytes = ByteArray(BUFFER_SIZE)
+                val bytes = ByteArray(bufferSize)
                 var n: Int
                 while (buffer.inputStream().read(bytes).also { n = it } != -1) {
                     output.write(bytes, 0, n)

@@ -98,10 +98,7 @@ data class AuthConfiguration internal constructor(
          * Returns an AuthConfiguration instance from JSON
          * @return populated AuthConfiguration instance.
          */
-        fun fromJson(
-            pluginJson: JSONObject,
-            configName: String = "Default"
-        ): AuthConfiguration {
+        fun fromJson(pluginJson: JSONObject, configName: String = "Default"): AuthConfiguration {
             val authConfig = pluginJson.optJSONObject("Auth")?.optJSONObject(configName)
 
             val signUpAttributes = authConfig?.optJSONArray("signupAttributes")?.map {
@@ -184,12 +181,14 @@ data class AuthConfiguration internal constructor(
             )
         }
 
-        private fun getAuthenticationFlowType(authType: String?): AuthFlowType {
-            return if (!authType.isNullOrEmpty() && AuthFlowType.values().any { it.name == authType }) {
-                AuthFlowType.valueOf(authType)
-            } else {
-                AuthFlowType.USER_SRP_AUTH
+        private fun getAuthenticationFlowType(authType: String?): AuthFlowType = if (!authType.isNullOrEmpty() &&
+            AuthFlowType.values().any {
+                it.name == authType
             }
+        ) {
+            AuthFlowType.valueOf(authType)
+        } else {
+            AuthFlowType.USER_SRP_AUTH
         }
 
         private fun getPasswordProtectionSettings(authConfig: JSONObject?): PasswordProtectionSettings? {

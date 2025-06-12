@@ -22,24 +22,26 @@ import android.content.Context
 import androidx.work.WorkerParameters
 import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.withConfig
+import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import com.amplifyframework.storage.s3.transfer.UploadProgressListener
 import com.amplifyframework.storage.s3.transfer.UploadProgressListenerInterceptor
 
 internal class SinglePartUploadWorker(
-    private val s3: S3Client,
+    private val clientProvider: StorageTransferClientProvider,
     private val transferDB: TransferDB,
     private val transferStatusUpdater: TransferStatusUpdater,
     context: Context,
     workerParameters: WorkerParameters
-) : BaseTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
+) : SuspendingTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
 
     private lateinit var uploadProgressListener: UploadProgressListener
 
     override suspend fun performWork(): Result {
         uploadProgressListener = UploadProgressListener(transferRecord, transferStatusUpdater)
         val putObjectRequest = createPutObjectRequest(transferRecord, uploadProgressListener)
+        val s3: S3Client = clientProvider.getStorageTransferClient(transferRecord.region, transferRecord.bucketName)
         return s3.withConfig {
             interceptors += UploadProgressListenerInterceptor(uploadProgressListener)
             enableAccelerate = transferRecord.useAccelerateEndpoint == 1

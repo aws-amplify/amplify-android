@@ -78,7 +78,6 @@ internal object HostedUIHttpHelper {
     }
 
     private fun parseTokenResponse(responseString: String): CognitoUserPoolTokens {
-
         if (responseString.isEmpty()) {
             throw ParseTokenException()
         }
@@ -107,7 +106,9 @@ internal object HostedUIHttpHelper {
                     recoverySuggestion = AmplifyException.TODO_RECOVERY_SUGGESTION,
                     cause = e
                 )
-            } else throw e
+            } else {
+                throw e
+            }
         }
     }
 }

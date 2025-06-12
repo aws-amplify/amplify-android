@@ -22,6 +22,7 @@ import com.amplifyframework.storage.StorageCategory
 import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.StoragePath
 import com.amplifyframework.storage.options.StorageGetUrlOptions
+import com.amplifyframework.storage.options.StorageRemoveOptions
 import com.amplifyframework.storage.options.StorageUploadFileOptions
 import com.amplifyframework.storage.s3.options.AWSS3StorageGetPresignedUrlOptions
 import com.amplifyframework.storage.s3.test.R
@@ -30,6 +31,7 @@ import com.amplifyframework.testutils.random.RandomTempFile
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousStorage
 import java.io.File
+import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
@@ -70,6 +72,12 @@ class AWSS3StoragePathGetUrlTest {
             // Upload small test file
             smallFile = RandomTempFile(SMALL_FILE_NAME, SMALL_FILE_SIZE)
             synchronousStorage.uploadFile(SMALL_FILE_PATH, smallFile, StorageUploadFileOptions.defaultInstance())
+        }
+
+        @JvmStatic
+        @AfterClass
+        fun tearDownOnce() {
+            synchronousStorage.remove(SMALL_FILE_PATH, StorageRemoveOptions.defaultInstance())
         }
     }
 

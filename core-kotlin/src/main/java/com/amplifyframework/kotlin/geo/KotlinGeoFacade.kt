@@ -50,27 +50,23 @@ class KotlinGeoFacade(private val delegate: GeoCategoryBehavior = Amplify.Geo) :
             )
         }
 
-    override suspend fun searchByText(
-        query: String,
-        options: GeoSearchByTextOptions
-    ) = suspendCoroutine { continuation ->
-        delegate.searchByText(
-            query,
-            options,
-            { continuation.resume(it) },
-            { continuation.resumeWithException(it) }
-        )
-    }
+    override suspend fun searchByText(query: String, options: GeoSearchByTextOptions) =
+        suspendCoroutine { continuation ->
+            delegate.searchByText(
+                query,
+                options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
 
-    override suspend fun searchByCoordinates(
-        position: Coordinates,
-        options: GeoSearchByCoordinatesOptions
-    ) = suspendCoroutine { continuation ->
-        delegate.searchByCoordinates(
-            position,
-            options,
-            { continuation.resume(it) },
-            { continuation.resumeWithException(it) }
-        )
-    }
+    override suspend fun searchByCoordinates(position: Coordinates, options: GeoSearchByCoordinatesOptions) =
+        suspendCoroutine { continuation ->
+            delegate.searchByCoordinates(
+                position,
+                options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
 }

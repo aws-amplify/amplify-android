@@ -21,21 +21,25 @@ import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.createMultipartUpload
 import aws.sdk.kotlin.services.s3.withConfig
 import com.amplifyframework.storage.TransferState
+import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
+import com.amplifyframework.storage.s3.transfer.worker.BaseTransferWorker.Companion.MULTI_PART_UPLOAD_ID
+import com.amplifyframework.storage.s3.transfer.worker.BaseTransferWorker.Companion.TRANSFER_RECORD_ID
 
 /**
  * Worker to initiate multipart upload
  **/
 internal class InitiateMultiPartUploadTransferWorker(
-    private val s3: S3Client,
+    private val clientProvider: StorageTransferClientProvider,
     private val transferDB: TransferDB,
     private val transferStatusUpdater: TransferStatusUpdater,
     context: Context,
     workerParameters: WorkerParameters
-) : BaseTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
+) : SuspendingTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
 
     override suspend fun performWork(): Result {
+        val s3: S3Client = clientProvider.getStorageTransferClient(transferRecord.region, transferRecord.bucketName)
         transferStatusUpdater.updateTransferState(transferRecord.id, TransferState.IN_PROGRESS)
         val putObjectRequest = createPutObjectRequest(transferRecord, null)
         return s3.withConfig {

@@ -178,17 +178,15 @@ class EventRecorderTest {
         }
     }
 
-    private fun getPinpointEvent(eventType: String): PinpointEvent {
-        return PinpointEvent(
-            eventType = eventType,
-            attributes = emptyMap(),
-            metrics = emptyMap(),
-            sdkInfo = SDKInfo("Test", "1.0"),
-            pinpointSession = PinpointSession("", 1L, 1L),
-            eventTimestamp = System.currentTimeMillis(),
-            uniqueId = UUID.randomUUID().toString(),
-            androidAppDetails = AndroidAppDetails("com.test.app", "TestApp", "com.test.app", "1.0", "test"),
-            androidDeviceDetails = AndroidDeviceDetails("test")
-        )
-    }
+    private fun getPinpointEvent(eventType: String): PinpointEvent = PinpointEvent(
+        eventType = eventType,
+        attributes = emptyMap(),
+        metrics = emptyMap(),
+        sdkInfo = SDKInfo("Test", "1.0"),
+        pinpointSession = PinpointSession("", 1L, 1L),
+        eventTimestamp = System.currentTimeMillis(),
+        uniqueId = UUID.randomUUID().toString(),
+        androidAppDetails = AndroidAppDetails("com.test.app", "TestApp", "com.test.app", "1.0", "test"),
+        androidDeviceDetails = AndroidDeviceDetails("test")
+    )
 }

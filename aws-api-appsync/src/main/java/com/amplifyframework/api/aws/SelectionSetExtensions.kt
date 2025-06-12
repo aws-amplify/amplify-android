@@ -85,9 +85,8 @@ private fun getSelectionSet(node: PropertyContainerPath): SelectionSet {
     return selectionSet
 }
 
-private fun shouldProcessNode(node: PropertyContainerPath, includeRoot: Boolean): Boolean {
-    return includeRoot || node.getMetadata().parent != null
-}
+private fun shouldProcessNode(node: PropertyContainerPath, includeRoot: Boolean): Boolean =
+    includeRoot || node.getMetadata().parent != null
 
 private fun nodesInPath(node: PropertyContainerPath, includeRoot: Boolean): List<PropertyContainerPath> {
     var currentNode: PropertyContainerPath? = node

@@ -35,11 +35,8 @@ import kotlin.coroutines.suspendCoroutine
 
 class KotlinPredictionsFacade(private val delegate: Delegate = Amplify.Predictions) : Predictions {
     @Throws(PredictionsException::class)
-    override suspend fun convertTextToSpeech(
-        text: String,
-        options: TextToSpeechOptions
-    ): TextToSpeechResult {
-        return suspendCoroutine { continuation ->
+    override suspend fun convertTextToSpeech(text: String, options: TextToSpeechOptions): TextToSpeechResult =
+        suspendCoroutine { continuation ->
             delegate.convertTextToSpeech(
                 text,
                 options,
@@ -47,14 +44,10 @@ class KotlinPredictionsFacade(private val delegate: Delegate = Amplify.Predictio
                 { continuation.resumeWithException(it) }
             )
         }
-    }
 
     @Throws(PredictionsException::class)
-    override suspend fun translateText(
-        text: String,
-        options: TranslateTextOptions
-    ): TranslateTextResult {
-        return suspendCoroutine { continuation ->
+    override suspend fun translateText(text: String, options: TranslateTextOptions): TranslateTextResult =
+        suspendCoroutine { continuation ->
             delegate.translateText(
                 text,
                 options,
@@ -62,7 +55,6 @@ class KotlinPredictionsFacade(private val delegate: Delegate = Amplify.Predictio
                 { continuation.resumeWithException(it) }
             )
         }
-    }
 
     @Throws(PredictionsException::class)
     override suspend fun translateText(
@@ -70,26 +62,20 @@ class KotlinPredictionsFacade(private val delegate: Delegate = Amplify.Predictio
         fromLanguage: LanguageType,
         toLanguage: LanguageType,
         options: TranslateTextOptions
-    ): TranslateTextResult {
-        return suspendCoroutine { continuation ->
-            delegate.translateText(
-                text,
-                fromLanguage,
-                toLanguage,
-                options,
-                { continuation.resume(it) },
-                { continuation.resumeWithException(it) }
-            )
-        }
+    ): TranslateTextResult = suspendCoroutine { continuation ->
+        delegate.translateText(
+            text,
+            fromLanguage,
+            toLanguage,
+            options,
+            { continuation.resume(it) },
+            { continuation.resumeWithException(it) }
+        )
     }
 
     @Throws(PredictionsException::class)
-    override suspend fun identify(
-        actionType: IdentifyAction,
-        image: Bitmap,
-        options: IdentifyOptions
-    ): IdentifyResult {
-        return suspendCoroutine { continuation ->
+    override suspend fun identify(actionType: IdentifyAction, image: Bitmap, options: IdentifyOptions): IdentifyResult =
+        suspendCoroutine { continuation ->
             delegate.identify(
                 actionType,
                 image,
@@ -98,11 +84,10 @@ class KotlinPredictionsFacade(private val delegate: Delegate = Amplify.Predictio
                 { continuation.resumeWithException(it) }
             )
         }
-    }
 
     @Throws(PredictionsException::class)
-    override suspend fun interpret(text: String, options: InterpretOptions): InterpretResult {
-        return suspendCoroutine { continuation ->
+    override suspend fun interpret(text: String, options: InterpretOptions): InterpretResult =
+        suspendCoroutine { continuation ->
             delegate.interpret(
                 text,
                 options,
@@ -110,5 +95,4 @@ class KotlinPredictionsFacade(private val delegate: Delegate = Amplify.Predictio
                 { continuation.resumeWithException(it) }
             )
         }
-    }
 }

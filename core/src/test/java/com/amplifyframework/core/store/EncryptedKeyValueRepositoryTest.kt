@@ -22,7 +22,7 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV
 import androidx.security.crypto.EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
 import androidx.security.crypto.MasterKeys
-import com.amplifyframework.core.store.EncryptedKeyValueRepository.Companion.amplifyIdentifierPrefix
+import com.amplifyframework.core.store.EncryptedKeyValueRepository.Companion.AMPLIFY_IDENTIFIER_PREFIX
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -169,7 +169,7 @@ class EncryptedKeyValueRepositoryTest {
         // Verify encrypted preferences are using the amplify key
         verify {
             EncryptedSharedPreferences.create(
-                match { it.startsWith("test.$amplifyIdentifierPrefix") },
+                match { it.startsWith("test.$AMPLIFY_IDENTIFIER_PREFIX") },
                 "amplifyKey",
                 any(),
                 any(),
@@ -191,7 +191,7 @@ class EncryptedKeyValueRepositoryTest {
 
         // As a side effect the installation identifier should have been updated to the amplify-specific version
         val identifier = installationFile.readText()
-        assertTrue(identifier.startsWith(amplifyIdentifierPrefix))
+        assertTrue(identifier.startsWith(AMPLIFY_IDENTIFIER_PREFIX))
     }
 
     @Test
@@ -235,7 +235,7 @@ class EncryptedKeyValueRepositoryTest {
                 if (identifier == null) any() else "test.$identifier",
                 when {
                     identifier == null -> any()
-                    identifier.startsWith(amplifyIdentifierPrefix) -> "amplifyKey"
+                    identifier.startsWith(AMPLIFY_IDENTIFIER_PREFIX) -> "amplifyKey"
                     else -> "masterKey"
                 },
                 context,
@@ -244,14 +244,13 @@ class EncryptedKeyValueRepositoryTest {
             )
         } returns sharedPreferences
     }
-    private fun amplifyIdentifier(identifier: String) = "$amplifyIdentifierPrefix$identifier"
+    private fun amplifyIdentifier(identifier: String) = "$AMPLIFY_IDENTIFIER_PREFIX$identifier"
 
-    private fun createRepository(installationFile: File = folder.newFile()): EncryptedKeyValueRepository {
-        return EncryptedKeyValueRepository(
+    private fun createRepository(installationFile: File = folder.newFile()): EncryptedKeyValueRepository =
+        EncryptedKeyValueRepository(
             context,
             "test",
             defaultMasterKeySpec,
             amplifyMasterKeySpec
         ) { _, _ -> installationFile }
-    }
 }

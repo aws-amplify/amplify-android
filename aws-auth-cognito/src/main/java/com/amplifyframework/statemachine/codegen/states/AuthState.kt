@@ -26,7 +26,9 @@ import com.amplifyframework.statemachine.codegen.events.AuthEvent
 internal sealed class AuthState : State {
     data class NotConfigured(val id: String = "") : AuthState()
     data class ConfiguringAuth(val id: String = "") : AuthState()
-    data class ConfiguringAuthentication(override var authNState: AuthenticationState?) : AuthState()
+    data class ConfiguringAuthentication(
+        override var authNState: AuthenticationState?
+    ) : AuthState()
 
     data class ConfiguringAuthorization(
         override var authNState: AuthenticationState?,
@@ -35,18 +37,21 @@ internal sealed class AuthState : State {
 
     data class Configured(
         override var authNState: AuthenticationState?,
-        override var authZState: AuthorizationState?
+        override var authZState: AuthorizationState?,
+        override var authSignUpState: SignUpState?
     ) : AuthState()
 
     data class Error(val exception: Exception) : AuthState()
 
     open var authNState: AuthenticationState? = AuthenticationState.NotConfigured()
     open var authZState: AuthorizationState? = AuthorizationState.NotConfigured()
+    open var authSignUpState: SignUpState? = SignUpState.NotStarted()
 
     class Resolver(
         private val authNResolver: StateMachineResolver<AuthenticationState>,
         private val authZResolver: StateMachineResolver<AuthorizationState>,
-        private val authActions: AuthActions
+        private val authActions: AuthActions,
+        private val authSignUpResolver: StateMachineResolver<SignUpState>
     ) :
         StateMachineResolver<AuthState> {
         override val defaultState = NotConfigured()
@@ -63,6 +68,11 @@ internal sealed class AuthState : State {
 
             oldState.authZState?.let { authZResolver.resolve(it, event) }?.let {
                 builder.authZState = it.newState
+                actions += it.actions
+            }
+
+            oldState.authSignUpState?.let { authSignUpResolver.resolve(it, event) }?.let {
+                builder.authSignUpState = it.newState
                 actions += it.actions
             }
 
@@ -106,7 +116,7 @@ internal sealed class AuthState : State {
                 }
                 is ConfiguringAuthorization -> when (authEvent) {
                     is AuthEvent.EventType.ConfiguredAuthorization -> StateResolution(
-                        Configured(oldState.authNState, oldState.authZState)
+                        Configured(oldState.authNState, oldState.authZState, oldState.authSignUpState)
                     )
                     else -> defaultResolution
                 }
@@ -119,11 +129,12 @@ internal sealed class AuthState : State {
         com.amplifyframework.statemachine.Builder<AuthState> {
         var authNState: AuthenticationState? = null
         var authZState: AuthorizationState? = null
+        var authSignUpState: SignUpState? = null
 
         override fun build() = when (authState) {
             is ConfiguringAuthentication -> ConfiguringAuthentication(authNState)
             is ConfiguringAuthorization -> ConfiguringAuthorization(authNState, authZState)
-            is Configured -> Configured(authNState, authZState)
+            is Configured -> Configured(authNState, authZState, authSignUpState)
             else -> authState
         }
     }

@@ -30,11 +30,9 @@ object GenderBinaryTypeAdapter {
      * @return Amplify's [GenderBinaryType] enum
      */
     @JvmStatic
-    fun fromRekognition(gender: String): GenderBinaryType {
-        return when (GenderType.fromValue(gender)) {
-            GenderType.Male -> GenderBinaryType.MALE
-            GenderType.Female -> GenderBinaryType.FEMALE
-            else -> GenderBinaryType.UNKNOWN
-        }
+    fun fromRekognition(gender: String): GenderBinaryType = when (GenderType.fromValue(gender)) {
+        GenderType.Male -> GenderBinaryType.MALE
+        GenderType.Female -> GenderBinaryType.FEMALE
+        else -> GenderBinaryType.UNKNOWN
     }
 }

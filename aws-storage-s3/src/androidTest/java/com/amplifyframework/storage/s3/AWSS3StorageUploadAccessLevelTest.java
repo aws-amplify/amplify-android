@@ -18,11 +18,11 @@ package com.amplifyframework.storage.s3;
 import android.content.Context;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageException;
+import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.s3.UserCredentials.Credential;
 import com.amplifyframework.storage.s3.test.R;
@@ -110,11 +110,16 @@ public final class AWSS3StorageUploadAccessLevelTest {
     }
 
     /**
-     * Sign out after each test.
-     * @throws AuthException if error encountered while signing out
+     * Remove test file and sign out after each test.
+     * @throws Exception if error encountered while signing out
      */
     @After
-    public void tearDown() throws AuthException {
+    public void tearDown() throws Exception {
+        synchronousAuth.signOut();
+        synchronousAuth.signIn(userOne.getUsername(), userOne.getPassword());
+        StorageAccessLevel accessLevel = uploadOptions.getAccessLevel();
+        StorageRemoveOptions options = StorageRemoveOptions.builder().accessLevel(accessLevel).build();
+        storage.remove(remoteKey, options);
         synchronousAuth.signOut();
     }
 

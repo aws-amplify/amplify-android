@@ -16,7 +16,10 @@
 package featureTest.utilities
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.InitiateAuthRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpRequest
 import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
@@ -42,6 +45,33 @@ object CognitoRequestFactory {
             }
 
             ForgotPasswordRequest.invoke(expectedRequestBuilder)
+        }
+
+        "confirmSignUp" -> {
+            val params = targetApi.request as JsonObject
+            val expectedRequest: ConfirmSignUpRequest.Builder.() -> Unit = {
+                clientId = (params["clientId"] as JsonPrimitive).content
+                username = (params["username"] as JsonPrimitive).content
+                confirmationCode = (params["confirmationCode"] as JsonPrimitive).content
+                session = (params["session"] as? JsonPrimitive)?.content
+
+                secretHash = AuthHelper.getSecretHash("", "", "")
+            }
+            ConfirmSignUpRequest.invoke(expectedRequest)
+        }
+
+        "initiateAuth" -> {
+            val params = targetApi.request as JsonObject
+            val expectedRequestBuilder: InitiateAuthRequest.Builder.() -> Unit = {
+                authFlow = AuthFlowType.fromValue((params["authFlow"] as JsonPrimitive).content)
+                clientId = (params["clientId"] as JsonPrimitive).content
+                authParameters =
+                    Json.decodeFromJsonElement<Map<String, String>>(params["authParameters"] as JsonObject)
+                session = (params["session"] as JsonPrimitive).content
+                clientMetadata =
+                    Json.decodeFromJsonElement<Map<String, String>>(params["clientMetadata"] as JsonObject)
+            }
+            InitiateAuthRequest.invoke(expectedRequestBuilder)
         }
 
         "signUp" -> {

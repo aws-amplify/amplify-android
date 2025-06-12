@@ -30,12 +30,11 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import java.util.Locale
 
-internal fun constructSharedPreferences(): SharedPreferences {
-    return ApplicationProvider.getApplicationContext<Context>().getSharedPreferences(
+internal fun constructSharedPreferences(): SharedPreferences =
+    ApplicationProvider.getApplicationContext<Context>().getSharedPreferences(
         "preferences",
         Context.MODE_PRIVATE
     )
-}
 
 internal val uniqueID = "unique-id"
 internal val appID = "app id"
@@ -90,6 +89,6 @@ internal fun constructTargetingClient(): TargetingClient {
         store,
         prefs,
         appDetails,
-        deviceDetails,
+        deviceDetails
     )
 }

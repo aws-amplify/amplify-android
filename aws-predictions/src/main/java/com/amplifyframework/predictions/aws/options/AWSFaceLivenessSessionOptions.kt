@@ -26,6 +26,7 @@ open class AWSFaceLivenessSessionOptions private constructor(
 ) : FaceLivenessSessionOptions() {
     companion object {
         @JvmStatic fun builder() = Builder()
+
         @JvmStatic fun defaults() = builder().build()
     }
 

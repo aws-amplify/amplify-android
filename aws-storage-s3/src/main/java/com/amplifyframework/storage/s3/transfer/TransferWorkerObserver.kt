@@ -25,6 +25,7 @@ import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
 import com.amplifyframework.storage.s3.TransferOperations
 import com.amplifyframework.storage.s3.transfer.worker.BaseTransferWorker
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -49,12 +50,14 @@ internal class TransferWorkerObserver private constructor(
             AWSS3StoragePlugin.AWS_S3_STORAGE_LOG_NAMESPACE.format(this::class.java.simpleName)
         )
 
+    private val observedTags = ConcurrentHashMap.newKeySet<String>()
+
     init {
         attachObserverForPendingTransfer()
     }
 
     companion object {
-        private var INSTANCE: TransferWorkerObserver? = null
+        private var instance: TransferWorkerObserver? = null
 
         @JvmStatic
         fun getInstance(
@@ -63,18 +66,16 @@ internal class TransferWorkerObserver private constructor(
             workManager: WorkManager,
             transferStatusUpdater: TransferStatusUpdater,
             transferDB: TransferDB
-        ): TransferWorkerObserver {
-            return TransferWorkerObserver.INSTANCE ?: run {
-                val transferWorkerObserver = TransferWorkerObserver(
-                    context,
-                    pluginKey,
-                    workManager,
-                    transferStatusUpdater,
-                    transferDB
-                )
-                INSTANCE = transferWorkerObserver
-                transferWorkerObserver
-            }
+        ): TransferWorkerObserver = instance ?: run {
+            val transferWorkerObserver = TransferWorkerObserver(
+                context,
+                pluginKey,
+                workManager,
+                transferStatusUpdater,
+                transferDB
+            )
+            instance = transferWorkerObserver
+            transferWorkerObserver
         }
     }
 
@@ -101,10 +102,7 @@ internal class TransferWorkerObserver private constructor(
         }
     }
 
-    private suspend fun handleTransferStatusUpdate(
-        workInfo: WorkInfo,
-        transferRecord: TransferRecord
-    ) {
+    private suspend fun handleTransferStatusUpdate(workInfo: WorkInfo, transferRecord: TransferRecord) {
         val workManagerToAmplifyStatesMap = mapOf(
             WorkInfo.State.ENQUEUED to TransferState.WAITING,
             WorkInfo.State.BLOCKED to TransferState.WAITING,
@@ -120,10 +118,7 @@ internal class TransferWorkerObserver private constructor(
         }
     }
 
-    private suspend fun handleMultipartUploadStatusUpdate(
-        workInfo: WorkInfo,
-        transferRecord: TransferRecord
-    ) {
+    private suspend fun handleMultipartUploadStatusUpdate(workInfo: WorkInfo, transferRecord: TransferRecord) {
         val workManagerToAmplifyStatesMap = mapOf(
             WorkInfo.State.ENQUEUED to TransferState.WAITING,
             WorkInfo.State.BLOCKED to TransferState.WAITING,
@@ -133,8 +128,8 @@ internal class TransferWorkerObserver private constructor(
             WorkInfo.State.SUCCEEDED to TransferState.COMPLETED
         )
         val initializationTag =
-            BaseTransferWorker.initiationRequestTag.format(transferRecord.id)
-        val completionTag = BaseTransferWorker.completionRequestTag.format(transferRecord.id)
+            BaseTransferWorker.INITIATION_REQUEST_TAG.format(transferRecord.id)
+        val completionTag = BaseTransferWorker.COMPLETION_REQUEST_TAG.format(transferRecord.id)
         if (workInfo.tags.contains(completionTag)) {
             if (abortRequest(transferRecord, workInfo.state)) {
                 TransferOperations.abortMultipartUploadRequest(transferRecord, pluginKey, workManager)
@@ -168,13 +163,9 @@ internal class TransferWorkerObserver private constructor(
         }
     }
 
-    private fun abortRequest(
-        transferRecord: TransferRecord,
-        workState: WorkInfo.State
-    ): Boolean {
-        return transferRecord.isMultipart == 1 &&
+    private fun abortRequest(transferRecord: TransferRecord, workState: WorkInfo.State): Boolean =
+        transferRecord.isMultipart == 1 &&
             (transferRecord.state == TransferState.PENDING_CANCEL || workState == WorkInfo.State.FAILED)
-    }
 
     private fun attachObserverForPendingTransfer() {
         coroutineScope.launch {
@@ -195,6 +186,7 @@ internal class TransferWorkerObserver private constructor(
 
     private suspend fun attachObserver(tag: String) {
         withContext(Dispatchers.Main) {
+            if (!observedTags.add(tag)) return@withContext
             val liveData = workManager.getWorkInfosByTagLiveData(tag)
             liveData.observeForever(this@TransferWorkerObserver)
         }
@@ -202,6 +194,7 @@ internal class TransferWorkerObserver private constructor(
 
     private suspend fun removeObserver(tag: String) {
         withContext(Dispatchers.Main) {
+            if (!observedTags.remove(tag)) return@withContext
             workManager.getWorkInfosByTagLiveData(tag)
                 .removeObserver(this@TransferWorkerObserver)
         }

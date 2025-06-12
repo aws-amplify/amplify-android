@@ -26,6 +26,8 @@ import aws.smithy.kotlin.runtime.content.ByteStream
 import aws.smithy.kotlin.runtime.content.fromFile
 import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.s3.transfer.DownloadProgressListenerInterceptor
+import com.amplifyframework.storage.s3.transfer.S3StorageTransferClientProvider
+import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferRecord
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
@@ -56,12 +58,14 @@ internal class DownloadWorkerTest {
     private lateinit var transferStatusUpdater: TransferStatusUpdater
     private lateinit var workerParameters: WorkerParameters
     private lateinit var downloadInterceptor: DownloadProgressListenerInterceptor
+    private lateinit var clientProvider: StorageTransferClientProvider
 
     @Before
     fun setup() {
         context = ApplicationProvider.getApplicationContext()
         workerParameters = mockk(WorkerParameters::class.java.name)
         s3Client = mockk<S3Client>(relaxed = true, relaxUnitFun = true)
+        clientProvider = mockk(S3StorageTransferClientProvider::class.java.name)
         mockkStatic(S3Client::withConfig)
         downloadInterceptor = mockk<DownloadProgressListenerInterceptor>(relaxed = true, relaxUnitFun = true)
         transferDB = mockk(TransferDB::class.java.name)
@@ -70,6 +74,7 @@ internal class DownloadWorkerTest {
         every { workerParameters.runAttemptCount }.answers { 1 }
         every { workerParameters.taskExecutor }.answers { ImmediateTaskExecutor() }
         every { s3Client.withConfig(any()) } returns s3Client
+        every { clientProvider.getStorageTransferClient(any(), any()) }.answers { s3Client }
     }
 
     @After
@@ -102,10 +107,11 @@ internal class DownloadWorkerTest {
         every { transferStatusUpdater.updateProgress(1, any(), any(), true, false) }.answers { }
         every { transferStatusUpdater.updateProgress(1, any(), any(), true, true) }.answers { }
 
-        val worker = DownloadWorker(s3Client, transferDB, transferStatusUpdater, context, workerParameters)
+        val worker = DownloadWorker(clientProvider, transferDB, transferStatusUpdater, context, workerParameters)
         val result = worker.doWork()
 
         verify(atLeast = 1) { transferStatusUpdater.updateProgress(1, 10 * 1024 * 1024, 10 * 1024 * 1024, true, true) }
+        verify(exactly = 1) { clientProvider.getStorageTransferClient(any(), any()) }
         val expectedResult =
             ListenableWorker.Result.success(workDataOf(BaseTransferWorker.OUTPUT_TRANSFER_RECORD_ID to 1))
         assertEquals(expectedResult, result)
@@ -131,7 +137,7 @@ internal class DownloadWorkerTest {
         every { transferStatusUpdater.updateTransferState(1, TransferState.FAILED) }.answers { }
         every { transferStatusUpdater.updateOnError(1, any()) }.answers { }
 
-        val worker = DownloadWorker(s3Client, transferDB, transferStatusUpdater, context, workerParameters)
+        val worker = DownloadWorker(clientProvider, transferDB, transferStatusUpdater, context, workerParameters)
         val result = worker.doWork()
 
         verify(exactly = 0) {

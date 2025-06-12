@@ -26,6 +26,7 @@ import com.amplifyframework.geo.models.Coordinates
 import com.amplifyframework.geo.models.CountryCode
 import com.amplifyframework.geo.models.Place
 import com.amplifyframework.geo.models.SearchArea
+import com.amplifyframework.util.setHttpEngine
 
 /**
  * Implements the backend provider for the location plugin using
@@ -33,17 +34,12 @@ import com.amplifyframework.geo.models.SearchArea
  * @param credentialsProvider AWS credentials provider for authorizing API calls
  * @param region AWS region for the Amazon Location Service
  */
-internal class AmazonLocationService(
-    credentialsProvider: CredentialsProvider,
-    region: String
-) : GeoService<LocationClient> {
-    override val provider: LocationClient
-
-    init {
-        provider = LocationClient.invoke {
-            this.credentialsProvider = credentialsProvider
-            this.region = region
-        }
+internal class AmazonLocationService(credentialsProvider: CredentialsProvider, region: String) :
+    GeoService<LocationClient> {
+    override val provider: LocationClient = LocationClient {
+        setHttpEngine()
+        this.credentialsProvider = credentialsProvider
+        this.region = region
     }
 
     override suspend fun getStyleJson(mapName: String): String {
@@ -75,17 +71,11 @@ internal class AmazonLocationService(
         val response = provider.searchPlaceIndexForText(request)
 
         return response.results
-            ?.mapNotNull { it.place }
-            ?.map {
-                AmazonLocationPlace(it)
-            } ?: listOf()
+            .mapNotNull { it.place }
+            .map { AmazonLocationPlace(it) }
     }
 
-    override suspend fun reverseGeocode(
-        index: String,
-        position: Coordinates,
-        limit: Int
-    ): List<Place> {
+    override suspend fun reverseGeocode(index: String, position: Coordinates, limit: Int): List<Place> {
         val request = SearchPlaceIndexForPositionRequest.invoke {
             this.position = listOf(position.longitude, position.latitude)
             indexName = index
@@ -94,9 +84,7 @@ internal class AmazonLocationService(
         val response = provider.searchPlaceIndexForPosition(request)
 
         return response.results
-            ?.mapNotNull { it.place }
-            ?.map {
-                AmazonLocationPlace(it)
-            } ?: listOf()
+            .mapNotNull { it.place }
+            .map { AmazonLocationPlace(it) }
     }
 }

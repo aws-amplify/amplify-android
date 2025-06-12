@@ -56,6 +56,5 @@ interface GraphQL {
      */
     @ExperimentalCoroutinesApi
     @FlowPreview
-    suspend fun <T> subscribe(request: GraphQLRequest<T>, apiName: String? = null):
-        Flow<GraphQLResponse<T>>
+    suspend fun <T> subscribe(request: GraphQLRequest<T>, apiName: String? = null): Flow<GraphQLResponse<T>>
 }

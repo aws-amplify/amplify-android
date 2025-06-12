@@ -38,11 +38,13 @@ class PushNotificationsConstants {
         const val PINPOINT_NOTIFICATION_TITLE = "$NOTIFICATION_PREFIX$TITLE" // pinpoint.notification.title
         const val PINPOINT_NOTIFICATION_BODY = "${NOTIFICATION_PREFIX}body" // pinpoint.notification.body
         const val PINPOINT_NOTIFICATION_IMAGEURL = "$NOTIFICATION_PREFIX$IMAGEURL" // pinpoint.notification.imageUrl
+
         // pinpoint.notification.silentPush
         const val PINPOINT_NOTIFICATION_SILENTPUSH = "${NOTIFICATION_PREFIX}silentPush"
         const val CAMPAIGN_ID = "campaign_id" // campaign_id
         const val CAMPAIGN_ACTIVITY_ID = "campaign_activity_id" // campaign_activity_id
         const val PINPOINT_CAMPAIGN_CAMPAIGN_ID = "$CAMPAIGN_PREFIX$CAMPAIGN_ID" // pinpoint.campaign.campaign_id
+
         // pinpoint.campaign.campaign_activity_id
         const val PINPOINT_CAMPAIGN_CAMPAIGN_ACTIVITY_ID = "$CAMPAIGN_PREFIX$CAMPAIGN_ACTIVITY_ID"
         const val DEFAULT_NOTIFICATION_CHANNEL_ID = "PINPOINT.NOTIFICATION" // PINPOINT.NOTIFICATION
