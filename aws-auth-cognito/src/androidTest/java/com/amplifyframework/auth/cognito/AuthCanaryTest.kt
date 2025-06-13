@@ -21,11 +21,8 @@ import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.aws.AWSApiPlugin
 import com.amplifyframework.api.rest.RestOptions
-import com.amplifyframework.auth.AuthCategoryBehavior
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
-import com.amplifyframework.auth.cognito.AWSCognitoAuthPluginInstrumentationTests.Companion.auth
-import com.amplifyframework.auth.cognito.AuthCanaryTestGen2.Companion
 import com.amplifyframework.auth.cognito.exceptions.service.UserNotFoundException
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
@@ -38,22 +35,16 @@ import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
-import com.amplifyframework.auth.result.step.AuthNextSignUpStep
-import com.amplifyframework.auth.result.step.AuthSignUpStep
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.testutils.coroutines.runBlockingWithTimeout
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 import kotlin.test.assertFailsWith
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.newSingleThreadContext
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -148,7 +139,9 @@ class AuthCanaryTest {
     @Test
     fun signIn() = runTest(timeout = TIMEOUT_S.seconds) {
         val options = AWSCognitoAuthSignInOptions.builder().authFlowType(AuthFlowType.USER_SRP_AUTH).build()
-        val signInResult = callAmplify { onSuccess, onFailure -> signIn(username, password, options, onSuccess, onFailure) }
+        val signInResult = callAmplify { onSuccess, onFailure ->
+            signIn(username, password, options, onSuccess, onFailure)
+        }
         assertTrue(signInResult.isSignedIn)
     }
 

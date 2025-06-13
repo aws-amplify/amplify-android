@@ -21,14 +21,13 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-suspend fun invokeAmplify(
-    block: AuthCategoryBehavior.(onSuccess: () -> Unit, onFailure: (Exception) -> Unit) -> Unit
-) = suspendCoroutine { continuation ->
-    Amplify.Auth.block(
-        { continuation.resume(Unit) },
-        { continuation.resumeWithException(it) }
-    )
-}
+suspend fun invokeAmplify(block: AuthCategoryBehavior.(onSuccess: () -> Unit, onFailure: (Exception) -> Unit) -> Unit) =
+    suspendCoroutine { continuation ->
+        Amplify.Auth.block(
+            { continuation.resume(Unit) },
+            { continuation.resumeWithException(it) }
+        )
+    }
 
 suspend fun <T> callAmplify(
     block: AuthCategoryBehavior.(onSuccess: (T) -> Unit, onFailure: (Exception) -> Unit) -> Unit

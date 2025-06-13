@@ -164,7 +164,6 @@ class AuthStressTests {
         timeout = 2.minutes,
         setup = { signInUser(username, password) }
     ) {
-
         val random = (Math.random() * 100).toInt()
         repeat(100) { idx ->
             if (idx == random) {
