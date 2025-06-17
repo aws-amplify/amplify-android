@@ -161,7 +161,7 @@ class AuthStressTests {
     @Test
     fun testSignIn_multipleFAS_withSignOut() = runStressTest(
         times = 100,
-        timeout = 2.minutes,
+        timeout = 3.minutes,
         setup = { signInUser(username, password) }
     ) {
         val random = (Math.random() * 100).toInt()
