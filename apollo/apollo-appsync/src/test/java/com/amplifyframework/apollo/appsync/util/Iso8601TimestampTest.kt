@@ -18,20 +18,25 @@ package com.amplifyframework.apollo.appsync.util
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockkObject
+import org.junit.Rule
 import java.util.Date
-import org.junit.Ignore
 import org.junit.Test
+import java.util.TimeZone
 
 class Iso8601TimestampTest {
+
+    @Rule
+    @JvmField
+    val timeZoneRule = TimeZoneRule(TimeZone.getTimeZone("GMT-04:00"))
+
     @Test
-    @Ignore("Not passing on GitHub Runner")
     fun `returns expected timestamp format`() {
         mockkObject(Iso8601Timestamp) {
-            // July 17 2024, 12:00:00
+            // July 17 2024, 11:00:00
             every { Iso8601Timestamp.currentDate() } returns Date(1721228400000L)
 
             val result = Iso8601Timestamp.now()
-            result shouldBe "20240717T120000Z"
+            result shouldBe "20240717T110000Z"
         }
     }
 }

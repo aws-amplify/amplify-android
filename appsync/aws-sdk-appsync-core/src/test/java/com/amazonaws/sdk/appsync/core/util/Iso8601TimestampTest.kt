@@ -18,13 +18,17 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockkObject
 import java.util.Date
-import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
+import java.util.TimeZone
 
 class Iso8601TimestampTest {
 
+    @Rule
+    @JvmField
+    val timeZoneRule = TimeZoneRule(TimeZone.getTimeZone("GMT-04:00"))
+
     @Test
-    @Ignore("Not passing outside of EDT Runner")
     fun `returns expected timestamp format`() {
         mockkObject(Iso8601Timestamp) {
             // July 17 2024, 11:00:00

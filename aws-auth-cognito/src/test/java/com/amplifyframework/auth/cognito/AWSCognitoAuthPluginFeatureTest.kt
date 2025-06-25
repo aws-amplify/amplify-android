@@ -26,6 +26,7 @@ import com.amplifyframework.auth.cognito.featuretest.FeatureTestCase
 import com.amplifyframework.auth.cognito.featuretest.generators.toJsonElement
 import com.amplifyframework.auth.cognito.featuretest.serializers.deserializeToAuthState
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
+import com.amplifyframework.auth.cognito.usecases.AuthUseCaseFactory
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CredentialType
@@ -59,7 +60,6 @@ import kotlinx.serialization.json.Json
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -125,10 +125,12 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
         // set timezone to be same as generated json from JsonGenerator
         Dispatchers.setMain(mainThreadSurrogate)
         feature = testCase
-        sut.realPlugin = readConfiguration(feature.preConditions.`amplify-configuration`)
+        readConfiguration(feature.preConditions.`amplify-configuration`).let {
+            sut.realPlugin = it.first
+            sut.useCaseFactory = it.second
+        }
     }
 
-    @Ignore("Ignoring to get the release out. We're confident the tests actually pass but CodeBuild is causing issues")
     @Test
     fun api_feature_test() {
         // GIVEN
@@ -151,7 +153,7 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
         coEvery { AuthHelper.getSecretHash(any(), any(), any()) } returns "a hash"
     }
 
-    private fun readConfiguration(configuration: String): RealAWSCognitoAuthPlugin {
+    private fun readConfiguration(configuration: String): Pair<RealAWSCognitoAuthPlugin, AuthUseCaseFactory> {
         val configFileUrl = this::class.java.getResource("$CONFIGURATION_FILES_BASE_PATH/$configuration")
         val configJSONObject =
             JSONObject(File(configFileUrl!!.file).readText())
@@ -191,7 +193,11 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
 
         authStateMachine = AuthStateMachine(authEnvironment, getState(feature.preConditions.state))
 
-        return RealAWSCognitoAuthPlugin(authConfiguration, authEnvironment, authStateMachine, logger)
+        val realPlugin = RealAWSCognitoAuthPlugin(authConfiguration, authEnvironment, authStateMachine, logger)
+        return Pair(
+            RealAWSCognitoAuthPlugin(authConfiguration, authEnvironment, authStateMachine, logger),
+            AuthUseCaseFactory(realPlugin, authEnvironment, authStateMachine)
+        )
     }
 
     private fun verify(validation: ExpectationShapes) {
