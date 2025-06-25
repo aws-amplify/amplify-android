@@ -1,8 +1,8 @@
 package com.amazonaws.sdk.appsync.core.util
 
+import java.util.TimeZone
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
-import java.util.TimeZone
 
 class TimeZoneRule(private val timeZone: TimeZone) : TestWatcher() {
     private val previous: TimeZone = TimeZone.getDefault()

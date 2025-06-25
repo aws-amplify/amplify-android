@@ -18,9 +18,9 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockkObject
 import java.util.Date
+import java.util.TimeZone
 import org.junit.Rule
 import org.junit.Test
-import java.util.TimeZone
 
 class Iso8601TimestampTest {
 

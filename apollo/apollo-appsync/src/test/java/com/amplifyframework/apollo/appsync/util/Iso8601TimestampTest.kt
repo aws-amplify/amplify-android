@@ -18,10 +18,10 @@ package com.amplifyframework.apollo.appsync.util
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockkObject
-import org.junit.Rule
 import java.util.Date
-import org.junit.Test
 import java.util.TimeZone
+import org.junit.Rule
+import org.junit.Test
 
 class Iso8601TimestampTest {
 
