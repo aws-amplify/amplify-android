@@ -95,7 +95,7 @@ public final class SelectionSet {
      * @return node value
      */
     @Nullable
-    protected String getValue() {
+    public String getValue() {
         return value;
     }
 
