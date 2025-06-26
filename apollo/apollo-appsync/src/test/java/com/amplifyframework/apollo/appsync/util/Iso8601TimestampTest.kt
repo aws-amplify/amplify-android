@@ -19,19 +19,26 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockkObject
 import java.util.Date
-import org.junit.Ignore
+import java.util.TimeZone
 import org.junit.Test
 
 class Iso8601TimestampTest {
+
     @Test
-    @Ignore("Not passing on GitHub Runner")
     fun `returns expected timestamp format`() {
         mockkObject(Iso8601Timestamp) {
-            // July 17 2024, 12:00:00
-            every { Iso8601Timestamp.currentDate() } returns Date(1721228400000L)
+            // Wed Jun 25 2025 14:00:00.000 UTC
+            val utcMillis = 1750860000000L
+
+            // Adjust for system timezone to get equivalent UTC time
+            // This allows us to compare the result string, regardless of the timezone of the system clock
+            val systemOffset = TimeZone.getDefault().getOffset(utcMillis)
+            val adjustedMillis = utcMillis - systemOffset
+
+            every { Iso8601Timestamp.currentDate() } returns Date(adjustedMillis)
 
             val result = Iso8601Timestamp.now()
-            result shouldBe "20240717T120000Z"
+            result shouldBe "20250625T140000Z"
         }
     }
 }

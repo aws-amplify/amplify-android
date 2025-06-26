@@ -32,7 +32,9 @@ body:
           | `com.amplifyframework:rxbindings`                      | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/rxbindings)                         |
           | `com.amplifyframework:apollo-appsync`                  | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/apollo-appsync)                     |
           | `com.amplifyframework:apollo-appsync-amplify`          | ![Maven Central](https://img.shields.io/maven-central/v/com.amplifyframework/apollo-appsync-amplify)             |
-        
+          | `com.amazonaws.sdk.appsync.core`                       | ![Maven Central](https://img.shields.io/maven-central/v/com.amazonaws/aws-sdk-appsync-core)                      |
+          | `com.amazonaws.sdk.appsync.events`                     | ![Maven Central](https://img.shields.io/maven-central/v/com.amazonaws/aws-sdk-appsync-events)                    |
+          | `com.amazonaws.sdk.appsync.amplify`                    | ![Maven Central](https://img.shields.io/maven-central/v/com.amazonaws/aws-sdk-appsync-amplify)                   |        
         </details>
 
   - type: checkboxes
@@ -71,6 +73,7 @@ body:
         - Analytics
         - REST API
         - GraphQL API
+        - AppSync Events
         - DataStore
         - Geo
         - Storage
