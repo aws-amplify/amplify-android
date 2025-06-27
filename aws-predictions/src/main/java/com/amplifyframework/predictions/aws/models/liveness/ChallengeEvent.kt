@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -14,12 +14,12 @@
  */
 package com.amplifyframework.predictions.aws.models.liveness
 
+import com.amplifyframework.predictions.models.FaceLivenessChallengeType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-internal data class ClientChallenge(
-    @SerialName("FaceMovementAndLightChallenge") val faceMovementAndLightChallenge:
-    FaceMovementAndLightClientChallenge? = null,
-    @SerialName("FaceMovementChallenge") val faceMovementChallenge: FaceMovementClientChallenge? = null
+internal data class ChallengeEvent(
+    @SerialName("Type") val challengeType: FaceLivenessChallengeType,
+    @SerialName("Version") val version: String
 )

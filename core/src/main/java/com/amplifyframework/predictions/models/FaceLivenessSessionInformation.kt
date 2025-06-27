@@ -17,9 +17,55 @@ package com.amplifyframework.predictions.models
 import com.amplifyframework.annotations.InternalAmplifyApi
 
 @InternalAmplifyApi
-data class FaceLivenessSessionInformation(
-    val videoWidth: Float,
-    val videoHeight: Float,
-    val challengeVersions: String,
+class FaceLivenessSessionInformation {
+    val videoWidth: Float
+    val videoHeight: Float
+    val challengeVersions: List<Challenge>
     val region: String
-)
+    val preCheckViewEnabled: Boolean?
+    val attemptCount: Int?
+
+    @Deprecated("Keeping compatibility for <= Amplify Liveness 1.2.6")
+    constructor(
+        videoWidth: Float,
+        videoHeight: Float,
+        challenge: String,
+        region: String
+    ) {
+        this.videoWidth = videoWidth
+        this.videoHeight = videoHeight
+        this.challengeVersions = listOf(Challenge.FaceMovementAndLightChallenge("1.0.0"))
+        this.region = region
+        this.preCheckViewEnabled = null
+        this.attemptCount = null
+    }
+
+    constructor(
+        videoWidth: Float,
+        videoHeight: Float,
+        region: String,
+        challengeVersions: List<Challenge>,
+        preCheckViewEnabled: Boolean,
+        attemptCount: Int
+    ) {
+        this.videoWidth = videoWidth
+        this.videoHeight = videoHeight
+        this.region = region
+        this.challengeVersions = challengeVersions
+        this.preCheckViewEnabled = preCheckViewEnabled
+        this.attemptCount = attemptCount
+    }
+}
+
+@InternalAmplifyApi
+sealed class Challenge private constructor(val name: String, open val version: String) {
+
+    @InternalAmplifyApi
+    data class FaceMovementChallenge(override val version: String) : Challenge("FaceMovementChallenge", version)
+
+    @InternalAmplifyApi
+    data class FaceMovementAndLightChallenge(override val version: String) :
+        Challenge("FaceMovementAndLightChallenge", version)
+
+    fun toQueryParamString(): String = "${name}_$version"
+}
