@@ -205,7 +205,6 @@ internal class RunFaceLivenessSession(
         reasonCode?.let { livenessWebSocket.destroy(it) } ?: livenessWebSocket.destroy()
     }
 
-
     private fun getStreamingEndpointForRegion(region: String): String {
         val baseDomain = when {
             region.startsWith("us-isof", ignoreCase = true) -> ISO_PARTITION_BASE_DOMAIN

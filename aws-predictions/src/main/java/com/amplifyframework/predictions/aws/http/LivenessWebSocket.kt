@@ -160,7 +160,6 @@ internal class LivenessWebSocket(
                         if (response.challengeEvent != null) {
                             challengeType = response.challengeEvent.challengeType
                         } else if (response.serverSessionInformationEvent != null) {
-
                             val clientRequestedOldLightChallenge = clientSessionInformation.challengeVersions
                                 .any { it == Challenge.FaceMovementAndLightChallenge("1.0.0") }
 
@@ -615,6 +614,7 @@ internal class LivenessWebSocket(
 
     companion object {
         private const val NORMAL_SOCKET_CLOSURE_STATUS_CODE = 1000
+
         // This is the same as the client-provided 'runtime error' status code
         private const val UNSUPPORTED_CHALLENGE_CLOSURE_STATUS_CODE = 4005
         private const val FOUR_MINUTES = 1000 * 60 * 4

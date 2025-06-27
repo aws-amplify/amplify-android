@@ -23,5 +23,5 @@ internal data class FaceMovementClientChallenge(
     @SerialName("VideoStartTimestamp") val videoStartTimestamp: Long? = null,
     @SerialName("VideoEndTimestamp") val videoEndTimestamp: Long? = null,
     @SerialName("InitialFace") val initialFace: InitialFace? = null,
-    @SerialName("TargetFace") val targetFace: TargetFace? = null,
+    @SerialName("TargetFace") val targetFace: TargetFace? = null
 )

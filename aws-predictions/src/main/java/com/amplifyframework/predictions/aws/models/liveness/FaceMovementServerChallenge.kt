@@ -20,5 +20,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 internal data class FaceMovementServerChallenge(
     @SerialName("OvalParameters") val ovalParameters: OvalParameters,
-    @SerialName("ChallengeConfig") val challengeConfig: ChallengeConfig,
+    @SerialName("ChallengeConfig") val challengeConfig: ChallengeConfig
 )
