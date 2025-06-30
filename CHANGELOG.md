@@ -1,3 +1,13 @@
+## [Release 2.29.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.29.0)
+
+### Features
+- **predictions:** Add support for a no light liveness challenge ([#3083](https://github.com/aws-amplify/amplify-android/issues/3083))
+
+### Miscellaneous
+- Remove ignored tests ([#3079](https://github.com/aws-amplify/amplify-android/issues/3079))
+
+[See all changes between 2.28.0 and 2.29.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.28.0...release_v2.29.0)
+
 ## [Release 2.28.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.28.0)
 
 ### Bug Fixes
