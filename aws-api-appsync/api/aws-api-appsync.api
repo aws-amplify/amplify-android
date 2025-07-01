@@ -16,6 +16,7 @@ public final class com/amplifyframework/api/aws/AppSyncGraphQLRequest : com/ampl
 	public fun getModelSchema ()Lcom/amplifyframework/core/model/ModelSchema;
 	public fun getOperation ()Lcom/amplifyframework/api/graphql/Operation;
 	public fun getQuery ()Ljava/lang/String;
+	public fun getSelectionSet ()Lcom/amplifyframework/api/aws/SelectionSet;
 	public fun getVariables ()Ljava/util/Map;
 	public fun hashCode ()I
 	public fun newBuilder ()Lcom/amplifyframework/api/aws/AppSyncGraphQLRequest$Builder;
@@ -92,9 +93,14 @@ public final class com/amplifyframework/api/aws/SelectionSet {
 	public static fun builder ()Lcom/amplifyframework/api/aws/SelectionSet$Builder;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getNodes ()Ljava/util/Set;
+	public fun getValue ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 	public fun toString (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class com/amplifyframework/api/aws/SelectionSetUtils {
+	public static final fun findChildByName (Lcom/amplifyframework/api/aws/SelectionSet;Ljava/lang/String;)Lcom/amplifyframework/api/aws/SelectionSet;
 }
 
 public final class com/amplifyframework/api/graphql/GsonResponseAdapters {
