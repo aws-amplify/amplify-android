@@ -26,6 +26,7 @@ binary-compatibility-validator = "0.14.0"
 coroutines = "1.7.3"
 desugar = "1.2.0"
 espresso = "3.3.0"
+firebase-bom = "33.16.0"
 fcm = "23.1.0"
 gson = "2.8.9"
 jetbrains-annotations = "26.0.2"
@@ -92,7 +93,8 @@ aws-smithy-http = { module = "aws.smithy.kotlin:http-client-jvm", version.ref = 
 aws-smithy-okhttp4 = { module = "aws.smithy.kotlin:http-client-engine-okhttp4", version.ref = "aws-smithy" }
 aws-textract = { module = "aws.sdk.kotlin:textract", version.ref = "aws-kotlin" }
 aws-translate = { module = "aws.sdk.kotlin:translate", version.ref = "aws-kotlin" }
-firebasemessaging = { module = "com.google.firebase:firebase-messaging-ktx", version.ref = "fcm" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
 google-material = { module = "com.google.android.material:material", version.ref = "material" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
