@@ -1,3 +1,10 @@
+## [Release 2.29.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.29.1)
+
+### Bug Fixes
+- **notifications:** Update to latest firebase bom ([#3086](https://github.com/aws-amplify/amplify-android/issues/3086))
+
+[See all changes between 2.29.0 and 2.29.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.29.0...release_v2.29.1)
+
 ## [Release 2.29.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.29.0)
 
 ### Features
