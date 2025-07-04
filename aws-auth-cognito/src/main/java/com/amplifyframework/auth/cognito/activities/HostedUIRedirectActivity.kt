@@ -17,7 +17,7 @@ package com.amplifyframework.auth.cognito.activities
 import android.app.Activity
 import android.os.Bundle
 import android.util.Log
-import com.amplifyframework.auth.cognito.activities.CustomTabsManagerActivity.Companion.createResponseHandlingIntent
+import com.amplifyframework.auth.cognito.activities.WebViewActivity.Companion.createResponseHandlingIntent
 import com.amplifyframework.core.Amplify
 
 /**

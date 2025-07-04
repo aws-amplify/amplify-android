@@ -26,6 +26,7 @@ import androidx.browser.customtabs.CustomTabsIntent
 import androidx.browser.customtabs.CustomTabsServiceConnection
 import androidx.browser.customtabs.CustomTabsSession
 import com.amplifyframework.auth.cognito.activities.CustomTabsManagerActivity
+import com.amplifyframework.auth.cognito.activities.WebViewActivity
 import com.amplifyframework.auth.cognito.exceptions.service.CodeValidationException
 import com.amplifyframework.auth.cognito.helpers.BrowserHelper
 import com.amplifyframework.auth.cognito.helpers.HostedUIHttpHelper
@@ -75,6 +76,19 @@ internal class HostedUIClient private constructor(
         )
     }
 
+    @Throws(RuntimeException::class)
+    fun launchWebViewSignIn(hostedUIOptions: HostedUIOptions) {
+        launchWebView(
+            uri = createAuthorizeUri(hostedUIOptions),
+            activity = hostedUIOptions.callingActivity
+        )
+    }
+
+    @Throws(RuntimeException::class)
+    fun launchWebViewSignOut() {
+        launchWebView(createSignOutUri())
+    }
+
     private fun launchCustomTabs(uri: Uri, activity: Activity? = null, customBrowserPackage: String?) {
         if (!BrowserHelper.isBrowserInstalled(context)) {
             throw RuntimeException("No browsers installed")
@@ -94,6 +108,17 @@ internal class HostedUIClient private constructor(
         } else {
             customTabIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(customTabIntent)
+        }
+    }
+
+    private fun launchWebView(uri: Uri, activity: Activity? = null) {
+        val webViewIntent = WebViewActivity.createStartIntent(uri, context)
+
+        if (activity != null) {
+            activity.startActivityForResult(webViewIntent, WEB_VIEW_ACTIVITY_CODE)
+        } else {
+            webViewIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(webViewIntent)
         }
     }
 
@@ -207,6 +232,7 @@ internal class HostedUIClient private constructor(
 
     companion object {
         const val CUSTOM_TABS_ACTIVITY_CODE = 49281
+        const val WEB_VIEW_ACTIVITY_CODE = 49282
 
         fun create(context: Context, configuration: OauthConfiguration?, logger: Logger) = if (configuration != null) {
             HostedUIClient(context, configuration, logger)

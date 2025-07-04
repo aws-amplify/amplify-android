@@ -37,9 +37,7 @@ internal object SignOutCognitoActions : SignOutActions {
             logger.verbose("$id Starting execution")
             try {
                 if (hostedUIClient == null) throw InvalidOauthConfigurationException()
-                val browserPackage = event.signOutData.browserPackage
-                    ?: (event.signedInData.signInMethod as? SignInMethod.HostedUI)?.browserPackage
-                hostedUIClient.launchCustomTabsSignOut(browserPackage)
+                hostedUIClient.launchWebViewSignOut()
             } catch (e: Exception) {
                 logger.warn("Failed to sign out web ui.", e)
                 val hostedUIErrorData = HostedUIErrorData(hostedUIClient?.createSignOutUri()?.toString(), e)

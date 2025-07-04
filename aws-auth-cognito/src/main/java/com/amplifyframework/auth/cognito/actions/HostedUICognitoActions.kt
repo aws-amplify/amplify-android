@@ -34,7 +34,7 @@ internal object HostedUICognitoActions : HostedUIActions {
             logger.verbose("$id Starting execution")
             try {
                 if (hostedUIClient == null) throw InvalidOauthConfigurationException()
-                hostedUIClient.launchCustomTabsSignIn(event.hostedUISignInData.hostedUIOptions)
+                hostedUIClient.launchWebViewSignIn(event.hostedUISignInData.hostedUIOptions)
             } catch (e: Exception) {
                 val errorEvent = HostedUIEvent(HostedUIEvent.EventType.ThrowError(e))
                 logger.verbose("$id Sending event ${errorEvent.type}")
