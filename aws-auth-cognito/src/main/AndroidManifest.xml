@@ -31,6 +31,11 @@
             android:exported="false"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
             android:launchMode="singleTask" />
+
+        <activity android:name=".activities.WebViewActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:launchMode="singleTask" />
     </application>
 
 </manifest>

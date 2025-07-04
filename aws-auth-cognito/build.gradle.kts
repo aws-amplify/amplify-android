@@ -40,8 +40,10 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.security)
     implementation(libs.androidx.browser)
+    implementation(libs.androidx.coordinatorlayout)
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services)
+    implementation(libs.google.material)
 
     implementation(libs.aws.http)
     implementation(libs.aws.cognitoidentity)
