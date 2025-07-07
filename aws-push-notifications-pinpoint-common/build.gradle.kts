@@ -36,7 +36,9 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.annotation)
     implementation(libs.androidx.core)
-    implementation(libs.firebasemessaging)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockk)

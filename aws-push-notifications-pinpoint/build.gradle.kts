@@ -28,13 +28,16 @@ android {
 }
 
 dependencies {
+
     implementation(project(":core"))
     implementation(project(":aws-core"))
     implementation(project(":common-core"))
     implementation(project(":aws-pinpoint-core"))
 
     implementation(project(":aws-push-notifications-pinpoint-common"))
-    api(libs.firebasemessaging)
+
+    api(platform(libs.firebase.bom))
+    api(libs.firebase.messaging)
 
     implementation(libs.aws.http)
     implementation(libs.aws.pinpoint)
