@@ -72,6 +72,7 @@ internal class WebViewActivity: AppCompatActivity() {
 
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(true)
+            setDisplayShowTitleEnabled(false)
         }
 
         toolbar.setNavigationOnClickListener {
