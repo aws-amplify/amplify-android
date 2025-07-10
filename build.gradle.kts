@@ -50,7 +50,7 @@ tasks.register<Delete>("clean").configure {
     delete(rootProject.layout.buildDirectory)
 }
 
-// apply(from = rootProject.file("configuration/instrumentation-tests.gradle"))
+apply(from = rootProject.file("configuration/instrumentation-tests.gradle"))
 
 dependencies {
     subprojects.forEach {
