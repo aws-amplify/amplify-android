@@ -1,9 +1,9 @@
 import java.util.Properties
 
 plugins {
-    id("com.android.library")
-    id("kotlin-android")
     alias(libs.plugins.apollo)
+    alias(libs.plugins.amplify.android.library)
+    alias(libs.plugins.amplify.api)
 }
 
 apply(from = rootProject.file("configuration/publishing.gradle"))
