@@ -29,36 +29,23 @@ class LicensesConventionPlugin : Plugin<Project> {
             extensions.configure<app.cash.licensee.LicenseeExtension> {
                 allow("Apache-2.0")
                 allow("MIT")
-
-                allowUrl("http://aws.amazon.com/apache2.0")
+                allow("BSD-2-Clause")
+                allow("CC0-1.0")
                 allowUrl("https://developer.android.com/studio/terms.html")
-
-                ignoreDependencies("javax.annotation", "javax.annotation-api") {
-                    because("Transitive dependency for androidx.test.espresso:espresso-core")
+                allowDependency("net.zetetic", "sqlcipher-android", "4.6.1") {
+                    because("BSD style License")
                 }
-                ignoreDependencies("org.junit", "junit-bom") {
-                    because("Unit Testing Dependency")
+                allowDependency("org.jetbrains", "annotations", "16.0.1") {
+                    because("Apache-2.0, but typo in license URL fixed in newer versions")
                 }
-                ignoreDependencies("org.junit", "jupiter") {
-                    because("Unit Testing Dependency")
+                allowDependency("org.mockito", "mockito-core", "3.9.0") {
+                    because("MIT license")
                 }
-                ignoreDependencies("org.junit.jupiter", "junit-jupiter") {
-                    because("Unit Testing Dependency")
+                allowDependency("junit", "junit", "4.13.2") {
+                    because("Test Dependency")
                 }
-                ignoreDependencies("org.junit.jupiter", "junit-jupiter-params") {
-                    because("Unit Testing Dependency")
-                }
-                ignoreDependencies("org.junit", "junit-jupiter-params") {
-                    because("Unit Testing Dependency")
-                }
-                ignoreDependencies("org.junit.platform", "junit-platform-commons") {
-                    because("Unit Testing Dependency")
-                }
-                ignoreDependencies("org.junit.platform", "junit-platform-engine") {
-                    because("Unit Testing Dependency")
-                }
-                ignoreDependencies("junit", "junit") {
-                    because("Unit Testing Dependency")
+                allowUrl("https://raw.githubusercontent.com/apollographql/apollo-kotlin/main/LICENSE") {
+                    because("MIT license")
                 }
             }
         }
