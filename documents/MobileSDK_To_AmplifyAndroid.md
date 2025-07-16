@@ -2,6 +2,15 @@
 [Amplify Android](https://github.com/aws-amplify/amplify-android) simplifies integrating AWS services into Android apps, making it easier to add features like authentication, data storage, and real-time updates without lots of code. This user-friendly interface not only cuts down on complexity but also speeds up the development process.
 With Amplify Android, developers get tools that make setup straightforward, provide detailed documentation, and support advanced capabilities like offline data sync and GraphQL. This means you can spend less time dealing with the technicalities of cloud integration and more time crafting engaging user experiences.
 Choosing Amplify Android could lead to quicker development, plus applications that are both scalable and secure.
+
+> **NOTE**: 
+
+## General Migration Notes
+
+- **Amplify Android** is the recommended library for all new Android related development.
+- For any AWS service not yet supported by Amplify, you can use the [AWS SDK for Swift](https://github.com/awslabs/aws-sdk-kotlin) or reference [Swift SDK code examples](https://github.com/awsdocs/aws-doc-sdk-examples/tree/main/kotlin).
+- Amplify will make a best-effort attempt to preserve user auth sessions during migration, but some users may need to re-authenticate.
+
 ## Categories
 
 ### [Authentication](https://docs.amplify.aws/android/build-a-backend/auth/set-up-auth/#set-up-backend-resources)
@@ -16,8 +25,7 @@ Choosing Amplify Android could lead to quicker development, plus applications th
 | [Confirm Sign In (MFA)](https://docs.amplify.aws/android/sdk/auth/working-with-api/#confirm-signin-mfa)                 | [MFA](https://docs.amplify.aws/android/build-a-backend/auth/enable-sign-in/#multi-factor-authentication)                                                                                                  |
 | [Change Password](https://docs.amplify.aws/android/sdk/auth/working-with-api/#force-change-password)                    | [Change Password](https://docs.amplify.aws/android/build-a-backend/auth/manage-passwords/#change-password)                                                                                                |
 | [Forgot Password](https://docs.amplify.aws/android/sdk/auth/working-with-api/#forgot-password)                          | [Reset Password](https://docs.amplify.aws/gen1/android/build-a-backend/auth/multi-step-sign-in/#reset-password)                                                                                                |
-| [Get Current User](https://docs.amplify.aws/android/sdk/auth/working-with-api/#utility-properties)                      | [Get Current User](https://docs.amplify.aws/android/build-a-backend/auth/multi-step-sign-in/#get-current-user)                                                                                            |
-| [Managing Tokens and Credentials](https://docs.amplify.aws/android/sdk/auth/working-with-api/#managing-security-tokens) | [Accessing Credentials](https://docs.amplify.aws/android/build-a-backend/auth/accessing-credentials/) / [Check Current Auth Session](https://docs.amplify.aws/android/build-a-backend/auth/set-up-auth/)  |
+| [Managing Tokens and Credentials](https://docs.amplify.aws/android/sdk/auth/working-with-api/#managing-security-tokens) | [Accessing Credentials](https://docs.amplify.aws/android/build-a-backend/auth/accessing-credentials/)   |
 | [SignOut](https://docs.amplify.aws/android/sdk/auth/working-with-api/#signout)                                          | [Sign Out](https://docs.amplify.aws/android/build-a-backend/auth/sign-out/)                                                                                                                               |
 | [Global SignOut](https://docs.amplify.aws/android/sdk/auth/working-with-api/#global-signout)                            | [Global Sign Out](https://docs.amplify.aws/android/build-a-backend/auth/sign-out/#global-sign-out)                                                                                                        |
 | [Federated Identities](https://docs.amplify.aws/android/sdk/auth/federated-identities/)                                 | [Federated Identities](https://docs.amplify.aws/android/build-a-backend/auth/advanced-workflows/#identity-pool-federation)                                                                                |
