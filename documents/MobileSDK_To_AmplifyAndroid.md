@@ -57,6 +57,8 @@ Notes:
 
 ### [Push Notification](https://docs.amplify.aws/android/build-a-backend/push-notifications/set-up-push-notifications/#set-up-backend-resources)
 
+> **Pinpoint deprecation notice** – Pinpoint will be retired Oct 30 2026. AWS End User Messaging is the recommended successor. Plan migrations accordingly.
+
 | AWS SDK For Android                                                                                                                                                                                 | Amplify Android                                                                                                                                                                                                                       |
 |-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [Setup](https://docs.amplify.aws/android/sdk/push-notifications/getting-started/), [Push Notification Service Setup](https://docs.amplify.aws/android/sdk/push-notifications/messaging-campaign/)   | [Setup](https://docs.amplify.aws/android/build-a-backend/push-notifications/set-up-push-notifications/), [Push Notification Service Setup](https://docs.amplify.aws/android/build-a-backend/push-notifications/set-up-push-service/)  |
