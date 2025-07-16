@@ -3,8 +3,6 @@
 With Amplify Android, developers get tools that make setup straightforward, provide detailed documentation, and support advanced capabilities like offline data sync and GraphQL. This means you can spend less time dealing with the technicalities of cloud integration and more time crafting engaging user experiences.
 Choosing Amplify Android could lead to quicker development, plus applications that are both scalable and secure.
 
-> **NOTE**: 
-
 ## General Migration Notes
 
 - **Amplify Android** is the recommended library for all new Android related development.
