@@ -6,7 +6,7 @@ Choosing Amplify Android could lead to quicker development, plus applications th
 ## General Migration Notes
 
 - **Amplify Android** is the recommended library for all new Android related development.
-- For any AWS service not yet supported by Amplify, you can use the [AWS SDK for Swift](https://github.com/awslabs/aws-sdk-kotlin) or reference [Kotlin SDK code examples](https://github.com/awsdocs/aws-doc-sdk-examples/tree/main/kotlin).
+- For any AWS service not yet supported by Amplify, you can use the [AWS SDK for Kotlin](https://github.com/awslabs/aws-sdk-kotlin) or reference [Kotlin SDK code examples](https://github.com/awsdocs/aws-doc-sdk-examples/tree/main/kotlin).
 - Amplify will make a best-effort attempt to preserve user auth sessions during migration, but some users may need to re-authenticate.
 
 ## Categories
