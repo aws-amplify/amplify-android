@@ -39,13 +39,9 @@ class CloudWatchLogger internal constructor(
 
     private val coroutineScope = CoroutineScope(dispatcher)
 
-    override fun getThresholdLevel(): LogLevel {
-        return loggingConstraintsResolver.resolveLogLevel(namespace, categoryType)
-    }
+    override fun getThresholdLevel(): LogLevel = loggingConstraintsResolver.resolveLogLevel(namespace, categoryType)
 
-    override fun getNamespace(): String {
-        return namespace
-    }
+    override fun getNamespace(): String = namespace
 
     override fun error(message: String?) = log(LogLevel.ERROR, message)
 
@@ -87,7 +83,6 @@ class CloudWatchLogger internal constructor(
         }
     }
 
-    private fun shouldNotLogMessage(logLevel: LogLevel): Boolean {
-        return !awsCloudWatchLoggingPlugin.isPluginEnabled || thresholdLevel.above(logLevel)
-    }
+    private fun shouldNotLogMessage(logLevel: LogLevel): Boolean =
+        !awsCloudWatchLoggingPlugin.isPluginEnabled || thresholdLevel.above(logLevel)
 }

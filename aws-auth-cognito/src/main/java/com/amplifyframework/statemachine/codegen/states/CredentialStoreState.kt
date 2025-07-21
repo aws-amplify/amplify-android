@@ -40,9 +40,8 @@ internal sealed class CredentialStoreState : State {
         StateMachineResolver<CredentialStoreState> {
         override val defaultState = NotConfigured()
 
-        private fun asCredentialStoreEvent(event: StateMachineEvent): CredentialStoreEvent.EventType? {
-            return (event as? CredentialStoreEvent)?.eventType
-        }
+        private fun asCredentialStoreEvent(event: StateMachineEvent): CredentialStoreEvent.EventType? =
+            (event as? CredentialStoreEvent)?.eventType
 
         override fun resolve(
             oldState: CredentialStoreState,

@@ -54,8 +54,7 @@
                 "isSignUpComplete": false,
                 "nextStep": {
                     "signUpStep": "CONFIRM_SIGN_UP_STEP",
-                    "additionalInfo": {
-                    },
+                    "additionalInfo": {},
                     "codeDeliveryDetails": {
                         "destination": "user@domain.com",
                         "deliveryMedium": "EMAIL",

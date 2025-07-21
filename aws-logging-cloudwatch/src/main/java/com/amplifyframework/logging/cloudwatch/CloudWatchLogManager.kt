@@ -178,8 +178,7 @@ internal class CloudWatchLogManager(
         }
     }
 
-    private fun getNextBatch(queriedEvents: MutableList<LogEvent>):
-        Pair<List<InputLogEvent>, List<Long>> {
+    private fun getNextBatch(queriedEvents: MutableList<LogEvent>): Pair<List<InputLogEvent>, List<Long>> {
         var totalBatchSize = 0L
         val inputLogEvents = mutableListOf<InputLogEvent>()
         val inputLogEventsIdToBeDeleted = mutableListOf<Long>()
@@ -189,9 +188,13 @@ internal class CloudWatchLogManager(
             val cloudWatchEvent = iterator.next()
             totalBatchSize = totalBatchSize.plus(cloudWatchEvent.message.length).plus(26)
             if (
-                inputLogEvents.size >= 10000 || // The maximum number of log events in a batch is 10,000.
-                totalBatchSize >= 1048576 || // The maximum batch size is 1,048,576 bytes.
-                cloudWatchEvent.timestamp - firstEvent.timestamp >= 24 * 60 * 60L // A batch of log events in a single request cannot span more than 24 hours. Otherwise, the operation fails.
+                // The maximum number of log events in a batch is 10,000.
+                inputLogEvents.size >= 10000 ||
+                // The maximum batch size is 1,048,576 bytes.
+                totalBatchSize >= 1048576 ||
+                // A batch of log events in a single request cannot span more than 24 hours.
+                // Otherwise, the operation fails.
+                cloudWatchEvent.timestamp - firstEvent.timestamp >= 24 * 60 * 60L
             ) {
                 break
             }

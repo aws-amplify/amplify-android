@@ -1,0 +1,41 @@
+{
+    "description": "Test that entering the incorrect SMS OTP code fails",
+    "preConditions": {
+        "amplify-configuration": "authconfiguration_userauth.json",
+        "state": "SigningIn_SmsOtp.json",
+        "mockedResponses": [
+            {
+                "type": "cognitoIdentityProvider",
+                "apiName": "respondToAuthChallenge",
+                "responseType": "failure",
+                "response": {
+                    "errorType": "CodeMismatchException",
+                    "errorMessage": "Confirmation code entered is not correct."
+                }
+            }
+        ]
+    },
+    "api": {
+        "name": "confirmSignIn",
+        "params": {
+            "challengeResponse": "000000"
+        },
+        "options": {}
+    },
+    "validations": [
+        {
+            "type": "amplify",
+            "apiName": "confirmSignIn",
+            "responseType": "failure",
+            "response": {
+                "errorType": "CodeMismatchException",
+                "errorMessage": "Confirmation code entered is not correct.",
+                "recoverySuggestion": "Enter correct confirmation code.",
+                "cause": {
+                    "errorType": "CodeMismatchException",
+                    "errorMessage": "Confirmation code entered is not correct."
+                }
+            }
+        }
+    ]
+}

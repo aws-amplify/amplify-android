@@ -41,17 +41,15 @@ import java.util.concurrent.TimeUnit
  */
 interface ReachabilityMonitor {
     fun configure(context: Context)
+
     @VisibleForTesting
     fun configure(context: Context, connectivityProvider: ConnectivityProvider)
 
     companion object {
-        fun create(): ReachabilityMonitor {
-            return ReachabilityMonitorImpl(ProdSchedulerProvider())
-        }
+        fun create(): ReachabilityMonitor = ReachabilityMonitorImpl(ProdSchedulerProvider())
 
-        fun createForTesting(baseSchedulerProvider: SchedulerProvider): ReachabilityMonitor {
-            return ReachabilityMonitorImpl(baseSchedulerProvider)
-        }
+        fun createForTesting(baseSchedulerProvider: SchedulerProvider): ReachabilityMonitor =
+            ReachabilityMonitorImpl(baseSchedulerProvider)
     }
     fun getObservable(): Observable<Boolean>
 }
@@ -60,9 +58,7 @@ private class ReachabilityMonitorImpl constructor(val schedulerProvider: Schedul
     private val subject = BehaviorSubject.create<Boolean>()
     private var connectivityProvider: ConnectivityProvider? = null
 
-    override fun configure(context: Context) {
-        return configure(context, DefaultConnectivityProvider())
-    }
+    override fun configure(context: Context) = configure(context, DefaultConnectivityProvider())
 
     override fun configure(context: Context, connectivityProvider: ConnectivityProvider) {
         this.connectivityProvider = connectivityProvider

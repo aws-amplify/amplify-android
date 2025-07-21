@@ -80,6 +80,10 @@ internal sealed class AuthenticationState : State {
                     is AuthenticationEvent.EventType.InitializedSignedOut -> StateResolution(
                         SignedOut(authenticationEvent.signedOutData)
                     )
+                    is AuthenticationEvent.EventType.SignInRequested -> {
+                        val action = authenticationActions.initiateSignInAction(authenticationEvent)
+                        StateResolution(SigningIn(), listOf(action))
+                    }
                     else -> defaultResolution
                 }
                 is SigningIn -> when (authenticationEvent) {
@@ -91,6 +95,9 @@ internal sealed class AuthenticationState : State {
                             StateResolution(Error(authenticationEvent.error))
                         }
                         StateResolution(SignedOut(SignedOutData()))
+                    }
+                    is AuthenticationEvent.EventType.ThrowError -> {
+                        StateResolution(Error(authenticationEvent.exception))
                     }
                     else -> {
                         val resolution = signInResolver.resolve(oldState.signInState, event)

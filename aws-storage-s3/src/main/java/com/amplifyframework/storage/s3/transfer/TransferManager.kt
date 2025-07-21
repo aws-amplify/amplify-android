@@ -24,8 +24,10 @@ import aws.sdk.kotlin.services.s3.model.ObjectCannedAcl
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.storage.ObjectMetadata
+import com.amplifyframework.storage.StorageFilePermissionException
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
 import com.amplifyframework.storage.s3.TransferOperations
+import com.amplifyframework.storage.s3.extensions.unableToOverwriteFileException
 import com.amplifyframework.storage.s3.transfer.worker.RouterWorker
 import com.amplifyframework.storage.s3.transfer.worker.TransferWorkerFactory
 import java.io.File
@@ -192,6 +194,9 @@ internal class TransferManager(
         val transferRecordId: Int = uri.lastPathSegment?.toInt()
             ?: throw IllegalStateException("Invalid TransferRecord ID ${uri.lastPathSegment}")
         if (file.isFile) {
+            if (!file.canWrite()) {
+                throw StorageFilePermissionException.unableToOverwriteFileException()
+            }
             logger.warn("Overwriting existing file: $file")
             file.delete()
         }
@@ -250,11 +255,7 @@ internal class TransferManager(
         } ?: false
     }
 
-    fun getTransferOperationById(
-        transferId: String
-    ): TransferRecord? {
-        return transferDB.getTransferByTransferId(transferId)
-    }
+    fun getTransferOperationById(transferId: String): TransferRecord? = transferDB.getTransferByTransferId(transferId)
 
     private fun createMultipartUploadRecords(
         transferId: String,
@@ -327,7 +328,5 @@ internal class TransferManager(
         return file
     }
 
-    private fun shouldUploadInMultipart(file: File): Boolean {
-        return file.length() > TransferRecord.MINIMUM_UPLOAD_PART_SIZE
-    }
+    private fun shouldUploadInMultipart(file: File): Boolean = file.length() > TransferRecord.MINIMUM_UPLOAD_PART_SIZE
 }

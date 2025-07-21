@@ -28,5 +28,10 @@ public enum AuthSignUpStep {
     /**
      * The flow is completed and no further steps are needed.
      */
-    DONE;
+    DONE,
+
+    /**
+     * Auto sign in needs to be called to complete sign up workflow.
+     */
+    COMPLETE_AUTO_SIGN_IN
 }

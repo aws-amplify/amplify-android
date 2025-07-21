@@ -15,6 +15,7 @@
 package com.amplifyframework.statemachine.codegen.events
 
 import com.amplifyframework.statemachine.StateMachineEvent
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignInTOTPSetupData
 import java.util.Date
 
@@ -24,22 +25,34 @@ internal class SetupTOTPEvent(val eventType: EventType, override val time: Date?
     sealed class EventType {
         data class SetupTOTP(
             val totpSetupDetails: SignInTOTPSetupData,
-            val challengeParams: Map<String, String>?
+            val challengeParams: Map<String, String>?,
+            val signInMethod: SignInMethod
         ) : EventType()
         data class WaitForAnswer(
             val totpSetupDetails: SignInTOTPSetupData,
-            val challengeParams: Map<String, String>?
+            val challengeParams: Map<String, String>?,
+            val signInMethod: SignInMethod
         ) : EventType()
-        data class ThrowAuthError(val exception: Exception, val username: String, val session: String?) : EventType()
+        data class ThrowAuthError(
+            val exception: Exception,
+            val username: String,
+            val session: String?,
+            val signInMethod: SignInMethod
+        ) : EventType()
         data class VerifyChallengeAnswer(
             val answer: String,
             val username: String,
             val session: String?,
-            val friendlyDeviceName: String?
+            val friendlyDeviceName: String?,
+            val signInMethod: SignInMethod
         ) :
             EventType()
 
-        data class RespondToAuthChallenge(val username: String, val session: String?) : EventType()
+        data class RespondToAuthChallenge(
+            val username: String,
+            val session: String?,
+            val signInMethod: SignInMethod
+        ) : EventType()
         data class Verified(val id: String = "") : EventType()
     }
 

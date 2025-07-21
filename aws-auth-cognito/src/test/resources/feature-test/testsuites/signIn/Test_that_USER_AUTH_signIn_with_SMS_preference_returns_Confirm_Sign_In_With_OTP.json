@@ -1,0 +1,58 @@
+{
+    "description": "Test that USER_AUTH signIn with SMS preference returns Confirm Sign In With OTP",
+    "preConditions": {
+        "amplify-configuration": "authconfiguration_userauth.json",
+        "state": "SignedOut_Configured.json",
+        "mockedResponses": [
+            {
+                "type": "cognitoIdentityProvider",
+                "apiName": "initiateAuth",
+                "responseType": "success",
+                "response": {
+                    "challengeName": "SMS_OTP",
+                    "session": "someSession",
+                    "parameters": {},
+                    "challengeParameters": {
+                        "CODE_DELIVERY_DELIVERY_MEDIUM": "SMS",
+                        "CODE_DELIVERY_DESTINATION": "+12345678900"
+                    }
+                }
+            }
+        ]
+    },
+    "api": {
+        "name": "signIn",
+        "params": {
+            "username": "username",
+            "password": ""
+        },
+        "options": {
+            "signInOptions": {
+                "authFlow": "USER_AUTH",
+                "preferredFirstFactor": "SMS_OTP"
+            }
+        }
+    },
+    "validations": [
+        {
+            "type": "amplify",
+            "apiName": "signIn",
+            "responseType": "success",
+            "response": {
+                "isSignedIn": false,
+                "nextStep": {
+                    "signInStep": "CONFIRM_SIGN_IN_WITH_OTP",
+                    "additionalInfo": {},
+                    "codeDeliveryDetails": {
+                        "destination": "+12345678900",
+                        "deliveryMedium": "SMS"
+                    }
+                }
+            }
+        },
+        {
+            "type": "state",
+            "expectedState": "SigningIn_SmsOtp.json"
+        }
+    ]
+}

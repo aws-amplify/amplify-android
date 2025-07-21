@@ -18,13 +18,6 @@ group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.apollo.appsync"
-    defaultConfig {
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    testOptions {
-        execution = "ANDROIDX_TEST_ORCHESTRATOR"
-    }
 }
 
 apollo {
@@ -56,8 +49,4 @@ dependencies {
     androidTestImplementation(libs.test.androidx.runner)
     androidTestImplementation(libs.test.kotlin.coroutines)
     androidTestImplementation(libs.test.turbine)
-}
-
-android.kotlinOptions {
-    jvmTarget = "11"
 }

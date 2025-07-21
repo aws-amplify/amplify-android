@@ -40,7 +40,7 @@ object ForgetDeviceTestCaseGenerator : SerializableProvider {
     private val apiReturnValidation = ExpectationShapes.Amplify(
         AuthAPI.forgetDevice,
         ResponseType.Success,
-        JsonObject(emptyMap()),
+        JsonObject(emptyMap())
     )
 
     private val baseCase = FeatureTestCase(
@@ -55,7 +55,7 @@ object ForgetDeviceTestCaseGenerator : SerializableProvider {
             mapOf(
                 "device" to AuthDevice.fromId("id", "test")
             ).toJsonElement(),
-            JsonObject(emptyMap()),
+            JsonObject(emptyMap())
         ),
         validations = listOf(apiReturnValidation)
     )
@@ -86,7 +86,7 @@ object ForgetDeviceTestCaseGenerator : SerializableProvider {
                     ExpectationShapes.Amplify(
                         AuthAPI.forgetDevice,
                         ResponseType.Failure,
-                        SignedOutException().toJsonElement(),
+                        SignedOutException().toJsonElement()
                     )
                 )
             )

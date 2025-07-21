@@ -29,39 +29,42 @@ data class OauthConfiguration internal constructor(
     val signOutRedirectURI: String
 ) {
     internal fun toGen1Json() = JSONObject().apply {
-        put(AppClientId, appClient)
-        appSecret?.let { put(AppClientSecret, it) }
-        put(WebDomain, domain)
-        put(Scopes, JSONArray(scopes))
-        put(SignInRedirectURI, signInRedirectURI)
-        put(SignOutRedirectURI, signOutRedirectURI)
+        put(APP_CLIENT_ID, appClient)
+        appSecret?.let { put(APP_CLIENT_SECRET, it) }
+        put(WEB_DOMAIN, domain)
+        put(SCOPES, JSONArray(scopes))
+        put(SIGN_IN_REDIRECT_URI, signInRedirectURI)
+        put(SIGN_OUT_REDIRECT_URI, signOutRedirectURI)
     }
 
     internal companion object {
 
-        private const val AppClientId = "AppClientId"
-        private const val AppClientSecret = "AppClientSecret"
-        private const val WebDomain = "WebDomain"
-        private const val Scopes = "Scopes"
-        private const val SignInRedirectURI = "SignInRedirectURI"
-        private const val SignOutRedirectURI = "SignOutRedirectURI"
+        private const val APP_CLIENT_ID = "AppClientId"
+        private const val APP_CLIENT_SECRET = "AppClientSecret"
+        private const val WEB_DOMAIN = "WebDomain"
+        private const val SCOPES = "Scopes"
+        private const val SIGN_IN_REDIRECT_URI = "SignInRedirectURI"
+        private const val SIGN_OUT_REDIRECT_URI = "SignOutRedirectURI"
 
         fun fromJson(jsonObject: JSONObject?): OauthConfiguration? {
             return jsonObject?.run {
-                val appClient = optString(AppClientId).takeUnless { it.isNullOrEmpty() }
-                val appSecret = optString(AppClientSecret, null).takeUnless { it.isNullOrEmpty() }
-                val domain = optString(WebDomain).takeUnless { it.isNullOrEmpty() }
-                val scopes = optJSONArray(Scopes)?.let { scopesArray ->
+                val appClient = optString(APP_CLIENT_ID).takeUnless { it.isNullOrEmpty() }
+                val appSecret = optString(APP_CLIENT_SECRET, null).takeUnless { it.isNullOrEmpty() }
+                val domain = optString(WEB_DOMAIN).takeUnless { it.isNullOrEmpty() }
+                val scopes = optJSONArray(SCOPES)?.let { scopesArray ->
                     val scopesSet = mutableSetOf<String>()
                     for (i in 0 until scopesArray.length()) {
                         scopesArray.optString(i)?.let { scopesSet.add(it) }
                     }
                     scopesSet
                 }
-                val signInRedirectURI = optString(SignInRedirectURI).takeUnless { it.isNullOrEmpty() }
-                val signOutRedirectURI = optString(SignOutRedirectURI).takeUnless { it.isNullOrEmpty() }
+                val signInRedirectURI = optString(SIGN_IN_REDIRECT_URI).takeUnless { it.isNullOrEmpty() }
+                val signOutRedirectURI = optString(SIGN_OUT_REDIRECT_URI).takeUnless { it.isNullOrEmpty() }
 
-                return if (appClient != null && domain != null && scopes != null && signInRedirectURI != null &&
+                return if (appClient != null &&
+                    domain != null &&
+                    scopes != null &&
+                    signInRedirectURI != null &&
                     signOutRedirectURI != null
                 ) {
                     OauthConfiguration(appClient, appSecret, domain, scopes, signInRedirectURI, signOutRedirectURI)

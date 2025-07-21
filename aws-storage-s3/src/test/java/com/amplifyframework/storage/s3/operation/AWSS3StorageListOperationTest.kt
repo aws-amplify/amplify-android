@@ -140,7 +140,7 @@ public class AWSS3StorageListOperationTest {
 
     @Test
     @Suppress("deprecation")
-    fun SubpathStrategyIncludeOperationTest() {
+    fun subpathStrategyIncludeOperationTest() {
         val path = ""
         val expectedKey = "public/"
         val request = AWSS3StorageListRequest(
@@ -167,7 +167,7 @@ public class AWSS3StorageListOperationTest {
 
     @Test
     @Suppress("deprecation")
-    fun SubpathStrategyExcludeOperationTest() {
+    fun subpathStrategyExcludeOperationTest() {
         val path = ""
         val expectedKey = "public/"
         val expectedSubpathStrategy = SubpathStrategy.Exclude()

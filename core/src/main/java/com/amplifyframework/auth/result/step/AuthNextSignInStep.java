@@ -20,6 +20,7 @@ import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
+import com.amplifyframework.auth.AuthFactorType;
 import com.amplifyframework.auth.MFAType;
 import com.amplifyframework.auth.TOTPSetupDetails;
 
@@ -40,6 +41,7 @@ public final class AuthNextSignInStep {
 
     private final TOTPSetupDetails totpSetupDetails;
     private final Set<MFAType> allowedMFATypes;
+    private final Set<AuthFactorType> availableFactors;
 
     /**
      * Gives details on the next step, if there is one, in the sign in flow.
@@ -48,19 +50,23 @@ public final class AuthNextSignInStep {
      * @param codeDeliveryDetails Details about how a code was sent, if relevant to the current step
      * @param totpSetupDetails Details to setup TOTP, if relevant to the current step
      * @param allowedMFATypes Set of allowed MFA type, if relevant to the current step
+     * @param availableFactors Set of available AuthFactorType to choose from, if relevant to the
+     *                         current step
      */
     public AuthNextSignInStep(
             @NonNull AuthSignInStep signInStep,
             @NonNull Map<String, String> additionalInfo,
             @Nullable AuthCodeDeliveryDetails codeDeliveryDetails,
             @Nullable TOTPSetupDetails totpSetupDetails,
-            @Nullable Set<MFAType> allowedMFATypes) {
+            @Nullable Set<MFAType> allowedMFATypes,
+            @Nullable Set<AuthFactorType> availableFactors) {
         this.signInStep = Objects.requireNonNull(signInStep);
         this.additionalInfo = new HashMap<>();
         this.additionalInfo.putAll(Objects.requireNonNull(additionalInfo));
         this.codeDeliveryDetails = codeDeliveryDetails;
         this.totpSetupDetails = totpSetupDetails;
         this.allowedMFATypes = allowedMFATypes;
+        this.availableFactors = availableFactors;
     }
 
     /**
@@ -109,6 +115,15 @@ public final class AuthNextSignInStep {
     }
 
     /**
+     * Set of available auth factors.
+     * @return Set of available auth factors, if relevant to the current step - null otherwise
+     */
+    @Nullable
+    public Set<AuthFactorType> getAvailableFactors() {
+        return availableFactors;
+    }
+
+    /**
      * When overriding, be sure to include signInStep, additionalInfo, and codeDeliveryDetails in the hash.
      * @return Hash code of this object
      */
@@ -119,7 +134,8 @@ public final class AuthNextSignInStep {
                 getAdditionalInfo(),
                 getCodeDeliveryDetails(),
                 getTotpSetupDetails(),
-                getAllowedMFATypes()
+                getAllowedMFATypes(),
+                getAvailableFactors()
         );
     }
 
@@ -139,7 +155,8 @@ public final class AuthNextSignInStep {
                     ObjectsCompat.equals(getAdditionalInfo(), authSignUpResult.getAdditionalInfo()) &&
                     ObjectsCompat.equals(getCodeDeliveryDetails(), authSignUpResult.getCodeDeliveryDetails()) &&
                     ObjectsCompat.equals(getTotpSetupDetails(), authSignUpResult.getTotpSetupDetails()) &&
-                    ObjectsCompat.equals(getAllowedMFATypes(), authSignUpResult.getAllowedMFATypes());
+                    ObjectsCompat.equals(getAllowedMFATypes(), authSignUpResult.getAllowedMFATypes()) &&
+                    ObjectsCompat.equals(getAvailableFactors(), authSignUpResult.getAvailableFactors());
         }
     }
 
@@ -155,6 +172,7 @@ public final class AuthNextSignInStep {
                 ", codeDeliveryDetails=" + getCodeDeliveryDetails() +
                 ", totpSetupDetails=" + getTotpSetupDetails() +
                 ", allowedMFATypes=" + getAllowedMFATypes() +
+                ", availableFactors=" + getAvailableFactors() +
                 '}';
     }
 }

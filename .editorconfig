@@ -2,3 +2,12 @@
 #this is to match java checkstyle
 max_line_length=120
 ktlint_code_style=android_studio
+
+# Disabled rules
+ktlint_standard_class-signature = disabled # don't force parameters onto one line in constructors
+ktlint_standard_value-parameter-comment = disabled # Allow same-line comments in parameters
+
+# Disable ktlint on generated source code, see
+# https://github.com/JLLeitschuh/ktlint-gradle/issues/746
+[**/build/generated/**]
+ktlint = disabled

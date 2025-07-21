@@ -55,7 +55,7 @@ import org.junit.Test
 
 @FlowPreview
 @ExperimentalCoroutinesApi
-@Suppress("UNCHECKED_CAST")
+@Suppress("UNCHECKED_CAST", "ktlint:standard:comment-wrapping")
 class KotlinStorageFacadeTest {
     private val delegate = mockk<StorageCategoryBehavior>()
     private val storage = KotlinStorageFacade(delegate)

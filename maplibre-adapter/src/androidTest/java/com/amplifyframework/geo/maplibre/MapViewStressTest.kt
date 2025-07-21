@@ -86,13 +86,11 @@ class MapViewStressTest {
     private fun <T> runBlockingWithConfiguredMapActivity(
         rule: ActivityScenarioRule<MapViewTestActivity>,
         block: suspend CoroutineScope.() -> T
-    ): T {
-        return runBlocking(Dispatchers.Main) {
-            rule.scenario.onActivity {
-                it.setMapView(geoCategory)
-            }
-            block()
+    ): T = runBlocking(Dispatchers.Main) {
+        rule.scenario.onActivity {
+            it.setMapView(geoCategory)
         }
+        block()
     }
 
     private fun signInWithCognito() {

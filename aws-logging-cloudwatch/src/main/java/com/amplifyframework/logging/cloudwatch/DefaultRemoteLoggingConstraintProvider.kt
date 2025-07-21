@@ -116,7 +116,5 @@ class DefaultRemoteLoggingConstraintProvider @JvmOverloads constructor(
         }
     }
 
-    override fun getConstraintsSyncInterval(): Int {
-        return refreshIntervalInSeconds
-    }
+    override fun getConstraintsSyncInterval(): Int = refreshIntervalInSeconds
 }

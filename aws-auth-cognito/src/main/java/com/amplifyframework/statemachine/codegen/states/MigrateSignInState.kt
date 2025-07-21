@@ -30,9 +30,7 @@ internal sealed class MigrateSignInState : State {
     class Resolver(private val migrateAuthActions: MigrateAuthActions) : StateMachineResolver<MigrateSignInState> {
         override val defaultState = NotStarted()
 
-        private fun asSignInEvent(event: StateMachineEvent): SignInEvent.EventType? {
-            return (event as? SignInEvent)?.eventType
-        }
+        private fun asSignInEvent(event: StateMachineEvent): SignInEvent.EventType? = (event as? SignInEvent)?.eventType
 
         override fun resolve(
             oldState: MigrateSignInState,

@@ -64,10 +64,7 @@ class SQLCommandProcessorTest {
         gson = GsonFactory.instance()
     }
 
-    private fun createDatabase(
-        modelProvider: ModelProvider,
-        registry: SchemaRegistry
-    ): SQLiteDatabase {
+    private fun createDatabase(modelProvider: ModelProvider, registry: SchemaRegistry): SQLiteDatabase {
         val openParams = OpenParams.Builder().build()
         val db = SQLiteDatabase.createInMemory(openParams)
         db.beginTransaction()

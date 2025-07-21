@@ -43,7 +43,7 @@ internal class RouterWorker(
             ?: throw IllegalArgumentException("Worker class name is missing")
     private val workerId = parameter.inputData.getString(BaseTransferWorker.WORKER_ID)
 
-    private var delegateWorker: BaseTransferWorker? = null
+    private var delegateWorker: ListenableWorker? = null
 
     companion object {
         internal const val WORKER_CLASS_NAME = "WORKER_CLASS_NAME"

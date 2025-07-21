@@ -139,6 +139,7 @@ internal class LivenessEventStreamTest {
 
         assertEquals(expectedResponse, decoded)
     }
+
     @Test
     fun `test decoding DisconnectionEvent`() {
         val event = DisconnectionEvent(timestampMillis = System.currentTimeMillis())

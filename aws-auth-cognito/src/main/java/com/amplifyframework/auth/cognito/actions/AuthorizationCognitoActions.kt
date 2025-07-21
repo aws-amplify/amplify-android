@@ -39,22 +39,21 @@ internal object AuthorizationCognitoActions : AuthorizationActions {
         dispatcher.send(evt)
     }
 
-    override fun initializeFetchUnAuthSession() =
-        Action<AuthEnvironment>("InitFetchUnAuthSession") { id, dispatcher ->
-            logger.verbose("$id Starting execution")
-            val evt = configuration.identityPool?.poolId?.let {
-                FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(LoginsMapProvider.UnAuthLogins()))
-            } ?: AuthorizationEvent(
-                AuthorizationEvent.EventType.ThrowError(
-                    ConfigurationException(
-                        "Identity Pool not configured.",
-                        "Please check amplifyconfiguration.json file."
-                    )
+    override fun initializeFetchUnAuthSession() = Action<AuthEnvironment>("InitFetchUnAuthSession") { id, dispatcher ->
+        logger.verbose("$id Starting execution")
+        val evt = configuration.identityPool?.poolId?.let {
+            FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(LoginsMapProvider.UnAuthLogins()))
+        } ?: AuthorizationEvent(
+            AuthorizationEvent.EventType.ThrowError(
+                ConfigurationException(
+                    "Identity Pool not configured.",
+                    "Please check amplifyconfiguration.json file."
                 )
             )
-            logger.verbose("$id Sending event ${evt.type}")
-            dispatcher.send(evt)
-        }
+        )
+        logger.verbose("$id Sending event ${evt.type}")
+        dispatcher.send(evt)
+    }
 
     override fun initializeFetchAuthSession(signedInData: SignedInData) =
         Action<AuthEnvironment>("InitFetchAuthSession") { id, dispatcher ->

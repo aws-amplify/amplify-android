@@ -19,5 +19,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 internal data class ClientChallenge(
-    @SerialName("FaceMovementAndLightChallenge") val faceMovementAndLightChallenge: FaceMovementAndLightClientChallenge
+    @SerialName("FaceMovementAndLightChallenge") val faceMovementAndLightChallenge:
+    FaceMovementAndLightClientChallenge? = null,
+    @SerialName("FaceMovementChallenge") val faceMovementChallenge: FaceMovementClientChallenge? = null
 )

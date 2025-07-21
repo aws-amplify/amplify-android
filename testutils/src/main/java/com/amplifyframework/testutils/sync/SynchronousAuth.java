@@ -129,7 +129,7 @@ public final class SynchronousAuth {
     @NonNull
     public AuthSignUpResult signUp(
             @NonNull String username,
-            @NonNull String password,
+            @Nullable String password,
             @NonNull AuthSignUpOptions options
     ) throws AuthException {
         return Await.<AuthSignUpResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
@@ -271,6 +271,16 @@ public final class SynchronousAuth {
         return Await.<AuthSignInResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.confirmSignIn(challengeResponse, onResult, onError)
         );
+    }
+
+    /**
+     * Automatically sign in synchronously.
+     * @return result object
+     * @throws AuthException exception
+     */
+    @NonNull
+    public AuthSignInResult autoSignIn() throws AuthException {
+        return Await.result(AUTH_OPERATION_TIMEOUT_MS, asyncDelegate::autoSignIn);
     }
 
     /**

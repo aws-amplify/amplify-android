@@ -16,6 +16,7 @@
 import app.cash.licensee.LicenseeExtension
 import com.android.build.gradle.LibraryExtension
 import kotlinx.validation.ApiValidationExtension
+import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
@@ -28,8 +29,7 @@ buildscript {
     dependencies {
         classpath(kotlin("gradle-plugin", version = "1.9.10"))
         classpath("com.google.gms:google-services:4.3.15")
-        classpath("org.jlleitschuh.gradle:ktlint-gradle:11.0.0")
-        classpath("org.jetbrains.kotlinx:kover:0.6.1")
+        classpath("org.jlleitschuh.gradle:ktlint-gradle:12.2.0")
         classpath("app.cash.licensee:licensee-gradle-plugin:1.7.0")
     }
 }
@@ -40,20 +40,15 @@ plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.android.library) apply false
+    alias(libs.plugins.kover)
 }
 
 allprojects {
-    repositories {
-        maven(url = "https://aws.oss.sonatype.org/content/repositories/snapshots/")
-        google()
-        mavenCentral()
-    }
-
     gradle.projectsEvaluated {
         tasks.withType<JavaCompile>().configureEach {
             options.compilerArgs.apply {
                 add("-Xlint:all")
-                add("-Werror")
+                // add("-Werror")
             }
         }
         tasks.withType<Test>().configureEach {
@@ -64,7 +59,7 @@ allprojects {
 }
 
 tasks.register<Delete>("clean").configure {
-    delete(rootProject.buildDir)
+    delete(rootProject.layout.buildDirectory)
 }
 
 val internalApiAnnotations = listOf(
@@ -77,7 +72,11 @@ subprojects {
     apply(plugin = "org.jlleitschuh.gradle.ktlint")
 
     configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+        version.set("1.5.0")
         android.set(true)
+        filter {
+            exclude("**/generated/**")
+        }
     }
 
     apply(plugin = "app.cash.licensee")
@@ -88,7 +87,7 @@ subprojects {
             allow("BSD-2-Clause")
             allow("CC0-1.0")
             allowUrl("https://developer.android.com/studio/terms.html")
-            allowDependency("net.zetetic", "android-database-sqlcipher", "4.5.4") {
+            allowDependency("net.zetetic", "sqlcipher-android", "4.6.1") {
                 because("BSD style License")
             }
             allowDependency("org.jetbrains", "annotations", "16.0.1") {
@@ -106,7 +105,10 @@ subprojects {
         }
 
         configureAndroid()
-        apply(from = rootProject.file("kover.gradle"))
+
+        if (!project.name.contains("test")) {
+            apply(from = rootProject.file("kover.gradle"))
+        }
     }
 
     tasks.withType<KotlinCompile> {
@@ -114,6 +116,12 @@ subprojects {
             internalApiAnnotations.forEach {
                 freeCompilerArgs += "-opt-in=$it"
             }
+        }
+    }
+
+    pluginManager.withPlugin("kotlin-android") {
+        configure<KotlinProjectExtension> {
+            jvmToolchain(17)
         }
     }
 }
@@ -131,7 +139,6 @@ fun Project.configureAndroid() {
         val sdkVersionName = findProperty("VERSION_NAME") ?: rootProject.findProperty("VERSION_NAME")
 
         configure<LibraryExtension> {
-            buildToolsVersion = "30.0.3"
             compileSdk = 34
 
             buildFeatures {
@@ -141,43 +148,40 @@ fun Project.configureAndroid() {
 
             defaultConfig {
                 minSdk = 24
-                targetSdk = 30
                 testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
                 testInstrumentationRunnerArguments += "clearPackageData" to "true"
                 consumerProguardFiles += rootProject.file("configuration/consumer-rules.pro")
-
-                testOptions {
-                    animationsDisabled = true
-                    unitTests {
-                        isIncludeAndroidResources = true
-                    }
-                }
-
                 buildConfigField("String", "VERSION_NAME", "\"$sdkVersionName\"")
+            }
+
+            testOptions {
+                animationsDisabled = true
+                unitTests {
+                    isIncludeAndroidResources = true
+                }
+                execution = "ANDROIDX_TEST_ORCHESTRATOR"
             }
 
             lint {
                 warningsAsErrors = true
                 abortOnError = true
-                enable += listOf("UnusedResources", "NewerVersionAvailable")
+                enable += listOf("UnusedResources")
+                disable += listOf(
+                    "GradleDependency",
+                    "NewerVersionAvailable",
+                    "AndroidGradlePluginVersion",
+                    "CredentialDependency"
+                )
             }
 
             compileOptions {
                 isCoreLibraryDesugaringEnabled = true
-                sourceCompatibility = JavaVersion.VERSION_11
-                targetCompatibility = JavaVersion.VERSION_11
-            }
-
-            tasks.withType<KotlinCompile>().configureEach {
-                kotlinOptions {
-                    jvmTarget = JavaVersion.VERSION_11.toString()
-                }
             }
 
             // Needed when running integration tests. The oauth2 library uses relies on two
             // dependencies (Apache's httpcore and httpclient), both of which include
             // META-INF/DEPENDENCIES. Tried a couple other options to no avail.
-            packagingOptions {
+            packaging {
                 resources.excludes.addAll(
                     listOf(
                         "META-INF/DEPENDENCIES",
@@ -196,6 +200,11 @@ fun Project.configureAndroid() {
 
         dependencies {
             add("coreLibraryDesugaring", libs.android.desugartools)
+            constraints {
+                add("implementation", libs.androidx.annotation.experimental) {
+                    because("Fixes a lint bug with RequiresOptIn")
+                }
+            }
         }
     }
 }
@@ -208,4 +217,12 @@ configure<ApiValidationExtension> {
     nonPublicMarkers.add("androidx.annotation.VisibleForTesting")
 
     ignoredProjects.addAll(setOf("testutils", "testmodels", "annotations"))
+}
+
+dependencies {
+    subprojects.forEach {
+        if (!it.name.contains("test")) {
+            kover(project(it.name))
+        }
+    }
 }

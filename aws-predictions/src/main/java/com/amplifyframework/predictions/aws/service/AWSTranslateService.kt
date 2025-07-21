@@ -22,6 +22,7 @@ import com.amplifyframework.predictions.PredictionsException
 import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration
 import com.amplifyframework.predictions.models.LanguageType
 import com.amplifyframework.predictions.result.TranslateTextResult
+import com.amplifyframework.util.setHttpEngine
 import java.util.concurrent.Executors
 import kotlinx.coroutines.runBlocking
 
@@ -33,6 +34,7 @@ internal class AWSTranslateService(
     private val authCredentialsProvider: CredentialsProvider
 ) {
     val client: TranslateClient = TranslateClient {
+        setHttpEngine()
         this.region = pluginConfiguration.defaultRegion
         this.credentialsProvider = authCredentialsProvider
     }
@@ -49,11 +51,17 @@ internal class AWSTranslateService(
         execute(
             {
                 val source =
-                    if (LanguageType.UNKNOWN != sourceLanguage) sourceLanguage else
+                    if (LanguageType.UNKNOWN != sourceLanguage) {
+                        sourceLanguage
+                    } else {
                         pluginConfiguration.translateTextConfiguration.sourceLanguage
+                    }
                 val target =
-                    if (LanguageType.UNKNOWN != targetLanguage) targetLanguage else
+                    if (LanguageType.UNKNOWN != targetLanguage) {
+                        targetLanguage
+                    } else {
                         pluginConfiguration.translateTextConfiguration.targetLanguage
+                    }
                 val result = client.translateText {
                     this.text = textToTranslate
                     this.sourceLanguageCode = source.languageCode

@@ -1,9 +1,10 @@
 #!/bin/bash
 project_arn=$DEVICEFARM_PROJECT_ARN
 max_devices=$NUMBER_OF_DEVICES_TO_TEST
+test_spec_arn=$DEVICEFARM_TEST_SPEC_ARN
+commit_sha=$COMMIT_SHA
 module_name=$1
 file_name="$module_name-debug-androidTest.apk"
-full_path="$module_name/build/outputs/apk/androidTest/debug/$file_name"
 
 if [[ -z "${project_arn}" ]]; then
   echo "DEVICEFARM_PROJECT_ARN environment variable not set."
@@ -34,7 +35,7 @@ read -a result <<< $(createUpload "INSTRUMENTATION_TEST_PACKAGE")
 test_package_url=${result[0]}
 test_package_upload_arn=${result[1]}
 # Upload the apk
-curl -H "Content-Type:application/octet-stream" -T $full_path $test_package_url
+curl -H "Content-Type:application/octet-stream" -T $file_name $test_package_url
 
 # Create an upload for the app package (They're the same, but they have to be setup in device farm)
 echo 'Uploading app package'
@@ -42,7 +43,7 @@ read -a result <<< $(createUpload "ANDROID_APP")
 app_package_url=${result[0]}
 app_package_upload_arn=${result[1]}
 # Upload the apk
-curl -H "Content-Type:application/octet-stream" -T $full_path $app_package_url
+curl -H "Content-Type:application/octet-stream" -T $file_name $app_package_url
 
 # Wait to make sure the upload completes. This should actually make a get-upload call and check the status.
 echo "Waiting for uploads to complete"
@@ -92,7 +93,7 @@ fi
 # Function to cancel duplicate runs for same code source in device farm.
 function stopDuplicates {
   echo "Stopping duplicate runs"
-  name="$file_name-$CODEBUILD_SOURCE_VERSION"
+  name="$file_name-$commit_sha"
   read -a running_arns <<< $(aws devicefarm list-runs \
                           --arn="$project_arn" \
                           --query="runs[?(status == 'RUNNING' || status == 'PENDING')  && name == '${name}'].arn" \
@@ -111,19 +112,19 @@ stopDuplicates
 # Schedule the test run in device farm
 echo "Scheduling test run"
 run_arn=`aws devicefarm schedule-run --project-arn=$project_arn \
-                            --app-arn="$app_package_upload_arn" \
-                            --device-selection-configuration='{
-                                "filters": [
-                                  {"attribute": "ARN", "operator":"IN", "values":["'$minDevice'", "'$middleDevice'", "'$latestDevice'"]}
-                                ],
-                                "maxDevices": '$max_devices'
-                            }' \
-                            --name="$file_name-$CODEBUILD_SOURCE_VERSION" \
-                            --test="type=INSTRUMENTATION,testPackageArn=$test_package_upload_arn" \
-                            --execution-configuration="jobTimeoutMinutes=30,videoCapture=false" \
-                            --query="run.arn" \
-                            --output=text \
-                            --region="us-west-2"`
+  --app-arn="$app_package_upload_arn" \
+  --device-selection-configuration='{
+      "filters": [
+        {"attribute": "ARN", "operator":"IN", "values":["'$minDevice'", "'$middleDevice'", "'$latestDevice'"]}
+      ],
+      "maxDevices": '$max_devices'
+  }' \
+  --name="$file_name-$commit_sha" \
+  --test="testSpecArn=$test_spec_arn,type=INSTRUMENTATION,testPackageArn=$test_package_upload_arn" \
+  --execution-configuration="jobTimeoutMinutes=30,videoCapture=false" \
+  --query="run.arn" \
+  --output=text \
+  --region="us-west-2"`
 
 status='NONE'
 result='NONE'
@@ -141,7 +142,11 @@ while true; do
 done
 echo "Status = $status Result = $result"
 
-./scripts/generate_df_testrun_report --run_arn="$run_arn" --module_name="$module_name" --pr="$CODEBUILD_SOURCE_VERSION" --output_path="build/allTests/$module_name/"
+./scripts/python/generate_df_testrun_report.py \
+  -r "$run_arn" \
+  -m "$module_name" \
+  -o "build/allTests/$module_name/"
+
 # If the result is PASSED, then exit with a return code 0
 if [ "$result" = "PASSED" ]
 then

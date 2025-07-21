@@ -22,8 +22,9 @@ internal sealed class LivenessResponseStream {
     @Serializable
     internal data class Event(
         @SerialName("ServerSessionInformationEvent") val serverSessionInformationEvent:
-            ServerSessionInformationEvent? = null,
-        @SerialName("DisconnectionEvent") val disconnectionEvent: DisconnectionEvent? = null
+        ServerSessionInformationEvent? = null,
+        @SerialName("DisconnectionEvent") val disconnectionEvent: DisconnectionEvent? = null,
+        @SerialName("ChallengeEvent") val challengeEvent: ChallengeEvent? = null
     ) : LivenessResponseStream()
 
     @Serializable
@@ -32,7 +33,7 @@ internal sealed class LivenessResponseStream {
         @SerialName("InternalServerException") val internalServerException: InternalServerException? = null,
         @SerialName("ThrottlingException") val throttlingException: ThrottlingException? = null,
         @SerialName("ServiceQuotaExceededException") val serviceQuotaExceededException:
-            ServiceQuotaExceededException? = null,
+        ServiceQuotaExceededException? = null,
         @SerialName("ServiceUnavailableException") val serviceUnavailableException: ServiceUnavailableException? = null,
         @SerialName("SessionNotFoundException") val sessionNotFoundException: SessionNotFoundException? = null,
         @SerialName("AccessDeniedException") val accessDeniedException: AccessDeniedException? = null,

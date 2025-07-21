@@ -40,12 +40,8 @@ object ModelQuery {
      * @return a valid [GraphQLRequest] instance.
      </M> */
     @JvmStatic
-    operator fun <M : Model> get(
-        modelType: Class<M>,
-        modelId: String,
-    ): GraphQLRequest<M> {
-        return AppSyncGraphQLRequestFactory.buildQuery(modelType, modelId)
-    }
+    operator fun <M : Model> get(modelType: Class<M>, modelId: String): GraphQLRequest<M> =
+        AppSyncGraphQLRequestFactory.buildQuery(modelType, modelId)
 
     /**
      * Creates a [GraphQLRequest] that represents a query that expects a single value as a result.
@@ -63,9 +59,7 @@ object ModelQuery {
         modelType: Class<M>,
         modelId: String,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<M> {
-        return AppSyncGraphQLRequestFactory.buildQuery(modelType, modelId, includes)
-    }
+    ): GraphQLRequest<M> = AppSyncGraphQLRequestFactory.buildQuery(modelType, modelId, includes)
 
     /**
      * Creates a [GraphQLRequest] that represents a query that expects a single value as a result.
@@ -77,12 +71,8 @@ object ModelQuery {
      * @return a valid [GraphQLRequest] instance.
      </M> */
     @JvmStatic
-    operator fun <M : Model> get(
-        modelType: Class<M>,
-        modelIdentifier: ModelIdentifier<M>
-    ): GraphQLRequest<M> {
-        return AppSyncGraphQLRequestFactory.buildQuery(modelType, modelIdentifier)
-    }
+    operator fun <M : Model> get(modelType: Class<M>, modelIdentifier: ModelIdentifier<M>): GraphQLRequest<M> =
+        AppSyncGraphQLRequestFactory.buildQuery(modelType, modelIdentifier)
 
     /**
      * Creates a [GraphQLRequest] that represents a query that expects a single value as a result.
@@ -100,9 +90,7 @@ object ModelQuery {
         modelType: Class<M>,
         modelIdentifier: ModelIdentifier<M>,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<M> {
-        return AppSyncGraphQLRequestFactory.buildQuery(modelType, modelIdentifier, includes)
-    }
+    ): GraphQLRequest<M> = AppSyncGraphQLRequestFactory.buildQuery(modelType, modelIdentifier, includes)
 
     /**
      * Creates a [GraphQLRequest] that represents a query that expects multiple values as a result.
@@ -114,12 +102,8 @@ object ModelQuery {
      * @return a valid [GraphQLRequest] instance.
      </M> */
     @JvmStatic
-    fun <M : Model> list(
-        modelType: Class<M>,
-        predicate: QueryPredicate
-    ): GraphQLRequest<PaginatedResult<M>> {
-        return AppSyncGraphQLRequestFactory.buildQuery(modelType, predicate)
-    }
+    fun <M : Model> list(modelType: Class<M>, predicate: QueryPredicate): GraphQLRequest<PaginatedResult<M>> =
+        AppSyncGraphQLRequestFactory.buildQuery(modelType, predicate)
 
     /**
      * Creates a [GraphQLRequest] that represents a query that expects multiple values as a result.
@@ -137,9 +121,7 @@ object ModelQuery {
         modelType: Class<M>,
         predicate: QueryPredicate,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<PaginatedResult<M>> {
-        return AppSyncGraphQLRequestFactory.buildQuery(modelType, predicate, includes)
-    }
+    ): GraphQLRequest<PaginatedResult<M>> = AppSyncGraphQLRequestFactory.buildQuery(modelType, predicate, includes)
 
     /**
      * Creates a [GraphQLRequest] that represents a query that expects multiple values as a result.
@@ -150,9 +132,8 @@ object ModelQuery {
      * @see .list
      </M> */
     @JvmStatic
-    fun <M : Model> list(modelType: Class<M>): GraphQLRequest<PaginatedResult<M>> {
-        return list(modelType, QueryPredicates.all())
-    }
+    fun <M : Model> list(modelType: Class<M>): GraphQLRequest<PaginatedResult<M>> =
+        list(modelType, QueryPredicates.all())
 
     /**
      * Creates a [GraphQLRequest] that represents a query that expects multiple values as a result.
@@ -168,9 +149,7 @@ object ModelQuery {
     fun <M : Model, P : ModelPath<M>> list(
         modelType: Class<M>,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<PaginatedResult<M>> {
-        return list(modelType, QueryPredicates.all(), includes)
-    }
+    ): GraphQLRequest<PaginatedResult<M>> = list(modelType, QueryPredicates.all(), includes)
 
     /**
      * Creates a [GraphQLRequest] that represents a query that expects multiple values as a result
@@ -191,11 +170,11 @@ object ModelQuery {
         modelType: Class<M>,
         predicate: QueryPredicate,
         pagination: ModelPagination
-    ): GraphQLRequest<PaginatedResult<M>> {
-        return AppSyncGraphQLRequestFactory.buildPaginatedResultQuery(
-            modelType, predicate, pagination.limit
-        )
-    }
+    ): GraphQLRequest<PaginatedResult<M>> = AppSyncGraphQLRequestFactory.buildPaginatedResultQuery(
+        modelType,
+        predicate,
+        pagination.limit
+    )
 
     /**
      * Creates a [GraphQLRequest] that represents a query that expects multiple values as a result
@@ -219,11 +198,12 @@ object ModelQuery {
         predicate: QueryPredicate,
         pagination: ModelPagination,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<PaginatedResult<M>> {
-        return AppSyncGraphQLRequestFactory.buildPaginatedResultQuery(
-            modelType, predicate, pagination.limit, includes
-        )
-    }
+    ): GraphQLRequest<PaginatedResult<M>> = AppSyncGraphQLRequestFactory.buildPaginatedResultQuery(
+        modelType,
+        predicate,
+        pagination.limit,
+        includes
+    )
 
     /**
      * Creates a [GraphQLRequest] that represents a query that expects multiple values as a result
@@ -239,14 +219,12 @@ object ModelQuery {
      * @see ModelPagination.firstPage
      </M> */
     @JvmStatic
-    fun <M : Model> list(
-        modelType: Class<M>,
-        pagination: ModelPagination
-    ): GraphQLRequest<PaginatedResult<M>> {
-        return AppSyncGraphQLRequestFactory.buildPaginatedResultQuery(
-            modelType, QueryPredicates.all(), pagination.limit
+    fun <M : Model> list(modelType: Class<M>, pagination: ModelPagination): GraphQLRequest<PaginatedResult<M>> =
+        AppSyncGraphQLRequestFactory.buildPaginatedResultQuery(
+            modelType,
+            QueryPredicates.all(),
+            pagination.limit
         )
-    }
 
     /**
      * Creates a [GraphQLRequest] that represents a query that expects multiple values as a result
@@ -268,9 +246,10 @@ object ModelQuery {
         modelType: Class<M>,
         pagination: ModelPagination,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<PaginatedResult<M>> {
-        return AppSyncGraphQLRequestFactory.buildPaginatedResultQuery(
-            modelType, QueryPredicates.all(), pagination.limit, includes
-        )
-    }
+    ): GraphQLRequest<PaginatedResult<M>> = AppSyncGraphQLRequestFactory.buildPaginatedResultQuery(
+        modelType,
+        QueryPredicates.all(),
+        pagination.limit,
+        includes
+    )
 }

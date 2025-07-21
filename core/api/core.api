@@ -478,6 +478,9 @@ public final class com/amplifyframework/api/rest/RestResponse$Data {
 
 public final class com/amplifyframework/auth/AuthCategory : com/amplifyframework/core/category/Category, com/amplifyframework/auth/AuthCategoryBehavior {
 	public fun <init> ()V
+	public fun associateWebAuthnCredential (Landroid/app/Activity;Lcom/amplifyframework/auth/options/AuthAssociateWebAuthnCredentialsOptions;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
+	public fun associateWebAuthnCredential (Landroid/app/Activity;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
+	public fun autoSignIn (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun confirmResetPassword (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmResetPasswordOptions;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public fun confirmResetPassword (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public fun confirmSignIn (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmSignInOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
@@ -486,6 +489,8 @@ public final class com/amplifyframework/auth/AuthCategory : com/amplifyframework
 	public fun confirmSignUp (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun confirmUserAttribute (Lcom/amplifyframework/auth/AuthUserAttributeKey;Ljava/lang/String;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public fun deleteUser (Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
+	public fun deleteWebAuthnCredential (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthDeleteWebAuthnCredentialOptions;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
+	public fun deleteWebAuthnCredential (Ljava/lang/String;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public fun fetchAuthSession (Lcom/amplifyframework/auth/options/AuthFetchSessionOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun fetchAuthSession (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun fetchDevices (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
@@ -495,6 +500,8 @@ public final class com/amplifyframework/auth/AuthCategory : com/amplifyframework
 	public fun getCategoryType ()Lcom/amplifyframework/core/category/CategoryType;
 	public fun getCurrentUser (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun handleWebUISignInResponse (Landroid/content/Intent;)V
+	public fun listWebAuthnCredentials (Lcom/amplifyframework/auth/options/AuthListWebAuthnCredentialsOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun listWebAuthnCredentials (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun rememberDevice (Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public fun resendSignUpCode (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthResendSignUpCodeOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun resendSignUpCode (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
@@ -522,6 +529,9 @@ public final class com/amplifyframework/auth/AuthCategory : com/amplifyframework
 }
 
 public abstract interface class com/amplifyframework/auth/AuthCategoryBehavior {
+	public abstract fun associateWebAuthnCredential (Landroid/app/Activity;Lcom/amplifyframework/auth/options/AuthAssociateWebAuthnCredentialsOptions;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
+	public abstract fun associateWebAuthnCredential (Landroid/app/Activity;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
+	public abstract fun autoSignIn (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun confirmResetPassword (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmResetPasswordOptions;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun confirmResetPassword (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun confirmSignIn (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmSignInOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
@@ -530,6 +540,8 @@ public abstract interface class com/amplifyframework/auth/AuthCategoryBehavior {
 	public abstract fun confirmSignUp (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun confirmUserAttribute (Lcom/amplifyframework/auth/AuthUserAttributeKey;Ljava/lang/String;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun deleteUser (Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
+	public abstract fun deleteWebAuthnCredential (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthDeleteWebAuthnCredentialOptions;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
+	public abstract fun deleteWebAuthnCredential (Ljava/lang/String;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun fetchAuthSession (Lcom/amplifyframework/auth/options/AuthFetchSessionOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun fetchAuthSession (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun fetchDevices (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
@@ -538,6 +550,8 @@ public abstract interface class com/amplifyframework/auth/AuthCategoryBehavior {
 	public abstract fun forgetDevice (Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun getCurrentUser (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun handleWebUISignInResponse (Landroid/content/Intent;)V
+	public abstract fun listWebAuthnCredentials (Lcom/amplifyframework/auth/options/AuthListWebAuthnCredentialsOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public abstract fun listWebAuthnCredentials (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun rememberDevice (Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun resendSignUpCode (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthResendSignUpCodeOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun resendSignUpCode (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
@@ -613,6 +627,18 @@ public final class com/amplifyframework/auth/AuthDevice {
 public class com/amplifyframework/auth/AuthException : com/amplifyframework/AmplifyException {
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/amplifyframework/auth/AuthFactorType : java/lang/Enum {
+	public static final field EMAIL_OTP Lcom/amplifyframework/auth/AuthFactorType;
+	public static final field PASSWORD Lcom/amplifyframework/auth/AuthFactorType;
+	public static final field PASSWORD_SRP Lcom/amplifyframework/auth/AuthFactorType;
+	public static final field SMS_OTP Lcom/amplifyframework/auth/AuthFactorType;
+	public static final field WEB_AUTHN Lcom/amplifyframework/auth/AuthFactorType;
+	public final fun getChallengeResponse ()Ljava/lang/String;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/auth/AuthFactorType;
+	public static fun values ()[Lcom/amplifyframework/auth/AuthFactorType;
 }
 
 public abstract class com/amplifyframework/auth/AuthPlugin : com/amplifyframework/auth/AuthCategoryBehavior, com/amplifyframework/core/plugin/Plugin {
@@ -772,6 +798,22 @@ public class com/amplifyframework/auth/exceptions/ValidationException : com/ampl
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
+public abstract class com/amplifyframework/auth/options/AuthAssociateWebAuthnCredentialsOptions {
+	public static final field Companion Lcom/amplifyframework/auth/options/AuthAssociateWebAuthnCredentialsOptions$Companion;
+	protected fun <init> ()V
+	public static final fun defaults ()Lcom/amplifyframework/auth/options/AuthAssociateWebAuthnCredentialsOptions;
+}
+
+public abstract class com/amplifyframework/auth/options/AuthAssociateWebAuthnCredentialsOptions$Builder {
+	public fun <init> ()V
+	public abstract fun build ()Lcom/amplifyframework/auth/options/AuthAssociateWebAuthnCredentialsOptions;
+	public abstract fun getThis ()Lcom/amplifyframework/auth/options/AuthAssociateWebAuthnCredentialsOptions$Builder;
+}
+
+public final class com/amplifyframework/auth/options/AuthAssociateWebAuthnCredentialsOptions$Companion {
+	public final fun defaults ()Lcom/amplifyframework/auth/options/AuthAssociateWebAuthnCredentialsOptions;
+}
+
 public abstract class com/amplifyframework/auth/options/AuthConfirmResetPasswordOptions {
 	public fun <init> ()V
 	public static fun defaults ()Lcom/amplifyframework/auth/options/AuthConfirmResetPasswordOptions$DefaultAuthConfirmResetPasswordOptions;
@@ -823,6 +865,22 @@ public final class com/amplifyframework/auth/options/AuthConfirmSignUpOptions$De
 	public fun toString ()Ljava/lang/String;
 }
 
+public abstract class com/amplifyframework/auth/options/AuthDeleteWebAuthnCredentialOptions {
+	public static final field Companion Lcom/amplifyframework/auth/options/AuthDeleteWebAuthnCredentialOptions$Companion;
+	protected fun <init> ()V
+	public static final fun defaults ()Lcom/amplifyframework/auth/options/AuthDeleteWebAuthnCredentialOptions;
+}
+
+public abstract class com/amplifyframework/auth/options/AuthDeleteWebAuthnCredentialOptions$Builder {
+	public fun <init> ()V
+	public abstract fun build ()Lcom/amplifyframework/auth/options/AuthDeleteWebAuthnCredentialOptions;
+	public abstract fun getThis ()Lcom/amplifyframework/auth/options/AuthDeleteWebAuthnCredentialOptions$Builder;
+}
+
+public final class com/amplifyframework/auth/options/AuthDeleteWebAuthnCredentialOptions$Companion {
+	public final fun defaults ()Lcom/amplifyframework/auth/options/AuthDeleteWebAuthnCredentialOptions;
+}
+
 public class com/amplifyframework/auth/options/AuthFetchSessionOptions {
 	public static final field Companion Lcom/amplifyframework/auth/options/AuthFetchSessionOptions$Companion;
 	protected fun <init> (Z)V
@@ -851,6 +909,22 @@ public final class com/amplifyframework/auth/options/AuthFetchSessionOptions$Cor
 	public fun <init> ()V
 	public synthetic fun getThis ()Lcom/amplifyframework/auth/options/AuthFetchSessionOptions$Builder;
 	public fun getThis ()Lcom/amplifyframework/auth/options/AuthFetchSessionOptions$CoreBuilder;
+}
+
+public abstract class com/amplifyframework/auth/options/AuthListWebAuthnCredentialsOptions {
+	public static final field Companion Lcom/amplifyframework/auth/options/AuthListWebAuthnCredentialsOptions$Companion;
+	protected fun <init> ()V
+	public static final fun defaults ()Lcom/amplifyframework/auth/options/AuthListWebAuthnCredentialsOptions;
+}
+
+public abstract class com/amplifyframework/auth/options/AuthListWebAuthnCredentialsOptions$Builder {
+	public fun <init> ()V
+	public abstract fun build ()Lcom/amplifyframework/auth/options/AuthListWebAuthnCredentialsOptions;
+	public abstract fun getThis ()Lcom/amplifyframework/auth/options/AuthListWebAuthnCredentialsOptions$Builder;
+}
+
+public final class com/amplifyframework/auth/options/AuthListWebAuthnCredentialsOptions$Companion {
+	public final fun defaults ()Lcom/amplifyframework/auth/options/AuthListWebAuthnCredentialsOptions;
 }
 
 public abstract class com/amplifyframework/auth/options/AuthResendSignUpCodeOptions {
@@ -1042,6 +1116,10 @@ public final class com/amplifyframework/auth/options/AuthWebUISignInOptions$Core
 	public fun getThis ()Lcom/amplifyframework/auth/options/AuthWebUISignInOptions$CoreBuilder;
 }
 
+public abstract interface class com/amplifyframework/auth/result/AuthListWebAuthnCredentialsResult {
+	public abstract fun getCredentials ()Ljava/util/List;
+}
+
 public final class com/amplifyframework/auth/result/AuthResetPasswordResult {
 	public fun <init> (ZLcom/amplifyframework/auth/result/step/AuthNextResetPasswordStep;)V
 	public fun equals (Ljava/lang/Object;)Z
@@ -1101,6 +1179,13 @@ public final class com/amplifyframework/auth/result/AuthUpdateAttributeResult {
 	public fun toString ()Ljava/lang/String;
 }
 
+public abstract interface class com/amplifyframework/auth/result/AuthWebAuthnCredential {
+	public abstract fun getCreatedAt ()Ljava/time/Instant;
+	public abstract fun getCredentialId ()Ljava/lang/String;
+	public abstract fun getFriendlyName ()Ljava/lang/String;
+	public abstract fun getRelyingPartyId ()Ljava/lang/String;
+}
+
 public final class com/amplifyframework/auth/result/step/AuthNextResetPasswordStep {
 	public fun <init> (Lcom/amplifyframework/auth/result/step/AuthResetPasswordStep;Ljava/util/Map;Lcom/amplifyframework/auth/AuthCodeDeliveryDetails;)V
 	public fun equals (Ljava/lang/Object;)Z
@@ -1112,10 +1197,11 @@ public final class com/amplifyframework/auth/result/step/AuthNextResetPasswordSt
 }
 
 public final class com/amplifyframework/auth/result/step/AuthNextSignInStep {
-	public fun <init> (Lcom/amplifyframework/auth/result/step/AuthSignInStep;Ljava/util/Map;Lcom/amplifyframework/auth/AuthCodeDeliveryDetails;Lcom/amplifyframework/auth/TOTPSetupDetails;Ljava/util/Set;)V
+	public fun <init> (Lcom/amplifyframework/auth/result/step/AuthSignInStep;Ljava/util/Map;Lcom/amplifyframework/auth/AuthCodeDeliveryDetails;Lcom/amplifyframework/auth/TOTPSetupDetails;Ljava/util/Set;Ljava/util/Set;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getAdditionalInfo ()Ljava/util/Map;
 	public fun getAllowedMFATypes ()Ljava/util/Set;
+	public fun getAvailableFactors ()Ljava/util/Set;
 	public fun getCodeDeliveryDetails ()Lcom/amplifyframework/auth/AuthCodeDeliveryDetails;
 	public fun getSignInStep ()Lcom/amplifyframework/auth/result/step/AuthSignInStep;
 	public fun getTotpSetupDetails ()Lcom/amplifyframework/auth/TOTPSetupDetails;
@@ -1154,10 +1240,12 @@ public final class com/amplifyframework/auth/result/step/AuthSignInStep : java/l
 	public static final field CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE Lcom/amplifyframework/auth/result/step/AuthSignInStep;
 	public static final field CONFIRM_SIGN_IN_WITH_NEW_PASSWORD Lcom/amplifyframework/auth/result/step/AuthSignInStep;
 	public static final field CONFIRM_SIGN_IN_WITH_OTP Lcom/amplifyframework/auth/result/step/AuthSignInStep;
+	public static final field CONFIRM_SIGN_IN_WITH_PASSWORD Lcom/amplifyframework/auth/result/step/AuthSignInStep;
 	public static final field CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE Lcom/amplifyframework/auth/result/step/AuthSignInStep;
 	public static final field CONFIRM_SIGN_IN_WITH_TOTP_CODE Lcom/amplifyframework/auth/result/step/AuthSignInStep;
 	public static final field CONFIRM_SIGN_UP Lcom/amplifyframework/auth/result/step/AuthSignInStep;
 	public static final field CONTINUE_SIGN_IN_WITH_EMAIL_MFA_SETUP Lcom/amplifyframework/auth/result/step/AuthSignInStep;
+	public static final field CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION Lcom/amplifyframework/auth/result/step/AuthSignInStep;
 	public static final field CONTINUE_SIGN_IN_WITH_MFA_SELECTION Lcom/amplifyframework/auth/result/step/AuthSignInStep;
 	public static final field CONTINUE_SIGN_IN_WITH_MFA_SETUP_SELECTION Lcom/amplifyframework/auth/result/step/AuthSignInStep;
 	public static final field CONTINUE_SIGN_IN_WITH_TOTP_SETUP Lcom/amplifyframework/auth/result/step/AuthSignInStep;
@@ -1168,6 +1256,7 @@ public final class com/amplifyframework/auth/result/step/AuthSignInStep : java/l
 }
 
 public final class com/amplifyframework/auth/result/step/AuthSignUpStep : java/lang/Enum {
+	public static final field COMPLETE_AUTO_SIGN_IN Lcom/amplifyframework/auth/result/step/AuthSignUpStep;
 	public static final field CONFIRM_SIGN_UP_STEP Lcom/amplifyframework/auth/result/step/AuthSignUpStep;
 	public static final field DONE Lcom/amplifyframework/auth/result/step/AuthSignUpStep;
 	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/auth/result/step/AuthSignUpStep;
@@ -4121,6 +4210,9 @@ public final class com/amplifyframework/storage/StorageChannelEventName : java/l
 public final class com/amplifyframework/storage/StorageException : com/amplifyframework/AmplifyException {
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
 	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
+}
+
+public final class com/amplifyframework/storage/StorageFilePermissionException : com/amplifyframework/AmplifyException {
 }
 
 public final class com/amplifyframework/storage/StorageItem {

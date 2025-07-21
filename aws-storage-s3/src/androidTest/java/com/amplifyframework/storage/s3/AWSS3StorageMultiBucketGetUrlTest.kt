@@ -69,6 +69,7 @@ class AWSS3StorageMultiBucketGetUrlTest {
             smallFile = RandomTempFile(SMALL_FILE_NAME, SMALL_FILE_SIZE)
             synchronousStorage.uploadFile(SMALL_FILE_PATH, smallFile, StorageUploadFileOptions.defaultInstance())
         }
+
         @JvmStatic
         @AfterClass
         fun tearDownOnce() {

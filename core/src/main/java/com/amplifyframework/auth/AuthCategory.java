@@ -20,10 +20,13 @@ import android.content.Intent;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.auth.options.AuthAssociateWebAuthnCredentialsOptions;
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions;
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions;
+import com.amplifyframework.auth.options.AuthDeleteWebAuthnCredentialOptions;
 import com.amplifyframework.auth.options.AuthFetchSessionOptions;
+import com.amplifyframework.auth.options.AuthListWebAuthnCredentialsOptions;
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions;
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions;
 import com.amplifyframework.auth.options.AuthResetPasswordOptions;
@@ -34,6 +37,7 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions;
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions;
 import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
+import com.amplifyframework.auth.result.AuthListWebAuthnCredentialsResult;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignOutResult;
@@ -63,7 +67,7 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     @Override
     public void signUp(
             @NonNull String username,
-            @NonNull String password,
+            @Nullable String password,
             @NonNull AuthSignUpOptions options,
             @NonNull Consumer<AuthSignUpResult> onSuccess,
             @NonNull Consumer<AuthException> onError
@@ -411,6 +415,69 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     public void verifyTOTPSetup(@NonNull String code, @NonNull AuthVerifyTOTPSetupOptions options,
                                 @NonNull Action onSuccess, @NonNull Consumer<AuthException> onError) {
         getSelectedPlugin().verifyTOTPSetup(code, options, onSuccess, onError);
+    }
+
+    @Override
+    public void associateWebAuthnCredential(
+            @NonNull Activity callingActivity,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().associateWebAuthnCredential(callingActivity, onSuccess, onError);
+    }
+
+    @Override
+    public void associateWebAuthnCredential(
+            @NonNull Activity callingActivity,
+            @NonNull AuthAssociateWebAuthnCredentialsOptions options,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().associateWebAuthnCredential(callingActivity, options, onSuccess, onError);
+    }
+
+    @Override
+    public void listWebAuthnCredentials(
+            @NonNull Consumer<AuthListWebAuthnCredentialsResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().listWebAuthnCredentials(onSuccess, onError);
+    }
+
+    @Override
+    public void listWebAuthnCredentials(
+            @NonNull AuthListWebAuthnCredentialsOptions options,
+            @NonNull Consumer<AuthListWebAuthnCredentialsResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().listWebAuthnCredentials(options, onSuccess, onError);
+    }
+
+    @Override
+    public void deleteWebAuthnCredential(
+            @NonNull String credentialId,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().deleteWebAuthnCredential(credentialId, onSuccess, onError);
+    }
+
+    @Override
+    public void deleteWebAuthnCredential(
+            @NonNull String credentialId,
+            @NonNull AuthDeleteWebAuthnCredentialOptions options,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().deleteWebAuthnCredential(credentialId, options, onSuccess, onError);
+    }
+
+    @Override
+    public void autoSignIn(
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().autoSignIn(onSuccess, onError);
     }
 }
 

@@ -164,12 +164,10 @@ class MultiAuthAppSyncGraphQLOperationTest {
             .build()
     }
 
-    private fun buildAuthException(): ApiAuthException {
-        return ApiAuthException(
-            "Unable to successfully complete request with any of the compatible auth types.",
-            "Check your application logs for detail."
-        )
-    }
+    private fun buildAuthException(): ApiAuthException = ApiAuthException(
+        "Unable to successfully complete request with any of the compatible auth types.",
+        "Check your application logs for detail."
+    )
 
     private fun buildGQLErrors(): GraphQLResponse.Error {
         val extensions: MutableMap<String, Any?> = HashMap()

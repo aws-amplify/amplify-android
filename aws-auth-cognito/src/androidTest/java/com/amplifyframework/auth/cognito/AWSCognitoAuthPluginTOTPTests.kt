@@ -68,8 +68,8 @@ class AWSCognitoAuthPluginTOTPTests {
     }
 
     /*
-    * This test signs up a new user and goes thru successful MFA Setup process.
-    * */
+     * This test signs up a new user and goes thru successful MFA Setup process.
+     * */
     @Test
     fun mfa_setup() {
         val result = synchronousAuth.signIn(userName, password)
@@ -84,9 +84,9 @@ class AWSCognitoAuthPluginTOTPTests {
     }
 
     /*
-    * This test signs up a new user, enter incorrect MFA code during verification and
-    * then enter correct OTP code to successfully set TOTP MFA.
-    * */
+     * This test signs up a new user, enter incorrect MFA code during verification and
+     * then enter correct OTP code to successfully set TOTP MFA.
+     * */
     @Test
     fun mfasetup_with_incorrect_otp() {
         val result = synchronousAuth.signIn(userName, password)
@@ -106,8 +106,8 @@ class AWSCognitoAuthPluginTOTPTests {
     }
 
     /*
-    * This test signs up a new user, successfully setup MFA, sign-out and then goes thru sign-in with TOTP.
-    * */
+     * This test signs up a new user, successfully setup MFA, sign-out and then goes thru sign-in with TOTP.
+     * */
     @Test
     fun signIn_with_totp_after_mfa_setup() {
         val result = synchronousAuth.signIn(userName, password)
@@ -130,10 +130,10 @@ class AWSCognitoAuthPluginTOTPTests {
     }
 
     /*
-    * This test signs up a new user, successfully setup MFA, update user attribute to add phone number,
-    * sign-out the user, goes thru MFA selection flow during sign-in, select TOTP MFA type,
-    * successfully sign-in using TOTP
-    * */
+     * This test signs up a new user, successfully setup MFA, update user attribute to add phone number,
+     * sign-out the user, goes thru MFA selection flow during sign-in, select TOTP MFA type,
+     * successfully sign-in using TOTP
+     * */
     @Test
     fun select_mfa_type() {
         val result = synchronousAuth.signIn(userName, password)
