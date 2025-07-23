@@ -20,7 +20,7 @@ import com.amplifyframework.geo.models.Coordinates
 import com.google.gson.JsonElement
 import com.google.gson.JsonNull
 import com.google.gson.JsonObject
-import com.mapbox.mapboxsdk.plugins.annotation.Symbol
+import org.maplibre.android.plugins.annotation.Symbol
 import kotlin.reflect.KProperty1
 
 private fun <T> JsonObject.addStringProperty(ref: T, property: KProperty1<T, String?>) {

@@ -34,6 +34,7 @@ import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 import java.util.Date
 import java.util.UUID
+import androidx.core.content.edit
 
 internal class AuthEnvironment internal constructor(
     val context: Context,
@@ -79,7 +80,7 @@ internal class AuthEnvironment internal constructor(
         val uniqueIdFromPrefs = pinpointPrefs.getString(PINPOINT_UNIQUE_ID_KEY, null)
         val uniqueId = if (uniqueIdFromPrefs == null) {
             val newUniqueId = UUID.randomUUID().toString()
-            pinpointPrefs.edit().putString(PINPOINT_UNIQUE_ID_KEY, uniqueIdFromPrefs).commit()
+            pinpointPrefs.edit(commit = true) { putString(PINPOINT_UNIQUE_ID_KEY, uniqueIdFromPrefs) }
             newUniqueId
         } else {
             uniqueIdFromPrefs

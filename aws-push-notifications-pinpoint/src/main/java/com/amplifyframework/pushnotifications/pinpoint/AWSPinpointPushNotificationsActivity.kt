@@ -23,6 +23,7 @@ import android.os.Bundle
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
+import androidx.core.net.toUri
 
 internal class AWSPinpointPushNotificationsActivity : Activity() {
 
@@ -55,13 +56,15 @@ internal class AWSPinpointPushNotificationsActivity : Activity() {
         return when {
             action?.get(PushNotificationsConstants.URL) != null -> {
                 // Action is open url
-                val url = action[PushNotificationsConstants.URL]
-                Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                action[PushNotificationsConstants.URL]?.toUri()?.let {
+                    Intent(Intent.ACTION_VIEW, it)
+                } ?: getDefaultTapAction()
             }
             action?.get(PushNotificationsConstants.DEEPLINK) != null -> {
                 // Action is open deeplink
-                val deepLink = action[PushNotificationsConstants.DEEPLINK]
-                Intent(Intent.ACTION_VIEW, Uri.parse(deepLink))
+                action[PushNotificationsConstants.DEEPLINK]?.toUri()?.let {
+                    Intent(Intent.ACTION_VIEW, it)
+                } ?: getDefaultTapAction()
             }
             // Default action is open app
             else -> getDefaultTapAction()

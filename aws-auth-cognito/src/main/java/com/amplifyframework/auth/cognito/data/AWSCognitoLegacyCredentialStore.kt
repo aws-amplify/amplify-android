@@ -34,6 +34,7 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Date
 import java.util.Locale
+import androidx.core.content.edit
 
 internal class AWSCognitoLegacyCredentialStore(
     val context: Context,
@@ -160,7 +161,7 @@ internal class AWSCognitoLegacyCredentialStore(
 
     override fun deleteASFDevice() {
         val sharedPreferences = context.getSharedPreferences(LOCAL_STORAGE_PATH, Context.MODE_PRIVATE)
-        sharedPreferences.edit().remove(LOCAL_STORAGE_DEVICE_ID_KEY).apply()
+        sharedPreferences.edit { remove(LOCAL_STORAGE_DEVICE_ID_KEY) }
     }
 
     private fun deleteCognitoUserPoolTokens() {

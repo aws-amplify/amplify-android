@@ -27,6 +27,7 @@ import java.security.SecureRandom
 import java.security.spec.AlgorithmParameterSpec
 import javax.crypto.Cipher
 import javax.crypto.spec.GCMParameterSpec
+import androidx.core.content.edit
 
 internal class LegacyKeyValueRepository(
     context: Context,
@@ -128,17 +129,17 @@ internal class LegacyKeyValueRepository(
                 ?: throw Exception("Error in Base64 encoding the IV for dataKey = $dataKey")
 
             // Persist
-            sharedPreferencesForData.edit()
-                .putString(dataKeyInPersistentStore, base64EncodedEncryptedString) // data
-                .putString(
-                    "$dataKeyInPersistentStore$SHARED_PREFERENCES_IV_SUFFIX",
-                    base64EncodedIV
-                ) // IV
-                .putInt(
-                    "$dataKeyInPersistentStore$SHARED_PREFERENCES_STORE_VERSION_SUFFIX",
-                    AWS_KEY_VALUE_STORE_VERSION
-                ) // KeyValueStore Version
-                .apply()
+            sharedPreferencesForData.edit {
+                putString(dataKeyInPersistentStore, base64EncodedEncryptedString) // data
+                    .putString(
+                        "$dataKeyInPersistentStore$SHARED_PREFERENCES_IV_SUFFIX",
+                        base64EncodedIV
+                    ) // IV
+                    .putInt(
+                        "$dataKeyInPersistentStore$SHARED_PREFERENCES_STORE_VERSION_SUFFIX",
+                        AWS_KEY_VALUE_STORE_VERSION
+                    ) // KeyValueStore Version
+            }
         } catch (ex: Exception) {
             // TODO Log  Error
             //    ("Error in storing value for dataKey = " + dataKey +
@@ -244,11 +245,11 @@ internal class LegacyKeyValueRepository(
         cache.remove(dataKey)
         if (isPersistenceEnabled) {
             val keyUsedInPersistentStore: String = getDataKeyUsedInPersistentStore(dataKey)
-            sharedPreferencesForData.edit()
-                .remove(keyUsedInPersistentStore)
-                .remove(keyUsedInPersistentStore + SHARED_PREFERENCES_IV_SUFFIX)
-                .remove(keyUsedInPersistentStore + SHARED_PREFERENCES_STORE_VERSION_SUFFIX)
-                .apply()
+            sharedPreferencesForData.edit {
+                remove(keyUsedInPersistentStore)
+                    .remove(keyUsedInPersistentStore + SHARED_PREFERENCES_IV_SUFFIX)
+                    .remove(keyUsedInPersistentStore + SHARED_PREFERENCES_STORE_VERSION_SUFFIX)
+            }
         }
     }
 

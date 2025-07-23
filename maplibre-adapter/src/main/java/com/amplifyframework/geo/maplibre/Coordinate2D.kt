@@ -18,7 +18,7 @@ package com.amplifyframework.geo.maplibre
 import android.annotation.SuppressLint
 import android.location.Location
 import android.os.Parcelable
-import com.mapbox.mapboxsdk.geometry.LatLng
+import org.maplibre.android.geometry.LatLng
 import kotlinx.parcelize.Parcelize
 
 @SuppressLint("ParcelCreator")
