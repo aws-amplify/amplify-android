@@ -25,7 +25,7 @@ public final class com/amplifyframework/geo/maplibre/Coordinate2D : android/os/P
 	public final fun component2 ()D
 	public final fun copy (DD)Lcom/amplifyframework/geo/maplibre/Coordinate2D;
 	public static synthetic fun copy$default (Lcom/amplifyframework/geo/maplibre/Coordinate2D;DDILjava/lang/Object;)Lcom/amplifyframework/geo/maplibre/Coordinate2D;
-	public fun describeContents ()I
+	public final fun describeContents ()I
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getLatitude ()D
 	public final fun getLatlng ()Lcom/mapbox/mapboxsdk/geometry/LatLng;
@@ -33,15 +33,7 @@ public final class com/amplifyframework/geo/maplibre/Coordinate2D : android/os/P
 	public final fun getLongitude ()D
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
-	public fun writeToParcel (Landroid/os/Parcel;I)V
-}
-
-public final class com/amplifyframework/geo/maplibre/Coordinate2D$Creator : android/os/Parcelable$Creator {
-	public fun <init> ()V
-	public final fun createFromParcel (Landroid/os/Parcel;)Lcom/amplifyframework/geo/maplibre/Coordinate2D;
-	public synthetic fun createFromParcel (Landroid/os/Parcel;)Ljava/lang/Object;
-	public final fun newArray (I)[Lcom/amplifyframework/geo/maplibre/Coordinate2D;
-	public synthetic fun newArray (I)[Ljava/lang/Object;
+	public final fun writeToParcel (Landroid/os/Parcel;I)V
 }
 
 public final class com/amplifyframework/geo/maplibre/Coordinate2DKt {
@@ -178,7 +170,7 @@ public final class com/amplifyframework/geo/maplibre/view/MapViewOptions : andro
 	public fun <init> ()V
 	public fun <init> (Ljava/lang/String;Lcom/amplifyframework/geo/maplibre/Coordinate2D;DDZZZD)V
 	public synthetic fun <init> (Ljava/lang/String;Lcom/amplifyframework/geo/maplibre/Coordinate2D;DDZZZDILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun describeContents ()I
+	public final fun describeContents ()I
 	public final fun getAttribution ()Ljava/lang/String;
 	public final fun getCenter ()Lcom/amplifyframework/geo/maplibre/Coordinate2D;
 	public final fun getMaxZoomLevel ()D
@@ -189,20 +181,12 @@ public final class com/amplifyframework/geo/maplibre/view/MapViewOptions : andro
 	public final fun getZoomLevel ()D
 	public final fun shouldRenderControls ()Z
 	public final fun toMapLibreOptions (Landroid/content/Context;)Lcom/mapbox/mapboxsdk/maps/MapboxMapOptions;
-	public fun writeToParcel (Landroid/os/Parcel;I)V
+	public final fun writeToParcel (Landroid/os/Parcel;I)V
 }
 
 public final class com/amplifyframework/geo/maplibre/view/MapViewOptions$Companion {
 	public final fun createFromAttributes (Landroid/content/Context;Landroid/util/AttributeSet;I)Lcom/amplifyframework/geo/maplibre/view/MapViewOptions;
 	public static synthetic fun createFromAttributes$default (Lcom/amplifyframework/geo/maplibre/view/MapViewOptions$Companion;Landroid/content/Context;Landroid/util/AttributeSet;IILjava/lang/Object;)Lcom/amplifyframework/geo/maplibre/view/MapViewOptions;
-}
-
-public final class com/amplifyframework/geo/maplibre/view/MapViewOptions$Creator : android/os/Parcelable$Creator {
-	public fun <init> ()V
-	public final fun createFromParcel (Landroid/os/Parcel;)Lcom/amplifyframework/geo/maplibre/view/MapViewOptions;
-	public synthetic fun createFromParcel (Landroid/os/Parcel;)Ljava/lang/Object;
-	public final fun newArray (I)[Lcom/amplifyframework/geo/maplibre/view/MapViewOptions;
-	public synthetic fun newArray (I)[Ljava/lang/Object;
 }
 
 public final class com/amplifyframework/geo/maplibre/view/MapViewOptionsKt {
