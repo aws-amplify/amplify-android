@@ -43,7 +43,8 @@ internal val apiExecutor: (AWSCognitoAuthPlugin, API) -> Any = { authPlugin: AWS
         try {
             // If we are attempting to call an api with options, ignore same named api without options
             if ((api.options as JsonObject).isNotEmpty() &&
-                (currentApi.parameters.find { it.name == "options" } == null)) {
+                (currentApi.parameters.find { it.name == "options" } == null)
+            ) {
                 continue
             }
             val currentParams = currentApi.parameters.associateWith { kParam ->
