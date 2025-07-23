@@ -45,13 +45,13 @@ import com.amplifyframework.geo.options.GeoSearchByTextOptions
 import com.amplifyframework.geo.result.GeoSearchResult
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.snackbar.Snackbar
+import kotlin.math.absoluteValue
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLngBounds
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.plugins.annotation.Symbol
 import org.maplibre.android.plugins.annotation.SymbolOptions
-import kotlin.math.absoluteValue
 
 /**
  * The AmplifyMapView encapsulates the MapLibre map integration with Amplify.Geo and introduces

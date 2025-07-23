@@ -19,6 +19,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Base64
 import android.util.Log
+import androidx.core.content.edit
 import com.amplifyframework.core.store.KeyValueRepository
 import com.amplifyframework.statemachine.codegen.errors.CredentialStoreError
 import java.nio.charset.Charset
@@ -27,7 +28,6 @@ import java.security.SecureRandom
 import java.security.spec.AlgorithmParameterSpec
 import javax.crypto.Cipher
 import javax.crypto.spec.GCMParameterSpec
-import androidx.core.content.edit
 
 internal class LegacyKeyValueRepository(
     context: Context,

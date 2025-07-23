@@ -23,14 +23,14 @@ import com.amplifyframework.geo.location.AWSLocationGeoPlugin
 import com.amplifyframework.geo.maplibre.http.AWSRequestSignerInterceptor
 import com.amplifyframework.geo.models.MapStyle
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions
-import org.maplibre.android.WellKnownTileServer
-import org.maplibre.android.maps.Style
-import org.maplibre.android.module.http.HttpRequestUtil
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import org.maplibre.android.MapLibre
+import org.maplibre.android.WellKnownTileServer
 import org.maplibre.android.maps.MapLibreMap
+import org.maplibre.android.maps.Style
+import org.maplibre.android.module.http.HttpRequestUtil
 
 private const val LOCATION_GEO_PLUGIN_KEY = "awsLocationGeoPlugin"
 

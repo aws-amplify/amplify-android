@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
+import androidx.core.content.edit
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.cognito.AuthConfiguration
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
@@ -34,7 +35,6 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Date
 import java.util.Locale
-import androidx.core.content.edit
 
 internal class AWSCognitoLegacyCredentialStore(
     val context: Context,

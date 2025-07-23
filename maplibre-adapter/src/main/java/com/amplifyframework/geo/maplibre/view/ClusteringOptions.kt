@@ -16,12 +16,12 @@
 package com.amplifyframework.geo.maplibre.view
 
 import android.graphics.Color
+import androidx.core.graphics.toColorInt
+import kotlin.math.min
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.geojson.Feature
 import org.maplibre.geojson.Point
-import kotlin.math.min
-import androidx.core.graphics.toColorInt
 
 /**
  * Stores options to use when clustering.

@@ -227,7 +227,7 @@ constructor(
         val geoJsonClusterOptions = GeoJsonOptions().withCluster(true)
             .withClusterMaxZoom(clusteringOptions.maxClusterZoomLevel)
             .withClusterRadius(clusteringOptions.clusterRadius)
-        this.symbolManager = SymbolManager(this, map, style, null, null,geoJsonClusterOptions).apply {
+        this.symbolManager = SymbolManager(this, map, style, null, null, geoJsonClusterOptions).apply {
             iconAllowOverlap = true
             iconIgnorePlacement = true
         }

@@ -18,7 +18,6 @@ package com.amplifyframework.auth.cognito.helpers
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import androidx.browser.customtabs.CustomTabsClient
 import androidx.browser.customtabs.CustomTabsService
 import androidx.core.net.toUri

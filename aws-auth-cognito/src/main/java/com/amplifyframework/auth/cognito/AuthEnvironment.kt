@@ -17,6 +17,7 @@ package com.amplifyframework.auth.cognito
 
 import android.annotation.SuppressLint
 import android.content.Context
+import androidx.core.content.edit
 import com.amplifyframework.auth.cognito.asf.UserContextDataProvider
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.exceptions.InvalidStateException
@@ -34,7 +35,6 @@ import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 import java.util.Date
 import java.util.UUID
-import androidx.core.content.edit
 
 internal class AuthEnvironment internal constructor(
     val context: Context,
