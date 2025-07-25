@@ -49,6 +49,10 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
             group = POM_GROUP
             extensions.configure<LibraryExtension> {
                 configureAndroid(this)
+                afterEvaluate {
+                    val sdkVersionName = findProperty("VERSION_NAME") ?: rootProject.findProperty("VERSION_NAME")
+                    this@configure.defaultConfig.buildConfigField("String", "VERSION_NAME", "\"$sdkVersionName\"")
+                }
             }
 
             tasks.withType<JavaCompile>().configureEach {
@@ -76,8 +80,6 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
     }
 
     private fun Project.configureAndroid(extension: LibraryExtension) {
-        val sdkVersionName = findProperty("VERSION_NAME") ?: rootProject.findProperty("VERSION_NAME")
-
         if (hasProperty("signingKeyId")) {
             println("Getting signing info from protected source.")
             extra["signing.keyId"] = findProperty("signingKeyId")
@@ -97,7 +99,6 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                 testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
                 testInstrumentationRunnerArguments += "clearPackageData" to "true"
                 consumerProguardFiles += rootProject.file("configuration/consumer-rules.pro")
-                buildConfigField("String", "VERSION_NAME", "\"$sdkVersionName\"")
             }
 
             testOptions {
