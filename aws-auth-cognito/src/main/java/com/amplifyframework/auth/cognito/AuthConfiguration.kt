@@ -18,6 +18,7 @@ package com.amplifyframework.auth.cognito
 import androidx.annotation.IntRange
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.core.configuration.AmplifyOutputsData
@@ -150,11 +151,9 @@ data class AuthConfiguration internal constructor(
                     appSecret = null, // Not supported in Gen2
                     domain = it.domain,
                     scopes = it.scopes.toSet(),
-                    // Note: Gen2 config gives an array for these values, while Gen1 is just a String. In Gen1
-                    // if you specify multiple URIs the CLI will join them to a comma-delimited string in the json.
-                    // We are matching that behaviour here for Gen2.
-                    signInRedirectURI = it.redirectSignInUri.joinToString(","),
-                    signOutRedirectURI = it.redirectSignOutUri.joinToString(",")
+                    // For sign-in, prefer a non-HTTP/HTTPS URI if available (for mobile apps)
+                    signInRedirectURI = HostedUIHelper.selectRedirectUri(it.redirectSignInUri) ?: "",
+                    signOutRedirectURI = HostedUIHelper.selectRedirectUri(it.redirectSignOutUri) ?: ""
                 )
             }
 
