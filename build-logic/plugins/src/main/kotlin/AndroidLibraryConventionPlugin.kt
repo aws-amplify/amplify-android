@@ -72,8 +72,9 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
             }
 
             tasks.withType<KotlinCompile>().configureEach {
-                kotlinOptions {
-                    freeCompilerArgs = freeCompilerArgs + amplifyInternalMarkers.map { "-opt-in=$it" }
+                compilerOptions {
+                    freeCompilerArgs.addAll(amplifyInternalMarkers.map { "-opt-in=$it" })
+                    freeCompilerArgs.add("-Xconsistent-data-class-copy-visibility")
                 }
             }
         }
