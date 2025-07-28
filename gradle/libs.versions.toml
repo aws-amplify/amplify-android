@@ -68,7 +68,6 @@ androidx-core = { module = "androidx.core:core", version.ref = "androidx-core" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref="androidx-credentials" }
 androidx-credentials-play-services = { module = "androidx.credentials:credentials-play-services-auth", version.ref="androidx-credentials" }
-androidx-junit-ktx = { module = "androidx.test.ext:junit-ktx", version.ref = "junit-ktx" }
 androidx-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime", version.ref = "androidx-lifecycle" }
 androidx-nav-fragment = { module = "androidx.navigation:navigation-fragment", version.ref = "navigation" }
 androidx-nav-ui = { module = "androidx.navigation:navigation-ui", version.ref = "navigation" }
@@ -119,6 +118,7 @@ test-androidx-core-ktx = { module = "androidx.test:core-ktx", version.ref="andro
 test-androidx-espresso = { module = "androidx.test.espresso:espresso-core", version.ref="espresso" }
 test-androidx-fragment = { module = "androidx.fragment:fragment-testing", version.ref="androidx-fragment" }
 test-androidx-junit = { module = "androidx.test.ext:junit", version.ref="androidx-test-junit" }
+test-androidx-junit-ktx = { module = "androidx.test.ext:junit-ktx", version.ref = "junit-ktx" }
 test-androidx-navigation = { module = "androidx.navigation:navigation-testing", version.ref = "navigation" }
 test-androidx-orchestrator = { module = "androidx.test:orchestrator", version.ref="androidx-test-orchestrator" }
 test-androidx-runner = { module = "androidx.test:runner", version.ref="androidx-test-runner" }
