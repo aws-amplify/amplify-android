@@ -43,7 +43,7 @@ dependencies {
     testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.kotlin.coroutines)
     testImplementation(libs.test.kotest.assertions)
-    testImplementation(libs.androidx.junit.ktx)
+    testImplementation(libs.test.androidx.junit.ktx)
 
     androidTestImplementation(libs.test.androidx.core)
     androidTestImplementation(libs.test.androidx.runner)
