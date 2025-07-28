@@ -15,6 +15,7 @@
 
 package com.amplifyframework.kotlin.datastore
 
+import android.annotation.SuppressLint
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.async.Cancelable
 import com.amplifyframework.core.model.Model
@@ -167,6 +168,7 @@ class KotlinDataStoreFacade(private val delegate: Delegate = Amplify.DataStore) 
         )
     }
 
+    @SuppressLint("ImplicitSamInstance")
     @Throws(DataStoreException::class)
     override suspend fun stop() = suspendCoroutine { continuation ->
         delegate.stop(

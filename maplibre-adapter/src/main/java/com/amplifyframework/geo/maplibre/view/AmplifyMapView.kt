@@ -45,13 +45,13 @@ import com.amplifyframework.geo.options.GeoSearchByTextOptions
 import com.amplifyframework.geo.result.GeoSearchResult
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.snackbar.Snackbar
-import com.mapbox.mapboxsdk.camera.CameraPosition
-import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
-import com.mapbox.mapboxsdk.geometry.LatLngBounds
-import com.mapbox.mapboxsdk.maps.MapboxMap
-import com.mapbox.mapboxsdk.plugins.annotation.Symbol
-import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions
 import kotlin.math.absoluteValue
+import org.maplibre.android.camera.CameraPosition
+import org.maplibre.android.camera.CameraUpdateFactory
+import org.maplibre.android.geometry.LatLngBounds
+import org.maplibre.android.maps.MapLibreMap
+import org.maplibre.android.plugins.annotation.Symbol
+import org.maplibre.android.plugins.annotation.SymbolOptions
 
 /**
  * The AmplifyMapView encapsulates the MapLibre map integration with Amplify.Geo and introduces
@@ -310,7 +310,7 @@ constructor(
             val options = GeoSearchByTextOptions
                 .builder()
                 .searchArea(
-                    SearchArea.near(map.cameraPosition.target.toCoordinates())
+                    SearchArea.near(map.cameraPosition.target!!.toCoordinates())
                 )
                 .build()
             geo.searchByText(query, options, ::onSearchResult, ::onSearchError)
@@ -409,8 +409,8 @@ constructor(
         val threshold = 0.05
         lastQueryBounds?.let {
             val boundariesUpdated =
-                (it.latNorth - bounds.latNorth).absoluteValue > threshold ||
-                    (it.lonWest - bounds.lonWest).absoluteValue > threshold ||
+                (it.latitudeNorth - bounds.latitudeNorth).absoluteValue > threshold ||
+                    (it.longitudeWest - bounds.longitudeWest).absoluteValue > threshold ||
                     (it.span.latitudeSpan - bounds.span.latitudeSpan).absoluteValue > threshold ||
                     (it.span.longitudeSpan - bounds.span.longitudeSpan).absoluteValue > threshold
             if (boundariesUpdated) {
@@ -426,7 +426,7 @@ constructor(
         }
     }
 
-    private fun withMap(block: (MapboxMap) -> Unit) {
+    private fun withMap(block: (MapLibreMap) -> Unit) {
         mapView.getMapAsync(block)
     }
 

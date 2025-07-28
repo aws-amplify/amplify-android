@@ -18,6 +18,7 @@ import com.android.build.gradle.LibraryExtension
 import kotlinx.validation.ApiValidationExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import kotlin.collections.forEach
 
 buildscript {
     repositories {
@@ -27,7 +28,7 @@ buildscript {
     }
 
     dependencies {
-        classpath(kotlin("gradle-plugin", version = "1.9.10"))
+        classpath(kotlin("gradle-plugin", version = "2.2.0"))
         classpath("com.google.gms:google-services:4.3.15")
         classpath("org.jlleitschuh.gradle:ktlint-gradle:12.2.0")
         classpath("app.cash.licensee:licensee-gradle-plugin:1.7.0")
@@ -112,9 +113,10 @@ subprojects {
     }
 
     tasks.withType<KotlinCompile> {
-        kotlinOptions {
+        compilerOptions {
             internalApiAnnotations.forEach {
-                freeCompilerArgs += "-opt-in=$it"
+                freeCompilerArgs.add("-opt-in=$it")
+                freeCompilerArgs.add("-Xconsistent-data-class-copy-visibility")
             }
         }
     }

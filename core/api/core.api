@@ -1590,6 +1590,7 @@ public abstract interface class com/amplifyframework/core/model/LazyModelList : 
 	public abstract fun fetchPage (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun fetchPage (Lcom/amplifyframework/core/model/PaginationToken;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public abstract synthetic fun fetchPage (Lcom/amplifyframework/core/model/PaginationToken;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun fetchPage$default (Lcom/amplifyframework/core/model/LazyModelList;Lcom/amplifyframework/core/model/PaginationToken;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
 
 public final class com/amplifyframework/core/model/LazyModelList$DefaultImpls {
@@ -1747,7 +1748,7 @@ public final class com/amplifyframework/core/model/ModelOperation : java/lang/En
 }
 
 public abstract interface class com/amplifyframework/core/model/ModelPage {
-	public abstract fun getHasNextPage ()Z
+	public fun getHasNextPage ()Z
 	public abstract fun getItems ()Ljava/util/List;
 	public abstract fun getNextToken ()Lcom/amplifyframework/core/model/PaginationToken;
 }
@@ -1838,8 +1839,6 @@ public final class com/amplifyframework/core/model/PropertyPathMetadata {
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Z
 	public final fun component3 ()Lcom/amplifyframework/core/model/PropertyPath;
-	public final fun copy (Ljava/lang/String;ZLcom/amplifyframework/core/model/PropertyPath;)Lcom/amplifyframework/core/model/PropertyPathMetadata;
-	public static synthetic fun copy$default (Lcom/amplifyframework/core/model/PropertyPathMetadata;Ljava/lang/String;ZLcom/amplifyframework/core/model/PropertyPath;ILjava/lang/Object;)Lcom/amplifyframework/core/model/PropertyPathMetadata;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getName ()Ljava/lang/String;
 	public final fun getParent ()Lcom/amplifyframework/core/model/PropertyPath;
@@ -2249,7 +2248,7 @@ public abstract interface class com/amplifyframework/core/store/KeyValueReposito
 	public abstract fun get (Ljava/lang/String;)Ljava/lang/String;
 	public abstract fun put (Ljava/lang/String;Ljava/lang/String;)V
 	public abstract fun remove (Ljava/lang/String;)V
-	public abstract fun removeAll ()V
+	public fun removeAll ()V
 }
 
 public final class com/amplifyframework/core/store/KeyValueRepository$DefaultImpls {
@@ -4037,8 +4036,6 @@ public final class com/amplifyframework/storage/BucketInfo {
 }
 
 public final class com/amplifyframework/storage/IdentityIdProvidedStoragePath : com/amplifyframework/storage/StoragePath {
-	public final fun copy (Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/storage/IdentityIdProvidedStoragePath;
-	public static synthetic fun copy$default (Lcom/amplifyframework/storage/IdentityIdProvidedStoragePath;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lcom/amplifyframework/storage/IdentityIdProvidedStoragePath;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -4258,8 +4255,6 @@ public abstract class com/amplifyframework/storage/StoragePlugin : com/amplifyfr
 }
 
 public final class com/amplifyframework/storage/StringStoragePath : com/amplifyframework/storage/StoragePath {
-	public final fun copy (Ljava/lang/String;)Lcom/amplifyframework/storage/StringStoragePath;
-	public static synthetic fun copy$default (Lcom/amplifyframework/storage/StringStoragePath;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/storage/StringStoragePath;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;

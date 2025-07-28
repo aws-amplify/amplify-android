@@ -2,8 +2,6 @@ public final class com/amplifyframework/auth/plugins/core/AWSCognitoIdentityPool
 	public static final field Companion Lcom/amplifyframework/auth/plugins/core/AWSCognitoIdentityPoolDetails$Companion;
 	public final fun component1 ()Lcom/amplifyframework/auth/result/AuthSessionResult;
 	public final fun component2 ()Lcom/amplifyframework/auth/result/AuthSessionResult;
-	public final fun copy (Lcom/amplifyframework/auth/result/AuthSessionResult;Lcom/amplifyframework/auth/result/AuthSessionResult;)Lcom/amplifyframework/auth/plugins/core/AWSCognitoIdentityPoolDetails;
-	public static synthetic fun copy$default (Lcom/amplifyframework/auth/plugins/core/AWSCognitoIdentityPoolDetails;Lcom/amplifyframework/auth/result/AuthSessionResult;Lcom/amplifyframework/auth/result/AuthSessionResult;ILjava/lang/Object;)Lcom/amplifyframework/auth/plugins/core/AWSCognitoIdentityPoolDetails;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAwsCredentialsResult ()Lcom/amplifyframework/auth/result/AuthSessionResult;
 	public final fun getIdentityIdResult ()Lcom/amplifyframework/auth/result/AuthSessionResult;
@@ -35,7 +33,6 @@ public final class com/amplifyframework/auth/plugins/core/AuthHubEventEmitter {
 
 public final class com/amplifyframework/auth/plugins/core/LoginProvider {
 	public static final field Companion Lcom/amplifyframework/auth/plugins/core/LoginProvider$Companion;
-	public synthetic fun <init> (ILjava/lang/String;Ljava/lang/String;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Ljava/lang/String;
@@ -46,16 +43,15 @@ public final class com/amplifyframework/auth/plugins/core/LoginProvider {
 	public final fun getUserIdentifier ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
-	public static final synthetic fun write$Self (Lcom/amplifyframework/auth/plugins/core/LoginProvider;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
 }
 
-public final class com/amplifyframework/auth/plugins/core/LoginProvider$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class com/amplifyframework/auth/plugins/core/LoginProvider$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lcom/amplifyframework/auth/plugins/core/LoginProvider$$serializer;
-	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/auth/plugins/core/LoginProvider;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/auth/plugins/core/LoginProvider;
 	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/auth/plugins/core/LoginProvider;)V
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/auth/plugins/core/LoginProvider;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
 	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }

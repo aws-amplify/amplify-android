@@ -32,20 +32,20 @@ public final class com/amazonaws/sdk/appsync/core/LogLevel : java/lang/Enum {
 
 public abstract interface class com/amazonaws/sdk/appsync/core/Logger {
 	public abstract fun debug (Ljava/lang/String;)V
-	public abstract fun debug (Ljava/util/function/Supplier;)V
+	public fun debug (Ljava/util/function/Supplier;)V
 	public abstract fun error (Ljava/lang/String;)V
 	public abstract fun error (Ljava/lang/String;Ljava/lang/Throwable;)V
-	public abstract fun error (Ljava/lang/Throwable;Ljava/util/function/Supplier;)V
-	public abstract fun error (Ljava/util/function/Supplier;)V
+	public fun error (Ljava/lang/Throwable;Ljava/util/function/Supplier;)V
+	public fun error (Ljava/util/function/Supplier;)V
 	public abstract fun getThresholdLevel ()Lcom/amazonaws/sdk/appsync/core/LogLevel;
 	public abstract fun info (Ljava/lang/String;)V
-	public abstract fun info (Ljava/util/function/Supplier;)V
+	public fun info (Ljava/util/function/Supplier;)V
 	public abstract fun verbose (Ljava/lang/String;)V
-	public abstract fun verbose (Ljava/util/function/Supplier;)V
+	public fun verbose (Ljava/util/function/Supplier;)V
 	public abstract fun warn (Ljava/lang/String;)V
 	public abstract fun warn (Ljava/lang/String;Ljava/lang/Throwable;)V
-	public abstract fun warn (Ljava/lang/Throwable;Ljava/util/function/Supplier;)V
-	public abstract fun warn (Ljava/util/function/Supplier;)V
+	public fun warn (Ljava/lang/Throwable;Ljava/util/function/Supplier;)V
+	public fun warn (Ljava/util/function/Supplier;)V
 }
 
 public final class com/amazonaws/sdk/appsync/core/Logger$DefaultImpls {

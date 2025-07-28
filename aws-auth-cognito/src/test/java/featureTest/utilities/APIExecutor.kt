@@ -41,6 +41,12 @@ internal val apiExecutor: (AWSCognitoAuthPlugin, API) -> Any = { authPlugin: AWS
     var targetApi: KFunction<*>? = null
     for (currentApi in targetApis) {
         try {
+            // If we are attempting to call an api with options, ignore same named api without options
+            if ((api.options as JsonObject).isNotEmpty() &&
+                (currentApi.parameters.find { it.name == "options" } == null)
+            ) {
+                continue
+            }
             val currentParams = currentApi.parameters.associateWith { kParam ->
                 when {
                     kParam.kind == KParameter.Kind.INSTANCE -> authPlugin

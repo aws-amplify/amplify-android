@@ -17,6 +17,7 @@ public final class com/amplifyframework/apollo/appsync/AppSyncEndpoint {
 
 public final class com/amplifyframework/apollo/appsync/AppSyncInterceptor : com/apollographql/apollo/network/http/HttpInterceptor {
 	public fun <init> (Lcom/amplifyframework/apollo/appsync/AppSyncAuthorizer;)V
+	public fun dispose ()V
 	public fun intercept (Lcom/apollographql/apollo/api/http/HttpRequest;Lcom/apollographql/apollo/network/http/HttpInterceptorChain;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
