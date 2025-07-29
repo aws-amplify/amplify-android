@@ -37,8 +37,10 @@ class KotlinConventionPlugin : Plugin<Project> {
             apply("amplify.ktlint")
 
             // Note: these only need to be applied in a future publishing convention plugin
-            apply("amplify.kover")
-            apply("amplify.licenses")
+            withPlugin("maven-publish") {
+                apply("amplify.kover")
+                apply("amplify.licenses")
+            }
         }
 
         with(target) {

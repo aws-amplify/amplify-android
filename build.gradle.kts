@@ -54,7 +54,7 @@ apply(from = rootProject.file("configuration/instrumentation-tests.gradle"))
 
 dependencies {
     subprojects.forEach {
-        if (!it.name.contains("test")) {
+        it.pluginManager.withPlugin("org.jetbrains.kotlinx.kover") {
             kover(project(it.name))
         }
     }
