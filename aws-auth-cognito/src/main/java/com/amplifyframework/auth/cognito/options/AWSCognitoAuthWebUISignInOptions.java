@@ -30,6 +30,7 @@ import java.util.List;
 public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptions {
     private final String idpIdentifier;
     private final String browserPackage;
+    private final Boolean preferPrivateSession;
 
     /**
      * Advanced options for signing in via a hosted web ui.
@@ -37,15 +38,18 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
      * @param idpIdentifier The IdentityProvider identifier if using multiple instances of same identity provider.
      * @param browserPackage Specify which browser package should be used for web sign in (e.g. "org.mozilla.firefox").
      *                       Defaults to the Chrome package if not specified.
+     * @param preferPrivateSession specifying whether or not to launch web ui in an ephemeral CustomTab.
      */
     protected AWSCognitoAuthWebUISignInOptions(
             List<String> scopes,
             String idpIdentifier,
-            String browserPackage
+            String browserPackage,
+            Boolean preferPrivateSession
     ) {
         super(scopes);
         this.idpIdentifier = idpIdentifier;
         this.browserPackage = browserPackage;
+        this.preferPrivateSession = preferPrivateSession;
     }
 
     /**
@@ -67,6 +71,15 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
     }
 
     /**
+     * Optional override to prefer launching in an Ephemeral CustomTab, if available.
+     * @return optional override to prefer launching in an Ephemeral CustomTab, if available.
+     */
+    @Nullable
+    public Boolean getPreferPrivateSession() {
+        return preferPrivateSession;
+    }
+
+    /**
      * Returns a builder for this object.
      * @return a builder for this object.
      */
@@ -80,7 +93,8 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
         return ObjectsCompat.hash(
                 getScopes(),
                 getIdpIdentifier(),
-                getBrowserPackage()
+                getBrowserPackage(),
+                getPreferPrivateSession()
         );
     }
 
@@ -94,7 +108,8 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
             AWSCognitoAuthWebUISignInOptions webUISignInOptions = (AWSCognitoAuthWebUISignInOptions) obj;
             return ObjectsCompat.equals(getScopes(), webUISignInOptions.getScopes()) &&
                     ObjectsCompat.equals(getIdpIdentifier(), webUISignInOptions.getIdpIdentifier()) &&
-                    ObjectsCompat.equals(getBrowserPackage(), webUISignInOptions.getBrowserPackage());
+                    ObjectsCompat.equals(getBrowserPackage(), webUISignInOptions.getBrowserPackage()) &&
+                    ObjectsCompat.equals(getPreferPrivateSession(), webUISignInOptions.getPreferPrivateSession());
         }
     }
 
@@ -104,6 +119,7 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
                 "scopes=" + getScopes() +
                 ", idpIdentifier=" + getIdpIdentifier() +
                 ", browserPackage=" + getBrowserPackage() +
+                ", preferPrivateSession=" + getPreferPrivateSession() +
                 '}';
     }
 
@@ -113,6 +129,7 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
     public static final class CognitoBuilder extends Builder<CognitoBuilder> {
         private String idpIdentifier;
         private String browserPackage;
+        private Boolean preferPrivateSession;
 
         /**
          * Constructs the builder.
@@ -154,6 +171,18 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
         }
 
         /**
+         * This can optionally be set to prefer launching in an Ephemeral CustomTab, if available.
+         *
+         * @param preferPrivateSession Boolean specifying whether or not to launch web ui in an
+         * ephemeral CustomTab.
+         * @return the instance of the builder.
+         */
+        public CognitoBuilder preferPrivateSession(@NonNull Boolean preferPrivateSession) {
+            this.preferPrivateSession = preferPrivateSession;
+            return this;
+        }
+
+        /**
          * Build the object.
          * @return a new instance of AWSCognitoAuthWebUISignInOptions.
          */
@@ -162,7 +191,8 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
             return new AWSCognitoAuthWebUISignInOptions(
                     Immutable.of(super.getScopes()),
                     idpIdentifier,
-                    browserPackage
+                    browserPackage,
+                    preferPrivateSession
             );
         }
     }

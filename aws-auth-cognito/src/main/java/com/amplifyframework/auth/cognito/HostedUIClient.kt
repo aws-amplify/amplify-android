@@ -63,7 +63,8 @@ internal class HostedUIClient private constructor(
         launchCustomTabs(
             uri = createAuthorizeUri(hostedUIOptions),
             activity = hostedUIOptions.callingActivity,
-            customBrowserPackage = hostedUIOptions.browserPackage
+            customBrowserPackage = hostedUIOptions.browserPackage,
+            preferPrivateSession = hostedUIOptions.preferPrivateSession
         )
     }
 
@@ -71,18 +72,26 @@ internal class HostedUIClient private constructor(
     fun launchCustomTabsSignOut(browserPackage: String?) {
         launchCustomTabs(
             uri = createSignOutUri(),
-            customBrowserPackage = browserPackage
+            customBrowserPackage = browserPackage,
+            preferPrivateSession = false
         )
     }
 
-    private fun launchCustomTabs(uri: Uri, activity: Activity? = null, customBrowserPackage: String?) {
+    private fun launchCustomTabs(
+        uri: Uri,
+        activity: Activity? = null,
+        customBrowserPackage: String?,
+        preferPrivateSession: Boolean?
+    ) {
         if (!BrowserHelper.isBrowserInstalled(context)) {
             throw RuntimeException("No browsers installed")
         }
 
         val browserPackage = customBrowserPackage ?: defaultCustomTabsPackage
 
-        val customTabsIntent = CustomTabsIntent.Builder(session).build().apply {
+        val customTabsIntent = CustomTabsIntent.Builder(session).apply {
+            preferPrivateSession?.let { setEphemeralBrowsingEnabled(it) }
+        }.build().apply {
             browserPackage?.let { intent.`package` = it }
             intent.data = uri
         }
