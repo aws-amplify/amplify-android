@@ -14,19 +14,13 @@
  */
 
 plugins {
-    alias(libs.plugins.amplify.android.library) // todo this does not need to be an android library
+    alias(libs.plugins.amplify.kotlin)
+    id("maven-publish")
 }
 
 apply(from = rootProject.file("configuration/publishing.gradle"))
 
 group = properties["POM_GROUP"].toString()
-
-android {
-    namespace = "com.amplifyframework.annotations"
-    kotlinOptions {
-        moduleName = "com.amplifyframework.annotations"
-    }
-}
 
 dependencies {
     implementation(libs.kotlin.stdlib)

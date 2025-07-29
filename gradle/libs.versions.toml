@@ -166,8 +166,9 @@ ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 licensee = { id = "app.cash.licensee", version.ref = "licensee" }
 
 # Internal convention plugins
-amplify-android-library = { id = "amplify.android.library" }
 amplify-api = { id = "amplify.api" }
-amplify-ktlint = { id = "amplify.ktlint" }
-amplify-licenses = { id = "amplify.licenses" }
+amplify-kotlin = { id = "amplify.kotlin" }
 amplify-kover = { id = "amplify.kover" }
+amplify-ktlint = { id = "amplify.ktlint" }
+amplify-android-library = { id = "amplify.android.library" }
+amplify-licenses = { id = "amplify.licenses" }

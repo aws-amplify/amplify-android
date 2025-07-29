@@ -25,9 +25,6 @@ group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.aws.core"
-    kotlinOptions {
-        moduleName = "com.amplifyframework.aws-core"
-    }
 }
 
 dependencies {

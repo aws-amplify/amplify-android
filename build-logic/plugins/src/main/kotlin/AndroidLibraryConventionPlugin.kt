@@ -16,15 +16,10 @@
 import com.android.build.api.dsl.LibraryExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.tasks.compile.JavaCompile
-import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.extra
 import org.gradle.kotlin.dsl.provideDelegate
-import org.gradle.kotlin.dsl.withType
-import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 /**
  * This convention plugin configures an Android library module
@@ -34,12 +29,9 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target.pluginManager) {
             apply("com.android.library")
-            apply("org.jetbrains.kotlin.android")
 
             // Apply other convention plugins
-            apply("amplify.licenses")
-            apply("amplify.ktlint")
-            apply("amplify.kover")
+            apply("amplify.kotlin")
         }
 
         @Suppress("ktlint:standard:property-naming")
@@ -52,29 +44,6 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                 afterEvaluate {
                     val sdkVersionName = findProperty("VERSION_NAME") ?: rootProject.findProperty("VERSION_NAME")
                     this@configure.defaultConfig.buildConfigField("String", "VERSION_NAME", "\"$sdkVersionName\"")
-                }
-            }
-
-            tasks.withType<JavaCompile>().configureEach {
-                options.compilerArgs.apply {
-                    add("-Xlint:all")
-                    add("-Werror")
-                }
-            }
-
-            tasks.withType<Test>().configureEach {
-                minHeapSize = "128m"
-                maxHeapSize = "4g"
-            }
-
-            configure<KotlinProjectExtension> {
-                jvmToolchain(17)
-            }
-
-            tasks.withType<KotlinCompile>().configureEach {
-                compilerOptions {
-                    freeCompilerArgs.addAll(amplifyInternalMarkers.map { "-opt-in=$it" })
-                    freeCompilerArgs.add("-Xconsistent-data-class-copy-visibility")
                 }
             }
         }

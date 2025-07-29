@@ -16,10 +16,8 @@
 import java.util.Properties
 
 plugins {
-    id("java-library")
+    alias(libs.plugins.amplify.kotlin)
     id("maven-publish")
-    alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.amplify.api)
 }
 
 java {

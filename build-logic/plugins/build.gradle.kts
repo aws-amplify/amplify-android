@@ -29,6 +29,7 @@ dependencies {
     compileOnly(libs.plugin.kover)
     compileOnly(libs.plugin.ktlint)
     compileOnly(libs.plugin.licensee)
+    implementation(kotlin("test"))
 }
 
 gradlePlugin {
@@ -41,13 +42,17 @@ gradlePlugin {
             id = libs.plugins.amplify.api.get().pluginId
             implementationClass = "ApiValidatorConventionPlugin"
         }
-        register("ktlint") {
-            id = libs.plugins.amplify.ktlint.get().pluginId
-            implementationClass = "KtLintConventionPlugin"
+        register("kotlin") {
+            id = libs.plugins.amplify.kotlin.get().pluginId
+            implementationClass = "KotlinConventionPlugin"
         }
         register("kover") {
             id = libs.plugins.amplify.kover.get().pluginId
             implementationClass = "KoverConventionPlugin"
+        }
+        register("ktlint") {
+            id = libs.plugins.amplify.ktlint.get().pluginId
+            implementationClass = "KtLintConventionPlugin"
         }
         register("licenses") {
             id = libs.plugins.amplify.licenses.get().pluginId
