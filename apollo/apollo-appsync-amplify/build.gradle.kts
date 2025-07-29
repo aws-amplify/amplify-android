@@ -20,16 +20,6 @@ android {
     namespace = "com.amplifyframework.apollo.appsync"
 }
 
-apollo {
-    service("appsync") {
-        packageName.set("com.amplifyframework.apollo.graphql")
-        srcDir("src/androidTest/graphql")
-        outputDirConnection {
-            connectToAndroidSourceSet("androidTest")
-        }
-    }
-}
-
 dependencies {
     api(project(":apollo-appsync"))
     api(project(":core"))

@@ -13,27 +13,12 @@ public class com/amplifyframework/notifications/pushnotifications/NotificationCo
 	public fun writeToParcel (Landroid/os/Parcel;I)V
 }
 
-public final class com/amplifyframework/notifications/pushnotifications/NotificationContentProvider$Creator : android/os/Parcelable$Creator {
-	public fun <init> ()V
-	public final fun createFromParcel (Landroid/os/Parcel;)Lcom/amplifyframework/notifications/pushnotifications/NotificationContentProvider;
-	public synthetic fun createFromParcel (Landroid/os/Parcel;)Ljava/lang/Object;
-	public final fun newArray (I)[Lcom/amplifyframework/notifications/pushnotifications/NotificationContentProvider;
-	public synthetic fun newArray (I)[Ljava/lang/Object;
-}
-
 public final class com/amplifyframework/notifications/pushnotifications/NotificationContentProvider$FCM : com/amplifyframework/notifications/pushnotifications/NotificationContentProvider {
 	public static final field CREATOR Landroid/os/Parcelable$Creator;
 	public fun <init> (Ljava/util/Map;)V
+	public final fun describeContents ()I
 	public fun getContent ()Ljava/util/Map;
-	public fun writeToParcel (Landroid/os/Parcel;I)V
-}
-
-public final class com/amplifyframework/notifications/pushnotifications/NotificationContentProvider$FCM$Creator : android/os/Parcelable$Creator {
-	public fun <init> ()V
-	public final fun createFromParcel (Landroid/os/Parcel;)Lcom/amplifyframework/notifications/pushnotifications/NotificationContentProvider$FCM;
-	public synthetic fun createFromParcel (Landroid/os/Parcel;)Ljava/lang/Object;
-	public final fun newArray (I)[Lcom/amplifyframework/notifications/pushnotifications/NotificationContentProvider$FCM;
-	public synthetic fun newArray (I)[Ljava/lang/Object;
+	public final fun writeToParcel (Landroid/os/Parcel;I)V
 }
 
 public class com/amplifyframework/notifications/pushnotifications/NotificationPayload : android/os/Parcelable {
@@ -65,13 +50,5 @@ public final class com/amplifyframework/notifications/pushnotifications/Notifica
 	public final fun builder (Lcom/amplifyframework/notifications/pushnotifications/NotificationContentProvider;)Lcom/amplifyframework/notifications/pushnotifications/NotificationPayload$Builder;
 	public final fun fromIntent (Landroid/content/Intent;)Lcom/amplifyframework/notifications/pushnotifications/NotificationPayload;
 	public final fun invoke (Lcom/amplifyframework/notifications/pushnotifications/NotificationContentProvider;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/notifications/pushnotifications/NotificationPayload;
-}
-
-public final class com/amplifyframework/notifications/pushnotifications/NotificationPayload$Creator : android/os/Parcelable$Creator {
-	public fun <init> ()V
-	public final fun createFromParcel (Landroid/os/Parcel;)Lcom/amplifyframework/notifications/pushnotifications/NotificationPayload;
-	public synthetic fun createFromParcel (Landroid/os/Parcel;)Ljava/lang/Object;
-	public final fun newArray (I)[Lcom/amplifyframework/notifications/pushnotifications/NotificationPayload;
-	public synthetic fun newArray (I)[Ljava/lang/Object;
 }
 

@@ -16,11 +16,12 @@
 package com.amplifyframework.geo.maplibre.view
 
 import android.graphics.Color
-import com.mapbox.geojson.Feature
-import com.mapbox.geojson.Point
-import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
-import com.mapbox.mapboxsdk.geometry.LatLng
+import androidx.core.graphics.toColorInt
 import kotlin.math.min
+import org.maplibre.android.camera.CameraUpdateFactory
+import org.maplibre.android.geometry.LatLng
+import org.maplibre.geojson.Feature
+import org.maplibre.geojson.Point
 
 /**
  * Stores options to use when clustering.
@@ -59,11 +60,11 @@ class ClusteringOptions private constructor(
      * Builder class for constructing a ClusteringOptions instance.
      */
     class Builder {
-        var clusterColor: Int = Color.parseColor("#1E88E5")
+        var clusterColor: Int = "#1E88E5".toColorInt()
             private set
         var clusterColorSteps: Map<Int, Int> = mapOf(
-            20 to Color.parseColor("#EF5350"),
-            50 to Color.parseColor("#FFEB3B")
+            20 to "#EF5350".toColorInt(),
+            50 to "#FFEB3B".toColorInt()
         )
             private set
         var clusterNumberColor: Int = Color.BLACK

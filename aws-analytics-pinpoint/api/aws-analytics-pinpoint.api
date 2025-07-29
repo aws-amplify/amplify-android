@@ -22,8 +22,6 @@ public final class com/amplifyframework/analytics/pinpoint/AWSPinpointAnalyticsP
 	public static final fun builder ()Lcom/amplifyframework/analytics/pinpoint/AWSPinpointAnalyticsPlugin$Options$Builder;
 	public final fun component1 ()J
 	public final fun component2 ()Z
-	public final fun copy (JZ)Lcom/amplifyframework/analytics/pinpoint/AWSPinpointAnalyticsPlugin$Options;
-	public static synthetic fun copy$default (Lcom/amplifyframework/analytics/pinpoint/AWSPinpointAnalyticsPlugin$Options;JZILjava/lang/Object;)Lcom/amplifyframework/analytics/pinpoint/AWSPinpointAnalyticsPlugin$Options;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAutoFlushEventsInterval ()J
 	public final fun getTrackLifecycleEvents ()Z

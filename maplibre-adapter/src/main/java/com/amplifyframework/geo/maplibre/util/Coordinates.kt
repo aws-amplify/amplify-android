@@ -18,7 +18,7 @@
 package com.amplifyframework.geo.maplibre.util
 
 import com.amplifyframework.geo.models.Coordinates
-import com.mapbox.mapboxsdk.geometry.LatLng
+import org.maplibre.android.geometry.LatLng
 
 /**
  * Converts the Amplify `Coordinates` to MapLibre's `LatLng` object.

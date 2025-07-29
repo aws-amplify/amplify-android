@@ -1,5 +1,0 @@
-query GetTodo($id: ID!) {
-    getTodo(id: $id) {
-        ... todoFragment
-    }
-}

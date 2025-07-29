@@ -31,7 +31,7 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":aws-core"))
     implementation(libs.androidx.appcompat)
-    implementation(libs.tensorflow)
+    implementation(libs.litert)
 
     testImplementation(project(":testutils"))
     testImplementation(libs.test.junit)

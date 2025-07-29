@@ -23,14 +23,14 @@ import com.amplifyframework.geo.location.AWSLocationGeoPlugin
 import com.amplifyframework.geo.maplibre.http.AWSRequestSignerInterceptor
 import com.amplifyframework.geo.models.MapStyle
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions
-import com.mapbox.mapboxsdk.Mapbox
-import com.mapbox.mapboxsdk.WellKnownTileServer
-import com.mapbox.mapboxsdk.maps.MapboxMap
-import com.mapbox.mapboxsdk.maps.Style
-import com.mapbox.mapboxsdk.module.http.HttpRequestUtil
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
+import org.maplibre.android.MapLibre
+import org.maplibre.android.WellKnownTileServer
+import org.maplibre.android.maps.MapLibreMap
+import org.maplibre.android.maps.Style
+import org.maplibre.android.module.http.HttpRequestUtil
 
 private const val LOCATION_GEO_PLUGIN_KEY = "awsLocationGeoPlugin"
 
@@ -52,7 +52,7 @@ class AmplifyMapLibreAdapter internal constructor(
      * to the default [OkHttpClient] used by the underlying Mapbox component.
      */
     fun initialize() {
-        Mapbox.getInstance(context, null, WellKnownTileServer.MapLibre)
+        MapLibre.getInstance(context, null, WellKnownTileServer.MapLibre)
         HttpRequestUtil.setOkHttpClient(
             OkHttpClient.Builder()
                 .addInterceptor(AWSRequestSignerInterceptor(plugin))
@@ -67,7 +67,7 @@ class AmplifyMapLibreAdapter internal constructor(
      * @param style Amplify map style to use
      * @param callback Callback to trigger upon successfully loading map style
      */
-    fun setStyle(map: MapboxMap, style: MapStyle? = null, callback: Style.OnStyleLoaded) {
+    fun setStyle(map: MapLibreMap, style: MapStyle? = null, callback: Style.OnStyleLoaded) {
         val options = if (style == null) {
             // Use default map if no style is provided
             GetMapStyleDescriptorOptions.defaults()
