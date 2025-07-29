@@ -26,7 +26,7 @@ import com.amplifyframework.core.model.PropertyContainerPath
  * @param name: the name to match the child node of type `SelectionSetField`
  * @return the matched `SelectionSet` or `nil` if there's no child with the specified name.
  */
-internal fun SelectionSet.findChildByName(name: String) = nodes.find { it.value == name }
+fun SelectionSet.findChildByName(name: String) = nodes.find { it.value == name }
 
 /**
  * Replaces or adds a new child to the selection set tree. When a child node exists
