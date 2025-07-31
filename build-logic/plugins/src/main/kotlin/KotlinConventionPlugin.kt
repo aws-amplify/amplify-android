@@ -3,6 +3,7 @@ import org.gradle.api.Project
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.extra
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -44,6 +45,14 @@ class KotlinConventionPlugin : Plugin<Project> {
         }
 
         with(target) {
+            // Set up signing properties for publishing
+            if (hasProperty("signingKeyId")) {
+                println("Getting signing info from protected source.")
+                extra["signing.keyId"] = findProperty("signingKeyId")
+                extra["signing.password"] = findProperty("signingPassword")
+                extra["signing.inMemoryKey"] = findProperty("signingInMemoryKey")
+            }
+
             configure<KotlinProjectExtension> {
                 jvmToolchain(17)
             }
