@@ -40,15 +40,3 @@ dependencies {
     testImplementation(libs.test.kotest.assertions)
     testImplementation(libs.test.robolectric)
 }
-
-afterEvaluate {
-    // Disables this warning:
-    // warning: listOf(classfile) MethodParameters attribute
-    // introduced in version 52.0 class files is ignored in
-    // version 51.0 class files
-    // Root project has -Werror, so this warning
-    // would fail the build, otherwise.
-    tasks.withType<JavaCompile>().configureEach {
-        options.compilerArgs.add("-Xlint:-classfile")
-    }
-}
