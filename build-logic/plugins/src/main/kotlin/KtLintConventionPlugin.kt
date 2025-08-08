@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -13,17 +14,23 @@
  * permissions and limitations under the License.
  */
 
-plugins {
-    alias(libs.plugins.amplify.android.library)
-    alias(libs.plugins.kotlin.parcelize)
-    alias(libs.plugins.amplify.api)
-}
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+import org.gradle.kotlin.dsl.configure
+import org.jlleitschuh.gradle.ktlint.KtlintExtension
 
-apply(from = rootProject.file("configuration/checkstyle.gradle"))
-apply(from = rootProject.file("configuration/publishing.gradle"))
-
-group = properties["POM_GROUP"].toString()
-
-android {
-    namespace = "com.amplifyframework.common.core"
+/**
+ * Applies and configures the KtLint plugin
+ */
+class KtLintConventionPlugin : Plugin<Project> {
+    override fun apply(target: Project) {
+        target.pluginManager.apply("org.jlleitschuh.gradle.ktlint")
+        target.extensions.configure<KtlintExtension> {
+            version.set("1.5.0")
+            android.set(true)
+            filter {
+                exclude("**/generated/**")
+            }
+        }
+    }
 }

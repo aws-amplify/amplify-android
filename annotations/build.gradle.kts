@@ -14,21 +14,18 @@
  */
 
 plugins {
-    id("com.android.library")
-    id("kotlin-android")
+    alias(libs.plugins.amplify.kotlin)
+    id("maven-publish")
 }
 
-apply(from = rootProject.file("configuration/checkstyle.gradle"))
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
 apply(from = rootProject.file("configuration/publishing.gradle"))
 
 group = properties["POM_GROUP"].toString()
-
-android {
-    namespace = "com.amplifyframework.annotations"
-    kotlinOptions {
-        moduleName = "com.amplifyframework.annotations"
-    }
-}
 
 dependencies {
     implementation(libs.kotlin.stdlib)
