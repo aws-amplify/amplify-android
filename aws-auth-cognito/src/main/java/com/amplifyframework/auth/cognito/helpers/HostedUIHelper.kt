@@ -36,7 +36,7 @@ internal object HostedUIHelper {
             idpIdentifier = (options as? AWSCognitoAuthWebUISignInOptions)?.idpIdentifier
         ),
         browserPackage = (options as? AWSCognitoAuthWebUISignInOptions)?.browserPackage,
-        preferPrivateSession = (options as? AWSCognitoAuthWebUISignInOptions)?.preferPrivateSession
+        preferPrivateSession = options.preferPrivateSession
     )
 
     /**

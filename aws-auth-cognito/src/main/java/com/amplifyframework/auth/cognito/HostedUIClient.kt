@@ -80,7 +80,7 @@ internal class HostedUIClient private constructor(
         uri: Uri,
         activity: Activity? = null,
         customBrowserPackage: String?,
-        preferPrivateSession: Boolean? = null //allowing nullable, as null means customer didn't specify
+        preferPrivateSession: Boolean? = null // allowing nullable, as null means customer didn't specify
     ) {
         if (!BrowserHelper.isBrowserInstalled(context)) {
             throw RuntimeException("No browsers installed")
