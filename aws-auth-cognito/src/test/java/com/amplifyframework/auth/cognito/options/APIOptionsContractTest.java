@@ -97,11 +97,34 @@ public class APIOptionsContractTest {
                         .scopes(scopes).build();
         Assert.assertEquals(webUISignInOptions.getBrowserPackage(), "chrome");
         Assert.assertEquals(webUISignInOptions.getScopes(), scopes);
+        Assert.assertNull(webUISignInOptions.getPreferPrivateSession());
+
+        // Test preferPrivateSession option
+        AWSCognitoAuthWebUISignInOptions webUISignInOptionsWithPrivateSession =
+                AWSCognitoAuthWebUISignInOptions.builder()
+                        .browserPackage("chrome")
+                        .scopes(scopes)
+                        .preferPrivateSession(true)
+                        .build();
+        Assert.assertEquals("chrome", webUISignInOptionsWithPrivateSession.getBrowserPackage());
+        Assert.assertEquals(scopes, webUISignInOptionsWithPrivateSession.getScopes());
+        Assert.assertEquals(Boolean.TRUE, webUISignInOptionsWithPrivateSession.getPreferPrivateSession());
+
+        // Test preferPrivateSession set to false
+        AWSCognitoAuthWebUISignInOptions webUISignInOptionsWithoutPrivateSession =
+                AWSCognitoAuthWebUISignInOptions.builder()
+                        .browserPackage("firefox")
+                        .scopes(scopes)
+                        .preferPrivateSession(false)
+                        .build();
+        Assert.assertEquals("firefox", webUISignInOptionsWithoutPrivateSession.getBrowserPackage());
+        Assert.assertEquals(scopes, webUISignInOptionsWithoutPrivateSession.getScopes());
+        Assert.assertEquals(Boolean.FALSE, webUISignInOptionsWithoutPrivateSession.getPreferPrivateSession());
 
         FederateToIdentityPoolOptions federateToIdentityPoolOptions =
                 FederateToIdentityPoolOptions.builder().developerProvidedIdentityId("test-idp")
                         .build();
-        Assert.assertEquals(federateToIdentityPoolOptions
-                .getDeveloperProvidedIdentityId(), "test-idp");
+        Assert.assertEquals("test-idp", federateToIdentityPoolOptions
+                .getDeveloperProvidedIdentityId());
     }
 }
