@@ -6,7 +6,7 @@
         "mockedResponses": [
             {
                 "type": "cognitoIdentityProvider",
-                "apiName": "getTokensFromRefreshTokens",
+                "apiName": "getTokensFromRefreshToken",
                 "responseType": "failure",
                 "response": {
                     "errorType": "ResourceNotFoundException",

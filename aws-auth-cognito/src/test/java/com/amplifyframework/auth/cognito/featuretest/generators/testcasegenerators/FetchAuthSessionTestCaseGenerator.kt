@@ -50,9 +50,9 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
         TimeZone.setDefault(initialTimeZone)
     }
 
-    private val mockedRefreshGetTokensFromRefreshTokensResponse = MockResponse(
+    private val mockedRefreshGetTokensFromRefreshTokenResponse = MockResponse(
         CognitoType.CognitoIdentityProvider,
-        "getTokensFromRefreshTokens",
+        "getTokensFromRefreshToken",
         ResponseType.Success,
         mapOf(
             "authenticationResult" to mapOf(
@@ -103,9 +103,9 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
         }.toJsonElement()
     )
 
-    private val mockedRefreshGetTokensFromRefreshTokensFailureResponse = MockResponse(
+    private val mockedRefreshGetTokensFromRefreshTokenFailureResponse = MockResponse(
         CognitoType.CognitoIdentityProvider,
-        "getTokensFromRefreshTokens",
+        "getTokensFromRefreshToken",
         ResponseType.Failure,
         ResourceNotFoundException.invoke {
             message = "Error type: Client, Protocol response: (empty response)"
@@ -225,7 +225,7 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
             "authconfiguration.json",
             "SignedIn_SessionEstablished.json",
             mockedResponses = listOf(
-                mockedRefreshGetTokensFromRefreshTokensResponse,
+                mockedRefreshGetTokensFromRefreshTokenResponse,
                 mockedRefreshGetIdResponse,
                 mockedRefreshGetAWSCredentialsResponse
             )
@@ -243,7 +243,7 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
         preConditions = PreConditions(
             "authconfiguration.json",
             "SignedIn_SessionEstablished.json",
-            mockedResponses = listOf(mockedRefreshGetTokensFromRefreshTokensFailureResponse)
+            mockedResponses = listOf(mockedRefreshGetTokensFromRefreshTokenFailureResponse)
         ),
         api = API(
             name = AuthAPI.fetchAuthSession,
@@ -259,7 +259,7 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
             "authconfiguration.json",
             "SignedIn_SessionEstablished.json",
             mockedResponses = listOf(
-                mockedRefreshGetTokensFromRefreshTokensResponse,
+                mockedRefreshGetTokensFromRefreshTokenResponse,
                 mockedRefreshGetIdFailureResponse,
                 mockedRefreshGetAWSCredentialsFailureResponse
             )
