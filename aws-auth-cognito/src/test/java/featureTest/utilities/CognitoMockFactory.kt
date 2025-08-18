@@ -39,6 +39,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChalle
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.RevokeTokenResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UpdateDeviceStatusResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetTokensFromRefreshTokenResponse
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.featuretest.CognitoType
 import com.amplifyframework.auth.cognito.featuretest.MockResponse
@@ -225,6 +226,16 @@ class CognitoMockFactory(
                                 deviceLastModifiedDate = Instant.now()
                             }
                         )
+                    }
+                }
+            }
+            "getTokensFromRefreshToken" -> {
+                coEvery { mockCognitoIPClient.getTokensFromRefreshToken(any()) } coAnswers {
+                    setupError(mockResponse, responseObject)
+                    GetTokensFromRefreshTokenResponse.invoke {
+                        this.authenticationResult = responseObject["authenticationResult"]?.let {
+                            parseAuthenticationResult(it as JsonObject)
+                        }
                     }
                 }
             }
