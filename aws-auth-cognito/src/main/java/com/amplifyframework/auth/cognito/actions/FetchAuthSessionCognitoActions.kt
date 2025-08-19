@@ -61,7 +61,7 @@ internal object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                 val refreshedUserPoolTokens = CognitoUserPoolTokens(
                     idToken = response?.authenticationResult?.idToken,
                     accessToken = response?.authenticationResult?.accessToken,
-                    refreshToken = response?.authenticationResult?.refreshToken ?: tokens.refreshToken,
+                    refreshToken = response?.authenticationResult?.refreshToken ?: tokens.refreshToken, // the original refresh token will work if rotation is not enabled
                     expiration = Instant.now().plus(expiresIn.seconds).epochSeconds
                 )
 
