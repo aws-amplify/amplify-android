@@ -18,11 +18,8 @@ package com.amplifyframework.auth.cognito.actions
 import aws.sdk.kotlin.services.cognitoidentity.model.GetCredentialsForIdentityRequest
 import aws.sdk.kotlin.services.cognitoidentity.model.GetIdRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.getTokensFromRefreshToken
-import aws.sdk.kotlin.services.cognitoidentityprovider.initiateAuth
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.AuthEnvironment
-import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.exceptions.NotAuthorizedException
 import com.amplifyframework.auth.exceptions.SessionExpiredException
@@ -61,7 +58,7 @@ internal object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                 val refreshedUserPoolTokens = CognitoUserPoolTokens(
                     idToken = response?.authenticationResult?.idToken,
                     accessToken = response?.authenticationResult?.accessToken,
-                    refreshToken = response?.authenticationResult?.refreshToken ?: tokens.refreshToken, // the original refresh token will work if rotation is not enabled
+                    refreshToken = response?.authenticationResult?.refreshToken ?: tokens.refreshToken,
                     expiration = Instant.now().plus(expiresIn.seconds).epochSeconds
                 )
 

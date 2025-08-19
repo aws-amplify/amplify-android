@@ -97,9 +97,13 @@ class FetchAuthSessionCognitoActionsTest {
         val originalRefreshToken = "original_refresh_token"
         val newRefreshToken = "new_refresh_token"
 
-        coEvery { cognitoIdentityProviderClientMock.getTokensFromRefreshToken(any()) } returns GetTokensFromRefreshTokenResponse {
+        coEvery {
+            cognitoIdentityProviderClientMock.getTokensFromRefreshToken(any())
+        } returns GetTokensFromRefreshTokenResponse {
             authenticationResult = AuthenticationResultType {
-                this.accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ.XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o"
+                this.accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
+                    "eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ." +
+                    "XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o"
                 this.idToken = "id_token"
                 this.refreshToken = newRefreshToken
                 this.expiresIn = 3600
@@ -109,14 +113,17 @@ class FetchAuthSessionCognitoActionsTest {
         val signedInData = mockSignedInData(
             username = "username",
             cognitoUserPoolTokens = CognitoUserPoolTokens(
-                accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ.XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o",
+                accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
+                    "eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ." +
+                    "XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o",
                 idToken = "old_id",
                 refreshToken = originalRefreshToken,
                 expiration = 0
             )
         )
 
-        FetchAuthSessionCognitoActions.refreshUserPoolTokensAction(signedInData).execute(dispatcher, authEnvironment)
+        FetchAuthSessionCognitoActions.refreshUserPoolTokensAction(signedInData)
+            .execute(dispatcher, authEnvironment)
 
         val event = capturedEvent.captured.shouldBeInstanceOf<RefreshSessionEvent>()
         val refreshedData = event.eventType.shouldBeInstanceOf<RefreshSessionEvent.EventType.Refreshed>().signedInData
@@ -127,9 +134,13 @@ class FetchAuthSessionCognitoActionsTest {
     fun `refreshUserPoolTokensAction falls back to original refresh token when rotation is not enabled`() = runTest {
         val originalRefreshToken = "original_refresh_token"
 
-        coEvery { cognitoIdentityProviderClientMock.getTokensFromRefreshToken(any()) } returns GetTokensFromRefreshTokenResponse {
+        coEvery {
+            cognitoIdentityProviderClientMock.getTokensFromRefreshToken(any())
+        } returns GetTokensFromRefreshTokenResponse {
             authenticationResult = AuthenticationResultType {
-                this.accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ.XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o"
+                this.accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
+                    "eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ." +
+                    "XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o"
                 this.idToken = "id_token"
                 this.refreshToken = null
                 this.expiresIn = 3600
@@ -139,14 +150,17 @@ class FetchAuthSessionCognitoActionsTest {
         val signedInData = mockSignedInData(
             username = "username",
             cognitoUserPoolTokens = CognitoUserPoolTokens(
-                accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ.XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o",
+                accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
+                    "eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ." +
+                    "XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o",
                 idToken = "old_id",
                 refreshToken = originalRefreshToken,
                 expiration = 0
             )
         )
 
-        FetchAuthSessionCognitoActions.refreshUserPoolTokensAction(signedInData).execute(dispatcher, authEnvironment)
+        FetchAuthSessionCognitoActions.refreshUserPoolTokensAction(signedInData)
+            .execute(dispatcher, authEnvironment)
 
         val event = capturedEvent.captured.shouldBeInstanceOf<RefreshSessionEvent>()
         val refreshedData = event.eventType.shouldBeInstanceOf<RefreshSessionEvent.EventType.Refreshed>().signedInData
@@ -155,40 +169,50 @@ class FetchAuthSessionCognitoActionsTest {
 
     @Test
     fun `refreshUserPoolTokensAction handles NotAuthorizedException`() = runTest {
-        coEvery { cognitoIdentityProviderClientMock.getTokensFromRefreshToken(any()) } throws NotAuthorizedException { 
-            message = "Token expired" 
+        coEvery {
+            cognitoIdentityProviderClientMock.getTokensFromRefreshToken(any())
+        } throws NotAuthorizedException {
+            message = "Token expired"
         }
 
         val signedInData = mockSignedInData(
             username = "username",
             cognitoUserPoolTokens = CognitoUserPoolTokens(
-                accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ.XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o",
+                accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
+                    "eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ." +
+                    "XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o",
                 idToken = "old_id",
                 refreshToken = "refresh_token",
                 expiration = 0
             )
         )
 
-        FetchAuthSessionCognitoActions.refreshUserPoolTokensAction(signedInData).execute(dispatcher, authEnvironment)
+        FetchAuthSessionCognitoActions.refreshUserPoolTokensAction(signedInData)
+            .execute(dispatcher, authEnvironment)
 
         capturedEvent.captured.shouldBeInstanceOf<AuthorizationEvent>()
     }
 
     @Test
     fun `refreshUserPoolTokensAction handles generic exception`() = runTest {
-        coEvery { cognitoIdentityProviderClientMock.getTokensFromRefreshToken(any()) } throws RuntimeException("Network error")
+        coEvery {
+            cognitoIdentityProviderClientMock.getTokensFromRefreshToken(any())
+        } throws RuntimeException("Network error")
 
         val signedInData = mockSignedInData(
             username = "username",
             cognitoUserPoolTokens = CognitoUserPoolTokens(
-                accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ.XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o",
+                accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
+                    "eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ." +
+                    "XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o",
                 idToken = "old_id",
                 refreshToken = "refresh_token",
                 expiration = 0
             )
         )
 
-        FetchAuthSessionCognitoActions.refreshUserPoolTokensAction(signedInData).execute(dispatcher, authEnvironment)
+        FetchAuthSessionCognitoActions.refreshUserPoolTokensAction(signedInData)
+            .execute(dispatcher, authEnvironment)
 
         capturedEvent.captured.shouldBeInstanceOf<AuthorizationEvent>()
     }
@@ -198,32 +222,42 @@ class FetchAuthSessionCognitoActionsTest {
         every { configuration.identityPool } returns mockk {
             every { poolId } returns "identity_pool_id"
         }
-        
-        coEvery { cognitoIdentityProviderClientMock.getTokensFromRefreshToken(any()) } returns GetTokensFromRefreshTokenResponse {
+
+        coEvery {
+            cognitoIdentityProviderClientMock.getTokensFromRefreshToken(any())
+        } returns GetTokensFromRefreshTokenResponse {
             authenticationResult = null
         }
 
         val signedInData = mockSignedInData(
             username = "username",
             cognitoUserPoolTokens = CognitoUserPoolTokens(
-                accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ.XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o",
+                accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
+                    "eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ." +
+                    "XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o",
                 idToken = "old_id",
                 refreshToken = "refresh_token",
                 expiration = 0
             )
         )
 
-        FetchAuthSessionCognitoActions.refreshUserPoolTokensAction(signedInData).execute(dispatcher, authEnvironment)
+        FetchAuthSessionCognitoActions.refreshUserPoolTokensAction(signedInData)
+            .execute(dispatcher, authEnvironment)
 
         capturedEvent.captured.shouldBeInstanceOf<AuthorizationEvent>()
     }
 
     @Test
     fun `refreshUserPoolTokensAction includes device key when available`() = runTest {
-        val requestSlot = slot<aws.sdk.kotlin.services.cognitoidentityprovider.model.GetTokensFromRefreshTokenRequest>()
-        coEvery { cognitoIdentityProviderClientMock.getTokensFromRefreshToken(capture(requestSlot)) } returns GetTokensFromRefreshTokenResponse {
+        val requestSlot =
+            slot<aws.sdk.kotlin.services.cognitoidentityprovider.model.GetTokensFromRefreshTokenRequest>()
+        coEvery {
+            cognitoIdentityProviderClientMock.getTokensFromRefreshToken(capture(requestSlot))
+        } returns GetTokensFromRefreshTokenResponse {
             authenticationResult = AuthenticationResultType {
-                this.accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ.XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o"
+                this.accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
+                    "eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ." +
+                    "XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o"
                 this.idToken = "id_token"
                 this.refreshToken = "new_refresh_token"
                 this.expiresIn = 3600
@@ -233,26 +267,36 @@ class FetchAuthSessionCognitoActionsTest {
         val signedInData = mockSignedInData(
             username = "username",
             cognitoUserPoolTokens = CognitoUserPoolTokens(
-                accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ.XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o",
+                accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
+                    "eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ." +
+                    "XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o",
                 idToken = "old_id",
                 refreshToken = "refresh_token",
                 expiration = 0
             )
         )
 
-        FetchAuthSessionCognitoActions.refreshUserPoolTokensAction(signedInData).execute(dispatcher, authEnvironment)
+        FetchAuthSessionCognitoActions.refreshUserPoolTokensAction(signedInData)
+            .execute(dispatcher, authEnvironment)
 
         requestSlot.captured.deviceKey shouldBe "device_key"
     }
 
     @Test
     fun `refreshUserPoolTokensAction works without device metadata`() = runTest {
-        coEvery { credentialStoreClient.loadCredentials(any<CredentialType.Device>()) } returns AmplifyCredential.DeviceData(DeviceMetadata.Empty)
-        
-        val requestSlot = slot<aws.sdk.kotlin.services.cognitoidentityprovider.model.GetTokensFromRefreshTokenRequest>()
-        coEvery { cognitoIdentityProviderClientMock.getTokensFromRefreshToken(capture(requestSlot)) } returns GetTokensFromRefreshTokenResponse {
+        coEvery {
+            credentialStoreClient.loadCredentials(any<CredentialType.Device>())
+        } returns AmplifyCredential.DeviceData(DeviceMetadata.Empty)
+
+        val requestSlot =
+            slot<aws.sdk.kotlin.services.cognitoidentityprovider.model.GetTokensFromRefreshTokenRequest>()
+        coEvery {
+            cognitoIdentityProviderClientMock.getTokensFromRefreshToken(capture(requestSlot))
+        } returns GetTokensFromRefreshTokenResponse {
             authenticationResult = AuthenticationResultType {
-                this.accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ.XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o"
+                this.accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
+                    "eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ." +
+                    "XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o"
                 this.idToken = "id_token"
                 this.refreshToken = "new_refresh_token"
                 this.expiresIn = 3600
@@ -262,16 +306,111 @@ class FetchAuthSessionCognitoActionsTest {
         val signedInData = mockSignedInData(
             username = "username",
             cognitoUserPoolTokens = CognitoUserPoolTokens(
-                accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ.XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o",
+                accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
+                    "eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ." +
+                    "XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o",
                 idToken = "old_id",
                 refreshToken = "refresh_token",
                 expiration = 0
             )
         )
 
-        FetchAuthSessionCognitoActions.refreshUserPoolTokensAction(signedInData).execute(dispatcher, authEnvironment)
+        FetchAuthSessionCognitoActions.refreshUserPoolTokensAction(signedInData)
+            .execute(dispatcher, authEnvironment)
 
         requestSlot.captured.deviceKey shouldBe null
+        capturedEvent.captured.shouldBeInstanceOf<RefreshSessionEvent>()
+    }
+
+    @Test
+    fun `refreshUserPoolTokensAction works without client secret`() = runTest {
+        val poolWithoutSecret = mockk<UserPoolConfiguration> {
+            every { appClient } returns "client"
+            every { appClientSecret } returns null
+            every { region } returns "us-east-1"
+            every { poolId } returns "pool_id"
+        }
+        val configWithoutSecret = mockk<AuthConfiguration> {
+            every { userPool } returns poolWithoutSecret
+            every { identityPool } returns null
+        }
+        val envWithoutSecret = AuthEnvironment(
+            ApplicationProvider.getApplicationContext(),
+            configWithoutSecret,
+            cognitoAuthService,
+            credentialStoreClient,
+            null,
+            null,
+            logger
+        )
+
+        val requestSlot =
+            slot<aws.sdk.kotlin.services.cognitoidentityprovider.model.GetTokensFromRefreshTokenRequest>()
+        coEvery {
+            cognitoIdentityProviderClientMock.getTokensFromRefreshToken(capture(requestSlot))
+        } returns GetTokensFromRefreshTokenResponse {
+            authenticationResult = AuthenticationResultType {
+                this.accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
+                    "eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ." +
+                    "XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o"
+                this.idToken = "id_token"
+                this.refreshToken = "new_refresh_token"
+                this.expiresIn = 3600
+            }
+        }
+
+        val signedInData = mockSignedInData(
+            username = "username",
+            cognitoUserPoolTokens = CognitoUserPoolTokens(
+                accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
+                    "eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ." +
+                    "XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o",
+                idToken = "old_id",
+                refreshToken = "refresh_token",
+                expiration = 0
+            )
+        )
+
+        FetchAuthSessionCognitoActions.refreshUserPoolTokensAction(signedInData)
+            .execute(dispatcher, envWithoutSecret)
+
+        requestSlot.captured.clientSecret shouldBe null
+        capturedEvent.captured.shouldBeInstanceOf<RefreshSessionEvent>()
+    }
+
+    @Test
+    fun `refreshUserPoolTokensAction includes client secret when available`() = runTest {
+        val requestSlot =
+            slot<aws.sdk.kotlin.services.cognitoidentityprovider.model.GetTokensFromRefreshTokenRequest>()
+        coEvery {
+            cognitoIdentityProviderClientMock.getTokensFromRefreshToken(capture(requestSlot))
+        } returns GetTokensFromRefreshTokenResponse {
+            authenticationResult = AuthenticationResultType {
+                this.accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
+                    "eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ." +
+                    "XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o"
+                this.idToken = "id_token"
+                this.refreshToken = "new_refresh_token"
+                this.expiresIn = 3600
+            }
+        }
+
+        val signedInData = mockSignedInData(
+            username = "username",
+            cognitoUserPoolTokens = CognitoUserPoolTokens(
+                accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
+                    "eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ." +
+                    "XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o",
+                idToken = "old_id",
+                refreshToken = "refresh_token",
+                expiration = 0
+            )
+        )
+
+        FetchAuthSessionCognitoActions.refreshUserPoolTokensAction(signedInData)
+            .execute(dispatcher, authEnvironment)
+
+        requestSlot.captured.clientSecret shouldBe "secret"
         capturedEvent.captured.shouldBeInstanceOf<RefreshSessionEvent>()
     }
 }

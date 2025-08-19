@@ -19,9 +19,9 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetTokensFromRefreshTokenRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.InitiateAuthRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpRequest
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetTokensFromRefreshTokenRequest
 import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import kotlinx.serialization.json.Json
