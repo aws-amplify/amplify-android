@@ -93,8 +93,17 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
                 }
             )
         }
-            .doOnSubscribe { semaphore.acquire() }
-            .doOnTerminate { semaphore.release() }
+            .doOnSubscribe { 
+                val methodName = Thread.currentThread().stackTrace[3].methodName
+                LOG.debug("[$methodName] Acquiring outbox semaphore (permits: ${semaphore.availablePermits()})")
+                semaphore.acquire()
+                LOG.debug("[$methodName] Acquired outbox semaphore (permits: ${semaphore.availablePermits()})")
+            }
+            .doOnTerminate { 
+                val methodName = Thread.currentThread().stackTrace[3].methodName
+                LOG.debug("[$methodName] Releasing outbox semaphore (permits: ${semaphore.availablePermits()})")
+                semaphore.release()
+            }
             .blockingAwait()
         return mutationResult.get()
     }
@@ -106,7 +115,10 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
     ): Set<String> {
         // We chunk sql query to 950 items to prevent hitting 1k sqlite predicate limit
         // Improvement would be to use IN, but not currently supported in our query builders
+        val methodName = Thread.currentThread().stackTrace[1].methodName
+        LOG.debug("[$methodName] Acquiring outbox semaphore (permits: ${semaphore.availablePermits()})")
         semaphore.acquire()
+        LOG.debug("[$methodName] Acquired outbox semaphore (permits: ${semaphore.availablePermits()})")
         val pendingMutations: Set<String> = models.chunked(950).fold(mutableSetOf()) { acc, chunk ->
             val queryOptions = Where.matches(
                 QueryPredicateGroup(
@@ -149,6 +161,7 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
             }
             acc
         }
+        LOG.debug("[$methodName] Releasing outbox semaphore (permits: ${semaphore.availablePermits()})")
         semaphore.release()
         return pendingMutations
     }
@@ -175,8 +188,17 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
                 }
             )
         }
-            .doOnSubscribe { semaphore.acquire() }
-            .doOnTerminate { semaphore.release() }
+            .doOnSubscribe { 
+                val methodName = Thread.currentThread().stackTrace[3].methodName
+                LOG.debug("[$methodName] Acquiring outbox semaphore (permits: ${semaphore.availablePermits()})")
+                semaphore.acquire()
+                LOG.debug("[$methodName] Acquired outbox semaphore (permits: ${semaphore.availablePermits()})")
+            }
+            .doOnTerminate { 
+                val methodName = Thread.currentThread().stackTrace[3].methodName
+                LOG.debug("[$methodName] Releasing outbox semaphore (permits: ${semaphore.availablePermits()})")
+                semaphore.release()
+            }
             .blockingAwait()
         return mutationResult.get()
     }
@@ -195,8 +217,17 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
                 return@defer resolveConflict<T>(existingMutation, incomingMutation)
             }
         }
-            .doOnSubscribe { semaphore.acquire() }
-            .doOnTerminate { semaphore.release() }
+            .doOnSubscribe { 
+                val methodName = Thread.currentThread().stackTrace[3].methodName
+                LOG.debug("[$methodName] Acquiring outbox semaphore (permits: ${semaphore.availablePermits()})")
+                semaphore.acquire()
+                LOG.debug("[$methodName] Acquired outbox semaphore (permits: ${semaphore.availablePermits()})")
+            }
+            .doOnTerminate { 
+                val methodName = Thread.currentThread().stackTrace[3].methodName
+                LOG.debug("[$methodName] Releasing outbox semaphore (permits: ${semaphore.availablePermits()})")
+                semaphore.release()
+            }
     }
 
     private fun <T : Model> resolveConflict(
@@ -241,8 +272,17 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
 
     override fun remove(pendingMutationId: TimeBasedUuid): Completable {
         return removeNotLocking(pendingMutationId)
-            .doOnSubscribe { semaphore.acquire() }
-            .doOnTerminate { semaphore.release() }
+            .doOnSubscribe { 
+                val methodName = Thread.currentThread().stackTrace[3].methodName
+                LOG.debug("[$methodName] Acquiring outbox semaphore (permits: ${semaphore.availablePermits()})")
+                semaphore.acquire()
+                LOG.debug("[$methodName] Acquired outbox semaphore (permits: ${semaphore.availablePermits()})")
+            }
+            .doOnTerminate { 
+                val methodName = Thread.currentThread().stackTrace[3].methodName
+                LOG.debug("[$methodName] Releasing outbox semaphore (permits: ${semaphore.availablePermits()})")
+                semaphore.release()
+            }
     }
 
     private fun removeNotLocking(pendingMutationId: TimeBasedUuid): Completable {
@@ -325,8 +365,17 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
                 }
             )
         }
-            .doOnSubscribe { semaphore.acquire() }
-            .doOnTerminate { semaphore.release() }
+            .doOnSubscribe { 
+                val methodName = Thread.currentThread().stackTrace[3].methodName
+                LOG.debug("[$methodName] Acquiring outbox semaphore (permits: ${semaphore.availablePermits()})")
+                semaphore.acquire()
+                LOG.debug("[$methodName] Acquired outbox semaphore (permits: ${semaphore.availablePermits()})")
+            }
+            .doOnTerminate { 
+                val methodName = Thread.currentThread().stackTrace[3].methodName
+                LOG.debug("[$methodName] Releasing outbox semaphore (permits: ${semaphore.availablePermits()})")
+                semaphore.release()
+            }
     }
 
     override fun events(): Observable<OutboxEvent> {

@@ -189,8 +189,8 @@ public final class Orchestrator {
     }
 
     private Completable performSynchronized(Action action) {
-        boolean permitAvailable = startStopSemaphore.availablePermits() > 0;
-        LOG.debug("Attempting to acquire lock. Permits available = " + permitAvailable);
+        String methodName = Thread.currentThread().getStackTrace()[3].getMethodName();
+        LOG.debug("[" + methodName + "] Attempting to acquire lock (permits: " + startStopSemaphore.availablePermits() + ")");
         try {
             if (!startStopSemaphore.tryAcquire(LOCAL_OP_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
                 return Completable.error(new DataStoreException("Timed out acquiring orchestrator lock.",
@@ -200,13 +200,13 @@ public final class Orchestrator {
             return Completable.error(new DataStoreException("Interrupted while acquiring orchestrator lock.",
                     "Retry your request."));
         }
-        LOG.info("Orchestrator lock acquired.");
+        LOG.info("[" + methodName + "] Orchestrator lock acquired (permits: " + startStopSemaphore.availablePermits() + ")");
         return Completable.fromAction(action).doOnError((e) -> {
             startStopSemaphore.release();
-            LOG.info("Orchestrator lock released.");
+            LOG.info("[" + methodName + "] Orchestrator lock released (permits: " + startStopSemaphore.availablePermits() + ")");
         }).andThen(Completable.fromAction(() -> {
             startStopSemaphore.release();
-            LOG.info("Orchestrator lock released.");
+            LOG.info("[" + methodName + "] Orchestrator lock released (permits: " + startStopSemaphore.availablePermits() + ")");
         }));
     }
 
