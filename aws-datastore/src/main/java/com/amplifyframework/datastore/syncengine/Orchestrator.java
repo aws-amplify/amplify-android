@@ -159,7 +159,7 @@ public final class Orchestrator {
      *      and started (asynchronously) the transition to SYNC_VIA_API, if an API is available.
      */
     public synchronized Completable start() {
-        return performSynchronized(() -> {
+        return performSynchronized("start", () -> {
             switch (targetState.get()) {
                 case LOCAL_ONLY:
                     disposeNetworkChanges();
@@ -185,11 +185,10 @@ public final class Orchestrator {
      * @return A completable which emits success when orchestrator stops
      */
     public synchronized Completable stop() {
-        return performSynchronized(this::transitionToStopped);
+        return performSynchronized("stop", this::transitionToStopped);
     }
 
-    private Completable performSynchronized(Action action) {
-        String methodName = Thread.currentThread().getStackTrace()[3].getMethodName();
+    private Completable performSynchronized(String methodName, Action action) {
         LOG.debug("[" + methodName + "] Attempting to acquire lock (permits: " + startStopSemaphore.availablePermits() + ")");
         try {
             if (!startStopSemaphore.tryAcquire(LOCAL_OP_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
@@ -201,13 +200,11 @@ public final class Orchestrator {
                     "Retry your request."));
         }
         LOG.info("[" + methodName + "] Orchestrator lock acquired (permits: " + startStopSemaphore.availablePermits() + ")");
-        return Completable.fromAction(action).doOnError((e) -> {
-            startStopSemaphore.release();
-            LOG.info("[" + methodName + "] Orchestrator lock released (permits: " + startStopSemaphore.availablePermits() + ")");
-        }).andThen(Completable.fromAction(() -> {
-            startStopSemaphore.release();
-            LOG.info("[" + methodName + "] Orchestrator lock released (permits: " + startStopSemaphore.availablePermits() + ")");
-        }));
+        return Completable.fromAction(action)
+            .doFinally(() -> {
+                startStopSemaphore.release();
+                LOG.info("[" + methodName + "] Orchestrator lock released (permits: " + startStopSemaphore.availablePermits() + ")");
+            });
     }
 
     private void unknownState(State state) throws DataStoreException {
