@@ -200,11 +200,13 @@ public final class Orchestrator {
                     "Retry your request."));
         }
         LOG.info("[" + methodName + "] Orchestrator lock acquired (permits: " + startStopSemaphore.availablePermits() + ")");
-        return Completable.fromAction(action)
-            .doFinally(() -> {
-                startStopSemaphore.release();
-                LOG.info("[" + methodName + "] Orchestrator lock released (permits: " + startStopSemaphore.availablePermits() + ")");
-            });
+        return Completable.fromAction(action).doOnError((e) -> {
+            startStopSemaphore.release();
+            LOG.info("[" + methodName + "] Orchestrator lock released (permits: " + startStopSemaphore.availablePermits() + ")");
+        }).andThen(Completable.fromAction(() -> {
+            startStopSemaphore.release();
+            LOG.info("[" + methodName + "] Orchestrator lock released (permits: " + startStopSemaphore.availablePermits() + ")");
+        }));
     }
 
     private void unknownState(State state) throws DataStoreException {
