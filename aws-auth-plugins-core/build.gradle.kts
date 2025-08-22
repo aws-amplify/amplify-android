@@ -14,9 +14,9 @@
  */
 
 plugins {
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.10"
-    id("com.android.library")
-    id("kotlin-android")
+    alias(libs.plugins.amplify.android.library)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.amplify.api)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
@@ -25,9 +25,7 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 group = properties["POM_GROUP"].toString()
 
 android {
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
-    }
+    namespace = "com.amplifyframework.plugins.core"
 }
 
 dependencies {

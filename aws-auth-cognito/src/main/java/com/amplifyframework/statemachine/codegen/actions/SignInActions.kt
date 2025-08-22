@@ -28,4 +28,6 @@ internal interface SignInActions {
     fun confirmDevice(event: SignInEvent.EventType.ConfirmDevice): Action
     fun startHostedUIAuthAction(event: SignInEvent.EventType.InitiateHostedUISignIn): Action
     fun initiateTOTPSetupAction(event: SignInEvent.EventType.InitiateTOTPSetup): Action
+    fun initiateWebAuthnSignInAction(event: SignInEvent.EventType.InitiateWebAuthnSignIn): Action
+    fun autoSignInAction(event: SignInEvent.EventType.InitiateAutoSignIn): Action
 }

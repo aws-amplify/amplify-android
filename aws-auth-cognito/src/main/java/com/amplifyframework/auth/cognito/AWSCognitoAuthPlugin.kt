@@ -33,15 +33,19 @@ import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.TOTPSetupDetails
 import com.amplifyframework.auth.cognito.asf.UserContextDataProvider
+import com.amplifyframework.auth.cognito.helpers.authLogger
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
+import com.amplifyframework.auth.cognito.usecases.AuthUseCaseFactory
 import com.amplifyframework.auth.exceptions.ConfigurationException
-import com.amplifyframework.auth.exceptions.UnknownException
+import com.amplifyframework.auth.options.AuthAssociateWebAuthnCredentialsOptions
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
+import com.amplifyframework.auth.options.AuthDeleteWebAuthnCredentialOptions
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
+import com.amplifyframework.auth.options.AuthListWebAuthnCredentialsOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -52,15 +56,14 @@ import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
+import com.amplifyframework.auth.result.AuthListWebAuthnCredentialsResult
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignOutResult
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.core.Action
-import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
-import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.core.configuration.AmplifyOutputsData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -80,11 +83,13 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         private const val AWS_COGNITO_AUTH_PLUGIN_KEY = "awsCognitoAuthPlugin"
     }
 
-    private val logger =
-        Amplify.Logging.logger(CategoryType.AUTH, AWS_COGNITO_AUTH_LOG_NAMESPACE.format(this::class.java.simpleName))
+    private val logger = authLogger()
 
     @VisibleForTesting
     internal lateinit var realPlugin: RealAWSCognitoAuthPlugin
+
+    @VisibleForTesting
+    internal lateinit var useCaseFactory: AuthUseCaseFactory
 
     private val pluginScope = CoroutineScope(Job() + Dispatchers.Default)
     private val queueFacade: KotlinAuthFacadeInternal by lazy {
@@ -102,9 +107,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     // older Authenticator versions we translate the config - whether it comes from Gen1 or Gen2 - back into Gen1 JSON
     @InternalAmplifyApi
     @Deprecated("Use getAuthConfiguration instead", replaceWith = ReplaceWith("getAuthConfiguration()"))
-    fun getPluginConfiguration(): JSONObject {
-        return getAuthConfiguration().toGen1Json()
-    }
+    fun getPluginConfiguration(): JSONObject = getAuthConfiguration().toGen1Json()
 
     @InternalAmplifyApi
     fun getAuthConfiguration() = realPlugin.configuration
@@ -114,12 +117,13 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         realPlugin.addToUserAgent(type, value)
     }
 
-    private fun Exception.toAuthException(): AuthException {
-        return if (this is AuthException) {
-            this
-        } else {
-            UnknownException(cause = this)
-        }
+    private fun Exception.toAuthException(): AuthException = if (this is AuthException) {
+        this
+    } else {
+        CognitoAuthExceptionConverter.lookup(
+            error = this,
+            fallbackMessage = "An unclassified error prevented this operation."
+        )
     }
 
     override fun initialize(context: Context) {
@@ -172,6 +176,8 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
             logger
         )
 
+        useCaseFactory = AuthUseCaseFactory(realPlugin, authEnvironment, authStateMachine)
+
         blockQueueChannelWhileConfiguring()
     }
 
@@ -187,40 +193,18 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
 
     override fun signUp(
         username: String,
-        password: String,
+        password: String?,
         options: AuthSignUpOptions,
         onSuccess: Consumer<AuthSignUpResult>,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.signUp(username, password, options)
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.signUp().execute(username, password, options) }
 
     override fun confirmSignUp(
         username: String,
         confirmationCode: String,
         onSuccess: Consumer<AuthSignUpResult>,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.confirmSignUp(username, confirmationCode)
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.confirmSignUp().execute(username, confirmationCode) }
 
     override fun confirmSignUp(
         username: String,
@@ -228,71 +212,27 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         options: AuthConfirmSignUpOptions,
         onSuccess: Consumer<AuthSignUpResult>,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.confirmSignUp(username, confirmationCode, options)
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.confirmSignUp().execute(username, confirmationCode, options) }
 
     override fun resendSignUpCode(
         username: String,
         onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.resendSignUpCode(username)
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.resendSignupCode().execute(username) }
 
     override fun resendSignUpCode(
         username: String,
         options: AuthResendSignUpCodeOptions,
         onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.resendSignUpCode(username, options)
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.resendSignupCode().execute(username, options) }
 
     override fun signIn(
         username: String?,
         password: String?,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.signIn(username, password)
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    ) = enqueue(onSuccess, onError) { queueFacade.signIn(username, password) }
 
     override fun signIn(
         username: String?,
@@ -300,71 +240,27 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         options: AuthSignInOptions,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.signIn(username, password, options)
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    ) = enqueue(onSuccess, onError) { queueFacade.signIn(username, password, options) }
 
     override fun confirmSignIn(
         challengeResponse: String,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.confirmSignIn(challengeResponse)
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    ) = enqueue(onSuccess, onError) { queueFacade.confirmSignIn(challengeResponse) }
 
     override fun confirmSignIn(
         challengeResponse: String,
         options: AuthConfirmSignInOptions,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.confirmSignIn(challengeResponse, options)
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    ) = enqueue(onSuccess, onError) { queueFacade.confirmSignIn(challengeResponse, options) }
 
     override fun signInWithSocialWebUI(
         provider: AuthProvider,
         callingActivity: Activity,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.signInWithSocialWebUI(provider, callingActivity)
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    ) = enqueue(onSuccess, onError) { queueFacade.signInWithSocialWebUI(provider, callingActivity) }
 
     override fun signInWithSocialWebUI(
         provider: AuthProvider,
@@ -372,53 +268,20 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         options: AuthWebUISignInOptions,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.signInWithSocialWebUI(provider, callingActivity, options)
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    ) = enqueue(onSuccess, onError) { queueFacade.signInWithSocialWebUI(provider, callingActivity, options) }
 
     override fun signInWithWebUI(
         callingActivity: Activity,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.signInWithWebUI(callingActivity)
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    ) = enqueue(onSuccess, onError) { queueFacade.signInWithWebUI(callingActivity) }
 
     override fun signInWithWebUI(
         callingActivity: Activity,
         options: AuthWebUISignInOptions,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.signInWithWebUI(callingActivity, options)
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    ) = enqueue(onSuccess, onError) { queueFacade.signInWithWebUI(callingActivity, options) }
 
     override fun handleWebUISignInResponse(intent: Intent?) {
         queueFacade.handleWebUISignInResponse(intent)
@@ -428,125 +291,35 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         options: AuthFetchSessionOptions,
         onSuccess: Consumer<AuthSession>,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.fetchAuthSession(options)
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    ) = enqueue(onSuccess, onError) { queueFacade.fetchAuthSession(options) }
 
-    override fun fetchAuthSession(onSuccess: Consumer<AuthSession>, onError: Consumer<AuthException>) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.fetchAuthSession()
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    override fun fetchAuthSession(onSuccess: Consumer<AuthSession>, onError: Consumer<AuthException>) =
+        enqueue(onSuccess, onError) { queueFacade.fetchAuthSession() }
 
-    override fun rememberDevice(onSuccess: Action, onError: Consumer<AuthException>) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    queueFacade.rememberDevice()
-                    pluginScope.launch { onSuccess.call() }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    override fun rememberDevice(onSuccess: Action, onError: Consumer<AuthException>) =
+        enqueue(onSuccess, onError) { useCaseFactory.rememberDevice().execute() }
 
-    override fun forgetDevice(onSuccess: Action, onError: Consumer<AuthException>) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    queueFacade.forgetDevice()
-                    pluginScope.launch { onSuccess.call() }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    override fun forgetDevice(onSuccess: Action, onError: Consumer<AuthException>) =
+        enqueue(onSuccess, onError) { useCaseFactory.forgetDevice().execute() }
 
-    override fun forgetDevice(
-        device: AuthDevice,
-        onSuccess: Action,
-        onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    queueFacade.forgetDevice(device)
-                    pluginScope.launch { onSuccess.call() }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    override fun forgetDevice(device: AuthDevice, onSuccess: Action, onError: Consumer<AuthException>) =
+        enqueue(onSuccess, onError) { useCaseFactory.forgetDevice().execute(device) }
 
-    override fun fetchDevices(
-        onSuccess: Consumer<List<AuthDevice>>,
-        onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.fetchDevices()
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    override fun fetchDevices(onSuccess: Consumer<List<AuthDevice>>, onError: Consumer<AuthException>) =
+        enqueue(onSuccess, onError) { useCaseFactory.fetchDevices().execute() }
 
     override fun resetPassword(
         username: String,
         options: AuthResetPasswordOptions,
         onSuccess: Consumer<AuthResetPasswordResult>,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.resetPassword(username, options)
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.resetPassword().execute(username, options) }
 
     override fun resetPassword(
         username: String,
         onSuccess: Consumer<AuthResetPasswordResult>,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.resetPassword(username)
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.resetPassword().execute(username) }
 
     override fun confirmResetPassword(
         username: String,
@@ -555,17 +328,8 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         options: AuthConfirmResetPasswordOptions,
         onSuccess: Action,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    queueFacade.confirmResetPassword(username, newPassword, confirmationCode, options)
-                    pluginScope.launch { onSuccess.call() }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
+    ) = enqueue(onSuccess, onError) {
+        useCaseFactory.confirmResetPassword().execute(username, newPassword, confirmationCode, options)
     }
 
     override fun confirmResetPassword(
@@ -574,17 +338,8 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         confirmationCode: String,
         onSuccess: Action,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    queueFacade.confirmResetPassword(username, newPassword, confirmationCode)
-                    pluginScope.launch { onSuccess.call() }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
+    ) = enqueue(onSuccess, onError) {
+        useCaseFactory.confirmResetPassword().execute(username, newPassword, confirmationCode)
     }
 
     override fun updatePassword(
@@ -592,217 +347,76 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         newPassword: String,
         onSuccess: Action,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    queueFacade.updatePassword(oldPassword, newPassword)
-                    pluginScope.launch { onSuccess.call() }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.updatePassword().execute(oldPassword, newPassword) }
 
-    override fun fetchUserAttributes(
-        onSuccess: Consumer<List<AuthUserAttribute>>,
-        onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.fetchUserAttributes()
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    override fun fetchUserAttributes(onSuccess: Consumer<List<AuthUserAttribute>>, onError: Consumer<AuthException>) =
+        enqueue(onSuccess, onError) { useCaseFactory.fetchUserAttributes().execute() }
 
     override fun updateUserAttribute(
         attribute: AuthUserAttribute,
         options: AuthUpdateUserAttributeOptions,
         onSuccess: Consumer<AuthUpdateAttributeResult>,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.updateUserAttribute(attribute, options)
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.updateUserAttributes().execute(attribute, options) }
 
     override fun updateUserAttribute(
         attribute: AuthUserAttribute,
         onSuccess: Consumer<AuthUpdateAttributeResult>,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.updateUserAttribute(attribute)
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.updateUserAttributes().execute(attribute) }
 
     override fun updateUserAttributes(
         attributes: List<AuthUserAttribute>,
         options: AuthUpdateUserAttributesOptions,
         onSuccess: Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>>,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.updateUserAttributes(attributes, options)
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.updateUserAttributes().execute(attributes, options) }
 
     override fun updateUserAttributes(
         attributes: List<AuthUserAttribute>,
         onSuccess: Consumer<Map<AuthUserAttributeKey, AuthUpdateAttributeResult>>,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.updateUserAttributes(attributes)
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.updateUserAttributes().execute(attributes) }
 
     override fun resendUserAttributeConfirmationCode(
         attributeKey: AuthUserAttributeKey,
         options: AuthResendUserAttributeConfirmationCodeOptions,
         onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.resendUserAttributeConfirmationCode(attributeKey, options)
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.resendUserAttributeConfirmation().execute(attributeKey, options) }
 
     override fun resendUserAttributeConfirmationCode(
         attributeKey: AuthUserAttributeKey,
         onSuccess: Consumer<AuthCodeDeliveryDetails>,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.resendUserAttributeConfirmationCode(attributeKey)
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.resendUserAttributeConfirmation().execute(attributeKey) }
 
     override fun confirmUserAttribute(
         attributeKey: AuthUserAttributeKey,
         confirmationCode: String,
         onSuccess: Action,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    queueFacade.confirmUserAttribute(attributeKey, confirmationCode)
-                    pluginScope.launch { onSuccess.call() }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
+    ) = enqueue(onSuccess, onError) { useCaseFactory.confirmUserAttribute().execute(attributeKey, confirmationCode) }
+
+    override fun getCurrentUser(onSuccess: Consumer<AuthUser>, onError: Consumer<AuthException>) =
+        enqueue(onSuccess, onError) { useCaseFactory.getCurrentUser().execute() }
+
+    override fun signOut(onComplete: Consumer<AuthSignOutResult>) = enqueue(
+        onComplete,
+        onError = ::throwIt
+    ) { queueFacade.signOut() }
+
+    override fun signOut(options: AuthSignOutOptions, onComplete: Consumer<AuthSignOutResult>) = enqueue(
+        onComplete,
+        onError = ::throwIt
+    ) { queueFacade.signOut(options) }
+
+    override fun deleteUser(onSuccess: Action, onError: Consumer<AuthException>) = enqueue(onSuccess, onError) {
+        useCaseFactory.deleteUser().execute()
     }
 
-    override fun getCurrentUser(
-        onSuccess: Consumer<AuthUser>,
-        onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.getCurrentUser()
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
-
-    override fun signOut(onComplete: Consumer<AuthSignOutResult>) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                val result = queueFacade.signOut()
-                pluginScope.launch { onComplete.accept(result) }
-            }
-        )
-    }
-
-    override fun signOut(options: AuthSignOutOptions, onComplete: Consumer<AuthSignOutResult>) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                val result = queueFacade.signOut(options)
-                pluginScope.launch { onComplete.accept(result) }
-            }
-        )
-    }
-
-    override fun deleteUser(onSuccess: Action, onError: Consumer<AuthException>) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    queueFacade.deleteUser()
-                    pluginScope.launch { onSuccess.call() }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
-
-    override fun setUpTOTP(onSuccess: Consumer<TOTPSetupDetails>, onError: Consumer<AuthException>) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.setUpTOTP()
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    override fun setUpTOTP(onSuccess: Consumer<TOTPSetupDetails>, onError: Consumer<AuthException>) =
+        enqueue(onSuccess, onError) { useCaseFactory.setupTotp().execute() }
 
     override fun verifyTOTPSetup(code: String, onSuccess: Action, onError: Consumer<AuthException>) {
         verifyTOTPSetup(code, AWSCognitoAuthVerifyTOTPSetupOptions.CognitoBuilder().build(), onSuccess, onError)
@@ -813,18 +427,50 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         options: AuthVerifyTOTPSetupOptions,
         onSuccess: Action,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    queueFacade.verifyTOTPSetup(code, options)
-                    pluginScope.launch { onSuccess.call() }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.verifyTotpSetup().execute(code, options) }
+
+    override fun associateWebAuthnCredential(
+        callingActivity: Activity,
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) = associateWebAuthnCredential(
+        callingActivity,
+        AuthAssociateWebAuthnCredentialsOptions.defaults(),
+        onSuccess,
+        onError
+    )
+
+    override fun associateWebAuthnCredential(
+        callingActivity: Activity,
+        options: AuthAssociateWebAuthnCredentialsOptions,
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) = enqueue(onSuccess, onError) { useCaseFactory.associateWebAuthnCredential().execute(callingActivity, options) }
+
+    override fun listWebAuthnCredentials(
+        onSuccess: Consumer<AuthListWebAuthnCredentialsResult>,
+        onError: Consumer<AuthException>
+    ) = listWebAuthnCredentials(AuthListWebAuthnCredentialsOptions.defaults(), onSuccess, onError)
+
+    override fun listWebAuthnCredentials(
+        options: AuthListWebAuthnCredentialsOptions,
+        onSuccess: Consumer<AuthListWebAuthnCredentialsResult>,
+        onError: Consumer<AuthException>
+    ) = enqueue(onSuccess, onError) { useCaseFactory.listWebAuthnCredentials().execute(options) }
+
+    override fun autoSignIn(onSuccess: Consumer<AuthSignInResult>, onError: Consumer<AuthException>) =
+        enqueue(onSuccess, onError) { useCaseFactory.autoSignIn().execute() }
+
+    override fun deleteWebAuthnCredential(credentialId: String, onSuccess: Action, onError: Consumer<AuthException>) =
+        deleteWebAuthnCredential(credentialId, AuthDeleteWebAuthnCredentialOptions.defaults(), onSuccess, onError)
+
+    override fun deleteWebAuthnCredential(
+        credentialId: String,
+        options: AuthDeleteWebAuthnCredentialOptions,
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) = enqueue(onSuccess, onError) { useCaseFactory.deleteWebAuthnCredential().execute(credentialId, options) }
+
     override fun getEscapeHatch() = realPlugin.escapeHatch()
 
     override fun getPluginKey() = AWS_COGNITO_AUTH_PLUGIN_KEY
@@ -842,20 +488,11 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         authProvider: AuthProvider,
         onSuccess: Consumer<FederateToIdentityPoolResult>,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.federateToIdentityPool(
-                        providerToken,
-                        authProvider,
-                        FederateToIdentityPoolOptions.builder().build()
-                    )
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
+    ) = enqueue(onSuccess, onError) {
+        queueFacade.federateToIdentityPool(
+            providerToken,
+            authProvider,
+            FederateToIdentityPoolOptions.builder().build()
         )
     }
 
@@ -872,20 +509,11 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         options: FederateToIdentityPoolOptions,
         onSuccess: Consumer<FederateToIdentityPoolResult>,
         onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.federateToIdentityPool(
-                        providerToken,
-                        authProvider,
-                        options
-                    )
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
+    ) = enqueue(onSuccess, onError) {
+        queueFacade.federateToIdentityPool(
+            providerToken,
+            authProvider,
+            options
         )
     }
 
@@ -894,53 +522,62 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
      * @param onSuccess Success callback
      * @param onError Error callback
      */
-    fun clearFederationToIdentityPool(
-        onSuccess: Action,
-        onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    queueFacade.clearFederationToIdentityPool()
-                    pluginScope.launch { onSuccess.call() }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    fun clearFederationToIdentityPool(onSuccess: Action, onError: Consumer<AuthException>) =
+        enqueue(onSuccess, onError) { queueFacade.clearFederationToIdentityPool() }
 
-    fun fetchMFAPreference(
-        onSuccess: Consumer<UserMFAPreference>,
-        onError: Consumer<AuthException>
-    ) {
-        queueChannel.trySend(
-            pluginScope.launch(start = CoroutineStart.LAZY) {
-                try {
-                    val result = queueFacade.fetchMFAPreference()
-                    pluginScope.launch { onSuccess.accept(result) }
-                } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
-                }
-            }
-        )
-    }
+    fun fetchMFAPreference(onSuccess: Consumer<UserMFAPreference>, onError: Consumer<AuthException>) =
+        enqueue(onSuccess, onError) { useCaseFactory.fetchMfaPreference().execute() }
 
+    @Deprecated("Use updateMFAPreference(sms, totp, email, onSuccess, onError) instead")
     fun updateMFAPreference(
         sms: MFAPreference?,
         totp: MFAPreference?,
         onSuccess: Action,
         onError: Consumer<AuthException>
-    ) {
+    ) = enqueue(onSuccess, onError) {
+        useCaseFactory.updateMfaPreference().execute(
+            sms = sms,
+            totp = totp,
+            email = null
+        )
+    }
+
+    fun updateMFAPreference(
+        sms: MFAPreference? = null,
+        totp: MFAPreference? = null,
+        email: MFAPreference? = null,
+        onSuccess: Action,
+        onError: Consumer<AuthException>
+    ) = enqueue(onSuccess, onError) {
+        useCaseFactory.updateMfaPreference().execute(
+            sms = sms,
+            totp = totp,
+            email = email
+        )
+    }
+
+    private fun enqueue(onSuccess: Action, onError: Consumer<AuthException>, block: suspend () -> Unit) =
+        enqueue({ onSuccess.call() }, onError::accept, block)
+
+    private fun <T : Any> enqueue(onSuccess: Consumer<T>, onError: Consumer<AuthException>, block: suspend () -> T) =
+        enqueue(onSuccess::accept, onError::accept, block)
+
+    /**
+     * Enqueue block to run sequentially with other blocks. Results are passed to onSuccess and any thrown exceptions
+     * are passed to onError
+     */
+    private fun <T : Any> enqueue(onSuccess: (T) -> Unit, onError: (AuthException) -> Unit, block: suspend () -> T) {
         queueChannel.trySend(
             pluginScope.launch(start = CoroutineStart.LAZY) {
                 try {
-                    queueFacade.updateMFAPreference(sms, totp)
-                    pluginScope.launch { onSuccess.call() }
+                    val result = block()
+                    pluginScope.launch { onSuccess(result) }
                 } catch (e: Exception) {
-                    pluginScope.launch { onError.accept(e.toAuthException()) }
+                    pluginScope.launch { onError(e.toAuthException()) }
                 }
             }
         )
     }
+
+    private fun throwIt(e: Throwable): Unit = throw e
 }

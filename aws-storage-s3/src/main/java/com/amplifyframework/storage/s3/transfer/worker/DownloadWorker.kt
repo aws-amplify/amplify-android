@@ -26,6 +26,7 @@ import aws.smithy.kotlin.runtime.io.SdkSource
 import aws.smithy.kotlin.runtime.io.buffer
 import com.amplifyframework.storage.s3.transfer.DownloadProgressListener
 import com.amplifyframework.storage.s3.transfer.DownloadProgressListenerInterceptor
+import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import java.io.BufferedOutputStream
@@ -40,16 +41,17 @@ import kotlinx.coroutines.withContext
  * Worker to perform download file task.
  */
 internal class DownloadWorker(
-    private val s3: S3Client,
+    private val clientProvider: StorageTransferClientProvider,
     private val transferDB: TransferDB,
     private val transferStatusUpdater: TransferStatusUpdater,
     context: Context,
     workerParameters: WorkerParameters
-) : BaseTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
+) : SuspendingTransferWorker(transferStatusUpdater, transferDB, context, workerParameters) {
 
     private lateinit var downloadProgressListener: DownloadProgressListener
     private val defaultBufferSize = 8192L
     override suspend fun performWork(): Result {
+        val s3: S3Client = clientProvider.getStorageTransferClient(transferRecord.region, transferRecord.bucketName)
         s3.withConfig {
             enableAccelerate = transferRecord.useAccelerateEndpoint == 1
         }
@@ -86,10 +88,7 @@ internal class DownloadWorker(
         }
     }
 
-    private suspend fun writeStreamToFile(
-        stream: ByteStream,
-        file: File
-    ) {
+    private suspend fun writeStreamToFile(stream: ByteStream, file: File) {
         withContext(Dispatchers.IO) {
             when (stream) {
                 is ByteStream.ChannelStream, is ByteStream.Buffer -> {

@@ -15,5 +15,6 @@
 - [ ] Added Unit Tests
 - [ ] Added Integration Tests
 - [ ] Security oriented best practices and standards are followed (e.g. using input sanitization, principle of least privilege, etc)
+- [ ] Ensure commit message has the appropriate scope (e.g `fix(storage): message`, `feat(auth): message`, `chore(all): message`)
 
 By submitting this pull request, I confirm that my contribution is made under the terms of the Apache 2.0 license.

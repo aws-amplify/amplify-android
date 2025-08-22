@@ -28,9 +28,5 @@ interface NotificationsCategoryBehavior {
         onError: Consumer<PushNotificationsException>
     )
 
-    fun identifyUser(
-        userId: String,
-        onSuccess: Action,
-        onError: Consumer<PushNotificationsException>
-    )
+    fun identifyUser(userId: String, onSuccess: Action, onError: Consumer<PushNotificationsException>)
 }

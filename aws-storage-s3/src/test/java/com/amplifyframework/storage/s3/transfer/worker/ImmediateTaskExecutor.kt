@@ -14,27 +14,21 @@
  */
 package com.amplifyframework.storage.s3.transfer.worker
 
-import androidx.work.impl.utils.SerialExecutor
 import androidx.work.impl.utils.SynchronousExecutor
+import androidx.work.impl.utils.taskexecutor.SerialExecutor
 import androidx.work.impl.utils.taskexecutor.TaskExecutor
 import java.util.concurrent.Executor
 
 class ImmediateTaskExecutor : TaskExecutor {
     private val mSynchronousExecutor: Executor = SynchronousExecutor()
-    private val mSerialExecutor = SerialExecutor(mSynchronousExecutor)
-    override fun postToMainThread(runnable: Runnable?) {
-        runnable?.run()
-    }
+    private val mSerialExecutor = SerialExecutorImpl(mSynchronousExecutor)
 
-    override fun getMainThreadExecutor(): Executor {
-        return mSynchronousExecutor
-    }
+    override fun getMainThreadExecutor(): Executor = mSynchronousExecutor
 
-    override fun executeOnBackgroundThread(runnable: Runnable?) {
-        runnable?.let { mSerialExecutor.execute(it) }
-    }
+    override fun getSerialTaskExecutor(): SerialExecutor = mSerialExecutor
 
-    override fun getBackgroundExecutor(): SerialExecutor {
-        return mSerialExecutor
+    private class SerialExecutorImpl(val delegate: Executor) : SerialExecutor, Executor by delegate {
+        // There's never any pending tasks since we execute all immediately
+        override fun hasPendingTasks() = false
     }
 }

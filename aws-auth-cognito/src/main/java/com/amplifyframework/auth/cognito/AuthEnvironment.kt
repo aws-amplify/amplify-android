@@ -17,8 +17,10 @@ package com.amplifyframework.auth.cognito
 
 import android.annotation.SuppressLint
 import android.content.Context
+import androidx.core.content.edit
 import com.amplifyframework.auth.cognito.asf.UserContextDataProvider
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
+import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.Environment
 import com.amplifyframework.statemachine.StateMachineEvent
@@ -30,6 +32,7 @@ import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
+import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 import java.util.Date
 import java.util.UUID
 
@@ -77,7 +80,7 @@ internal class AuthEnvironment internal constructor(
         val uniqueIdFromPrefs = pinpointPrefs.getString(PINPOINT_UNIQUE_ID_KEY, null)
         val uniqueId = if (uniqueIdFromPrefs == null) {
             val newUniqueId = UUID.randomUUID().toString()
-            pinpointPrefs.edit().putString(PINPOINT_UNIQUE_ID_KEY, uniqueIdFromPrefs).commit()
+            pinpointPrefs.edit(commit = true) { putString(PINPOINT_UNIQUE_ID_KEY, uniqueIdFromPrefs) }
             newUniqueId
         } else {
             uniqueIdFromPrefs
@@ -96,7 +99,9 @@ internal class AuthEnvironment internal constructor(
             val newASFDevice = AmplifyCredential.ASFDevice(newDeviceId)
             credentialStoreClient.storeCredentials(CredentialType.ASF, newASFDevice)
             newDeviceId
-        } else asfDevice.id
+        } else {
+            asfDevice.id
+        }
 
         return userContextDataProvider?.getEncodedContextData(username, deviceId)
     }
@@ -112,22 +117,19 @@ internal class AuthEnvironment internal constructor(
     }
 }
 
-internal fun StateMachineEvent.isAuthEvent(): AuthEvent.EventType? {
-    return (this as? AuthEvent)?.eventType
-}
+internal fun AuthEnvironment.requireIdentityProviderClient() = cognitoAuthService.cognitoIdentityProviderClient
+    ?: throw InvalidStateException("No Cognito identity provider client available")
 
-internal fun StateMachineEvent.isAuthenticationEvent(): AuthenticationEvent.EventType? {
-    return (this as? AuthenticationEvent)?.eventType
-}
+internal fun StateMachineEvent.isAuthEvent(): AuthEvent.EventType? = (this as? AuthEvent)?.eventType
 
-internal fun StateMachineEvent.isAuthorizationEvent(): AuthorizationEvent.EventType? {
-    return (this as? AuthorizationEvent)?.eventType
-}
+internal fun StateMachineEvent.isAuthenticationEvent(): AuthenticationEvent.EventType? =
+    (this as? AuthenticationEvent)?.eventType
 
-internal fun StateMachineEvent.isSignOutEvent(): SignOutEvent.EventType? {
-    return (this as? SignOutEvent)?.eventType
-}
+internal fun StateMachineEvent.isAuthorizationEvent(): AuthorizationEvent.EventType? =
+    (this as? AuthorizationEvent)?.eventType
 
-internal fun StateMachineEvent.isDeleteUserEvent(): DeleteUserEvent.EventType? {
-    return (this as? DeleteUserEvent)?.eventType
-}
+internal fun StateMachineEvent.isSignOutEvent(): SignOutEvent.EventType? = (this as? SignOutEvent)?.eventType
+
+internal fun StateMachineEvent.isDeleteUserEvent(): DeleteUserEvent.EventType? = (this as? DeleteUserEvent)?.eventType
+
+internal fun StateMachineEvent.isSignUpEvent(): SignUpEvent.EventType? = (this as? SignUpEvent)?.eventType

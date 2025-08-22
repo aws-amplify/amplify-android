@@ -90,16 +90,14 @@ internal class SearchResultListView(context: Context) : LinearLayout(context) {
         private val result: MutableList<AmazonLocationPlace>
     ) : RecyclerView.Adapter<ItemViewHolder>() {
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder {
-            return ItemViewHolder(
-                SearchResultItemView(parent.context).apply {
-                    layoutParams = LayoutParams(
-                        LayoutParams.MATCH_PARENT,
-                        LayoutParams.WRAP_CONTENT
-                    )
-                }
-            )
-        }
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemViewHolder = ItemViewHolder(
+            SearchResultItemView(parent.context).apply {
+                layoutParams = LayoutParams(
+                    LayoutParams.MATCH_PARENT,
+                    LayoutParams.WRAP_CONTENT
+                )
+            }
+        )
 
         override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
             val place = result[position]

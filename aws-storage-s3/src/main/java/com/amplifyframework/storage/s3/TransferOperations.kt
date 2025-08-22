@@ -70,6 +70,7 @@ internal object TransferOperations {
             transferRecord.id,
             transferStatusUpdater,
             transferRecord.bucketName,
+            transferRecord.region,
             transferRecord.key,
             transferRecord.file,
             listener
@@ -160,9 +161,11 @@ internal object TransferOperations {
     ) {
         val type = transferRecord.type ?: throw IllegalStateException("Transfer type missing")
         val workerClassName =
-            if (type == TransferType.UPLOAD)
-                SinglePartUploadWorker::class.java.name else
+            if (type == TransferType.UPLOAD) {
+                SinglePartUploadWorker::class.java.name
+            } else {
                 DownloadWorker::class.java.name
+            }
 
         val transferRequest = getOneTimeWorkRequest(
             transferRecord,
@@ -236,7 +239,7 @@ internal object TransferOperations {
             ),
             listOf(
                 transferRecord.id.toString(),
-                BaseTransferWorker.initiationRequestTag.format(transferRecord.id.toString()),
+                BaseTransferWorker.INITIATION_REQUEST_TAG.format(transferRecord.id.toString()),
                 pluginKey
             )
         )
@@ -244,11 +247,7 @@ internal object TransferOperations {
         return request
     }
 
-    private fun pendingParts(
-        transferRecord: TransferRecord,
-        pluginKey: String,
-        transferDB: TransferDB
-    ) = let {
+    private fun pendingParts(transferRecord: TransferRecord, pluginKey: String, transferDB: TransferDB) = let {
         val listOfPendingParts = transferDB.getNonCompletedPartRequestsFromDB(transferRecord.id)
         val pendingPartRequest = mutableListOf<OneTimeWorkRequest>()
         for (part in listOfPendingParts) {
@@ -284,7 +283,7 @@ internal object TransferOperations {
             listOf(
                 transferRecord.id.toString(),
                 pluginKey,
-                BaseTransferWorker.completionRequestTag.format(transferRecord.id.toString())
+                BaseTransferWorker.COMPLETION_REQUEST_TAG.format(transferRecord.id.toString())
             )
         )
         transferStatusUpdater.addWorkRequest(request.id.toString(), transferRecord.id, true)

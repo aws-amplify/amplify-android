@@ -54,16 +54,15 @@ internal object DeleteUserCognitoActions : DeleteUserActions {
             }
         }
 
-    override fun initiateSignOut(): Action =
-        Action<AuthEnvironment>("Sign Out Deleted User") { id, dispatcher ->
-            logger.verbose("$id Starting execution")
-            val evt = AuthorizationEvent(AuthorizationEvent.EventType.UserDeleted())
-            val evt2 = AuthenticationEvent(
-                AuthenticationEvent.EventType.SignOutRequested(SignOutData(globalSignOut = true, bypassCancel = true))
-            )
-            logger.verbose("$id Sending event ${evt.type}")
-            dispatcher.send(evt)
-            logger.verbose("$id Sending event ${evt2.type}")
-            dispatcher.send(evt2)
-        }
+    override fun initiateSignOut(): Action = Action<AuthEnvironment>("Sign Out Deleted User") { id, dispatcher ->
+        logger.verbose("$id Starting execution")
+        val evt = AuthorizationEvent(AuthorizationEvent.EventType.UserDeleted())
+        val evt2 = AuthenticationEvent(
+            AuthenticationEvent.EventType.SignOutRequested(SignOutData(globalSignOut = true, bypassCancel = true))
+        )
+        logger.verbose("$id Sending event ${evt.type}")
+        dispatcher.send(evt)
+        logger.verbose("$id Sending event ${evt2.type}")
+        dispatcher.send(evt2)
+    }
 }

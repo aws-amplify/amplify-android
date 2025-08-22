@@ -29,13 +29,12 @@ object SentimentTypeAdapter {
      * @return Amplify's [SentimentType] enum
      */
     @JvmStatic
-    fun fromComprehend(sentiment: String): SentimentType {
-        return when (aws.sdk.kotlin.services.comprehend.model.SentimentType.fromValue(sentiment)) {
+    fun fromComprehend(sentiment: String): SentimentType =
+        when (aws.sdk.kotlin.services.comprehend.model.SentimentType.fromValue(sentiment)) {
             aws.sdk.kotlin.services.comprehend.model.SentimentType.Positive -> SentimentType.POSITIVE
             aws.sdk.kotlin.services.comprehend.model.SentimentType.Negative -> SentimentType.NEGATIVE
             aws.sdk.kotlin.services.comprehend.model.SentimentType.Neutral -> SentimentType.NEUTRAL
             aws.sdk.kotlin.services.comprehend.model.SentimentType.Mixed -> SentimentType.MIXED
             else -> SentimentType.UNKNOWN
         }
-    }
 }

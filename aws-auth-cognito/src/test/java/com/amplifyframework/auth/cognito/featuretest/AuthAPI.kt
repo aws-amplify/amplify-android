@@ -20,6 +20,7 @@ package com.amplifyframework.auth.cognito.featuretest
  * Note that case of ENUMs are not capitalized so as to serialze it into proper case
  * something like `resetPassword` instead of `RESET_PASSWORD`
  */
+@Suppress("ktlint:standard:enum-entry-name-case")
 enum class AuthAPI {
     clearFederationToIdentityPool,
     configure,
@@ -43,6 +44,7 @@ enum class AuthAPI {
     resendUserAttributeConfirmationCode,
     resetPassword,
     signIn,
+    autoSignIn,
     signInWithSocialWebUI,
     signInWithWebUI,
     signOut,

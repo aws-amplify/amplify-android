@@ -47,15 +47,11 @@ open class NotificationPayload(
         @JvmStatic
         fun builder(contentProvider: NotificationContentProvider) = Builder(contentProvider)
 
-        inline operator fun invoke(
-            contentProvider: NotificationContentProvider,
-            block: Builder.() -> Unit
-        ) = Builder(contentProvider).apply(block).build()
+        inline operator fun invoke(contentProvider: NotificationContentProvider, block: Builder.() -> Unit) =
+            Builder(contentProvider).apply(block).build()
 
         @JvmStatic
-        fun fromIntent(intent: Intent?): NotificationPayload? {
-            return intent?.getParcelableExtra("amplifyNotificationPayload")
-        }
+        fun fromIntent(intent: Intent?): NotificationPayload? = intent?.getParcelableExtra("amplifyNotificationPayload")
     }
 
     class Builder(val contentProvider: NotificationContentProvider) {

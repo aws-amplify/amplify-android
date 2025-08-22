@@ -77,7 +77,9 @@ class PushNotificationsUtils(
     }
 
     private suspend fun downloadImage(url: String): Bitmap? = withContext(Dispatchers.IO) {
-        BitmapFactory.decodeStream(URL(url).openConnection().getInputStream())
+        runCatching {
+            BitmapFactory.decodeStream(URL(url).openConnection().getInputStream())
+        }.getOrNull()
     }
 
     fun isAppInForeground(): Boolean {
@@ -104,11 +106,7 @@ class PushNotificationsUtils(
 
     @Suppress("DEPRECATION")
     @SuppressLint("NewApi")
-    fun showNotification(
-        notificationId: Int,
-        payload: PinpointNotificationPayload,
-        targetClass: Class<*>?
-    ) {
+    fun showNotification(notificationId: Int, payload: PinpointNotificationPayload, targetClass: Class<*>?) {
         CoroutineScope(Dispatchers.IO).launch {
             val largeImageIcon = payload.imageUrl?.let { downloadImage(it) }
             val notificationIntent = Intent(context, payload.targetClass ?: targetClass)
@@ -135,6 +133,7 @@ class PushNotificationsUtils(
                 setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 setLargeIcon(largeImageIcon)
                 setAutoCancel(true)
+                setStyle(NotificationCompat.BigTextStyle().bigText(payload.body))
             }
 
             with(NotificationManagerCompat.from(context)) {

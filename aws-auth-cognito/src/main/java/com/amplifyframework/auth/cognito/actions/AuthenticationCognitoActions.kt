@@ -72,7 +72,12 @@ internal object AuthenticationCognitoActions : AuthenticationActions {
                 is SignInData.SRPSignInData -> {
                     if (data.username != null && data.password != null) {
                         SignInEvent(
-                            SignInEvent.EventType.InitiateSignInWithSRP(data.username, data.password, data.metadata)
+                            SignInEvent.EventType.InitiateSignInWithSRP(
+                                data.username,
+                                data.password,
+                                data.metadata,
+                                data.authFlowType
+                            )
                         )
                     } else {
                         AuthenticationEvent(
@@ -118,7 +123,12 @@ internal object AuthenticationCognitoActions : AuthenticationActions {
                 is SignInData.MigrationAuthSignInData -> {
                     if (data.username != null && data.password != null) {
                         SignInEvent(
-                            SignInEvent.EventType.InitiateMigrateAuth(data.username, data.password, data.metadata)
+                            SignInEvent.EventType.InitiateMigrateAuth(
+                                username = data.username,
+                                password = data.password,
+                                metadata = data.metadata,
+                                authFlowType = data.authFlowType
+                            )
                         )
                     } else {
                         AuthenticationEvent(
@@ -127,6 +137,28 @@ internal object AuthenticationCognitoActions : AuthenticationActions {
                             )
                         )
                     }
+                }
+                is SignInData.UserAuthSignInData -> {
+                    if (data.username != null) {
+                        SignInEvent(
+                            SignInEvent.EventType.InitiateUserAuth(
+                                data.username,
+                                data.preferredChallenge,
+                                data.callingActivity,
+                                data.metadata
+                            )
+                        )
+                    } else {
+                        AuthenticationEvent(
+                            AuthenticationEvent.EventType.ThrowError(
+                                ValidationException("Sign in failed.", "username cannot be empty")
+                            )
+                        )
+                    }
+                }
+
+                is SignInData.AutoSignInData -> {
+                    SignInEvent(SignInEvent.EventType.InitiateAutoSignIn(data))
                 }
             }
 

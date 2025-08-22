@@ -14,8 +14,8 @@
  */
 
 plugins {
-    id("com.android.library")
-    id("kotlin-android")
+    alias(libs.plugins.amplify.android.library)
+    alias(libs.plugins.amplify.api)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
@@ -24,12 +24,7 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 group = properties["POM_GROUP"].toString()
 
 android {
-    defaultConfig {
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-    testOptions {
-        execution = "ANDROIDX_TEST_ORCHESTRATOR"
-    }
+    namespace = "com.amplifyframework.storage.s3"
 }
 
 dependencies {
@@ -60,11 +55,8 @@ dependencies {
     androidTestImplementation(libs.test.androidx.runner)
     androidTestImplementation(libs.test.androidx.junit)
     androidTestImplementation(libs.test.androidx.workmanager)
+    androidTestImplementation(libs.test.kotest.assertions)
     androidTestImplementation(project(":aws-storage-s3"))
 
     androidTestUtil(libs.test.androidx.orchestrator)
-}
-
-android.kotlinOptions {
-    jvmTarget = "11"
 }

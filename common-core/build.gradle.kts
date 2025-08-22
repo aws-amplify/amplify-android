@@ -14,9 +14,9 @@
  */
 
 plugins {
-    id("com.android.library")
-    id("kotlin-android")
-    id("kotlin-parcelize")
+    alias(libs.plugins.amplify.android.library)
+    alias(libs.plugins.kotlin.parcelize)
+    alias(libs.plugins.amplify.api)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
@@ -24,5 +24,6 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 
 group = properties["POM_GROUP"].toString()
 
-dependencies {
+android {
+    namespace = "com.amplifyframework.common.core"
 }

@@ -28,7 +28,7 @@ import com.amplifyframework.pinpoint.core.TargetingClient
 
 internal class AWSPinpointAnalyticsPluginBehavior(
     private val analyticsClient: AnalyticsClient,
-    private val targetingClient: TargetingClient,
+    private val targetingClient: TargetingClient
 ) : AnalyticsCategoryBehavior {
 
     override fun identifyUser(userId: String, profile: UserProfile?) = targetingClient.identifyUser(userId, profile)

@@ -36,27 +36,23 @@ abstract class AWSGraphQLOperation<R>(
 ) : GraphQLOperation<R>(graphQLRequest, responseFactory) {
 
     @Throws(ApiException::class)
-    override fun wrapResponse(jsonResponse: String): GraphQLResponse<R> {
-        return buildResponse(jsonResponse)
-    }
+    override fun wrapResponse(jsonResponse: String): GraphQLResponse<R> = buildResponse(jsonResponse)
 
     // This method should be used in place of GraphQLOperation.wrapResponse. In order to pass
     // apiName, we had to stop using the default GraphQLResponse.Factory buildResponse method
     // as there was no place to inject api name for adding to LazyModel
     @Throws(ApiException::class)
-    private fun buildResponse(jsonResponse: String): GraphQLResponse<R> {
-        return try {
-            (responseFactory as? GsonGraphQLResponseFactory)?.buildResponse(request, jsonResponse, apiName)
-                ?: throw ApiException(
-                    "Amplify encountered an error while deserializing an object. " +
-                        "GraphQLResponse.Factory was not of type GsonGraphQLResponseFactory",
-                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
-                )
-        } catch (cce: ClassCastException) {
-            throw ApiException(
-                "Amplify encountered an error while deserializing an object",
-                AmplifyException.TODO_RECOVERY_SUGGESTION
+    private fun buildResponse(jsonResponse: String): GraphQLResponse<R> = try {
+        (responseFactory as? GsonGraphQLResponseFactory)?.buildResponse(request, jsonResponse, apiName)
+            ?: throw ApiException(
+                "Amplify encountered an error while deserializing an object. " +
+                    "GraphQLResponse.Factory was not of type GsonGraphQLResponseFactory",
+                AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
             )
-        }
+    } catch (cce: ClassCastException) {
+        throw ApiException(
+            "Amplify encountered an error while deserializing an object",
+            AmplifyException.TODO_RECOVERY_SUGGESTION
+        )
     }
 }

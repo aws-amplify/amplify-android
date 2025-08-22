@@ -18,6 +18,7 @@ package com.amplifyframework.auth.cognito
 import androidx.annotation.IntRange
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.core.configuration.AmplifyOutputsData
@@ -98,10 +99,7 @@ data class AuthConfiguration internal constructor(
          * Returns an AuthConfiguration instance from JSON
          * @return populated AuthConfiguration instance.
          */
-        fun fromJson(
-            pluginJson: JSONObject,
-            configName: String = "Default"
-        ): AuthConfiguration {
+        fun fromJson(pluginJson: JSONObject, configName: String = "Default"): AuthConfiguration {
             val authConfig = pluginJson.optJSONObject("Auth")?.optJSONObject(configName)
 
             val signUpAttributes = authConfig?.optJSONArray("signupAttributes")?.map {
@@ -153,11 +151,9 @@ data class AuthConfiguration internal constructor(
                     appSecret = null, // Not supported in Gen2
                     domain = it.domain,
                     scopes = it.scopes.toSet(),
-                    // Note: Gen2 config gives an array for these values, while Gen1 is just a String. In Gen1
-                    // if you specify multiple URIs the CLI will join them to a comma-delimited string in the json.
-                    // We are matching that behaviour here for Gen2.
-                    signInRedirectURI = it.redirectSignInUri.joinToString(","),
-                    signOutRedirectURI = it.redirectSignOutUri.joinToString(",")
+                    // For sign-in, prefer a non-HTTP/HTTPS URI if available (for mobile apps)
+                    signInRedirectURI = HostedUIHelper.selectRedirectUri(it.redirectSignInUri) ?: "",
+                    signOutRedirectURI = HostedUIHelper.selectRedirectUri(it.redirectSignOutUri) ?: ""
                 )
             }
 
@@ -184,12 +180,14 @@ data class AuthConfiguration internal constructor(
             )
         }
 
-        private fun getAuthenticationFlowType(authType: String?): AuthFlowType {
-            return if (!authType.isNullOrEmpty() && AuthFlowType.values().any { it.name == authType }) {
-                AuthFlowType.valueOf(authType)
-            } else {
-                AuthFlowType.USER_SRP_AUTH
+        private fun getAuthenticationFlowType(authType: String?): AuthFlowType = if (!authType.isNullOrEmpty() &&
+            AuthFlowType.values().any {
+                it.name == authType
             }
+        ) {
+            AuthFlowType.valueOf(authType)
+        } else {
+            AuthFlowType.USER_SRP_AUTH
         }
 
         private fun getPasswordProtectionSettings(authConfig: JSONObject?): PasswordProtectionSettings? {

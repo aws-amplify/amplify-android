@@ -123,7 +123,7 @@ object SignOutTestCaseGenerator : SerializableProvider {
                 response = AWSCognitoAuthSignOutResult.PartialSignOut(
                     revokeTokenError = RevokeTokenError(
                         RevokeTokenErrorData(
-                            refreshToken = AuthStateJsonGenerator.dummyToken,
+                            refreshToken = AuthStateJsonGenerator.DUMMY_TOKEN,
                             error = NotAuthorizedException.invoke { }
                         )
                     )
@@ -147,7 +147,7 @@ object SignOutTestCaseGenerator : SerializableProvider {
                 response = AWSCognitoAuthSignOutResult.PartialSignOut(
                     revokeTokenError = RevokeTokenError(
                         RevokeTokenErrorData(
-                            refreshToken = AuthStateJsonGenerator.dummyToken,
+                            refreshToken = AuthStateJsonGenerator.DUMMY_TOKEN,
                             error = NotAuthorizedException.invoke { }
                         )
                     )
@@ -171,13 +171,13 @@ object SignOutTestCaseGenerator : SerializableProvider {
                 response = AWSCognitoAuthSignOutResult.PartialSignOut(
                     globalSignOutError = GlobalSignOutError(
                         GlobalSignOutErrorData(
-                            accessToken = AuthStateJsonGenerator.dummyToken,
+                            accessToken = AuthStateJsonGenerator.DUMMY_TOKEN,
                             error = NotAuthorizedException.invoke { }
                         )
                     ),
                     revokeTokenError = RevokeTokenError(
                         RevokeTokenErrorData(
-                            refreshToken = AuthStateJsonGenerator.dummyToken,
+                            refreshToken = AuthStateJsonGenerator.DUMMY_TOKEN,
                             error = Exception("RevokeToken not attempted because GlobalSignOut failed.")
                         )
                     )

@@ -23,13 +23,11 @@ import kotlin.coroutines.suspendCoroutine
 
 internal class CustomCognitoCredentialsProvider() : CognitoCredentialsProvider() {
 
-    suspend fun getCurrentUser(): AuthUser {
-        return suspendCoroutine { continuation ->
-            Amplify.Auth.getCurrentUser({
-                continuation.resume(it)
-            }, {
-                continuation.resumeWithException(it)
-            })
-        }
+    suspend fun getCurrentUser(): AuthUser = suspendCoroutine { continuation ->
+        Amplify.Auth.getCurrentUser({
+            continuation.resume(it)
+        }, {
+            continuation.resumeWithException(it)
+        })
     }
 }

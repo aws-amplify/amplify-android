@@ -14,9 +14,9 @@
  */
 
 plugins {
-    id("org.jetbrains.kotlin.plugin.serialization")
-    id("com.android.library")
-    id("kotlin-android")
+    alias(libs.plugins.amplify.android.library)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.amplify.api)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
@@ -25,9 +25,7 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 group = properties["POM_GROUP"].toString()
 
 android {
-    kotlinOptions {
-        moduleName = "com.amplifyframework.core"
-    }
+    namespace = "com.amplifyframework.core"
 }
 
 dependencies {
@@ -64,10 +62,6 @@ dependencies {
     androidTestImplementation(libs.test.androidx.espresso)
     androidTestImplementation(libs.test.androidx.navigation)
     androidTestImplementation(libs.test.androidx.fragment)
-}
-
-android.kotlinOptions {
-    jvmTarget = "11"
 }
 
 afterEvaluate {

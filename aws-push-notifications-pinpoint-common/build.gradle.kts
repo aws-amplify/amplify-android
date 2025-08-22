@@ -14,8 +14,8 @@
  */
 
 plugins {
-    id("com.android.library")
-    id("kotlin-android")
+    alias(libs.plugins.amplify.android.library)
+    alias(libs.plugins.amplify.api)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
@@ -24,9 +24,7 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 group = properties["POM_GROUP"].toString()
 
 android {
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
-    }
+    namespace = "com.amplifyframework.pushnotifications.pinpoint.common"
 }
 
 dependencies {
@@ -38,7 +36,9 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.annotation)
     implementation(libs.androidx.core)
-    implementation(libs.firebasemessaging)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockk)

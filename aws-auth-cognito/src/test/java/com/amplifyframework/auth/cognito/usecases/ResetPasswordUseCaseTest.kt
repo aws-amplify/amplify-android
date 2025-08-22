@@ -16,38 +16,32 @@
 package com.amplifyframework.auth.cognito.usecases
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
+import aws.sdk.kotlin.services.cognitoidentityprovider.forgotPassword
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AnalyticsMetadataType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeDeliveryDetailsType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordResponse
-import com.amplifyframework.auth.AuthException
-import com.amplifyframework.auth.cognito.helpers.AuthHelper
+import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.auth.cognito.MockAuthHelperRule
+import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
+import com.amplifyframework.auth.cognito.util.toAuthCodeDeliveryDetails
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.step.AuthNextResetPasswordStep
 import com.amplifyframework.auth.result.step.AuthResetPasswordStep
-import com.amplifyframework.core.Consumer
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.assertions.throwables.shouldThrowAny
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
-import io.mockk.coJustRun
 import io.mockk.coVerify
-import io.mockk.justRun
+import io.mockk.every
 import io.mockk.mockk
-import io.mockk.slot
-import kotlin.test.assertEquals
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.newSingleThreadContext
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
-import org.junit.After
-import org.junit.Before
+import kotlinx.coroutines.test.runTest
+import org.junit.Rule
 import org.junit.Test
 
-@OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
 class ResetPasswordUseCaseTest {
 
     private val dummyClientId = "app client id"
@@ -55,69 +49,50 @@ class ResetPasswordUseCaseTest {
     private val dummyUserName = "username"
     private val expectedPinpointEndpointId = "abc123"
 
-    private val mockCognitoIPClient: CognitoIdentityProviderClient = mockk()
-
-    private lateinit var resetPasswordUseCase: ResetPasswordUseCase
-
-    // Used to execute a test in situations where the platform Main dispatcher is not available
-    // see [https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-test/]
-    private val mainThreadSurrogate = newSingleThreadContext("Main thread")
-
-    @Before
-    fun setUp() {
-        Dispatchers.setMain(mainThreadSurrogate)
-        resetPasswordUseCase = ResetPasswordUseCase(mockCognitoIPClient, dummyClientId, dummyAppClientSecret)
+    private val client: CognitoIdentityProviderClient = mockk {
+        coEvery { forgotPassword(any()) } returns ForgotPasswordResponse {
+            codeDeliveryDetails = mockk(relaxed = true)
+        }
     }
 
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
+    private val environment = mockk<AuthEnvironment> {
+        coEvery { getDeviceMetadata("user")?.deviceKey } returns "test deviceKey"
+        every { getPinpointEndpointId() } returns expectedPinpointEndpointId
+        coEvery { getUserContextData(any()) } returns null
+        every { configuration.userPool } returns mockk {
+            every { appClient } returns dummyClientId
+            every { appClientSecret } returns dummyAppClientSecret
+        }
     }
+
+    private val useCase = ResetPasswordUseCase(
+        client = client,
+        environment = environment
+    )
+
+    @get:Rule
+    val authHelperRule = MockAuthHelperRule()
 
     @Test
-    fun `use case calls forgotPassword API with given arguments`() {
-        // GIVEN
-        val requestBuilderCaptor = slot<ForgotPasswordRequest>()
-        coJustRun { mockCognitoIPClient.forgotPassword(capture(requestBuilderCaptor)) }
-
+    fun `use case calls forgotPassword API with given arguments`() = runTest {
         val expectedRequestBuilder: ForgotPasswordRequest.Builder.() -> Unit = {
             username = dummyUserName
             clientMetadata = mapOf()
             clientId = dummyClientId
-            secretHash = AuthHelper.getSecretHash(
-                username,
-                dummyClientId,
-                dummyAppClientSecret
-            )
+            secretHash = MockAuthHelperRule.DEFAULT_HASH
             analyticsMetadata = AnalyticsMetadataType.invoke { analyticsEndpointId = expectedPinpointEndpointId }
         }
 
-        // WHEN
-        runBlocking {
-            resetPasswordUseCase.execute(
-                dummyUserName,
-                AuthResetPasswordOptions.defaults(),
-                null,
-                expectedPinpointEndpointId,
-                {},
-                {}
-            )
-        }
+        useCase.execute(dummyUserName, AuthResetPasswordOptions.defaults())
 
-        // THEN
-        assertEquals(
-            ForgotPasswordRequest.invoke(expectedRequestBuilder),
-            requestBuilderCaptor.captured
-        )
+        coVerify {
+            client.forgotPassword(expectedRequestBuilder)
+        }
     }
 
     @Test
-    fun `AuthResetPasswordResult object is returned when reset password succeeds`() {
-        // GIVEN
-        val onSuccess = mockk<Consumer<AuthResetPasswordResult>>()
-        val onError = mockk<Consumer<AuthException>>()
-
-        val dummyCodeDeliveryDetails = CodeDeliveryDetailsType.invoke {
+    fun `AuthResetPasswordResult object is returned when reset password succeeds`() = runTest {
+        val dummyCodeDeliveryDetails = CodeDeliveryDetailsType {
             destination = "dummy destination"
             deliveryMedium = DeliveryMediumType.Email
             attributeName = "dummy attribute"
@@ -132,64 +107,31 @@ class ResetPasswordUseCaseTest {
             )
         )
 
-        coEvery { mockCognitoIPClient.forgotPassword(any()) } coAnswers {
-            ForgotPasswordResponse.invoke { codeDeliveryDetails = dummyCodeDeliveryDetails }
-        }
+        coEvery { client.forgotPassword(any()) } returns
+            ForgotPasswordResponse { codeDeliveryDetails = dummyCodeDeliveryDetails }
 
-        val resultCaptor = slot<AuthResetPasswordResult>()
-        justRun { onSuccess.accept(capture(resultCaptor)) }
+        val result = useCase.execute(dummyUserName)
 
-        // WHEN
-        runBlocking {
-            resetPasswordUseCase.execute(
-                dummyUserName,
-                AuthResetPasswordOptions.defaults(),
-                null,
-                expectedPinpointEndpointId,
-                onSuccess,
-                onError
-            )
-        }
-
-        // THEN
-        coVerify(exactly = 0) { onError.accept(any()) }
-        coVerify(exactly = 1) { onSuccess.accept(resultCaptor.captured) }
-
-        assertEquals(expectedResult, resultCaptor.captured)
+        result shouldBe expectedResult
     }
 
     @Test
-    fun `AuthException is thrown when forgotPassword API call fails`() {
-        // GIVEN
-        val onSuccess = mockk<Consumer<AuthResetPasswordResult>>()
-        val onError = mockk<Consumer<AuthException>>()
+    fun `AuthException is thrown when forgotPassword API call fails`() = runTest {
         val expectedException = CognitoIdentityProviderException("Some SDK Message")
 
-        coEvery { mockCognitoIPClient.forgotPassword(any()) } coAnswers {
-            throw expectedException
+        coEvery { client.forgotPassword(any()) } throws expectedException
+
+        shouldThrowAny {
+            useCase.execute(dummyUserName)
+        } shouldBe expectedException
+    }
+
+    @Test
+    fun `reset password fails if appClientId is not set`() = runTest {
+        every { environment.configuration.userPool?.appClient } returns null
+
+        shouldThrow<InvalidUserPoolConfigurationException> {
+            useCase.execute(dummyUserName)
         }
-
-        val resultCaptor = slot<AuthException>()
-        justRun { onError.accept(capture(resultCaptor)) }
-
-        // WHEN
-        runBlocking {
-            resetPasswordUseCase.execute(
-                dummyUserName,
-                AuthResetPasswordOptions.defaults(),
-                null,
-                expectedPinpointEndpointId,
-                onSuccess,
-                onError
-            )
-        }
-
-        // THEN
-        coVerify(exactly = 0) { onSuccess.accept(any()) }
-        coVerify {
-            onError.accept(resultCaptor.captured)
-        }
-
-        assertEquals(expectedException, resultCaptor.captured.cause)
     }
 }

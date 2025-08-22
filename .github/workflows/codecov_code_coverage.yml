@@ -1,48 +1,32 @@
-# This is a basic workflow to help you get started with Actions
-
 name: Run code coverage
 
-# Controls when the action will run.
 on:
-  # Triggers the workflow on push or pull request events but only for the main & dev-preview branch
   push:
     branches:
       - 'main'
-      - 'v1'
   pull_request:
     branches:
       - 'main'
-      - 'v1'
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2
-      # Execute unit tests
+
       - name: Setup Java
         uses: actions/setup-java@cd89f46ac9d01407894225f350157564c9c7cee2 # v3
         with:
-          java-version: '11'
+          java-version: '17'
           distribution: 'corretto'
 
       - name: Run test and generate kover report
-        run: ./gradlew koverReport
-
-      - name: create temp directory
-        run: mkdir /home/runner/work/amplify-android/amplify-android/code-coverage
-
-      - name: copy kover test report to temp directory
-        run: cp -r /home/runner/work/amplify-android/amplify-android/**/build/reports/kover/xml/*.xml /home/runner/work/amplify-android/amplify-android/code-coverage/
+        run: ./gradlew koverXmlReport
 
       - name: Upload Test Report
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           name: report
-          files: code-coverage/*.xml
+          files: build/reports/kover/report.xml
+          token: ${{ secrets.CODECOV_TOKEN }}

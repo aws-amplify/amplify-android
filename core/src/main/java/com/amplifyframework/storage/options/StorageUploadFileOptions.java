@@ -58,10 +58,11 @@ public class StorageUploadFileOptions extends StorageUploadOptions {
     @SuppressWarnings("deprecation")
     public static Builder<?> from(@NonNull final StorageUploadFileOptions options) {
         return builder()
-            .accessLevel(options.getAccessLevel())
-            .targetIdentityId(options.getTargetIdentityId())
-            .contentType(options.getContentType())
-            .metadata(options.getMetadata());
+                .accessLevel(options.getAccessLevel())
+                .targetIdentityId(options.getTargetIdentityId())
+                .contentType(options.getContentType())
+                .metadata(options.getMetadata())
+                .bucket(options.getBucket());
     }
 
     /**
@@ -88,7 +89,8 @@ public class StorageUploadFileOptions extends StorageUploadOptions {
             return ObjectsCompat.equals(getAccessLevel(), that.getAccessLevel()) &&
                     ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId()) &&
                     ObjectsCompat.equals(getContentType(), that.getContentType()) &&
-                    ObjectsCompat.equals(getMetadata(), that.getMetadata());
+                    ObjectsCompat.equals(getMetadata(), that.getMetadata()) &&
+                    ObjectsCompat.equals(getBucket(), that.getBucket());
         }
     }
 
@@ -102,7 +104,8 @@ public class StorageUploadFileOptions extends StorageUploadOptions {
                 getAccessLevel(),
                 getTargetIdentityId(),
                 getContentType(),
-                getMetadata()
+                getMetadata(),
+                getBucket()
         );
     }
 
@@ -118,6 +121,7 @@ public class StorageUploadFileOptions extends StorageUploadOptions {
                 ", targetIdentityId=" + getTargetIdentityId() +
                 ", contentType=" + getContentType() +
                 ", metadata=" + getMetadata() +
+                ", bucket=" + getBucket() +
                 '}';
     }
 

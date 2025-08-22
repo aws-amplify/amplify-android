@@ -52,9 +52,8 @@ internal class Merger(
      * @param <T> Type of model
      * @return A completable operation to merge the model
      </T> */
-    fun <T : Model> merge(modelWithMetadata: ModelWithMetadata<T>): Completable {
-        return merge(listOf(modelWithMetadata), NoOpConsumer.create())
-    }
+    fun <T : Model> merge(modelWithMetadata: ModelWithMetadata<T>): Completable =
+        merge(listOf(modelWithMetadata), NoOpConsumer.create())
     fun <T : Model> merge(
         modelsWithMetadata: List<ModelWithMetadata<T>>,
         changeTypeConsumer: Consumer<StorageItemChange.Type>

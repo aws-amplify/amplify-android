@@ -23,8 +23,8 @@ import android.util.AttributeSet
 import androidx.annotation.StyleableRes
 import com.amplifyframework.geo.maplibre.Coordinate2D
 import com.amplifyframework.geo.maplibre.R
-import com.mapbox.mapboxsdk.camera.CameraPosition
 import kotlinx.parcelize.Parcelize
+import org.maplibre.android.camera.CameraPosition
 
 const val MAX_ZOOM_BOUNDARY = 22.0
 const val MIN_ZOOM_BOUNDARY = 0.0
@@ -52,12 +52,8 @@ class MapViewOptions(
 
     companion object {
 
-        fun createFromAttributes(
-            context: Context,
-            attrs: AttributeSet? = null,
-            defStyleAttr: Int = 0
-        ): MapViewOptions {
-            return attrs?.let {
+        fun createFromAttributes(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0): MapViewOptions =
+            attrs?.let {
                 val typedArray = context.obtainStyledAttributes(
                     attrs,
                     R.styleable.map_AmplifyMapView,
@@ -110,30 +106,23 @@ class MapViewOptions(
                     zoomLevel = zoomLevel
                 )
             } ?: MapViewOptions()
-        }
     }
 
-    fun toMapLibreOptions(context: Context): MapLibreOptions {
-        return MapLibreOptions.createFromAttributes(context)
-            .attributionEnabled(!attribution.isNullOrBlank())
-            .camera(
-                CameraPosition.Builder()
-                    .target(center.latlng)
-                    .zoom(zoomLevel)
-                    .build()
-            )
-            .compassEnabled(false)
-            .logoEnabled(false)
-            .minZoomPreference(minZoomLevel.coerceAtLeast(MIN_ZOOM_BOUNDARY))
-            .maxZoomPreference(maxZoomLevel.coerceAtMost(MAX_ZOOM_BOUNDARY))
-    }
+    fun toMapLibreOptions(context: Context): MapLibreOptions = MapLibreOptions.createFromAttributes(context)
+        .attributionEnabled(!attribution.isNullOrBlank())
+        .camera(
+            CameraPosition.Builder()
+                .target(center.latlng)
+                .zoom(zoomLevel)
+                .build()
+        )
+        .compassEnabled(false)
+        .logoEnabled(false)
+        .minZoomPreference(minZoomLevel.coerceAtLeast(MIN_ZOOM_BOUNDARY))
+        .maxZoomPreference(maxZoomLevel.coerceAtMost(MAX_ZOOM_BOUNDARY))
 
     fun shouldRenderControls() = showCompassIndicator || showZoomControls
 }
 
-private fun TypedArray.getDouble(
-    @StyleableRes res: Int,
-    defValue: Double = 0.0
-): Double {
-    return this.getFloat(res, defValue.toFloat()).toDouble()
-}
+private fun TypedArray.getDouble(@StyleableRes res: Int, defValue: Double = 0.0): Double =
+    this.getFloat(res, defValue.toFloat()).toDouble()

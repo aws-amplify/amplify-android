@@ -17,25 +17,10 @@
                                     "value": "value"
                                 }
                             ],
-                            "deviceCreateDate": {
-                                "value": {
-                                    "seconds": 1.688674717E9,
-                                    "nanos": 2.73132E8
-                                }
-                            },
+                            "deviceCreateDate": 1723480158,
                             "deviceKey": "deviceKey",
-                            "deviceLastAuthenticatedDate": {
-                                "value": {
-                                    "seconds": 1.688674717E9,
-                                    "nanos": 2.73136E8
-                                }
-                            },
-                            "deviceLastModifiedDate": {
-                                "value": {
-                                    "seconds": 1.688674717E9,
-                                    "nanos": 2.73137E8
-                                }
-                            }
+                            "deviceLastAuthenticatedDate": 1723480158,
+                            "deviceLastModifiedDate": 1723480158
                         }
                     ]
                 }
@@ -44,10 +29,8 @@
     },
     "api": {
         "name": "fetchDevices",
-        "params": {
-        },
-        "options": {
-        }
+        "params": {},
+        "options": {}
     },
     "validations": [
         {

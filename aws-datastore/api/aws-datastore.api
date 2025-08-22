@@ -502,7 +502,6 @@ public abstract interface class com/amplifyframework/datastore/syncengine/Connec
 }
 
 public final class com/amplifyframework/datastore/syncengine/LastSyncMetadata : com/amplifyframework/core/model/Model {
-	public static fun baseSyncedAt (Ljava/lang/String;J)Lcom/amplifyframework/datastore/syncengine/LastSyncMetadata;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getId ()Ljava/lang/String;
 	public fun getLastSyncTime ()Ljava/lang/Long;

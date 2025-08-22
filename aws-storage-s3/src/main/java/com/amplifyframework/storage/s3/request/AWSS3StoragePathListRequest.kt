@@ -15,6 +15,7 @@
 package com.amplifyframework.storage.s3.request
 
 import com.amplifyframework.storage.StoragePath
+import com.amplifyframework.storage.options.SubpathStrategy
 
 /**
  * Parameters to provide to S3 that describe a request to list files.
@@ -22,5 +23,6 @@ import com.amplifyframework.storage.StoragePath
 internal data class AWSS3StoragePathListRequest(
     val path: StoragePath,
     val pageSize: Int,
-    val nextToken: String?
+    val nextToken: String?,
+    val subpathStrategy: SubpathStrategy?
 )

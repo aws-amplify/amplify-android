@@ -14,8 +14,8 @@
  */
 
 plugins {
-    id("com.android.library")
-    id("kotlin-android")
+    alias(libs.plugins.amplify.android.library)
+    alias(libs.plugins.amplify.api)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
@@ -24,9 +24,7 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 group = properties["POM_GROUP"].toString()
 
 android {
-    kotlinOptions {
-        moduleName = "com.amplifyframework.aws-core"
-    }
+    namespace = "com.amplifyframework.aws.core"
 }
 
 dependencies {
@@ -34,9 +32,16 @@ dependencies {
     implementation(libs.kotlin.stdlib)
     implementation(libs.kotlin.coroutines)
 
+    implementation(libs.aws.smithy.http)
+    compileOnly(libs.aws.smithy.okhttp4)
+
     implementation(libs.aws.credentials)
     // slf4j dependency is added to fix https://github.com/awslabs/aws-sdk-kotlin/issues/993#issuecomment-1678885524
     implementation(libs.slf4j)
+
+    testImplementation(libs.test.junit)
+    testImplementation(libs.test.kotest.assertions)
+    testImplementation(libs.test.robolectric)
 }
 
 afterEvaluate {

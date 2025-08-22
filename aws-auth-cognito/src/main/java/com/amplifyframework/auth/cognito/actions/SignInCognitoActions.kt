@@ -16,17 +16,22 @@
 package com.amplifyframework.auth.cognito.actions
 
 import android.os.Build
+import aws.sdk.kotlin.services.cognitoidentityprovider.initiateAuth
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmDeviceRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceSecretVerifierConfigType
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.CognitoDeviceHelper
+import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignInActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
 import com.amplifyframework.statemachine.codegen.events.DeviceSRPSignInEvent
@@ -35,12 +40,24 @@ import com.amplifyframework.statemachine.codegen.events.SRPEvent
 import com.amplifyframework.statemachine.codegen.events.SetupTOTPEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 import com.amplifyframework.statemachine.codegen.events.SignInEvent
+import com.amplifyframework.statemachine.codegen.events.WebAuthnEvent
 
 internal object SignInCognitoActions : SignInActions {
+    private const val KEY_SECRET_HASH = "SECRET_HASH"
+    private const val KEY_USERNAME = "USERNAME"
+
     override fun startSRPAuthAction(event: SignInEvent.EventType.InitiateSignInWithSRP) =
         Action<AuthEnvironment>("StartSRPAuth") { id, dispatcher ->
             logger.verbose("$id Starting execution")
-            val evt = SRPEvent(SRPEvent.EventType.InitiateSRP(event.username, event.password, event.metadata))
+            val evt = SRPEvent(
+                SRPEvent.EventType.InitiateSRP(
+                    username = event.username,
+                    password = event.password,
+                    metadata = event.metadata,
+                    authFlowType = event.authFlowType,
+                    respondToAuthChallenge = event.respondToAuthChallenge
+                )
+            )
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
@@ -59,7 +76,12 @@ internal object SignInCognitoActions : SignInActions {
         Action<AuthEnvironment>("StartMigrationAuth") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             val evt = SignInEvent(
-                SignInEvent.EventType.InitiateMigrateAuth(event.username, event.password, event.metadata)
+                SignInEvent.EventType.InitiateMigrateAuth(
+                    username = event.username,
+                    password = event.password,
+                    metadata = event.metadata,
+                    authFlowType = event.authFlowType
+                )
             )
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
@@ -86,7 +108,9 @@ internal object SignInCognitoActions : SignInActions {
     override fun initResolveChallenge(event: SignInEvent.EventType.ReceivedChallenge) =
         Action<AuthEnvironment>("InitResolveChallenge") { id, dispatcher ->
             logger.verbose("$id Starting execution")
-            val evt = SignInChallengeEvent(SignInChallengeEvent.EventType.WaitForAnswer(event.challenge, true))
+            val evt = SignInChallengeEvent(
+                SignInChallengeEvent.EventType.WaitForAnswer(event.challenge, event.signInMethod, true)
+            )
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
@@ -142,7 +166,84 @@ internal object SignInCognitoActions : SignInActions {
     override fun initiateTOTPSetupAction(event: SignInEvent.EventType.InitiateTOTPSetup) =
         Action<AuthEnvironment>("initiateTOTPSetup") { id, dispatcher ->
             logger.verbose("$id Starting execution")
-            val evt = SetupTOTPEvent(SetupTOTPEvent.EventType.SetupTOTP(event.signInTOTPSetupData))
+            val evt = SetupTOTPEvent(
+                SetupTOTPEvent.EventType.SetupTOTP(
+                    totpSetupDetails = event.signInTOTPSetupData,
+                    challengeParams = event.challengeParams,
+                    signInMethod = event.signInMethod
+                )
+            )
+            logger.verbose("$id Sending event ${evt.type}")
+            dispatcher.send(evt)
+        }
+
+    override fun initiateWebAuthnSignInAction(event: SignInEvent.EventType.InitiateWebAuthnSignIn) =
+        Action<AuthEnvironment>("initiateWebAuthnSignIn") { id, dispatcher ->
+            logger.verbose("$id Starting excution")
+            val signInContext = event.signInContext
+            val requestJson = signInContext.requestJson
+            val evt = if (requestJson == null) {
+                // If we don't already have the request JSON then fetch it
+                WebAuthnEvent(WebAuthnEvent.EventType.FetchCredentialOptions(signInContext))
+            } else {
+                // We do have the request JSON so go directly to asserting it
+                WebAuthnEvent(WebAuthnEvent.EventType.AssertCredentialOptions(signInContext))
+            }
+            logger.verbose("$id sending event ${evt.type}")
+            dispatcher.send(evt)
+        }
+
+    override fun autoSignInAction(event: SignInEvent.EventType.InitiateAutoSignIn): Action =
+        Action<AuthEnvironment>("AutoSignIn") { id, dispatcher ->
+            logger.verbose("$id Starting execution")
+            val evt = try {
+                val username = event.signInData.username
+                val secretHash = AuthHelper.getSecretHash(
+                    username,
+                    configuration.userPool?.appClient,
+                    configuration.userPool?.appClientSecret
+                )
+
+                val authParams = mutableMapOf(
+                    KEY_USERNAME to username
+                )
+                secretHash?.let { authParams[KEY_SECRET_HASH] = it }
+
+                val encodedContextData = getUserContextData(username)
+                val pinpointEndpointId = getPinpointEndpointId()
+
+                val response = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
+                    authFlow = AuthFlowType.UserAuth
+                    clientId = configuration.userPool?.appClient
+                    authParameters = authParams
+                    clientMetadata = event.signInData.metadata
+                    pinpointEndpointId?.let { analyticsMetadata { analyticsEndpointId = it } }
+                    encodedContextData?.let { userContextData { encodedData = it } }
+                    session = event.signInData.session
+                }
+
+                if (response != null) {
+                    SignInChallengeHelper.evaluateNextStep(
+                        username = username,
+                        challengeNameType = response.challengeName,
+                        session = response.session,
+                        challengeParameters = response.challengeParameters,
+                        authenticationResult = response.authenticationResult,
+                        signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_AUTH)
+                    )
+                } else {
+                    throw ServiceException(
+                        "Sign in failed",
+                        AmplifyException.TODO_RECOVERY_SUGGESTION
+                    )
+                }
+            } catch (e: Exception) {
+                val signInError = SignInEvent(SignInEvent.EventType.ThrowError(e))
+                logger.verbose("$id Sending event ${signInError.type}")
+                dispatcher.send(signInError)
+
+                AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
+            }
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }

@@ -14,15 +14,19 @@
  */
 
 plugins {
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.10"
-    id("com.android.library")
-    id("kotlin-android")
+    alias(libs.plugins.amplify.android.library)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.amplify.api)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
 apply(from = rootProject.file("configuration/publishing.gradle"))
 
 group = properties["POM_GROUP"].toString()
+
+android {
+    namespace = "com.amplifyframework.predictions.aws"
+}
 
 dependencies {
     implementation(project(":core"))
@@ -51,8 +55,4 @@ dependencies {
     androidTestImplementation(libs.test.androidx.runner)
     androidTestImplementation(libs.test.mockk.android)
     androidTestImplementation(libs.rxjava)
-}
-
-android.kotlinOptions {
-    jvmTarget = "11"
 }

@@ -19,8 +19,10 @@ import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.core.configuration.AmplifyOutputsData
+import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
 import com.amplifyframework.testutils.configuration.amplifyOutputsData
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.assertions.throwables.shouldThrowWithMessage
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -28,6 +30,7 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import kotlin.test.assertEquals
 import org.json.JSONObject
 import org.junit.Test
 
@@ -267,6 +270,149 @@ class AuthConfigurationTest {
 
         shouldThrow<ConfigurationException> {
             AuthConfiguration.from(data)
+        }
+    }
+
+    @Test
+    fun `custom endpoint with query fails`() {
+        val configJsonObject = JSONObject()
+        configJsonObject.put("PoolId", "TestUserPool")
+        configJsonObject.put("AppClientId", "0000000000")
+        configJsonObject.put("Region", "test-region")
+        val invalidEndpoint = "fsjjdh.com?q=id"
+        configJsonObject.put("Endpoint", invalidEndpoint)
+        val expectedErrorMessage = "Invalid endpoint value $invalidEndpoint. Expected fully qualified hostname with " +
+            "no scheme, no path and no query"
+
+        shouldThrowWithMessage<Exception>(expectedErrorMessage) {
+            UserPoolConfiguration.fromJson(configJsonObject).build()
+        }
+    }
+
+    @Test
+    fun `custom endpoint with path fails`() {
+        val configJsonObject = JSONObject()
+        configJsonObject.put("PoolId", "TestUserPool")
+        configJsonObject.put("AppClientId", "0000000000")
+        configJsonObject.put("Region", "test-region")
+        val invalidEndpoint = "fsjjdh.com/id"
+        configJsonObject.put("Endpoint", invalidEndpoint)
+        val expectedErrorMessage = "Invalid endpoint value $invalidEndpoint. Expected fully qualified hostname with " +
+            "no scheme, no path and no query"
+
+        shouldThrowWithMessage<Exception>(expectedErrorMessage) {
+            UserPoolConfiguration.fromJson(configJsonObject).build()
+        }
+    }
+
+    @Test
+    fun `custom endpoint with scheme fails`() {
+        val configJsonObject = JSONObject()
+        configJsonObject.put("PoolId", "TestUserPool")
+        configJsonObject.put("AppClientId", "0000000000")
+        configJsonObject.put("Region", "test-region")
+
+        val invalidEndpoint = "https://fsjjdh.com"
+        configJsonObject.put("Endpoint", invalidEndpoint)
+        val expectedErrorMessage = "Invalid endpoint value $invalidEndpoint. Expected fully qualified hostname with " +
+            "no scheme, no path and no query"
+
+        shouldThrowWithMessage<Exception>(expectedErrorMessage) {
+            UserPoolConfiguration.fromJson(configJsonObject).build()
+        }
+    }
+
+    @Test
+    fun `custom endpoint with no query,path, scheme success`() {
+        val configJsonObject = JSONObject()
+        val poolId = "TestUserPool"
+        val region = "test-region"
+        val appClientId = "0000000000"
+        val endpoint = "fsjjdh.com"
+        configJsonObject.put("PoolId", poolId)
+        configJsonObject.put("AppClientId", appClientId)
+        configJsonObject.put("Region", region)
+        configJsonObject.put("Endpoint", endpoint)
+
+        val userPool = UserPoolConfiguration.fromJson(configJsonObject).build()
+        assertEquals(userPool.region, region, "Regions do not match expected")
+        assertEquals(userPool.poolId, poolId, "Pool id do not match expected")
+        assertEquals(userPool.appClient, appClientId, "AppClientId do not match expected")
+        assertEquals(userPool.endpoint, "https://$endpoint", "Endpoint do not match expected")
+    }
+
+    @Test
+    fun `validate auth flow type defaults to user_srp_auth for invalid types`() {
+        val configJsonObject = JSONObject()
+        val configAuthJsonObject = JSONObject()
+        val configAuthDefaultJsonObject = JSONObject()
+        configAuthDefaultJsonObject.put("authenticationFlowType", "INVALID_FLOW_TYPE")
+        configAuthJsonObject.put("Default", configAuthDefaultJsonObject)
+        configJsonObject.put("Auth", configAuthJsonObject)
+        val configuration = AuthConfiguration.fromJson(configJsonObject)
+        assertEquals(configuration.authFlowType, AuthFlowType.USER_SRP_AUTH, "Auth flow types do not match expected")
+    }
+
+    @Test
+    fun `validate auth flow type success`() {
+        val configJsonObject = JSONObject()
+        val configAuthJsonObject = JSONObject()
+        val configAuthDefaultJsonObject = JSONObject()
+        configAuthDefaultJsonObject.put("authenticationFlowType", "USER_PASSWORD_AUTH")
+        configAuthJsonObject.put("Default", configAuthDefaultJsonObject)
+        configJsonObject.put("Auth", configAuthJsonObject)
+        val configuration = AuthConfiguration.fromJson(configJsonObject)
+        assertEquals(
+            configuration.authFlowType,
+            AuthFlowType.USER_PASSWORD_AUTH,
+            "Auth flow types do not match expected"
+        )
+    }
+
+    @Test
+    fun `selects non-HTTP URI from multiple redirect URIs`() {
+        val data = amplifyOutputsData {
+            auth {
+                awsRegion = "test-region"
+                userPoolId = "userpool"
+                userPoolClientId = "userpool-client"
+                oauth {
+                    redirectSignInUri += "https://test.com/signin"
+                    redirectSignInUri += "myapp://signin"
+                    redirectSignOutUri += "myapp://signout"
+                    redirectSignOutUri += "https://test.com/signout"
+                }
+            }
+        }
+
+        val configuration = AuthConfiguration.from(data)
+        configuration.oauth.shouldNotBeNull().run {
+            signInRedirectURI shouldBe "myapp://signin"
+            signOutRedirectURI shouldBe "myapp://signout"
+        }
+    }
+
+    @Test
+    fun `uses first URI when all are HTTP or HTTPS`() {
+        val data = amplifyOutputsData {
+            auth {
+                awsRegion = "test-region"
+                userPoolId = "userpool"
+                userPoolClientId = "userpool-client"
+                oauth {
+                    scopes += listOf("openid")
+                    redirectSignInUri += "https://test.com/signin"
+                    redirectSignInUri += "http://localhost/callback"
+                    redirectSignOutUri += "https://test.com/signout"
+                    redirectSignOutUri += "http://localhost/logout"
+                }
+            }
+        }
+
+        val configuration = AuthConfiguration.from(data)
+        configuration.oauth.shouldNotBeNull().run {
+            signInRedirectURI shouldBe "https://test.com/signin"
+            signOutRedirectURI shouldBe "https://test.com/signout"
         }
     }
 

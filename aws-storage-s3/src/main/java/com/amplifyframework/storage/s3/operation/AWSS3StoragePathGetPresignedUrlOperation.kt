@@ -38,7 +38,6 @@ internal class AWSS3StoragePathGetPresignedUrlOperation(
 ) : StorageGetUrlOperation<AWSS3StoragePathGetPresignedUrlRequest>(request) {
     override fun start() {
         executorService.submit {
-
             val serviceKey = try {
                 runBlocking {
                     request.path.toS3ServiceKey(authCredentialsProvider)
@@ -46,6 +45,24 @@ internal class AWSS3StoragePathGetPresignedUrlOperation(
             } catch (se: StorageException) {
                 onError.accept(se)
                 return@submit
+            }
+
+            if (request.validateObjectExistence) {
+                try {
+                    storageService.validateObjectExists(serviceKey)
+                } catch (se: StorageException) {
+                    onError.accept(se)
+                    return@submit
+                } catch (exception: Exception) {
+                    onError.accept(
+                        StorageException(
+                            "Encountered an issue while validating the existence of object",
+                            exception,
+                            "See included exception for more details and suggestions to fix."
+                        )
+                    )
+                    return@submit
+                }
             }
 
             try {

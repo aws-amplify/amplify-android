@@ -14,9 +14,9 @@
  */
 
 plugins {
-    id("com.android.library")
-    id("kotlin-android")
-    id("kotlin-parcelize")
+    alias(libs.plugins.amplify.android.library)
+    alias(libs.plugins.kotlin.parcelize)
+    alias(libs.plugins.amplify.api)
 }
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
 apply(from = rootProject.file("configuration/publishing.gradle"))
@@ -24,9 +24,7 @@ apply(from = rootProject.file("configuration/publishing.gradle"))
 group = properties["POM_GROUP"].toString()
 
 android {
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
-    }
+    namespace = "com.amplifyframework.geo.maplibre"
     lint {
         disable += "GradleDependency"
     }

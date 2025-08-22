@@ -18,9 +18,9 @@ package com.amplifyframework.auth.cognito.helpers
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import androidx.browser.customtabs.CustomTabsClient
 import androidx.browser.customtabs.CustomTabsService
+import androidx.core.net.toUri
 
 internal object BrowserHelper {
 
@@ -30,7 +30,7 @@ internal object BrowserHelper {
      */
     fun isBrowserInstalled(context: Context): Boolean {
         val url = "https://docs.amplify.aws/"
-        val webAddress = Uri.parse(url)
+        val webAddress = url.toUri()
         val intentWeb = Intent(Intent.ACTION_VIEW, webAddress)
         return intentWeb.resolveActivity(context.packageManager) != null
     }

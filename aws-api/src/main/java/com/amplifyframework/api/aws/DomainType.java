@@ -34,7 +34,7 @@ public enum DomainType {
     CUSTOM;
 
     private static final String STANDARD_ENDPOINT_REGEX =
-            "^https:\\/\\/\\w{26}\\.appsync\\-api\\.\\w{2}(?:(?:\\-\\w{2,})+)\\-\\d\\.amazonaws.com\\/graphql$";
+            "^https:\\/\\/\\w{26}\\.appsync\\-api\\.\\w{2}(?:\\-\\w{2,})+\\-\\d\\.amazonaws.com(?:\\.cn)?\\/graphql$";
 
     /**
      * Get Domain type based on defined endpoint.

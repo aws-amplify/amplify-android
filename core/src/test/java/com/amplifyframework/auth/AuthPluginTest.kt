@@ -18,10 +18,13 @@ package com.amplifyframework.auth
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import com.amplifyframework.auth.options.AuthAssociateWebAuthnCredentialsOptions
 import com.amplifyframework.auth.options.AuthConfirmResetPasswordOptions
 import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
+import com.amplifyframework.auth.options.AuthDeleteWebAuthnCredentialOptions
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
+import com.amplifyframework.auth.options.AuthListWebAuthnCredentialsOptions
 import com.amplifyframework.auth.options.AuthResendSignUpCodeOptions
 import com.amplifyframework.auth.options.AuthResendUserAttributeConfirmationCodeOptions
 import com.amplifyframework.auth.options.AuthResetPasswordOptions
@@ -31,6 +34,7 @@ import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.options.AuthUpdateUserAttributeOptions
 import com.amplifyframework.auth.options.AuthUpdateUserAttributesOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
+import com.amplifyframework.auth.result.AuthListWebAuthnCredentialsResult
 import com.amplifyframework.auth.result.AuthResetPasswordResult
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.auth.result.AuthSignOutResult
@@ -62,7 +66,7 @@ class AuthPluginTest {
     private class TestPlugin : AuthPlugin<Unit>() {
         override fun signUp(
             username: String,
-            password: String,
+            password: String?,
             options: AuthSignUpOptions,
             onSuccess: Consumer<AuthSignUpResult>,
             onError: Consumer<AuthException>
@@ -229,6 +233,41 @@ class AuthPluginTest {
         override fun signOut(onComplete: Consumer<AuthSignOutResult>) {}
         override fun signOut(options: AuthSignOutOptions, onComplete: Consumer<AuthSignOutResult>) {}
         override fun deleteUser(onSuccess: Action, onError: Consumer<AuthException>) {}
+        override fun listWebAuthnCredentials(
+            onSuccess: Consumer<AuthListWebAuthnCredentialsResult>,
+            onError: Consumer<AuthException>
+        ) {}
+        override fun listWebAuthnCredentials(
+            options: AuthListWebAuthnCredentialsOptions,
+            onSuccess: Consumer<AuthListWebAuthnCredentialsResult>,
+            onError: Consumer<AuthException>
+        ) { }
+        override fun autoSignIn(onSuccess: Consumer<AuthSignInResult>, onError: Consumer<AuthException>) {}
+        override fun associateWebAuthnCredential(
+            callingActivity: Activity,
+            onSuccess: Action,
+            onError: Consumer<AuthException>
+        ) {}
+
+        override fun associateWebAuthnCredential(
+            callingActivity: Activity,
+            options: AuthAssociateWebAuthnCredentialsOptions,
+            onSuccess: Action,
+            onError: Consumer<AuthException>
+        ) {}
+
+        override fun deleteWebAuthnCredential(
+            credentialId: String,
+            onSuccess: Action,
+            onError: Consumer<AuthException>
+        ) {}
+
+        override fun deleteWebAuthnCredential(
+            credentialId: String,
+            options: AuthDeleteWebAuthnCredentialOptions,
+            onSuccess: Action,
+            onError: Consumer<AuthException>
+        ) {}
         override fun getPluginKey() = ""
         override fun configure(pluginConfiguration: JSONObject?, context: Context) {}
         override fun getEscapeHatch() = Unit

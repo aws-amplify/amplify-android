@@ -14,8 +14,11 @@
  */
 
 plugins {
-    id("com.android.library")
-    id("kotlin-android")
+    alias(libs.plugins.amplify.android.library)
+}
+
+android {
+    namespace = "com.amplifyframework.testmodels"
 }
 
 dependencies {

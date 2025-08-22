@@ -30,7 +30,6 @@ import com.amplifyframework.auth.result.AuthSessionResult
 import com.amplifyframework.core.Amplify
 import java.time.Instant
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -65,10 +64,10 @@ class AWSCognitoIdentityPoolOperations(
         it.matches(semVerRegex)
     } ?: "1.0.0"
 
-    private val KEY_LOGINS_PROVIDER = "amplify.${identityPool.poolId}.session.loginsProvider"
-    private val KEY_IDENTITY_ID = "amplify.${identityPool.poolId}.session.identityId"
-    private val KEY_AWS_CREDENTIALS = "amplify.${identityPool.poolId}.session.credential"
-    private val awsAuthCredentialStore = AuthCredentialStore(context.applicationContext, pluginKeySanitized, true)
+    private val keyLoginsProvider = "amplify.${identityPool.poolId}.session.loginsProvider"
+    private val keyIdentityId = "amplify.${identityPool.poolId}.session.identityId"
+    private val keyAwsCredentials = "amplify.${identityPool.poolId}.session.credential"
+    private val awsAuthCredentialStore = AuthCredentialStore(context.applicationContext, pluginKeySanitized)
 
     val cognitoIdentityClient = CognitoClientFactory.createIdentityClient(
         identityPool,
@@ -182,9 +181,9 @@ class AWSCognitoIdentityPoolOperations(
         forceRefresh: Boolean
     ): AWSCognitoIdentityPoolDetails {
         logger.verbose("fetchAWSCognitoIdentityPoolDetails: get cached AWS credentials")
-        val currentLoginProvider = deserializeLogins(awsAuthCredentialStore.get(KEY_LOGINS_PROVIDER))
-        val currentIdentityId = awsAuthCredentialStore.get(KEY_IDENTITY_ID)
-        val currentAWSCredentials = deserializeCredential(awsAuthCredentialStore.get(KEY_AWS_CREDENTIALS))
+        val currentLoginProvider = deserializeLogins(awsAuthCredentialStore.get(keyLoginsProvider))
+        val currentIdentityId = awsAuthCredentialStore.get(keyIdentityId)
+        val currentAWSCredentials = deserializeCredential(awsAuthCredentialStore.get(keyAwsCredentials))
 
         logger.verbose("fetchAWSCognitoIdentityPoolDetails: start fetching identity id")
         val identityIdResult = if (currentIdentityId == null || currentIdentityId.isBlank()) {
@@ -200,17 +199,19 @@ class AWSCognitoIdentityPoolOperations(
 
         val newLogin = logins != currentLoginProvider
         logger.verbose("fetchAWSCognitoIdentityPoolDetails: start fetching AWS credentials")
-        val awsCredentialsResult = if (currentAWSCredentials == null || !isValidSession(currentAWSCredentials) ||
-            newLogin || forceRefresh
+        val awsCredentialsResult = if (currentAWSCredentials == null ||
+            !isValidSession(currentAWSCredentials) ||
+            newLogin ||
+            forceRefresh
         ) {
             when (identityIdResult.type) {
                 AuthSessionResult.Type.FAILURE -> AuthSessionResult.failure(identityIdResult.error)
                 AuthSessionResult.Type.SUCCESS -> {
                     try {
                         val (identityId, awsCredentials) = getAWSCredentials(identityIdResult.value, logins)
-                        awsAuthCredentialStore.put(KEY_LOGINS_PROVIDER, Json.encodeToString(logins))
-                        awsAuthCredentialStore.put(KEY_IDENTITY_ID, identityId ?: "")
-                        awsAuthCredentialStore.put(KEY_AWS_CREDENTIALS, Json.encodeToString(awsCredentials))
+                        awsAuthCredentialStore.put(keyLoginsProvider, Json.encodeToString(logins))
+                        awsAuthCredentialStore.put(keyIdentityId, identityId ?: "")
+                        awsAuthCredentialStore.put(keyAwsCredentials, Json.encodeToString(awsCredentials))
                         logger.verbose("fetchAWSCognitoIdentityPoolDetails: cached AWS credentials")
                         getCredentialsResult(awsCredentials)
                     } catch (exception: AuthException) {
@@ -233,19 +234,15 @@ class AWSCognitoIdentityPoolOperations(
         awsAuthCredentialStore.removeAll()
     }
 
-    private fun deserializeCredential(encodedString: String?): AWSCredentialsInternal? {
-        return try {
-            encodedString?.let { Json.decodeFromString(it) }
-        } catch (e: Exception) {
-            null
-        }
+    private fun deserializeCredential(encodedString: String?): AWSCredentialsInternal? = try {
+        encodedString?.let { Json.decodeFromString(it) }
+    } catch (e: Exception) {
+        null
     }
 
-    private fun deserializeLogins(encodedString: String?): List<LoginProvider> {
-        return try {
-            encodedString?.let { Json.decodeFromString(it) } ?: emptyList()
-        } catch (e: Exception) {
-            emptyList()
-        }
+    private fun deserializeLogins(encodedString: String?): List<LoginProvider> = try {
+        encodedString?.let { Json.decodeFromString(it) } ?: emptyList()
+    } catch (e: Exception) {
+        emptyList()
     }
 }
