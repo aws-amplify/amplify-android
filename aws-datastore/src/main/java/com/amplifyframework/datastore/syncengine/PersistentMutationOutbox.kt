@@ -46,6 +46,7 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.runBlocking
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * The [MutationOutbox] is a persistently-backed in-order staging ground
@@ -437,9 +438,6 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
     }
 
     override fun markInFlight(pendingMutationId: TimeBasedUuid): Completable {
-        val methodName = "markInFlight"
-        val semaphoreReleased = AtomicBoolean(false)
-        
         return Completable.create { emitter: CompletableEmitter ->
             val mutation = getMutationById(pendingMutationId.toString())
             if (mutation != null) {
@@ -455,23 +453,6 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
                 )
             )
         }
-            .doOnSubscribe { 
-                LOG.debug { "[$methodName] Acquiring outbox semaphore (permits: ${semaphore.availablePermits()})" }
-                semaphore.acquire()
-                LOG.debug { "[$methodName] Acquired outbox semaphore (permits: ${semaphore.availablePermits()})" }
-            }
-            .doOnTerminate {
-                if (semaphoreReleased.compareAndSet(false, true)) {
-                    LOG.debug { "[$methodName] Releasing outbox semaphore in onTerminate (permits: ${semaphore.availablePermits()})" }
-                    semaphore.release()
-                }
-            }
-            .doFinally {
-                if (semaphoreReleased.compareAndSet(false, true)) {
-                    LOG.debug { "[$methodName] Releasing outbox semaphore in doFinally (permits: ${semaphore.availablePermits()})" }
-                    semaphore.release()
-                }
-            }
     }
 
     /**
