@@ -239,6 +239,19 @@ public final class AuthRule {
     }
 
     /**
+     * Returns the owner if it's not set.
+     * @param schema specifies a schema from a request.
+     * @return owner field.
+     */
+    public ModelField ownerField(ModelSchema schema) {
+        if (ownerField == null) {
+            return null;
+
+        }
+        return schema.getFields().get(this.ownerField);
+    }
+
+    /**
      * Builder class for {@link AuthRule}.
      */
     public static final class Builder {
