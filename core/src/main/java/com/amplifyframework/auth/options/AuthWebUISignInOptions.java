@@ -36,6 +36,7 @@ public class AuthWebUISignInOptions {
      * Advanced options for signing in with a hosted web UI.
      * @param scopes specify OAUTH scopes
      * @param preferPrivateSession specifying whether or not to launch web ui in an ephemeral CustomTab.
+     *                             Default value is unset (null), which behaves the same as false.
      */
     protected AuthWebUISignInOptions(List<String> scopes, Boolean preferPrivateSession) {
         this.scopes = scopes;
@@ -54,6 +55,7 @@ public class AuthWebUISignInOptions {
     /**
      * Optional override to prefer launching in an Ephemeral CustomTab, if available.
      * @return optional override to prefer launching in an Ephemeral CustomTab, if available.
+     * Default value is unset (null), which behaves the same as false.
      */
     @Nullable
     public Boolean getPreferPrivateSession() {
@@ -142,6 +144,7 @@ public class AuthWebUISignInOptions {
         /**
          * Optional override to prefer launching in an Ephemeral CustomTab, if available.
          * @return optional override to prefer launching in an Ephemeral CustomTab, if available.
+         * Default value is unset (null), which behaves the same as false.
          */
         @Nullable
         public Boolean getPreferPrivateSession() {
@@ -165,7 +168,7 @@ public class AuthWebUISignInOptions {
          * This can optionally be set to prefer launching in an Ephemeral CustomTab, if available.
          *
          * @param preferPrivateSession Boolean specifying whether or not to launch web ui in an
-         * ephemeral CustomTab.
+         * ephemeral CustomTab. Default value is unset (null), which behaves the same as false.
          * @return the instance of the builder.
          */
         public T preferPrivateSession(@NonNull Boolean preferPrivateSession) {
