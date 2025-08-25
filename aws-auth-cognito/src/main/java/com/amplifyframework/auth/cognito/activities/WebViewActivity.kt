@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
@@ -15,6 +16,10 @@ import com.amplifyframework.auth.cognito.R
 import com.amplifyframework.core.Amplify
 import com.google.android.material.appbar.MaterialToolbar
 import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 
 internal class WebViewActivity: AppCompatActivity() {
     private lateinit var webView: WebView
@@ -64,6 +69,17 @@ internal class WebViewActivity: AppCompatActivity() {
 
     private fun initializeView() {
         setContentView(R.layout.activity_auth_webview)
+
+        WindowCompat.setDecorFitsSystemWindows(window, true)
+        val insetsController = WindowInsetsControllerCompat(window, window.decorView)
+        insetsController.isAppearanceLightStatusBars = false
+        insetsController.isAppearanceLightNavigationBars = false
+        val contentContainer: View = findViewById(android.R.id.content)
+        ViewCompat.setOnApplyWindowInsetsListener(contentContainer) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
 
         // Toolbar
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
