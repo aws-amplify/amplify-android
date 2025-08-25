@@ -42,11 +42,11 @@ import io.reactivex.rxjava3.subjects.PublishSubject
 import io.reactivex.rxjava3.subjects.Subject
 import java.util.Objects
 import java.util.concurrent.Semaphore
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.runBlocking
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * The [MutationOutbox] is a persistently-backed in-order staging ground
@@ -69,9 +69,7 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
 
     @VisibleForTesting
     fun getMutationForModelId(modelId: String, modelClass: String): PendingMutation<out Model>? {
-        val methodName = "getMutationForModelId"
         val mutationResult = AtomicReference<PendingMutation<out Model>>()
-        val semaphoreReleased = AtomicBoolean(false)
 
         Completable.create { emitter: CompletableEmitter ->
             storage.query(
@@ -97,23 +95,7 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
                 }
             )
         }
-            .doOnSubscribe {
-                LOG.debug { "[$methodName] Acquiring outbox semaphore (permits: ${semaphore.availablePermits()})" }
-                semaphore.acquire()
-                LOG.debug { "[$methodName] Acquired outbox semaphore (permits: ${semaphore.availablePermits()})" }
-            }
-            .doOnTerminate {
-                if (semaphoreReleased.compareAndSet(false, true)) {
-                    LOG.debug { "[$methodName] Releasing outbox semaphore in onTerminate (permits: ${semaphore.availablePermits()})" }
-                    semaphore.release()
-                }
-            }
-            .doFinally {
-                if (semaphoreReleased.compareAndSet(false, true)) {
-                    LOG.debug { "[$methodName] Releasing outbox semaphore in doFinally (permits: ${semaphore.availablePermits()})" }
-                    semaphore.release()
-                }
-            }
+            .acquireSemaphore(semaphore, "getMutationForModelId")
             .blockingAwait()
         return mutationResult.get()
     }
@@ -177,9 +159,7 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
     }
 
     private fun getMutationById(mutationId: String): PendingMutation<out Model>? {
-        val methodName = "getMutationById"
         val mutationResult = AtomicReference<PendingMutation<out Model>>()
-        val semaphoreReleased = AtomicBoolean(false)
 
         Completable.create { emitter: CompletableEmitter ->
             storage.query(
@@ -201,31 +181,12 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
                 }
             )
         }
-            .doOnSubscribe {
-                LOG.debug { "[$methodName] Acquiring outbox semaphore (permits: ${semaphore.availablePermits()})" }
-                semaphore.acquire()
-                LOG.debug { "[$methodName] Acquired outbox semaphore (permits: ${semaphore.availablePermits()})" }
-            }
-            .doOnTerminate {
-                if (semaphoreReleased.compareAndSet(false, true)) {
-                    LOG.debug { "[$methodName] Releasing outbox semaphore in onTerminate (permits: ${semaphore.availablePermits()})" }
-                    semaphore.release()
-                }
-            }
-            .doFinally {
-                if (semaphoreReleased.compareAndSet(false, true)) {
-                    LOG.debug { "[$methodName] Releasing outbox semaphore in doFinally (permits: ${semaphore.availablePermits()})" }
-                    semaphore.release()
-                }
-            }
+            .acquireSemaphore(semaphore, "getMutationById")
             .blockingAwait()
         return mutationResult.get()
     }
 
     override fun <T : Model> enqueue(incomingMutation: PendingMutation<T>): Completable {
-        val methodName = "enqueue"
-        val semaphoreReleased = AtomicBoolean(false)
-
         return Completable.defer {
             // If there is no existing mutation for the model, then just apply the incoming
             // mutation, and be done with this.
@@ -239,23 +200,7 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
                 return@defer resolveConflict<T>(existingMutation, incomingMutation)
             }
         }
-            .doOnSubscribe {
-                LOG.debug { "[$methodName] Acquiring outbox semaphore (permits: ${semaphore.availablePermits()})" }
-                semaphore.acquire()
-                LOG.debug { "[$methodName] Acquired outbox semaphore (permits: ${semaphore.availablePermits()})" }
-            }
-            .doOnTerminate {
-                if (semaphoreReleased.compareAndSet(false, true)) {
-                    LOG.debug { "[$methodName] Releasing outbox semaphore in onTerminate (permits: ${semaphore.availablePermits()})" }
-                    semaphore.release()
-                }
-            }
-            .doFinally {
-                if (semaphoreReleased.compareAndSet(false, true)) {
-                    LOG.debug { "[$methodName] Releasing outbox semaphore in doFinally (permits: ${semaphore.availablePermits()})" }
-                    semaphore.release()
-                }
-            }
+            .acquireSemaphore(semaphore, "enqueue")
     }
 
     private fun <T : Model> resolveConflict(
@@ -295,29 +240,8 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
         }
     }
 
-    override fun remove(pendingMutationId: TimeBasedUuid): Completable {
-        val methodName = "remove"
-        val semaphoreReleased = AtomicBoolean(false)
-
-        return removeNotLocking(pendingMutationId)
-            .doOnSubscribe {
-                LOG.debug { "[$methodName] Acquiring outbox semaphore (permits: ${semaphore.availablePermits()})" }
-                semaphore.acquire()
-                LOG.debug { "[$methodName] Acquired outbox semaphore (permits: ${semaphore.availablePermits()})" }
-            }
-            .doOnTerminate {
-                if (semaphoreReleased.compareAndSet(false, true)) {
-                    LOG.debug { "[$methodName] Releasing outbox semaphore in onTerminate (permits: ${semaphore.availablePermits()})" }
-                    semaphore.release()
-                }
-            }
-            .doFinally {
-                if (semaphoreReleased.compareAndSet(false, true)) {
-                    LOG.debug { "[$methodName] Releasing outbox semaphore in doFinally (permits: ${semaphore.availablePermits()})" }
-                    semaphore.release()
-                }
-            }
-    }
+    override fun remove(pendingMutationId: TimeBasedUuid): Completable =
+        removeNotLocking(pendingMutationId).acquireSemaphore(semaphore, "remove")
 
     private fun removeNotLocking(pendingMutationId: TimeBasedUuid): Completable {
         Objects.requireNonNull(pendingMutationId)
@@ -354,9 +278,6 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
     }
 
     override fun load(): Completable {
-        val methodName = "load"
-        val semaphoreReleased = AtomicBoolean(false)
-
         return Completable.create { emitter: CompletableEmitter ->
             inFlightMutations.clear()
             var queryOptions = Where.matchesAll()
@@ -402,23 +323,7 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
                 }
             )
         }
-            .doOnSubscribe {
-                LOG.debug { "[$methodName] Acquiring outbox semaphore (permits: ${semaphore.availablePermits()})" }
-                semaphore.acquire()
-                LOG.debug { "[$methodName] Acquired outbox semaphore (permits: ${semaphore.availablePermits()})" }
-            }
-            .doOnTerminate {
-                if (semaphoreReleased.compareAndSet(false, true)) {
-                    LOG.debug { "[$methodName] Releasing outbox semaphore in onTerminate (permits: ${semaphore.availablePermits()})" }
-                    semaphore.release()
-                }
-            }
-            .doFinally {
-                if (semaphoreReleased.compareAndSet(false, true)) {
-                    LOG.debug { "[$methodName] Releasing outbox semaphore in doFinally (permits: ${semaphore.availablePermits()})" }
-                    semaphore.release()
-                }
-            }
+            .acquireSemaphore(semaphore, "load")
     }
 
     override fun events(): Observable<OutboxEvent> = events
@@ -470,6 +375,31 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
         )
     }
 
+    internal fun Completable.acquireSemaphore(semaphore: Semaphore, methodName: String): Completable {
+        val semaphoreReleased = AtomicBoolean(false)
+        return this.doOnSubscribe {
+            LOG.debug { "[$methodName] Acquiring outbox semaphore (permits: ${semaphore.availablePermits()})" }
+            semaphore.acquire()
+            LOG.debug { "[$methodName] Acquired outbox semaphore (permits: ${semaphore.availablePermits()})" }
+        }
+            .doOnTerminate {
+                if (semaphoreReleased.compareAndSet(false, true)) {
+                    LOG.debug {
+                        "[$methodName] Releasing outbox semaphore in onTerminate (permits: ${semaphore.availablePermits()})"
+                    }
+                    semaphore.release()
+                }
+            }
+            .doFinally {
+                if (semaphoreReleased.compareAndSet(false, true)) {
+                    LOG.debug {
+                        "[$methodName] Releasing outbox semaphore in onFinally (permits: ${semaphore.availablePermits()})"
+                    }
+                    semaphore.release()
+                }
+            }
+    }
+
     /**
      * Encapsulate the logic to determine which actions to take based on incoming and existing
      * mutations. Non-static so we can access instance methods of the outer class. Private because
@@ -489,8 +419,8 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
         fun resolve(): Completable {
             LOG.debug {
                 "IncomingMutationConflict - " +
-                        " existing " + existing.mutationType +
-                        " incoming " + incoming.mutationType
+                    " existing " + existing.mutationType +
+                    " incoming " + incoming.mutationType
             }
             return when (incoming.mutationType) {
                 PendingMutation.Type.CREATE -> handleIncomingCreate()
@@ -661,7 +591,6 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
             ) as PendingMutation<T>
         }
     }
-
     companion object {
         private val LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore")
     }
