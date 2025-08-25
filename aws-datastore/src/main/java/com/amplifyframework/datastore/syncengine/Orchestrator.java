@@ -159,7 +159,7 @@ public final class Orchestrator {
      *      and started (asynchronously) the transition to SYNC_VIA_API, if an API is available.
      */
     public synchronized Completable start() {
-        return performSynchronized("start", () -> {
+        return performSynchronized(() -> {
             switch (targetState.get()) {
                 case LOCAL_ONLY:
                     disposeNetworkChanges();
@@ -185,10 +185,10 @@ public final class Orchestrator {
      * @return A completable which emits success when orchestrator stops
      */
     public synchronized Completable stop() {
-        return performSynchronized("stop", this::transitionToStopped);
+        return performSynchronized(this::transitionToStopped);
     }
 
-    private Completable performSynchronized(String methodName, Action action) {
+    private Completable performSynchronized(Action action) {
         try {
             if (!startStopSemaphore.tryAcquire(LOCAL_OP_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
                 return Completable.error(new DataStoreException("Timed out acquiring orchestrator lock.",
