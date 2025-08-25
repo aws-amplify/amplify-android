@@ -18,7 +18,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
-import org.gradle.kotlin.dsl.extra
 import org.gradle.kotlin.dsl.provideDelegate
 
 /**
@@ -50,13 +49,6 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
     }
 
     private fun Project.configureAndroid(extension: LibraryExtension) {
-        if (hasProperty("signingKeyId")) {
-            println("Getting signing info from protected source.")
-            extra["signing.keyId"] = findProperty("signingKeyId")
-            extra["signing.password"] = findProperty("signingPassword")
-            extra["signing.inMemoryKey"] = findProperty("signingInMemoryKey")
-        }
-
         extension.apply {
             compileSdk = 34
 
@@ -106,12 +98,6 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                         "META-INF/LICENSE-notice.md"
                     )
                 )
-            }
-
-            publishing {
-                singleVariant("release") {
-                    withSourcesJar()
-                }
             }
         }
 
