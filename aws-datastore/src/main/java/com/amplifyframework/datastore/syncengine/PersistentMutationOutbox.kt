@@ -70,7 +70,6 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
     @VisibleForTesting
     fun getMutationForModelId(modelId: String, modelClass: String): PendingMutation<out Model>? {
         val mutationResult = AtomicReference<PendingMutation<out Model>>()
-
         Completable.create { emitter: CompletableEmitter ->
             storage.query(
                 PersistentRecord::class.java,
