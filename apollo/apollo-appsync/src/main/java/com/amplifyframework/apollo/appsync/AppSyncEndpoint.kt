@@ -43,7 +43,7 @@ class AppSyncEndpoint(serverUrl: String) {
     }
 
     // See SubscriptionEndpoint.buildConnectionRequestUrl
-    private val realtime by lazy {
+    internal val realtime by lazy {
         if (standardEndpointRegex.matches(urlString)) {
             // For standard URLs we insert "realtime" into the domain
             URL(urlString.replace("appsync-api", "appsync-realtime-api"))
@@ -51,11 +51,6 @@ class AppSyncEndpoint(serverUrl: String) {
             // For custom URLs we append "realtime" to the path
             URL("$urlString/realtime")
         }
-    }
-
-    internal val websocketConnection by lazy {
-        // See SubscriptionEndpoint.buildConnectionRequestUrl
-        URL("$realtime/connect")
     }
 
     /**
@@ -67,7 +62,7 @@ class AppSyncEndpoint(serverUrl: String) {
         val headers = mapOf("host" to serverUrl.host) + authorizer.getWebsocketConnectionHeaders(this)
         val authorization = headers.base64()
 
-        val url = websocketConnection.toHttpUrlOrNull() ?: error("Invalid endpoint url")
+        val url = realtime.toHttpUrlOrNull() ?: error("Invalid endpoint url")
 
         return url.newBuilder()
             .addQueryParameter("header", authorization)

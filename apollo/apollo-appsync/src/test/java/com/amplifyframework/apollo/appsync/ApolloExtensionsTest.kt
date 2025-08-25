@@ -82,7 +82,7 @@ class ApolloExtensionsTest {
 
         verify {
             transportBuilder.serverUrl(
-                "https://example1234567890123456789.appsync-realtime-api.us-east-1.amazonaws.com/graphql/connect"
+                "https://example1234567890123456789.appsync-realtime-api.us-east-1.amazonaws.com/graphql"
             )
         }
     }
