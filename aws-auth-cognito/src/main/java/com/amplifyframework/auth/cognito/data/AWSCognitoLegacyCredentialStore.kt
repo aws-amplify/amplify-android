@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
+import androidx.core.content.edit
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.cognito.AuthConfiguration
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
@@ -160,7 +161,7 @@ internal class AWSCognitoLegacyCredentialStore(
 
     override fun deleteASFDevice() {
         val sharedPreferences = context.getSharedPreferences(LOCAL_STORAGE_PATH, Context.MODE_PRIVATE)
-        sharedPreferences.edit().remove(LOCAL_STORAGE_DEVICE_ID_KEY).apply()
+        sharedPreferences.edit { remove(LOCAL_STORAGE_DEVICE_ID_KEY) }
     }
 
     private fun deleteCognitoUserPoolTokens() {

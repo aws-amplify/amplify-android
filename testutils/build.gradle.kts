@@ -14,9 +14,8 @@
  */
 
 plugins {
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.10"
-    id("com.android.library")
-    id("kotlin-android")
+    alias(libs.plugins.amplify.android.library)
+    alias(libs.plugins.kotlin.parcelize)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))

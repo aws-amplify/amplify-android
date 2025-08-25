@@ -30,19 +30,20 @@ import com.amplifyframework.geo.maplibre.AmplifyMapLibreAdapter
 import com.amplifyframework.geo.maplibre.R
 import com.amplifyframework.geo.maplibre.view.support.AttributionInfoView
 import com.amplifyframework.geo.models.MapStyle
-import com.mapbox.mapboxsdk.maps.MapView
-import com.mapbox.mapboxsdk.maps.MapboxMap
-import com.mapbox.mapboxsdk.maps.Style
-import com.mapbox.mapboxsdk.plugins.annotation.Symbol
-import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager
-import com.mapbox.mapboxsdk.style.expressions.Expression
-import com.mapbox.mapboxsdk.style.layers.CircleLayer
-import com.mapbox.mapboxsdk.style.layers.PropertyFactory
-import com.mapbox.mapboxsdk.style.layers.SymbolLayer
-import com.mapbox.mapboxsdk.style.sources.GeoJsonOptions
-import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
+import org.maplibre.android.maps.MapLibreMap
+import org.maplibre.android.maps.MapLibreMapOptions
+import org.maplibre.android.maps.MapView
+import org.maplibre.android.maps.Style
+import org.maplibre.android.plugins.annotation.Symbol
+import org.maplibre.android.plugins.annotation.SymbolManager
+import org.maplibre.android.style.expressions.Expression
+import org.maplibre.android.style.layers.CircleLayer
+import org.maplibre.android.style.layers.PropertyFactory
+import org.maplibre.android.style.layers.SymbolLayer
+import org.maplibre.android.style.sources.GeoJsonOptions
+import org.maplibre.android.style.sources.GeoJsonSource
 
-typealias MapLibreOptions = com.mapbox.mapboxsdk.maps.MapboxMapOptions
+typealias MapLibreOptions = MapLibreMapOptions
 
 /**
  * The MapLibreView encapsulates the MapBox map integration with `Amplify.Geo` and
@@ -142,10 +143,10 @@ constructor(
      *
      * @param callback the onLoad lambda
      */
-    fun getStyle(callback: (MapboxMap, Style) -> Unit) {
+    fun getStyle(callback: (MapLibreMap, Style) -> Unit) {
         getStyle(
             object : OnStyleLoaded {
-                override fun onLoad(map: MapboxMap, style: Style) {
+                override fun onLoad(map: MapLibreMap, style: Style) {
                     callback(map, style)
                 }
             }
@@ -222,11 +223,11 @@ constructor(
         }
     }
 
-    private fun enableClustering(map: MapboxMap, style: Style) {
+    private fun enableClustering(map: MapLibreMap, style: Style) {
         val geoJsonClusterOptions = GeoJsonOptions().withCluster(true)
             .withClusterMaxZoom(clusteringOptions.maxClusterZoomLevel)
             .withClusterRadius(clusteringOptions.clusterRadius)
-        this.symbolManager = SymbolManager(this, map, style, null, geoJsonClusterOptions).apply {
+        this.symbolManager = SymbolManager(this, map, style, null, null, geoJsonClusterOptions).apply {
             iconAllowOverlap = true
             iconIgnorePlacement = true
         }
@@ -337,6 +338,6 @@ constructor(
      * Callback interface that is invoked when both the map and its style are fully loaded.
      */
     interface OnStyleLoaded {
-        fun onLoad(map: MapboxMap, style: Style)
+        fun onLoad(map: MapLibreMap, style: Style)
     }
 }

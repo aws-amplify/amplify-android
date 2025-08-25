@@ -1,5 +1,5 @@
 [versions]
-agp = "8.4.0"
+agp = "8.11.1"
 androidx-activity = "1.2.0"
 androidx-annotation = "1.9.1"
 androidx-annotation-experimental = "1.4.1"
@@ -18,8 +18,8 @@ androidx-test-junit = "1.1.2"
 androidx-test-orchestrator = "1.4.2"
 androidx-test-runner = "1.3.0"
 androidx-workmanager = "2.9.1"
-apollo = "4.0.0"
-aws-kotlin = "1.3.81" # ensure proper aws-smithy version also set
+apollo = "4.3.1"
+aws-kotlin = "1.5.0" # ensure proper aws-smithy version also set
 aws-sdk = "2.62.2"
 aws-smithy = "1.3.23" # ensure proper aws-kotlin version also set
 binary-compatibility-validator = "0.14.0"
@@ -36,24 +36,26 @@ jsonassert = "1.5.0"
 junit = "4.13.2"
 junit-ktx = "1.2.0"
 kotest = "5.9.0"
-kotlin = "1.9.10"
+kotlin = "2.2.0"
 kotlin-serialization = "1.6.0"
 kover = "0.9.1"
-maplibre = "9.6.0"
-maplibre-annotations = "1.0.0"
+ktlint = "12.2.0"
+licensee = "1.7.0"
+litert = "1.4.0"
+maplibre = "11.12.1"
+maplibre-annotations = "3.0.2"
 material = "1.8.0"
 mockito = "3.9.0"
 mockito-inline = "3.11.2"
-mockk = "1.13.8"
+mockk = "1.14.5"
 mockwebserver = "5.0.0-alpha.11"
 navigation = "2.3.4"
 oauth2 = "0.26.0"
-okhttp = "5.0.0-alpha.11"
+okhttp = "5.1.0"
 robolectric = "4.7"
 rxjava = "3.0.6"
 slf4j = "2.0.6"
 sqlcipher = "4.6.1"
-tensorflow = "2.0.0"
 uuid = "4.0.1"
 totp = "1.0.1"
 turbine = "1.1.0"
@@ -70,7 +72,6 @@ androidx-core = { module = "androidx.core:core", version.ref = "androidx-core" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref="androidx-credentials" }
 androidx-credentials-play-services = { module = "androidx.credentials:credentials-play-services-auth", version.ref="androidx-credentials" }
-androidx-junit-ktx = { module = "androidx.test.ext:junit-ktx", version.ref = "junit-ktx" }
 androidx-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime", version.ref = "androidx-lifecycle" }
 androidx-nav-fragment = { module = "androidx.navigation:navigation-fragment", version.ref = "navigation" }
 androidx-nav-ui = { module = "androidx.navigation:navigation-ui", version.ref = "navigation" }
@@ -105,6 +106,7 @@ kotlin-coroutines-rx3 = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-rx3
 kotlin-futures = { module = "androidx.concurrent:concurrent-futures-ktx", version.ref = "androidx-concurrent" }
 kotlin-serializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlin-serialization" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref="kotlin" }
+litert = { module = "com.google.ai.edge.litert:litert", version.ref = "litert" }
 maplibre-annotations = { module = "org.maplibre.gl:android-plugin-annotation-v9", version.ref = "maplibre-annotations" }
 maplibre-sdk = { module = "org.maplibre.gl:android-sdk", version.ref = "maplibre" }
 oauth2 = { module = "com.google.auth:google-auth-library-oauth2-http", version.ref = "oauth2" }
@@ -112,7 +114,6 @@ okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 rxjava = { module = "io.reactivex.rxjava3:rxjava", version.ref = "rxjava" }
 slf4j = { module = "org.slf4j:slf4j-api", version.ref = "slf4j"}
 sqlcipher= { module = "net.zetetic:sqlcipher-android", version.ref = "sqlcipher" }
-tensorflow = { module = "org.tensorflow:tensorflow-lite", version.ref="tensorflow" }
 uuidgen = { module = "com.fasterxml.uuid:java-uuid-generator", version.ref="uuid" }
 
 # Testing libraries
@@ -121,6 +122,7 @@ test-androidx-core-ktx = { module = "androidx.test:core-ktx", version.ref="andro
 test-androidx-espresso = { module = "androidx.test.espresso:espresso-core", version.ref="espresso" }
 test-androidx-fragment = { module = "androidx.fragment:fragment-testing", version.ref="androidx-fragment" }
 test-androidx-junit = { module = "androidx.test.ext:junit", version.ref="androidx-test-junit" }
+test-androidx-junit-ktx = { module = "androidx.test.ext:junit-ktx", version.ref = "junit-ktx" }
 test-androidx-navigation = { module = "androidx.navigation:navigation-testing", version.ref = "navigation" }
 test-androidx-orchestrator = { module = "androidx.test:orchestrator", version.ref="androidx-test-orchestrator" }
 test-androidx-runner = { module = "androidx.test:runner", version.ref="androidx-test-runner" }
@@ -145,11 +147,30 @@ test-robolectric = { module = "org.robolectric:robolectric", version.ref="robole
 test-totp = { module = "dev.robinohs:totp-kt", version.ref="totp" }
 test-turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine"}
 
+# Dependencies for convention plugins
+plugin-android-gradle = { module = "com.android.tools.build:gradle", version.ref = "agp" }
+plugin-binary-compatibility = { module = "org.jetbrains.kotlinx:binary-compatibility-validator", version.ref = "binary-compatibility-validator" }
+plugin-kotlin-android = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+plugin-kover = { module = "org.jetbrains.kotlinx:kover-gradle-plugin", version.ref = "kover" }
+plugin-ktlint = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "ktlint" }
+plugin-licensee = { module = "app.cash.licensee:app.cash.licensee.gradle.plugin", version.ref = "licensee" }
+
 [plugins]
 android-library = { id = "com.android.library", version.ref = "agp" }
 apollo = { id = "com.apollographql.apollo", version.ref = "apollo" }
 binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binary-compatibility-validator" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
+licensee = { id = "app.cash.licensee", version.ref = "licensee" }
+
+# Internal convention plugins
+amplify-api = { id = "amplify.api" }
+amplify-kotlin = { id = "amplify.kotlin" }
+amplify-kover = { id = "amplify.kover" }
+amplify-ktlint = { id = "amplify.ktlint" }
+amplify-android-library = { id = "amplify.android.library" }
+amplify-licenses = { id = "amplify.licenses" }

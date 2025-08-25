@@ -1,9 +1,9 @@
 import java.util.Properties
 
 plugins {
-    id("com.android.library")
-    id("kotlin-android")
     alias(libs.plugins.apollo)
+    alias(libs.plugins.amplify.android.library)
+    alias(libs.plugins.amplify.api)
 }
 
 apply(from = rootProject.file("configuration/publishing.gradle"))
@@ -18,16 +18,6 @@ group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.apollo.appsync"
-}
-
-apollo {
-    service("appsync") {
-        packageName.set("com.amplifyframework.apollo.graphql")
-        srcDir("src/androidTest/graphql")
-        outputDirConnection {
-            connectToAndroidSourceSet("androidTest")
-        }
-    }
 }
 
 dependencies {

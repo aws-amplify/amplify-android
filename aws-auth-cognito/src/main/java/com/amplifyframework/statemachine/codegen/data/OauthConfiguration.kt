@@ -16,6 +16,7 @@
 package com.amplifyframework.statemachine.codegen.data
 
 import com.amplifyframework.annotations.InternalAmplifyApi
+import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -58,8 +59,15 @@ data class OauthConfiguration internal constructor(
                     }
                     scopesSet
                 }
-                val signInRedirectURI = optString(SIGN_IN_REDIRECT_URI).takeUnless { it.isNullOrEmpty() }
-                val signOutRedirectURI = optString(SIGN_OUT_REDIRECT_URI).takeUnless { it.isNullOrEmpty() }
+                // Get redirect URIs and split by comma if multiple URIs are provided
+                val signInRedirectURIs =
+                    optString(SIGN_IN_REDIRECT_URI).takeUnless { it.isNullOrEmpty() }?.split(",") ?: emptyList()
+                val signOutRedirectURIs =
+                    optString(SIGN_OUT_REDIRECT_URI).takeUnless { it.isNullOrEmpty() }?.split(",") ?: emptyList()
+
+                // Select appropriate redirect URIs (prefer non-HTTP/HTTPS URIs for mobile)
+                val signInRedirectURI = HostedUIHelper.selectRedirectUri(signInRedirectURIs)
+                val signOutRedirectURI = HostedUIHelper.selectRedirectUri(signOutRedirectURIs)
 
                 return if (appClient != null &&
                     domain != null &&

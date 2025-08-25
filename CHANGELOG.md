@@ -1,3 +1,11 @@
+## [Release 2.29.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.29.2)
+
+### Bug Fixes
+- **auth:** Select first non http(s) redirect ([#3091](https://github.com/aws-amplify/amplify-android/issues/3091))
+- **analytics:** Remove test dependency ([#3093](https://github.com/aws-amplify/amplify-android/issues/3093))
+
+[See all changes between 2.29.1 and 2.29.2](https://github.com/aws-amplify/amplify-android/compare/release_v2.29.1...release_v2.29.2)
+
 ## [Release 2.29.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.29.1)
 
 ### Bug Fixes

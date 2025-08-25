@@ -14,8 +14,8 @@
  */
 
 plugins {
-    id("com.android.library")
-    id("kotlin-android")
+    alias(libs.plugins.amplify.android.library)
+    alias(libs.plugins.amplify.api)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
@@ -31,7 +31,7 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":aws-core"))
     implementation(libs.androidx.appcompat)
-    implementation(libs.tensorflow)
+    implementation(libs.litert)
 
     testImplementation(project(":testutils"))
     testImplementation(libs.test.junit)
