@@ -6,7 +6,7 @@
         "mockedResponses": [
             {
                 "type": "cognitoIdentityProvider",
-                "apiName": "initiateAuth",
+                "apiName": "getTokensFromRefreshToken",
                 "responseType": "failure",
                 "response": {
                     "errorType": "ResourceNotFoundException",
@@ -17,8 +17,7 @@
     },
     "api": {
         "name": "fetchAuthSession",
-        "params": {
-        },
+        "params": {},
         "options": {
             "forceRefresh": true
         }
