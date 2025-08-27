@@ -1,3 +1,10 @@
+## [Release 1.2.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_apollo_v1.2.1)
+
+### Bug Fixes
+- **apollo:** Remove connect suffix from websocket connection url ([#3114](https://github.com/aws-amplify/amplify-android/issues/3114))
+
+[See all changes between 1.2.0 and 1.2.1](https://github.com/aws-amplify/amplify-android/compare/release_apollo_v1.2.0...release_apollo_v1.2.1)
+
 ## [Release 1.2.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_apollo_v1.2.0)
 
 ### Features
