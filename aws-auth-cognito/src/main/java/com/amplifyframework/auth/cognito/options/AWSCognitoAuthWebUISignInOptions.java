@@ -37,13 +37,15 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
      * @param idpIdentifier The IdentityProvider identifier if using multiple instances of same identity provider.
      * @param browserPackage Specify which browser package should be used for web sign in (e.g. "org.mozilla.firefox").
      *                       Defaults to the Chrome package if not specified.
+     * @param preferPrivateSession specifying whether or not to launch web ui in an ephemeral CustomTab.
      */
     protected AWSCognitoAuthWebUISignInOptions(
             List<String> scopes,
             String idpIdentifier,
-            String browserPackage
+            String browserPackage,
+            Boolean preferPrivateSession
     ) {
-        super(scopes);
+        super(scopes, preferPrivateSession);
         this.idpIdentifier = idpIdentifier;
         this.browserPackage = browserPackage;
     }
@@ -80,7 +82,8 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
         return ObjectsCompat.hash(
                 getScopes(),
                 getIdpIdentifier(),
-                getBrowserPackage()
+                getBrowserPackage(),
+                getPreferPrivateSession()
         );
     }
 
@@ -94,7 +97,8 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
             AWSCognitoAuthWebUISignInOptions webUISignInOptions = (AWSCognitoAuthWebUISignInOptions) obj;
             return ObjectsCompat.equals(getScopes(), webUISignInOptions.getScopes()) &&
                     ObjectsCompat.equals(getIdpIdentifier(), webUISignInOptions.getIdpIdentifier()) &&
-                    ObjectsCompat.equals(getBrowserPackage(), webUISignInOptions.getBrowserPackage());
+                    ObjectsCompat.equals(getBrowserPackage(), webUISignInOptions.getBrowserPackage()) &&
+                    ObjectsCompat.equals(getPreferPrivateSession(), webUISignInOptions.getPreferPrivateSession());
         }
     }
 
@@ -104,6 +108,7 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
                 "scopes=" + getScopes() +
                 ", idpIdentifier=" + getIdpIdentifier() +
                 ", browserPackage=" + getBrowserPackage() +
+                ", preferPrivateSession=" + getPreferPrivateSession() +
                 '}';
     }
 
@@ -162,7 +167,8 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
             return new AWSCognitoAuthWebUISignInOptions(
                     Immutable.of(super.getScopes()),
                     idpIdentifier,
-                    browserPackage
+                    browserPackage,
+                    super.getPreferPrivateSession()
             );
         }
     }

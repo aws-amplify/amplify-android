@@ -1094,9 +1094,10 @@ public final class com/amplifyframework/auth/options/AuthVerifyTOTPSetupOptions$
 }
 
 public class com/amplifyframework/auth/options/AuthWebUISignInOptions {
-	protected fun <init> (Ljava/util/List;)V
+	protected fun <init> (Ljava/util/List;Ljava/lang/Boolean;)V
 	public static fun builder ()Lcom/amplifyframework/auth/options/AuthWebUISignInOptions$Builder;
 	public fun equals (Ljava/lang/Object;)Z
+	public fun getPreferPrivateSession ()Ljava/lang/Boolean;
 	public fun getScopes ()Ljava/util/List;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -1105,8 +1106,10 @@ public class com/amplifyframework/auth/options/AuthWebUISignInOptions {
 public abstract class com/amplifyframework/auth/options/AuthWebUISignInOptions$Builder {
 	public fun <init> ()V
 	public fun build ()Lcom/amplifyframework/auth/options/AuthWebUISignInOptions;
+	public fun getPreferPrivateSession ()Ljava/lang/Boolean;
 	public fun getScopes ()Ljava/util/List;
 	public abstract fun getThis ()Lcom/amplifyframework/auth/options/AuthWebUISignInOptions$Builder;
+	public fun preferPrivateSession (Ljava/lang/Boolean;)Lcom/amplifyframework/auth/options/AuthWebUISignInOptions$Builder;
 	public fun scopes (Ljava/util/List;)Lcom/amplifyframework/auth/options/AuthWebUISignInOptions$Builder;
 }
 
