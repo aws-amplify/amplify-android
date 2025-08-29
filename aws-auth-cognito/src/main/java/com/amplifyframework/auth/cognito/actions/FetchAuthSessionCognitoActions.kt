@@ -20,7 +20,6 @@ import aws.sdk.kotlin.services.cognitoidentity.model.GetIdRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.getTokensFromRefreshToken
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.AuthEnvironment
-import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.exceptions.NotAuthorizedException
 import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.SignedOutException
@@ -48,7 +47,7 @@ internal object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                 val deviceMetadata: DeviceMetadata.Metadata? = getDeviceMetadata(username)
 
                 val response = cognitoAuthService.cognitoIdentityProviderClient?.getTokensFromRefreshToken {
-                    refreshToken = tokens.refreshToken
+                    refreshToken = tokens.refreshToken?.tokenValue
                     clientId = configuration.userPool?.appClient
                     clientSecret = configuration.userPool?.appClientSecret
                     deviceKey = deviceMetadata?.deviceKey
@@ -58,13 +57,13 @@ internal object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                 val refreshedUserPoolTokens = CognitoUserPoolTokens(
                     idToken = response?.authenticationResult?.idToken,
                     accessToken = response?.authenticationResult?.accessToken,
-                    refreshToken = response?.authenticationResult?.refreshToken ?: tokens.refreshToken,
+                    refreshToken = response?.authenticationResult?.refreshToken ?: tokens.refreshToken?.tokenValue,
                     expiration = Instant.now().plus(expiresIn.seconds).epochSeconds
                 )
 
                 val updatedSignedInData = signedInData.copy(
-                    userId = refreshedUserPoolTokens.accessToken?.let(SessionHelper::getUserSub) ?: signedInData.userId,
-                    username = refreshedUserPoolTokens.accessToken?.let(SessionHelper::getUsername) ?: username,
+                    userId = refreshedUserPoolTokens.accessToken?.userSub ?: signedInData.userId,
+                    username = refreshedUserPoolTokens.accessToken?.username ?: username,
                     cognitoUserPoolTokens = refreshedUserPoolTokens
                 )
 

@@ -15,6 +15,7 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
+import com.amplifyframework.statemachine.util.mask
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -81,7 +82,7 @@ internal sealed class AmplifyCredential {
 @Serializable
 internal data class FederatedToken(val token: String, val providerName: String) {
     override fun toString(): String = "FederatedToken(" +
-        "token = ${token.substring(0..4)}***, " +
+        "token = ${token.mask()}, " +
         "providerName = $providerName" +
         ")"
 }
@@ -95,16 +96,22 @@ internal data class FederatedToken(val token: String, val providerName: String) 
  */
 @Serializable
 internal data class CognitoUserPoolTokens(
-    val idToken: String?,
-    val accessToken: String?,
-    val refreshToken: String?,
+    val idToken: IdToken?,
+    val accessToken: AccessToken?,
+    val refreshToken: RefreshToken?,
     val expiration: Long?
 ) {
-    override fun toString(): String = "CognitoUserPoolTokens(" +
-        "idToken = ${idToken?.substring(0..4)}***, " +
-        "accessToken = ${accessToken?.substring(0..4)}***, " +
-        "refreshToken = ${refreshToken?.substring(0..4)}***" +
-        ")"
+    constructor(
+        idToken: String?,
+        accessToken: String?,
+        refreshToken: String?,
+        expiration: Long?
+    ) : this(
+        idToken = idToken.asIdToken(),
+        accessToken = accessToken.asAccessToken(),
+        refreshToken = refreshToken.asRefreshToken(),
+        expiration = expiration
+    )
 
     override fun equals(other: Any?): Boolean = if (super.equals(other)) {
         true
@@ -134,9 +141,9 @@ internal data class AWSCredentials(
     }
 
     override fun toString(): String = "AWSCredentials(" +
-        "accessKeyId = ${accessKeyId?.substring(0..4)}***, " +
-        "secretAccessKey = ${secretAccessKey?.substring(0..4)}***, " +
-        "sessionToken = ${sessionToken?.substring(0..4)}***, " +
+        "accessKeyId = ${accessKeyId.mask()}, " +
+        "secretAccessKey = ${secretAccessKey.mask()}, " +
+        "sessionToken = ${sessionToken.mask()}, " +
         "expiration = $expiration" +
         ")"
 }

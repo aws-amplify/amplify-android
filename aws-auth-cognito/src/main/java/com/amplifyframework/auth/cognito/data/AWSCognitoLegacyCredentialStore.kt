@@ -19,7 +19,6 @@ import android.content.Context
 import androidx.core.content.edit
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.cognito.AuthConfiguration
-import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.cognito.helpers.identityProviderName
 import com.amplifyframework.core.store.KeyValueRepository
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
@@ -216,13 +215,13 @@ internal class AWSCognitoLegacyCredentialStore(
         val signInMethod = retrieveUserPoolSignInMethod() ?: return null
         val tokenUserId =
             try {
-                cognitoUserPoolTokens.accessToken?.let { SessionHelper.getUserSub(it) } ?: ""
+                cognitoUserPoolTokens.accessToken?.userSub ?: ""
             } catch (e: Exception) {
                 ""
             }
         val tokenUsername =
             try {
-                cognitoUserPoolTokens.accessToken?.let { SessionHelper.getUsername(it) } ?: ""
+                cognitoUserPoolTokens.accessToken?.username ?: ""
             } catch (e: Exception) {
                 ""
             }
