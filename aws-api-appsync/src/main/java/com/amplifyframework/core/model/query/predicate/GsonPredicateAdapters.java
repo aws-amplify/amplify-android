@@ -183,7 +183,7 @@ public final class GsonPredicateAdapters {
             PredicateType predicateType;
             if (predicate instanceof QueryPredicateGroup) {
                 predicateType = PredicateType.GROUP;
-                json = serializeQueryPredicateGroup((QueryPredicateGroup) predicate);
+                json = serializeQueryPredicateGroup((QueryPredicateGroup) predicate, context);
             } else {
                 json = gson.toJsonTree(predicate);
                 if (predicate instanceof MatchAllQueryPredicate) {
@@ -201,13 +201,13 @@ public final class GsonPredicateAdapters {
             return jsonObject;
         }
 
-        private JsonElement serializeQueryPredicateGroup(QueryPredicateGroup group) {
+        private JsonElement serializeQueryPredicateGroup(QueryPredicateGroup group, JsonSerializationContext context) {
             JsonObject jsonObject = new JsonObject();
             jsonObject.addProperty("type", group.type().name());
             
             JsonArray predicatesArray = new JsonArray();
             for (QueryPredicate predicate : group.predicates()) {
-                predicatesArray.add(serialize(predicate, QueryPredicate.class, null));
+                predicatesArray.add(serialize(predicate, QueryPredicate.class, context));
             }
             jsonObject.add("predicates", predicatesArray);
             
