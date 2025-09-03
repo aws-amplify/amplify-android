@@ -24,8 +24,11 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import com.google.gson.JsonArray;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Gson adapters to serialize/deserialize to/from data modeling types.
@@ -159,7 +162,7 @@ public final class GsonPredicateAdapters {
                 case OPERATION:
                     return gson.fromJson(json, QueryPredicateOperation.class);
                 case GROUP:
-                    return gson.fromJson(json, QueryPredicateGroup.class);
+                    return deserializeQueryPredicateGroup(jsonObject);
                 case ALL:
                     return gson.fromJson(json, MatchAllQueryPredicate.class);
                 case NONE:
@@ -176,22 +179,54 @@ public final class GsonPredicateAdapters {
         @Override
         public JsonElement serialize(QueryPredicate predicate, Type type, JsonSerializationContext context)
                 throws JsonParseException {
-            JsonElement json = gson.toJsonTree(predicate);
+            JsonElement json;
             PredicateType predicateType;
-            if (predicate instanceof MatchAllQueryPredicate) {
-                predicateType = PredicateType.ALL;
-            } else if (predicate instanceof MatchNoneQueryPredicate) {
-                predicateType = PredicateType.NONE;
-            } else if (predicate instanceof QueryPredicateOperation) {
-                predicateType = PredicateType.OPERATION;
-            } else if (predicate instanceof QueryPredicateGroup) {
+            if (predicate instanceof QueryPredicateGroup) {
                 predicateType = PredicateType.GROUP;
+                json = serializeQueryPredicateGroup((QueryPredicateGroup) predicate);
             } else {
-                throw new JsonParseException("Unable to identify the predicate type.");
+                json = gson.toJsonTree(predicate);
+                if (predicate instanceof MatchAllQueryPredicate) {
+                    predicateType = PredicateType.ALL;
+                } else if (predicate instanceof MatchNoneQueryPredicate) {
+                    predicateType = PredicateType.NONE;
+                } else if (predicate instanceof QueryPredicateOperation) {
+                    predicateType = PredicateType.OPERATION;
+                } else {
+                    throw new JsonParseException("Unable to identify the predicate type.");
+                }
             }
             JsonObject jsonObject = json.getAsJsonObject();
             jsonObject.addProperty(TYPE, predicateType.name());
             return jsonObject;
+        }
+
+        private JsonElement serializeQueryPredicateGroup(QueryPredicateGroup group) {
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty("type", group.type().name());
+            
+            JsonArray predicatesArray = new JsonArray();
+            for (QueryPredicate predicate : group.predicates()) {
+                predicatesArray.add(serialize(predicate, QueryPredicate.class, null));
+            }
+            jsonObject.add("predicates", predicatesArray);
+            
+            return jsonObject;
+        }
+        
+        private QueryPredicateGroup deserializeQueryPredicateGroup(JsonObject jsonObject) {
+            QueryPredicateGroup.Type type = QueryPredicateGroup.Type.valueOf(
+                jsonObject.get("type").getAsString()
+            );
+            
+            List<QueryPredicate> predicates = new ArrayList<>();
+            JsonArray predicatesArray = jsonObject.getAsJsonArray("predicates");
+            for (JsonElement predicateElement : predicatesArray) {
+                QueryPredicate predicate = deserialize(predicateElement, QueryPredicate.class, null);
+                predicates.add(predicate);
+            }
+            
+            return new QueryPredicateGroup(type, predicates);
         }
     }
 }
