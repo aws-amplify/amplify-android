@@ -31,6 +31,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeliveryMediumType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgetDeviceResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetTokensFromRefreshTokenResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.GlobalSignOutResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.InitiateAuthResponse
@@ -225,6 +226,16 @@ class CognitoMockFactory(
                                 deviceLastModifiedDate = Instant.now()
                             }
                         )
+                    }
+                }
+            }
+            "getTokensFromRefreshToken" -> {
+                coEvery { mockCognitoIPClient.getTokensFromRefreshToken(any()) } coAnswers {
+                    setupError(mockResponse, responseObject)
+                    GetTokensFromRefreshTokenResponse.invoke {
+                        this.authenticationResult = responseObject["authenticationResult"]?.let {
+                            parseAuthenticationResult(it as JsonObject)
+                        }
                     }
                 }
             }

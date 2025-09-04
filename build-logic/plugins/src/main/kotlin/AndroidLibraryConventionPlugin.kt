@@ -50,7 +50,7 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
 
     private fun Project.configureAndroid(extension: LibraryExtension) {
         extension.apply {
-            compileSdk = 34
+            compileSdk = 36
 
             buildFeatures {
                 buildConfig = true
