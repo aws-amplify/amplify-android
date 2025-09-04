@@ -18,7 +18,7 @@ package com.amplifyframework.datastore.syncengine
  * Constants for the migration_flags table.
  * This table is used to hold flags on whether or not certain migrations have been run on db tables
  */
-object MigrationFlagsTable {
+internal object MigrationFlagsTable {
     const val TABLE_NAME = "migration_flags"
     const val COLUMN_FLAG_NAME = "flag_name"
     const val CREATE_SQL = "CREATE TABLE IF NOT EXISTS $TABLE_NAME ($COLUMN_FLAG_NAME TEXT PRIMARY KEY)"
