@@ -29,16 +29,15 @@ object MigrationFlagsTable {
 
     @JvmStatic
     val flags = mapOf(
-        CLEARED_V2_30_0_AND_BELOW_GROUP_SYNC_EXPRESSIONS to "INSERT OR IGNORE INTO $TABLE_NAME ($COLUMN_FLAG_NAME) VALUES ('$CLEARED_V2_30_0_AND_BELOW_GROUP_SYNC_EXPRESSIONS')"
+        CLEARED_V2_30_0_AND_BELOW_GROUP_SYNC_EXPRESSIONS to
+            "INSERT OR IGNORE INTO $TABLE_NAME ($COLUMN_FLAG_NAME) VALUES ('$CLEARED_V2_30_0_AND_BELOW_GROUP_SYNC_EXPRESSIONS')"
     )
 
     /*
     Grab a list of all statements that a new table should run so that we don't attempt to migrate later.
      */
     @JvmStatic
-    fun initialInsertStatements(): Set<String>{
-        return flags.map { flag ->
-            flag.value
-        }.toSet()
-    }
+    fun initialInsertStatements(): Set<String> = flags.map { flag ->
+        flag.value
+    }.toSet()
 }

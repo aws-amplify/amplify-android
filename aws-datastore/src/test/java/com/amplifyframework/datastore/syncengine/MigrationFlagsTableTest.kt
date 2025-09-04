@@ -22,7 +22,9 @@ class MigrationFlagsTableTest {
     @Test
     fun `validate initial insert entries`() {
         assertEquals(
-            setOf("INSERT OR IGNORE INTO migration_flags (flag_name) VALUES ('cleared_v2_30_0_and_below_group_sync_expressions')"),
+            setOf(
+                "INSERT OR IGNORE INTO migration_flags (flag_name) VALUES ('cleared_v2_30_0_and_below_group_sync_expressions')"
+            ),
             MigrationFlagsTable.initialInsertStatements()
         )
     }
