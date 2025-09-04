@@ -22,6 +22,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.datastore.StrictMode;
+import com.amplifyframework.datastore.syncengine.MigrationFlagsTable;
 import com.amplifyframework.logging.Logger;
 
 import org.junit.After;
@@ -33,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import static org.junit.Assert.assertNotNull;
@@ -78,7 +80,7 @@ public class SQLiteStorageHelperInstrumentedTest {
                 ApplicationProvider.getApplicationContext(),
                 "AmplifyDatastore.db",
                 1,
-                new CreateSqlCommands(createTableCommands, Collections.emptySet()));
+                new CreateSqlCommands(createTableCommands, Collections.emptySet(), Collections.emptySet()));
         sqLiteDatabase = sqLiteStorageHelper.getWritableDatabase();
 
     }
@@ -103,7 +105,7 @@ public class SQLiteStorageHelperInstrumentedTest {
                 ApplicationProvider.getApplicationContext(),
                 "AmplifyDatastore.db",
                 1,
-                new CreateSqlCommands(createTableCommands, Collections.emptySet()));
+                new CreateSqlCommands(createTableCommands, Collections.emptySet(), Collections.emptySet()));
         sqLiteDatabase = sqLiteStorageHelper.getWritableDatabase();
 
     }
@@ -157,6 +159,40 @@ public class SQLiteStorageHelperInstrumentedTest {
                     tableNamesFromDatabase.contains(sqlCommand.tableName())
             );
         }
+    }
+
+    /**
+     * Assert that {@link SQLiteStorageHelper#onCreate(SQLiteDatabase)}
+     * creates the specified tables and inserts records.
+     */
+    @Test
+    public void onCreateCreatesAndInsertTables() {
+        Set<SqlCommand> createCommands = Set.of(new SqlCommand(MigrationFlagsTable.TABLE_NAME, MigrationFlagsTable.CREATE_SQL));
+        Set<SqlCommand> insertCommands = Set.of(new SqlCommand(MigrationFlagsTable.TABLE_NAME, Objects.requireNonNull(MigrationFlagsTable.getFlags().get(MigrationFlagsTable.CLEARED_V2_30_0_AND_BELOW_GROUP_SYNC_EXPRESSIONS))));
+
+        sqLiteStorageHelper = SQLiteStorageHelper.getInstance(
+                ApplicationProvider.getApplicationContext(),
+                "AmplifyDatastore.db",
+                1,
+                new CreateSqlCommands(createCommands, Collections.emptySet(), insertCommands));
+        sqLiteDatabase = sqLiteStorageHelper.getWritableDatabase();
+        // Getting an instance to the writable database
+        // invokes onCreate on the SQLiteStorageHelper.
+        final List<String> tableNamesFromDatabase = getTableNames(sqLiteDatabase);
+        LOG.debug(tableNamesFromDatabase.toString());
+        for (SqlCommand sqlCommand : createTableCommands) {
+            assertTrue(
+                    sqlCommand.tableName() + " was not in the list: " + tableNamesFromDatabase,
+                    tableNamesFromDatabase.contains(sqlCommand.tableName())
+            );
+        }
+        // Check that the migration flag row was inserted
+        try (Cursor cursor = sqLiteDatabase.rawQuery(
+                "SELECT 1 FROM " + MigrationFlagsTable.TABLE_NAME +
+                        " WHERE " + MigrationFlagsTable.COLUMN_FLAG_NAME + " = ?",
+                new String[]{MigrationFlagsTable.CLEARED_V2_30_0_AND_BELOW_GROUP_SYNC_EXPRESSIONS})) {
+            assertTrue("Migration flag row was not inserted", cursor.getCount() > 0);
+            }
     }
 
     /**
