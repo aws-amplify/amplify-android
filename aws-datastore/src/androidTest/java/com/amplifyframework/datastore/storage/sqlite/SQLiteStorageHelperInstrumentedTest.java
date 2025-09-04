@@ -167,8 +167,18 @@ public class SQLiteStorageHelperInstrumentedTest {
      */
     @Test
     public void onCreateCreatesAndInsertTables() {
-        Set<SqlCommand> createCommands = Set.of(new SqlCommand(MigrationFlagsTable.TABLE_NAME, MigrationFlagsTable.CREATE_SQL));
-        Set<SqlCommand> insertCommands = Set.of(new SqlCommand(MigrationFlagsTable.TABLE_NAME, Objects.requireNonNull(MigrationFlagsTable.getFlags().get(MigrationFlagsTable.CLEARED_V2_30_0_AND_BELOW_GROUP_SYNC_EXPRESSIONS))));
+        Set<SqlCommand> createCommands = Set.of(
+                new SqlCommand(MigrationFlagsTable.TABLE_NAME, MigrationFlagsTable.CREATE_SQL)
+        );
+        Set<SqlCommand> insertCommands = Set.of(
+                new SqlCommand(
+                        MigrationFlagsTable.TABLE_NAME,
+                        Objects.requireNonNull(
+                                MigrationFlagsTable.getFlags()
+                                        .get(MigrationFlagsTable.CLEARED_V2_30_0_AND_BELOW_GROUP_SYNC_EXPRESSIONS)
+                        )
+                )
+        );
 
         sqLiteStorageHelper = SQLiteStorageHelper.getInstance(
                 ApplicationProvider.getApplicationContext(),
@@ -188,11 +198,11 @@ public class SQLiteStorageHelperInstrumentedTest {
         }
         // Check that the migration flag row was inserted
         try (Cursor cursor = sqLiteDatabase.rawQuery(
-                "SELECT 1 FROM " + MigrationFlagsTable.TABLE_NAME +
-                        " WHERE " + MigrationFlagsTable.COLUMN_FLAG_NAME + " = ?",
+            "SELECT 1 FROM " + MigrationFlagsTable.TABLE_NAME +
+                    " WHERE " + MigrationFlagsTable.COLUMN_FLAG_NAME + " = ?",
                 new String[]{MigrationFlagsTable.CLEARED_V2_30_0_AND_BELOW_GROUP_SYNC_EXPRESSIONS})) {
             assertTrue("Migration flag row was not inserted", cursor.getCount() > 0);
-            }
+        }
     }
 
     /**

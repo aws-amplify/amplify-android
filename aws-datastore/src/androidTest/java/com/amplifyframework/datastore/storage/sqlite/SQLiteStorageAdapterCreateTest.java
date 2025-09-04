@@ -70,12 +70,19 @@ public final class SQLiteStorageAdapterCreateTest {
     @Test
     public void verifyMigrationFlagsTableExistsAndContainsRecordsOnCreate() {
         // Verify migration flags table exists and has initial entries
-        String dbPath = ApplicationProvider.getApplicationContext().getDatabasePath(SQLiteStorageAdapter.DEFAULT_DATABASE_NAME).getAbsolutePath();
-        SQLiteDatabase database = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY);
+        String dbPath = ApplicationProvider.getApplicationContext()
+                .getDatabasePath(SQLiteStorageAdapter.DEFAULT_DATABASE_NAME).getAbsolutePath();
+        SQLiteDatabase database = SQLiteDatabase.openDatabase(
+                dbPath,
+                null,
+                SQLiteDatabase.OPEN_READONLY
+        );
         try (Cursor cursor = database.rawQuery(
                 "SELECT 1 FROM " + MigrationFlagsTable.TABLE_NAME +
                 " WHERE " + MigrationFlagsTable.COLUMN_FLAG_NAME + " = ?", 
-                new String[]{MigrationFlagsTable.CLEARED_V2_30_0_AND_BELOW_GROUP_SYNC_EXPRESSIONS})) {
+                new String[]{
+                    MigrationFlagsTable.CLEARED_V2_30_0_AND_BELOW_GROUP_SYNC_EXPRESSIONS
+                })) {
             assertTrue("Migration flag row was not created", cursor.getCount() > 0);
         } finally {
             database.close();

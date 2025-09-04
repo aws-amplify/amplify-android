@@ -29,8 +29,8 @@ import com.amplifyframework.logging.Logger;
  */
 final class ClearInvalidGroupSyncExpressions implements ModelMigration {
     private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore");
-    private final SQLiteDatabase database;
     private static final String MIGRATION_FLAG = MigrationFlagsTable.CLEARED_V2_30_0_AND_BELOW_GROUP_SYNC_EXPRESSIONS;
+    private final SQLiteDatabase database;
 
     /**
      * Constructor for the migration class.
@@ -57,18 +57,28 @@ final class ClearInvalidGroupSyncExpressions implements ModelMigration {
                 " WHERE " + MigrationFlagsTable.COLUMN_FLAG_NAME + " = ?", 
                 new String[]{MIGRATION_FLAG})) {
             return cursor.getCount() > 0;
-        } catch (Exception e) {
+        } catch (Exception exception) {
             return false;
         }
     }
 
     private void clearGroupSyncExpressions() {
-        database.execSQL("UPDATE LastSyncMetadata SET syncExpression = NULL WHERE syncExpression LIKE '%\"_type\":\"GROUP\"%'");
+        database.execSQL(
+                "UPDATE LastSyncMetadata " +
+                        "SET syncExpression = NULL " +
+                        "WHERE syncExpression LIKE '%\"_type\":\"GROUP\"%'"
+        );
     }
 
     private void markMigrationCompleted() {
-        if (MigrationFlagsTable.getFlags().containsKey(MigrationFlagsTable.CLEARED_V2_30_0_AND_BELOW_GROUP_SYNC_EXPRESSIONS)) {
-            database.execSQL(MigrationFlagsTable.getFlags().get(MigrationFlagsTable.CLEARED_V2_30_0_AND_BELOW_GROUP_SYNC_EXPRESSIONS));
+        if (MigrationFlagsTable.getFlags()
+                .containsKey(MigrationFlagsTable.CLEARED_V2_30_0_AND_BELOW_GROUP_SYNC_EXPRESSIONS)
+        ) {
+            database.execSQL(
+                    MigrationFlagsTable.getFlags().get(
+                            MigrationFlagsTable.CLEARED_V2_30_0_AND_BELOW_GROUP_SYNC_EXPRESSIONS
+                    )
+            );
         }
     }
 }
