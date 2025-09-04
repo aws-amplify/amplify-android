@@ -18,7 +18,6 @@ package com.amplifyframework.auth.cognito.usecases
 import com.amplifyframework.auth.cognito.AuthStateMachine
 import com.amplifyframework.auth.cognito.mockSignedInData
 import com.amplifyframework.auth.exceptions.InvalidStateException
-import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import io.kotest.assertions.throwables.shouldThrow
@@ -29,10 +28,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 class GetCurrentUserUseCaseTest {
-    private val fetchAuthSession: FetchAuthSessionUseCase = mockk {
-        coEvery { execute().userPoolTokensResult.error } returns null
-    }
-
     private val stateMachine: AuthStateMachine = mockk {
         coEvery { getCurrentState().authNState } returns AuthenticationState.SignedIn(
             signedInData = mockSignedInData(username = "username", userId = "sub"),
@@ -41,7 +36,6 @@ class GetCurrentUserUseCaseTest {
     }
 
     private val useCase = GetCurrentUserUseCase(
-        fetchAuthSession = fetchAuthSession,
         stateMachine = stateMachine
     )
 
@@ -67,14 +61,5 @@ class GetCurrentUserUseCaseTest {
         shouldThrow<SignedOutException> {
             useCase.execute()
         }
-    }
-
-    @Test
-    fun `throws exception for expired session`() = runTest {
-        val error = SessionExpiredException()
-        coEvery { fetchAuthSession.execute().userPoolTokensResult.error } returns error
-        shouldThrow<SessionExpiredException> {
-            useCase.execute()
-        } shouldBe error
     }
 }
