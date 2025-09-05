@@ -32,9 +32,10 @@ import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.transformWhile
 
 internal class AutoSignInUseCase(
@@ -84,11 +85,12 @@ internal class AutoSignInUseCase(
             signUpData.userId
         )
 
-        val result = stateMachine.stateTransitions
-            .onStart {
+        val result = stateMachine.state
+            .onSubscription {
                 val event = AuthenticationEvent(AuthenticationEvent.EventType.SignInRequested(signInData))
                 stateMachine.send(event)
             }
+            .drop(1)
             .mapNotNull { authState ->
                 val authNState = authState.authNState
                 val authZState = authState.authZState

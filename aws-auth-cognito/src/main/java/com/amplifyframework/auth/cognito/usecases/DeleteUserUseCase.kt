@@ -26,7 +26,7 @@ import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.DeleteUserState
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.onSubscription
 
 internal class DeleteUserUseCase(
     private val fetchAuthSession: FetchAuthSessionUseCase,
@@ -41,7 +41,7 @@ internal class DeleteUserUseCase(
 
         var deleteUserException: Exception? = null
         stateMachine.state
-            .onStart {
+            .onSubscription {
                 val event = DeleteUserEvent(DeleteUserEvent.EventType.DeleteUser(accessToken = token))
                 stateMachine.send(event)
             }.collectWhile { authState ->

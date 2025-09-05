@@ -30,16 +30,23 @@ import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class ConfirmSignUpUseCaseTest {
 
+    private val stateFlow = MutableStateFlow(mockAuthState(mockk()))
     private val stateMachine: AuthStateMachine = mockk {
         justRun { send(any()) }
+        every { state } returns stateFlow
     }
     private val useCase = ConfirmSignUpUseCase(stateMachine = stateMachine)
 
@@ -60,14 +67,15 @@ class ConfirmSignUpUseCaseTest {
         coEvery { stateMachine.getCurrentState().authNState } returns AuthenticationState.Configured()
         coEvery { stateMachine.getCurrentState().authSignUpState } returns null
 
-        coEvery { stateMachine.stateTransitions } returns flowOf(
-            mockAuthState(SignUpState.ConfirmingSignUp(mockk())),
-            mockAuthState(SignUpState.Error(exception))
-        )
+        launch {
+            shouldThrowAny {
+                useCase.execute("user", "pass")
+            } shouldBe exception
+        }
 
-        shouldThrowAny {
-            useCase.execute("user", "pass")
-        } shouldBe exception
+        runCurrent()
+        stateFlow.emit(mockAuthState(SignUpState.ConfirmingSignUp(mockk())))
+        stateFlow.emit(mockAuthState(SignUpState.Error(exception)))
     }
 
     @Test
@@ -75,21 +83,22 @@ class ConfirmSignUpUseCaseTest {
         coEvery { stateMachine.getCurrentState().authNState } returns AuthenticationState.Configured()
         coEvery { stateMachine.getCurrentState().authSignUpState } returns null
 
-        coEvery { stateMachine.stateTransitions } returns flowOf(
-            mockAuthState(SignUpState.ConfirmingSignUp(mockk())),
-            mockAuthState(SignUpState.SignedUp(mockk(), mockk()))
-        )
+        launch {
+            useCase.execute("user", "pass")
 
-        useCase.execute("user", "pass")
-
-        coVerify {
-            stateMachine.send(
-                withSignUpEvent<SignUpEvent.EventType.ConfirmSignUp> { event ->
-                    event.signUpData.username shouldBe "user"
-                    event.confirmationCode shouldBe "pass"
-                }
-            )
+            coVerify {
+                stateMachine.send(
+                    withSignUpEvent<SignUpEvent.EventType.ConfirmSignUp> { event ->
+                        event.signUpData.username shouldBe "user"
+                        event.confirmationCode shouldBe "pass"
+                    }
+                )
+            }
         }
+
+        runCurrent()
+        stateFlow.emit(mockAuthState(SignUpState.ConfirmingSignUp(mockk())))
+        stateFlow.emit(mockAuthState(SignUpState.SignedUp(mockk(), mockk())))
     }
 
     @Test
@@ -107,14 +116,14 @@ class ConfirmSignUpUseCaseTest {
         coEvery { stateMachine.getCurrentState().authNState } returns AuthenticationState.Configured()
         coEvery { stateMachine.getCurrentState().authSignUpState } returns null
 
-        coEvery { stateMachine.stateTransitions } returns flowOf(
-            mockAuthState(SignUpState.ConfirmingSignUp(mockk())),
-            mockAuthState(SignUpState.SignedUp(mockk(), expectedResult))
-        )
+        launch {
+            val result = useCase.execute("user", "pass")
+            result shouldBe expectedResult
+        }
 
-        val result = useCase.execute("user", "pass")
-
-        result shouldBe expectedResult
+        runCurrent()
+        stateFlow.emit(mockAuthState(SignUpState.ConfirmingSignUp(mockk())))
+        stateFlow.emit(mockAuthState(SignUpState.SignedUp(mockk(), expectedResult)))
     }
 
     private fun mockAuthState(signUpState: SignUpState): AuthState = mockk {

@@ -24,8 +24,9 @@ import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.statemachine.codegen.data.SignUpData
 import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 import com.amplifyframework.statemachine.codegen.states.SignUpState
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.transformWhile
 
 internal class ConfirmSignUpUseCase(private val stateMachine: AuthStateMachine) {
@@ -38,8 +39,8 @@ internal class ConfirmSignUpUseCase(private val stateMachine: AuthStateMachine) 
 
         val startingState = stateMachine.getCurrentState().authSignUpState
 
-        val result = stateMachine.stateTransitions
-            .onStart {
+        val result = stateMachine.state
+            .onSubscription {
                 var userId: String? = null
                 var session: String? = null
                 if (startingState is SignUpState.AwaitingUserConfirmation &&
@@ -53,6 +54,7 @@ internal class ConfirmSignUpUseCase(private val stateMachine: AuthStateMachine) 
                 val event = SignUpEvent(SignUpEvent.EventType.ConfirmSignUp(signupData, confirmationCode))
                 stateMachine.send(event)
             }
+            .drop(1)
             .transformWhile { authState ->
                 when (val signUpState = authState.authSignUpState) {
                     is SignUpState.Error -> {
