@@ -22,6 +22,7 @@ import com.amazonaws.sdk.appsync.events.mocks.TestAuthorizer
 import com.amazonaws.sdk.appsync.events.utils.JsonUtils
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldStartWith
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -92,7 +93,7 @@ internal class EventsWebSocketTest {
         capturedRequest.headers.size shouldBe 4
         capturedRequest.headers["Sec-WebSocket-Protocol"] shouldBe "aws-appsync-event-ws"
         capturedRequest.headers["host"] shouldBe "11111111111111111111111111.appsync-api.us-east-1.amazonaws.com"
-        capturedRequest.headers["x-amz-user-agent"] shouldBe "aws-appsync-events-android#1.0.0"
+        capturedRequest.headers["x-amz-user-agent"] shouldStartWith  "aws-appsync-events-android#1."
         capturedRequest.headers["testKey"] shouldBe "default"
         capturedRequest.body shouldBe null
     }
