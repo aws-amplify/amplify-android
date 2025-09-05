@@ -21,7 +21,6 @@ import android.database.sqlite.SQLiteDatabase;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.logging.Logger;
-import com.amplifyframework.util.Wrap;
 
 /**
  * Add SyncExpression (TEXT) column to LastSyncMetadata table.
@@ -69,14 +68,17 @@ final class AddSyncExpressionToLastSyncMetadata implements ModelMigration {
     }
 
     private boolean needsMigration() {
-        final String checkColumnSql = "SELECT COUNT(*) FROM pragma_table_info('LastSyncMetadata') " +
-            "WHERE name=" + Wrap.inSingleQuotes(newSyncExpColumnName);
-        try (Cursor queryResults = database.rawQuery(checkColumnSql, new String[]{})) {
-            if (queryResults.moveToNext()) {
-                int recordNum = queryResults.getInt(0);
-                return recordNum == 0; // needs to be upgraded if there's no column named ${newSyncExpColumnName}
+        try (Cursor cursor = database.rawQuery("PRAGMA table_info(LastSyncMetadata)", null)) {
+            int nameIndex = cursor.getColumnIndex("name");
+            if (nameIndex != -1) {
+                while (cursor.moveToNext()) {
+                    String columnName = cursor.getString(nameIndex);
+                    if (newSyncExpColumnName.equals(columnName)) {
+                        return false; // Column exists
+                    }
+                }
             }
         }
-        return false;
+        return true; // Column doesn't exist, needs migration
     }
 }

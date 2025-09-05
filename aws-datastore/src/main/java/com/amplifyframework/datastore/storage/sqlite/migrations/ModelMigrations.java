@@ -38,6 +38,7 @@ public class ModelMigrations {
         List<ModelMigration> migrationClasses = new ArrayList<>();
         migrationClasses.add(new AddModelNameToModelMetadataKey(databaseConnectionHandle, modelsProvider));
         migrationClasses.add(new AddSyncExpressionToLastSyncMetadata(databaseConnectionHandle));
+        migrationClasses.add(new ClearInvalidGroupSyncExpressions(databaseConnectionHandle));
         this.modelMigrations = Immutable.of(migrationClasses);
     }
 
