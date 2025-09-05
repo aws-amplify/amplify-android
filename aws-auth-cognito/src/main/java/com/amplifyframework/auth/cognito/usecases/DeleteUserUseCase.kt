@@ -42,9 +42,12 @@ internal class DeleteUserUseCase(
         var deleteUserException: Exception? = null
         stateMachine.state
             .onStart {
+                println("TEST sending delete user event")
                 val event = DeleteUserEvent(DeleteUserEvent.EventType.DeleteUser(accessToken = token))
                 stateMachine.send(event)
             }.collectWhile { authState ->
+                println("TEST Collected authState $authState")
+
                 val authNState = authState.authNState
                 val authZState = authState.authZState
 

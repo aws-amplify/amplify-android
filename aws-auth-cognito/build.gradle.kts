@@ -31,6 +31,13 @@ android {
     }
 }
 
+tasks.withType<Test> {
+    testLogging {
+        events("PASSED", "SKIPPED", "FAILED", "STANDARD_OUT", "STANDARD_ERROR")
+        showStandardStreams = true
+    }
+}
+
 dependencies {
     implementation(project(":core"))
     implementation(project(":aws-core"))
