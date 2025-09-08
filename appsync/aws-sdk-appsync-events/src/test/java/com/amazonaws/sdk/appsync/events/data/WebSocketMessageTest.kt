@@ -112,7 +112,7 @@ class WebSocketMessageTest {
 
         val deserialized = json.decodeFromString<WebSocketMessage.Received>(jsonString)
         deserialized shouldBe WebSocketMessage.Received.ConnectionError(
-            listOf(
+            errors = listOf(
                 EventsError("UnauthorizedException", "Test error message")
             )
         )
