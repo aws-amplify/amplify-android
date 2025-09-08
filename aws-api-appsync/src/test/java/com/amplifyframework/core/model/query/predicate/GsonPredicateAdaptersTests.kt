@@ -16,7 +16,7 @@ package com.amplifyframework.core.model.query.predicate
 
 import com.amplifyframework.testmodels.todo.Todo
 import com.google.gson.Gson
-import org.junit.Assert.assertEquals
+import io.kotest.matchers.shouldBe
 import org.junit.Test
 
 class GsonPredicateAdaptersTests {
@@ -32,9 +32,9 @@ class GsonPredicateAdaptersTests {
         val expectedString = """
             {"field":"id","operator":{"value":"123","type":"EQUAL"},"_type":"OPERATION"}
         """.replace("\\s".toRegex(), "")
-        assertEquals(expectedString, queryPredicateString)
+        queryPredicateString shouldBe expectedString
         val deserializedPredicate = gson.fromJson(queryPredicateString, QueryPredicate::class.java)
-        assertEquals(queryPredicate, deserializedPredicate)
+        deserializedPredicate shouldBe queryPredicate
     }
 
     @Test
@@ -51,9 +51,9 @@ class GsonPredicateAdaptersTests {
                 "_type":"GROUP"
             }
         """.replace("\\s".toRegex(), "")
-        assertEquals(expectedString, queryPredicateString)
+        queryPredicateString shouldBe expectedString
         val deserializedPredicate = gson.fromJson(queryPredicateString, QueryPredicate::class.java)
-        assertEquals(queryPredicate, deserializedPredicate)
+        deserializedPredicate shouldBe queryPredicate
     }
 
     @Test
@@ -99,8 +99,8 @@ class GsonPredicateAdaptersTests {
                 "_type": "GROUP"
             }
         """.replace("\\s".toRegex(), "")
-        assertEquals(expectedString, queryPredicateString)
+        queryPredicateString shouldBe expectedString
         val deserializedPredicate = gson.fromJson(queryPredicateString, QueryPredicate::class.java)
-        assertEquals(queryPredicate, deserializedPredicate)
+        deserializedPredicate shouldBe queryPredicate
     }
 }

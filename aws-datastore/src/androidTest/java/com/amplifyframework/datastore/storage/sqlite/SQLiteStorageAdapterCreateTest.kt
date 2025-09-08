@@ -20,8 +20,9 @@ import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter
 import com.amplifyframework.datastore.syncengine.MigrationFlagsTable
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider
+import io.kotest.assertions.withClue
+import io.kotest.matchers.ints.shouldBePositive
 import org.junit.After
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
@@ -70,7 +71,9 @@ class SQLiteStorageAdapterCreateTest {
                     MigrationFlagsTable.CLEARED_V2_30_0_AND_BELOW_GROUP_SYNC_EXPRESSIONS
                 )
             ).use { cursor ->
-                Assert.assertTrue("Migration flag row was not created", cursor.count > 0)
+                withClue("Migration flag row was not created") {
+                    cursor.count.shouldBePositive()
+                }
             }
         } finally {
             database.close()
