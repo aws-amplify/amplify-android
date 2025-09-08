@@ -63,5 +63,4 @@ dependencies {
     androidTestImplementation(libs.okhttp)
     androidTestImplementation(libs.oauth2)
     androidTestImplementation(libs.test.kotest.assertions)
-
 }
