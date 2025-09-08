@@ -369,6 +369,53 @@ class AuthConfigurationTest {
         )
     }
 
+    @Test
+    fun `selects non-HTTP URI from multiple redirect URIs`() {
+        val data = amplifyOutputsData {
+            auth {
+                awsRegion = "test-region"
+                userPoolId = "userpool"
+                userPoolClientId = "userpool-client"
+                oauth {
+                    redirectSignInUri += "https://test.com/signin"
+                    redirectSignInUri += "myapp://signin"
+                    redirectSignOutUri += "myapp://signout"
+                    redirectSignOutUri += "https://test.com/signout"
+                }
+            }
+        }
+
+        val configuration = AuthConfiguration.from(data)
+        configuration.oauth.shouldNotBeNull().run {
+            signInRedirectURI shouldBe "myapp://signin"
+            signOutRedirectURI shouldBe "myapp://signout"
+        }
+    }
+
+    @Test
+    fun `uses first URI when all are HTTP or HTTPS`() {
+        val data = amplifyOutputsData {
+            auth {
+                awsRegion = "test-region"
+                userPoolId = "userpool"
+                userPoolClientId = "userpool-client"
+                oauth {
+                    scopes += listOf("openid")
+                    redirectSignInUri += "https://test.com/signin"
+                    redirectSignInUri += "http://localhost/callback"
+                    redirectSignOutUri += "https://test.com/signout"
+                    redirectSignOutUri += "http://localhost/logout"
+                }
+            }
+        }
+
+        val configuration = AuthConfiguration.from(data)
+        configuration.oauth.shouldNotBeNull().run {
+            signInRedirectURI shouldBe "https://test.com/signin"
+            signOutRedirectURI shouldBe "https://test.com/signout"
+        }
+    }
+
     private fun getAuthConfig() = jsonObject.getJSONObject("Auth").getJSONObject("Default")
     private fun getPasswordSettings() = jsonObject.getJSONObject("Auth").getJSONObject("Default")
         .getJSONObject("passwordProtectionSettings")

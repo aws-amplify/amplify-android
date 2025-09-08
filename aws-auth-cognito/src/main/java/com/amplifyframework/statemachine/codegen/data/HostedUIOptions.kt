@@ -21,5 +21,6 @@ internal data class HostedUIOptions(
     val callingActivity: Activity,
     val scopes: List<String>?,
     val providerInfo: HostedUIProviderInfo,
-    val browserPackage: String?
+    val browserPackage: String?,
+    val preferPrivateSession: Boolean?
 )

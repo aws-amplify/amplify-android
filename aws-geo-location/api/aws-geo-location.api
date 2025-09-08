@@ -35,8 +35,6 @@ public final class com/amplifyframework/geo/location/configuration/GeoConfigurat
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Lcom/amplifyframework/geo/location/configuration/MapsConfiguration;
 	public final fun component3 ()Lcom/amplifyframework/geo/location/configuration/SearchIndicesConfiguration;
-	public final fun copy (Ljava/lang/String;Lcom/amplifyframework/geo/location/configuration/MapsConfiguration;Lcom/amplifyframework/geo/location/configuration/SearchIndicesConfiguration;)Lcom/amplifyframework/geo/location/configuration/GeoConfiguration;
-	public static synthetic fun copy$default (Lcom/amplifyframework/geo/location/configuration/GeoConfiguration;Ljava/lang/String;Lcom/amplifyframework/geo/location/configuration/MapsConfiguration;Lcom/amplifyframework/geo/location/configuration/SearchIndicesConfiguration;ILjava/lang/Object;)Lcom/amplifyframework/geo/location/configuration/GeoConfiguration;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getMaps ()Lcom/amplifyframework/geo/location/configuration/MapsConfiguration;
 	public final fun getRegion ()Ljava/lang/String;
@@ -48,8 +46,6 @@ public final class com/amplifyframework/geo/location/configuration/GeoConfigurat
 public final class com/amplifyframework/geo/location/configuration/GeoConfiguration$Builder {
 	public fun <init> ()V
 	public final fun build ()Lcom/amplifyframework/geo/location/configuration/GeoConfiguration;
-	public final fun copy (Lorg/json/JSONObject;)Lcom/amplifyframework/geo/location/configuration/GeoConfiguration$Builder;
-	public static synthetic fun copy$default (Lcom/amplifyframework/geo/location/configuration/GeoConfiguration$Builder;Lorg/json/JSONObject;ILjava/lang/Object;)Lcom/amplifyframework/geo/location/configuration/GeoConfiguration$Builder;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
 	public final fun maps (Lcom/amplifyframework/geo/location/configuration/MapsConfiguration;)Lcom/amplifyframework/geo/location/configuration/GeoConfiguration$Builder;
@@ -67,8 +63,6 @@ public final class com/amplifyframework/geo/location/configuration/MapsConfigura
 	public static final fun builder ()Lcom/amplifyframework/geo/location/configuration/MapsConfiguration$Builder;
 	public final fun component1 ()Ljava/util/Collection;
 	public final fun component2 ()Lcom/amplifyframework/geo/models/MapStyle;
-	public final fun copy (Ljava/util/Collection;Lcom/amplifyframework/geo/models/MapStyle;)Lcom/amplifyframework/geo/location/configuration/MapsConfiguration;
-	public static synthetic fun copy$default (Lcom/amplifyframework/geo/location/configuration/MapsConfiguration;Ljava/util/Collection;Lcom/amplifyframework/geo/models/MapStyle;ILjava/lang/Object;)Lcom/amplifyframework/geo/location/configuration/MapsConfiguration;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getDefault ()Lcom/amplifyframework/geo/models/MapStyle;
 	public final fun getItems ()Ljava/util/Collection;
@@ -79,8 +73,6 @@ public final class com/amplifyframework/geo/location/configuration/MapsConfigura
 public final class com/amplifyframework/geo/location/configuration/MapsConfiguration$Builder {
 	public fun <init> ()V
 	public final fun build ()Lcom/amplifyframework/geo/location/configuration/MapsConfiguration;
-	public final fun copy (Lorg/json/JSONObject;)Lcom/amplifyframework/geo/location/configuration/MapsConfiguration$Builder;
-	public static synthetic fun copy$default (Lcom/amplifyframework/geo/location/configuration/MapsConfiguration$Builder;Lorg/json/JSONObject;ILjava/lang/Object;)Lcom/amplifyframework/geo/location/configuration/MapsConfiguration$Builder;
 	public final fun default (Lcom/amplifyframework/geo/models/MapStyle;)Lcom/amplifyframework/geo/location/configuration/MapsConfiguration$Builder;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
@@ -97,8 +89,6 @@ public final class com/amplifyframework/geo/location/configuration/SearchIndices
 	public static final fun builder ()Lcom/amplifyframework/geo/location/configuration/SearchIndicesConfiguration$Builder;
 	public final fun component1 ()Ljava/util/Collection;
 	public final fun component2 ()Ljava/lang/String;
-	public final fun copy (Ljava/util/Collection;Ljava/lang/String;)Lcom/amplifyframework/geo/location/configuration/SearchIndicesConfiguration;
-	public static synthetic fun copy$default (Lcom/amplifyframework/geo/location/configuration/SearchIndicesConfiguration;Ljava/util/Collection;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/geo/location/configuration/SearchIndicesConfiguration;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getDefault ()Ljava/lang/String;
 	public final fun getItems ()Ljava/util/Collection;
@@ -109,8 +99,6 @@ public final class com/amplifyframework/geo/location/configuration/SearchIndices
 public final class com/amplifyframework/geo/location/configuration/SearchIndicesConfiguration$Builder {
 	public fun <init> ()V
 	public final fun build ()Lcom/amplifyframework/geo/location/configuration/SearchIndicesConfiguration;
-	public final fun copy (Lorg/json/JSONObject;)Lcom/amplifyframework/geo/location/configuration/SearchIndicesConfiguration$Builder;
-	public static synthetic fun copy$default (Lcom/amplifyframework/geo/location/configuration/SearchIndicesConfiguration$Builder;Lorg/json/JSONObject;ILjava/lang/Object;)Lcom/amplifyframework/geo/location/configuration/SearchIndicesConfiguration$Builder;
 	public final fun default (Ljava/lang/String;)Lcom/amplifyframework/geo/location/configuration/SearchIndicesConfiguration$Builder;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I

@@ -35,6 +35,27 @@ internal object HostedUIHelper {
             authProvider = authProvider,
             idpIdentifier = (options as? AWSCognitoAuthWebUISignInOptions)?.idpIdentifier
         ),
-        browserPackage = (options as? AWSCognitoAuthWebUISignInOptions)?.browserPackage
+        browserPackage = (options as? AWSCognitoAuthWebUISignInOptions)?.browserPackage,
+        preferPrivateSession = options.preferPrivateSession
     )
+
+    /**
+     * Selects a redirect URI from the list, preferring a non-HTTP/HTTPS URI if available.
+     * If no suitable URI is found, falls back to the first URI in the list.
+     *
+     * @param redirectUris List of redirect URIs
+     * @return The selected redirect URI, or first if not empty
+     */
+    fun selectRedirectUri(redirectUris: List<String>): String? {
+        if (redirectUris.isEmpty()) return null
+
+        // First try to find a non-HTTP/HTTPS URI (app scheme URI)
+        val nonWebUri = redirectUris.find { uri ->
+            val scheme = uri.substringBefore("://", "").lowercase()
+            scheme != "http" && scheme != "https" && scheme.isNotEmpty()
+        }
+
+        // Return the non-web URI if found, otherwise use the first URI
+        return nonWebUri ?: redirectUris.firstOrNull()
+    }
 }

@@ -14,8 +14,8 @@
  */
 
 plugins {
-    id("com.android.library")
-    id("kotlin-android")
+    alias(libs.plugins.amplify.android.library)
+    alias(libs.plugins.amplify.api)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
@@ -25,9 +25,6 @@ group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.aws.core"
-    kotlinOptions {
-        moduleName = "com.amplifyframework.aws-core"
-    }
 }
 
 dependencies {

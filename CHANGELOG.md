@@ -1,3 +1,25 @@
+## [Release 2.30.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.30.0)
+
+### Features
+- **auth:** Refresh Token Rotation ([#3112](https://github.com/aws-amplify/amplify-android/issues/3112))
+- **auth:** Prefer Private Session support for WebUI Sign In's ([#3108](https://github.com/aws-amplify/amplify-android/issues/3108))
+
+### Bug Fixes
+- **data:** Prevent semaphore deadlock within PersistentMutationOutbox ([#3115](https://github.com/aws-amplify/amplify-android/issues/3115))
+
+### Miscellaneous
+- release: Apollo AppSync Extensions 1.2.1 ([#3117](https://github.com/aws-amplify/amplify-android/issues/3117))
+
+[See all changes between 2.29.2 and 2.30.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.29.2...release_v2.30.0)
+
+## [Release 2.29.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.29.2)
+
+### Bug Fixes
+- **auth:** Select first non http(s) redirect ([#3091](https://github.com/aws-amplify/amplify-android/issues/3091))
+- **analytics:** Remove test dependency ([#3093](https://github.com/aws-amplify/amplify-android/issues/3093))
+
+[See all changes between 2.29.1 and 2.29.2](https://github.com/aws-amplify/amplify-android/compare/release_v2.29.1...release_v2.29.2)
+
 ## [Release 2.29.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.29.1)
 
 ### Bug Fixes

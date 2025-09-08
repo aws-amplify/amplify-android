@@ -17,11 +17,9 @@ package com.amplifyframework.auth.cognito.actions
 
 import aws.sdk.kotlin.services.cognitoidentity.model.GetCredentialsForIdentityRequest
 import aws.sdk.kotlin.services.cognitoidentity.model.GetIdRequest
-import aws.sdk.kotlin.services.cognitoidentityprovider.initiateAuth
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
+import aws.sdk.kotlin.services.cognitoidentityprovider.getTokensFromRefreshToken
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.AuthEnvironment
-import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.exceptions.NotAuthorizedException
 import com.amplifyframework.auth.exceptions.SessionExpiredException
@@ -40,9 +38,6 @@ import com.amplifyframework.statemachine.codegen.events.RefreshSessionEvent
 import kotlin.time.Duration.Companion.seconds
 
 internal object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
-    private const val KEY_SECRET_HASH = "SECRET_HASH"
-    private const val KEY_REFRESH_TOKEN = "REFRESH_TOKEN"
-    private const val KEY_DEVICE_KEY = "DEVICE_KEY"
 
     override fun refreshUserPoolTokensAction(signedInData: SignedInData) =
         Action<AuthEnvironment>("RefreshUserPoolTokens") { id, dispatcher ->
@@ -50,34 +45,20 @@ internal object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
             val evt = try {
                 val username = signedInData.username
                 val tokens = signedInData.cognitoUserPoolTokens
-
-                val authParameters = mutableMapOf<String, String>()
-                val secretHash = AuthHelper.getSecretHash(
-                    username,
-                    configuration.userPool?.appClient,
-                    configuration.userPool?.appClientSecret
-                )
-                tokens.refreshToken?.let { authParameters[KEY_REFRESH_TOKEN] = it }
-                secretHash?.let { authParameters[KEY_SECRET_HASH] = it }
-
-                val encodedContextData = getUserContextData(username)
                 val deviceMetadata: DeviceMetadata.Metadata? = getDeviceMetadata(username)
-                deviceMetadata?.let { authParameters[KEY_DEVICE_KEY] = it.deviceKey }
-                val pinpointEndpointId = getPinpointEndpointId()
 
-                val response = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
-                    authFlow = AuthFlowType.RefreshToken
+                val response = cognitoAuthService.cognitoIdentityProviderClient?.getTokensFromRefreshToken {
+                    refreshToken = tokens.refreshToken
                     clientId = configuration.userPool?.appClient
-                    this.authParameters = authParameters
-                    pinpointEndpointId?.let { analyticsMetadata { analyticsEndpointId = it } }
-                    encodedContextData?.let { userContextData { encodedData = it } }
+                    clientSecret = configuration.userPool?.appClientSecret
+                    deviceKey = deviceMetadata?.deviceKey
                 }
 
                 val expiresIn = response?.authenticationResult?.expiresIn?.toLong() ?: 0
                 val refreshedUserPoolTokens = CognitoUserPoolTokens(
                     idToken = response?.authenticationResult?.idToken,
                     accessToken = response?.authenticationResult?.accessToken,
-                    refreshToken = tokens.refreshToken,
+                    refreshToken = response?.authenticationResult?.refreshToken ?: tokens.refreshToken,
                     expiration = Instant.now().plus(expiresIn.seconds).epochSeconds
                 )
 

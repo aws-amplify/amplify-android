@@ -18,6 +18,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import app.cash.turbine.test
 import app.cash.turbine.turbineScope
 import com.amazonaws.sdk.appsync.core.authorizers.ApiKeyAuthorizer
+import com.amazonaws.sdk.appsync.events.data.ConnectException
 import com.amazonaws.sdk.appsync.events.data.InvalidInputException
 import com.amazonaws.sdk.appsync.events.data.PublishResult
 import com.amazonaws.sdk.appsync.events.data.UnauthorizedException
@@ -47,6 +48,7 @@ import org.junit.Test
 internal class EventsWebSocketClientTests {
     private val eventsConfig = getEventsConfig(InstrumentationRegistry.getInstrumentation().targetContext)
     private val apiKeyAuthorizer = ApiKeyAuthorizer(eventsConfig.apiKey)
+    private val badApiKeyAuthorizer = ApiKeyAuthorizer("bad-api-key")
     private val webSocketLogCapture = EventsLibraryLogCapture()
     private val defaultChannel = "default/${UUID.randomUUID()}"
     private val customChannel = "custom/${UUID.randomUUID()}"
@@ -59,6 +61,12 @@ internal class EventsWebSocketClientTests {
         options = Events.Options.WebSocket(
             loggerProvider = { _ -> webSocketLogCapture }
         )
+    )
+
+    private val badWebSocketClient = events.createWebSocketClient(
+        badApiKeyAuthorizer,
+        badApiKeyAuthorizer,
+        badApiKeyAuthorizer
     )
     private val backgroundScope = CoroutineScope(Dispatchers.IO)
 
@@ -107,6 +115,15 @@ internal class EventsWebSocketClientTests {
                 json.encodeToJsonElement(TestMessage(messageId = "2", content = "hello"))
             )
         )
+    }
+
+    @Test
+    fun testConnectionFailure() = runBlockingWithTimeout {
+        turbineScope(timeout = 10.seconds) {
+            badWebSocketClient.subscribe(defaultChannel).test(timeout = 10.seconds) {
+                awaitError() shouldBe ConnectException(UnauthorizedException())
+            }
+        }
     }
 
     @Test

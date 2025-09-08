@@ -50,8 +50,6 @@ public final class com/amplifyframework/pushnotifications/pinpoint/models/AWSNot
 	public static final field Companion Lcom/amplifyframework/pushnotifications/pinpoint/models/AWSNotificationsUserProfile$Companion;
 	public static final fun builder ()Lcom/amplifyframework/pushnotifications/pinpoint/models/AWSNotificationsUserProfile$Builder;
 	public final fun component1 ()Lcom/amplifyframework/pushnotifications/pinpoint/models/AWSNotificationsUserProfile$Builder;
-	public final fun copy (Lcom/amplifyframework/pushnotifications/pinpoint/models/AWSNotificationsUserProfile$Builder;)Lcom/amplifyframework/pushnotifications/pinpoint/models/AWSNotificationsUserProfile;
-	public static synthetic fun copy$default (Lcom/amplifyframework/pushnotifications/pinpoint/models/AWSNotificationsUserProfile;Lcom/amplifyframework/pushnotifications/pinpoint/models/AWSNotificationsUserProfile$Builder;ILjava/lang/Object;)Lcom/amplifyframework/pushnotifications/pinpoint/models/AWSNotificationsUserProfile;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getBuilder ()Lcom/amplifyframework/pushnotifications/pinpoint/models/AWSNotificationsUserProfile$Builder;
 	public fun getUserAttributes ()Lcom/amplifyframework/analytics/AnalyticsProperties;

@@ -11,8 +11,11 @@ public abstract interface class com/amplifyframework/kotlin/api/Api : com/amplif
 
 public abstract interface class com/amplifyframework/kotlin/api/GraphQL {
 	public abstract fun mutate (Lcom/amplifyframework/api/graphql/GraphQLRequest;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun mutate$default (Lcom/amplifyframework/kotlin/api/GraphQL;Lcom/amplifyframework/api/graphql/GraphQLRequest;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun query (Lcom/amplifyframework/api/graphql/GraphQLRequest;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun query$default (Lcom/amplifyframework/kotlin/api/GraphQL;Lcom/amplifyframework/api/graphql/GraphQLRequest;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun subscribe (Lcom/amplifyframework/api/graphql/GraphQLRequest;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun subscribe$default (Lcom/amplifyframework/kotlin/api/GraphQL;Lcom/amplifyframework/api/graphql/GraphQLRequest;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
 
 public final class com/amplifyframework/kotlin/api/GraphQL$DefaultImpls {
@@ -38,11 +41,17 @@ public final class com/amplifyframework/kotlin/api/KotlinApiFacade : com/amplify
 
 public abstract interface class com/amplifyframework/kotlin/api/Rest {
 	public abstract fun delete (Lcom/amplifyframework/api/rest/RestOptions;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun delete$default (Lcom/amplifyframework/kotlin/api/Rest;Lcom/amplifyframework/api/rest/RestOptions;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun get (Lcom/amplifyframework/api/rest/RestOptions;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun get$default (Lcom/amplifyframework/kotlin/api/Rest;Lcom/amplifyframework/api/rest/RestOptions;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun head (Lcom/amplifyframework/api/rest/RestOptions;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun head$default (Lcom/amplifyframework/kotlin/api/Rest;Lcom/amplifyframework/api/rest/RestOptions;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun patch (Lcom/amplifyframework/api/rest/RestOptions;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun patch$default (Lcom/amplifyframework/kotlin/api/Rest;Lcom/amplifyframework/api/rest/RestOptions;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun post (Lcom/amplifyframework/api/rest/RestOptions;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun post$default (Lcom/amplifyframework/kotlin/api/Rest;Lcom/amplifyframework/api/rest/RestOptions;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun put (Lcom/amplifyframework/api/rest/RestOptions;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun put$default (Lcom/amplifyframework/kotlin/api/Rest;Lcom/amplifyframework/api/rest/RestOptions;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
 
 public final class com/amplifyframework/kotlin/api/Rest$DefaultImpls {
@@ -56,34 +65,53 @@ public final class com/amplifyframework/kotlin/api/Rest$DefaultImpls {
 
 public abstract interface class com/amplifyframework/kotlin/auth/Auth {
 	public abstract fun associateWebAuthnCredential (Landroid/app/Activity;Lcom/amplifyframework/auth/options/AuthAssociateWebAuthnCredentialsOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun associateWebAuthnCredential$default (Lcom/amplifyframework/kotlin/auth/Auth;Landroid/app/Activity;Lcom/amplifyframework/auth/options/AuthAssociateWebAuthnCredentialsOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun autoSignIn (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun confirmResetPassword (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmResetPasswordOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun confirmResetPassword$default (Lcom/amplifyframework/kotlin/auth/Auth;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmResetPasswordOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun confirmSignIn (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmSignInOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun confirmSignIn$default (Lcom/amplifyframework/kotlin/auth/Auth;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmSignInOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun confirmSignUp (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmSignUpOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun confirmSignUp$default (Lcom/amplifyframework/kotlin/auth/Auth;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmSignUpOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun confirmUserAttribute (Lcom/amplifyframework/auth/AuthUserAttributeKey;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun deleteUser (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun deleteWebAuthnCredential (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthDeleteWebAuthnCredentialOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun deleteWebAuthnCredential$default (Lcom/amplifyframework/kotlin/auth/Auth;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthDeleteWebAuthnCredentialOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun fetchAuthSession (Lcom/amplifyframework/auth/options/AuthFetchSessionOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun fetchAuthSession$default (Lcom/amplifyframework/kotlin/auth/Auth;Lcom/amplifyframework/auth/options/AuthFetchSessionOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun fetchDevices (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun fetchUserAttributes (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun forgetDevice (Lcom/amplifyframework/auth/AuthDevice;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun forgetDevice$default (Lcom/amplifyframework/kotlin/auth/Auth;Lcom/amplifyframework/auth/AuthDevice;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun getCurrentUser (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun handleWebUISignInResponse (Landroid/content/Intent;)V
 	public abstract fun listWebAuthnCredentials (Lcom/amplifyframework/auth/options/AuthListWebAuthnCredentialsOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun listWebAuthnCredentials$default (Lcom/amplifyframework/kotlin/auth/Auth;Lcom/amplifyframework/auth/options/AuthListWebAuthnCredentialsOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun rememberDevice (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun resendSignUpCode (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthResendSignUpCodeOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun resendSignUpCode$default (Lcom/amplifyframework/kotlin/auth/Auth;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthResendSignUpCodeOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun resendUserAttributeConfirmationCode (Lcom/amplifyframework/auth/AuthUserAttributeKey;Lcom/amplifyframework/auth/options/AuthResendUserAttributeConfirmationCodeOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun resendUserAttributeConfirmationCode$default (Lcom/amplifyframework/kotlin/auth/Auth;Lcom/amplifyframework/auth/AuthUserAttributeKey;Lcom/amplifyframework/auth/options/AuthResendUserAttributeConfirmationCodeOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun resetPassword (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthResetPasswordOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun resetPassword$default (Lcom/amplifyframework/kotlin/auth/Auth;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthResetPasswordOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun setUpTOTP (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun signIn (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthSignInOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun signIn$default (Lcom/amplifyframework/kotlin/auth/Auth;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthSignInOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun signInWithSocialWebUI (Lcom/amplifyframework/auth/AuthProvider;Landroid/app/Activity;Lcom/amplifyframework/auth/options/AuthWebUISignInOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun signInWithSocialWebUI$default (Lcom/amplifyframework/kotlin/auth/Auth;Lcom/amplifyframework/auth/AuthProvider;Landroid/app/Activity;Lcom/amplifyframework/auth/options/AuthWebUISignInOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun signInWithWebUI (Landroid/app/Activity;Lcom/amplifyframework/auth/options/AuthWebUISignInOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun signInWithWebUI$default (Lcom/amplifyframework/kotlin/auth/Auth;Landroid/app/Activity;Lcom/amplifyframework/auth/options/AuthWebUISignInOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun signOut (Lcom/amplifyframework/auth/options/AuthSignOutOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun signOut$default (Lcom/amplifyframework/kotlin/auth/Auth;Lcom/amplifyframework/auth/options/AuthSignOutOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun signUp (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthSignUpOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun signUp$default (Lcom/amplifyframework/kotlin/auth/Auth;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthSignUpOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun updatePassword (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun updateUserAttribute (Lcom/amplifyframework/auth/AuthUserAttribute;Lcom/amplifyframework/auth/options/AuthUpdateUserAttributeOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun updateUserAttribute$default (Lcom/amplifyframework/kotlin/auth/Auth;Lcom/amplifyframework/auth/AuthUserAttribute;Lcom/amplifyframework/auth/options/AuthUpdateUserAttributeOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun updateUserAttributes (Ljava/util/List;Lcom/amplifyframework/auth/options/AuthUpdateUserAttributesOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun updateUserAttributes$default (Lcom/amplifyframework/kotlin/auth/Auth;Ljava/util/List;Lcom/amplifyframework/auth/options/AuthUpdateUserAttributesOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun verifyTOTPSetup (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthVerifyTOTPSetupOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun verifyTOTPSetup$default (Lcom/amplifyframework/kotlin/auth/Auth;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthVerifyTOTPSetupOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
 
 public final class com/amplifyframework/kotlin/auth/Auth$DefaultImpls {
@@ -170,12 +198,17 @@ public abstract interface class com/amplifyframework/kotlin/datastore/DataStore 
 	public abstract fun clear (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun delete (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun delete (Lkotlin/reflect/KClass;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun delete$default (Lcom/amplifyframework/kotlin/datastore/DataStore;Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun delete$default (Lcom/amplifyframework/kotlin/datastore/DataStore;Lkotlin/reflect/KClass;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun observe (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun observe (Lkotlin/reflect/KClass;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun observe (Lkotlin/reflect/KClass;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun observe$default (Lcom/amplifyframework/kotlin/datastore/DataStore;Lkotlin/reflect/KClass;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun observeQuery (Lkotlin/reflect/KClass;Lcom/amplifyframework/core/model/query/ObserveQueryOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun query (Lkotlin/reflect/KClass;Lcom/amplifyframework/core/model/query/QueryOptions;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun query$default (Lcom/amplifyframework/kotlin/datastore/DataStore;Lkotlin/reflect/KClass;Lcom/amplifyframework/core/model/query/QueryOptions;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
 	public abstract fun save (Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun save$default (Lcom/amplifyframework/kotlin/datastore/DataStore;Lcom/amplifyframework/core/model/Model;Lcom/amplifyframework/core/model/query/predicate/QueryPredicate;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun start (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun stop (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
@@ -209,8 +242,11 @@ public abstract interface class com/amplifyframework/kotlin/geo/Geo {
 	public abstract fun getAvailableMaps (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getDefaultMap (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getMapStyleDescriptor (Lcom/amplifyframework/geo/options/GetMapStyleDescriptorOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun getMapStyleDescriptor$default (Lcom/amplifyframework/kotlin/geo/Geo;Lcom/amplifyframework/geo/options/GetMapStyleDescriptorOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun searchByCoordinates (Lcom/amplifyframework/geo/models/Coordinates;Lcom/amplifyframework/geo/options/GeoSearchByCoordinatesOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun searchByCoordinates$default (Lcom/amplifyframework/kotlin/geo/Geo;Lcom/amplifyframework/geo/models/Coordinates;Lcom/amplifyframework/geo/options/GeoSearchByCoordinatesOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun searchByText (Ljava/lang/String;Lcom/amplifyframework/geo/options/GeoSearchByTextOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun searchByText$default (Lcom/amplifyframework/kotlin/geo/Geo;Ljava/lang/String;Lcom/amplifyframework/geo/options/GeoSearchByTextOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
 
 public final class com/amplifyframework/kotlin/geo/Geo$DefaultImpls {
@@ -233,6 +269,7 @@ public final class com/amplifyframework/kotlin/geo/KotlinGeoFacade : com/amplify
 public abstract interface class com/amplifyframework/kotlin/hub/Hub {
 	public abstract fun publish (Lcom/amplifyframework/hub/HubChannel;Lcom/amplifyframework/hub/HubEvent;)V
 	public abstract fun subscribe (Lcom/amplifyframework/hub/HubChannel;Lcom/amplifyframework/hub/HubEventFilter;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun subscribe$default (Lcom/amplifyframework/kotlin/hub/Hub;Lcom/amplifyframework/hub/HubChannel;Lcom/amplifyframework/hub/HubEventFilter;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
 }
 
 public final class com/amplifyframework/kotlin/hub/Hub$DefaultImpls {
@@ -295,10 +332,15 @@ public final class com/amplifyframework/kotlin/predictions/KotlinPredictionsFaca
 
 public abstract interface class com/amplifyframework/kotlin/predictions/Predictions {
 	public abstract fun convertTextToSpeech (Ljava/lang/String;Lcom/amplifyframework/predictions/options/TextToSpeechOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun convertTextToSpeech$default (Lcom/amplifyframework/kotlin/predictions/Predictions;Ljava/lang/String;Lcom/amplifyframework/predictions/options/TextToSpeechOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun identify (Lcom/amplifyframework/predictions/models/IdentifyAction;Landroid/graphics/Bitmap;Lcom/amplifyframework/predictions/options/IdentifyOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun identify$default (Lcom/amplifyframework/kotlin/predictions/Predictions;Lcom/amplifyframework/predictions/models/IdentifyAction;Landroid/graphics/Bitmap;Lcom/amplifyframework/predictions/options/IdentifyOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun interpret (Ljava/lang/String;Lcom/amplifyframework/predictions/options/InterpretOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun interpret$default (Lcom/amplifyframework/kotlin/predictions/Predictions;Ljava/lang/String;Lcom/amplifyframework/predictions/options/InterpretOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun translateText (Ljava/lang/String;Lcom/amplifyframework/predictions/models/LanguageType;Lcom/amplifyframework/predictions/models/LanguageType;Lcom/amplifyframework/predictions/options/TranslateTextOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun translateText (Ljava/lang/String;Lcom/amplifyframework/predictions/options/TranslateTextOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun translateText$default (Lcom/amplifyframework/kotlin/predictions/Predictions;Ljava/lang/String;Lcom/amplifyframework/predictions/models/LanguageType;Lcom/amplifyframework/predictions/models/LanguageType;Lcom/amplifyframework/predictions/options/TranslateTextOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun translateText$default (Lcom/amplifyframework/kotlin/predictions/Predictions;Ljava/lang/String;Lcom/amplifyframework/predictions/options/TranslateTextOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 }
 
 public final class com/amplifyframework/kotlin/predictions/Predictions$DefaultImpls {
@@ -332,18 +374,29 @@ public final class com/amplifyframework/kotlin/storage/KotlinStorageFacade : com
 public abstract interface class com/amplifyframework/kotlin/storage/Storage {
 	public abstract fun downloadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageDownloadFileOptions;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
 	public abstract fun downloadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageDownloadFileOptions;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
+	public static synthetic fun downloadFile$default (Lcom/amplifyframework/kotlin/storage/Storage;Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageDownloadFileOptions;ILjava/lang/Object;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
+	public static synthetic fun downloadFile$default (Lcom/amplifyframework/kotlin/storage/Storage;Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageDownloadFileOptions;ILjava/lang/Object;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
 	public abstract fun getTransfer (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getUrl (Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/storage/options/StorageGetUrlOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun getUrl (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageGetUrlOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun getUrl$default (Lcom/amplifyframework/kotlin/storage/Storage;Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/storage/options/StorageGetUrlOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun getUrl$default (Lcom/amplifyframework/kotlin/storage/Storage;Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageGetUrlOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun list (Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/storage/options/StoragePagedListOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun list (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageListOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun list (Ljava/lang/String;Lcom/amplifyframework/storage/options/StoragePagedListOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun list$default (Lcom/amplifyframework/kotlin/storage/Storage;Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageListOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun remove (Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/storage/options/StorageRemoveOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun remove (Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageRemoveOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun remove$default (Lcom/amplifyframework/kotlin/storage/Storage;Lcom/amplifyframework/storage/StoragePath;Lcom/amplifyframework/storage/options/StorageRemoveOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static synthetic fun remove$default (Lcom/amplifyframework/kotlin/storage/Storage;Ljava/lang/String;Lcom/amplifyframework/storage/options/StorageRemoveOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public abstract fun uploadFile (Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageUploadFileOptions;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
 	public abstract fun uploadFile (Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageUploadFileOptions;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
+	public static synthetic fun uploadFile$default (Lcom/amplifyframework/kotlin/storage/Storage;Lcom/amplifyframework/storage/StoragePath;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageUploadFileOptions;ILjava/lang/Object;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
+	public static synthetic fun uploadFile$default (Lcom/amplifyframework/kotlin/storage/Storage;Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/options/StorageUploadFileOptions;ILjava/lang/Object;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
 	public abstract fun uploadInputStream (Lcom/amplifyframework/storage/StoragePath;Ljava/io/InputStream;Lcom/amplifyframework/storage/options/StorageUploadInputStreamOptions;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
 	public abstract fun uploadInputStream (Ljava/lang/String;Ljava/io/InputStream;Lcom/amplifyframework/storage/options/StorageUploadInputStreamOptions;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
+	public static synthetic fun uploadInputStream$default (Lcom/amplifyframework/kotlin/storage/Storage;Lcom/amplifyframework/storage/StoragePath;Ljava/io/InputStream;Lcom/amplifyframework/storage/options/StorageUploadInputStreamOptions;ILjava/lang/Object;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
+	public static synthetic fun uploadInputStream$default (Lcom/amplifyframework/kotlin/storage/Storage;Ljava/lang/String;Ljava/io/InputStream;Lcom/amplifyframework/storage/options/StorageUploadInputStreamOptions;ILjava/lang/Object;)Lcom/amplifyframework/kotlin/storage/Storage$InProgressStorageOperation;
 }
 
 public final class com/amplifyframework/kotlin/storage/Storage$DefaultImpls {
