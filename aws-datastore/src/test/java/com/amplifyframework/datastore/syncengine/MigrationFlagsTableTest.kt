@@ -28,6 +28,7 @@ class MigrationFlagsTableTest {
 
     @Test
     fun `validate create statement`() {
-        MigrationFlagsTable.CREATE_SQL shouldBe "CREATE TABLE IF NOT EXISTS migration_flags (flag_name TEXT PRIMARY KEY)"
+        MigrationFlagsTable.CREATE_SQL shouldBe
+            "CREATE TABLE IF NOT EXISTS migration_flags (flag_name TEXT PRIMARY KEY)"
     }
 }
