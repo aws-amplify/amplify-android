@@ -14,26 +14,20 @@
  */
 package com.amplifyframework.datastore.syncengine
 
-import org.junit.Assert.assertEquals
+import io.kotest.matchers.shouldBe
 import org.junit.Test
 
 class MigrationFlagsTableTest {
 
     @Test
     fun `validate initial insert entries`() {
-        assertEquals(
-            setOf(
-                "INSERT OR IGNORE INTO migration_flags (flag_name) VALUES ('cleared_v2_30_0_and_below_group_sync_expressions')"
-            ),
-            MigrationFlagsTable.initialInsertStatements()
+        MigrationFlagsTable.initialInsertStatements() shouldBe setOf(
+            "INSERT OR IGNORE INTO migration_flags (flag_name) VALUES ('cleared_v2_30_0_and_below_group_sync_expressions')"
         )
     }
 
     @Test
     fun `validate create statement`() {
-        assertEquals(
-            "CREATE TABLE IF NOT EXISTS migration_flags (flag_name TEXT PRIMARY KEY)",
-            MigrationFlagsTable.CREATE_SQL
-        )
+        MigrationFlagsTable.CREATE_SQL shouldBe "CREATE TABLE IF NOT EXISTS migration_flags (flag_name TEXT PRIMARY KEY)"
     }
 }
