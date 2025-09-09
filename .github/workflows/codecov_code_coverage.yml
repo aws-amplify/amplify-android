@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - 'main'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -22,7 +23,7 @@ jobs:
           distribution: 'corretto'
 
       - name: Run test and generate kover report
-        run: ./gradlew koverXmlReport
+        run: ./gradlew koverXmlReport --stacktrace --info
 
       - name: Upload Test Report
         uses: codecov/codecov-action@v5
