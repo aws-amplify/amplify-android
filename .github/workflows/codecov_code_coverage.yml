@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - 'main'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -30,3 +31,11 @@ jobs:
           name: report
           files: build/reports/kover/report.xml
           token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload test reports
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: failure()
+        with:
+          name: test-reports
+          path: '**/reports/tests/**'
+          retention-days: 7
