@@ -1,3 +1,13 @@
+## [Release 2.30.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.30.1)
+
+### Bug Fixes
+- **data:** Fix GroupQueryPredicate Serialization for LastSyncMetadata stored syncExpression ([#3124](https://github.com/aws-amplify/amplify-android/issues/3124))
+
+### Miscellaneous
+- release: AWS AppSync Events for Android 1.0.1 ([#3128](https://github.com/aws-amplify/amplify-android/issues/3128))
+
+[See all changes between 2.30.0 and 2.30.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.30.0...release_v2.30.1)
+
 ## [Release 2.30.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.30.0)
 
 ### Features
