@@ -22,10 +22,12 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.withContext
@@ -61,21 +63,20 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
 ) : EventDispatcher {
     private val resolver = resolver.eraseToAnyResolver()
 
-    // The current state of the state machine. Consumers can collect or read the current state from the read-only StateFlow
-    private val _state = MutableStateFlow(initialState ?: resolver.defaultState)
-    val state = _state.asStateFlow()
+    // The current state of the state machine. We use a SharedFlow instead of a StateFlow so that emitted states are
+    // not conflated, and all emitted states are received by subscribers
+    private val _state = MutableSharedFlow<StateType>(
+        replay = 1,
+        extraBufferCapacity = 10,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    ).apply {
+        tryEmit(initialState ?: resolver.defaultState)
+    }
+    val state = _state.asSharedFlow()
 
     // A flow of states that omits the current states - emitting only states that occur after the flow starts.
     val stateTransitions: Flow<StateType>
         get() = state.drop(1)
-
-    // Private accessor for the current state. Although this is thread-safe to access/mutate, we still want to limit
-    // read/write to the single-threaded stateMachineContext for consistency
-    private var currentState: StateType
-        get() = _state.value
-        set(value) {
-            _state.value = value
-        }
 
     // Manage consistency of internal state machine state and limits invocation of listeners to a minimum of one at a time.
     @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
@@ -122,14 +123,18 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
     @Deprecated("Use suspending version instead")
     fun getCurrentState(completion: (StateType) -> Unit) {
         stateMachineScope.launch {
-            completion(currentState)
+            completion(getCurrentState())
         }
     }
 
     /**
      * Get the current state, dispatching to the state machine context for the read.
      */
-    suspend fun getCurrentState() = withContext(stateMachineContext) { currentState }
+    suspend fun getCurrentState() = withContext(stateMachineContext) { state.first() }
+
+    private fun setCurrentState(newState: StateType) {
+        _state.tryEmit(newState)
+    }
 
     /**
      * Register a listener.
@@ -137,13 +142,13 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      * @param listener listener to invoke when the state has changed
      * @param onSubscribe callback to invoke when subscription is complete
      */
-    private fun addSubscription(
+    private suspend fun addSubscription(
         token: StateChangeListenerToken,
         listener: (StateType) -> Unit,
         onSubscribe: OnSubscribedCallback?
     ) {
         if (pendingCancellations.contains(token)) return
-        val currentState = this.currentState
+        val currentState = getCurrentState()
         subscribers[token] = listener
         onSubscribe?.invoke()
         stateMachineScope.launch(dispatcherQueue) {
@@ -193,10 +198,11 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      * the state machine will execute any effects from the event resolution process.
      * @param event event to apply on current state for resolution
      */
-    private fun process(event: StateMachineEvent) {
+    private suspend fun process(event: StateMachineEvent) {
+        val currentState = getCurrentState()
         val resolution = resolver.resolve(currentState, event)
         if (currentState != resolution.newState) {
-            currentState = resolution.newState
+            setCurrentState(resolution.newState)
             val subscribersToRemove = subscribers.filter { !notifySubscribers(it, resolution.newState) }
             subscribersToRemove.forEach { subscribers.remove(it.key) }
         }
