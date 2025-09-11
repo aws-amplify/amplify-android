@@ -187,6 +187,11 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpdateS
                 LOG.info("Creating index for table: " + sqlCommand.tableName());
                 sqliteDatabase.execSQL(sqlCommand.sqlStatement());
             }
+
+            for (final SqlCommand sqlCommand : createSqlCommands.getCreateInsertCommands()) {
+                LOG.info("Creating record for table: " + sqlCommand.tableName());
+                sqliteDatabase.execSQL(sqlCommand.sqlStatement());
+            }
             sqliteDatabase.setTransactionSuccessful();
         } finally {
             sqliteDatabase.endTransaction();

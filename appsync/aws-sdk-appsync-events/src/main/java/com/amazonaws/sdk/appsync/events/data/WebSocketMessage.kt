@@ -97,7 +97,10 @@ internal sealed class WebSocketMessage {
 
         @Serializable
         @SerialName("connection_error")
-        internal data class ConnectionError(val errors: List<EventsError>) : Received()
+        internal data class ConnectionError(
+            override val id: String? = null,
+            override val errors: List<EventsError>
+        ) : Received(), ErrorContainer
 
         @Serializable
         internal sealed class Subscription : Received() {
@@ -189,7 +192,8 @@ internal sealed class WebSocketMessage {
 
     internal data class Closed(val reason: WebSocketDisconnectReason) : WebSocketMessage()
 
-    // All errors contain an id and errors list
+    // All errors contain an errors list
+    // Most events contain an id, which is either a channel id or a publish id
     internal interface ErrorContainer {
         val id: String?
         val errors: List<EventsError>

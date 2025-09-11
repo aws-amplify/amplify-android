@@ -77,3 +77,5 @@ internal object SessionHelper {
             )
     }
 }
+
+internal fun CognitoUserPoolTokens.isValid() = SessionHelper.isValidTokens(this)

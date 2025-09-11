@@ -38,6 +38,7 @@ dependencies {
     testImplementation(libs.test.junit)
     testImplementation(libs.test.robolectric)
     testImplementation(libs.test.jsonassert)
+    testImplementation(libs.test.kotest.assertions)
     testImplementation(project(":testmodels"))
     testImplementation(project(":testutils"))
 }

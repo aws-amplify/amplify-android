@@ -12,21 +12,23 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+package com.amplifyframework.datastore.syncengine
 
-package com.amplifyframework.auth.cognito.usecases
+import io.kotest.matchers.shouldBe
+import org.junit.Test
 
-import com.amplifyframework.auth.AuthUser
-import com.amplifyframework.auth.cognito.AuthStateMachine
-import com.amplifyframework.auth.cognito.requireSignedInState
+class MigrationFlagsTableTest {
 
-internal class GetCurrentUserUseCase(
-    private val stateMachine: AuthStateMachine
-) {
-    suspend fun execute(): AuthUser {
-        val state = stateMachine.requireSignedInState()
-        return AuthUser(
-            state.signedInData.userId,
-            state.signedInData.username
+    @Test
+    fun `validate initial insert entries`() {
+        MigrationFlagsTable.initialInsertStatements() shouldBe setOf(
+            "INSERT OR IGNORE INTO migration_flags (flag_name) VALUES ('cleared_v2_30_0_and_below_group_sync_expressions')"
         )
+    }
+
+    @Test
+    fun `validate create statement`() {
+        MigrationFlagsTable.CREATE_SQL shouldBe
+            "CREATE TABLE IF NOT EXISTS migration_flags (flag_name TEXT PRIMARY KEY)"
     }
 }
