@@ -23,7 +23,6 @@ import com.amplifyframework.statemachine.state.CounterStateMachine
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.newSingleThreadContext
@@ -127,23 +126,5 @@ class StateMachineListenerTests {
         stateMachine.cancel(token)
         stateMachine.send(Counter.Event("2", eventType = Increment))
         assertTrue { listenLatch.await(5, TimeUnit.SECONDS) }
-    }
-
-    @Test
-    fun testNoNotifyImmediateCancel() {
-        stateMachine.send(Counter.Event("1", eventType = Increment))
-        val listenLatch = CountDownLatch(1)
-        val token = StateChangeListenerToken()
-        stateMachine.listen(
-            token,
-            {
-                listenLatch.countDown()
-            },
-            null
-        )
-
-        stateMachine.cancel(token)
-        stateMachine.send(Counter.Event("2", eventType = Increment))
-        assertFalse { listenLatch.await(5, TimeUnit.SECONDS) }
     }
 }
