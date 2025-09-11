@@ -58,5 +58,9 @@ gradlePlugin {
             id = libs.plugins.amplify.licenses.get().pluginId
             implementationClass = "LicensesConventionPlugin"
         }
+        register("publishing") {
+            id = libs.plugins.amplify.publishing.get().pluginId
+            implementationClass = "PublishingConventionPlugin"
+        }
     }
 }
