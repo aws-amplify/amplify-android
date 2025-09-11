@@ -15,13 +15,10 @@
 
 plugins {
     alias(libs.plugins.amplify.android.library)
-    alias(libs.plugins.amplify.api)
+    alias(libs.plugins.amplify.publishing)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
-apply(from = rootProject.file("configuration/publishing.gradle"))
-
-group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.aws.core"
@@ -42,16 +39,4 @@ dependencies {
     testImplementation(libs.test.junit)
     testImplementation(libs.test.kotest.assertions)
     testImplementation(libs.test.robolectric)
-}
-
-afterEvaluate {
-    // Disables this warning:
-    // warning: listOf(classfile) MethodParameters attribute
-    // introduced in version 52.0 class files is ignored in
-    // version 51.0 class files
-    // Root project has -Werror, so this warning
-    // would fail the build, otherwise.
-    tasks.withType<JavaCompile>().configureEach {
-        options.compilerArgs.add("-Xlint:-classfile")
-    }
 }

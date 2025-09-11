@@ -172,3 +172,4 @@ amplify-kover = { id = "amplify.kover" }
 amplify-ktlint = { id = "amplify.ktlint" }
 amplify-android-library = { id = "amplify.android.library" }
 amplify-licenses = { id = "amplify.licenses" }
+amplify-publishing = { id = "amplify.publishing" }
