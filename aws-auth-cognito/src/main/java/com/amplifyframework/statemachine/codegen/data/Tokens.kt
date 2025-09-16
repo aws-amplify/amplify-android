@@ -95,7 +95,9 @@ internal class AccessToken(override val tokenValue: String) : Jwt() {
 // Refresh token is just an opaque base64 string
 @Serializable
 @JvmInline
-internal value class RefreshToken(val tokenValue: String)
+internal value class RefreshToken(val tokenValue: String) {
+    override fun toString() = tokenValue.mask()
+}
 
 internal fun String?.asIdToken() = this?.let { IdToken(it) }
 internal fun String?.asAccessToken() = this?.let { AccessToken(it) }
