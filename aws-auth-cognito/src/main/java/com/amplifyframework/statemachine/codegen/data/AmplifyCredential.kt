@@ -88,41 +88,6 @@ internal data class FederatedToken(val token: String, val providerName: String) 
 }
 
 /**
- * Contains cognito user pool JWT tokens
- * @param idToken User Pool id token
- * @param accessToken User Pool access token
- * @param refreshToken User Pool refresh token
- * @param expiration Auth result expiration but not token expiration
- */
-@Serializable
-internal data class CognitoUserPoolTokens(
-    val idToken: IdToken?,
-    val accessToken: AccessToken?,
-    val refreshToken: RefreshToken?,
-    val expiration: Long?
-) {
-    constructor(
-        idToken: String?,
-        accessToken: String?,
-        refreshToken: String?,
-        expiration: Long?
-    ) : this(
-        idToken = idToken.asIdToken(),
-        accessToken = accessToken.asAccessToken(),
-        refreshToken = refreshToken.asRefreshToken(),
-        expiration = expiration
-    )
-
-    override fun equals(other: Any?): Boolean = if (super.equals(other)) {
-        true
-    } else if (other == null || javaClass != other.javaClass || other !is CognitoUserPoolTokens) {
-        false
-    } else {
-        idToken == other.idToken && accessToken == other.accessToken && refreshToken == other.refreshToken
-    }
-}
-
-/**
  * Contains AWS credentials that allows access to AWS resources
  * @param accessKeyId access key id
  * @param secretAccessKey secret access key

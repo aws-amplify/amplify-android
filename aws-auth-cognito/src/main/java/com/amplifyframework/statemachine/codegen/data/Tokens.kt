@@ -102,3 +102,38 @@ internal value class RefreshToken(val tokenValue: String) {
 internal fun String?.asIdToken() = this?.let { IdToken(it) }
 internal fun String?.asAccessToken() = this?.let { AccessToken(it) }
 internal fun String?.asRefreshToken() = this?.let { RefreshToken(it) }
+
+/**
+ * Contains cognito user pool JWT tokens
+ * @param idToken User Pool id token
+ * @param accessToken User Pool access token
+ * @param refreshToken User Pool refresh token
+ * @param expiration Auth result expiration but not token expiration
+ */
+@Serializable
+internal data class CognitoUserPoolTokens(
+    val idToken: IdToken?,
+    val accessToken: AccessToken?,
+    val refreshToken: RefreshToken?,
+    val expiration: Long?
+) {
+    constructor(
+        idToken: String?,
+        accessToken: String?,
+        refreshToken: String?,
+        expiration: Long?
+    ) : this(
+        idToken = idToken.asIdToken(),
+        accessToken = accessToken.asAccessToken(),
+        refreshToken = refreshToken.asRefreshToken(),
+        expiration = expiration
+    )
+
+    override fun equals(other: Any?): Boolean = if (super.equals(other)) {
+        true
+    } else if (other == null || javaClass != other.javaClass || other !is CognitoUserPoolTokens) {
+        false
+    } else {
+        idToken == other.idToken && accessToken == other.accessToken && refreshToken == other.refreshToken
+    }
+}
