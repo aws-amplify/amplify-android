@@ -59,9 +59,9 @@ internal object SignInChallengeHelper {
     ): StateMachineEvent = when {
         authenticationResult != null -> {
             authenticationResult.let {
-                val userId = it.accessToken?.let { token -> SessionHelper.getUserSub(token) } ?: ""
-                val expiresIn = Instant.now().plus(it.expiresIn.seconds).epochSeconds
-                val tokens = CognitoUserPoolTokens(it.idToken, it.accessToken, it.refreshToken, expiresIn)
+                val expiration = Instant.now().plus(it.expiresIn.seconds).epochSeconds
+                val tokens = CognitoUserPoolTokens(it.idToken, it.accessToken, it.refreshToken, expiration)
+                val userId = tokens.accessToken?.userSub ?: ""
                 val signedInData = SignedInData(
                     userId,
                     username,

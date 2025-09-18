@@ -127,7 +127,7 @@ class FetchAuthSessionCognitoActionsTest {
 
         val event = capturedEvent.captured.shouldBeInstanceOf<RefreshSessionEvent>()
         val refreshedData = event.eventType.shouldBeInstanceOf<RefreshSessionEvent.EventType.Refreshed>().signedInData
-        refreshedData.cognitoUserPoolTokens.refreshToken shouldBe newRefreshToken
+        refreshedData.cognitoUserPoolTokens.refreshToken?.tokenValue shouldBe newRefreshToken
     }
 
     @Test
@@ -164,7 +164,7 @@ class FetchAuthSessionCognitoActionsTest {
 
         val event = capturedEvent.captured.shouldBeInstanceOf<RefreshSessionEvent>()
         val refreshedData = event.eventType.shouldBeInstanceOf<RefreshSessionEvent.EventType.Refreshed>().signedInData
-        refreshedData.cognitoUserPoolTokens.refreshToken shouldBe originalRefreshToken
+        refreshedData.cognitoUserPoolTokens.refreshToken?.tokenValue shouldBe originalRefreshToken
     }
 
     @Test
