@@ -63,7 +63,7 @@ internal fun mockSignedInData(
     signedInDate: Date = Date(),
     signInMethod: SignInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
     cognitoUserPoolTokens: CognitoUserPoolTokens =
-        CognitoUserPoolTokens(idToken = null, accessToken = null, refreshToken = null, expiration = null)
+        CognitoUserPoolTokens(idToken = null as String?, accessToken = null, refreshToken = null, expiration = null)
 ) = SignedInData(
     userId = userId,
     username = username,

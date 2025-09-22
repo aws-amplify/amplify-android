@@ -126,7 +126,7 @@ internal object SignInCognitoActions : SignInActions {
 
                 cognitoAuthService.cognitoIdentityProviderClient?.confirmDevice(
                     ConfirmDeviceRequest.invoke {
-                        this.accessToken = event.signedInData.cognitoUserPoolTokens.accessToken
+                        this.accessToken = event.signedInData.cognitoUserPoolTokens.accessToken?.tokenValue
                         this.deviceKey = deviceKey
                         this.deviceName = Build.MODEL
                         this.deviceSecretVerifierConfig = DeviceSecretVerifierConfigType.invoke {
