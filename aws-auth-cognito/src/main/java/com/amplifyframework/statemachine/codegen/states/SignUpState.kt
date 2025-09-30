@@ -31,7 +31,11 @@ internal sealed class SignUpState : State {
     data class AwaitingUserConfirmation(val signUpData: SignUpData, val signUpResult: AuthSignUpResult) : SignUpState()
     data class ConfirmingSignUp(val signUpData: SignUpData) : SignUpState()
     data class SignedUp(val signUpData: SignUpData, val signUpResult: AuthSignUpResult) : SignUpState()
-    data class Error(val exception: Exception, var hasNewResponse: Boolean = true) : SignUpState()
+    data class Error(
+        val signUpData: SignUpData,
+        val exception: Exception,
+        var hasNewResponse: Boolean = true
+    ) : SignUpState()
 
     class Resolver(private val signUpActions: SignUpActions) :
         StateMachineResolver<SignUpState> {
@@ -56,7 +60,7 @@ internal sealed class SignUpState : State {
                         )
                     }
                     is SignUpEvent.EventType.ThrowError -> {
-                        StateResolution(Error(signUpEvent.exception))
+                        StateResolution(Error(signUpEvent.signUpData, signUpEvent.exception))
                     }
                     else -> defaultResolution
                 }
@@ -82,7 +86,7 @@ internal sealed class SignUpState : State {
                         )
                     }
                     is SignUpEvent.EventType.ThrowError -> {
-                        StateResolution(Error(signUpEvent.exception))
+                        StateResolution(Error(signUpEvent.signUpData, signUpEvent.exception))
                     }
                     else -> defaultResolution
                 }
@@ -100,7 +104,7 @@ internal sealed class SignUpState : State {
                         )
                     }
                     is SignUpEvent.EventType.ThrowError -> {
-                        StateResolution(Error(signUpEvent.exception))
+                        StateResolution(Error(signUpEvent.signUpData, signUpEvent.exception))
                     }
                     else -> defaultResolution
                 }
@@ -121,7 +125,7 @@ internal sealed class SignUpState : State {
                         StateResolution(SignedUp(signUpEvent.signUpData, signUpEvent.signUpResult))
                     }
                     is SignUpEvent.EventType.ThrowError -> {
-                        StateResolution(Error(signUpEvent.exception))
+                        StateResolution(Error(signUpEvent.signUpData, signUpEvent.exception))
                     }
                     else -> defaultResolution
                 }
@@ -143,4 +147,13 @@ internal sealed class SignUpState : State {
             }
         }
     }
+}
+
+internal fun SignUpState.getSignUpData(): SignUpData? = when (this) {
+    is SignUpState.AwaitingUserConfirmation -> this.signUpData
+    is SignUpState.ConfirmingSignUp -> this.signUpData
+    is SignUpState.Error -> this.signUpData
+    is SignUpState.InitiatingSignUp -> this.signUpData
+    is SignUpState.NotStarted -> null
+    is SignUpState.SignedUp -> this.signUpData
 }
