@@ -229,6 +229,7 @@ internal object SignInCognitoActions : SignInActions {
                         session = response.session,
                         challengeParameters = response.challengeParameters,
                         authenticationResult = response.authenticationResult,
+                        availableChallenges = response.availableChallenges?.map { it.value },
                         signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_AUTH)
                     )
                 } else {
