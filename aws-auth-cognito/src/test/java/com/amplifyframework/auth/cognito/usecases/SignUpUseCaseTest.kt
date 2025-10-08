@@ -74,7 +74,7 @@ class SignUpUseCaseTest {
         }
 
         runCurrent()
-        stateFlow.emit(mockAuthState(SignUpState.Error(exception)))
+        stateFlow.emit(mockAuthState(SignUpState.Error(mockk(), exception)))
     }
 
     @Test

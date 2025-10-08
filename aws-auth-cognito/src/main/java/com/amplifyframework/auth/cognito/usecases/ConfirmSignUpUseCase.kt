@@ -24,6 +24,7 @@ import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.statemachine.codegen.data.SignUpData
 import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 import com.amplifyframework.statemachine.codegen.states.SignUpState
+import com.amplifyframework.statemachine.codegen.states.getSignUpData
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onSubscription
@@ -37,21 +38,25 @@ internal class ConfirmSignUpUseCase(private val stateMachine: AuthStateMachine) 
     ): AuthSignUpResult {
         stateMachine.throwIfNotConfigured()
 
-        val startingState = stateMachine.getCurrentState().authSignUpState
+        val currentState = stateMachine.getCurrentState()
+        val existingSignUpData = currentState.authSignUpState?.getSignUpData()
+
+        val clientMetadata = (options as? AWSCognitoAuthConfirmSignUpOptions)?.clientMetadata
+        val signUpData = if (existingSignUpData?.username == username) {
+            existingSignUpData.copy(clientMetadata = clientMetadata)
+        } else {
+            SignUpData(
+                username = username,
+                validationData = null,
+                clientMetadata = clientMetadata,
+                session = null,
+                userId = null
+            )
+        }
 
         val result = stateMachine.state
             .onSubscription {
-                var userId: String? = null
-                var session: String? = null
-                if (startingState is SignUpState.AwaitingUserConfirmation &&
-                    startingState.signUpData.username == username
-                ) {
-                    session = startingState.signUpData.session
-                    userId = startingState.signUpResult.userId
-                }
-                val clientMetadata = (options as? AWSCognitoAuthConfirmSignUpOptions)?.clientMetadata
-                val signupData = SignUpData(username, null, clientMetadata, session, userId)
-                val event = SignUpEvent(SignUpEvent.EventType.ConfirmSignUp(signupData, confirmationCode))
+                val event = SignUpEvent(SignUpEvent.EventType.ConfirmSignUp(signUpData, confirmationCode))
                 stateMachine.send(event)
             }
             .drop(1)
