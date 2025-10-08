@@ -100,7 +100,7 @@ internal class AutoSignInUseCase(
                     authNState is AuthenticationState.SignedIn &&
                         authZState is AuthorizationState.SessionEstablished -> {
                         hubEmitter.sendHubEvent(AuthChannelEventName.SIGNED_IN.toString())
-                        UserPoolSignInHelper.signInDoneResult()
+                        UserPoolSignInHelper.signedInResult()
                     }
                     else -> null
                 }

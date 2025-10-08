@@ -110,7 +110,7 @@ internal object UserPoolSignInHelper {
         )
     )
 
-    fun signInDoneResult() = signInResult(signInStep = AuthSignInStep.DONE)
+    fun signedInResult() = signInResult(signInStep = AuthSignInStep.DONE)
 
     private fun SignInTOTPSetupData.toTotpSetupDetails() = TOTPSetupDetails(
         sharedSecret = secretCode,

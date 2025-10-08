@@ -238,7 +238,7 @@ internal class RealAWSCognitoAuthPlugin(
                     authNState is AuthenticationState.SignedIn &&
                         authZState is AuthorizationState.SessionEstablished -> {
                         authStateMachine.cancel(token)
-                        onSuccess.accept(UserPoolSignInHelper.signInDoneResult())
+                        onSuccess.accept(UserPoolSignInHelper.signedInResult())
                         sendHubEvent(AuthChannelEventName.SIGNED_IN.toString())
                     }
                     authNState is AuthenticationState.SigningIn -> {
@@ -379,7 +379,7 @@ internal class RealAWSCognitoAuthPlugin(
                     authNState is AuthenticationState.SignedIn &&
                         authZState is AuthorizationState.SessionEstablished -> {
                         authStateMachine.cancel(token)
-                        onSuccess.accept(UserPoolSignInHelper.signInDoneResult())
+                        onSuccess.accept(UserPoolSignInHelper.signedInResult())
                         sendHubEvent(AuthChannelEventName.SIGNED_IN.toString())
                     }
                     authNState is AuthenticationState.SigningIn -> {
@@ -1219,24 +1219,6 @@ internal class RealAWSCognitoAuthPlugin(
                     sendHubEvent(AWSCognitoAuthChannelEventName.FEDERATION_TO_IDENTITY_POOL_CLEARED.toString())
                 }
             }
-        }
-    }
-
-    private inline fun <T : Any> callSafely(
-        onSuccess: Consumer<T>,
-        onError: Consumer<AuthException>,
-        fallbackMessage: String,
-        func: () -> T?
-    ) {
-        val result: T?
-        try {
-            result = func()
-        } catch (e: Exception) {
-            onError.accept(CognitoAuthExceptionConverter.lookup(e, fallbackMessage))
-            return
-        }
-        if (result != null) {
-            onSuccess.accept(result)
         }
     }
 
