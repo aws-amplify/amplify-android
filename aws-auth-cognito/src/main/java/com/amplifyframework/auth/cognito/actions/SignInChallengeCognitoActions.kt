@@ -41,7 +41,7 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
     override fun verifyChallengeAuthAction(
         answer: String,
         metadata: Map<String, String>,
-        attributes: List<AuthUserAttribute>,
+        userAttributes: List<AuthUserAttribute>,
         challenge: AuthChallenge,
         signInMethod: SignInMethod
     ): Action = Action<AuthEnvironment>("VerifySignInChallenge") { id, dispatcher ->
@@ -76,7 +76,7 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
             }
 
             challengeResponses.putAll(
-                attributes.map {
+                userAttributes.map {
                     Pair("${KEY_PREFIX_USER_ATTRIBUTE}${it.key.keyString}", it.value)
                 }
             )
@@ -122,7 +122,7 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
                     SignInChallengeEvent.EventType.RetryVerifyChallengeAnswer(
                         answer,
                         metadata,
-                        attributes,
+                        userAttributes,
                         challenge
                     )
                 )
