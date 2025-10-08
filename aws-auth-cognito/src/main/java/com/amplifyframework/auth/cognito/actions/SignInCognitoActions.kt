@@ -109,7 +109,7 @@ internal object SignInCognitoActions : SignInActions {
         Action<AuthEnvironment>("InitResolveChallenge") { id, dispatcher ->
             logger.verbose("$id Starting execution")
             val evt = SignInChallengeEvent(
-                SignInChallengeEvent.EventType.WaitForAnswer(event.challenge, event.signInMethod, true)
+                SignInChallengeEvent.EventType.WaitForAnswer(event.challenge, event.signInMethod)
             )
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)

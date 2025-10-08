@@ -127,7 +127,7 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
                     )
                 )
             } else {
-                SignInChallengeEvent(SignInChallengeEvent.EventType.ThrowError(e, challenge, true))
+                SignInChallengeEvent(SignInChallengeEvent.EventType.ThrowError(e, challenge))
             }
         }
         logger.verbose("$id Sending event ${evt.type}")
