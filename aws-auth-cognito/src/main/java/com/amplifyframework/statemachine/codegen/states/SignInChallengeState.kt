@@ -28,9 +28,10 @@ internal sealed class SignInChallengeState : State {
     data class NotStarted(val id: String = "") : SignInChallengeState()
     data class WaitingForAnswer(
         val challenge: AuthChallenge,
-        val signInMethod: SignInMethod,
-        var hasNewResponse: Boolean = false
-    ) : SignInChallengeState()
+        val signInMethod: SignInMethod
+    ) : SignInChallengeState() {
+        var hasNewResponse = true
+    }
     data class Verifying(
         val id: String = "",
         val signInMethod: SignInMethod
@@ -39,9 +40,10 @@ internal sealed class SignInChallengeState : State {
     data class Error(
         val exception: Exception,
         val challenge: AuthChallenge,
-        val signInMethod: SignInMethod,
-        var hasNewResponse: Boolean = false
-    ) : SignInChallengeState()
+        val signInMethod: SignInMethod
+    ) : SignInChallengeState() {
+        var hasNewResponse = true
+    }
 
     class Resolver(private val challengeActions: SignInChallengeActions) : StateMachineResolver<SignInChallengeState> {
         override val defaultState: SignInChallengeState = NotStarted()
@@ -78,8 +80,7 @@ internal sealed class SignInChallengeState : State {
                                     session = oldState.challenge.session,
                                     parameters = oldState.challenge.parameters
                                 ),
-                                signInMethod = oldState.signInMethod,
-                                hasNewResponse = true
+                                signInMethod = oldState.signInMethod
                             )
                         )
                     }
@@ -108,8 +109,7 @@ internal sealed class SignInChallengeState : State {
                             Error(
                                 challengeEvent.exception,
                                 challengeEvent.challenge,
-                                oldState.signInMethod,
-                                true
+                                oldState.signInMethod
                             ),
                             listOf()
                         )
@@ -134,8 +134,7 @@ internal sealed class SignInChallengeState : State {
                         StateResolution(
                             WaitingForAnswer(
                                 challengeEvent.challenge,
-                                oldState.signInMethod,
-                                true
+                                oldState.signInMethod
                             ),
                             listOf()
                         )

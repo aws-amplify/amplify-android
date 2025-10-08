@@ -33,9 +33,10 @@ internal sealed class SignUpState : State {
     data class SignedUp(val signUpData: SignUpData, val signUpResult: AuthSignUpResult) : SignUpState()
     data class Error(
         val signUpData: SignUpData,
-        val exception: Exception,
-        var hasNewResponse: Boolean = true
-    ) : SignUpState()
+        val exception: Exception
+    ) : SignUpState() {
+        var hasNewResponse = true
+    }
 
     class Resolver(private val signUpActions: SignUpActions) :
         StateMachineResolver<SignUpState> {

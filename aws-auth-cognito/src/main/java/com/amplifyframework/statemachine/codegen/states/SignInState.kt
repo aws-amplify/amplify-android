@@ -284,7 +284,7 @@ internal sealed class SignInState : State {
                     }
                     is SignInEvent.EventType.ReceivedChallenge -> {
                         val action = signInActions.initResolveChallenge(signInEvent)
-                        StateResolution(ResolvingChallenge(oldState.challengeState), listOf(action))
+                        StateResolution(ResolvingChallenge(SignInChallengeState.NotStarted()), listOf(action))
                     }
                     is SignInEvent.EventType.InitiateSignInWithDeviceSRP -> {
                         val action = signInActions.startDeviceSRPAuthAction(signInEvent)

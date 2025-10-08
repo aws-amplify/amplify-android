@@ -21,15 +21,12 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthCodeDeliveryDetails.DeliveryMedium
-import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthFactorType
 import com.amplifyframework.auth.MFAType
-import com.amplifyframework.auth.TOTPSetupDetails
+import com.amplifyframework.auth.cognito.helpers.UserPoolSignInHelper.signInResult
 import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.auth.result.AuthSignInResult
-import com.amplifyframework.auth.result.step.AuthNextSignInStep
 import com.amplifyframework.auth.result.step.AuthSignInStep
-import com.amplifyframework.core.Consumer
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.ChallengeParameter
@@ -145,171 +142,73 @@ internal object SignInChallengeHelper {
         else -> SignInEvent(SignInEvent.EventType.ThrowError(Exception("Response did not contain sign in info.")))
     }
 
-    fun getNextStep(
-        challenge: AuthChallenge,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>,
-        signInTOTPSetupData: SignInTOTPSetupData? = null,
-        allowedMFAType: Set<MFAType>? = null
-    ) {
+    fun getNextStep(challenge: AuthChallenge): AuthSignInResult {
         val challengeParams = challenge.parameters ?: emptyMap()
-
-        when (challenge.challengeNameType) {
-            is ChallengeNameType.SmsMfa,
-            ChallengeNameType.EmailOtp,
-            ChallengeNameType.SmsOtp -> {
-                val deliveryDetails = AuthCodeDeliveryDetails(
+        return when (challenge.challengeNameType) {
+            ChallengeNameType.SmsMfa -> signInResult(
+                signInStep = AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE,
+                codeDeliveryDetails = AuthCodeDeliveryDetails(
                     challengeParams.getValue(ChallengeParameter.CodeDeliveryDestination.key),
                     DeliveryMedium.fromString(challengeParams.getValue(ChallengeParameter.CodeDeliveryMedium.key))
                 )
-                val signInStep = if (challenge.challengeNameType == ChallengeNameType.SmsMfa) {
-                    AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE
-                } else {
-                    AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP
-                }
-                val authSignInResult = AuthSignInResult(
-                    false,
-                    AuthNextSignInStep(
-                        signInStep,
-                        mapOf(),
-                        deliveryDetails,
-                        null,
-                        null,
-                        null
-                    )
+            )
+            ChallengeNameType.EmailOtp, ChallengeNameType.SmsOtp -> signInResult(
+                signInStep = AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP,
+                codeDeliveryDetails = AuthCodeDeliveryDetails(
+                    challengeParams.getValue(ChallengeParameter.CodeDeliveryDestination.key),
+                    DeliveryMedium.fromString(challengeParams.getValue(ChallengeParameter.CodeDeliveryMedium.key))
                 )
-                onSuccess.accept(authSignInResult)
-            }
-            is ChallengeNameType.NewPasswordRequired -> {
-                val authSignInResult = AuthSignInResult(
-                    false,
-                    AuthNextSignInStep(
-                        AuthSignInStep.CONFIRM_SIGN_IN_WITH_NEW_PASSWORD,
-                        challengeParams,
-                        null,
-                        null,
-                        null,
-                        null
-                    )
-                )
-                onSuccess.accept(authSignInResult)
-            }
-            is ChallengeNameType.CustomChallenge -> {
-                val authSignInResult = AuthSignInResult(
-                    false,
-                    AuthNextSignInStep(
-                        AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE,
-                        challengeParams,
-                        null,
-                        null,
-                        null,
-                        null
-                    )
-                )
-                onSuccess.accept(authSignInResult)
-            }
-            is ChallengeNameType.SoftwareTokenMfa -> {
-                val authSignInResult = AuthSignInResult(
-                    false,
-                    AuthNextSignInStep(
-                        AuthSignInStep.CONFIRM_SIGN_IN_WITH_TOTP_CODE,
-                        emptyMap(),
-                        null,
-                        null,
-                        null,
-                        null
-                    )
-                )
-                onSuccess.accept(authSignInResult)
-            }
-            is ChallengeNameType.MfaSetup -> {
+            )
+            ChallengeNameType.NewPasswordRequired -> signInResult(
+                signInStep = AuthSignInStep.CONFIRM_SIGN_IN_WITH_NEW_PASSWORD
+            )
+            ChallengeNameType.CustomChallenge -> signInResult(
+                signInStep = AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE,
+                additionalInfo = challengeParams
+            )
+            ChallengeNameType.SoftwareTokenMfa -> signInResult(
+                signInStep = AuthSignInStep.CONFIRM_SIGN_IN_WITH_TOTP_CODE
+            )
+            ChallengeNameType.MfaSetup -> {
                 val allowedMFASetupTypes = getAllowedMFASetupTypesFromChallengeParameters(challengeParams)
-
                 if (allowedMFASetupTypes.contains(MFAType.TOTP) && allowedMFASetupTypes.contains(MFAType.EMAIL)) {
-                    val authSignInResult = AuthSignInResult(
-                        false,
-                        AuthNextSignInStep(
-                            AuthSignInStep.CONTINUE_SIGN_IN_WITH_MFA_SETUP_SELECTION,
-                            emptyMap(),
-                            null,
-                            null,
-                            allowedMFASetupTypes,
-                            null
-                        )
+                    signInResult(
+                        signInStep = AuthSignInStep.CONTINUE_SIGN_IN_WITH_MFA_SETUP_SELECTION,
+                        allowedMFATypes = allowedMFASetupTypes
                     )
-                    onSuccess.accept(authSignInResult)
-                } else if (allowedMFASetupTypes.contains(MFAType.TOTP) && signInTOTPSetupData != null) {
-                    val authSignInResult = AuthSignInResult(
-                        false,
-                        AuthNextSignInStep(
-                            AuthSignInStep.CONTINUE_SIGN_IN_WITH_TOTP_SETUP,
-                            challengeParams,
-                            null,
-                            TOTPSetupDetails(signInTOTPSetupData.secretCode, signInTOTPSetupData.username),
-                            allowedMFAType,
-                            null
-                        )
-                    )
-                    onSuccess.accept(authSignInResult)
                 } else if (allowedMFASetupTypes.contains(MFAType.EMAIL)) {
-                    val authSignInResult = AuthSignInResult(
-                        false,
-                        AuthNextSignInStep(
-                            AuthSignInStep.CONTINUE_SIGN_IN_WITH_EMAIL_MFA_SETUP,
-                            emptyMap(),
-                            null,
-                            null,
-                            allowedMFAType,
-                            null
-                        )
-                    )
-                    onSuccess.accept(authSignInResult)
+                    signInResult(signInStep = AuthSignInStep.CONTINUE_SIGN_IN_WITH_EMAIL_MFA_SETUP)
                 } else {
-                    onError.accept(UnknownException(cause = Exception("Challenge type not supported.")))
+                    unknownException("Unsupported MFA type")
                 }
             }
-            is ChallengeNameType.SelectMfaType -> {
-                val authSignInResult = AuthSignInResult(
-                    false,
-                    AuthNextSignInStep(
-                        AuthSignInStep.CONTINUE_SIGN_IN_WITH_MFA_SELECTION,
-                        mapOf(),
-                        null,
-                        null,
-                        getAllowedMFATypesFromChallengeParameters(challengeParams),
-                        null
-                    )
-                )
-                onSuccess.accept(authSignInResult)
-            }
-            is ChallengeNameType.SelectChallenge -> {
-                val authSignInResult = AuthSignInResult(
-                    false,
-                    AuthNextSignInStep(
-                        AuthSignInStep.CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION,
-                        mapOf(),
-                        null,
-                        null,
-                        null,
-                        getAvailableFactors(challenge.availableChallenges)
-                    )
-                )
-                onSuccess.accept(authSignInResult)
-            }
-            else -> onError.accept(UnknownException(cause = Exception("Challenge type not supported.")))
+            ChallengeNameType.SelectMfaType -> signInResult(
+                signInStep = AuthSignInStep.CONTINUE_SIGN_IN_WITH_MFA_SELECTION,
+                allowedMFATypes = getAllowedMFATypesFromChallengeParameters(challengeParams)
+            )
+            ChallengeNameType.SelectChallenge -> signInResult(
+                signInStep = AuthSignInStep.CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION,
+                availableFactors = getAvailableFactors(challenge.availableChallenges)
+            )
+            ChallengeNameType.Password, ChallengeNameType.PasswordSrp -> signInResult(
+                signInStep = AuthSignInStep.CONFIRM_SIGN_IN_WITH_PASSWORD
+            )
+            else -> unknownException("Challenge type not supported.")
         }
     }
+
+    private fun unknownException(message: String): Nothing = throw UnknownException(message = message)
 
     private fun getAvailableFactors(possibleFactors: List<String>?): Set<AuthFactorType> {
         val result = mutableSetOf<AuthFactorType>()
         if (possibleFactors == null) {
-            throw UnknownException(cause = Exception("Tried to parse available factors but found none."))
+            unknownException("Tried to parse available factors but found none.")
         } else {
             possibleFactors.forEach {
                 try {
                     result.add(AuthFactorType.valueOf(it))
                 } catch (exception: IllegalArgumentException) {
-                    throw UnknownException(cause = Exception("Tried to parse an unrecognized AuthFactorType"))
+                    unknownException("Tried to parse an unrecognized AuthFactorType")
                 }
             }
         }

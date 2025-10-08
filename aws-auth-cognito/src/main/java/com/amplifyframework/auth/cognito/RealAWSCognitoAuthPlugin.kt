@@ -25,12 +25,10 @@ import com.amplifyframework.auth.AWSCognitoAuthMetadataType
 import com.amplifyframework.auth.AWSCredentials
 import com.amplifyframework.auth.AWSTemporaryCredentials
 import com.amplifyframework.auth.AuthChannelEventName
-import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthFactorType
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthSession
-import com.amplifyframework.auth.MFAType
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
@@ -39,13 +37,11 @@ import com.amplifyframework.auth.cognito.exceptions.service.InvalidAccountTypeEx
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidParameterException
 import com.amplifyframework.auth.cognito.exceptions.service.UserCancelledException
 import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
-import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
-import com.amplifyframework.auth.cognito.helpers.getAllowedMFATypesFromChallengeParameters
+import com.amplifyframework.auth.cognito.helpers.UserPoolSignInHelper
 import com.amplifyframework.auth.cognito.helpers.getMFASetupTypeOrNull
 import com.amplifyframework.auth.cognito.helpers.getMFATypeOrNull
 import com.amplifyframework.auth.cognito.helpers.identityProviderName
 import com.amplifyframework.auth.cognito.helpers.isMfaSetupSelectionChallenge
-import com.amplifyframework.auth.cognito.helpers.value
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignOutOptions
@@ -102,7 +98,6 @@ import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
-import com.amplifyframework.statemachine.codegen.states.SRPSignInState
 import com.amplifyframework.statemachine.codegen.states.SetupTOTPState
 import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
 import com.amplifyframework.statemachine.codegen.states.SignInState
@@ -112,9 +107,6 @@ import java.lang.ref.WeakReference
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.takeWhile
 
@@ -237,73 +229,31 @@ internal class RealAWSCognitoAuthPlugin(
                 val authNState = authState.authNState
                 val authZState = authState.authZState
                 when {
-                    authNState is AuthenticationState.SigningIn -> {
-                        val signInState = authNState.signInState
-                        val srpSignInState = (signInState as? SignInState.SigningInWithSRP)?.srpSignInState
-                        val challengeState = (signInState as? SignInState.ResolvingChallenge)?.challengeState
-                        val totpSetupState = (signInState as? SignInState.ResolvingTOTPSetup)?.setupTOTPState
-                        val webAuthnState = (signInState as? SignInState.SigningInWithWebAuthn)?.webAuthnSignInState
-                        when {
-                            srpSignInState is SRPSignInState.Error -> {
-                                authStateMachine.cancel(token)
-                                onError.accept(
-                                    CognitoAuthExceptionConverter.lookup(srpSignInState.exception, "Sign in failed.")
-                                )
-                            }
-                            signInState is SignInState.Error -> {
-                                authStateMachine.cancel(token)
-                                onError.accept(
-                                    CognitoAuthExceptionConverter.lookup(signInState.exception, "Sign in failed.")
-                                )
-                            }
-                            challengeState is SignInChallengeState.WaitingForAnswer -> {
-                                authStateMachine.cancel(token)
-                                SignInChallengeHelper.getNextStep(challengeState.challenge, onSuccess, onError)
-                            }
-                            webAuthnState is WebAuthnSignInState.Error -> {
-                                authStateMachine.cancel(token)
-                                onError.accept(
-                                    CognitoAuthExceptionConverter.lookup(webAuthnState.exception, "Sign in failed")
-                                )
-                            }
-
-                            totpSetupState is SetupTOTPState.WaitingForAnswer -> {
-                                authStateMachine.cancel(token)
-                                SignInChallengeHelper.getNextStep(
-                                    AuthChallenge(
-                                        ChallengeNameType.MfaSetup.value,
-                                        null,
-                                        null,
-                                        totpSetupState.challengeParams
-                                    ),
-                                    onSuccess,
-                                    onError,
-                                    totpSetupState.signInTOTPSetupData
-                                )
-                                totpSetupState.hasNewResponse = false
-                            }
-                        }
+                    authNState is AuthenticationState.Error -> {
+                        authStateMachine.cancel(token)
+                        onError.accept(
+                            CognitoAuthExceptionConverter.lookup(authNState.exception, "Confirm sign in failed")
+                        )
                     }
                     authNState is AuthenticationState.SignedIn &&
                         authZState is AuthorizationState.SessionEstablished -> {
                         authStateMachine.cancel(token)
-                        val authSignInResult = AuthSignInResult(
-                            true,
-                            AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null, null, null, null)
-                        )
-                        onSuccess.accept(authSignInResult)
+                        onSuccess.accept(UserPoolSignInHelper.signInDoneResult())
                         sendHubEvent(AuthChannelEventName.SIGNED_IN.toString())
                     }
-                    authNState is AuthenticationState.Error -> {
-                        authStateMachine.cancel(token)
-                        val exception = if (authNState.exception is AuthException) {
-                            authNState.exception
-                        } else {
-                            UnknownException(cause = authNState.exception)
+                    authNState is AuthenticationState.SigningIn -> {
+                        var result: AuthSignInResult? = null
+                        try {
+                            result = UserPoolSignInHelper.checkNextStep(authNState.signInState)
+                        } catch (e: Exception) {
+                            authStateMachine.cancel(token)
+                            onError.accept(CognitoAuthExceptionConverter.lookup(e, "Confirm sign in failed"))
                         }
-                        onError.accept(exception)
+                        if (result != null) {
+                            authStateMachine.cancel(token)
+                            onSuccess.accept(result)
+                        }
                     }
-                    else -> Unit
                 }
             },
             {
@@ -419,148 +369,31 @@ internal class RealAWSCognitoAuthPlugin(
             { authState ->
                 val authNState = authState.authNState
                 val authZState = authState.authZState
-                val signInState = (authNState as? AuthenticationState.SigningIn)?.signInState
-                val totpSetupState = (signInState as? SignInState.ResolvingTOTPSetup)?.setupTOTPState
                 when {
+                    authNState is AuthenticationState.Error -> {
+                        authStateMachine.cancel(token)
+                        onError.accept(
+                            CognitoAuthExceptionConverter.lookup(authNState.exception, "Confirm sign in failed")
+                        )
+                    }
                     authNState is AuthenticationState.SignedIn &&
                         authZState is AuthorizationState.SessionEstablished -> {
                         authStateMachine.cancel(token)
-                        val authSignInResult = AuthSignInResult(
-                            true,
-                            AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null, null, null, null)
-                        )
-                        onSuccess.accept(authSignInResult)
+                        onSuccess.accept(UserPoolSignInHelper.signInDoneResult())
                         sendHubEvent(AuthChannelEventName.SIGNED_IN.toString())
                     }
-                    signInState is SignInState.Error -> {
-                        authStateMachine.cancel(token)
-                        onError.accept(
-                            CognitoAuthExceptionConverter.lookup(
-                                signInState.exception,
-                                "Confirm Sign in failed."
-                            )
-                        )
-                    }
-
-                    signInState is SignInState.ResolvingChallenge &&
-                        signInState.challengeState is SignInChallengeState.WaitingForAnswer &&
-                        (signInState.challengeState as SignInChallengeState.WaitingForAnswer).hasNewResponse -> {
-                        authStateMachine.cancel(token)
-                        val signInChallengeState = signInState.challengeState as SignInChallengeState.WaitingForAnswer
-                        var allowedMFATypes: Set<MFAType>? = null
-                        var codeDeliveryDetails: AuthCodeDeliveryDetails? = null
-
-                        if (signInChallengeState.challenge.challengeNameType == ChallengeNameType.MfaSetup ||
-                            signInChallengeState.challenge.challengeNameType == ChallengeNameType.EmailOtp ||
-                            signInChallengeState.challenge.challengeNameType == ChallengeNameType.SmsOtp
-                        ) {
-                            SignInChallengeHelper.getNextStep(
-                                signInChallengeState.challenge,
-                                onSuccess,
-                                onError
-                            )
-                            (signInState.challengeState as SignInChallengeState.WaitingForAnswer).hasNewResponse = false
-                            return@listen
+                    authNState is AuthenticationState.SigningIn -> {
+                        var result: AuthSignInResult? = null
+                        try {
+                            result = UserPoolSignInHelper.checkNextStep(authNState.signInState)
+                        } catch (e: Exception) {
+                            authStateMachine.cancel(token)
+                            onError.accept(CognitoAuthExceptionConverter.lookup(e, "Confirm sign in failed"))
                         }
-
-                        val signInStep = when (signInChallengeState.challenge.challengeNameType) {
-                            ChallengeNameType.SmsMfa -> AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE
-                            ChallengeNameType.NewPasswordRequired -> AuthSignInStep.CONFIRM_SIGN_IN_WITH_NEW_PASSWORD
-                            ChallengeNameType.SoftwareTokenMfa -> AuthSignInStep.CONFIRM_SIGN_IN_WITH_TOTP_CODE
-                            ChallengeNameType.SelectMfaType -> {
-                                allowedMFATypes =
-                                    getAllowedMFATypesFromChallengeParameters(signInChallengeState.challenge.parameters)
-                                AuthSignInStep.CONTINUE_SIGN_IN_WITH_MFA_SELECTION
-                            }
-                            ChallengeNameType.EmailOtp, ChallengeNameType.SmsOtp -> {
-                                signInChallengeState.challenge.parameters?.get(
-                                    "CODE_DELIVERY_DELIVERY_MEDIUM"
-                                )?.let { medium ->
-                                    signInChallengeState.challenge.parameters["CODE_DELIVERY_DESTINATION"]
-                                        ?.let { destination ->
-                                            codeDeliveryDetails = AuthCodeDeliveryDetails(
-                                                destination,
-                                                AuthCodeDeliveryDetails.DeliveryMedium.fromString(medium)
-                                            )
-                                        }
-                                }
-                                AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP
-                            }
-                            ChallengeNameType.Password, ChallengeNameType.PasswordSrp -> {
-                                AuthSignInStep.CONFIRM_SIGN_IN_WITH_PASSWORD
-                            }
-                            else -> AuthSignInStep.CONFIRM_SIGN_IN_WITH_CUSTOM_CHALLENGE
+                        if (result != null) {
+                            authStateMachine.cancel(token)
+                            onSuccess.accept(result)
                         }
-                        val authSignInResult = AuthSignInResult(
-                            false,
-                            AuthNextSignInStep(
-                                signInStep,
-                                signInChallengeState.challenge.parameters ?: mapOf(),
-                                codeDeliveryDetails,
-                                null,
-                                allowedMFATypes,
-                                null
-                            )
-                        )
-                        onSuccess.accept(authSignInResult)
-                        (signInState.challengeState as SignInChallengeState.WaitingForAnswer).hasNewResponse = false
-                    }
-
-                    signInState is SignInState.ResolvingTOTPSetup &&
-                        totpSetupState is SetupTOTPState.WaitingForAnswer &&
-                        totpSetupState.hasNewResponse -> {
-                        authStateMachine.cancel(token)
-                        SignInChallengeHelper.getNextStep(
-                            AuthChallenge(
-                                ChallengeNameType.MfaSetup.value,
-                                null,
-                                null,
-                                totpSetupState.challengeParams
-                            ),
-                            onSuccess,
-                            onError,
-                            totpSetupState.signInTOTPSetupData
-                        )
-                        totpSetupState.hasNewResponse = false
-                    }
-
-                    signInState is SignInState.ResolvingTOTPSetup &&
-                        totpSetupState is SetupTOTPState.Error &&
-                        totpSetupState.hasNewResponse -> {
-                        authStateMachine.cancel(token)
-                        onError.accept(
-                            CognitoAuthExceptionConverter.lookup(
-                                totpSetupState.exception,
-                                "Confirm Sign in failed."
-                            )
-                        )
-                        totpSetupState.hasNewResponse = false
-                    }
-
-                    signInState is SignInState.ResolvingChallenge &&
-                        signInState.challengeState is SignInChallengeState.Error &&
-                        (signInState.challengeState as SignInChallengeState.Error).hasNewResponse -> {
-                        authStateMachine.cancel(token)
-                        onError.accept(
-                            CognitoAuthExceptionConverter.lookup(
-                                (
-                                    signInState.challengeState as SignInChallengeState.Error
-                                    ).exception,
-                                "Confirm Sign in failed."
-                            )
-                        )
-                        (signInState.challengeState as SignInChallengeState.Error).hasNewResponse = false
-                    }
-
-                    signInState is SignInState.SigningInWithWebAuthn &&
-                        signInState.webAuthnSignInState is WebAuthnSignInState.Error &&
-                        (signInState.webAuthnSignInState as WebAuthnSignInState.Error).hasNewResponse -> {
-                        val errorState = signInState.webAuthnSignInState as WebAuthnSignInState.Error
-                        authStateMachine.cancel(token)
-                        onError.accept(
-                            CognitoAuthExceptionConverter.lookup(errorState.exception, "Confirm Sign in failed.")
-                        )
-                        errorState.hasNewResponse = false
                     }
                 }
             },
@@ -991,23 +824,6 @@ internal class RealAWSCognitoAuthPlugin(
         }
     }
 
-    private suspend fun getSession(): AWSCognitoAuthSession = suspendCoroutine { continuation ->
-        fetchAuthSession(
-            { authSession ->
-                if (authSession is AWSCognitoAuthSession) {
-                    continuation.resume(authSession)
-                } else {
-                    continuation.resumeWithException(
-                        UnknownException(
-                            message = "fetchAuthSession did not return a type of AWSCognitoAuthSession"
-                        )
-                    )
-                }
-            },
-            { continuation.resumeWithException(it) }
-        )
-    }
-
     fun fetchAuthSession(onSuccess: Consumer<AuthSession>, onError: Consumer<AuthException>) {
         fetchAuthSession(AuthFetchSessionOptions.defaults(), onSuccess, onError)
     }
@@ -1403,6 +1219,24 @@ internal class RealAWSCognitoAuthPlugin(
                     sendHubEvent(AWSCognitoAuthChannelEventName.FEDERATION_TO_IDENTITY_POOL_CLEARED.toString())
                 }
             }
+        }
+    }
+
+    private inline fun <T : Any> callSafely(
+        onSuccess: Consumer<T>,
+        onError: Consumer<AuthException>,
+        fallbackMessage: String,
+        func: () -> T?
+    ) {
+        val result: T?
+        try {
+            result = func()
+        } catch (e: Exception) {
+            onError.accept(CognitoAuthExceptionConverter.lookup(e, fallbackMessage))
+            return
+        }
+        if (result != null) {
+            onSuccess.accept(result)
         }
     }
 
