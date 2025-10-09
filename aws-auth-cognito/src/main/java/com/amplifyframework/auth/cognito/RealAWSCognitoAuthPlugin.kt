@@ -18,7 +18,6 @@ package com.amplifyframework.auth.cognito
 import android.app.Activity
 import android.content.Intent
 import androidx.annotation.WorkerThread
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.AWSCognitoAuthMetadataType
@@ -26,7 +25,6 @@ import com.amplifyframework.auth.AWSCredentials
 import com.amplifyframework.auth.AWSTemporaryCredentials
 import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.AuthException
-import com.amplifyframework.auth.AuthFactorType
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthConfigurationException
@@ -34,19 +32,11 @@ import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoo
 import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
 import com.amplifyframework.auth.cognito.exceptions.service.HostedUISignOutException
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidAccountTypeException
-import com.amplifyframework.auth.cognito.exceptions.service.InvalidParameterException
 import com.amplifyframework.auth.cognito.exceptions.service.UserCancelledException
 import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
-import com.amplifyframework.auth.cognito.helpers.UserPoolSignInHelper
-import com.amplifyframework.auth.cognito.helpers.getMFASetupTypeOrNull
-import com.amplifyframework.auth.cognito.helpers.getMFATypeOrNull
 import com.amplifyframework.auth.cognito.helpers.identityProviderName
-import com.amplifyframework.auth.cognito.helpers.isMfaSetupSelectionChallenge
-import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignInOptions
-import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignOutOptions
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions
-import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
 import com.amplifyframework.auth.cognito.result.AWSCognitoAuthSignOutResult
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
@@ -60,9 +50,7 @@ import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.exceptions.UnknownException
-import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
-import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthSignInResult
@@ -77,33 +65,22 @@ import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.HostedUIErrorData
 import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignOutData
-import com.amplifyframework.statemachine.codegen.data.WebAuthnSignInContext
-import com.amplifyframework.statemachine.codegen.data.challengeNameType
 import com.amplifyframework.statemachine.codegen.errors.SessionError
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.events.HostedUIEvent
-import com.amplifyframework.statemachine.codegen.events.SetupTOTPEvent
-import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
-import com.amplifyframework.statemachine.codegen.events.SignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
-import com.amplifyframework.statemachine.codegen.states.SetupTOTPState
-import com.amplifyframework.statemachine.codegen.states.SignInChallengeState
-import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
-import com.amplifyframework.statemachine.codegen.states.WebAuthnSignInState
-import java.lang.ref.WeakReference
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
@@ -159,429 +136,6 @@ internal class RealAWSCognitoAuthPlugin(
 
     internal suspend fun suspendWhileConfiguring() {
         authStateMachine.state.takeWhile { it !is AuthState.Configured && it !is AuthState.Error }.collect()
-    }
-
-    fun signIn(
-        username: String?,
-        password: String?,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
-    ) {
-        signIn(username, password, AuthSignInOptions.defaults(), onSuccess, onError)
-    }
-
-    fun signIn(
-        username: String?,
-        password: String?,
-        options: AuthSignInOptions,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
-    ) {
-        authStateMachine.getCurrentState { authState ->
-            val signInOptions = options as? AWSCognitoAuthSignInOptions ?: AWSCognitoAuthSignInOptions.builder()
-                .authFlowType(configuration.authFlowType)
-                .build()
-            when (authState.authNState) {
-                is AuthenticationState.NotConfigured -> onError.accept(
-                    InvalidUserPoolConfigurationException()
-                )
-                // Continue sign in
-                is AuthenticationState.SignedOut,
-                is AuthenticationState.Configured
-                -> {
-                    _signIn(username, password, signInOptions, onSuccess, onError)
-                }
-                is AuthenticationState.SignedIn -> onError.accept(SignedInException())
-                is AuthenticationState.SigningIn -> {
-                    val token = StateChangeListenerToken()
-                    authStateMachine.listen(
-                        token,
-                        { authState ->
-                            when (authState.authNState) {
-                                is AuthenticationState.SignedOut -> {
-                                    authStateMachine.cancel(token)
-                                    _signIn(username, password, signInOptions, onSuccess, onError)
-                                }
-                                else -> Unit
-                            }
-                        },
-                        {
-                            authStateMachine.send(AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn()))
-                        }
-                    )
-                }
-                else -> onError.accept(InvalidStateException())
-            }
-        }
-    }
-
-    private fun _signIn(
-        username: String?,
-        password: String?,
-        options: AWSCognitoAuthSignInOptions,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
-    ) {
-        val token = StateChangeListenerToken()
-        authStateMachine.listen(
-            token,
-            { authState ->
-                val authNState = authState.authNState
-                val authZState = authState.authZState
-                when {
-                    authNState is AuthenticationState.Error -> {
-                        authStateMachine.cancel(token)
-                        onError.accept(
-                            CognitoAuthExceptionConverter.lookup(authNState.exception, "Sign in failed")
-                        )
-                    }
-                    authNState is AuthenticationState.SignedIn &&
-                        authZState is AuthorizationState.SessionEstablished -> {
-                        authStateMachine.cancel(token)
-                        onSuccess.accept(UserPoolSignInHelper.signedInResult())
-                        sendHubEvent(AuthChannelEventName.SIGNED_IN.toString())
-                    }
-                    authNState is AuthenticationState.SigningIn -> {
-                        var result: AuthSignInResult? = null
-                        try {
-                            result = UserPoolSignInHelper.checkNextStep(authNState.signInState)
-                        } catch (e: Exception) {
-                            authStateMachine.cancel(token)
-                            onError.accept(CognitoAuthExceptionConverter.lookup(e, "Sign in failed"))
-                        }
-                        if (result != null) {
-                            authStateMachine.cancel(token)
-                            onSuccess.accept(result)
-                        }
-                    }
-                }
-            },
-            {
-                val signInData = when (options.authFlowType ?: configuration.authFlowType) {
-                    AuthFlowType.USER_SRP_AUTH -> {
-                        SignInData.SRPSignInData(username, password, options.metadata, AuthFlowType.USER_SRP_AUTH)
-                    }
-                    AuthFlowType.CUSTOM_AUTH, AuthFlowType.CUSTOM_AUTH_WITHOUT_SRP -> {
-                        SignInData.CustomAuthSignInData(username, options.metadata)
-                    }
-                    AuthFlowType.CUSTOM_AUTH_WITH_SRP -> {
-                        SignInData.CustomSRPAuthSignInData(username, password, options.metadata)
-                    }
-                    AuthFlowType.USER_PASSWORD_AUTH -> {
-                        SignInData.MigrationAuthSignInData(
-                            username = username,
-                            password = password,
-                            metadata = options.metadata,
-                            authFlowType = AuthFlowType.USER_PASSWORD_AUTH
-                        )
-                    }
-                    AuthFlowType.USER_AUTH -> {
-                        when (options.preferredFirstFactor) {
-                            AuthFactorType.PASSWORD -> {
-                                SignInData.MigrationAuthSignInData(
-                                    username = username,
-                                    password = password,
-                                    metadata = options.metadata,
-                                    authFlowType = AuthFlowType.USER_AUTH
-                                )
-                            }
-                            AuthFactorType.PASSWORD_SRP -> {
-                                SignInData.SRPSignInData(username, password, options.metadata, AuthFlowType.USER_AUTH)
-                            }
-                            else -> {
-                                SignInData.UserAuthSignInData(
-                                    username = username,
-                                    preferredChallenge = options.preferredFirstFactor,
-                                    callingActivity = options.callingActivity,
-                                    metadata = options.metadata
-                                )
-                            }
-                        }
-                    }
-                }
-                val event = AuthenticationEvent(AuthenticationEvent.EventType.SignInRequested(signInData))
-                authStateMachine.send(event)
-            }
-        )
-    }
-
-    fun confirmSignIn(
-        challengeResponse: String,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
-    ) {
-        confirmSignIn(challengeResponse, AuthConfirmSignInOptions.defaults(), onSuccess, onError)
-    }
-
-    fun confirmSignIn(
-        challengeResponse: String,
-        options: AuthConfirmSignInOptions,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
-    ) {
-        authStateMachine.getCurrentState { authState ->
-            val authNState = authState.authNState
-            val signInState = (authNState as? AuthenticationState.SigningIn)?.signInState
-            if (signInState is SignInState.ResolvingChallenge) {
-                when (signInState.challengeState) {
-                    is SignInChallengeState.WaitingForAnswer, is SignInChallengeState.Error -> {
-                        _confirmSignIn(signInState, challengeResponse, options, onSuccess, onError)
-                    }
-                    else -> {
-                        onError.accept(InvalidStateException())
-                    }
-                }
-            } else if (signInState is SignInState.ResolvingTOTPSetup) {
-                when (signInState.setupTOTPState) {
-                    is SetupTOTPState.WaitingForAnswer, is SetupTOTPState.Error -> {
-                        _confirmSignIn(signInState, challengeResponse, options, onSuccess, onError)
-                    }
-
-                    else -> onError.accept(InvalidStateException())
-                }
-            } else if (signInState is SignInState.SigningInWithWebAuthn) {
-                when (signInState.webAuthnSignInState) {
-                    is WebAuthnSignInState.Error -> _confirmSignIn(
-                        signInState,
-                        challengeResponse,
-                        options,
-                        onSuccess,
-                        onError
-                    )
-                    else -> onError.accept(InvalidStateException())
-                }
-            } else {
-                onError.accept(InvalidStateException())
-            }
-        }
-    }
-
-    private fun _confirmSignIn(
-        signInState: SignInState,
-        challengeResponse: String,
-        options: AuthConfirmSignInOptions,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
-    ) {
-        val token = StateChangeListenerToken()
-        authStateMachine.listen(
-            token,
-            { authState ->
-                val authNState = authState.authNState
-                val authZState = authState.authZState
-                when {
-                    authNState is AuthenticationState.Error -> {
-                        authStateMachine.cancel(token)
-                        onError.accept(
-                            CognitoAuthExceptionConverter.lookup(authNState.exception, "Confirm sign in failed")
-                        )
-                    }
-                    authNState is AuthenticationState.SignedIn &&
-                        authZState is AuthorizationState.SessionEstablished -> {
-                        authStateMachine.cancel(token)
-                        onSuccess.accept(UserPoolSignInHelper.signedInResult())
-                        sendHubEvent(AuthChannelEventName.SIGNED_IN.toString())
-                    }
-                    authNState is AuthenticationState.SigningIn -> {
-                        var result: AuthSignInResult? = null
-                        try {
-                            result = UserPoolSignInHelper.checkNextStep(authNState.signInState)
-                        } catch (e: Exception) {
-                            authStateMachine.cancel(token)
-                            onError.accept(CognitoAuthExceptionConverter.lookup(e, "Confirm sign in failed"))
-                        }
-                        if (result != null) {
-                            authStateMachine.cancel(token)
-                            onSuccess.accept(result)
-                        }
-                    }
-                }
-            },
-            {
-                val awsCognitoConfirmSignInOptions = options as? AWSCognitoAuthConfirmSignInOptions
-                val metadata = awsCognitoConfirmSignInOptions?.metadata ?: emptyMap()
-                val userAttributes = awsCognitoConfirmSignInOptions?.userAttributes ?: emptyList()
-                when (signInState) {
-                    is SignInState.ResolvingChallenge -> {
-                        val challengeState = signInState.challengeState
-                        if (challengeState is SignInChallengeState.WaitingForAnswer &&
-                            challengeState.challenge.challengeNameType == ChallengeNameType.SelectMfaType &&
-                            getMFATypeOrNull(challengeResponse) == null
-                        ) {
-                            val error = InvalidParameterException(
-                                message = "Value for challengeResponse must be one of " +
-                                    "SMS_MFA, EMAIL_OTP or SOFTWARE_TOKEN_MFA"
-                            )
-                            onError.accept(error)
-                            authStateMachine.cancel(token)
-                        } else if (challengeState is SignInChallengeState.WaitingForAnswer &&
-                            isMfaSetupSelectionChallenge(challengeState.challenge) &&
-                            getMFASetupTypeOrNull(challengeResponse) == null
-                        ) {
-                            val error = InvalidParameterException(
-                                message = "Value for challengeResponse must be one of EMAIL_OTP or SOFTWARE_TOKEN_MFA"
-                            )
-                            onError.accept(error)
-                            authStateMachine.cancel(token)
-                        } else if (challengeState is SignInChallengeState.WaitingForAnswer &&
-                            challengeState.challenge.challengeNameType == ChallengeNameType.SelectChallenge &&
-                            challengeResponse == AuthFactorType.WEB_AUTHN.challengeResponse
-                        ) {
-                            val username = challengeState.challenge.username!!
-                            val session = challengeState.challenge.session
-                            val signInContext = WebAuthnSignInContext(
-                                username = username,
-                                callingActivity = awsCognitoConfirmSignInOptions?.callingActivity ?: WeakReference(
-                                    null
-                                ),
-                                session = session
-                            )
-                            val event = SignInEvent(SignInEvent.EventType.InitiateWebAuthnSignIn(signInContext))
-                            authStateMachine.send(event)
-                        } else if (challengeState is SignInChallengeState.WaitingForAnswer &&
-                            challengeState.challenge.challengeNameType == ChallengeNameType.SelectChallenge &&
-                            challengeResponse == ChallengeNameType.Password.value
-                        ) {
-                            val event = SignInEvent(
-                                SignInEvent.EventType.ReceivedChallenge(
-                                    AuthChallenge(
-                                        challengeName = ChallengeNameType.Password.value,
-                                        username = challengeState.challenge.username,
-                                        session = challengeState.challenge.session,
-                                        parameters = challengeState.challenge.parameters
-                                    ),
-                                    signInMethod = challengeState.signInMethod
-                                )
-                            )
-                            authStateMachine.send(event)
-                        } else if (challengeState is SignInChallengeState.WaitingForAnswer &&
-                            challengeState.challenge.challengeNameType == ChallengeNameType.SelectChallenge &&
-                            challengeResponse == ChallengeNameType.PasswordSrp.value
-                        ) {
-                            val event = SignInEvent(
-                                SignInEvent.EventType.ReceivedChallenge(
-                                    AuthChallenge(
-                                        challengeName = ChallengeNameType.PasswordSrp.value,
-                                        username = challengeState.challenge.username,
-                                        session = challengeState.challenge.session,
-                                        parameters = challengeState.challenge.parameters
-                                    ),
-                                    signInMethod = challengeState.signInMethod
-                                )
-                            )
-                            authStateMachine.send(event)
-                        } else if (challengeState is SignInChallengeState.WaitingForAnswer &&
-                            challengeState.challenge.challengeNameType == ChallengeNameType.Password
-                        ) {
-                            val event = SignInEvent(
-                                SignInEvent.EventType.InitiateMigrateAuth(
-                                    username = challengeState.challenge.username!!,
-                                    password = challengeResponse,
-                                    metadata = metadata,
-                                    authFlowType = AuthFlowType.USER_AUTH,
-                                    respondToAuthChallenge = AuthChallenge(
-                                        challengeName = ChallengeNameType.SelectChallenge.value,
-                                        username = challengeState.challenge.username,
-                                        session = challengeState.challenge.session!!,
-                                        parameters = null
-                                    )
-                                )
-                            )
-                            authStateMachine.send(event)
-                        } else if (challengeState is SignInChallengeState.WaitingForAnswer &&
-                            challengeState.challenge.challengeNameType == ChallengeNameType.PasswordSrp
-                        ) {
-                            val event = SignInEvent(
-                                SignInEvent.EventType.InitiateSignInWithSRP(
-                                    username = challengeState.challenge.username!!,
-                                    password = challengeResponse,
-                                    metadata = metadata,
-                                    authFlowType = AuthFlowType.USER_AUTH,
-                                    respondToAuthChallenge = AuthChallenge(
-                                        challengeName = ChallengeNameType.SelectChallenge.value,
-                                        username = challengeState.challenge.username,
-                                        session = challengeState.challenge.session!!,
-                                        parameters = null
-                                    )
-                                )
-                            )
-                            authStateMachine.send(event)
-                        } else {
-                            val event = SignInChallengeEvent(
-                                SignInChallengeEvent.EventType.VerifyChallengeAnswer(
-                                    challengeResponse,
-                                    metadata,
-                                    userAttributes
-                                )
-                            )
-                            authStateMachine.send(event)
-                        }
-                    }
-
-                    is SignInState.ResolvingTOTPSetup -> {
-                        when (signInState.setupTOTPState) {
-                            is SetupTOTPState.WaitingForAnswer -> {
-                                val setupTOTPState =
-                                    (signInState.setupTOTPState as SetupTOTPState.WaitingForAnswer)
-
-                                val event = SetupTOTPEvent(
-                                    SetupTOTPEvent.EventType.VerifyChallengeAnswer(
-                                        challengeResponse,
-                                        setupTOTPState.signInTOTPSetupData.username,
-                                        setupTOTPState.signInTOTPSetupData.session,
-                                        awsCognitoConfirmSignInOptions?.friendlyDeviceName,
-                                        setupTOTPState.signInMethod
-                                    )
-                                )
-                                authStateMachine.send(event)
-                            }
-                            is SetupTOTPState.Error -> {
-                                val username =
-                                    (signInState.setupTOTPState as SetupTOTPState.Error).username
-                                val session =
-                                    (signInState.setupTOTPState as SetupTOTPState.Error).session
-                                val signInMethod =
-                                    (signInState.setupTOTPState as SetupTOTPState.Error).signInMethod
-
-                                val event = SetupTOTPEvent(
-                                    SetupTOTPEvent.EventType.VerifyChallengeAnswer(
-                                        challengeResponse,
-                                        username,
-                                        session,
-                                        awsCognitoConfirmSignInOptions?.friendlyDeviceName,
-                                        signInMethod
-                                    )
-                                )
-                                authStateMachine.send(event)
-                            }
-
-                            else -> {
-                                onError.accept(InvalidStateException())
-                                authStateMachine.cancel(token)
-                            }
-                        }
-                    }
-
-                    is SignInState.SigningInWithWebAuthn -> {
-                        if (signInState.webAuthnSignInState is WebAuthnSignInState.Error &&
-                            challengeResponse == AuthFactorType.WEB_AUTHN.challengeResponse
-                        ) {
-                            val signInContext = (signInState.webAuthnSignInState as WebAuthnSignInState.Error).context
-                            val event = SignInEvent(SignInEvent.EventType.InitiateWebAuthnSignIn(signInContext))
-                            authStateMachine.send(event)
-                        } else {
-                            onError.accept(InvalidStateException())
-                            authStateMachine.cancel(token)
-                        }
-                    }
-
-                    else -> {
-                        onError.accept(InvalidStateException())
-                        authStateMachine.cancel(token)
-                    }
-                }
-            }
-        )
     }
 
     fun signInWithSocialWebUI(

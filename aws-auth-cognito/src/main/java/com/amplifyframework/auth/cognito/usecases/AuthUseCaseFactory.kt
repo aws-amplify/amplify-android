@@ -160,4 +160,11 @@ internal class AuthUseCaseFactory(
         fetchAuthSession = fetchAuthSession(),
         stateMachine = stateMachine
     )
+
+    fun signIn() = SignInUseCase(
+        stateMachine = stateMachine,
+        configuration = authEnvironment.configuration
+    )
+
+    fun confirmSignIn() = ConfirmSignInUseCase(stateMachine = stateMachine)
 }

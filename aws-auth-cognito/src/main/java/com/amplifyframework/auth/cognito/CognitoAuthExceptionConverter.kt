@@ -102,5 +102,7 @@ internal class CognitoAuthExceptionConverter {
                 )
             else -> UnknownException(fallbackMessage, error)
         }
+
+        fun Exception.toAuthException(fallbackMessage: String) = lookup(this, fallbackMessage)
     }
 }
