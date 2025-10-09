@@ -232,7 +232,7 @@ internal class RealAWSCognitoAuthPlugin(
                     authNState is AuthenticationState.Error -> {
                         authStateMachine.cancel(token)
                         onError.accept(
-                            CognitoAuthExceptionConverter.lookup(authNState.exception, "Confirm sign in failed")
+                            CognitoAuthExceptionConverter.lookup(authNState.exception, "Sign in failed")
                         )
                     }
                     authNState is AuthenticationState.SignedIn &&
@@ -247,7 +247,7 @@ internal class RealAWSCognitoAuthPlugin(
                             result = UserPoolSignInHelper.checkNextStep(authNState.signInState)
                         } catch (e: Exception) {
                             authStateMachine.cancel(token)
-                            onError.accept(CognitoAuthExceptionConverter.lookup(e, "Confirm sign in failed"))
+                            onError.accept(CognitoAuthExceptionConverter.lookup(e, "Sign in failed"))
                         }
                         if (result != null) {
                             authStateMachine.cancel(token)
