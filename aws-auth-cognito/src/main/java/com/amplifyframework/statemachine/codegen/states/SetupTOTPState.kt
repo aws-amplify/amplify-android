@@ -30,9 +30,7 @@ internal sealed class SetupTOTPState : State {
         val signInTOTPSetupData: SignInTOTPSetupData,
         val challengeParams: Map<String, String>?,
         val signInMethod: SignInMethod
-    ) : SetupTOTPState() {
-        var hasNewResponse = true
-    }
+    ) : SetupTOTPState()
     data class Verifying(val id: String = "") : SetupTOTPState()
     data class RespondingToAuthChallenge(val id: String = "") : SetupTOTPState()
     data class Success(val id: String = "") : SetupTOTPState()
@@ -41,9 +39,7 @@ internal sealed class SetupTOTPState : State {
         val username: String,
         val session: String?,
         val signInMethod: SignInMethod
-    ) : SetupTOTPState() {
-        var hasNewResponse = true
-    }
+    ) : SetupTOTPState()
 
     class Resolver(private val setupTOTPActions: SetupTOTPActions) : StateMachineResolver<SetupTOTPState> {
         override val defaultState = NotStarted("default")

@@ -29,9 +29,7 @@ internal sealed class SignInChallengeState : State {
     data class WaitingForAnswer(
         val challenge: AuthChallenge,
         val signInMethod: SignInMethod
-    ) : SignInChallengeState() {
-        var hasNewResponse = true
-    }
+    ) : SignInChallengeState()
     data class Verifying(
         val id: String = "",
         val signInMethod: SignInMethod
@@ -41,9 +39,7 @@ internal sealed class SignInChallengeState : State {
         val exception: Exception,
         val challenge: AuthChallenge,
         val signInMethod: SignInMethod
-    ) : SignInChallengeState() {
-        var hasNewResponse = true
-    }
+    ) : SignInChallengeState()
 
     class Resolver(private val challengeActions: SignInChallengeActions) : StateMachineResolver<SignInChallengeState> {
         override val defaultState: SignInChallengeState = NotStarted()

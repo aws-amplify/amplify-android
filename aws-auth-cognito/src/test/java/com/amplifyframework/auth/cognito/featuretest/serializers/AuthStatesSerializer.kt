@@ -109,7 +109,7 @@ internal data class AuthStatesProxy(
         "AuthorizationState.SigningIn" -> AuthorizationState.SigningIn() as T
         "SignInState.ResolvingChallenge" -> SignInState.ResolvingChallenge(signInChallengeState) as T
         "SignInChallengeState.WaitingForAnswer" -> authChallenge?.let {
-            SignInChallengeState.WaitingForAnswer(it, signInMethod!!).apply { hasNewResponse = false }
+            SignInChallengeState.WaitingForAnswer(it, signInMethod!!)
         } as T
         else -> {
             error("Cannot get real type!")
