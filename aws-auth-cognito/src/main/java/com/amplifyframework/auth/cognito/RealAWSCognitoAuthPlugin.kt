@@ -83,7 +83,6 @@ import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
 import com.amplifyframework.statemachine.codegen.states.SignOutState
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.takeWhile
 
@@ -94,9 +93,6 @@ internal class RealAWSCognitoAuthPlugin(
     private val authStateMachine: AuthStateMachine,
     private val logger: Logger
 ) {
-
-    private val lastPublishedHubEventName = AtomicReference<String>()
-
     init {
         addAuthStateChangeListener()
         configureAuthStates()
@@ -777,9 +773,6 @@ internal class RealAWSCognitoAuthPlugin(
     }
 
     private fun sendHubEvent(eventName: String) {
-        if (lastPublishedHubEventName.get() != eventName) {
-            lastPublishedHubEventName.set(eventName)
-            Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(eventName))
-        }
+        Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(eventName))
     }
 }
