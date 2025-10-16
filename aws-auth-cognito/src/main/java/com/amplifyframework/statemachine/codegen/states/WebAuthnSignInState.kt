@@ -31,8 +31,9 @@ internal sealed class WebAuthnSignInState : State {
     data class AssertingCredentials(val id: String = "") : WebAuthnSignInState()
     data class VerifyingCredentialsAndSigningIn(val id: String = "") : WebAuthnSignInState()
     data class SignedIn(val id: String = "") : WebAuthnSignInState()
-    data class Error(val exception: Exception, val context: WebAuthnSignInContext, var hasNewResponse: Boolean) :
-        WebAuthnSignInState()
+    data class Error(val exception: Exception, val context: WebAuthnSignInContext) : WebAuthnSignInState() {
+        var hasNewResponse = true
+    }
 
     class Resolver(private val actions: WebAuthnSignInActions, private val signInActions: SignInActions) :
         StateMachineResolver<WebAuthnSignInState> {
@@ -48,7 +49,7 @@ internal sealed class WebAuthnSignInState : State {
             // Thrown errors always result in the error state
             if (webAuthnEvent is WebAuthnEvent.EventType.ThrowError) {
                 return StateResolution(
-                    Error(webAuthnEvent.exception, webAuthnEvent.signInContext, hasNewResponse = true)
+                    Error(webAuthnEvent.exception, webAuthnEvent.signInContext)
                 )
             }
 

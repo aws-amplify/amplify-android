@@ -25,8 +25,7 @@ internal class SignInChallengeEvent(val eventType: EventType, override val time:
     sealed class EventType {
         data class WaitForAnswer(
             val challenge: AuthChallenge,
-            val signInMethod: SignInMethod,
-            val hasNewResponse: Boolean = false
+            val signInMethod: SignInMethod
         ) : EventType()
         data class VerifyChallengeAnswer(
             val answer: String,
@@ -44,8 +43,7 @@ internal class SignInChallengeEvent(val eventType: EventType, override val time:
         data class Verified(val id: String = "") : EventType()
         data class ThrowError(
             val exception: Exception,
-            val challenge: AuthChallenge,
-            val hasNewResponse: Boolean = false
+            val challenge: AuthChallenge
         ) : EventType()
     }
 

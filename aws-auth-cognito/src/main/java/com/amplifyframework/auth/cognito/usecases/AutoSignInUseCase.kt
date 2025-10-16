@@ -19,18 +19,16 @@ import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.cognito.AuthStateMachine
 import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
+import com.amplifyframework.auth.cognito.helpers.UserPoolSignInHelper
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.plugins.core.AuthHubEventEmitter
 import com.amplifyframework.auth.result.AuthSignInResult
-import com.amplifyframework.auth.result.step.AuthNextSignInStep
-import com.amplifyframework.auth.result.step.AuthSignInStep
 import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.data.SignUpData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
-import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
@@ -95,30 +93,14 @@ internal class AutoSignInUseCase(
                 val authNState = authState.authNState
                 val authZState = authState.authZState
                 when {
+                    authNState is AuthenticationState.Error -> throw authNState.exception
                     authNState is AuthenticationState.SigningIn -> {
-                        val signInState = authNState.signInState
-                        if (signInState is SignInState.Error) {
-                            throw CognitoAuthExceptionConverter.lookup(signInState.exception, "Sign in failed.")
-                        }
-                        null
+                        UserPoolSignInHelper.checkNextStep(signInState = authNState.signInState)
                     }
                     authNState is AuthenticationState.SignedIn &&
                         authZState is AuthorizationState.SessionEstablished -> {
-                        // There are never any next steps for autoSignIn - if it succeeds then the user is fully
-                        // signed in
-                        val authSignInResult = AuthSignInResult(
-                            true,
-                            AuthNextSignInStep(
-                                AuthSignInStep.DONE,
-                                mapOf(),
-                                null,
-                                null,
-                                null,
-                                null
-                            )
-                        )
                         hubEmitter.sendHubEvent(AuthChannelEventName.SIGNED_IN.toString())
-                        authSignInResult
+                        UserPoolSignInHelper.signedInResult()
                     }
                     else -> null
                 }
