@@ -20,13 +20,14 @@ import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.amplifyframework.auth.AuthChannelEventName
-import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.cognito.testutils.Credentials
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.InitializationStatus
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.testutils.HubAccumulator
+import com.amplifyframework.testutils.assertAwait
 import com.amplifyframework.testutils.await
+import com.amplifyframework.testutils.sync.SynchronousAuth
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.seconds
@@ -43,7 +44,8 @@ import org.junit.runner.RunWith
 class AWSCognitoAuthPluginInstrumentationTests {
 
     companion object {
-        var auth = AWSCognitoAuthPlugin()
+        val auth = AWSCognitoAuthPlugin()
+        val syncAuth = SynchronousAuth.delegatingTo(auth)
 
         @BeforeClass
         @JvmStatic
@@ -60,7 +62,7 @@ class AWSCognitoAuthPluginInstrumentationTests {
                             latch.countDown()
                     }
                 }
-                latch.await(20, TimeUnit.SECONDS)
+                latch.assertAwait(20, TimeUnit.SECONDS)
             } catch (ex: Exception) {
                 Log.i("AWSCognitoAuthPluginInstrumentationTests", "Error initializing", ex)
             }
@@ -70,7 +72,7 @@ class AWSCognitoAuthPluginInstrumentationTests {
     @Before
     fun setup() {
         signOut()
-        Thread.sleep(1000) // ensure signout has time to complete
+        Thread.sleep(5000) // ensure signout has time to complete
     }
 
     @Test
@@ -118,19 +120,7 @@ class AWSCognitoAuthPluginInstrumentationTests {
     fun fetchAuthSession_can_pull_session_when_signed_in() {
         signInWithCognito()
 
-        lateinit var session: AuthSession
-        val latch = CountDownLatch(1)
-
-        auth.fetchAuthSession(
-            {
-                session = it
-                latch.countDown()
-            },
-            {
-                latch.countDown()
-            }
-        )
-        latch.await(10.seconds)
+        val session = syncAuth.fetchAuthSession()
 
         assertTrue(session.isSignedIn)
         with(session as AWSCognitoAuthSession) {
@@ -145,20 +135,7 @@ class AWSCognitoAuthPluginInstrumentationTests {
     fun fetchAuthSession_does_not_throw_error_even_when_signed_out() {
         signOut()
 
-        lateinit var session: AuthSession
-
-        val latch = CountDownLatch(1)
-
-        auth.fetchAuthSession(
-            {
-                session = it
-                latch.countDown()
-            },
-            {
-                latch.countDown()
-            }
-        )
-        latch.await(10.seconds)
+        val session = syncAuth.fetchAuthSession()
 
         assertFalse(session.isSignedIn)
         with(session as AWSCognitoAuthSession) {
@@ -173,80 +150,24 @@ class AWSCognitoAuthPluginInstrumentationTests {
     fun rememberDevice_succeeds_after_signIn_and_signOut() {
         signInWithCognito()
 
-        val rememberLatch = CountDownLatch(1)
-
-        auth.rememberDevice(
-            {
-                rememberLatch.countDown()
-            },
-            {
-                rememberLatch.countDown()
-                assertTrue(false)
-            }
-        )
-
-        rememberLatch.await(10.seconds)
-
-        val forgetLatch = CountDownLatch(1)
-
-        auth.forgetDevice(
-            {
-                forgetLatch.countDown()
-            },
-            {
-                forgetLatch.countDown()
-                assertTrue(false)
-            }
-        )
-
-        forgetLatch.await(10.seconds)
+        syncAuth.rememberDevice()
+        syncAuth.forgetDevice()
 
         signOut()
         signInWithCognito()
 
-        val rememberLatch2 = CountDownLatch(1)
-
-        auth.rememberDevice(
-            {
-                rememberLatch2.countDown()
-            },
-            {
-                assertTrue(false)
-                rememberLatch2.countDown()
-            }
-        )
-
-        rememberLatch2.await(10.seconds)
-
-        val forgetLatch2 = CountDownLatch(1)
-
-        auth.forgetDevice(
-            {
-                forgetLatch2.countDown()
-            },
-            {
-                assertTrue(false)
-                forgetLatch2.countDown()
-            }
-        )
-
-        forgetLatch2.await(10.seconds)
+        syncAuth.rememberDevice()
+        syncAuth.forgetDevice()
     }
 
-    private fun signInWithCognito(synchronous: Boolean = true) {
+    private fun signInWithCognito() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val (username, password) = Credentials.load(context)
-
-        val latch = CountDownLatch(1)
-        auth.signIn(username, password, { latch.countDown() }, { latch.countDown() })
-
-        if (synchronous) latch.await()
+        syncAuth.signIn(username, password)
     }
 
-    private fun signOut(synchronous: Boolean = true) {
-        val latch = CountDownLatch(1)
-        auth.signOut { latch.countDown() }
-        if (synchronous) latch.await()
+    private fun signOut() {
+        syncAuth.signOut()
     }
 
     // Creates and starts a HubAccumulator, runs the supplied block, and then stops the accumulator

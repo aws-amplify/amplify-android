@@ -25,9 +25,9 @@ import com.amplifyframework.auth.cognito.result.AWSCognitoAuthSignOutResult
 import com.amplifyframework.auth.cognito.testutils.Credentials
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.testutils.assertAwait
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.BeforeClass
@@ -67,7 +67,7 @@ class AuthStressTests {
         Amplify.Auth.signOut {
             latch.countDown()
         }
-        latch.await(TIMEOUT_S, TimeUnit.SECONDS)
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
         val context = ApplicationProvider.getApplicationContext<Context>()
         Credentials.load(context).let {
             username = it.first
@@ -92,8 +92,8 @@ class AuthStressTests {
             )
         }
 
-        assertTrue(successLatch.await(TIMEOUT_S, TimeUnit.SECONDS))
-        assertTrue(errorLatch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        successLatch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        errorLatch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     /**
@@ -109,7 +109,7 @@ class AuthStressTests {
             }
         }
 
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     /**
@@ -123,7 +123,7 @@ class AuthStressTests {
             Amplify.Auth.fetchAuthSession({ if (!it.isSignedIn) latch.countDown() else fail() }, { fail() })
         }
 
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     /**
@@ -144,7 +144,7 @@ class AuthStressTests {
             Amplify.Auth.fetchAuthSession({ if (it.isSignedIn) latch.countDown() else fail() }, { fail() })
         }
 
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     /**
@@ -163,7 +163,7 @@ class AuthStressTests {
 
         Amplify.Auth.signOut { if ((it as AWSCognitoAuthSignOutResult).signedOutLocally) latch.countDown() else fail() }
 
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     /**
@@ -186,7 +186,7 @@ class AuthStressTests {
 
         Amplify.Auth.signOut { if ((it as AWSCognitoAuthSignOutResult).signedOutLocally) latch.countDown() else fail() }
 
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     /**
@@ -214,7 +214,7 @@ class AuthStressTests {
             Amplify.Auth.fetchAuthSession({ latch.countDown() }, { fail() })
         }
 
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     /**
@@ -243,7 +243,7 @@ class AuthStressTests {
             )
         }
 
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.MINUTES))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.MINUTES)
     }
 
     /**
@@ -275,7 +275,7 @@ class AuthStressTests {
             }
         }
 
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.MINUTES))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.MINUTES)
     }
 
     /**
@@ -298,7 +298,7 @@ class AuthStressTests {
             )
         }
 
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.MINUTES))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.MINUTES)
     }
 
     /**
@@ -321,7 +321,7 @@ class AuthStressTests {
             )
         }
 
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.MINUTES))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.MINUTES)
     }
 
     /**
@@ -345,6 +345,6 @@ class AuthStressTests {
             )
         }
 
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.MINUTES))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.MINUTES)
     }
 }

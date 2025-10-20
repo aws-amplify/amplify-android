@@ -31,6 +31,7 @@ import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.testutils.assertAwait
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -39,7 +40,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.test.setMain
 import org.junit.After
-import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.BeforeClass
@@ -119,7 +119,7 @@ class AuthCanaryTest {
             },
             { fail("Sign up failed: $it") }
         )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     // Test requires confirmation code, testing onError call.
@@ -132,7 +132,7 @@ class AuthCanaryTest {
             { fail("Confirm sign up completed successfully, expected confirm sign up to fail") },
             { latch.countDown() }
         )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     @Test
@@ -152,7 +152,7 @@ class AuthCanaryTest {
             },
             { fail("Failed to sign in: $it") }
         )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     // Test requires confirmation code, testing onError call
@@ -164,7 +164,7 @@ class AuthCanaryTest {
             { fail("Confirm sign in completed successfully, expected confirm sign in to fail") },
             { latch.countDown() }
         )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     @Test
@@ -175,7 +175,7 @@ class AuthCanaryTest {
             { latch.countDown() },
             { fail("Failed to fetch session: $it") }
         )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     @Test
@@ -188,7 +188,7 @@ class AuthCanaryTest {
             { latch.countDown() },
             { fail("Failed to fetch session: $it") }
         )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     @Test
@@ -199,7 +199,7 @@ class AuthCanaryTest {
             { latch.countDown() },
             { fail("Remember device failed: $it") }
         )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     @Test
@@ -210,7 +210,7 @@ class AuthCanaryTest {
             { latch.countDown() },
             { fail("Forget device failed with error: $it") }
         )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     @Test
@@ -221,7 +221,7 @@ class AuthCanaryTest {
             { latch.countDown() },
             { fail("Fetch devices failed with error: $it") }
         )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     // Test requires confirmation code, testing onError call
@@ -239,7 +239,7 @@ class AuthCanaryTest {
         } catch (e: Exception) {
             fail(e.toString())
         }
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     @Test
@@ -254,7 +254,7 @@ class AuthCanaryTest {
             { latch.countDown() },
             { fail("Password update failed: $it") }
         )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     @Test
@@ -265,7 +265,7 @@ class AuthCanaryTest {
             { latch.countDown() },
             { fail("Failed to fetch user attributes: $it") }
         )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     @Test
@@ -277,7 +277,7 @@ class AuthCanaryTest {
             { latch.countDown() },
             { fail("Failed to update user attribute: $it") }
         )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     @Test
@@ -289,7 +289,7 @@ class AuthCanaryTest {
             { latch.countDown() },
             { fail("Failed to update user attributes: $it") }
         )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     // Test requires confirmation code, testing onError call
@@ -302,7 +302,7 @@ class AuthCanaryTest {
             { fail("Confirmed user attribute with incorrect code, expected confirm user attribute to fail.") },
             { latch.countDown() }
         )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     @Test
@@ -313,7 +313,7 @@ class AuthCanaryTest {
             { latch.countDown() },
             { fail("Get current user failed with an exception: $it") }
         )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     @Test
@@ -338,7 +338,7 @@ class AuthCanaryTest {
                 }
             }
         }
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     @Test
@@ -366,7 +366,7 @@ class AuthCanaryTest {
                 }
             }
         }
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     @Test
@@ -382,7 +382,7 @@ class AuthCanaryTest {
             },
             { fail("Delete user failed: $it") }
         )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     private fun signUpUser(user: String, pass: String) {
@@ -403,19 +403,19 @@ class AuthCanaryTest {
                 latch.countDown()
             }
         )
-        latch.await(TIMEOUT_S, TimeUnit.SECONDS)
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     private fun signInUser(user: String, pass: String) {
         val latch = CountDownLatch(1)
         auth.signIn(user, pass, { latch.countDown() }, { latch.countDown() })
-        latch.await(TIMEOUT_S, TimeUnit.SECONDS)
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     private fun signOutUser() {
         val latch = CountDownLatch(1)
         auth.signOut { latch.countDown() }
-        latch.await(TIMEOUT_S, TimeUnit.SECONDS)
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     private fun deleteTemporaryUser(user: String) {
@@ -434,7 +434,7 @@ class AuthCanaryTest {
                 latch.countDown()
             }
         )
-        latch.await(TIMEOUT_S, TimeUnit.SECONDS)
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
         signOutUser()
     }
 
@@ -454,7 +454,7 @@ class AuthCanaryTest {
                 latch.countDown()
             }
         )
-        latch.await(TIMEOUT_S, TimeUnit.SECONDS)
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
         signOutUser()
     }
 }

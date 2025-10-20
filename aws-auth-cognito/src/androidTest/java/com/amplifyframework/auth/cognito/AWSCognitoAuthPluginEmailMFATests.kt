@@ -32,6 +32,7 @@ import com.amplifyframework.core.configuration.AmplifyOutputs
 import com.amplifyframework.core.configuration.AmplifyOutputsData
 import com.amplifyframework.datastore.generated.model.MfaInfo
 import com.amplifyframework.testutils.Assets
+import com.amplifyframework.testutils.assertAwait
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import java.util.Random
 import java.util.UUID
@@ -120,7 +121,7 @@ class AWSCognitoAuthPluginEmailMFATests {
         assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP, signInResult.nextStep.signInStep)
 
         // Wait until the MFA code has been received
-        latch?.await(20, TimeUnit.SECONDS)
+        latch?.assertAwait(20, TimeUnit.SECONDS)
 
         // Step 5: Input the emailed MFA code for confirmation
         signInResult = synchronousAuth.confirmSignIn(mfaCode)
@@ -142,7 +143,7 @@ class AWSCognitoAuthPluginEmailMFATests {
         assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP, signInResult.nextStep.signInStep)
 
         // Wait until the MFA code has been received
-        latch?.await(20, TimeUnit.SECONDS)
+        latch?.assertAwait(20, TimeUnit.SECONDS)
 
         // Step 4: Input the emailed MFA code for confirmation
         signInResult = synchronousAuth.confirmSignIn(mfaCode)
@@ -164,7 +165,7 @@ class AWSCognitoAuthPluginEmailMFATests {
         assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP, signInResult.nextStep.signInStep)
 
         // Wait until the MFA code has been received
-        latch?.await(20, TimeUnit.SECONDS)
+        latch?.assertAwait(20, TimeUnit.SECONDS)
 
         // Step 4: Input the an incorrect MFA code
         // Validation 2: Validate that an incorrect MFA code throws a CodeMismatchException

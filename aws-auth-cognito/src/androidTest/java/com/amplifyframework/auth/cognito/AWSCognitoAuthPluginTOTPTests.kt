@@ -27,6 +27,7 @@ import com.amplifyframework.auth.result.step.AuthSignInStep
 import com.amplifyframework.core.AmplifyConfiguration
 import com.amplifyframework.core.category.CategoryConfiguration
 import com.amplifyframework.core.category.CategoryType
+import com.amplifyframework.testutils.assertAwait
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import dev.robinohs.totpkt.otp.totp.TotpGenerator
 import dev.robinohs.totpkt.otp.totp.timesupport.generateCode
@@ -171,6 +172,6 @@ class AWSCognitoAuthPluginTOTPTests {
     private fun updateMFAPreference(sms: MFAPreference, totp: MFAPreference, email: MFAPreference) {
         val latch = CountDownLatch(1)
         authPlugin.updateMFAPreference(sms, totp, email, { latch.countDown() }, { latch.countDown() })
-        latch.await(5, TimeUnit.SECONDS)
+        latch.assertAwait(5, TimeUnit.SECONDS)
     }
 }

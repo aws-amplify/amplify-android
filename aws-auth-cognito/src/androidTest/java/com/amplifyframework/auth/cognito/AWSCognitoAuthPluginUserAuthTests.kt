@@ -41,6 +41,7 @@ import com.amplifyframework.core.category.CategoryConfiguration
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.datastore.generated.model.MfaInfo
 import com.amplifyframework.testutils.Assets
+import com.amplifyframework.testutils.assertAwait
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
@@ -111,7 +112,7 @@ class AWSCognitoAuthPluginUserAuthTests {
             { }
         )
 
-        assertTrue(subscriptionEstablishedLatch.await(10, TimeUnit.SECONDS))
+        subscriptionEstablishedLatch.assertAwait(10, TimeUnit.SECONDS)
     }
 
     @After

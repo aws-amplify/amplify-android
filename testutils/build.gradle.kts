@@ -29,6 +29,7 @@ dependencies {
     implementation(libs.test.junit)
     implementation(libs.test.mockito.core)
     implementation(libs.test.androidx.core)
+    implementation(libs.test.kotest.assertions)
     implementation(libs.rxjava)
 
     implementation(libs.kotlin.serializationJson)
