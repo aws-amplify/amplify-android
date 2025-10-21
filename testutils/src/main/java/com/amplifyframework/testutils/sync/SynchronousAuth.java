@@ -608,8 +608,8 @@ public final class SynchronousAuth {
      * @throws AuthException exception
      */
     public AuthSignOutResult signOut() throws AuthException {
-        return Await.<Object, AuthException>result(timeoutMs, (onResult, onError) ->
-                asyncDelegate.signOut(onResult::accept)
+        return Await.<AuthSignOutResult, AuthException>result(timeoutMs, (onResult, onError) ->
+                asyncDelegate.signOut(onResult)
         );
     }
 
@@ -619,8 +619,8 @@ public final class SynchronousAuth {
      * @throws AuthException exception
      */
     public AuthSignOutResult signOut(AuthSignOutOptions options) throws AuthException {
-        return Await.<Object, AuthException>result(timeoutMs, (onResult, onError) ->
-                asyncDelegate.signOut(options, onResult::accept)
+        return Await.<AuthSignOutResult, AuthException>result(timeoutMs, (onResult, onError) ->
+                asyncDelegate.signOut(options, onResult)
         );
     }
 
