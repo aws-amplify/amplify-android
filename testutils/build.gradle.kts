@@ -18,8 +18,6 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
 }
 
-apply(from = rootProject.file("configuration/checkstyle.gradle"))
-
 android {
     namespace = "com.amplifyframework.testutils"
 }
