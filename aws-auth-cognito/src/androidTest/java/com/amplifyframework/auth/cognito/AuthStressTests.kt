@@ -19,16 +19,32 @@ import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
 import com.amplifyframework.auth.cognito.result.AWSCognitoAuthSignOutResult
 import com.amplifyframework.auth.cognito.testutils.Credentials
+import com.amplifyframework.auth.cognito.testutils.ResultFunction
+import com.amplifyframework.auth.cognito.testutils.ResultFunctionWithArg
+import com.amplifyframework.auth.cognito.testutils.blockForResult
+import com.amplifyframework.auth.cognito.testutils.deferredResult
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
+import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.core.Amplify
-import com.amplifyframework.testutils.assertAwait
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import org.junit.Assert.fail
+import io.kotest.inspectors.forAll
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldHaveSingleElement
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.shouldBe
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
@@ -63,11 +79,7 @@ class AuthStressTests {
 
     @Before
     fun resetAuth() {
-        val latch = CountDownLatch(1)
-        Amplify.Auth.signOut {
-            latch.countDown()
-        }
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        blockForResult(TIMEOUT_S.seconds) { onSuccess, _ -> Amplify.Auth.signOut(onSuccess) }
         val context = ApplicationProvider.getApplicationContext<Context>()
         Credentials.load(context).let {
             username = it.first
@@ -79,142 +91,99 @@ class AuthStressTests {
      * Calls Auth.signIn 50 times
      */
     @Test
-    fun testMultipleSignIn() {
-        val successLatch = CountDownLatch(1)
-        val errorLatch = CountDownLatch(49)
+    fun testMultipleSignIn() = runStressTest {
+        val results = callConcurrently(50) { onSuccess, _ ->
+            Amplify.Auth.signIn(username, password, onSuccess, onSuccess) // errors are expected
+        }.awaitAll()
 
-        repeat(50) {
-            Amplify.Auth.signIn(
-                username,
-                password,
-                { if (it.isSignedIn) successLatch.countDown() else fail() },
-                { errorLatch.countDown() }
-            )
-        }
-
-        successLatch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
-        errorLatch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        results.filterIsInstance<AuthSignInResult>().shouldHaveSingleElement { it.isSignedIn }
+        results.filterIsInstance<SignedInException>().shouldHaveSize(49)
     }
 
     /**
      * Calls Auth.signOut 50 times
      */
     @Test
-    fun testMultipleSignOut() {
-        val latch = CountDownLatch(50)
+    fun testMultipleSignOut() = runStressTest {
+        val results = callConcurrently(50) { onSuccess, _ ->
+            Amplify.Auth.signOut(onSuccess)
+        }.awaitAll()
 
-        repeat(50) {
-            Amplify.Auth.signOut {
-                if ((it as AWSCognitoAuthSignOutResult).signedOutLocally) latch.countDown() else fail()
-            }
-        }
-
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        results.filterIsInstance<AWSCognitoAuthSignOutResult>()
+            .shouldHaveSize(50).forAll { it.signedOutLocally.shouldBeTrue() }
     }
 
     /**
      * Calls Auth.fetchAuthSession 100 times when signed out
      */
     @Test
-    fun testMultipleFAS_WhenSignedOut() {
-        val latch = CountDownLatch(100)
+    fun testMultipleFAS_WhenSignedOut() = runStressTest {
+        val results = callConcurrently(100) { onSuccess, onError ->
+            Amplify.Auth.fetchAuthSession(onSuccess, onError)
+        }.awaitAll()
 
-        repeat(100) {
-            Amplify.Auth.fetchAuthSession({ if (!it.isSignedIn) latch.countDown() else fail() }, { fail() })
-        }
-
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        results.shouldHaveSize(100).forAll { it.isSignedIn.shouldBeFalse() }
     }
 
     /**
      * Calls Auth.signIn, then calls Auth.fetchAuthSession 100 times
      */
     @Test
-    fun testMultipleFAS_AfterSignIn() {
-        val latch = CountDownLatch(101)
+    fun testMultipleFAS_AfterSignIn() = runStressTest {
+        signIn()
 
-        Amplify.Auth.signIn(
-            username,
-            password,
-            { if (it.isSignedIn) latch.countDown() else fail() },
-            { fail() }
-        )
+        val results = callConcurrently(100) { onSuccess, onError ->
+            Amplify.Auth.fetchAuthSession(onSuccess, onError)
+        }.awaitAll()
 
-        repeat(100) {
-            Amplify.Auth.fetchAuthSession({ if (it.isSignedIn) latch.countDown() else fail() }, { fail() })
-        }
-
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        results.shouldHaveSize(100).forAll { it.isSignedIn.shouldBeTrue() }
     }
 
     /**
      * Calls Auth.signIn, then calls Auth.signOut
      */
     @Test
-    fun testSignOut_AfterSignIn() {
-        val latch = CountDownLatch(2)
-
-        Amplify.Auth.signIn(
-            username,
-            password,
-            { if (it.isSignedIn) latch.countDown() else fail() },
-            { fail() }
-        )
-
-        Amplify.Auth.signOut { if ((it as AWSCognitoAuthSignOutResult).signedOutLocally) latch.countDown() else fail() }
-
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+    fun testSignOut_AfterSignIn() = runStressTest {
+        signIn()
+        signOut()
     }
 
     /**
      * Calls Auth.signIn, calls Auth.fetchAuthSession 100 times, then calls Auth.signOut
      */
     @Test
-    fun testSignIn_multipleFAS_SignOut() {
-        val latch = CountDownLatch(102)
+    fun testSignIn_multipleFAS_SignOut() = runStressTest {
+        signIn()
 
-        Amplify.Auth.signIn(
-            username,
-            password,
-            { if (it.isSignedIn) latch.countDown() else fail() },
-            { fail() }
-        )
+        val results = callConcurrently(100) { onSuccess, onError ->
+            Amplify.Auth.fetchAuthSession(onSuccess, onError)
+        }.awaitAll()
 
-        repeat(100) {
-            Amplify.Auth.fetchAuthSession({ latch.countDown() }, { fail() })
-        }
+        results.shouldHaveSize(100)
 
-        Amplify.Auth.signOut { if ((it as AWSCognitoAuthSignOutResult).signedOutLocally) latch.countDown() else fail() }
-
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        signOut()
     }
 
     /**
      * Calls Auth.signIn, then calls Auth.fetchAuthSession 100 times. Randomly calls Auth.signOut within those 100 calls.
      */
     @Test
-    fun testSignIn_multipleFAS_withSignOut() {
-        val latch = CountDownLatch(102)
+    fun testSignIn_multipleFAS_withSignOut() = runStressTest {
+        signIn()
 
-        Amplify.Auth.signIn(
-            username,
-            password,
-            { if (it.isSignedIn) latch.countDown() else fail() },
-            { fail() }
-        )
-
+        val deferred = mutableListOf<Deferred<Any>>()
         val random = (Math.random() * 100).toInt()
         repeat(100) { idx ->
             if (idx == random) {
-                Amplify.Auth.signOut {
-                    if ((it as AWSCognitoAuthSignOutResult).signedOutLocally) latch.countDown() else fail()
-                }
+                deferred += deferredResult { onSuccess, _ -> Amplify.Auth.signOut(onSuccess) }
             }
 
-            Amplify.Auth.fetchAuthSession({ latch.countDown() }, { fail() })
+            deferred += deferredResult { onSuccess, onError -> Amplify.Auth.fetchAuthSession(onSuccess, onError) }
         }
 
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        val results = deferred.awaitAll()
+        results.filterIsInstance<AuthSession>().shouldHaveSize(100)
+        results.filterIsInstance<AWSCognitoAuthSignOutResult>().shouldHaveSingleElement { it.signedOutLocally }
     }
 
     /**
@@ -222,129 +191,116 @@ class AuthStressTests {
      * forceRefresh() within those 100 calls.
      */
     @Test
-    fun testSignIn_multipleFAS_withRefresh() {
-        val latch = CountDownLatch(101)
-
-        Amplify.Auth.signIn(
-            username,
-            password,
-            { if (it.isSignedIn) latch.countDown() },
-            { fail() }
-        )
+    fun testSignIn_multipleFAS_withRefresh() = runStressTest {
+        signIn()
 
         val random = List(2) { (Math.random() * 100).toInt() }
-        repeat(100) { idx ->
+
+        val results = callConcurrentlyIndexed(100) { idx, onSuccess, onError ->
             val options = AuthFetchSessionOptions.builder().forceRefresh(random.contains(idx)).build()
+            Amplify.Auth.fetchAuthSession(options, onSuccess, onError)
+        }.awaitAll()
 
-            Amplify.Auth.fetchAuthSession(
-                options,
-                { if (it.isSignedIn) latch.countDown() else fail() },
-                { fail() }
-            )
-        }
-
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        results.shouldHaveSize(100)
     }
 
     /**
      * Randomly calls Auth.fetchAuthSession, Auth.signIn, Auth.fetchAuthSession with forceRefresh(), and Auth.signOut 20 times.
      */
     @Test
-    fun testRandomMultipleAPIs() {
-        val latch = CountDownLatch(20)
-
-        val random = List(20) { (1..4).random() }
-        random.forEach { idx ->
-            when (idx) {
-                1 -> Amplify.Auth.fetchAuthSession({ latch.countDown() }, { fail() })
-                2 -> {
-                    Amplify.Auth.signIn(
-                        username,
-                        password,
-                        { if (it.isSignedIn) latch.countDown() },
-                        { latch.countDown() }
-                    )
-                }
+    fun testRandomMultipleAPIs() = runStressTest(timeout = 30.seconds) {
+        val results = callConcurrently(20) { onSuccess, onError ->
+            val randomizer = (1..4).random()
+            when (randomizer) {
+                1 -> Amplify.Auth.fetchAuthSession(onSuccess, onError)
+                2 -> Amplify.Auth.signIn(username, password, onSuccess, onSuccess) // SignedInException is expected
                 3 -> {
                     val options = AuthFetchSessionOptions.builder().forceRefresh(true).build()
-                    Amplify.Auth.fetchAuthSession(options, { latch.countDown() }, { fail() })
+                    Amplify.Auth.fetchAuthSession(options, onSuccess, onError)
                 }
-                4 -> Amplify.Auth.signOut {
-                    if ((it as AWSCognitoAuthSignOutResult).signedOutLocally) latch.countDown() else fail()
-                }
+                4 -> Amplify.Auth.signOut(onSuccess)
             }
-        }
+        }.awaitAll()
 
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        results.shouldHaveSize(20)
+        results.filterIsInstance<AWSCognitoAuthSignOutResult>().forAll { it.signedOutLocally.shouldBeTrue() }
+        results.filterIsInstance<AuthSignInResult>().forAll { it.isSignedIn.shouldBeTrue() }
     }
 
     /**
      * Calls Auth.getCurrentUser 100 times
      */
     @Test
-    fun testSignIn_GetCurrentUser() {
-        val latch = CountDownLatch(101)
-        Amplify.Auth.signIn(
-            username,
-            password,
-            { if (it.isSignedIn) latch.countDown() else fail() },
-            { fail() }
-        )
+    fun testSignIn_GetCurrentUser() = runStressTest {
+        signIn()
 
-        repeat(100) {
-            Amplify.Auth.getCurrentUser(
-                { if (it.username == username) latch.countDown() else fail() },
-                { fail() }
-            )
-        }
+        val results = callConcurrently(100) { onSuccess, onError ->
+            Amplify.Auth.getCurrentUser(onSuccess, onError)
+        }.awaitAll()
 
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        results.shouldHaveSize(100).forAll { it.username shouldBe username }
     }
 
     /**
-     * Calls Auth.fetchUserAttributes 100 times
+     * Calls Auth.fetchUserAttributes 25 times
+     * Each of these calls  always makes a network request so they take much longer
      */
     @Test
-    fun testSignIn_FetchAttributes() {
-        val latch = CountDownLatch(101)
-        Amplify.Auth.signIn(
-            username,
-            password,
-            { if (it.isSignedIn) latch.countDown() else fail() },
-            { fail() }
-        )
+    fun testSignIn_FetchAttributes() = runStressTest(timeout = 2.minutes) {
+        signIn()
 
-        repeat(100) {
-            Amplify.Auth.fetchUserAttributes(
-                { latch.countDown() },
-                { fail() }
-            )
-        }
+        val results = callConcurrently(25) { onSuccess, onError ->
+            Amplify.Auth.fetchUserAttributes(onSuccess, onError)
+        }.awaitAll()
 
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        results.shouldHaveSize(25)
     }
 
     /**
-     * Calls Auth.updateUserAttributes 100 times
+     * Calls Auth.updateUserAttributes 25 times
+     * Each of these calls always makes a network request so they take much longer
      */
     @Test
-    fun testSignIn_UpdateAttributes() {
-        val latch = CountDownLatch(101)
-        Amplify.Auth.signIn(
-            username,
-            password,
-            { if (it.isSignedIn) latch.countDown() else fail() },
-            { fail() }
-        )
+    fun testSignIn_UpdateAttributes() = runStressTest(timeout = 2.minutes) {
+        signIn()
 
-        repeat(100) {
-            Amplify.Auth.updateUserAttributes(
-                attributes,
-                { latch.countDown() },
-                { fail() }
-            )
+        val results = callConcurrently(25) { onSuccess, onError ->
+            Amplify.Auth.updateUserAttributes(attributes, onSuccess, onError)
+        }.awaitAll()
+
+        results.shouldHaveSize(25)
+    }
+
+    private fun runStressTest(timeout: Duration = TIMEOUT_S.seconds, body: suspend () -> Unit) = runBlocking {
+        withTimeout(timeout) {
+            body()
+        }
+    }
+
+    private fun <T> callConcurrently(times: Int, func: ResultFunction<T>): List<Deferred<T>> = buildList {
+        repeat(times) {
+            add(deferredResult(func))
+        }
+    }
+
+    private fun <T> callConcurrentlyIndexed(times: Int, func: ResultFunctionWithArg<Int, T>): List<Deferred<T>> =
+        buildList {
+            repeat(times) { i ->
+                add(deferredResult(i, func))
+            }
         }
 
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+    private suspend fun signIn() {
+        val result = deferredResult { onSuccess, onError ->
+            Amplify.Auth.signIn(username, password, onSuccess, onError)
+        }.await()
+        result.isSignedIn.shouldBeTrue()
+    }
+
+    private suspend fun signOut() {
+        val result = deferredResult { onSuccess, onError ->
+            Amplify.Auth.signOut(onSuccess)
+        }.await()
+        (result as AWSCognitoAuthSignOutResult).signedOutLocally.shouldBeTrue()
     }
 }

@@ -21,15 +21,17 @@ import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 
+typealias ResultFunction<T> = (onSuccess: (T) -> Unit, onError: (AuthException) -> Unit) -> Unit
+typealias ResultFunctionWithArg<T, R> = (arg: T, onSuccess: (R) -> Unit, onError: (AuthException) -> Unit) -> Unit
+
 // Run a function that invokes a callback-based API and returns the result or throws an exception on error.
 // The exception is thrown on the calling thread, allowing it to be caught by the JUnit runner
-fun <T> blockForResult(
-    timeout: Duration = 10.seconds,
-    func: (onSuccess: (T) -> Unit, onError: (AuthException) -> Unit) -> Unit
-): T = runBlocking {
+fun <T> blockForResult(timeout: Duration = 10.seconds, func: ResultFunction<T>): T = runBlocking {
     withTimeout(timeout) {
         suspendCoroutine { continuation ->
             func(
@@ -47,4 +49,25 @@ fun blockForCompletion(
     func: (onSuccess: () -> Unit, onError: (AuthException) -> Unit) -> Unit
 ): Unit = blockForResult(timeout) { onSuccess, onError ->
     func({ onSuccess(Unit) }, onError)
+}
+
+// Run a function that invokes a callback-based API and get the result as a Future
+// This allows invoking the API many times concurrently for stress-testing purposes
+fun <T> deferredResult(func: ResultFunction<T>): Deferred<T> {
+    val deferred = CompletableDeferred<T>()
+    func(
+        { deferred.complete(it) },
+        { deferred.completeExceptionally(it) }
+    )
+    return deferred
+}
+
+fun <T, R> deferredResult(arg: T, func: ResultFunctionWithArg<T, R>): Deferred<R> {
+    val deferred = CompletableDeferred<R>()
+    func(
+        arg,
+        { deferred.complete(it) },
+        { deferred.completeExceptionally(it) }
+    )
+    return deferred
 }
