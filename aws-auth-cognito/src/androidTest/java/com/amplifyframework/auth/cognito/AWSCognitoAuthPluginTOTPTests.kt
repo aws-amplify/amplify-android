@@ -22,19 +22,18 @@ import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.MFAType
 import com.amplifyframework.auth.cognito.helpers.value
 import com.amplifyframework.auth.cognito.test.R
+import com.amplifyframework.auth.cognito.testutils.blockForCompletion
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.result.step.AuthSignInStep
 import com.amplifyframework.core.AmplifyConfiguration
 import com.amplifyframework.core.category.CategoryConfiguration
 import com.amplifyframework.core.category.CategoryType
-import com.amplifyframework.testutils.assertAwait
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import dev.robinohs.totpkt.otp.totp.TotpGenerator
 import dev.robinohs.totpkt.otp.totp.timesupport.generateCode
 import java.util.Random
 import java.util.UUID
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
@@ -170,8 +169,8 @@ class AWSCognitoAuthPluginTOTPTests {
     }
 
     private fun updateMFAPreference(sms: MFAPreference, totp: MFAPreference, email: MFAPreference) {
-        val latch = CountDownLatch(1)
-        authPlugin.updateMFAPreference(sms, totp, email, { latch.countDown() }, { latch.countDown() })
-        latch.assertAwait(5, TimeUnit.SECONDS)
+        blockForCompletion(5.seconds) { onSuccess, onError ->
+            authPlugin.updateMFAPreference(sms, totp, email, onSuccess, onError)
+        }
     }
 }

@@ -34,11 +34,11 @@ import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.AmplifyConfiguration
 import com.amplifyframework.core.configuration.AmplifyOutputs
-import com.amplifyframework.testutils.assertAwait
+import com.amplifyframework.testutils.sync.SynchronousApi
 import com.amplifyframework.testutils.sync.SynchronousAuth
+import io.kotest.assertions.throwables.shouldThrowAny
+import io.kotest.matchers.booleans.shouldBeTrue
 import java.util.UUID
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.newSingleThreadContext
@@ -51,7 +51,7 @@ import org.junit.Test
 
 class AuthCanaryTestGen2 {
     companion object {
-        private const val TIMEOUT_S = 20L
+        private const val TIMEOUT_MS = 20L * 1000
         private val TAG = AuthCanaryTestGen2::class.simpleName
         private val mainThreadSurrogate = newSingleThreadContext("Main thread")
         private val attributes = listOf(
@@ -65,7 +65,8 @@ class AuthCanaryTestGen2 {
 
         private val api = AWSApiPlugin()
         private val auth = AWSCognitoAuthPlugin()
-        private val syncAuth = SynchronousAuth.delegatingTo(auth)
+        private val syncAuth = SynchronousAuth.delegatingToAmplify(TIMEOUT_MS)
+        private val syncApi = SynchronousApi.delegatingTo(api, TIMEOUT_MS)
 
         @BeforeClass
         @JvmStatic
@@ -117,141 +118,72 @@ class AuthCanaryTestGen2 {
 
     @Test
     fun signUp() {
-        val latch = CountDownLatch(1)
         val options = AuthSignUpOptions.builder()
             .userAttribute(AuthUserAttributeKey.email(), "my@email.com")
             .build()
-        Amplify.Auth.signUp(
-            tempUsername,
-            tempPassword,
-            options,
-            {
-                signedUpNewUser = true
-                latch.countDown()
-            },
-            { fail("Sign up failed: $it") }
-        )
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        syncAuth.signUp(tempUsername, tempPassword, options)
     }
 
     // Test requires confirmation code, testing onError call.
     @Test
     fun confirmSignUp() {
-        val latch = CountDownLatch(1)
-        Amplify.Auth.confirmSignUp(
-            "username",
-            "the code you received via email",
-            { fail("Confirm sign up completed successfully, expected confirm sign up to fail") },
-            { latch.countDown() }
-        )
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        shouldThrowAny {
+            syncAuth.confirmSignUp("username", "the code you received via email")
+        }
     }
 
     @Test
     fun signIn() {
-        val latch = CountDownLatch(1)
         val options = AWSCognitoAuthSignInOptions.builder().authFlowType(AuthFlowType.USER_SRP_AUTH).build()
-        Amplify.Auth.signIn(
-            username,
-            password,
-            options,
-            { result ->
-                if (result.isSignedIn) {
-                    latch.countDown()
-                } else {
-                    fail("Sign in not complete")
-                }
-            },
-            { fail("Failed to sign in: $it") }
-        )
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        val result = syncAuth.signIn(username, password, options)
+        result.isSignedIn.shouldBeTrue()
     }
 
     // Test requires confirmation code, testing onError call
     @Test
     fun confirmSignIn() {
-        val latch = CountDownLatch(1)
-        Amplify.Auth.confirmSignIn(
-            "confirmation code",
-            { fail("Confirm sign in completed successfully, expected confirm sign in to fail") },
-            { latch.countDown() }
-        )
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        shouldThrowAny {
+            syncAuth.confirmSignIn("confirmation code")
+        }
     }
 
     @Test
     fun fetchAuthSession() {
         signInUser(username, password)
-        val latch = CountDownLatch(1)
-        Amplify.Auth.fetchAuthSession(
-            { latch.countDown() },
-            { fail("Failed to fetch session: $it") }
-        )
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        syncAuth.fetchAuthSession()
     }
 
     @Test
     fun fetchAuthSessionWithRefresh() {
         signInUser(username, password)
-        val latch = CountDownLatch(1)
         val option = AuthFetchSessionOptions.builder().forceRefresh(true).build()
-        Amplify.Auth.fetchAuthSession(
-            option,
-            { latch.countDown() },
-            { fail("Failed to fetch session: $it") }
-        )
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        syncAuth.fetchAuthSession(option)
     }
 
     @Test
     fun rememberDevice() {
         signInUser(username, password)
-        val latch = CountDownLatch(1)
-        Amplify.Auth.rememberDevice(
-            { latch.countDown() },
-            { fail("Remember device failed: $it") }
-        )
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        syncAuth.rememberDevice()
     }
 
     @Test
     fun forgetDevice() {
         signInUser(username, password)
-        val latch = CountDownLatch(1)
-        Amplify.Auth.forgetDevice(
-            { latch.countDown() },
-            { fail("Forget device failed with error: $it") }
-        )
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        syncAuth.forgetDevice()
     }
 
     @Test
     fun fetchDevices() {
         signInUser(username, password)
-        val latch = CountDownLatch(1)
-        Amplify.Auth.fetchDevices(
-            { latch.countDown() },
-            { fail("Fetch devices failed with error: $it") }
-        )
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        syncAuth.fetchDevices()
     }
 
     // Test requires confirmation code, testing onError call
     @Test
     fun confirmResetPassword() {
-        val latch = CountDownLatch(1)
-        try {
-            Amplify.Auth.confirmResetPassword(
-                "username",
-                "NewPassword123",
-                "confirmation code",
-                { fail("New password confirmed, expected confirm reset password to fail") },
-                { latch.countDown() }
-            )
-        } catch (e: Exception) {
-            fail(e.toString())
+        shouldThrowAny {
+            syncAuth.confirmResetPassword("username", "NewPassword123", "confirmation code")
         }
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     @Test
@@ -259,126 +191,78 @@ class AuthCanaryTestGen2 {
         signUpUser(tempUsername, tempPassword)
         confirmTemporaryUserSignUp(tempUsername)
         signInUser(tempUsername, tempPassword)
-        val latch = CountDownLatch(1)
-        Amplify.Auth.updatePassword(
-            tempPassword,
-            tempPassword + "1",
-            { latch.countDown() },
-            { fail("Password update failed: $it") }
-        )
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        syncAuth.updatePassword(tempPassword, tempPassword + "1")
     }
 
     @Test
     fun fetchUserAttributes() {
         signInUser(username, password)
-        val latch = CountDownLatch(1)
-        Amplify.Auth.fetchUserAttributes(
-            { latch.countDown() },
-            { fail("Failed to fetch user attributes: $it") }
-        )
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        syncAuth.fetchUserAttributes()
     }
 
     @Test
     fun updateUserAttribute() {
         signInUser(username, password)
-        val latch = CountDownLatch(1)
-        Amplify.Auth.updateUserAttribute(
-            AuthUserAttribute(AuthUserAttributeKey.name(), "apitest"),
-            { latch.countDown() },
-            { fail("Failed to update user attribute: $it") }
-        )
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        syncAuth.updateUserAttribute(AuthUserAttribute(AuthUserAttributeKey.name(), "apitest"))
     }
 
     @Test
     fun updateUserAttributes() {
         signInUser(username, password)
-        val latch = CountDownLatch(1)
-        Amplify.Auth.updateUserAttributes(
-            attributes, // attributes is a list of AuthUserAttribute
-            { latch.countDown() },
-            { fail("Failed to update user attributes: $it") }
-        )
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        syncAuth.updateUserAttributes(attributes)
     }
 
     // Test requires confirmation code, testing onError call
     @Test
     fun confirmUserAttribute() {
-        val latch = CountDownLatch(1)
-        Amplify.Auth.confirmUserAttribute(
-            AuthUserAttributeKey.email(),
-            "344299",
-            { fail("Confirmed user attribute with incorrect code, expected confirm user attribute to fail.") },
-            { latch.countDown() }
-        )
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        shouldThrowAny {
+            syncAuth.confirmUserAttribute(AuthUserAttributeKey.email(), "344299")
+        }
     }
 
     @Test
     fun getCurrentUser() {
         signInUser(username, password)
-        val latch = CountDownLatch(1)
-        Amplify.Auth.getCurrentUser(
-            { latch.countDown() },
-            { fail("Get current user failed with an exception: $it") }
-        )
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        syncAuth.currentUser
     }
 
     @Test
     fun signOut() {
         signInUser(username, password)
-        val latch = CountDownLatch(1)
-        Amplify.Auth.signOut { signOutResult ->
-            when (signOutResult) {
-                is AWSCognitoAuthSignOutResult.CompleteSignOut -> {
-                    // Sign Out completed fully and without errors.
-                    latch.countDown()
-                }
-                is AWSCognitoAuthSignOutResult.PartialSignOut -> {
-                    // Sign Out completed with some errors. User is signed out of the device.
-                    signOutResult.hostedUIError?.let { fail("HostedUIError while signing out: $it") }
-                    signOutResult.globalSignOutError?.let { fail("GlobalSignOutError while signing out: $it") }
-                    signOutResult.revokeTokenError?.let { fail("RevokeTokenError: $it") }
-                }
-                is AWSCognitoAuthSignOutResult.FailedSignOut -> {
-                    // Sign Out failed with an exception, leaving the user signed in.
-                    fail("Sign out failed: ${signOutResult.exception}")
-                }
+        val signOutResult = syncAuth.signOut()
+        when (signOutResult) {
+            is AWSCognitoAuthSignOutResult.PartialSignOut -> {
+                // Sign Out completed with some errors. User is signed out of the device.
+                signOutResult.hostedUIError?.let { fail("HostedUIError while signing out: $it") }
+                signOutResult.globalSignOutError?.let { fail("GlobalSignOutError while signing out: $it") }
+                signOutResult.revokeTokenError?.let { fail("RevokeTokenError: $it") }
+            }
+            is AWSCognitoAuthSignOutResult.FailedSignOut -> {
+                // Sign Out failed with an exception, leaving the user signed in.
+                fail("Sign out failed: ${signOutResult.exception}")
             }
         }
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     @Test
     fun globalSignOut() {
         signInUser(username, password)
-        val latch = CountDownLatch(1)
         val options = AuthSignOutOptions.builder()
             .globalSignOut(true)
             .build()
-        Amplify.Auth.signOut(options) { signOutResult ->
-            when (signOutResult) {
-                is AWSCognitoAuthSignOutResult.CompleteSignOut -> {
-                    // Sign Out completed fully and without errors.
-                    latch.countDown()
-                }
-                is AWSCognitoAuthSignOutResult.PartialSignOut -> {
-                    // Sign Out completed with some errors. User is signed out of the device.
-                    signOutResult.hostedUIError?.let { fail("HostedUIError while signing out: $it") }
-                    signOutResult.globalSignOutError?.let { fail("GlobalSignOutError while signing out: $it") }
-                    signOutResult.revokeTokenError?.let { fail("RevokeTokenError: $it") }
-                }
-                is AWSCognitoAuthSignOutResult.FailedSignOut -> {
-                    // Sign Out failed with an exception, leaving the user signed in.
-                    fail("Sign out failed: ${signOutResult.exception}")
-                }
+        val signOutResult = syncAuth.signOut(options)
+        when (signOutResult) {
+            is AWSCognitoAuthSignOutResult.PartialSignOut -> {
+                // Sign Out completed with some errors. User is signed out of the device.
+                signOutResult.hostedUIError?.let { fail("HostedUIError while signing out: $it") }
+                signOutResult.globalSignOutError?.let { fail("GlobalSignOutError while signing out: $it") }
+                signOutResult.revokeTokenError?.let { fail("RevokeTokenError: $it") }
+            }
+            is AWSCognitoAuthSignOutResult.FailedSignOut -> {
+                // Sign Out failed with an exception, leaving the user signed in.
+                fail("Sign out failed: ${signOutResult.exception}")
             }
         }
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     @Test
@@ -407,41 +291,23 @@ class AuthCanaryTestGen2 {
 
     private fun deleteTemporaryUser(user: String) {
         signInUser(username, password)
-        val latch = CountDownLatch(1)
         val request = RestOptions.builder()
             .addPath("/deleteUser")
             .addBody("{\"username\":\"$user\"}".toByteArray())
             .addHeader("Content-Type", "application/json")
             .build()
-        api.post(
-            request,
-            { latch.countDown() },
-            {
-                Log.e(TAG, "Error deleting user", it)
-                latch.countDown()
-            }
-        )
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        syncApi.post(request)
         signOutUser()
     }
 
     private fun confirmTemporaryUserSignUp(user: String) {
         signInUser(username, password)
-        val latch = CountDownLatch(1)
         val request = RestOptions.builder()
             .addPath("/confirmUserSignUp")
             .addBody("{\"username\":\"$user\"}".toByteArray())
             .addHeader("Content-Type", "application/json")
             .build()
-        api.post(
-            request,
-            { latch.countDown() },
-            {
-                Log.e(TAG, "Error confirming user", it)
-                latch.countDown()
-            }
-        )
-        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
+        syncApi.post(request)
         signOutUser()
     }
 }

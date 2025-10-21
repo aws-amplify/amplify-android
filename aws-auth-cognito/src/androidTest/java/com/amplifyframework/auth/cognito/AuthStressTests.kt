@@ -243,7 +243,7 @@ class AuthStressTests {
             )
         }
 
-        latch.assertAwait(TIMEOUT_S, TimeUnit.MINUTES)
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     /**
@@ -275,7 +275,7 @@ class AuthStressTests {
             }
         }
 
-        latch.assertAwait(TIMEOUT_S, TimeUnit.MINUTES)
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     /**
@@ -298,7 +298,7 @@ class AuthStressTests {
             )
         }
 
-        latch.assertAwait(TIMEOUT_S, TimeUnit.MINUTES)
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     /**
@@ -321,7 +321,7 @@ class AuthStressTests {
             )
         }
 
-        latch.assertAwait(TIMEOUT_S, TimeUnit.MINUTES)
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 
     /**
@@ -345,6 +345,6 @@ class AuthStressTests {
             )
         }
 
-        latch.assertAwait(TIMEOUT_S, TimeUnit.MINUTES)
+        latch.assertAwait(TIMEOUT_S, TimeUnit.SECONDS)
     }
 }
