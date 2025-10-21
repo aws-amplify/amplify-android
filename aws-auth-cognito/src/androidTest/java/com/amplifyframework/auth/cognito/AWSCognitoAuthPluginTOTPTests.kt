@@ -143,7 +143,7 @@ class AWSCognitoAuthPluginTOTPTests {
         )
         synchronousAuth.confirmSignIn(otp)
         synchronousAuth.updateUserAttribute(AuthUserAttribute(AuthUserAttributeKey.phoneNumber(), "+19876543210"))
-        updateMFAPreference(MFAPreference.ENABLED, MFAPreference.ENABLED, MFAPreference.ENABLED)
+        updateMFAPreference(MFAPreference.ENABLED, MFAPreference.ENABLED, MFAPreference.DISABLED)
         synchronousAuth.signOut()
         val signInResult = synchronousAuth.signIn(userName, password)
         Assert.assertEquals(AuthSignInStep.CONTINUE_SIGN_IN_WITH_MFA_SELECTION, signInResult.nextStep.signInStep)
