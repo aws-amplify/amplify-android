@@ -23,11 +23,14 @@ import com.amplifyframework.api.aws.AWSApiPlugin
 import com.amplifyframework.api.rest.RestOptions
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
+import com.amplifyframework.auth.cognito.exceptions.service.InvalidParameterException
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.result.AWSCognitoAuthSignOutResult
 import com.amplifyframework.auth.cognito.test.R
 import com.amplifyframework.auth.cognito.testutils.Credentials
+import com.amplifyframework.auth.exceptions.InvalidStateException
+import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
@@ -36,7 +39,7 @@ import com.amplifyframework.core.AmplifyConfiguration
 import com.amplifyframework.core.configuration.AmplifyOutputs
 import com.amplifyframework.testutils.sync.SynchronousApi
 import com.amplifyframework.testutils.sync.SynchronousAuth
-import io.kotest.assertions.throwables.shouldThrowAny
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeTrue
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
@@ -127,7 +130,8 @@ class AuthCanaryTestGen2 {
     // Test requires confirmation code, testing onError call.
     @Test
     fun confirmSignUp() {
-        shouldThrowAny {
+        // InvalidParameterException thrown because "username" is already confirmed
+        shouldThrow<InvalidParameterException> {
             syncAuth.confirmSignUp("username", "the code you received via email")
         }
     }
@@ -142,7 +146,8 @@ class AuthCanaryTestGen2 {
     // Test requires confirmation code, testing onError call
     @Test
     fun confirmSignIn() {
-        shouldThrowAny {
+        // InvalidStateException thrown because user has not initiated a sign in
+        shouldThrow<InvalidStateException> {
             syncAuth.confirmSignIn("confirmation code")
         }
     }
@@ -181,7 +186,8 @@ class AuthCanaryTestGen2 {
     // Test requires confirmation code, testing onError call
     @Test
     fun confirmResetPassword() {
-        shouldThrowAny {
+        // InvalidParameterException thrown because "username" has not initiated a password reset
+        shouldThrow<InvalidParameterException> {
             syncAuth.confirmResetPassword("username", "NewPassword123", "confirmation code")
         }
     }
@@ -215,7 +221,8 @@ class AuthCanaryTestGen2 {
     // Test requires confirmation code, testing onError call
     @Test
     fun confirmUserAttribute() {
-        shouldThrowAny {
+        // SignedOutException thrown because there is no user signed in
+        shouldThrow<SignedOutException> {
             syncAuth.confirmUserAttribute(AuthUserAttributeKey.email(), "344299")
         }
     }
