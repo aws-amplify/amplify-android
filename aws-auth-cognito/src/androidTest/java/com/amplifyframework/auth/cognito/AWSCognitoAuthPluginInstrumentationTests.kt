@@ -72,7 +72,6 @@ class AWSCognitoAuthPluginInstrumentationTests {
     @Before
     fun setup() {
         signOut()
-        Thread.sleep(5000) // ensure signout has time to complete
     }
 
     @Test
