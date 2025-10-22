@@ -73,6 +73,7 @@ dependencies {
     androidTestImplementation(libs.test.kotlin.coroutines)
     androidTestImplementation(libs.test.kotlin.kotlinTest)
     androidTestImplementation(libs.test.totp)
+    androidTestImplementation(libs.test.kotest.assertions)
 
     androidTestImplementation(project(":aws-api"))
     androidTestImplementation(project(":aws-api-appsync"))
