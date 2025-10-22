@@ -18,8 +18,6 @@ package com.amplifyframework.auth.cognito
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.api.aws.AWSApiPlugin
-import com.amplifyframework.api.graphql.GraphQLOperation
-import com.amplifyframework.api.graphql.SimpleGraphQLRequest
 import com.amplifyframework.auth.AuthFactorType
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
@@ -30,6 +28,9 @@ import com.amplifyframework.auth.cognito.exceptions.service.UsernameExistsExcept
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.test.R
+import com.amplifyframework.auth.cognito.testutils.blockForCode
+import com.amplifyframework.auth.cognito.testutils.blockUntilEstablished
+import com.amplifyframework.auth.cognito.testutils.createMfaSubscription
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.exceptions.NotAuthorizedException
 import com.amplifyframework.auth.exceptions.SignedOutException
@@ -40,16 +41,12 @@ import com.amplifyframework.core.AmplifyConfiguration
 import com.amplifyframework.core.category.CategoryConfiguration
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.datastore.generated.model.MfaInfo
-import com.amplifyframework.testutils.Assets
+import com.amplifyframework.testutils.api.SubscriptionHolder
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import java.util.UUID
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
-import kotlin.test.fail
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -57,20 +54,14 @@ import org.junit.Test
 class AWSCognitoAuthPluginUserAuthTests {
 
     private val password = "${UUID.randomUUID()}BleepBloop1234!"
-    private val userName = "test${Random.nextInt()}"
-    private val email = "$userName@amplify-swift-gamma.awsapps.com"
+    private val username = "test${Random.nextInt()}"
+    private val email = "$username@amplify-swift-gamma.awsapps.com"
     private val phoneNumber = "+1555${Random.nextInt(1000000, 10000000)}"
 
     private var authPlugin = AWSCognitoAuthPlugin()
     private var apiPlugin = AWSApiPlugin()
     private lateinit var synchronousAuth: SynchronousAuth
-    private var subscription: GraphQLOperation<MfaInfo>? = null
-    private var otpCode = ""
-    private var latch: CountDownLatch? = null
-
-    internal companion object {
-        const val OTP_AWAIT_SECONDS = 30L
-    }
+    private lateinit var subscription: SubscriptionHolder<MfaInfo>
 
     @Before
     fun initializePlugin() {
@@ -86,38 +77,12 @@ class AWSCognitoAuthPluginUserAuthTests {
         apiPlugin.configure(apiConfigJson, context)
         synchronousAuth = SynchronousAuth.delegatingTo(authPlugin)
 
-        val subscriptionEstablishedLatch = CountDownLatch(1)
-        subscription = apiPlugin.subscribe(
-            SimpleGraphQLRequest(
-                Assets.readAsString("create-mfa-subscription.graphql"),
-                MfaInfo::class.java,
-                null
-            ),
-            {
-                println("====== Subscription Established ======")
-                subscriptionEstablishedLatch.countDown()
-            },
-            {
-                println("====== Received some MFA Info ======")
-                if (it.data.username == userName) {
-                    otpCode = it.data.code
-                    latch?.countDown()
-                }
-            },
-            {
-                println("====== Subscription Failed $it ======")
-                fail("Failed to establish subscription to listen for MFA")
-            },
-            { }
-        )
-
-        assertTrue(subscriptionEstablishedLatch.await(10, TimeUnit.SECONDS))
+        subscription = apiPlugin.createMfaSubscription()
     }
 
     @After
     fun tearDown() {
-        subscription?.cancel()
-        otpCode = ""
+        subscription.cancel()
         try {
             synchronousAuth.deleteUser()
         } catch (e: SignedOutException) {
@@ -132,6 +97,7 @@ class AWSCognitoAuthPluginUserAuthTests {
     fun signInWithAnIncompatiblePreferredFirstFactorShowsSelectChallenge() {
         // Step 1: Sign up a new user with NO phone number and confirm it
         signUpAndConfirmNewUser(
+            subscription = subscription,
             usePhoneNumber = false
         )
 
@@ -144,7 +110,7 @@ class AWSCognitoAuthPluginUserAuthTests {
                 .preferredFirstFactor(AuthFactorType.SMS_OTP)
                 .build()
 
-        var signInResult = synchronousAuth.signIn(userName, null, options)
+        var signInResult = synchronousAuth.signIn(username, null, options)
 
         // Validation 1: Validate that the next step is to select a first factor (since SMS isn't a proper option)
         assertEquals(AuthSignInStep.CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION, signInResult.nextStep.signInStep)
@@ -156,8 +122,7 @@ class AWSCognitoAuthPluginUserAuthTests {
         assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP, signInResult.nextStep.signInStep)
 
         // Wait until the OTP code has been received
-        latch = CountDownLatch(1)
-        assertTrue(latch?.await(OTP_AWAIT_SECONDS, TimeUnit.SECONDS) ?: false)
+        val otpCode = subscription.blockForCode(username)
 
         // Step 4: Input the emailed OTP code for confirmation
         signInResult = synchronousAuth.confirmSignIn(otpCode)
@@ -172,6 +137,7 @@ class AWSCognitoAuthPluginUserAuthTests {
     fun signInWithNoFirstFactorPreferenceAndSelectEmailSucceeds() {
         // Step 1: Sign up a new user and confirm it
         signUpAndConfirmNewUser(
+            subscription = subscription,
             usePhoneNumber = true,
             usePassword = true
         )
@@ -184,7 +150,7 @@ class AWSCognitoAuthPluginUserAuthTests {
                 .preferredFirstFactor(null)
                 .build()
 
-        var signInResult = synchronousAuth.signIn(userName, null, options)
+        var signInResult = synchronousAuth.signIn(username, null, options)
 
         // Validation 1: Validate that the next step is to select a first factor
         assertEquals(AuthSignInStep.CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION, signInResult.nextStep.signInStep)
@@ -196,8 +162,7 @@ class AWSCognitoAuthPluginUserAuthTests {
         assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP, signInResult.nextStep.signInStep)
 
         // Wait until the OTP code has been received
-        latch = CountDownLatch(1)
-        assertTrue(latch?.await(OTP_AWAIT_SECONDS, TimeUnit.SECONDS) ?: false)
+        val otpCode = subscription.blockForCode(username)
 
         // Step 4: Input the emailed OTP code for confirmation
         signInResult = synchronousAuth.confirmSignIn(otpCode)
@@ -210,6 +175,7 @@ class AWSCognitoAuthPluginUserAuthTests {
     fun signInWithNoFirstFactorPreferenceAndSelectEmailRetrySucceeds() {
         // Step 1: Sign up a new user and confirm it
         signUpAndConfirmNewUser(
+            subscription = subscription,
             usePhoneNumber = true
         )
 
@@ -221,7 +187,7 @@ class AWSCognitoAuthPluginUserAuthTests {
                 .preferredFirstFactor(null)
                 .build()
 
-        var signInResult = synchronousAuth.signIn(userName, null, options)
+        var signInResult = synchronousAuth.signIn(username, null, options)
 
         // Validation 1: Validate that the next step is to select a first factor
         assertEquals(AuthSignInStep.CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION, signInResult.nextStep.signInStep)
@@ -233,8 +199,7 @@ class AWSCognitoAuthPluginUserAuthTests {
         assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP, signInResult.nextStep.signInStep)
 
         // Wait until the OTP code has been received
-        latch = CountDownLatch(1)
-        assertTrue(latch?.await(OTP_AWAIT_SECONDS, TimeUnit.SECONDS) ?: false)
+        val otpCode = subscription.blockForCode(username)
 
         // Validation 3: Validate that providing an incorrect OTP code throws the proper exception
         assertFailsWith<CodeMismatchException> {
@@ -251,7 +216,7 @@ class AWSCognitoAuthPluginUserAuthTests {
     @Test
     fun signInWithEmailPreferredSucceeds() {
         // Step 1: Sign up a new user and confirm it
-        signUpAndConfirmNewUser()
+        signUpAndConfirmNewUser(subscription = subscription)
 
         // Step 2: Attempt to sign in with the newly created user with EMAIL preferred first factor
         val options =
@@ -261,14 +226,13 @@ class AWSCognitoAuthPluginUserAuthTests {
                 .preferredFirstFactor(AuthFactorType.EMAIL_OTP)
                 .build()
 
-        var signInResult = synchronousAuth.signIn(userName, null, options)
+        var signInResult = synchronousAuth.signIn(username, null, options)
 
         // Validation 1: Validate that the next step is to confirm the emailed OTP code
         assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP, signInResult.nextStep.signInStep)
 
         // Wait until the OTP code has been received
-        latch = CountDownLatch(1)
-        assertTrue(latch?.await(OTP_AWAIT_SECONDS, TimeUnit.SECONDS) ?: false)
+        val otpCode = subscription.blockForCode(username)
 
         // Step 3: Input the emailed OTP code for confirmation
         signInResult = synchronousAuth.confirmSignIn(otpCode)
@@ -280,7 +244,7 @@ class AWSCognitoAuthPluginUserAuthTests {
     @Test
     fun signInWithEmailPreferredRetrySucceeds() {
         // Step 1: Sign up a new user and confirm it
-        signUpAndConfirmNewUser()
+        signUpAndConfirmNewUser(subscription = subscription)
 
         // Step 2: Attempt to sign in with the newly created user with EMAIL preferred first factor
         val options =
@@ -290,14 +254,13 @@ class AWSCognitoAuthPluginUserAuthTests {
                 .preferredFirstFactor(AuthFactorType.EMAIL_OTP)
                 .build()
 
-        var signInResult = synchronousAuth.signIn(userName, null, options)
+        var signInResult = synchronousAuth.signIn(username, null, options)
 
         // Validation 1: Validate that the next step is to confirm the emailed OTP code
         assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP, signInResult.nextStep.signInStep)
 
         // Wait until the OTP code has been received
-        latch = CountDownLatch(1)
-        assertTrue(latch?.await(OTP_AWAIT_SECONDS, TimeUnit.SECONDS) ?: false)
+        val otpCode = subscription.blockForCode(username)
 
         // Validation 2: Validate that providing an incorrect OTP code throws the proper exception
         assertFailsWith<CodeMismatchException> {
@@ -317,6 +280,7 @@ class AWSCognitoAuthPluginUserAuthTests {
     fun signInWithNoFirstFactorPreferenceAndSelectSmsSucceeds() {
         // Step 1: Sign up a new user and confirm it
         signUpAndConfirmNewUser(
+            subscription = subscription,
             usePhoneNumber = true
         )
 
@@ -328,7 +292,7 @@ class AWSCognitoAuthPluginUserAuthTests {
                 .preferredFirstFactor(null)
                 .build()
 
-        var signInResult = synchronousAuth.signIn(userName, null, options)
+        var signInResult = synchronousAuth.signIn(username, null, options)
 
         // Validation 1: Validate that the next step is to select a first factor
         assertEquals(AuthSignInStep.CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION, signInResult.nextStep.signInStep)
@@ -340,8 +304,7 @@ class AWSCognitoAuthPluginUserAuthTests {
         assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP, signInResult.nextStep.signInStep)
 
         // Wait until the OTP code has been received
-        latch = CountDownLatch(1)
-        assertTrue(latch?.await(OTP_AWAIT_SECONDS, TimeUnit.SECONDS) ?: false)
+        val otpCode = subscription.blockForCode(username)
 
         // Step 4: Input the texted OTP code for confirmation
         signInResult = synchronousAuth.confirmSignIn(otpCode)
@@ -354,6 +317,7 @@ class AWSCognitoAuthPluginUserAuthTests {
     fun signInWithNoFirstFactorPreferenceAndSelectSmsRetrySucceeds() {
         // Step 1: Sign up a new user and confirm it
         signUpAndConfirmNewUser(
+            subscription = subscription,
             usePhoneNumber = true
         )
 
@@ -365,7 +329,7 @@ class AWSCognitoAuthPluginUserAuthTests {
                 .preferredFirstFactor(null)
                 .build()
 
-        var signInResult = synchronousAuth.signIn(userName, null, options)
+        var signInResult = synchronousAuth.signIn(username, null, options)
 
         // Validation 1: Validate that the next step is to select a first factor
         assertEquals(AuthSignInStep.CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION, signInResult.nextStep.signInStep)
@@ -377,8 +341,7 @@ class AWSCognitoAuthPluginUserAuthTests {
         assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP, signInResult.nextStep.signInStep)
 
         // Wait until the OTP code has been received
-        latch = CountDownLatch(1)
-        assertTrue(latch?.await(OTP_AWAIT_SECONDS, TimeUnit.SECONDS) ?: false)
+        val otpCode = subscription.blockForCode(username)
 
         // Validation 3: Validate that providing an incorrect OTP code throws the proper exception
         assertFailsWith<CodeMismatchException> {
@@ -396,6 +359,7 @@ class AWSCognitoAuthPluginUserAuthTests {
     fun signInWithSmsPreferredSucceeds() {
         // Step 1: Sign up a new user and confirm it
         signUpAndConfirmNewUser(
+            subscription = subscription,
             usePhoneNumber = true
         )
 
@@ -407,14 +371,13 @@ class AWSCognitoAuthPluginUserAuthTests {
                 .preferredFirstFactor(AuthFactorType.SMS_OTP)
                 .build()
 
-        var signInResult = synchronousAuth.signIn(userName, null, options)
+        var signInResult = synchronousAuth.signIn(username, null, options)
 
         // Validation 1: Validate that the next step is to confirm the texted OTP code
         assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP, signInResult.nextStep.signInStep)
 
         // Wait until the OTP code has been received
-        latch = CountDownLatch(1)
-        assertTrue(latch?.await(OTP_AWAIT_SECONDS, TimeUnit.SECONDS) ?: false)
+        val otpCode = subscription.blockForCode(username)
 
         // Step 4: Input the texted OTP code for confirmation
         signInResult = synchronousAuth.confirmSignIn(otpCode)
@@ -427,6 +390,7 @@ class AWSCognitoAuthPluginUserAuthTests {
     fun signInWithSmsPreferredRetrySucceeds() {
         // Step 1: Sign up a new user and confirm it
         signUpAndConfirmNewUser(
+            subscription = subscription,
             usePhoneNumber = true
         )
 
@@ -438,14 +402,13 @@ class AWSCognitoAuthPluginUserAuthTests {
                 .preferredFirstFactor(AuthFactorType.SMS_OTP)
                 .build()
 
-        var signInResult = synchronousAuth.signIn(userName, null, options)
+        var signInResult = synchronousAuth.signIn(username, null, options)
 
         // Validation 1: Validate that the next step is to confirm the texted OTP code
         assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP, signInResult.nextStep.signInStep)
 
         // Wait until the OTP code has been received
-        latch = CountDownLatch(1)
-        assertTrue(latch?.await(OTP_AWAIT_SECONDS, TimeUnit.SECONDS) ?: false)
+        val otpCode = subscription.blockForCode(username)
 
         // Validation 2: Validate that providing an incorrect OTP code throws the proper exception
         assertFailsWith<CodeMismatchException> {
@@ -465,6 +428,7 @@ class AWSCognitoAuthPluginUserAuthTests {
     fun signInWithNoFirstFactorPreferenceAndSelectPasswordSucceeds() {
         // Step 1: Sign up a new user and confirm it
         signUpAndConfirmNewUser(
+            subscription = subscription,
             usePassword = true
         )
 
@@ -476,7 +440,7 @@ class AWSCognitoAuthPluginUserAuthTests {
                 .preferredFirstFactor(null)
                 .build()
 
-        var signInResult = synchronousAuth.signIn(userName, null, options)
+        var signInResult = synchronousAuth.signIn(username, null, options)
 
         // Validation 1: Validate that the next step is to select a first factor
         assertEquals(AuthSignInStep.CONTINUE_SIGN_IN_WITH_FIRST_FACTOR_SELECTION, signInResult.nextStep.signInStep)
@@ -498,6 +462,7 @@ class AWSCognitoAuthPluginUserAuthTests {
     fun signInWithPasswordPreferredRetrySucceeds() {
         // Step 1: Sign up a new user and confirm it
         signUpAndConfirmNewUser(
+            subscription = subscription,
             usePassword = true
         )
 
@@ -511,11 +476,11 @@ class AWSCognitoAuthPluginUserAuthTests {
 
         // Validation 1: Validate that an incorrect password returns the proper exception
         assertFailsWith<NotAuthorizedException> {
-            synchronousAuth.signIn(userName, password.reversed(), options)
+            synchronousAuth.signIn(username, password.reversed(), options)
         }
 
         // Step 3: Sign in with the correct password
-        val signInResult = synchronousAuth.signIn(userName, password, options)
+        val signInResult = synchronousAuth.signIn(username, password, options)
 
         // Validation 2: Validate that user is signed in
         assertEquals(AuthSignInStep.DONE, signInResult.nextStep.signInStep)
@@ -540,6 +505,7 @@ class AWSCognitoAuthPluginUserAuthTests {
     fun signUpWithSameUsernameFails() {
         // Step 1: Sign up a new user and confirm it
         signUpAndConfirmNewUser(
+            subscription = subscription,
             usePassword = true
         )
 
@@ -550,7 +516,7 @@ class AWSCognitoAuthPluginUserAuthTests {
 
         // Validation 1: Validate that sign up fails because the username was already taken
         assertFailsWith<UsernameExistsException> {
-            synchronousAuth.signUp(userName, password, signUpOptions)
+            synchronousAuth.signUp(username, password, signUpOptions)
         }
 
         // Step 3: Sign in so that we can delete the user in the tear down
@@ -562,7 +528,7 @@ class AWSCognitoAuthPluginUserAuthTests {
                 .build()
 
         // Step 3: Sign in with the correct password
-        val signInResult = synchronousAuth.signIn(userName, password, signInOptions)
+        val signInResult = synchronousAuth.signIn(username, password, signInOptions)
 
         // Validation 2: Validate that user is signed in
         assertEquals(AuthSignInStep.DONE, signInResult.nextStep.signInStep)
@@ -572,11 +538,14 @@ class AWSCognitoAuthPluginUserAuthTests {
 
     @Test
     fun confirmSignUpAndAutoSignInSucceeds() {
+        // Ensure subscription is ready to receive MFA code
+        subscription.blockUntilEstablished()
+
         // Step 1: Sign up a passwordless user with just an email address
         val options = AuthSignUpOptions.builder()
             .userAttributes(listOf(AuthUserAttribute(AuthUserAttributeKey.email(), email)))
             .build()
-        var signUpResult = synchronousAuth.signUp(userName, null, options)
+        var signUpResult = synchronousAuth.signUp(username, null, options)
 
         // Validation 1: Validate that the user is currently in the Confirm Sign Up state
         assertEquals(AuthSignUpStep.CONFIRM_SIGN_UP_STEP, signUpResult.nextStep.signUpStep)
@@ -587,11 +556,10 @@ class AWSCognitoAuthPluginUserAuthTests {
         }
 
         // Wait until the confirmation code has been received
-        latch = CountDownLatch(1)
-        assertTrue(latch?.await(OTP_AWAIT_SECONDS, TimeUnit.SECONDS) ?: false)
+        val otpCode = subscription.blockForCode(username)
 
         // Step 2: Confirm sign up with the correct OTP code
-        signUpResult = synchronousAuth.confirmSignUp(userName, otpCode)
+        signUpResult = synchronousAuth.confirmSignUp(username, otpCode)
 
         // Validation 3: Validate that the user confirmation is complete and that auto sign in can be completed
         assertEquals(AuthSignUpStep.COMPLETE_AUTO_SIGN_IN, signUpResult.nextStep.signUpStep)
@@ -605,11 +573,14 @@ class AWSCognitoAuthPluginUserAuthTests {
 
     @Test
     fun confirmSignUpRetryAndAutoSignInSucceeds() {
+        // Ensure subscription is ready to receive MFA code
+        subscription.blockUntilEstablished()
+
         // Step 1: Sign up a passwordless user with just an email address
         val options = AuthSignUpOptions.builder()
             .userAttributes(listOf(AuthUserAttribute(AuthUserAttributeKey.email(), email)))
             .build()
-        var signUpResult = synchronousAuth.signUp(userName, null, options)
+        var signUpResult = synchronousAuth.signUp(username, null, options)
 
         // Validation 1: Validate that the user is currently in the Confirm Sign Up state
         assertEquals(AuthSignUpStep.CONFIRM_SIGN_UP_STEP, signUpResult.nextStep.signUpStep)
@@ -620,16 +591,15 @@ class AWSCognitoAuthPluginUserAuthTests {
         }
 
         // Wait until the confirmation code has been received
-        latch = CountDownLatch(1)
-        assertTrue(latch?.await(OTP_AWAIT_SECONDS, TimeUnit.SECONDS) ?: false)
+        val otpCode = subscription.blockForCode(username)
 
         // Validation 3: Validate that confirm sign up fails the OTP code is incorrect
         assertFailsWith<CodeMismatchException> {
-            synchronousAuth.confirmSignUp(userName, otpCode.reversed())
+            synchronousAuth.confirmSignUp(username, otpCode.reversed())
         }
 
         // Step 2: Confirm sign up with the correct OTP code
-        signUpResult = synchronousAuth.confirmSignUp(userName, otpCode)
+        signUpResult = synchronousAuth.confirmSignUp(username, otpCode)
 
         // Validation 4: Validate that the user confirmation is complete and that auto sign in can be completed
         assertEquals(AuthSignUpStep.COMPLETE_AUTO_SIGN_IN, signUpResult.nextStep.signUpStep)
@@ -645,7 +615,7 @@ class AWSCognitoAuthPluginUserAuthTests {
     fun confirmSignUpFailsForUnregisteredUser() {
         // Validation 1: Validate that confirm sign up fails on an unregistered user
         assertFailsWith<UserNotFoundException> {
-            synchronousAuth.confirmSignUp(userName, "123456")
+            synchronousAuth.confirmSignUp(username, "123456")
         }
     }
 
@@ -657,7 +627,11 @@ class AWSCognitoAuthPluginUserAuthTests {
         }
     }
 
-    private fun signUpAndConfirmNewUser(usePhoneNumber: Boolean = false, usePassword: Boolean = false) {
+    private fun signUpAndConfirmNewUser(
+        subscription: SubscriptionHolder<MfaInfo>,
+        usePhoneNumber: Boolean = false,
+        usePassword: Boolean = false
+    ) {
         val signUpPassword = if (usePassword) {
             password
         } else {
@@ -672,14 +646,16 @@ class AWSCognitoAuthPluginUserAuthTests {
             listOf(AuthUserAttribute(AuthUserAttributeKey.email(), email))
         }
 
+        // Ensure subscription is ready to receive MFA code
+        subscription.blockUntilEstablished()
+
         val options = AuthSignUpOptions.builder()
             .userAttributes(attributes).build()
-        synchronousAuth.signUp(userName, signUpPassword, options)
+        synchronousAuth.signUp(username, signUpPassword, options)
 
         // Wait until the confirmation code has been received
-        latch = CountDownLatch(1)
-        assertTrue(latch?.await(OTP_AWAIT_SECONDS, TimeUnit.SECONDS) ?: false)
+        val otpCode = subscription.blockForCode(username)
 
-        synchronousAuth.confirmSignUp(userName, otpCode)
+        synchronousAuth.confirmSignUp(username, otpCode)
     }
 }
