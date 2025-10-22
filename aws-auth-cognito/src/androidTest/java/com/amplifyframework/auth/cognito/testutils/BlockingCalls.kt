@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito.testutils
 
 import com.amplifyframework.auth.AuthException
+import com.amplifyframework.testutils.coroutines.runBlockingWithTimeout
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -23,22 +24,18 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
 
 typealias ResultFunction<T> = (onSuccess: (T) -> Unit, onError: (AuthException) -> Unit) -> Unit
 typealias ResultFunctionWithArg<T, R> = (arg: T, onSuccess: (R) -> Unit, onError: (AuthException) -> Unit) -> Unit
 
 // Run a function that invokes a callback-based API and returns the result or throws an exception on error.
 // The exception is thrown on the calling thread, allowing it to be caught by the JUnit runner
-fun <T> blockForResult(timeout: Duration = 10.seconds, func: ResultFunction<T>): T = runBlocking {
-    withTimeout(timeout) {
-        suspendCoroutine { continuation ->
-            func(
-                { continuation.resume(it) },
-                { continuation.resumeWithException(it) }
-            )
-        }
+fun <T> blockForResult(timeout: Duration = 10.seconds, func: ResultFunction<T>): T = runBlockingWithTimeout(timeout) {
+    suspendCoroutine { continuation ->
+        func(
+            { continuation.resume(it) },
+            { continuation.resumeWithException(it) }
+        )
     }
 }
 
@@ -51,7 +48,7 @@ fun blockForCompletion(
     func({ onSuccess(Unit) }, onError)
 }
 
-// Run a function that invokes a callback-based API and get the result as a Future
+// Run a function that invokes a callback-based API and get the result as a Deferred
 // This allows invoking the API many times concurrently for stress-testing purposes
 fun <T> deferredResult(func: ResultFunction<T>): Deferred<T> {
     val deferred = CompletableDeferred<T>()
