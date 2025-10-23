@@ -1,3 +1,11 @@
+## [Release 2.30.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.30.2)
+
+### Bug Fixes
+- **auth:** Fix losing session identifier when incorrect otp code is entered during confirm sign up ([#3136](https://github.com/aws-amplify/amplify-android/issues/3136))
+- **auth:** Add missing state transitions for AutoSignIn state ([#3138](https://github.com/aws-amplify/amplify-android/issues/3138))
+
+[See all changes between 2.30.1 and 2.30.2](https://github.com/aws-amplify/amplify-android/compare/release_v2.30.1...release_v2.30.2)
+
 ## [Release 2.30.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.30.1)
 
 ### Bug Fixes
