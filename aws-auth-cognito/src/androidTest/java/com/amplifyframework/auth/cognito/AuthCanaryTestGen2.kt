@@ -253,7 +253,10 @@ class AuthCanaryTestGen2 {
 
     @Test
     fun globalSignOut() {
-        signInUser(username, password)
+        signUpUser(tempUsername, tempPassword)
+        confirmTemporaryUserSignUp(tempUsername)
+        signInUser(tempUsername, tempPassword)
+
         val options = AuthSignOutOptions.builder()
             .globalSignOut(true)
             .build()
@@ -286,6 +289,7 @@ class AuthCanaryTestGen2 {
             .userAttribute(AuthUserAttributeKey.email(), "my@email.com")
             .build()
         syncAuth.signUp(user, pass, options)
+        signedUpNewUser = true
     }
 
     private fun signInUser(user: String, pass: String) {
