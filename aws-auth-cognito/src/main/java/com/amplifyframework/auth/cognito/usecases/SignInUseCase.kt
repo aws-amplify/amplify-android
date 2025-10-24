@@ -21,6 +21,7 @@ import com.amplifyframework.auth.cognito.AuthConfiguration
 import com.amplifyframework.auth.cognito.AuthStateMachine
 import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter.Companion.toAuthException
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
+import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.util.sendEventAndGetSignInResult
@@ -65,6 +66,7 @@ internal class SignInUseCase(
             when (val authNState = authState.authNState) {
                 is AuthenticationState.NotConfigured -> throw InvalidUserPoolConfigurationException()
                 is AuthenticationState.SignedOut, is AuthenticationState.Configured -> authState
+                is AuthenticationState.SignedIn -> throw SignedInException()
                 is AuthenticationState.SigningOut -> null
                 is AuthenticationState.SigningIn -> {
                     // Cancel the sign in
