@@ -31,9 +31,7 @@ internal sealed class WebAuthnSignInState : State {
     data class AssertingCredentials(val id: String = "") : WebAuthnSignInState()
     data class VerifyingCredentialsAndSigningIn(val id: String = "") : WebAuthnSignInState()
     data class SignedIn(val id: String = "") : WebAuthnSignInState()
-    data class Error(val exception: Exception, val context: WebAuthnSignInContext) : WebAuthnSignInState() {
-        var hasNewResponse = true
-    }
+    data class Error(val exception: Exception, val context: WebAuthnSignInContext) : WebAuthnSignInState()
 
     class Resolver(private val actions: WebAuthnSignInActions, private val signInActions: SignInActions) :
         StateMachineResolver<WebAuthnSignInState> {

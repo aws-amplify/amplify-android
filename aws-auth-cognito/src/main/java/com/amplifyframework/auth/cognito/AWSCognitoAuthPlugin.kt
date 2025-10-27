@@ -232,7 +232,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         password: String?,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.signIn(username, password) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.signIn().execute(username, password) }
 
     override fun signIn(
         username: String?,
@@ -240,20 +240,20 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         options: AuthSignInOptions,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.signIn(username, password, options) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.signIn().execute(username, password, options) }
 
     override fun confirmSignIn(
         challengeResponse: String,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.confirmSignIn(challengeResponse) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.confirmSignIn().execute(challengeResponse) }
 
     override fun confirmSignIn(
         challengeResponse: String,
         options: AuthConfirmSignInOptions,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.confirmSignIn(challengeResponse, options) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.confirmSignIn().execute(challengeResponse, options) }
 
     override fun signInWithSocialWebUI(
         provider: AuthProvider,
