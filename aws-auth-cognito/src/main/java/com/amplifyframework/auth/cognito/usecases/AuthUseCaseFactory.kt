@@ -167,4 +167,13 @@ internal class AuthUseCaseFactory(
     )
 
     fun confirmSignIn() = ConfirmSignInUseCase(stateMachine = stateMachine)
+
+    fun signOut() = SignOutUseCase(
+        stateMachine = stateMachine
+    )
+
+    fun clearFederationToIdentityPool() = ClearFederationToIdentityPoolUseCase(
+        stateMachine = stateMachine,
+        signOut = signOut()
+    )
 }
