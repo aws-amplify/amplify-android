@@ -65,14 +65,19 @@ internal abstract class Jwt {
     enum class Claim(val key: String) {
         Expiration("exp"),
         UserSub("sub"),
-        Username("username"),
-        TokenRevocationId("origin_jti")
+        Username("username"), // username claim in the access token
+        TokenRevocationId("origin_jti"),
+        CognitoUsername("cognito:username") // username claim in the identity token
     }
 }
 
 // See https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-the-id-token.html
 @Serializable
 internal class IdToken(override val tokenValue: String) : Jwt() {
+    val userSub: String?
+        get() = getClaim(Claim.UserSub)
+    val username: String?
+        get() = getClaim(Claim.CognitoUsername)
     val expiration: Instant? by lazy {
         getClaim(Claim.Expiration)?.let { Instant.ofEpochSecond(it.toLong()) }
     }

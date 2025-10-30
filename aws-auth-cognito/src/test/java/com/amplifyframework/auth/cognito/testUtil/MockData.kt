@@ -15,10 +15,12 @@
 
 package com.amplifyframework.auth.cognito.testUtil
 
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthenticationResultType
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
+import kotlin.time.Duration.Companion.minutes
 
 internal fun authState(
     authNState: AuthenticationState? = null,
@@ -29,3 +31,15 @@ internal fun authState(
     authZState = authZState,
     authSignUpState = authSignUpState
 )
+
+internal fun authenticationResult(
+    accessToken: String? = "accessToken",
+    idToken: String? = "idToken",
+    refreshToken: String? = "refreshToken",
+    expiresIn: Int = 60.minutes.inWholeSeconds.toInt()
+) = AuthenticationResultType {
+    this.accessToken = accessToken
+    this.idToken = idToken
+    this.refreshToken = refreshToken
+    this.expiresIn = expiresIn
+}
