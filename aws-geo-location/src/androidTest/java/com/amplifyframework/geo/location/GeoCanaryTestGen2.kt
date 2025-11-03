@@ -23,11 +23,9 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.configuration.AmplifyOutputs
 import com.amplifyframework.geo.location.test.R
 import com.amplifyframework.geo.models.Coordinates
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
+import com.amplifyframework.testutils.sync.SynchronousAuth
+import com.amplifyframework.testutils.sync.SynchronousGeo
 import org.junit.After
-import org.junit.Assert
-import org.junit.Assert.fail
 import org.junit.BeforeClass
 import org.junit.Test
 
@@ -49,6 +47,9 @@ class GeoCanaryTestGen2 {
         }
     }
 
+    private val syncAuth = SynchronousAuth.delegatingToAmplify()
+    private val syncGeo = SynchronousGeo.delegatingToAmplify()
+
     @After
     fun tearDown() {
         signOutFromCognito()
@@ -56,66 +57,31 @@ class GeoCanaryTestGen2 {
 
     @Test
     fun searchByText() {
-        val latch = CountDownLatch(1)
         signInWithCognito()
         val searchQuery = "Amazon Go"
-        try {
-            Amplify.Geo.searchByText(
-                searchQuery,
-                {
-                    for (place in it.places) {
-                        Log.i(TAG, place.toString())
-                    }
-                    latch.countDown()
-                },
-                { fail("Failed to search for $searchQuery: $it") }
-            )
-        } catch (e: Exception) {
-            fail(e.toString())
+        val result = syncGeo.searchByText(searchQuery)
+        for (place in result.places) {
+            Log.i(GeoCanaryTest.Companion.TAG, place.toString())
         }
-        Assert.assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
     }
 
     @Test
     fun searchByCoordinates() {
-        val latch = CountDownLatch(1)
         signInWithCognito()
         val position = Coordinates(47.6153, -122.3384)
-        try {
-            Amplify.Geo.searchByCoordinates(
-                position,
-                {
-                    for (place in it.places) {
-                        Log.i(TAG, place.toString())
-                    }
-                    latch.countDown()
-                },
-                { fail("Failed to reverse geocode $position: $it") }
-            )
-        } catch (e: Exception) {
-            fail(e.toString())
+        val result = syncGeo.searchByCoordinates(position)
+        for (place in result.places) {
+            Log.i(GeoCanaryTest.Companion.TAG, place.toString())
         }
-        Assert.assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
     }
 
     private fun signInWithCognito() {
-        val latch = CountDownLatch(1)
         val context = ApplicationProvider.getApplicationContext<Context>()
         val (username, password) = Credentials.load(context)
-        Amplify.Auth.signIn(
-            username,
-            password,
-            { latch.countDown() },
-            { Log.e(TAG, "Failed to sign in", it) }
-        )
-        latch.await(TIMEOUT_S, TimeUnit.SECONDS)
+        syncAuth.signIn(username, password)
     }
 
     private fun signOutFromCognito() {
-        val latch = CountDownLatch(1)
-        Amplify.Auth.signOut {
-            latch.countDown()
-        }
-        latch.await(TIMEOUT_S, TimeUnit.SECONDS)
+        syncAuth.signOut()
     }
 }
