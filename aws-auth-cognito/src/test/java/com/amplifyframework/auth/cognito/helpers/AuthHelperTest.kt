@@ -102,11 +102,11 @@ class AuthHelperTest {
                 idToken = idToken,
                 accessToken = accessToken
             )
-            if (usernameParameter != null || userIdForSrpParameter != null) {
-                this.challengeParameters = buildMap {
-                    usernameParameter?.let { put(ChallengeParameter.Username.key, it) }
-                    userIdForSrpParameter?.let { put(ChallengeParameter.UserIdForSrp.key, it) }
-                }
+        }
+        if (usernameParameter != null || userIdForSrpParameter != null) {
+            this.challengeParameters = buildMap {
+                usernameParameter?.let { put(ChallengeParameter.Username.key, it) }
+                userIdForSrpParameter?.let { put(ChallengeParameter.UserIdForSrp.key, it) }
             }
         }
     }

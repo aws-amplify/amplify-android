@@ -543,6 +543,7 @@ class AuthValidationTest {
     }
 
     private fun mockInitiateAuthSuccessResponse(username: String) = mockk<InitiateAuthResponse> {
+        every { authenticationResult } returns null
         every { challengeName } returns ChallengeNameType.PasswordVerifier
         every { challengeParameters } returns mapOf(
             "SALT" to "abc",
