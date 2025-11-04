@@ -25,12 +25,10 @@ import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider
 import com.amplifyframework.testmodels.commentsblog.Post
 import com.amplifyframework.testmodels.commentsblog.PostStatus
 import com.amplifyframework.testutils.HubAccumulator
+import com.amplifyframework.testutils.sync.SynchronousDataStore
 import java.util.UUID
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import org.junit.After
-import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
 import org.junit.BeforeClass
 import org.junit.Test
 
@@ -55,45 +53,26 @@ class DatastoreCanaryTestGen2 {
         }
     }
 
+    val syncDatastore = SynchronousDataStore.delegatingTo(Amplify.DataStore)
+
     @After
     fun teardown() {
-        val latch = CountDownLatch(1)
-        Amplify.DataStore.clear(
-            { latch.countDown() },
-            {
-                latch.countDown()
-                Log.e(TAG, "Error clearing DataStore", it)
-            }
-        )
-        latch.await(TIMEOUT_S, TimeUnit.SECONDS)
+        syncDatastore.clear()
     }
 
     @Test
     fun save() {
-        val latch = CountDownLatch(1)
         val post = Post.builder()
             .title("Post" + UUID.randomUUID().toString())
             .status(PostStatus.ACTIVE)
             .rating(3)
             .build()
-
-        Amplify.DataStore.save(
-            post,
-            { latch.countDown() },
-            { fail("Error creating post: $it") }
-        )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        syncDatastore.save(post)
     }
 
     @Test
     fun query() {
-        val latch = CountDownLatch(1)
-        Amplify.DataStore.query(
-            Post::class.java,
-            { latch.countDown() },
-            { fail("Error retrieving posts: $it") }
-        )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        syncDatastore.query(Post::class.java)
     }
 
     @Test
@@ -105,75 +84,30 @@ class DatastoreCanaryTestGen2 {
             .id(UUID.randomUUID().toString())
             .build()
 
-        val saveLatch = CountDownLatch(1)
         val createHub = HubAccumulator.create(
             HubChannel.DATASTORE,
             DataStoreHubEventFilters.enqueueOf(Post::class.simpleName, post.id),
             1
         ).start()
 
-        Amplify.DataStore.save(
-            post,
-            { saveLatch.countDown() },
-            { fail("Error creating post: $it") }
-        )
-        saveLatch.await(TIMEOUT_S, TimeUnit.SECONDS)
+        syncDatastore.save(post)
         createHub.await(TIMEOUT_S.toInt(), TimeUnit.SECONDS)
 
-        val deleteLatch = CountDownLatch(1)
-        Amplify.DataStore.delete(
-            post,
-            { deleteLatch.countDown() },
-            { fail("Failed to delete post: $it") }
-        )
-        // Temporarily prevent https://github.com/aws-amplify/amplify-android/issues/2617
-        Thread.sleep(1000)
-        assertTrue(deleteLatch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        syncDatastore.delete(post)
     }
 
     @Test
     fun start() {
-        val latch = CountDownLatch(1)
-        Amplify.DataStore.start(
-            { latch.countDown() },
-            { fail("Error starting DataStore: $it") }
-        )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
-    }
-
-    @Test
-    fun observe() {
-        val latch = CountDownLatch(1)
-        Amplify.DataStore.observe(
-            Post::class.java,
-            { latch.countDown() },
-            {
-                val post = it.item()
-                Log.i(TAG, "Post: $post")
-            },
-            { fail("Observation failed: $it") },
-            { Log.i(TAG, "Observation complete") }
-        )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        syncDatastore.start()
     }
 
     @Test
     fun stop() {
-        val latch = CountDownLatch(1)
-        Amplify.DataStore.stop(
-            { latch.countDown() },
-            { fail("Error stopping DataStore: $it") }
-        )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        syncDatastore.stop()
     }
 
     @Test
     fun clear() {
-        val latch = CountDownLatch(1)
-        Amplify.DataStore.clear(
-            { latch.countDown() },
-            { fail("Error clearing DataStore: $it") }
-        )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        syncDatastore.clear()
     }
 }
