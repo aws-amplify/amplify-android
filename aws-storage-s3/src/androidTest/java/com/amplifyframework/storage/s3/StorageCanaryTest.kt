@@ -96,7 +96,6 @@ class StorageCanaryTest {
         val fileName = "ExampleKey${UUID.randomUUID()}"
 
         val opFuture = CompletableFuture<StorageUploadFileOperation<*>>()
-        val uploadComplete = CompletableFuture<Boolean>()
         val paused = CompletableFuture<Boolean>()
 
         val op = Amplify.Storage.uploadFile(
@@ -111,11 +110,9 @@ class StorageCanaryTest {
                 paused.complete(true)
             },
             {
-                uploadComplete.complete(true)
             },
             {
                 paused.completeExceptionally(it)
-                uploadComplete.complete(false)
             }
         )
         opFuture.complete(op)
@@ -124,9 +121,7 @@ class StorageCanaryTest {
         val operation = syncStorage.getTransfer(op.transferId)
         Log.i(TAG, "Current State" + operation.transferState)
 
-        // Ensure the transfer finishes. We don't particularly care if it's successful or not at this point.
-        // We just don't want it still going to potentially impact other tests.
-        uploadComplete.get(TIMEOUT_S, TimeUnit.SECONDS)
+        op.cancel()
     }
 
     @Test
