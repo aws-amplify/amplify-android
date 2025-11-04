@@ -15,6 +15,7 @@
 
 package com.amplifyframework.storage.s3.transfer
 
+import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import com.amplifyframework.core.Amplify
@@ -27,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Updates transfer status to observers and to local DB
  **/
-internal class TransferStatusUpdater(
+internal class TransferStatusUpdater private constructor(
     private val transferDB: TransferDB
 ) {
     private val logger =
@@ -61,6 +62,17 @@ internal class TransferStatusUpdater(
 
     companion object {
         internal const val TEMP_FILE_PREFIX = "aws-s3-d861b25a-1edf-11eb-adc1-0242ac120002"
+        
+        @Volatile
+        private var INSTANCE: TransferStatusUpdater? = null
+
+        fun getInstance(context: Context): TransferStatusUpdater {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: TransferStatusUpdater(
+                    TransferDB.getInstance(context.applicationContext)
+                ).also { INSTANCE = it }
+            }
+        }
     }
 
     @Synchronized

@@ -52,7 +52,7 @@ internal class TransferManager(
 ) {
 
     private val transferDB: TransferDB = TransferDB.getInstance(context)
-    val transferStatusUpdater: TransferStatusUpdater = TransferStatusUpdater(transferDB)
+    val transferStatusUpdater: TransferStatusUpdater = TransferStatusUpdater.getInstance(context)
 
     private val logger =
         Amplify.Logging.logger(
