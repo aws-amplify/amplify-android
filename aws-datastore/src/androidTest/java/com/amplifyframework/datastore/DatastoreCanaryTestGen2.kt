@@ -94,6 +94,9 @@ class DatastoreCanaryTestGen2 {
         createHub.await(TIMEOUT_S.toInt(), TimeUnit.SECONDS)
 
         syncDatastore.delete(post)
+
+        // Temporarily prevent https://github.com/aws-amplify/amplify-android/issues/2617
+        Thread.sleep(1000)
     }
 
     @Test
