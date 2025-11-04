@@ -153,7 +153,6 @@ public final class SynchronousStorage {
      * @throws StorageException if download fails or times out
      */
     @NonNull
-    @SuppressWarnings("deprecation")
     public StorageDownloadFileResult downloadFile(
             @NonNull StoragePath path,
             @NonNull File local,
@@ -175,7 +174,6 @@ public final class SynchronousStorage {
      * @throws StorageException if upload fails or times out
      */
     @NonNull
-    @SuppressWarnings("deprecation")
     public StorageUploadFileResult uploadFile(
             @NonNull String key,
             @NonNull File local,
@@ -217,7 +215,6 @@ public final class SynchronousStorage {
      * @throws StorageException if upload fails or times out
      */
     @NonNull
-    @SuppressWarnings("deprecation")
     public StorageUploadFileResult uploadFile(
             @NonNull StoragePath path,
             @NonNull File local,
@@ -422,6 +419,7 @@ public final class SynchronousStorage {
     }
 
     @NonNull
+    @SuppressWarnings("deprecation")
     public StorageGetUrlResult getUrl(
         @NonNull String key,
         @NonNull StorageGetUrlOptions options
@@ -469,7 +467,6 @@ public final class SynchronousStorage {
     }
 
     @NonNull
-    @SuppressWarnings("deprecation")
     public StorageListResult list(
         @NonNull String path,
         @NonNull StoragePagedListOptions options
