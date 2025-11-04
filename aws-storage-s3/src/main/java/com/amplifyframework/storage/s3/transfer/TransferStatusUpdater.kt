@@ -62,16 +62,14 @@ internal class TransferStatusUpdater private constructor(
 
     companion object {
         internal const val TEMP_FILE_PREFIX = "aws-s3-d861b25a-1edf-11eb-adc1-0242ac120002"
-        
-        @Volatile
-        private var INSTANCE: TransferStatusUpdater? = null
 
-        fun getInstance(context: Context): TransferStatusUpdater {
-            return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: TransferStatusUpdater(
-                    TransferDB.getInstance(context.applicationContext)
-                ).also { INSTANCE = it }
-            }
+        @Volatile
+        private var instance: TransferStatusUpdater? = null
+
+        fun getInstance(context: Context): TransferStatusUpdater = instance ?: synchronized(this) {
+            instance ?: TransferStatusUpdater(
+                TransferDB.getInstance(context.applicationContext)
+            ).also { instance = it }
         }
     }
 
