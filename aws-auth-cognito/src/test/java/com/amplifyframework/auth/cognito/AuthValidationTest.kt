@@ -27,6 +27,7 @@ import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.featuretest.generators.authstategenerators.AuthStateJsonGenerator.DUMMY_TOKEN
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.usecases.SignInUseCase
+import com.amplifyframework.auth.cognito.usecases.SignOutUseCase
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.core.Consumer
@@ -140,6 +141,10 @@ class AuthValidationTest {
     private val signInUseCase = SignInUseCase(
         stateMachine = stateMachine,
         configuration = configuration
+    )
+
+    private val signOutUseCase = SignOutUseCase(
+        stateMachine = stateMachine
     )
 
     private val mainThreadSurrogate = newSingleThreadContext("Main thread")
@@ -461,9 +466,7 @@ class AuthValidationTest {
         }
     }
 
-    private fun signOut() = blockForResult { complete ->
-        plugin.signOut(complete)
-    }
+    private fun signOut() = runBlocking { withTimeout(100000L) { signOutUseCase.execute() } }
 
     private fun signInHostedUi(): AuthSignInResult {
         every { hostedUIClient.launchCustomTabsSignIn(any()) } answers {
@@ -478,9 +481,7 @@ class AuthValidationTest {
         }
     }
 
-    private fun signOutHostedUi() = blockForResult { complete ->
-        plugin.signOut(complete)
-    }
+    private fun signOutHostedUi() = signOut()
 
     private fun assertSignedOut() {
         val result = blockForResult { continuation -> stateMachine.getCurrentState { continuation.accept(it) } }
