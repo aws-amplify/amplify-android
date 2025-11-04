@@ -61,7 +61,7 @@ class GeoCanaryTestGen2 {
         val searchQuery = "Amazon Go"
         val result = syncGeo.searchByText(searchQuery)
         for (place in result.places) {
-            Log.i(GeoCanaryTest.Companion.TAG, place.toString())
+            Log.i(TAG, place.toString())
         }
     }
 
@@ -71,7 +71,7 @@ class GeoCanaryTestGen2 {
         val position = Coordinates(47.6153, -122.3384)
         val result = syncGeo.searchByCoordinates(position)
         for (place in result.places) {
-            Log.i(GeoCanaryTest.Companion.TAG, place.toString())
+            Log.i(TAG, place.toString())
         }
     }
 
