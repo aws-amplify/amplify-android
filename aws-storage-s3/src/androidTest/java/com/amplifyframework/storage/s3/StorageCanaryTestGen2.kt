@@ -126,9 +126,7 @@ class StorageCanaryTestGen2 {
         val operation = syncStorage.getTransfer(op.transferId)
         Log.i(TAG, "Current State" + operation.transferState)
 
-        // Ensure the transfer finishes. We don't particularly care if it's successful or not at this point.
-        // We just don't want it still going to potentially impact other tests.
-        uploadComplete.get(TIMEOUT_S, TimeUnit.SECONDS)
+        op.cancel()
     }
 
     @Test
