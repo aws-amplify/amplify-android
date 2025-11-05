@@ -33,7 +33,7 @@ import org.junit.Test
 class AWSS3StoragePluginTest {
 
     private val storageServiceFactory = mockk<AWSS3StorageService.Factory> {
-        every { create(any(), any(), any(), any()) } returns mockk<AWSS3StorageService>()
+        every { create(any(), any(), any(), any(), mockk()) } returns mockk<AWSS3StorageService>()
     }
 
     private val plugin = AWSS3StoragePlugin(
@@ -54,7 +54,7 @@ class AWSS3StoragePluginTest {
         plugin.configure(data, mockk())
 
         verify {
-            storageServiceFactory.create(any(), "test-region", "test-bucket", any())
+            storageServiceFactory.create(any(), "test-region", "test-bucket", any(), mockk())
         }
     }
 

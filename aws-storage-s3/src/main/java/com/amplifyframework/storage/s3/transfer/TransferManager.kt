@@ -48,11 +48,11 @@ internal class TransferManager(
     context: Context,
     clientProvider: StorageTransferClientProvider,
     private val pluginKey: String,
+    private val transferStatusUpdater: TransferStatusUpdater,
     private val workManager: WorkManager = WorkManager.getInstance(context)
 ) {
 
     private val transferDB: TransferDB = TransferDB.getInstance(context)
-    val transferStatusUpdater: TransferStatusUpdater = TransferStatusUpdater.getInstance(context)
 
     private val logger =
         Amplify.Logging.logger(

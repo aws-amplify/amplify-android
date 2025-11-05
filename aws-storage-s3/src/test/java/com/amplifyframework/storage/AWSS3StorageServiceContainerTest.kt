@@ -33,7 +33,7 @@ import org.junit.Test
 class AWSS3StorageServiceContainerTest {
 
     private val storageServiceFactory = mockk<AWSS3StorageService.Factory> {
-        every { create(any(), any(), any(), any()) } returns mockk<AWSS3StorageService>()
+        every { create(any(), any(), any(), any(), any()) } returns mockk<AWSS3StorageService>()
     }
     private val context = mockk<Context>()
     private val clientProvider = mockk<StorageTransferClientProvider>()
@@ -50,13 +50,14 @@ class AWSS3StorageServiceContainerTest {
             context,
             storageServiceFactory,
             clientProvider,
-            serviceContainerHashMap
+            serviceContainerHashMap,
+            mockk()
         )
     }
 
     @Test
     fun `put default AWSS3Service in container`() {
-        val service = storageServiceFactory.create(context, region, bucketName, clientProvider)
+        val service = storageServiceFactory.create(context, region, bucketName, clientProvider, mockk())
         serviceContainer.put(bucketName, service)
 
         serviceContainerHashMap.size shouldBe 1
