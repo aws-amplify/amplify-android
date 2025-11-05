@@ -15,6 +15,8 @@
 
 package com.amplifyframework.storage.s3
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.storage.BucketInfo
 import com.amplifyframework.storage.InvalidStorageBucketException
 import com.amplifyframework.storage.StorageBucket
@@ -32,8 +34,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+
 @RunWith(RobolectricTestRunner::class)
 class AWSS3StoragePluginTest {
+
+    var context: Context = ApplicationProvider.getApplicationContext()
+
 
     private val storageServiceFactory = mockk<AWSS3StorageService.Factory> {
         every { create(any(), any(), any(), any(), any()) } returns mockk<AWSS3StorageService>()
@@ -54,7 +60,7 @@ class AWSS3StoragePluginTest {
             }
         }
 
-        plugin.configure(data, mockk(relaxed = true))
+        plugin.configure(data, context)
 
         verify {
             storageServiceFactory.create(any(), "test-region", "test-bucket", any(), any())
@@ -68,7 +74,7 @@ class AWSS3StoragePluginTest {
         }
 
         shouldThrow<StorageException> {
-            plugin.configure(data, mockk(relaxed = true))
+            plugin.configure(data, context)
         }
     }
 
@@ -86,7 +92,7 @@ class AWSS3StoragePluginTest {
             }
         }
 
-        plugin.configure(data, mockk(relaxed = true))
+        plugin.configure(data, context)
         val service = plugin.getStorageService(null)
         service shouldNotBe null
     }
@@ -105,7 +111,7 @@ class AWSS3StoragePluginTest {
             }
         }
 
-        plugin.configure(data, mockk(relaxed = true))
+        plugin.configure(data, context)
         val bucketInfo = BucketInfo("test-bucket", "test-region")
         val bucket = StorageBucket.fromBucketInfo(bucketInfo)
         val service = plugin.getStorageService(bucket)
@@ -126,7 +132,7 @@ class AWSS3StoragePluginTest {
             }
         }
 
-        plugin.configure(data, mockk(relaxed = true))
+        plugin.configure(data, context)
         val bucket = StorageBucket.fromOutputs("test=name")
         val service = plugin.getStorageService(bucket)
         service shouldNotBe null
@@ -146,7 +152,7 @@ class AWSS3StoragePluginTest {
             }
         }
 
-        plugin.configure(data, mockk(relaxed = true))
+        plugin.configure(data, context)
         val bucket = StorageBucket.fromOutputs("myBucket")
         val exception = shouldThrow<StorageException> {
             plugin.getStorageService(bucket)
@@ -168,7 +174,7 @@ class AWSS3StoragePluginTest {
             }
         }
 
-        plugin.configure(data, mockk(relaxed = true))
+        plugin.configure(data, context)
         val bucket = StorageBucket.fromOutputs("test-name")
         val result = plugin.getStorageServiceResult(bucket)
         val service = result.storageService
@@ -191,7 +197,7 @@ class AWSS3StoragePluginTest {
             }
         }
 
-        plugin.configure(data, mockk(relaxed = true))
+        plugin.configure(data, context)
         val bucket = StorageBucket.fromOutputs("myBucket")
         val exception = plugin.getStorageServiceResult(bucket).storageException
         exception shouldNotBe null
