@@ -40,7 +40,6 @@ class AWSS3StoragePluginTest {
 
     var context: Context = ApplicationProvider.getApplicationContext()
 
-
     private val storageServiceFactory = mockk<AWSS3StorageService.Factory> {
         every { create(any(), any(), any(), any(), any()) } returns mockk<AWSS3StorageService>()
     }
