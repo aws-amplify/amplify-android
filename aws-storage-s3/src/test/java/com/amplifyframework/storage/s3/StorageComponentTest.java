@@ -35,7 +35,6 @@ import com.amplifyframework.storage.s3.service.StorageService;
 import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider;
 import com.amplifyframework.storage.s3.transfer.TransferListener;
 import com.amplifyframework.storage.s3.transfer.TransferObserver;
-import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.random.RandomBytes;
 import com.amplifyframework.testutils.random.RandomString;
@@ -91,8 +90,13 @@ public final class StorageComponentTest {
     public void setup() throws AmplifyException {
         this.storage = new StorageCategory();
         this.storageService = mock(AWSS3StorageService.class);
-        AWSS3StorageService.Factory storageServiceFactory
-                = (context, region, bucket, clientProvider, transferStatusUpdater) -> (AWSS3StorageService) storageService;
+        AWSS3StorageService.Factory storageServiceFactory = (
+                context,
+                region,
+                bucket,
+                clientProvider,
+                transferStatusUpdater
+        ) -> (AWSS3StorageService) storageService;
         AuthCredentialsProvider cognitoAuthProvider = mock(AuthCredentialsProvider.class);
         doReturn(RandomString.string()).when(cognitoAuthProvider).getIdentityId(null);
         this.storage.addPlugin(new AWSS3StoragePlugin(storageServiceFactory,
