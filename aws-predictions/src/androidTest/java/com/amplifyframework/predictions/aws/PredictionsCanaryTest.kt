@@ -29,10 +29,7 @@ import com.amplifyframework.predictions.result.IdentifyEntitiesResult
 import com.amplifyframework.predictions.result.IdentifyLabelsResult
 import com.amplifyframework.predictions.result.IdentifyTextResult
 import com.amplifyframework.testutils.Assets
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
+import com.amplifyframework.testutils.sync.SynchronousPredictions
 import org.junit.BeforeClass
 import org.junit.Test
 
@@ -54,149 +51,77 @@ class PredictionsCanaryTest {
         }
     }
 
+    val syncPredictions = SynchronousPredictions.delegatingTo(Amplify.Predictions)
+
     @Test
     fun translateText() {
-        val latch = CountDownLatch(1)
-        Amplify.Predictions.translateText(
+        val result = syncPredictions.translateText(
             "I like to eat spaghetti",
             LanguageType.ENGLISH,
-            LanguageType.SPANISH,
-            {
-                Log.i(TAG, it.translatedText)
-                latch.countDown()
-            },
-            { fail("Translation failed: $it") }
+            LanguageType.SPANISH
         )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        Log.i(TAG, result.translatedText)
     }
 
     @Test
     fun textToSpeech() {
-        val latch = CountDownLatch(1)
-        Amplify.Predictions.convertTextToSpeech(
-            "I like to eat spaghetti!",
-            { latch.countDown() },
-            { fail("Failed to convert text to speech: $it") }
-        )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        syncPredictions.convertTextToSpeech("I like to eat spaghetti!")
     }
 
     @Test
     fun identifyTextInImage() {
-        val latch = CountDownLatch(1)
         val image = Assets.readAsBitmap("sample-table.png")
-        Amplify.Predictions.identify(
-            TextFormatType.PLAIN,
-            image,
-            { result ->
-                val identifyResult = result as IdentifyTextResult
-                Log.i(TAG, identifyResult.fullText)
-                latch.countDown()
-            },
-            { fail("Identify text failed: $it") }
-        )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        val result = syncPredictions.identify(TextFormatType.PLAIN, image)
+        val identifyResult = result as IdentifyTextResult
+        Log.i(TAG, identifyResult.fullText)
     }
 
     @Test
     fun identifyTextInDocument() {
-        val latch = CountDownLatch(1)
         val image = Assets.readAsBitmap("sample-table.png")
-        Amplify.Predictions.identify(
-            TextFormatType.FORM,
-            image,
-            { result ->
-                val identifyResult = result as IdentifyDocumentTextResult
-                Log.i(TAG, identifyResult.fullText)
-                latch.countDown()
-            },
-            { fail("Identify text failed: $it") }
-        )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        val result = syncPredictions.identify(TextFormatType.FORM, image)
+        val identifyResult = result as IdentifyDocumentTextResult
+        Log.i(TAG, identifyResult.fullText)
     }
 
     @Test
     fun identifyEntities() {
-        val latch = CountDownLatch(1)
         val image = Assets.readAsBitmap("jeff_bezos.jpg")
-        Amplify.Predictions.identify(
-            IdentifyActionType.DETECT_ENTITIES,
-            image,
-            { result ->
-                val identifyResult = result as IdentifyEntitiesResult
-                val metadata = identifyResult.entities.firstOrNull()
-                Log.i(TAG, "${metadata?.box?.toShortString()}")
-                latch.countDown()
-            },
-            { fail("Entity detection failed: $it") }
-        )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        val result = syncPredictions.identify(IdentifyActionType.DETECT_ENTITIES, image)
+        val identifyResult = result as IdentifyEntitiesResult
+        val metadata = identifyResult.entities.firstOrNull()
+        Log.i(TAG, "${metadata?.box?.toShortString()}")
     }
 
     @Test
     fun identifyCelebrities() {
-        val latch = CountDownLatch(1)
         val image = Assets.readAsBitmap("jeff_bezos.jpg")
-        Amplify.Predictions.identify(
-            IdentifyActionType.DETECT_CELEBRITIES,
-            image,
-            { result ->
-                val identifyResult = result as IdentifyCelebritiesResult
-                val metadata = identifyResult.celebrities.firstOrNull()
-                Log.i(TAG, "${metadata?.celebrity?.name}")
-                latch.countDown()
-            },
-            { fail("Celebrity detection failed: $it") }
-        )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        val result = syncPredictions.identify(IdentifyActionType.DETECT_CELEBRITIES, image)
+        val identifyResult = result as IdentifyCelebritiesResult
+        val metadata = identifyResult.celebrities.firstOrNull()
+        Log.i(TAG, "${metadata?.celebrity?.name}")
     }
 
     @Test
     fun identifyLabels() {
-        val latch = CountDownLatch(1)
         val image = Assets.readAsBitmap("jeff_bezos.jpg")
-        Amplify.Predictions.identify(
-            LabelType.LABELS,
-            image,
-            { result ->
-                val identifyResult = result as IdentifyLabelsResult
-                val label = identifyResult.labels.firstOrNull()
-                Log.i(TAG, "${label?.name}")
-                latch.countDown()
-            },
-            { fail("Label detection failed: $it") }
-        )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        val result = syncPredictions.identify(LabelType.LABELS, image)
+        val identifyResult = result as IdentifyLabelsResult
+        val label = identifyResult.labels.firstOrNull()
+        Log.i(TAG, "${label?.name}")
     }
 
     @Test
     fun identifyModerationLabels() {
-        val latch = CountDownLatch(1)
         val image = Assets.readAsBitmap("jeff_bezos.jpg")
-        Amplify.Predictions.identify(
-            LabelType.MODERATION_LABELS,
-            image,
-            { result ->
-                val identifyResult = result as IdentifyLabelsResult
-                Log.i(TAG, "${identifyResult.isUnsafeContent}")
-                latch.countDown()
-            },
-            { fail("Identify moderation labels failed: $it") }
-        )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        val result = syncPredictions.identify(LabelType.MODERATION_LABELS, image)
+        val identifyResult = result as IdentifyLabelsResult
+        Log.i(TAG, "${identifyResult.isUnsafeContent}")
     }
 
     @Test
     fun interpretSentiment() {
-        val latch = CountDownLatch(1)
-        Amplify.Predictions.interpret(
-            "I like to eat spaghetti",
-            {
-                Log.i(TAG, "${it.sentiment?.value}")
-                latch.countDown()
-            },
-            { fail("Interpret failed: $it") }
-        )
-        assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        val result = syncPredictions.interpret("I like to eat spaghetti")
+        Log.i(TAG, "${result.sentiment?.value}")
     }
 }

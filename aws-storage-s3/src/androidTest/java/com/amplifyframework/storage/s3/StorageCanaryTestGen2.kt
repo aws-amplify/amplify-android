@@ -22,18 +22,20 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.configuration.AmplifyOutputs
 import com.amplifyframework.storage.StorageAccessLevel
 import com.amplifyframework.storage.operation.StorageUploadFileOperation
+import com.amplifyframework.storage.options.StorageDownloadFileOptions
+import com.amplifyframework.storage.options.StorageGetUrlOptions
 import com.amplifyframework.storage.options.StoragePagedListOptions
+import com.amplifyframework.storage.options.StorageRemoveOptions
 import com.amplifyframework.storage.options.StorageUploadFileOptions
+import com.amplifyframework.storage.options.StorageUploadInputStreamOptions
 import com.amplifyframework.storage.s3.test.R
+import com.amplifyframework.testutils.sync.SynchronousStorage
 import java.io.File
 import java.io.FileInputStream
 import java.io.RandomAccessFile
 import java.util.UUID
-import java.util.concurrent.CountDownLatch
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
-import org.junit.Assert
-import org.junit.Assert.fail
 import org.junit.BeforeClass
 import org.junit.Test
 
@@ -57,108 +59,74 @@ class StorageCanaryTestGen2 {
         }
     }
 
+    private val syncStorage = SynchronousStorage.delegatingToAmplify()
+
     @Test
     fun uploadInputStream() {
-        val latch = CountDownLatch(1)
         val raf = createFile(1)
         val stream = FileInputStream(raf)
         val fileKey = "ExampleKey"
-        Amplify.Storage.uploadInputStream(
-            fileKey,
-            stream,
-            { latch.countDown() },
-            { fail("Upload failed: $it") }
-        )
-        Assert.assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        syncStorage.uploadInputStream(fileKey, stream, StorageUploadInputStreamOptions.defaultInstance())
         removeFile(fileKey)
     }
 
     @Test
     fun uploadFile() {
-        val latch = CountDownLatch(1)
         val file = createFile(1)
         val fileKey = UUID.randomUUID().toString()
-        Amplify.Storage.uploadFile(
-            fileKey,
-            file,
-            { latch.countDown() },
-            { fail("Upload failed: $it") }
-        )
-        Assert.assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        syncStorage.uploadFile(fileKey, file, StorageUploadFileOptions.defaultInstance())
         removeFile(fileKey)
     }
 
     @Test
     fun downloadFile() {
-        val uploadLatch = CountDownLatch(1)
         val file = createFile(1)
         val fileName = "ExampleKey${UUID.randomUUID()}"
-        Amplify.Storage.uploadFile(
-            fileName,
-            file,
-            { uploadLatch.countDown() },
-            { fail("Upload failed: $it") }
-        )
-        uploadLatch.await(TIMEOUT_S, TimeUnit.SECONDS)
-
-        val downloadLatch = CountDownLatch(1)
-        Amplify.Storage.downloadFile(
-            fileName,
-            file,
-            { downloadLatch.countDown() },
-            { fail("Download failed: $it") }
-        )
-        Assert.assertTrue(downloadLatch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        syncStorage.uploadFile(fileName, file, StorageUploadFileOptions.defaultInstance())
+        syncStorage.downloadFile(fileName, file, StorageDownloadFileOptions.defaultInstance())
     }
 
     @Test
     fun getUrl() {
-        val latch = CountDownLatch(1)
-        Amplify.Storage.getUrl(
-            "ExampleKey",
-            {
-                Log.i(TAG, "Successfully generated: ${it.url}")
-                latch.countDown()
-            },
-            { fail("URL generation failure: $it") }
-        )
-        Assert.assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        val result = syncStorage.getUrl("ExampleKey", StorageGetUrlOptions.defaultInstance())
+        Log.i(TAG, "Successfully generated: ${result.url}")
     }
 
     @Test
     fun getTransfer() {
-        val uploadLatch = CountDownLatch(1)
         val file = createFile(100)
         val fileName = "ExampleKey${UUID.randomUUID()}"
-        val transferId = AtomicReference<String>()
-        val opContainer = AtomicReference<StorageUploadFileOperation<*>>()
+
+        val opFuture = CompletableFuture<StorageUploadFileOperation<*>>()
+        val uploadComplete = CompletableFuture<Boolean>()
+        val paused = CompletableFuture<Boolean>()
+
         val op = Amplify.Storage.uploadFile(
             fileName,
             file,
             StorageUploadFileOptions.builder().accessLevel(StorageAccessLevel.PUBLIC).build(),
             { progress ->
                 if (progress.currentBytes > 0) {
-                    opContainer.get().pause()
+                    // Block until operation is available
+                    opFuture.get(TIMEOUT_S, TimeUnit.SECONDS).pause()
                 }
-                uploadLatch.countDown()
+                paused.complete(true)
             },
-            { Log.i(TAG, "Successfully uploaded: ${it.key}") },
-            { fail("Upload failed: $it") }
+            {
+                uploadComplete.complete(true)
+            },
+            {
+                paused.completeExceptionally(it)
+                uploadComplete.complete(false)
+            }
         )
-        opContainer.set(op)
-        transferId.set(op.transferId)
-        uploadLatch.await(TIMEOUT_S, TimeUnit.SECONDS)
+        opFuture.complete(op)
+        paused.get(TIMEOUT_S, TimeUnit.SECONDS)
 
-        val transferLatch = CountDownLatch(1)
-        Amplify.Storage.getTransfer(
-            transferId.get(),
-            { operation ->
-                Log.i(TAG, "Current State" + operation.transferState)
-                transferLatch.countDown()
-            },
-            { fail("Failed to query transfer: $it") }
-        )
-        Assert.assertTrue(transferLatch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        val operation = syncStorage.getTransfer(op.transferId)
+        Log.i(TAG, "Current State" + operation.transferState)
+
+        op.cancel()
     }
 
     @Test
@@ -166,33 +134,16 @@ class StorageCanaryTestGen2 {
         val options = StoragePagedListOptions.builder()
             .setPageSize(1000)
             .build()
-        val latch = CountDownLatch(1)
-        Amplify.Storage.list(
-            "",
-            options,
-            { result ->
-                result.items.forEach { item ->
-                    Log.i(TAG, "Item: ${item.key}")
-                }
-                latch.countDown()
-            },
-            { fail("Failed to list items: $it") }
-        )
-        Assert.assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        val result = syncStorage.list("", options)
+        result.items.forEach { item ->
+            Log.i(TAG, "Item: ${item.key}")
+        }
     }
 
     @Test
     fun remove() {
-        val latch = CountDownLatch(1)
-        Amplify.Storage.remove(
-            "myUploadedFileName.txt",
-            {
-                Log.i(TAG, "Successfully removed: ${it.key}")
-                latch.countDown()
-            },
-            { fail("Failed to remove file: $it") }
-        )
-        Assert.assertTrue(latch.await(TIMEOUT_S, TimeUnit.SECONDS))
+        val result = syncStorage.remove("myUploadedFileName.txt", StorageRemoveOptions.defaultInstance())
+        Log.i(TAG, "Successfully removed: ${result.key}")
     }
 
     private fun createFile(size: Int): File {
@@ -206,12 +157,6 @@ class StorageCanaryTestGen2 {
     }
 
     private fun removeFile(fileKey: String) {
-        val latch = CountDownLatch(1)
-        Amplify.Storage.remove(
-            fileKey,
-            { latch.countDown() },
-            { Log.e(TAG, "Failed to remove file", it) }
-        )
-        latch.await(TIMEOUT_S, TimeUnit.SECONDS)
+        syncStorage.remove(fileKey, StorageRemoveOptions.defaultInstance())
     }
 }
