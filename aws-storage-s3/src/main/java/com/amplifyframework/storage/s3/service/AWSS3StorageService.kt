@@ -37,6 +37,7 @@ import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.TransferManager
 import com.amplifyframework.storage.s3.transfer.TransferObserver
 import com.amplifyframework.storage.s3.transfer.TransferRecord
+import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import com.amplifyframework.storage.s3.transfer.UploadOptions
 import com.amplifyframework.storage.s3.utils.S3Keys
 import java.io.File
@@ -57,13 +58,14 @@ internal class AWSS3StorageService(
     private val s3BucketName: String,
     private val authCredentialsProvider: AuthCredentialsProvider,
     private val awsS3StoragePluginKey: String,
-    private val clientProvider: StorageTransferClientProvider
+    private val clientProvider: StorageTransferClientProvider,
+    private val transferStatusUpdater: TransferStatusUpdater
 ) : StorageService {
 
     private var s3Client: S3Client = S3StorageTransferClientProvider.getS3Client(awsRegion, authCredentialsProvider)
 
     val transferManager: TransferManager =
-        TransferManager(context, clientProvider, awsS3StoragePluginKey)
+        TransferManager(context, clientProvider, awsS3StoragePluginKey, transferStatusUpdater)
 
     /**
      * Generate pre-signed URL for an object.
@@ -421,7 +423,8 @@ internal class AWSS3StorageService(
             context: Context,
             region: String,
             bucketName: String,
-            clientProvider: StorageTransferClientProvider
+            clientProvider: StorageTransferClientProvider,
+            transferStatusUpdater: TransferStatusUpdater
         ): AWSS3StorageService
     }
 }

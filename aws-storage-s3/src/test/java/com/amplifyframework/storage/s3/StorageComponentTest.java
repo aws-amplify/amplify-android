@@ -90,8 +90,13 @@ public final class StorageComponentTest {
     public void setup() throws AmplifyException {
         this.storage = new StorageCategory();
         this.storageService = mock(AWSS3StorageService.class);
-        AWSS3StorageService.Factory storageServiceFactory
-                = (context, region, bucket, clientProvider) -> (AWSS3StorageService) storageService;
+        AWSS3StorageService.Factory storageServiceFactory = (
+                context,
+                region,
+                bucket,
+                clientProvider,
+                transferStatusUpdater
+        ) -> (AWSS3StorageService) storageService;
         AuthCredentialsProvider cognitoAuthProvider = mock(AuthCredentialsProvider.class);
         doReturn(RandomString.string()).when(cognitoAuthProvider).getIdentityId(null);
         this.storage.addPlugin(new AWSS3StoragePlugin(storageServiceFactory,

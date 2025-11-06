@@ -94,6 +94,7 @@ import com.amplifyframework.storage.s3.service.AWSS3StorageService;
 import com.amplifyframework.storage.s3.service.AWSS3StorageServiceContainer;
 import com.amplifyframework.storage.s3.transfer.S3StorageTransferClientProvider;
 import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider;
+import com.amplifyframework.storage.s3.transfer.TransferDB;
 import com.amplifyframework.storage.s3.transfer.TransferObserver;
 import com.amplifyframework.storage.s3.transfer.TransferRecord;
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater;
@@ -154,6 +155,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                 return defaultStorageService.getClient();
             });
 
+    private TransferStatusUpdater transferStatusUpdater;
+
     /**
      * Constructs the AWS S3 Storage Plugin initializing the executor service.
      */
@@ -176,14 +179,15 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
     @VisibleForTesting
     AWSS3StoragePlugin(AuthCredentialsProvider authCredentialsProvider) {
-        this((context, region, bucket, clientProvider) ->
+        this((context, region, bucket, clientProvider, transferStatusUpdater) ->
                 new AWSS3StorageService(
                     context,
                     region,
                     bucket,
                     authCredentialsProvider,
                     AWS_S3_STORAGE_PLUGIN_KEY,
-                    clientProvider
+                    clientProvider,
+                    transferStatusUpdater
                 ),
             authCredentialsProvider,
             new AWSS3StoragePluginConfiguration.Builder().build());
@@ -193,14 +197,15 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     AWSS3StoragePlugin(AuthCredentialsProvider authCredentialsProvider,
                        AWSS3StoragePluginConfiguration awss3StoragePluginConfiguration) {
 
-        this((context, region, bucket, clientProvider) ->
+        this((context, region, bucket, clientProvider, transferStatusUpdater) ->
                 new AWSS3StorageService(
                     context,
                     region,
                     bucket,
                     authCredentialsProvider,
                     AWS_S3_STORAGE_PLUGIN_KEY,
-                    clientProvider
+                    clientProvider,
+                    transferStatusUpdater
                 ),
             authCredentialsProvider,
             awss3StoragePluginConfiguration);
@@ -298,14 +303,20 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             @NonNull ResolvedStorageBucket bucket
     ) throws StorageException {
         try {
+            this.transferStatusUpdater = new TransferStatusUpdater(TransferDB.Companion.getInstance(context));
+
+            this.awss3StorageServiceContainer = new AWSS3StorageServiceContainer(
+                    context, storageServiceFactory,
+                    (S3StorageTransferClientProvider) clientProvider,
+                    transferStatusUpdater
+            );
             this.defaultStorageService = storageServiceFactory.create(
                     context,
                     region,
                     bucket.getBucketInfo().getBucketName(),
-                    clientProvider);
-            this.awss3StorageServiceContainer = new AWSS3StorageServiceContainer(
-                    context, storageServiceFactory,
-                    (S3StorageTransferClientProvider) clientProvider);
+                    clientProvider,
+                    transferStatusUpdater
+            );
             this.awss3StorageServiceContainer.put(bucket.getBucketInfo().getBucketName(), this.defaultStorageService);
         } catch (RuntimeException exception) {
             throw new StorageException(
@@ -927,7 +938,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                     TransferObserver transferObserver =
                         new TransferObserver(
                             transferRecord.getId(),
-                            defaultStorageService.getTransferManager().getTransferStatusUpdater(),
+                            transferStatusUpdater,
                             transferRecord.getBucketName(),
                             transferRecord.getRegion(),
                             transferRecord.getKey(),
