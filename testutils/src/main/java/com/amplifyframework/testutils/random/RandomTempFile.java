@@ -78,7 +78,10 @@ public final class RandomTempFile extends File {
     private void createFile(long byteSize) throws IOException {
         deleteOnExit();
         try (RandomAccessFile raf = new RandomAccessFile(this, "rw")) {
-            raf.setLength(byteSize);
+            String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            for (long i = 0; i < byteSize; i++) {
+                raf.writeByte(chars.charAt((int)(i % chars.length())));
+            }
         }
     }
 }
