@@ -38,6 +38,7 @@ import com.amplifyframework.storage.s3.transfer.worker.InitiateMultiPartUploadTr
 import com.amplifyframework.storage.s3.transfer.worker.PartUploadTransferWorker
 import com.amplifyframework.storage.s3.transfer.worker.RouterWorker
 import com.amplifyframework.storage.s3.transfer.worker.SinglePartUploadWorker
+import java.util.concurrent.TimeUnit
 
 internal object TransferOperations {
 
@@ -85,7 +86,9 @@ internal object TransferOperations {
         if (TransferState.isStarted(transferRecord.state) && !TransferState.isInTerminalState(transferRecord.state)) {
             transferStatusUpdater.updateTransferState(transferRecord.id, TransferState.PENDING_PAUSE)
             try {
-                workManager.cancelUniqueWork(transferRecord.id.toString()).result.get()
+                workManager.cancelUniqueWork(
+                    transferRecord.id.toString()
+                ).result.get(1, TimeUnit.SECONDS)
             } catch (_: Exception) {
                 // do nothing
             }
