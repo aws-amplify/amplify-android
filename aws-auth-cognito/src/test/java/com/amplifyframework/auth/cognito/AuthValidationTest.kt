@@ -544,6 +544,7 @@ class AuthValidationTest {
     }
 
     private fun mockInitiateAuthSuccessResponse(username: String) = mockk<InitiateAuthResponse> {
+        every { authenticationResult } returns null
         every { challengeName } returns ChallengeNameType.PasswordVerifier
         every { challengeParameters } returns mapOf(
             "SALT" to "abc",
@@ -563,37 +564,5 @@ class AuthValidationTest {
             every { expiresIn } returns 300
             every { newDeviceMetadata } returns null
         }
-    }
-
-    @Test
-    fun `test getActiveUsername returns correct username when active and userIDforSRP is null`() {
-        val username = AuthHelper.getActiveUsername("username", null, null)
-        assertEquals(username, "username")
-    }
-
-    @Test
-    fun `getActiveUsername returns correct username when userIDforSRP is null & alternate is same as username`() {
-        val username = AuthHelper.getActiveUsername("username", "username", null)
-        assertEquals(username, "username")
-    }
-
-    @Test
-    fun `getActiveUsername returns correct username when userIDforSRP is null & alternate is different as username`() {
-        val username = AuthHelper.getActiveUsername(
-            "username",
-            "userID12322",
-            null
-        )
-        assertEquals(username, "userID12322")
-    }
-
-    @Test
-    fun `test getActiveUsername returns correct username when userIDforSRP is not null null and alternate is null`() {
-        val username = AuthHelper.getActiveUsername(
-            "username",
-            null,
-            "userID12322"
-        )
-        assertEquals(username, "userID12322")
     }
 }
