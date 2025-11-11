@@ -1,3 +1,12 @@
+## [Release 2.30.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.30.3)
+
+### Bug Fixes
+- **storage:** Prevent missed transfer status updates ([#3154](https://github.com/aws-amplify/amplify-android/issues/3154))
+- **auth:** Fix issue with extracting username during USER_PASSWORD_AUTH ([#3149](https://github.com/aws-amplify/amplify-android/issues/3149))
+- **storage:** Download Accuracy Fix ([#3156](https://github.com/aws-amplify/amplify-android/issues/3156))
+
+[See all changes between 2.30.2 and 2.30.3](https://github.com/aws-amplify/amplify-android/compare/release_v2.30.2...release_v2.30.3)
+
 ## [Release 2.30.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.30.2)
 
 ### Bug Fixes
