@@ -22,6 +22,7 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.util.Immutable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,7 +31,11 @@ import java.util.List;
 public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptions {
     private final String idpIdentifier;
     private final String browserPackage;
-
+    private final String nonce;
+    private final String language;
+    private final String loginHint;
+    private final List<AuthWebUIPrompt> prompt;
+    private final String resource;
     /**
      * Advanced options for signing in via a hosted web ui.
      * @param scopes specify OAUTH scopes
@@ -43,11 +48,21 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
             List<String> scopes,
             String idpIdentifier,
             String browserPackage,
-            Boolean preferPrivateSession
+            Boolean preferPrivateSession,
+            String nonce,
+            String language,
+            String loginHint,
+            List<AuthWebUIPrompt> prompt,
+            String resource
     ) {
         super(scopes, preferPrivateSession);
         this.idpIdentifier = idpIdentifier;
         this.browserPackage = browserPackage;
+        this.nonce = nonce;
+        this.language = language;
+        this.loginHint = loginHint;
+        this.prompt = prompt;
+        this.resource = resource;
     }
 
     /**
@@ -68,6 +83,31 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
         return browserPackage;
     }
 
+    @Nullable
+    public String getNonce() {
+        return nonce;
+    }
+
+    @Nullable
+    public String getLanguage() {
+        return language;
+    }
+
+    @Nullable
+    public String getLoginHint() {
+        return loginHint;
+    }
+
+    @Nullable
+    public List<AuthWebUIPrompt> getPrompt() {
+        return prompt;
+    }
+
+    @Nullable
+    public String getResource() {
+        return resource;
+    }
+
     /**
      * Returns a builder for this object.
      * @return a builder for this object.
@@ -83,7 +123,12 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
                 getScopes(),
                 getIdpIdentifier(),
                 getBrowserPackage(),
-                getPreferPrivateSession()
+                getPreferPrivateSession(),
+                getNonce(),
+                getLanguage(),
+                getLoginHint(),
+                getPrompt(),
+                getResource()
         );
     }
 
@@ -98,7 +143,12 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
             return ObjectsCompat.equals(getScopes(), webUISignInOptions.getScopes()) &&
                     ObjectsCompat.equals(getIdpIdentifier(), webUISignInOptions.getIdpIdentifier()) &&
                     ObjectsCompat.equals(getBrowserPackage(), webUISignInOptions.getBrowserPackage()) &&
-                    ObjectsCompat.equals(getPreferPrivateSession(), webUISignInOptions.getPreferPrivateSession());
+                    ObjectsCompat.equals(getPreferPrivateSession(), webUISignInOptions.getPreferPrivateSession()) &&
+                    ObjectsCompat.equals(getNonce(), webUISignInOptions.getNonce()) &&
+                    ObjectsCompat.equals(getLanguage(), webUISignInOptions.getLanguage()) &&
+                    ObjectsCompat.equals(getLoginHint(), webUISignInOptions.getLoginHint()) &&
+                    ObjectsCompat.equals(getPrompt(), webUISignInOptions.getPrompt()) &&
+                    ObjectsCompat.equals(getResource(), webUISignInOptions.getResource());
         }
     }
 
@@ -108,7 +158,12 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
                 "scopes=" + getScopes() +
                 ", idpIdentifier=" + getIdpIdentifier() +
                 ", browserPackage=" + getBrowserPackage() +
-                ", preferPrivateSession=" + getPreferPrivateSession() +
+                ", preferPrivateSession=" + getPreferPrivateSession()  +
+                ", nonce=" + getNonce() +
+                ", language=" + getLanguage() +
+                ", loginHint=" + getLoginHint() +
+                ", prompt=" + getPrompt() +
+                ", resource=" + getResource() +
                 '}';
     }
 
@@ -118,6 +173,11 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
     public static final class CognitoBuilder extends Builder<CognitoBuilder> {
         private String idpIdentifier;
         private String browserPackage;
+        private String nonce;
+        private String language;
+        private String loginHint;
+        private List<AuthWebUIPrompt> prompt;
+        private String resource;
 
         /**
          * Constructs the builder.
@@ -146,6 +206,39 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
             return getThis();
         }
 
+        @NonNull
+        public CognitoBuilder nonce(@NonNull String nonce) {
+            this.nonce = nonce;
+            return getThis();
+        }
+
+        @NonNull
+        public CognitoBuilder language(@NonNull String language) {
+            this.language = language;
+            return getThis();
+        }
+
+        @NonNull
+        public CognitoBuilder loginHint(@NonNull String loginHint) {
+            this.loginHint = loginHint;
+            return getThis();
+        }
+
+        @NonNull
+        public CognitoBuilder prompt(AuthWebUIPrompt... prompt) {
+            this.prompt = new ArrayList<>();
+            for (AuthWebUIPrompt value: prompt) {
+                this.prompt.add(value);
+            }
+            return getThis();
+        }
+
+        @NonNull
+        public CognitoBuilder resource(@NonNull String resource) {
+            this.resource = resource;
+            return getThis();
+        }
+
         /**
          * This can optionally be set to specify which browser package should perform the sign in action
          * (e.g. "org.mozilla.firefox"). Defaults to the Chrome package if not set.
@@ -168,7 +261,12 @@ public final class AWSCognitoAuthWebUISignInOptions extends AuthWebUISignInOptio
                     Immutable.of(super.getScopes()),
                     idpIdentifier,
                     browserPackage,
-                    super.getPreferPrivateSession()
+                    super.getPreferPrivateSession(),
+                    nonce,
+                    language,
+                    loginHint,
+                    prompt,
+                    resource
             );
         }
     }
