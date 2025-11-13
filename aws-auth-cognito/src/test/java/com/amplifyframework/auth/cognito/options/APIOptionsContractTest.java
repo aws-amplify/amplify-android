@@ -128,6 +128,9 @@ public class APIOptionsContractTest {
                 .getDeveloperProvidedIdentityId());
     }
 
+    /**
+     * Test Java CognitoAuthWebUIOptions OIDC parameters builder methods.
+     */
     @Test
     public void testCognitoAuthWebUISignInOIDCParameters() {
         List<AuthWebUIPrompt> prompt = Arrays.asList(AuthWebUIPrompt.LOGIN, AuthWebUIPrompt.CONSENT);
