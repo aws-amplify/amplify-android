@@ -16,11 +16,17 @@
 package com.amplifyframework.statemachine.codegen.data
 
 import android.app.Activity
+import com.amplifyframework.auth.cognito.options.AuthWebUIPrompt
 
 internal data class HostedUIOptions(
     val callingActivity: Activity,
     val scopes: List<String>?,
     val providerInfo: HostedUIProviderInfo,
     val browserPackage: String?,
-    val preferPrivateSession: Boolean?
+    val preferPrivateSession: Boolean?,
+    val nonce: String?,
+    val language: String?,
+    val loginHint: String?,
+    val prompt: List<AuthWebUIPrompt>?,
+    val resource: String?
 )

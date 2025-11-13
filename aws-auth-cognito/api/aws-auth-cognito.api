@@ -611,6 +611,11 @@ public final class com/amplifyframework/auth/cognito/options/AWSCognitoAuthWebUI
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getBrowserPackage ()Ljava/lang/String;
 	public fun getIdpIdentifier ()Ljava/lang/String;
+	public fun getLanguage ()Ljava/lang/String;
+	public fun getLoginHint ()Ljava/lang/String;
+	public fun getNonce ()Ljava/lang/String;
+	public fun getPrompt ()Ljava/util/List;
+	public fun getResource ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -623,6 +628,11 @@ public final class com/amplifyframework/auth/cognito/options/AWSCognitoAuthWebUI
 	public fun getThis ()Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthWebUISignInOptions$CognitoBuilder;
 	public synthetic fun getThis ()Lcom/amplifyframework/auth/options/AuthWebUISignInOptions$Builder;
 	public fun idpIdentifier (Ljava/lang/String;)Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthWebUISignInOptions$CognitoBuilder;
+	public fun language (Ljava/lang/String;)Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthWebUISignInOptions$CognitoBuilder;
+	public fun loginHint (Ljava/lang/String;)Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthWebUISignInOptions$CognitoBuilder;
+	public fun nonce (Ljava/lang/String;)Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthWebUISignInOptions$CognitoBuilder;
+	public fun prompt ([Lcom/amplifyframework/auth/cognito/options/AuthWebUIPrompt;)Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthWebUISignInOptions$CognitoBuilder;
+	public fun resource (Ljava/lang/String;)Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthWebUISignInOptions$CognitoBuilder;
 }
 
 public final class com/amplifyframework/auth/cognito/options/AuthFlowType : java/lang/Enum {
@@ -634,6 +644,17 @@ public final class com/amplifyframework/auth/cognito/options/AuthFlowType : java
 	public static final field USER_SRP_AUTH Lcom/amplifyframework/auth/cognito/options/AuthFlowType;
 	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/auth/cognito/options/AuthFlowType;
 	public static fun values ()[Lcom/amplifyframework/auth/cognito/options/AuthFlowType;
+}
+
+public final class com/amplifyframework/auth/cognito/options/AuthWebUIPrompt : java/lang/Enum {
+	public static final field CONSENT Lcom/amplifyframework/auth/cognito/options/AuthWebUIPrompt;
+	public static final field LOGIN Lcom/amplifyframework/auth/cognito/options/AuthWebUIPrompt;
+	public static final field NONE Lcom/amplifyframework/auth/cognito/options/AuthWebUIPrompt;
+	public static final field SELECT_ACCOUNT Lcom/amplifyframework/auth/cognito/options/AuthWebUIPrompt;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getValue ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/auth/cognito/options/AuthWebUIPrompt;
+	public static fun values ()[Lcom/amplifyframework/auth/cognito/options/AuthWebUIPrompt;
 }
 
 public final class com/amplifyframework/auth/cognito/options/FederateToIdentityPoolOptions {

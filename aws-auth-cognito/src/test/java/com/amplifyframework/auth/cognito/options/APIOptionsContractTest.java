@@ -127,4 +127,25 @@ public class APIOptionsContractTest {
         Assert.assertEquals("test-idp", federateToIdentityPoolOptions
                 .getDeveloperProvidedIdentityId());
     }
+
+    /**
+     * Test Java CognitoAuthWebUIOptions OIDC parameters builder methods.
+     */
+    @Test
+    public void testCognitoAuthWebUISignInOIDCParameters() {
+        List<AuthWebUIPrompt> prompt = Arrays.asList(AuthWebUIPrompt.LOGIN, AuthWebUIPrompt.CONSENT);
+        AWSCognitoAuthWebUISignInOptions webUISignInOptionsWithOIDCParameters =
+                AWSCognitoAuthWebUISignInOptions.builder()
+                        .nonce("nonce")
+                        .language("en")
+                        .loginHint("username")
+                        .prompt(AuthWebUIPrompt.LOGIN, AuthWebUIPrompt.CONSENT)
+                        .resource("myapp://")
+                        .build();
+        Assert.assertEquals("nonce", webUISignInOptionsWithOIDCParameters.getNonce());
+        Assert.assertEquals("en", webUISignInOptionsWithOIDCParameters.getLanguage());
+        Assert.assertEquals("username", webUISignInOptionsWithOIDCParameters.getLoginHint());
+        Assert.assertEquals(prompt, webUISignInOptionsWithOIDCParameters.getPrompt());
+        Assert.assertEquals("myapp://", webUISignInOptionsWithOIDCParameters.getResource());
+    }
 }
