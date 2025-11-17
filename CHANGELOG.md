@@ -1,4 +1,6 @@
-## [Release 2.30.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.30.3)
+## 🚨 CRITICAL: Version Deprecated [Release 2.30.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.30.3)
+
+### Please follow issue [#3160](https://github.com/aws-amplify/amplify-android/issues/3160) for further instructions if you've already updated
 
 ### Bug Fixes
 - **storage:** Prevent missed transfer status updates ([#3154](https://github.com/aws-amplify/amplify-android/issues/3154))
@@ -7,7 +9,9 @@
 
 [See all changes between 2.30.2 and 2.30.3](https://github.com/aws-amplify/amplify-android/compare/release_v2.30.2...release_v2.30.3)
 
-## [Release 2.30.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.30.2)
+## 🚨 CRITICAL: Version Deprecated [Release 2.30.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.30.2)
+
+### Please follow issue [#3160](https://github.com/aws-amplify/amplify-android/issues/3160) for further instructions if you've already updated
 
 ### Bug Fixes
 - **auth:** Fix losing session identifier when incorrect otp code is entered during confirm sign up ([#3136](https://github.com/aws-amplify/amplify-android/issues/3136))
