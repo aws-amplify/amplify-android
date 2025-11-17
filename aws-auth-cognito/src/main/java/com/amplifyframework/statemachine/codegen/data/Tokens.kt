@@ -154,6 +154,8 @@ internal data class CognitoUserPoolTokens(
 
 /**
  * Helper function to extract token value from either flat or nested format
+ * commit 047483866231622a362f736350f600072affad86 unintentionally introduced a token serialization/deserialization
+ * change causing logouts. This method ensures tokens are readable in a flat string format, or nested object.
  */
 private fun extractTokenValue(decoder: Decoder, tokenType: String): String = if (decoder is JsonDecoder) {
     when (val element = decoder.decodeJsonElement()) {
