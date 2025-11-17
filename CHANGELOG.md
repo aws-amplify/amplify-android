@@ -1,3 +1,10 @@
+## [Release 2.30.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.30.4)
+
+### Bug Fixes
+- **auth:** Resolve logout issue caused by JWT token serialization breaking change ([#3162](https://github.com/aws-amplify/amplify-android/issues/3162))
+
+[See all changes between 2.30.3 and 2.30.4](https://github.com/aws-amplify/amplify-android/compare/release_v2.30.3...release_v2.30.4)
+
 ## 🚨 CRITICAL: Version Deprecated [Release 2.30.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.30.3)
 
 ### Please follow issue [#3160](https://github.com/aws-amplify/amplify-android/issues/3160) for further instructions if you've already updated
