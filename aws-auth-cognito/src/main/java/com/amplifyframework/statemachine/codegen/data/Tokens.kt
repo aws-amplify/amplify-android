@@ -22,6 +22,15 @@ import java.time.Instant
 import kotlin.text.Charsets.UTF_8
 import kotlinx.serialization.Serializable
 import org.json.JSONObject
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonPrimitive
 
 internal abstract class Jwt {
     abstract val tokenValue: String
@@ -72,7 +81,7 @@ internal abstract class Jwt {
 }
 
 // See https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-the-id-token.html
-@Serializable
+@Serializable(with = IdTokenAsStringSerializer::class)
 internal class IdToken(override val tokenValue: String) : Jwt() {
     val userSub: String?
         get() = getClaim(Claim.UserSub)
@@ -84,7 +93,7 @@ internal class IdToken(override val tokenValue: String) : Jwt() {
 }
 
 // See https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-the-access-token.html
-@Serializable
+@Serializable(with = AccessTokenAsStringSerializer::class)
 internal class AccessToken(override val tokenValue: String) : Jwt() {
     val tokenRevocationId: String?
         get() = getClaim(Claim.TokenRevocationId)
@@ -98,7 +107,7 @@ internal class AccessToken(override val tokenValue: String) : Jwt() {
 }
 
 // Refresh token is just an opaque base64 string
-@Serializable
+@Serializable(with = RefreshTokenAsStringSerializer::class)
 @JvmInline
 internal value class RefreshToken(val tokenValue: String) {
     override fun toString() = tokenValue.mask()
@@ -141,4 +150,47 @@ internal data class CognitoUserPoolTokens(
     } else {
         idToken == other.idToken && accessToken == other.accessToken && refreshToken == other.refreshToken
     }
+}
+
+/**
+ * Helper function to extract token value from either flat or nested format
+ */
+private fun extractTokenValue(decoder: Decoder, tokenType: String): String {
+    return if (decoder is JsonDecoder) {
+        when (val element = decoder.decodeJsonElement()) {
+            is JsonPrimitive -> element.content // Flat format: "token": "value"
+            is JsonObject -> element["tokenValue"]?.jsonPrimitive?.content 
+                ?: throw SerializationException("Missing tokenValue in nested $tokenType")
+            else -> throw SerializationException("Expected string or object for $tokenType")
+        }
+    } else {
+        decoder.decodeString() // Fallback for non-JSON decoders
+    }
+}
+
+/**
+ * Serializer for IdToken that maintains string serialization format
+ */
+internal object IdTokenAsStringSerializer : KSerializer<IdToken> {
+    override val descriptor = String.serializer().descriptor
+    override fun serialize(encoder: Encoder, value: IdToken) = encoder.encodeString(value.tokenValue)
+    override fun deserialize(decoder: Decoder) = IdToken(extractTokenValue(decoder, "IdToken"))
+}
+
+/**
+ * Serializer for AccessToken that maintains string serialization format
+ */
+internal object AccessTokenAsStringSerializer : KSerializer<AccessToken> {
+    override val descriptor = String.serializer().descriptor
+    override fun serialize(encoder: Encoder, value: AccessToken) = encoder.encodeString(value.tokenValue)
+    override fun deserialize(decoder: Decoder) = AccessToken(extractTokenValue(decoder, "AccessToken"))
+}
+
+/**
+ * Serializer for RefreshToken that maintains string serialization format
+ */
+internal object RefreshTokenAsStringSerializer : KSerializer<RefreshToken> {
+    override val descriptor = String.serializer().descriptor
+    override fun serialize(encoder: Encoder, value: RefreshToken) = encoder.encodeString(value.tokenValue)
+    override fun deserialize(decoder: Decoder) = RefreshToken(extractTokenValue(decoder, "RefreshToken"))
 }
