@@ -28,8 +28,8 @@ import org.junit.Test
 class TokensTest {
     private val tokenString =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwidXNlcm5hbWUiOiJqZG" +
-                "9lIiwiaWF0IjoxNzU2OTk4Mjc4LCJleHAiOjE3NTY5OTg1NzgsIm9yaWdpbl9qdGkiOiJhYWFhYWFhYS1iYmJiLWNjY2MtZGRkZC1lZ" +
-                "WVlZWVlZWVlZWUifQ.3Mvd5WVi1z1GpQ37hEoev6DzYNv9lWNL-fGfQTxUYx4"
+            "9lIiwiaWF0IjoxNzU2OTk4Mjc4LCJleHAiOjE3NTY5OTg1NzgsIm9yaWdpbl9qdGkiOiJhYWFhYWFhYS1iYmJiLWNjY2MtZGRkZC1lZ" +
+            "WVlZWVlZWVlZWUifQ.3Mvd5WVi1z1GpQ37hEoev6DzYNv9lWNL-fGfQTxUYx4"
 
     @Test
     fun `identity token returns expiry`() {
@@ -88,8 +88,8 @@ class TokensTest {
             expiration = null
         )
         cognitoTokens.toString() shouldBe
-                "CognitoUserPoolTokens(idToken=eyJh***, accessToken=eyJh***, " +
-                "refreshToken=eyJh***, expiration=null)"
+            "CognitoUserPoolTokens(idToken=eyJh***, accessToken=eyJh***, " +
+            "refreshToken=eyJh***, expiration=null)"
     }
 
     @Test

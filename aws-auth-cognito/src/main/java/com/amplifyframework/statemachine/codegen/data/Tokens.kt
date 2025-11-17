@@ -20,9 +20,8 @@ import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.statemachine.util.mask
 import java.time.Instant
 import kotlin.text.Charsets.UTF_8
-import kotlinx.serialization.Serializable
-import org.json.JSONObject
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.encoding.Decoder
@@ -31,6 +30,7 @@ import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonPrimitive
+import org.json.JSONObject
 
 internal abstract class Jwt {
     abstract val tokenValue: String
@@ -155,17 +155,15 @@ internal data class CognitoUserPoolTokens(
 /**
  * Helper function to extract token value from either flat or nested format
  */
-private fun extractTokenValue(decoder: Decoder, tokenType: String): String {
-    return if (decoder is JsonDecoder) {
-        when (val element = decoder.decodeJsonElement()) {
-            is JsonPrimitive -> element.content // Flat format: "token": "value"
-            is JsonObject -> element["tokenValue"]?.jsonPrimitive?.content 
-                ?: throw SerializationException("Missing tokenValue in nested $tokenType")
-            else -> throw SerializationException("Expected string or object for $tokenType")
-        }
-    } else {
-        decoder.decodeString() // Fallback for non-JSON decoders
+private fun extractTokenValue(decoder: Decoder, tokenType: String): String = if (decoder is JsonDecoder) {
+    when (val element = decoder.decodeJsonElement()) {
+        is JsonPrimitive -> element.content // Flat format: "token": "value"
+        is JsonObject -> element["tokenValue"]?.jsonPrimitive?.content
+            ?: throw SerializationException("Missing tokenValue in nested $tokenType")
+        else -> throw SerializationException("Expected string or object for $tokenType")
     }
+} else {
+    decoder.decodeString() // Fallback for non-JSON decoders
 }
 
 /**
