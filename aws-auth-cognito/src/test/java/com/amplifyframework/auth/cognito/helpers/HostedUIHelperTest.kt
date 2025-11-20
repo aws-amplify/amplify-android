@@ -18,6 +18,7 @@ package com.amplifyframework.auth.cognito.helpers
 import android.app.Activity
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions
+import com.amplifyframework.auth.cognito.options.AuthWebUIPrompt
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import org.junit.Test
@@ -86,6 +87,30 @@ class HostedUIHelperTest {
         hostedUIOptions.scopes shouldBe scopes
         hostedUIOptions.browserPackage shouldBe "com.android.chrome"
         hostedUIOptions.preferPrivateSession shouldBe null
+    }
+
+    @Test
+    fun `createHostedUIOptions with Cognito OIDC parameters`() {
+        val options = AWSCognitoAuthWebUISignInOptions.builder()
+            .nonce("nonce")
+            .language("en")
+            .loginHint("username")
+            .prompt(AuthWebUIPrompt.LOGIN, AuthWebUIPrompt.CONSENT)
+            .resource("myapp://")
+            .build()
+
+        val hostedUIOptions = HostedUIHelper.createHostedUIOptions(
+            callingActivity = mockActivity,
+            authProvider = null,
+            options = options
+        )
+
+        hostedUIOptions.callingActivity shouldBe mockActivity
+        hostedUIOptions.nonce shouldBe "nonce"
+        hostedUIOptions.language shouldBe "en"
+        hostedUIOptions.loginHint shouldBe "username"
+        hostedUIOptions.prompt shouldBe listOf(AuthWebUIPrompt.LOGIN, AuthWebUIPrompt.CONSENT)
+        hostedUIOptions.resource shouldBe "myapp://"
     }
 
     @Test
