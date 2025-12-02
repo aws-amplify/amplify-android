@@ -4,6 +4,9 @@ on:
   pull_request:
     types: [opened, ready_for_review, reopened]
 
+permissions:
+  contents: read
+
 jobs:
   notify:
     runs-on: ubuntu-latest
