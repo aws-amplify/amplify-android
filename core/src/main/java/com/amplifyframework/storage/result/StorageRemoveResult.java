@@ -28,9 +28,13 @@ import java.util.Objects;
 public final class StorageRemoveResult {
     private final String path;
     private final String key;
+    private final boolean isFolder;
+    private final int totalFiles;
+    private final int deletedCount;
+    private final int failedCount;
 
     /**
-     * Creates a new StorageRemoveResult.
+     * Creates a new StorageRemoveResult for single file operations.
      * Although this has public access, it is intended for internal use and should not be used directly by host
      * applications. The behavior of this may change without warning.
      * @param path The path of the storage item that was removed
@@ -38,8 +42,28 @@ public final class StorageRemoveResult {
      */
     @InternalAmplifyApi
     public StorageRemoveResult(String path, String key) {
+        this(path, key, false, 1, 1, 0);
+    }
+
+    /**
+     * Creates a new StorageRemoveResult for folder operations.
+     * Although this has public access, it is intended for internal use and should not be used directly by host
+     * applications. The behavior of this may change without warning.
+     * @param path The path of the storage item that was removed
+     * @param key The key of the storage item that was removed
+     * @param isFolder Whether this was a folder operation
+     * @param totalFiles Total number of files processed
+     * @param deletedCount Number of files successfully deleted
+     * @param failedCount Number of files that failed to delete
+     */
+    @InternalAmplifyApi
+    public StorageRemoveResult(String path, String key, boolean isFolder, int totalFiles, int deletedCount, int failedCount) {
         this.path = path;
         this.key = key;
+        this.isFolder = isFolder;
+        this.totalFiles = totalFiles;
+        this.deletedCount = deletedCount;
+        this.failedCount = failedCount;
     }
 
     /**
@@ -79,6 +103,39 @@ public final class StorageRemoveResult {
         return key;
     }
 
+    /**
+     * Gets whether this was a folder operation.
+     * @return true if this was a folder operation, false for single file
+     */
+    public boolean isFolder() {
+        return isFolder;
+    }
+
+    /**
+     * Gets the total number of files processed in the operation.
+     * For single file operations, this will be 1.
+     * @return total number of files processed
+     */
+    public int getTotalFiles() {
+        return totalFiles;
+    }
+
+    /**
+     * Gets the number of files successfully deleted.
+     * @return number of files successfully deleted
+     */
+    public int getDeletedCount() {
+        return deletedCount;
+    }
+
+    /**
+     * Gets the number of files that failed to delete.
+     * @return number of files that failed to delete
+     */
+    public int getFailedCount() {
+        return failedCount;
+    }
+
     @Override
     public boolean equals(Object thatObject) {
         if (this == thatObject) {
@@ -90,11 +147,16 @@ public final class StorageRemoveResult {
 
         StorageRemoveResult that = (StorageRemoveResult) thatObject;
 
-        return ObjectsCompat.equals(path, that.path) && ObjectsCompat.equals(key, that.key);
+        return ObjectsCompat.equals(path, that.path) && 
+               ObjectsCompat.equals(key, that.key) &&
+               isFolder == that.isFolder &&
+               totalFiles == that.totalFiles &&
+               deletedCount == that.deletedCount &&
+               failedCount == that.failedCount;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(path, key);
+        return Objects.hash(path, key, isFolder, totalFiles, deletedCount, failedCount);
     }
 }
