@@ -1,3 +1,10 @@
+## [Release 2.31.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.31.0)
+
+### Features
+- **auth:** add support for cognito oidc parameters in managed login ([#3158](https://github.com/aws-amplify/amplify-android/issues/3158))
+
+[See all changes between 2.30.4 and 2.31.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.30.4...release_v2.31.0)
+
 ## [Release 2.30.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.30.4)
 
 ### Bug Fixes
