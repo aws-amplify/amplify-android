@@ -98,11 +98,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     // Database Version
     private static final int DATABASE_VERSION = 1;
 
-    // Thread pool size is determined as number of processors multiplied by this value.  We want to allow more threads
-    // than available processors to parallelize primarily IO bound work, but still provide a limit to avoid out of
-    // memory errors.
-    private static final int THREAD_POOL_SIZE_MULTIPLIER = 20;
-
     @VisibleForTesting @SuppressWarnings("checkstyle:all") // Keep logger first
     static final String DEFAULT_DATABASE_NAME = "AmplifyDatastore.db";
 
@@ -233,7 +228,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(onError);
         // Create a thread pool large enough to take advantage of parallelization, but small enough to avoid
         // OutOfMemoryError and CursorWindowAllocationException issues.
-        this.threadPool = Executors.newFixedThreadPool(dataStoreConfiguration.getLocalStorageNumThreads());
+        this.threadPool = Executors.newFixedThreadPool(dataStoreConfiguration.getLocalStorageThreadPoolSize());
         this.context = context;
         this.dataStoreConfiguration = dataStoreConfiguration;
         threadPool.submit(() -> {

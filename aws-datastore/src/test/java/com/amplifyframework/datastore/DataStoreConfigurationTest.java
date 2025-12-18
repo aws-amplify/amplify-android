@@ -65,7 +65,7 @@ public final class DataStoreConfigurationTest {
         assertEquals(DataStoreConfiguration.DEFAULT_SYNC_MAX_CONCURRENT_MODELS,
             dataStoreConfiguration.getSyncMaxConcurrentModels().intValue());
         assertEquals(DataStoreConfiguration.DEFAULT_LOCAL_STORAGE_NUM_THREADS,
-            dataStoreConfiguration.getLocalStorageNumThreads().intValue());
+            dataStoreConfiguration.getLocalStorageThreadPoolSize());
 
         assertTrue(dataStoreConfiguration.getConflictHandler() instanceof AlwaysApplyRemoteHandler);
         assertTrue(dataStoreConfiguration.getErrorHandler() instanceof DefaultDataStoreErrorHandler);
@@ -154,24 +154,26 @@ public final class DataStoreConfigurationTest {
 
     /**
      * Tests that localStorageNumThreads configuration works correctly.
+     * @throws DataStoreException On failure to build a config object
      */
     @Test
     public void testLocalStorageNumThreadsConfiguration() throws DataStoreException {
-        Integer expectedThreads = 50;
+        int expectedThreads = 50;
         DataStoreConfiguration configuration = DataStoreConfiguration.builder()
-            .localStorageNumThreads(expectedThreads)
+            .localStorageThreadPoolSize(expectedThreads)
             .build();
-        assertEquals(expectedThreads, configuration.getLocalStorageNumThreads());
+        assertEquals(expectedThreads, configuration.getLocalStorageThreadPoolSize());
     }
 
     /**
      * Tests that localStorageNumThreads uses default value when not specified.
+     * @throws DataStoreException On failure to build a config object
      */
     @Test
     public void testLocalStorageNumThreadsDefault() throws DataStoreException {
         DataStoreConfiguration configuration = DataStoreConfiguration.defaults();
         assertEquals(DataStoreConfiguration.DEFAULT_LOCAL_STORAGE_NUM_THREADS, 
-            configuration.getLocalStorageNumThreads().intValue());
+            configuration.getLocalStorageThreadPoolSize());
     }
 
     /**

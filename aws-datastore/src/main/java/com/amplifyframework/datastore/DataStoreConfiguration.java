@@ -232,7 +232,8 @@ public final class DataStoreConfiguration {
 
     /**
      * Gets the number of threads that the thread pool of the local storage
-     * should be initialized with
+     * should be initialized with.
+     * @return Number of threads for local storage thread pool
      */
     @IntRange(from = 1)
     public int getLocalStorageThreadPoolSize() {
