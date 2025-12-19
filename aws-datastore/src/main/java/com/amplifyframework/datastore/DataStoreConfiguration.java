@@ -499,7 +499,11 @@ public final class DataStoreConfiguration {
         }
 
         /**
-         * Sets the number of threads to use for local storage operations.
+         * Sets the number of threads to use for local storage operations. By default, this
+         * resolves to 20 x #CPUs. However, on devices with low RAM and high CPU, other values
+         * may be chosen to avoid high memory consumption due to thread allocation. It is also
+         * possible to set the value as multiple of #CPUs by passing
+         * {@code Runtime.getRuntime().availableProcessors() * k} as argument.
          * @param localStorageThreadPoolSize Number of threads for local storage operations
          * @return Current builder
          */
