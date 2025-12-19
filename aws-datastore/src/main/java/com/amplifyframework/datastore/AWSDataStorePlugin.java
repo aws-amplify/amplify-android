@@ -136,7 +136,9 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             builder.authModeStrategy;
         this.isSyncRetryEnabled = builder.isSyncRetryEnabled;
         ApiCategory api = builder.apiCategory == null ? Amplify.API : builder.apiCategory;
-        this.userProvidedConfiguration = builder.dataStoreConfiguration;
+        this.userProvidedConfiguration = builder.dataStoreConfiguration == null ?
+                DataStoreConfiguration.defaults() :
+                builder.dataStoreConfiguration;
         this.sqliteStorageAdapter = builder.storageAdapter == null ?
             SQLiteStorageAdapter.forModels(schemaRegistry, modelProvider) :
             builder.storageAdapter;
