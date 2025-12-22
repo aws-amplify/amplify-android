@@ -136,9 +136,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             builder.authModeStrategy;
         this.isSyncRetryEnabled = builder.isSyncRetryEnabled;
         ApiCategory api = builder.apiCategory == null ? Amplify.API : builder.apiCategory;
-        this.userProvidedConfiguration = builder.dataStoreConfiguration == null ?
-                DataStoreConfiguration.defaults() :
-                builder.dataStoreConfiguration;
+        this.userProvidedConfiguration = builder.dataStoreConfiguration;
         this.sqliteStorageAdapter = builder.storageAdapter == null ?
             SQLiteStorageAdapter.forModels(schemaRegistry, modelProvider) :
             builder.storageAdapter;
@@ -275,12 +273,15 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @InternalAmplifyApi
     public void configure(@NonNull AmplifyOutputsData configuration, @NonNull Context context) throws AmplifyException {
         // DataStore does not read any values from AmplifyOutputs, just use the programmatically provided
-        // configuration values
-        configure(context, userProvidedConfiguration);
+        // configuration values if provided, otherwise use the default configuration
+        configure(
+            context,
+            userProvidedConfiguration == null ? DataStoreConfiguration.defaults() : userProvidedConfiguration
+        );
     }
 
     @SuppressLint({"CheckResult", "RxLeakedSubscription", "RxSubscribeOnError"})
-    private void configure(Context context, DataStoreConfiguration configuration) {
+    private void configure(Context context, @NonNull DataStoreConfiguration configuration) {
         pluginConfiguration = configuration;
         HubChannel hubChannel = HubChannel.forCategoryType(getCategoryType());
         Amplify.Hub.subscribe(hubChannel,
