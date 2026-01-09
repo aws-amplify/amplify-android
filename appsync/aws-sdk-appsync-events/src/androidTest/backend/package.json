@@ -21,5 +21,8 @@
   },
   "dependencies": {
     "aws-amplify": "^6.15.0"
+  },
+  "overrides": {
+    "@smithy/config-resolver": "^4.4.0"
   }
 }
