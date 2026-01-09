@@ -1,3 +1,13 @@
+## [Release 2.32.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.32.0)
+
+### Features
+- **datastore:** Make thread pool size configurable ([#3170](https://github.com/aws-amplify/amplify-android/issues/3170))
+
+### Bug Fixes
+- **auth:** UserCancelledException occurrence on sign-in after sign-out ([#3169](https://github.com/aws-amplify/amplify-android/issues/3169))
+
+[See all changes between 2.31.0 and 2.32.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.31.0...release_v2.32.0)
+
 ## [Release 2.31.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.31.0)
 
 ### Features
