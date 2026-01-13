@@ -26,6 +26,9 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.UserNotFoundExcepti
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.featuretest.generators.authstategenerators.AuthStateJsonGenerator.DUMMY_TOKEN
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
+import com.amplifyframework.auth.cognito.usecases.SignInUseCase
+import com.amplifyframework.auth.cognito.usecases.SignOutUseCase
+import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.logging.Logger
@@ -37,6 +40,7 @@ import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
+import io.kotest.assertions.throwables.shouldThrow
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
@@ -134,6 +138,15 @@ class AuthValidationTest {
         logger = logger
     )
 
+    private val signInUseCase = SignInUseCase(
+        stateMachine = stateMachine,
+        configuration = configuration
+    )
+
+    private val signOutUseCase = SignOutUseCase(
+        stateMachine = stateMachine
+    )
+
     private val mainThreadSurrogate = newSingleThreadContext("Main thread")
 
 //region Setup/Teardown
@@ -200,7 +213,7 @@ class AuthValidationTest {
         signIn(USERNAME_1, PASSWORD_1)
         signOut()
         assertSignedOut()
-        assertFails { signIn(USERNAME_2, INCORRECT_PASSWORD) }
+        shouldThrow<InvalidPasswordException> { signIn(USERNAME_2, INCORRECT_PASSWORD) }
     }
 
     // SPR 5
@@ -210,7 +223,7 @@ class AuthValidationTest {
         signIn(USERNAME_1, PASSWORD_1)
         signOut()
         assertSignedOut()
-        assertFails { signIn(INVALID_USERNAME, PASSWORD_1) }
+        shouldThrow<UserNotFoundException> { signIn(INVALID_USERNAME, PASSWORD_1) }
     }
 
 //endregion
@@ -245,7 +258,7 @@ class AuthValidationTest {
     @Test
     fun `SRP sign in existing user with correct password, Hosted UI sign in`() {
         signIn(USERNAME_1, PASSWORD_1)
-        assertFails { signInHostedUi() }
+        shouldThrow<InvalidStateException> { signInHostedUi() }
         assertSignedInAs(USERNAME_1)
     }
 
@@ -254,7 +267,7 @@ class AuthValidationTest {
     @Test
     fun `Hosted UI sign in, SRP sign in existing user with correct password`() {
         signInHostedUi()
-        assertFails { signIn(USERNAME_1, PASSWORD_1) }
+        shouldThrow<InvalidStateException> { signIn(USERNAME_1, PASSWORD_1) }
         assertSignedInAs(USERNAME_1)
     }
 
@@ -263,7 +276,7 @@ class AuthValidationTest {
     @Test
     fun `Hosted UI sign in, SRP sign in existing user with incorrect password`() {
         signInHostedUi()
-        assertFails { signIn(USERNAME_1, INCORRECT_PASSWORD) }
+        shouldThrow<InvalidStateException> { signIn(USERNAME_1, INCORRECT_PASSWORD) }
         assertSignedInAs(USERNAME_1)
     }
 
@@ -272,7 +285,7 @@ class AuthValidationTest {
     @Test
     fun `Hosted UI sign in, SRP sign in non-existent user`() {
         signInHostedUi()
-        assertFails { signIn(INVALID_USERNAME, PASSWORD_1) }
+        shouldThrow<InvalidStateException> { signIn(INVALID_USERNAME, PASSWORD_1) }
     }
 
     // SRP/Hosted 5
@@ -301,7 +314,7 @@ class AuthValidationTest {
     fun `Hosted UI sign in, Hosted UI sign out, SRP sign in existing user with incorrect password`() {
         signInHostedUi()
         signOutHostedUi()
-        assertFails { signIn(USERNAME_1, INCORRECT_PASSWORD) }
+        shouldThrow<InvalidPasswordException> { signIn(USERNAME_1, INCORRECT_PASSWORD) }
     }
 
     // SRP/Hosted 8
@@ -310,7 +323,7 @@ class AuthValidationTest {
     fun `Hosted UI sign in, Hosted UI sign out, SRP sign in non-existent user`() {
         signInHostedUi()
         signOutHostedUi()
-        assertFails { signIn(INVALID_USERNAME, PASSWORD_1) }
+        shouldThrow<UserNotFoundException> { signIn(INVALID_USERNAME, PASSWORD_1) }
     }
 
     // SRP/Hosted 9
@@ -335,7 +348,7 @@ class AuthValidationTest {
         signOutHostedUi()
         signIn(USERNAME_1, PASSWORD_1)
         signOut()
-        assertFails { signIn(USERNAME_1, INCORRECT_PASSWORD) }
+        shouldThrow<InvalidPasswordException> { signIn(USERNAME_1, INCORRECT_PASSWORD) }
     }
 
     // SRP/Hosted 11
@@ -361,7 +374,7 @@ class AuthValidationTest {
         signOutHostedUi()
         signIn(USERNAME_1, PASSWORD_1)
         signOut()
-        assertFails { signIn(USERNAME_2, INCORRECT_PASSWORD) }
+        shouldThrow<InvalidPasswordException> { signIn(USERNAME_2, INCORRECT_PASSWORD) }
     }
 
     // SRP/Hosted 13
@@ -373,7 +386,7 @@ class AuthValidationTest {
         signOutHostedUi()
         signIn(USERNAME_1, PASSWORD_1)
         signOut()
-        assertFails { signIn(INVALID_USERNAME, PASSWORD_1) }
+        shouldThrow<UserNotFoundException> { signIn(INVALID_USERNAME, PASSWORD_1) }
     }
 
     // SRP/Hosted 14
@@ -397,7 +410,7 @@ class AuthValidationTest {
         signOut()
         signInHostedUi()
         signOutHostedUi()
-        assertFails { signIn(USERNAME_1, INCORRECT_PASSWORD) }
+        shouldThrow<InvalidPasswordException> { signIn(USERNAME_1, INCORRECT_PASSWORD) }
     }
 
     // SRP/Hosted 16
@@ -421,7 +434,7 @@ class AuthValidationTest {
         signOut()
         signInHostedUi()
         signOutHostedUi()
-        assertFails { signIn(USERNAME_2, INCORRECT_PASSWORD) }
+        shouldThrow<InvalidPasswordException> { signIn(USERNAME_2, INCORRECT_PASSWORD) }
     }
 
     // SRP/Hosted 18
@@ -433,7 +446,7 @@ class AuthValidationTest {
         signOut()
         signInHostedUi()
         signOutHostedUi()
-        assertFails { signIn(INVALID_USERNAME, PASSWORD_1) }
+        shouldThrow<UserNotFoundException> { signIn(INVALID_USERNAME, PASSWORD_1) }
     }
 
 //endregion
@@ -448,14 +461,12 @@ class AuthValidationTest {
             setupMockResponseForSuccessfulSrp(username)
         }
 
-        return blockForResult { success, error ->
-            plugin.signIn(username, password, success, error)
+        return runBlocking {
+            signInUseCase.execute(username, password)
         }
     }
 
-    private fun signOut() = blockForResult { complete ->
-        plugin.signOut(complete)
-    }
+    private fun signOut() = runBlocking { withTimeout(100000L) { signOutUseCase.execute() } }
 
     private fun signInHostedUi(): AuthSignInResult {
         every { hostedUIClient.launchCustomTabsSignIn(any()) } answers {
@@ -470,9 +481,7 @@ class AuthValidationTest {
         }
     }
 
-    private fun signOutHostedUi() = blockForResult { complete ->
-        plugin.signOut(complete)
-    }
+    private fun signOutHostedUi() = signOut()
 
     private fun assertSignedOut() {
         val result = blockForResult { continuation -> stateMachine.getCurrentState { continuation.accept(it) } }
@@ -535,6 +544,7 @@ class AuthValidationTest {
     }
 
     private fun mockInitiateAuthSuccessResponse(username: String) = mockk<InitiateAuthResponse> {
+        every { authenticationResult } returns null
         every { challengeName } returns ChallengeNameType.PasswordVerifier
         every { challengeParameters } returns mapOf(
             "SALT" to "abc",
@@ -554,37 +564,5 @@ class AuthValidationTest {
             every { expiresIn } returns 300
             every { newDeviceMetadata } returns null
         }
-    }
-
-    @Test
-    fun `test getActiveUsername returns correct username when active and userIDforSRP is null`() {
-        val username = AuthHelper.getActiveUsername("username", null, null)
-        assertEquals(username, "username")
-    }
-
-    @Test
-    fun `getActiveUsername returns correct username when userIDforSRP is null & alternate is same as username`() {
-        val username = AuthHelper.getActiveUsername("username", "username", null)
-        assertEquals(username, "username")
-    }
-
-    @Test
-    fun `getActiveUsername returns correct username when userIDforSRP is null & alternate is different as username`() {
-        val username = AuthHelper.getActiveUsername(
-            "username",
-            "userID12322",
-            null
-        )
-        assertEquals(username, "userID12322")
-    }
-
-    @Test
-    fun `test getActiveUsername returns correct username when userIDforSRP is not null null and alternate is null`() {
-        val username = AuthHelper.getActiveUsername(
-            "username",
-            null,
-            "userID12322"
-        )
-        assertEquals(username, "userID12322")
     }
 }

@@ -21,56 +21,14 @@ import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
-import com.amplifyframework.auth.options.AuthConfirmSignInOptions
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
-import com.amplifyframework.auth.options.AuthSignInOptions
-import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthSignInResult
-import com.amplifyframework.auth.result.AuthSignOutResult
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuthPlugin) {
-
-    suspend fun signIn(username: String?, password: String?): AuthSignInResult = suspendCoroutine { continuation ->
-        delegate.signIn(
-            username,
-            password,
-            { continuation.resume(it) },
-            { continuation.resumeWithException(it) }
-        )
-    }
-
-    suspend fun signIn(username: String?, password: String?, options: AuthSignInOptions): AuthSignInResult =
-        suspendCoroutine { continuation ->
-            delegate.signIn(
-                username,
-                password,
-                options,
-                { continuation.resume(it) },
-                { continuation.resumeWithException(it) }
-            )
-        }
-
-    suspend fun confirmSignIn(challengeResponse: String): AuthSignInResult = suspendCoroutine { continuation ->
-        delegate.confirmSignIn(
-            challengeResponse,
-            { continuation.resume(it) },
-            { continuation.resumeWithException(it) }
-        )
-    }
-
-    suspend fun confirmSignIn(challengeResponse: String, options: AuthConfirmSignInOptions): AuthSignInResult =
-        suspendCoroutine { continuation ->
-            delegate.confirmSignIn(
-                challengeResponse,
-                options,
-                { continuation.resume(it) },
-                { continuation.resumeWithException(it) }
-            )
-        }
 
     suspend fun signInWithSocialWebUI(provider: AuthProvider, callingActivity: Activity): AuthSignInResult =
         suspendCoroutine { continuation ->
@@ -132,15 +90,6 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
             { continuation.resumeWithException(it) }
         )
     }
-
-    suspend fun signOut(): AuthSignOutResult = suspendCoroutine { continuation ->
-        delegate.signOut { continuation.resume(it) }
-    }
-
-    suspend fun signOut(options: AuthSignOutOptions): AuthSignOutResult = suspendCoroutine { continuation ->
-        delegate.signOut(options) { continuation.resume(it) }
-    }
-
     suspend fun federateToIdentityPool(
         providerToken: String,
         authProvider: AuthProvider,
@@ -151,13 +100,6 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
             authProvider,
             options,
             { continuation.resume(it) },
-            { continuation.resumeWithException(it) }
-        )
-    }
-
-    suspend fun clearFederationToIdentityPool() = suspendCoroutine { continuation ->
-        delegate.clearFederationToIdentityPool(
-            { continuation.resume(Unit) },
             { continuation.resumeWithException(it) }
         )
     }

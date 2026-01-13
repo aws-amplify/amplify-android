@@ -23,5 +23,7 @@ internal enum class ChallengeParameter(val key: String) {
     CodeDeliveryMedium("CODE_DELIVERY_DELIVERY_MEDIUM"),
     CredentialRequestOptions("CREDENTIAL_REQUEST_OPTIONS"),
     MfasCanChoose("MFAS_CAN_CHOOSE"),
-    MfasCanSetup("MFAS_CAN_SETUP")
+    MfasCanSetup("MFAS_CAN_SETUP"),
+    Username("USERNAME"),
+    UserIdForSrp("USER_ID_FOR_SRP")
 }

@@ -160,4 +160,20 @@ internal class AuthUseCaseFactory(
         fetchAuthSession = fetchAuthSession(),
         stateMachine = stateMachine
     )
+
+    fun signIn() = SignInUseCase(
+        stateMachine = stateMachine,
+        configuration = authEnvironment.configuration
+    )
+
+    fun confirmSignIn() = ConfirmSignInUseCase(stateMachine = stateMachine)
+
+    fun signOut() = SignOutUseCase(
+        stateMachine = stateMachine
+    )
+
+    fun clearFederationToIdentityPool() = ClearFederationToIdentityPoolUseCase(
+        stateMachine = stateMachine,
+        signOut = signOut()
+    )
 }

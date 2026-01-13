@@ -22,6 +22,7 @@ import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.core.AmplifyConfiguration
 import com.amplifyframework.core.category.CategoryConfiguration
 import com.amplifyframework.core.category.CategoryType
+import com.amplifyframework.testutils.assertAwait
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import org.junit.Assert.assertTrue
@@ -57,7 +58,7 @@ class AWSCognitoAuthQueueTests {
             }
         )
 
-        latch.await(10, TimeUnit.SECONDS)
+        latch.assertAwait(10, TimeUnit.SECONDS)
 
         assertTrue(
             "Auth call returned InvalidStateException, indicating it likely didn't wait for a settled state",

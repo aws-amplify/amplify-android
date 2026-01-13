@@ -32,63 +32,44 @@ import com.amplifyframework.statemachine.codegen.states.SignInState
 import com.amplifyframework.statemachine.codegen.states.WebAuthnSignInState
 
 internal object UserPoolSignInHelper {
-    fun checkNextStep(signInState: SignInState): AuthSignInResult? {
-        when (signInState) {
-            is SignInState.Error -> throw signInState.exception
-            is SignInState.SigningInWithSRP -> {
-                val srpState = signInState.srpSignInState
-                if (srpState is SRPSignInState.Error) throw srpState.exception
-            }
-            is SignInState.SigningInWithSRPCustom -> {
-                val srpState = signInState.srpSignInState
-                if (srpState is SRPSignInState.Error) throw srpState.exception
-            }
-            // Swift has an error state for migrate auth, Android does not
-            is SignInState.SigningInViaMigrateAuth -> Unit
-            is SignInState.SigningInWithCustom -> {
-                val customState = signInState.customSignInState
-                if (customState is CustomSignInState.Error) throw customState.error
-            }
-            is SignInState.SigningInWithHostedUI -> {
-                val hostedUiState = signInState.hostedUISignInState
-                if (hostedUiState is HostedUISignInState.Error) throw hostedUiState.exception
-            }
-            is SignInState.ResolvingChallenge -> {
-                val challengeState = signInState.challengeState
-                if (challengeState is SignInChallengeState.WaitingForAnswer && challengeState.hasNewResponse) {
-                    challengeState.hasNewResponse = false
-                    return SignInChallengeHelper.getNextStep(challengeState.challenge)
-                }
-                if (challengeState is SignInChallengeState.Error && challengeState.hasNewResponse) {
-                    challengeState.hasNewResponse = false
-                    throw challengeState.exception
-                }
-            }
-            is SignInState.ResolvingTOTPSetup -> {
-                val setupTotpState = signInState.setupTOTPState
-                if (setupTotpState is SetupTOTPState.Error && setupTotpState.hasNewResponse) {
-                    setupTotpState.hasNewResponse = false
-                    throw setupTotpState.exception
-                }
-                if (setupTotpState is SetupTOTPState.WaitingForAnswer && setupTotpState.hasNewResponse) {
-                    setupTotpState.hasNewResponse = false
-                    return signInResult(
-                        signInStep = AuthSignInStep.CONTINUE_SIGN_IN_WITH_TOTP_SETUP,
-                        totpSetupDetails = setupTotpState.signInTOTPSetupData.toTotpSetupDetails()
-                    )
-                }
-            }
-            is SignInState.SigningInWithWebAuthn -> {
-                val webAuthnState = signInState.webAuthnSignInState
-                if (webAuthnState is WebAuthnSignInState.Error && webAuthnState.hasNewResponse) {
-                    webAuthnState.hasNewResponse = false
-                    throw webAuthnState.exception
-                }
-            }
-            else -> Unit
+    fun checkNextStep(signInState: SignInState): AuthSignInResult? = when (signInState) {
+        is SignInState.Error -> throw signInState.exception
+        is SignInState.SigningInWithSRP -> when (val srpState = signInState.srpSignInState) {
+            is SRPSignInState.Error -> throw srpState.exception
+            else -> null
         }
-
-        return null
+        is SignInState.SigningInWithSRPCustom -> when (val srpState = signInState.srpSignInState) {
+            is SRPSignInState.Error -> throw srpState.exception
+            else -> null
+        }
+        // Swift has an error state for migrate auth, Android does not
+        is SignInState.SigningInViaMigrateAuth -> null
+        is SignInState.SigningInWithCustom -> when (val customState = signInState.customSignInState) {
+            is CustomSignInState.Error -> throw customState.error
+            else -> null
+        }
+        is SignInState.SigningInWithHostedUI -> when (val hostedUiState = signInState.hostedUISignInState) {
+            is HostedUISignInState.Error -> throw hostedUiState.exception
+            else -> null
+        }
+        is SignInState.ResolvingChallenge -> when (val challengeState = signInState.challengeState) {
+            is SignInChallengeState.Error -> throw challengeState.exception
+            is SignInChallengeState.WaitingForAnswer -> SignInChallengeHelper.getNextStep(challengeState.challenge)
+            else -> null
+        }
+        is SignInState.ResolvingTOTPSetup -> when (val totpState = signInState.setupTOTPState) {
+            is SetupTOTPState.Error -> throw totpState.exception
+            is SetupTOTPState.WaitingForAnswer -> signInResult(
+                signInStep = AuthSignInStep.CONTINUE_SIGN_IN_WITH_TOTP_SETUP,
+                totpSetupDetails = totpState.signInTOTPSetupData.toTotpSetupDetails()
+            )
+            else -> null
+        }
+        is SignInState.SigningInWithWebAuthn -> when (val webAuthnState = signInState.webAuthnSignInState) {
+            is WebAuthnSignInState.Error -> throw webAuthnState.exception
+            else -> null
+        }
+        else -> null
     }
 
     fun signInResult(

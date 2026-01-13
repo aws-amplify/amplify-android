@@ -1,3 +1,48 @@
+## [Release 2.32.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.32.0)
+
+### Features
+- **datastore:** Make thread pool size configurable ([#3170](https://github.com/aws-amplify/amplify-android/issues/3170))
+
+### Bug Fixes
+- **auth:** UserCancelledException occurrence on sign-in after sign-out ([#3169](https://github.com/aws-amplify/amplify-android/issues/3169))
+
+[See all changes between 2.31.0 and 2.32.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.31.0...release_v2.32.0)
+
+## [Release 2.31.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.31.0)
+
+### Features
+- **auth:** add support for cognito oidc parameters in managed login ([#3158](https://github.com/aws-amplify/amplify-android/issues/3158))
+
+[See all changes between 2.30.4 and 2.31.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.30.4...release_v2.31.0)
+
+## [Release 2.30.4](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.30.4)
+
+### Bug Fixes
+- **auth:** Resolve logout issue caused by JWT token serialization breaking change ([#3162](https://github.com/aws-amplify/amplify-android/issues/3162))
+
+[See all changes between 2.30.3 and 2.30.4](https://github.com/aws-amplify/amplify-android/compare/release_v2.30.3...release_v2.30.4)
+
+## 🚨 CRITICAL: Version Deprecated [Release 2.30.3](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.30.3)
+
+### Please follow issue [#3160](https://github.com/aws-amplify/amplify-android/issues/3160) for further instructions if you've already updated
+
+### Bug Fixes
+- **storage:** Prevent missed transfer status updates ([#3154](https://github.com/aws-amplify/amplify-android/issues/3154))
+- **auth:** Fix issue with extracting username during USER_PASSWORD_AUTH ([#3149](https://github.com/aws-amplify/amplify-android/issues/3149))
+- **storage:** Download Accuracy Fix ([#3156](https://github.com/aws-amplify/amplify-android/issues/3156))
+
+[See all changes between 2.30.2 and 2.30.3](https://github.com/aws-amplify/amplify-android/compare/release_v2.30.2...release_v2.30.3)
+
+## 🚨 CRITICAL: Version Deprecated [Release 2.30.2](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.30.2)
+
+### Please follow issue [#3160](https://github.com/aws-amplify/amplify-android/issues/3160) for further instructions if you've already updated
+
+### Bug Fixes
+- **auth:** Fix losing session identifier when incorrect otp code is entered during confirm sign up ([#3136](https://github.com/aws-amplify/amplify-android/issues/3136))
+- **auth:** Add missing state transitions for AutoSignIn state ([#3138](https://github.com/aws-amplify/amplify-android/issues/3138))
+
+[See all changes between 2.30.1 and 2.30.2](https://github.com/aws-amplify/amplify-android/compare/release_v2.30.1...release_v2.30.2)
+
 ## [Release 2.30.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.30.1)
 
 ### Bug Fixes

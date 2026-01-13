@@ -18,13 +18,8 @@ package com.amplifyframework.auth.cognito
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthSession
-import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.helpers.SRPHelper
-import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
-import com.amplifyframework.auth.cognito.options.AuthFlowType
-import com.amplifyframework.auth.options.AuthSignInOptions
-import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
@@ -158,71 +153,6 @@ class RealAWSCognitoAuthPluginTest {
 
         // THEN
         verify(exactly = 0) { onSuccess.accept(any()) }
-    }
-
-    @Test
-    fun testCustomSignInWithSRPSucceedsWithChallenge() {
-        // GIVEN
-        val onSuccess = mockk<Consumer<AuthSignInResult>>()
-        val onError = mockk<Consumer<AuthException>>(relaxed = true)
-
-        setupCurrentAuthState(authNState = AuthenticationState.SignedOut(mockk()))
-
-        // WHEN
-        plugin.signIn(
-            "username",
-            "password",
-            AWSCognitoAuthSignInOptions.builder().authFlowType(AuthFlowType.CUSTOM_AUTH_WITH_SRP).build(),
-            onSuccess,
-            onError
-        )
-
-        // THEN
-        verify(exactly = 0) { onSuccess.accept(any()) }
-    }
-
-    @Test
-    fun testSignInFailsIfNotConfigured() {
-        // GIVEN
-        val expectedAuthError = InvalidUserPoolConfigurationException()
-        val onSuccess = mockk<Consumer<AuthSignInResult>>()
-        val onError = ConsumerWithLatch<AuthException>(expect = expectedAuthError)
-
-        setupCurrentAuthState(authNState = AuthenticationState.NotConfigured())
-
-        coEvery { authConfiguration.authFlowType } returns AuthFlowType.USER_SRP_AUTH
-        // WHEN
-        plugin.signIn("user", "password", AuthSignInOptions.defaults(), onSuccess, onError)
-
-        // THEN
-        onError.shouldBeCalled()
-        verify(exactly = 0) { onSuccess.accept(any()) }
-    }
-
-    @Test
-    fun testSignInFailsIfAlreadySignedIn() {
-        // GIVEN
-        val onError = ConsumerWithLatch<AuthException>()
-        coEvery { authConfiguration.authFlowType } returns AuthFlowType.USER_SRP_AUTH
-
-        setupCurrentAuthState(
-            authNState = AuthenticationState.SignedIn(
-                SignedInData(
-                    "userId",
-                    "user",
-                    Date(),
-                    SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
-                    CognitoUserPoolTokens("", "", "", 0)
-                ),
-                mockk()
-            )
-        )
-
-        // WHEN
-        plugin.signIn("user", "password", AuthSignInOptions.defaults(), mockk(), onError)
-
-        // THEN
-        onError.shouldBeCalled()
     }
 
     private fun setupCurrentAuthState(authNState: AuthenticationState? = null, authZState: AuthorizationState? = null) {
