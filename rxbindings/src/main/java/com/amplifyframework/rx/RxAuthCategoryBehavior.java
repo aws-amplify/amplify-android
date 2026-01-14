@@ -17,6 +17,7 @@ package com.amplifyframework.rx;
 
 import android.app.Activity;
 import android.content.Intent;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -259,7 +260,7 @@ public interface RxAuthCategoryBehavior {
      * @return An Rx {@link Single} which emits {@link AuthSession} on success,
      *         {@link AuthException} on failure
      */
-    Single<AuthSession> fetchAuthSession(@NonNull AuthFetchSessionOptions options);
+    Single<AuthSession> fetchAuthSession(@NonNull String userId, @NonNull AuthFetchSessionOptions options);
 
     /**
      * Remember the user device that is currently being used.

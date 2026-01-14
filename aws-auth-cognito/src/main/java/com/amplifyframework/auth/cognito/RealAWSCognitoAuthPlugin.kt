@@ -1590,6 +1590,78 @@ internal class RealAWSCognitoAuthPlugin(
         }
     }
 
+    fun fetchAuthSession(
+        userId: String,
+        options: AuthFetchSessionOptions,
+        onSuccess: Consumer<AuthSession>,
+        onError: Consumer<AuthException>
+    ) {
+        val forceRefresh = options.forceRefresh
+        authStateMachine.getCurrentState(userId) { authState ->
+            when (val authZState = authState.authZState) {
+                is AuthorizationState.Configured -> {
+                    authStateMachine.send(
+                        AuthorizationEvent(AuthorizationEvent.EventType.FetchUnAuthSession(userId)),
+                        userId
+                    )
+                    _fetchAuthSession(userId, onSuccess)
+                }
+
+                is AuthorizationState.SessionEstablished -> {
+                    val credential = authZState.amplifyCredential
+                    if (!credential.isValid() || forceRefresh) {
+                        if (credential is AmplifyCredential.IdentityPoolFederated) {
+                            authStateMachine.send(
+                                AuthorizationEvent(
+                                    AuthorizationEvent.EventType.StartFederationToIdentityPool(
+                                        credential.federatedToken,
+                                        credential.identityId,
+                                        credential
+                                    )
+                                ), userId
+                            )
+                        } else {
+                            authStateMachine.send(
+                                AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(userId, credential)),
+                                userId
+                            )
+                        }
+                        _fetchAuthSession(userId, onSuccess)
+                    } else {
+                        onSuccess.accept(credential.getCognitoSession())
+                    }
+                }
+
+                is AuthorizationState.Error -> {
+                    val error = authZState.exception
+                    if (error is SessionError) {
+                        val amplifyCredential = error.amplifyCredential
+                        if (amplifyCredential is AmplifyCredential.IdentityPoolFederated) {
+                            authStateMachine.send(
+                                AuthorizationEvent(
+                                    AuthorizationEvent.EventType.StartFederationToIdentityPool(
+                                        amplifyCredential.federatedToken,
+                                        amplifyCredential.identityId,
+                                        amplifyCredential
+                                    )
+                                ), userId
+                            )
+                        } else {
+//                            authStateMachine.send(
+//                                AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(amplifyCredential))
+//                            )
+                        }
+                        _fetchAuthSession(userId, onSuccess)
+                    } else {
+                        onError.accept(InvalidStateException())
+                    }
+                }
+
+                else -> onError.accept(InvalidStateException())
+            }
+        }
+    }
+
     private fun _fetchAuthSession(userId: String?, onSuccess: Consumer<AuthSession>) {
         val token = StateChangeListenerToken()
         authStateMachine.listen(

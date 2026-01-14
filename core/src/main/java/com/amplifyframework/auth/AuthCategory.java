@@ -203,11 +203,21 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
 
     @Override
     public void fetchAuthSession(
+            @NonNull String userId,
             @NonNull AuthFetchSessionOptions options,
             @NonNull Consumer<AuthSession> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
-        getSelectedPlugin().fetchAuthSession(options, onSuccess, onError);
+        getSelectedPlugin().fetchAuthSession(userId, options, onSuccess, onError);
+    }
+
+    @Override
+    public void fetchAuthSession(
+            @NonNull AuthFetchSessionOptions options,
+            @NonNull Consumer<AuthSession> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().fetchAuthSession("", options, onSuccess, onError);
     }
 
     @Override
