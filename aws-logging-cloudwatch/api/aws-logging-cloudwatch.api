@@ -3,7 +3,8 @@ public final class com/amplifyframework/logging/cloudwatch/AWSCloudWatchLoggingP
 	public fun <init> ()V
 	public fun <init> (Lcom/amplifyframework/logging/cloudwatch/models/AWSCloudWatchLoggingPluginConfiguration;)V
 	public fun <init> (Lcom/amplifyframework/logging/cloudwatch/models/AWSCloudWatchLoggingPluginConfiguration;Lcom/amplifyframework/logging/cloudwatch/RemoteLoggingConstraintProvider;)V
-	public synthetic fun <init> (Lcom/amplifyframework/logging/cloudwatch/models/AWSCloudWatchLoggingPluginConfiguration;Lcom/amplifyframework/logging/cloudwatch/RemoteLoggingConstraintProvider;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lcom/amplifyframework/logging/cloudwatch/models/AWSCloudWatchLoggingPluginConfiguration;Lcom/amplifyframework/logging/cloudwatch/RemoteLoggingConstraintProvider;Lcom/amplifyframework/logging/cloudwatch/models/LogStreamNameFormatter;)V
+	public synthetic fun <init> (Lcom/amplifyframework/logging/cloudwatch/models/AWSCloudWatchLoggingPluginConfiguration;Lcom/amplifyframework/logging/cloudwatch/RemoteLoggingConstraintProvider;Lcom/amplifyframework/logging/cloudwatch/models/LogStreamNameFormatter;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun configure (Lorg/json/JSONObject;Landroid/content/Context;)V
 	public fun disable ()V
 	public fun enable ()V
@@ -130,6 +131,23 @@ public final synthetic class com/amplifyframework/logging/cloudwatch/models/Defa
 
 public final class com/amplifyframework/logging/cloudwatch/models/DefaultRemoteConfiguration$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/logging/cloudwatch/models/LogStreamContext {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lcom/amplifyframework/logging/cloudwatch/models/LogStreamContext;
+	public static synthetic fun copy$default (Lcom/amplifyframework/logging/cloudwatch/models/LogStreamContext;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/logging/cloudwatch/models/LogStreamContext;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDeviceId ()Ljava/lang/String;
+	public final fun getUserId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/amplifyframework/logging/cloudwatch/models/LogStreamNameFormatter {
+	public abstract fun format (Lcom/amplifyframework/logging/cloudwatch/models/LogStreamContext;)Ljava/lang/String;
 }
 
 public final class com/amplifyframework/logging/cloudwatch/models/LoggingConstraints {

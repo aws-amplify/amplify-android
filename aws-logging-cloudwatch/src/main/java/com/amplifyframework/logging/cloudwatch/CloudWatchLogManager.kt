@@ -35,6 +35,8 @@ import com.amplifyframework.logging.cloudwatch.db.CloudWatchLoggingDatabase
 import com.amplifyframework.logging.cloudwatch.db.LogEvent
 import com.amplifyframework.logging.cloudwatch.models.AWSCloudWatchLoggingPluginConfiguration
 import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
+import com.amplifyframework.logging.cloudwatch.models.LogStreamContext
+import com.amplifyframework.logging.cloudwatch.models.LogStreamNameFormatter
 import com.amplifyframework.logging.cloudwatch.worker.CloudwatchLogsSyncWorker
 import com.amplifyframework.logging.cloudwatch.worker.CloudwatchRouterWorker
 import java.text.SimpleDateFormat
@@ -57,7 +59,8 @@ internal class CloudWatchLogManager(
     private val loggingConstraintsResolver: LoggingConstraintsResolver,
     private val cloudWatchLoggingDatabase: CloudWatchLoggingDatabase = CloudWatchLoggingDatabase(context),
     private val customCognitoCredentialsProvider: CustomCognitoCredentialsProvider = CustomCognitoCredentialsProvider(),
-    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val logStreamNameFormatter: LogStreamNameFormatter? = null
 ) {
     private val deviceIdKey = "unique_device_id"
     private var stopSync = false
@@ -117,7 +120,14 @@ internal class CloudWatchLogManager(
                         if (queriedEvents.isEmpty()) break
                         while (queriedEvents.isNotEmpty()) {
                             val groupName = pluginConfiguration.logGroupName
-                            val streamName = "$todayDate.${uniqueDeviceId()}.${userIdentityId ?: "guest"}"
+                            val deviceId = uniqueDeviceId()
+                            val context = LogStreamContext(deviceId = deviceId, userId = userIdentityId)
+
+                            // Generate stream name: use custom formatter if provided, otherwise use default format
+                            val streamName = logStreamNameFormatter?.format(context)
+                                ?: // Default format: MM-dd-yyyy.deviceId.userId
+                                "$todayDate.$deviceId.${userIdentityId ?: "guest"}"
+
                             val nextBatch = getNextBatch(queriedEvents)
                             val inputLogEvents = nextBatch.first
                             inputLogEventsIdToBeDeleted = nextBatch.second

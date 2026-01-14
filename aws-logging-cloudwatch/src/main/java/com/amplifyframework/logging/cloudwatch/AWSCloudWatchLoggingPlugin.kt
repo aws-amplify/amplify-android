@@ -26,6 +26,7 @@ import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.logging.LoggingPlugin
 import com.amplifyframework.logging.cloudwatch.models.AWSCloudWatchLoggingPluginConfiguration
+import com.amplifyframework.logging.cloudwatch.models.LogStreamNameFormatter
 import com.amplifyframework.logging.cloudwatch.worker.CloudwatchRouterWorker
 import com.amplifyframework.logging.cloudwatch.worker.CloudwatchWorkerFactory
 import com.amplifyframework.util.setHttpEngine
@@ -39,7 +40,8 @@ import org.json.JSONObject
 */
 class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
     private val awsCloudWatchLoggingPluginConfig: AWSCloudWatchLoggingPluginConfiguration? = null,
-    private val awsRemoteLoggingConstraintProvider: RemoteLoggingConstraintProvider? = null
+    private val awsRemoteLoggingConstraintProvider: RemoteLoggingConstraintProvider? = null,
+    private val logStreamNameFormatter: LogStreamNameFormatter? = null
 ) : LoggingPlugin<CloudWatchLogsClient>() {
 
     private val loggingConstraintsResolver =
@@ -102,8 +104,13 @@ class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
                     )
                 }
             }
-            val cloudWatchLogManager =
-                CloudWatchLogManager(context, awsLoggingConfig, cloudWatchLogsClient, loggingConstraintsResolver)
+            val cloudWatchLogManager = CloudWatchLogManager(
+                context,
+                awsLoggingConfig,
+                cloudWatchLogsClient,
+                loggingConstraintsResolver,
+                logStreamNameFormatter = logStreamNameFormatter
+            )
             awsCloudWatchLoggingPluginImplementation.cloudWatchLogManager = cloudWatchLogManager
             CloudwatchRouterWorker.workerFactories[CloudwatchRouterWorker.WORKER_FACTORY_KEY] = CloudwatchWorkerFactory(
                 cloudWatchLogManager,
