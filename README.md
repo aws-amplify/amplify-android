@@ -18,21 +18,21 @@ interaction with Amazon Web Services (AWS). But, the Amplify Framework
 is designed to be extensible to any other backend or service.
 
 To familiarize yourself with Amplify, checkout our [Getting Started
-Guide](https://docs.amplify.aws/start/q/integration/android).
+Guide](https://docs.amplify.aws/gen2/start/quickstart/).
 
 ## Categories
 
-| Category                                                                                                     | AWS Provider | Description                                                                                   |
-|--------------------------------------------------------------------------------------------------------------|--------------|-----------------------------------------------------------------------------------------------|
-| **[Authentication](https://docs.amplify.aws/lib/devpreview/getting-started/q/platform/android)**             | Cognito      | Building blocks to create auth experiences                                                    |
-| **[Storage](https://docs.amplify.aws/lib/storage/getting-started/q/platform/android)**                       | S3           | Manages content in public, protected, private storage buckets                                 |
-| **[DataStore](https://docs.amplify.aws/lib/datastore/getting-started/q/platform/android)**                   | AppSync      | Programming model for shared and distributed data, with simple online/offline synchronization |
-| **[API (GraphQL)](https://docs.amplify.aws/lib/graphqlapi/getting-started/q/platform/android)**              | AppSync      | Interact with your GraphQL or AppSync endpoint                                                |
-| **[API (REST)](https://docs.amplify.aws/lib/restapi/getting-started/q/platform/android)**                    | API Gateway  | Sigv4 signing and AWS auth for API Gateway and other REST endpoints                           |
-| **[Analytics](https://docs.amplify.aws/lib/analytics/getting-started/q/platform/android)**                   | Pinpoint     | Collect Analytics data for your app including tracking user sessions                          |
-| **[Geo](https://docs.amplify.aws/lib/geo/getting-started/q/platform/android)**                               | Location     | Add maps to your app with APIs and map UI components                                          |
-| **[Predictions](https://docs.amplify.aws/lib/predictions/getting-started/q/platform/android)**               | Various*     | Connect your app with machine learning services like NLP, computer vision, TTS, and more.     |
-| **[Push Notifications](https://docs.amplify.aws/lib/push-notifications/getting-started/q/platform/android)** | Pinpoint     | Segment users, trigger push notifications, and record metrics                                 |
+| Category                                                                                                              | AWS Provider | Description                                                                                   | Gen2 | Gen1 |
+|-----------------------------------------------------------------------------------------------------------------------|--------------|-----------------------------------------------------------------------------------------------|------|------|
+| **[Authentication](https://docs.amplify.aws/android/build-a-backend/auth/set-up-auth/)**                              | Cognito      | Building blocks to create auth experiences                                                    | ✅   | ✅   |
+| **[Storage](https://docs.amplify.aws/android/build-a-backend/storage/set-up-storage/)**                               | S3           | Manages content in public, protected, private storage buckets                                 | ✅   | ✅   |
+| **[Analytics](https://docs.amplify.aws/android/build-a-backend/add-aws-services/analytics/set-up-analytics/)**        | Pinpoint     | Collect Analytics data for your app including tracking user sessions                          | ✅   | ✅   |
+| **[Geo](https://docs.amplify.aws/android/build-a-backend/add-aws-services/geo/set-up-geo/)**                          | Location     | Add maps to your app with APIs and map UI components                                          | ✅   | ✅   |
+| Nonexist **[DataStore](https://docs.amplify.aws/lib/datastore/getting-started/q/platform/android)**                   | AppSync      | Programming model for shared and distributed data, with simple online/offline synchronization |      | ✅   |
+| Nonexist **[API (GraphQL)](https://docs.amplify.aws/lib/graphqlapi/getting-started/q/platform/android)**              | AppSync      | Interact with your GraphQL or AppSync endpoint                                                |      | ✅   |
+| Nonexist **[API (REST)](https://docs.amplify.aws/lib/restapi/getting-started/q/platform/android)**                    | API Gateway  | Sigv4 signing and AWS auth for API Gateway and other REST endpoints                           |      | ✅   |
+| Nonexist **[Predictions](https://docs.amplify.aws/lib/predictions/getting-started/q/platform/android)**               | Various*     | Connect your app with machine learning services like NLP, computer vision, TTS, and more.     |      | ✅   |
+| Nonexist **[Push Notifications](https://docs.amplify.aws/lib/push-notifications/getting-started/q/platform/android)** | Pinpoint     | Segment users, trigger push notifications, and record metrics                                 |      | ✅   |
 
 \* Predictions utilizes a range of Amazon's Machine Learning services,
 including: Amazon Comprehend, Amazon Polly, Amazon Rekognition, Amazon
@@ -53,10 +53,6 @@ val s3Client = s3StoragePlugin.escapeHatch as S3Client
 AWSS3StoragePlugin plugin = (AWSS3StoragePlugin) Amplify.Storage.getPlugin("awsS3StoragePlugin");
 S3Client s3Client = plugin.getEscapeHatch();
 ```
-
-## Platform Support
-
-The Amplify Framework supports Android API level 24 (Android 7.0) and above.
 
 ## Using Amplify from Your App
 
@@ -91,8 +87,6 @@ block inside your app's `build.gradle`, as below:
 android {
     compileOptions {
         coreLibraryDesugaringEnabled true
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
     }
 }
 ```
