@@ -60,6 +60,8 @@ internal class HostedUIClient private constructor(
 
     @Throws(RuntimeException::class)
     fun launchCustomTabsSignIn(hostedUIOptions: HostedUIOptions) {
+        session = client?.newSession(null)
+
         launchCustomTabs(
             uri = createAuthorizeUri(hostedUIOptions),
             activity = hostedUIOptions.callingActivity,

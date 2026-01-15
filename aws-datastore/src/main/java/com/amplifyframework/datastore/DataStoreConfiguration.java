@@ -50,6 +50,8 @@ public final class DataStoreConfiguration {
     static final boolean DEFAULT_DO_SYNC_RETRY = false;
     @VisibleForTesting
     static final int DEFAULT_SYNC_MAX_CONCURRENT_MODELS = 1;
+    @VisibleForTesting
+    static final int DEFAULT_LOCAL_STORAGE_NUM_THREADS = Runtime.getRuntime().availableProcessors() * 20;
     static final int MAX_RECORDS = 1000;
     static final long MAX_TIME_SEC = 2;
 
@@ -65,6 +67,7 @@ public final class DataStoreConfiguration {
     private final Long syncIntervalInMinutes;
     private final Long maxTimeLapseForObserveQuery;
     private final Integer observeQueryMaxRecords;
+    private final int localStorageThreadPoolSize;
 
     private DataStoreConfiguration(Builder builder) {
         this.errorHandler = builder.errorHandler;
@@ -78,6 +81,8 @@ public final class DataStoreConfiguration {
                 builder.syncMaxConcurrentModels : DEFAULT_SYNC_MAX_CONCURRENT_MODELS;
         this.maxTimeLapseForObserveQuery = builder.maxTimeLapseForObserveQuery;
         this.observeQueryMaxRecords = builder.observeQueryMaxRecords;
+        this.localStorageThreadPoolSize = builder.localStorageThreadPoolSize != null ?
+                builder.localStorageThreadPoolSize : DEFAULT_LOCAL_STORAGE_NUM_THREADS;
     }
 
     /**
@@ -135,6 +140,7 @@ public final class DataStoreConfiguration {
             .observeQueryMaxTime(MAX_TIME_SEC)
             .observeQueryMaxRecords(MAX_RECORDS)
             .syncMaxConcurrentModels(DEFAULT_SYNC_MAX_CONCURRENT_MODELS)
+            .localStorageThreadPoolSize(DEFAULT_LOCAL_STORAGE_NUM_THREADS)
             .build();
     }
 
@@ -225,6 +231,16 @@ public final class DataStoreConfiguration {
     }
 
     /**
+     * Gets the number of threads that the thread pool of the local storage
+     * should be initialized with.
+     * @return Number of threads for local storage thread pool
+     */
+    @IntRange(from = 1)
+    public int getLocalStorageThreadPoolSize() {
+        return localStorageThreadPoolSize;
+    }
+
+    /**
      * Returns the Map of all {@link DataStoreSyncExpression}s used to filter data received from AppSync, either during
      * a sync or over the real-time subscription.
      * @return the Map of all {@link DataStoreSyncExpression}s.
@@ -273,6 +289,9 @@ public final class DataStoreConfiguration {
         if (!ObjectsCompat.equals(getSyncMaxConcurrentModels(), that.getSyncMaxConcurrentModels())) {
             return false;
         }
+        if (getLocalStorageThreadPoolSize() != that.getLocalStorageThreadPoolSize()) {
+            return false;
+        }
         return true;
     }
 
@@ -288,6 +307,7 @@ public final class DataStoreConfiguration {
         result = 31 * result + (getObserveQueryMaxRecords() != null ? getObserveQueryMaxRecords().hashCode() : 0);
         result = 31 * result + getMaxTimeLapseForObserveQuery().hashCode();
         result = 31 * result + getSyncMaxConcurrentModels().hashCode();
+        result = 31 * result + getLocalStorageThreadPoolSize();
         return result;
     }
 
@@ -304,6 +324,7 @@ public final class DataStoreConfiguration {
             ", maxTimeRelapseForObserveQuery=" + maxTimeLapseForObserveQuery +
             ", observeQueryMaxRecords=" + observeQueryMaxRecords +
             ", syncMaxConcurrentModels=" + syncMaxConcurrentModels +
+            ", localStorageThreadPoolSize=" + localStorageThreadPoolSize +
             '}';
     }
 
@@ -344,6 +365,7 @@ public final class DataStoreConfiguration {
         private DataStoreConfiguration userProvidedConfiguration;
         private Integer observeQueryMaxRecords;
         private long maxTimeLapseForObserveQuery;
+        private Integer localStorageThreadPoolSize;
 
         private Builder() {
             this.errorHandler = DefaultDataStoreErrorHandler.instance();
@@ -477,6 +499,21 @@ public final class DataStoreConfiguration {
         }
 
         /**
+         * Sets the number of threads to use for local storage operations. By default, this
+         * resolves to 20 x #CPUs. However, on devices with low RAM and high CPU, other values
+         * may be chosen to avoid high memory consumption due to thread allocation. It is also
+         * possible to set the value as multiple of #CPUs by passing
+         * {@code Runtime.getRuntime().availableProcessors() * k} as argument.
+         * @param localStorageThreadPoolSize Number of threads for local storage operations
+         * @return Current builder
+         */
+        @NonNull
+        public Builder localStorageThreadPoolSize(@IntRange(from = 1) int localStorageThreadPoolSize) {
+            this.localStorageThreadPoolSize = localStorageThreadPoolSize;
+            return Builder.this;
+        }
+
+        /**
          * Sets a sync expression for a particular model to filter which data is synced locally.
          * The expression is evaluated each time DataStore is started.
          * The QueryPredicate is applied on both sync and subscriptions.
@@ -573,6 +610,10 @@ public final class DataStoreConfiguration {
                     observeQueryMaxRecords);
             maxTimeLapseForObserveQuery = userProvidedConfiguration.getMaxTimeLapseForObserveQuery()
                     == 0 ? maxTimeLapseForObserveQuery : userProvidedConfiguration.getMaxTimeLapseForObserveQuery();
+            localStorageThreadPoolSize = getValueOrDefault(
+                    userProvidedConfiguration.getLocalStorageThreadPoolSize(),
+                    localStorageThreadPoolSize
+            );
         }
 
         private static <T> T getValueOrDefault(T value, T defaultValue) {
@@ -606,6 +647,9 @@ public final class DataStoreConfiguration {
                 observeQueryMaxRecords = getValueOrDefault(observeQueryMaxRecords, MAX_RECORDS);
                 maxTimeLapseForObserveQuery = maxTimeLapseForObserveQuery == 0 ? MAX_TIME_SEC :
                         maxTimeLapseForObserveQuery;
+                localStorageThreadPoolSize = getValueOrDefault(
+                        localStorageThreadPoolSize, DEFAULT_LOCAL_STORAGE_NUM_THREADS
+                );
             }
             return new DataStoreConfiguration(this);
         }
