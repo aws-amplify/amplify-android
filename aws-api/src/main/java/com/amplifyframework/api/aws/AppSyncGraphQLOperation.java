@@ -143,8 +143,9 @@ public final class AppSyncGraphQLOperation<R> extends AWSGraphQLOperation<R> {
                 }
             }
             if (response.code() >= START_OF_CLIENT_ERROR_CODE && response.code() <= END_OF_CLIENT_ERROR_CODE) {
+                IOException cause = new IOException("HTTP error occurred: " + response.code() + " " + jsonResponse);
                 onFailure.accept(new ApiException
-                        .NonRetryableException("OkHttp client request failed.", "Irrecoverable error")
+                        .NonRetryableException("OkHttp client request failed.", cause, "Irrecoverable error")
                 );
                 return;
             }

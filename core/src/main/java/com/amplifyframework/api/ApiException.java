@@ -69,6 +69,18 @@ public class ApiException extends AmplifyException {
 
             super(message, recoverySuggestion);
         }
+
+        /**
+         * Constructor for NonRetryable Exception with cause.
+         * @param message message for exception.
+         * @param throwable The underlying cause of this exception.
+         * @param recoverySuggestion recovery suggestions.
+         */
+        public NonRetryableException(@NonNull String message,
+                                      Throwable throwable,
+                                      @NonNull String recoverySuggestion) {
+            super(message, throwable, recoverySuggestion);
+        }
     }
 
     /**
