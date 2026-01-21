@@ -22,7 +22,6 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.model.ModelQuery;
-import com.amplifyframework.api.graphql.model.ModelSubscription;
 import com.amplifyframework.testutils.Await;
 
 import org.json.JSONException;
@@ -34,7 +33,6 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.MockResponse;
