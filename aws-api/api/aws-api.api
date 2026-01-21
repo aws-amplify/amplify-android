@@ -108,6 +108,18 @@ public final class com/amplifyframework/api/aws/EndpointType : java/lang/Enum {
 	public static fun values ()[Lcom/amplifyframework/api/aws/EndpointType;
 }
 
+public final class com/amplifyframework/api/aws/GraphQLResponseException : java/io/IOException {
+	public fun <init> (Lorg/json/JSONObject;)V
+	public fun getErrors ()Ljava/util/List;
+}
+
+public final class com/amplifyframework/api/aws/GraphQLResponseException$GraphQLError {
+	public fun getErrorCode ()Ljava/lang/Integer;
+	public fun getErrorType ()Ljava/lang/String;
+	public fun getMessage ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class com/amplifyframework/api/aws/LazyTypeDeserializersKt {
 	public static final field ITEMS_KEY Ljava/lang/String;
 	public static final field NEXT_TOKEN_KEY Ljava/lang/String;

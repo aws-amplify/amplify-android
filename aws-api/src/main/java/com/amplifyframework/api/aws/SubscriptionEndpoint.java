@@ -633,14 +633,16 @@ final class SubscriptionEndpoint {
                         endpointStatus.set(EndpointStatus.CONNECTION_FAILED);
                         LOG.warn("Websocket listener received a CONNECTION_ERROR event. " + message);
                         
-                        // Convert error payload to IOException
+                        // Convert error payload to GraphQLResponseException
                         try {
                             if (jsonMessage.has("payload")) {
                                 JSONObject payload = jsonMessage.getJSONObject("payload");
-                                connectionFailureCause = new IOException(payload.toString());
+                                connectionFailureCause = new GraphQLResponseException(payload);
                             }
                         } catch (JSONException exception) {
-                            LOG.debug("Failed to extract CONNECTION_ERROR payload");
+                            LOG.warn("Failed to parse CONNECTION_ERROR payload as GraphQL error");
+                            // Fall back to simple IOException with JSONException as cause
+                            connectionFailureCause = new IOException(message, exception);
                         }
                         
                         connectionResponse.countDown();
