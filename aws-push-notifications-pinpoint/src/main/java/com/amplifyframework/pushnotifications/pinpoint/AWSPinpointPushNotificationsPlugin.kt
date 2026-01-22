@@ -50,6 +50,7 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
 import org.json.JSONObject
 
+@Deprecated("AWS will end support for Amazon Pinpoint on October 30, 2026.")
 class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClient>() {
 
     companion object {
@@ -102,6 +103,17 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     }
 
     private fun configure(context: Context, configuration: AWSPinpointPushNotificationsConfiguration) {
+        LOG.warn(
+            """
+            AWS will end support for Amazon Pinpoint on October 30, 2026.
+            The guidance is to use AWS End User Messaging for push notifications and SMS,
+            Amazon Simple Email Service for sending emails, Amazon Connect for campaigns, journeys, endpoints, 
+            and engagement analytics. Pinpoint recommends Amazon Kinesis for event collection and mobile analytics.
+            
+            See https://docs.aws.amazon.com/pinpoint/latest/userguide/migrate.html for more details.
+            """.trimIndent()
+        )
+
         this.context = context
         this.configuration = configuration
         pushNotificationsUtils = PushNotificationsUtils(context)
