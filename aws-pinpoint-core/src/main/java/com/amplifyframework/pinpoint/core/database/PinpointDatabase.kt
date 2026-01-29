@@ -60,27 +60,21 @@ class PinpointDatabase(
         databaseHelper.close()
     }
 
-    suspend fun saveEvent(event: PinpointEvent): Uri {
-        return withContext(coroutineDispatcher) {
-            insert(getContentUri(), generateContentValuesFromEvent(event))
-        }
+    suspend fun saveEvent(event: PinpointEvent): Uri = withContext(coroutineDispatcher) {
+        insert(getContentUri(), generateContentValuesFromEvent(event))
     }
 
-    suspend fun queryAllEvents(): Cursor {
-        return withContext(coroutineDispatcher) {
-            query(contentUri, null, null, null, null, null)
-        }
+    suspend fun queryAllEvents(): Cursor = withContext(coroutineDispatcher) {
+        query(contentUri, null, null, null, null, null)
     }
 
-    suspend fun deleteEventById(eventColumnId: Int): Int {
-        return withContext(coroutineDispatcher) {
-            val whereClause = "${EventTable.COLUMN_ID}=$eventColumnId"
-            database.delete(
-                EventTable.TABLE_EVENT,
-                whereClause,
-                null
-            )
-        }
+    suspend fun deleteEventById(eventColumnId: Int): Int = withContext(coroutineDispatcher) {
+        val whereClause = "${EventTable.COLUMN_ID}=$eventColumnId"
+        database.delete(
+            EventTable.TABLE_EVENT,
+            whereClause,
+            null
+        )
     }
 
     private fun generateContentValuesFromEvent(event: PinpointEvent): ContentValues {

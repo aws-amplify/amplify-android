@@ -35,9 +35,8 @@ object ModelMutation {
      * @see MutationType.CREATE
      </M> */
     @JvmStatic
-    fun <M : Model> create(model: M): GraphQLRequest<M> {
-        return buildMutation(model, QueryPredicates.all(), MutationType.CREATE)
-    }
+    fun <M : Model> create(model: M): GraphQLRequest<M> =
+        buildMutation(model, QueryPredicates.all(), MutationType.CREATE)
 
     /**
      * Creates a [GraphQLRequest] that represents a create mutation for a given `model` instance.
@@ -52,9 +51,7 @@ object ModelMutation {
     fun <M : Model, P : ModelPath<M>> create(
         model: M,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<M> {
-        return buildMutation(model, QueryPredicates.all(), MutationType.CREATE, includes)
-    }
+    ): GraphQLRequest<M> = buildMutation(model, QueryPredicates.all(), MutationType.CREATE, includes)
 
     /**
      * Creates a [GraphQLRequest] that represents an update mutation for a given `model` instance.
@@ -65,12 +62,8 @@ object ModelMutation {
      * @see MutationType.UPDATE
      </M> */
     @JvmStatic
-    fun <M : Model> update(
-        model: M,
-        predicate: QueryPredicate
-    ): GraphQLRequest<M> {
-        return buildMutation(model, predicate, MutationType.UPDATE)
-    }
+    fun <M : Model> update(model: M, predicate: QueryPredicate): GraphQLRequest<M> =
+        buildMutation(model, predicate, MutationType.UPDATE)
 
     /**
      * Creates a [GraphQLRequest] that represents an update mutation for a given `model` instance.
@@ -87,9 +80,7 @@ object ModelMutation {
         model: M,
         predicate: QueryPredicate,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<M> {
-        return buildMutation(model, predicate, MutationType.UPDATE, includes)
-    }
+    ): GraphQLRequest<M> = buildMutation(model, predicate, MutationType.UPDATE, includes)
 
     /**
      * Creates a [GraphQLRequest] that represents an update mutation for a given `model` instance.
@@ -101,9 +92,8 @@ object ModelMutation {
      * @see .update
      </M> */
     @JvmStatic
-    fun <M : Model> update(model: M): GraphQLRequest<M> {
-        return buildMutation(model, QueryPredicates.all(), MutationType.UPDATE)
-    }
+    fun <M : Model> update(model: M): GraphQLRequest<M> =
+        buildMutation(model, QueryPredicates.all(), MutationType.UPDATE)
 
     /**
      * Creates a [GraphQLRequest] that represents an update mutation for a given `model` instance.
@@ -118,9 +108,7 @@ object ModelMutation {
     fun <M : Model, P : ModelPath<M>> update(
         model: M,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<M> {
-        return buildMutation(model, QueryPredicates.all(), MutationType.UPDATE, includes)
-    }
+    ): GraphQLRequest<M> = buildMutation(model, QueryPredicates.all(), MutationType.UPDATE, includes)
 
     /**
      * Creates a [GraphQLRequest] that represents a delete mutation for a given `model` instance.
@@ -131,12 +119,8 @@ object ModelMutation {
      * @see MutationType.DELETE
      </M> */
     @JvmStatic
-    fun <M : Model> delete(
-        model: M,
-        predicate: QueryPredicate
-    ): GraphQLRequest<M> {
-        return buildMutation(model, predicate, MutationType.DELETE)
-    }
+    fun <M : Model> delete(model: M, predicate: QueryPredicate): GraphQLRequest<M> =
+        buildMutation(model, predicate, MutationType.DELETE)
 
     /**
      * Creates a [GraphQLRequest] that represents a delete mutation for a given `model` instance.
@@ -153,9 +137,7 @@ object ModelMutation {
         model: M,
         predicate: QueryPredicate,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<M> {
-        return buildMutation(model, predicate, MutationType.DELETE, includes)
-    }
+    ): GraphQLRequest<M> = buildMutation(model, predicate, MutationType.DELETE, includes)
 
     /**
      * Creates a [GraphQLRequest] that represents a delete mutation for a given `model` instance.
@@ -167,9 +149,8 @@ object ModelMutation {
      * @see .delete
      </M> */
     @JvmStatic
-    fun <M : Model> delete(model: M): GraphQLRequest<M> {
-        return buildMutation(model, QueryPredicates.all(), MutationType.DELETE)
-    }
+    fun <M : Model> delete(model: M): GraphQLRequest<M> =
+        buildMutation(model, QueryPredicates.all(), MutationType.DELETE)
 
     /**
      * Creates a [GraphQLRequest] that represents a delete mutation for a given `model` instance.
@@ -184,7 +165,5 @@ object ModelMutation {
     fun <M : Model, P : ModelPath<M>> delete(
         model: M,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<M> {
-        return buildMutation(model, QueryPredicates.all(), MutationType.DELETE, includes)
-    }
+    ): GraphQLRequest<M> = buildMutation(model, QueryPredicates.all(), MutationType.DELETE, includes)
 }

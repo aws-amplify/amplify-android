@@ -17,12 +17,20 @@ package com.amplifyframework.statemachine
 
 import java.util.UUID
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.newFixedThreadPoolContext
+import kotlinx.coroutines.newSingleThreadContext
+import kotlinx.coroutines.withContext
 
 internal typealias OnSubscribedCallback = () -> Unit
 
@@ -49,43 +57,37 @@ internal class StateChangeListenerToken private constructor(val uuid: UUID) {
 internal open class StateMachine<StateType : State, EnvironmentType : Environment>(
     resolver: StateMachineResolver<StateType>,
     val environment: EnvironmentType,
-    executor: EffectExecutor? = null,
-    concurrentQueue: CoroutineDispatcher? = null,
+    private val dispatcherQueue: CoroutineDispatcher = Dispatchers.Default,
+    private val executor: EffectExecutor = ConcurrentEffectExecutor(dispatcherQueue),
     initialState: StateType? = null
 ) : EventDispatcher {
     private val resolver = resolver.eraseToAnyResolver()
-    private val executor: EffectExecutor
-    private var currentState = initialState ?: resolver.defaultState
 
-    private val dispatcherQueue: CoroutineDispatcher
-
-    /**
-     * Manage consistency of internal state machine state and limits invocation of listeners to a minimum of one at a time.
-     */
-    private val operationQueue = newFixedThreadPoolContext(1, "Single threaded dispatcher")
-    private val exceptionHandler = CoroutineExceptionHandler { _, exception ->
-        println("CoroutineExceptionHandler got $exception")
+    // The current state of the state machine. We use a SharedFlow instead of a StateFlow so that emitted states are
+    // not conflated, and all emitted states are received by subscribers
+    private val _state = MutableSharedFlow<StateType>(
+        replay = 1,
+        extraBufferCapacity = 10,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    ).apply {
+        tryEmit(initialState ?: resolver.defaultState)
     }
+    val state = _state.asSharedFlow()
 
-    /**
-     * TODO: add coroutine exception handler if required.
-     */
-    private val stateMachineScope = Job() + operationQueue // + exceptionHandler
+    // A flow of states that omits the current states - emitting only states that occur after the flow starts.
+    val stateTransitions: Flow<StateType>
+        get() = state.drop(1)
+
+    // Manage consistency of internal state machine state and limits invocation of listeners to a minimum of one at a time.
+    @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
+    private val stateMachineContext = SupervisorJob() + newSingleThreadContext("StateMachineContext")
+    private val stateMachineScope = CoroutineScope(stateMachineContext)
 
     // weak wrapper ??
-    private val subscribers: MutableMap<StateChangeListenerToken, (StateType) -> Unit>
+    private val subscribers: MutableMap<StateChangeListenerToken, (StateType) -> Unit> = mutableMapOf()
 
     // atomic value ??
-    private val pendingCancellations: MutableSet<StateChangeListenerToken>
-
-    init {
-        val resolvedQueue = concurrentQueue ?: Dispatchers.Default
-        dispatcherQueue = resolvedQueue
-        this.executor = executor ?: ConcurrentEffectExecutor(resolvedQueue)
-
-        subscribers = mutableMapOf()
-        pendingCancellations = mutableSetOf()
-    }
+    private val pendingCancellations: MutableSet<StateChangeListenerToken> = mutableSetOf()
 
     /**
      * Start listening to state changes updates. Asynchronously invoke listener on a background queue with the current state.
@@ -94,8 +96,9 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      * @param onSubscribe callback to invoke when subscription is complete
      * @return token that can be used to unsubscribe the listener
      */
+    @Deprecated("Collect from state flow instead")
     fun listen(token: StateChangeListenerToken, listener: (StateType) -> Unit, onSubscribe: OnSubscribedCallback?) {
-        GlobalScope.launch(stateMachineScope) {
+        stateMachineScope.launch {
             addSubscription(token, listener, onSubscribe)
         }
     }
@@ -105,9 +108,10 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      * `cancel` is called and the time the pending cancellation is processed, the event will not be dispatched to the listener.
      * @param token identifies the listener to be removed
      */
+    @Deprecated("Collect from state flow instead")
     fun cancel(token: StateChangeListenerToken) {
         pendingCancellations.add(token)
-        GlobalScope.launch(stateMachineScope) {
+        stateMachineScope.launch {
             removeSubscription(token)
         }
     }
@@ -116,10 +120,20 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      * Invoke `completion` with the current state
      * @param completion callback to invoke with the current state
      */
+    @Deprecated("Use suspending version instead")
     fun getCurrentState(completion: (StateType) -> Unit) {
-        GlobalScope.launch(stateMachineScope) {
-            completion(currentState)
+        stateMachineScope.launch {
+            completion(getCurrentState())
         }
+    }
+
+    /**
+     * Get the current state, dispatching to the state machine context for the read.
+     */
+    suspend fun getCurrentState() = withContext(stateMachineContext) { state.first() }
+
+    private fun setCurrentState(newState: StateType) {
+        _state.tryEmit(newState)
     }
 
     /**
@@ -128,16 +142,16 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      * @param listener listener to invoke when the state has changed
      * @param onSubscribe callback to invoke when subscription is complete
      */
-    private fun addSubscription(
+    private suspend fun addSubscription(
         token: StateChangeListenerToken,
         listener: (StateType) -> Unit,
         onSubscribe: OnSubscribedCallback?
     ) {
         if (pendingCancellations.contains(token)) return
-        val currentState = this.currentState
+        val currentState = getCurrentState()
         subscribers[token] = listener
         onSubscribe?.invoke()
-        GlobalScope.launch(dispatcherQueue) {
+        stateMachineScope.launch(dispatcherQueue) {
             listener.invoke(currentState)
         }
     }
@@ -156,7 +170,7 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      * @param event event to send to the system
      */
     override fun send(event: StateMachineEvent) {
-        GlobalScope.launch(stateMachineScope) {
+        stateMachineScope.launch {
             process(event)
         }
     }
@@ -184,10 +198,11 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
      * the state machine will execute any effects from the event resolution process.
      * @param event event to apply on current state for resolution
      */
-    private fun process(event: StateMachineEvent) {
+    private suspend fun process(event: StateMachineEvent) {
+        val currentState = getCurrentState()
         val resolution = resolver.resolve(currentState, event)
         if (currentState != resolution.newState) {
-            currentState = resolution.newState
+            setCurrentState(resolution.newState)
             val subscribersToRemove = subscribers.filter { !notifySubscribers(it, resolution.newState) }
             subscribersToRemove.forEach { subscribers.remove(it.key) }
         }

@@ -74,9 +74,7 @@ class Session {
         return "${trimOrPad(uniqueId)}$sessionIdDelimiter$time"
     }
 
-    private fun trimOrPad(
-        input: String
-    ): String {
+    private fun trimOrPad(input: String): String {
         val stringBuffer = StringBuffer()
         if (input.length > maxSessionIdLength - 1) {
             stringBuffer.append(input.substring(input.length - maxSessionIdLength))

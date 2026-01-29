@@ -16,18 +16,8 @@
 import java.util.Properties
 
 plugins {
-    id("java-library")
-    id("maven-publish")
-    alias(libs.plugins.kotlin.jvm)
-}
-
-java {
-    withSourcesJar()
-    withJavadocJar()
-}
-
-kotlin {
-    jvmToolchain(17)
+    alias(libs.plugins.amplify.kotlin)
+    alias(libs.plugins.amplify.publishing)
 }
 
 fun readVersion() = Properties().run {
@@ -36,8 +26,6 @@ fun readVersion() = Properties().run {
 }
 
 project.setProperty("VERSION_NAME", readVersion())
-
-apply(from = rootProject.file("configuration/publishing.gradle"))
 
 val packageInfoGenerator by tasks.registering {
     val constantsDir = project.layout.buildDirectory.dir("generated/sources/constants/java")

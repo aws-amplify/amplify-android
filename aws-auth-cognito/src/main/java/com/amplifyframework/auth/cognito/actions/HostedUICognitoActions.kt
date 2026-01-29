@@ -17,7 +17,6 @@ package com.amplifyframework.auth.cognito.actions
 
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthConfigurationException
-import com.amplifyframework.auth.cognito.helpers.JWTParser
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.HostedUIActions
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
@@ -54,8 +53,8 @@ internal object HostedUICognitoActions : HostedUIActions {
                 if (hostedUIClient == null) throw InvalidOauthConfigurationException()
 
                 val token = hostedUIClient.fetchToken(event.uri)
-                val userId = token.accessToken?.let { JWTParser.getClaim(it, "sub") } ?: ""
-                val username = token.accessToken?.let { JWTParser.getClaim(it, "username") } ?: ""
+                val userId = token.accessToken?.userSub ?: ""
+                val username = token.accessToken?.username ?: ""
 
                 val signedInData = SignedInData(
                     userId,

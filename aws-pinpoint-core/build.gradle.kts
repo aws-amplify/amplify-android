@@ -14,15 +14,12 @@
  */
 
 plugins {
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.10"
-    id("com.android.library")
-    id("kotlin-android")
+    alias(libs.plugins.amplify.android.library)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.amplify.publishing)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
-apply(from = rootProject.file("configuration/publishing.gradle"))
-
-group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.pinpoint.core"
@@ -34,7 +31,6 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.aws.pinpoint)
     implementation(libs.kotlin.serializationJson)
-    implementation(libs.androidx.junit.ktx)
 
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockk)
@@ -44,12 +40,9 @@ dependencies {
     testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.kotlin.coroutines)
     testImplementation(libs.test.kotest.assertions)
+    testImplementation(libs.test.androidx.junit.ktx)
 
     androidTestImplementation(libs.test.androidx.core)
     androidTestImplementation(libs.test.androidx.runner)
     androidTestImplementation(libs.test.androidx.junit)
-}
-
-android.kotlinOptions {
-    jvmTarget = "11"
 }

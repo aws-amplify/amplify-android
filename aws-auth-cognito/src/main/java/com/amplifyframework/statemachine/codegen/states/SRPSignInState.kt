@@ -15,16 +15,18 @@
 
 package com.amplifyframework.statemachine.codegen.states
 
+import com.amplifyframework.auth.cognito.helpers.toSignInMethod
 import com.amplifyframework.statemachine.State
 import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.StateMachineResolver
 import com.amplifyframework.statemachine.StateResolution
 import com.amplifyframework.statemachine.codegen.actions.SRPActions
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.events.SRPEvent
 
 internal sealed class SRPSignInState : State {
     data class NotStarted(val id: String = "") : SRPSignInState()
-    data class InitiatingSRPA(val id: String = "") : SRPSignInState()
+    data class InitiatingSRPA(val signInMethod: SignInMethod) : SRPSignInState()
     data class RespondingPasswordVerifier(val id: String = "") : SRPSignInState()
     data class SignedIn(val id: String = "") : SRPSignInState()
     data class Cancelling(val id: String = "") : SRPSignInState()
@@ -33,9 +35,7 @@ internal sealed class SRPSignInState : State {
     class Resolver(private val srpActions: SRPActions) : StateMachineResolver<SRPSignInState> {
         override val defaultState = NotStarted("")
 
-        private fun asSRPEvent(event: StateMachineEvent): SRPEvent.EventType? {
-            return (event as? SRPEvent)?.eventType
-        }
+        private fun asSRPEvent(event: StateMachineEvent): SRPEvent.EventType? = (event as? SRPEvent)?.eventType
 
         override fun resolve(oldState: SRPSignInState, event: StateMachineEvent): StateResolution<SRPSignInState> {
             val srpEvent = asSRPEvent(event)
@@ -44,18 +44,24 @@ internal sealed class SRPSignInState : State {
                 is NotStarted -> when (srpEvent) {
                     is SRPEvent.EventType.InitiateSRP -> {
                         val action = srpActions.initiateSRPAuthAction(srpEvent)
-                        StateResolution(InitiatingSRPA(), listOf(action))
+                        StateResolution(InitiatingSRPA(srpEvent.authFlowType.toSignInMethod()), listOf(action))
                     }
                     is SRPEvent.EventType.InitiateSRPWithCustom -> {
                         val action = srpActions.initiateSRPWithCustomAuthAction(srpEvent)
-                        StateResolution(InitiatingSRPA(), listOf(action))
+                        StateResolution(
+                            InitiatingSRPA(SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.CUSTOM_AUTH)),
+                            listOf(action)
+                        )
                     }
                     else -> defaultResolution
                 }
                 is InitiatingSRPA -> when (srpEvent) {
                     is SRPEvent.EventType.RespondPasswordVerifier -> {
                         val action = srpActions.verifyPasswordSRPAction(
-                            srpEvent.challengeParameters, srpEvent.metadata, srpEvent.session
+                            srpEvent.challengeParameters,
+                            srpEvent.metadata,
+                            srpEvent.session,
+                            oldState.signInMethod
                         )
                         StateResolution(RespondingPasswordVerifier(), listOf(action))
                     }
@@ -66,7 +72,10 @@ internal sealed class SRPSignInState : State {
                 is RespondingPasswordVerifier -> when (srpEvent) {
                     is SRPEvent.EventType.RetryRespondPasswordVerifier -> {
                         val action = srpActions.verifyPasswordSRPAction(
-                            srpEvent.challengeParameters, srpEvent.metadata, srpEvent.session
+                            srpEvent.challengeParameters,
+                            srpEvent.metadata,
+                            srpEvent.session,
+                            srpEvent.signInMethod
                         )
                         StateResolution(RespondingPasswordVerifier(), listOf(action))
                     }

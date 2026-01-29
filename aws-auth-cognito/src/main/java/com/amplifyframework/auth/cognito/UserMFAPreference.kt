@@ -22,18 +22,12 @@ import com.amplifyframework.auth.MFAType
  * @param enabled MFA types
  * @param preferred MFA type. null if not set
  */
-data class UserMFAPreference(
-    val enabled: Set<MFAType>?,
-    val preferred: MFAType?
-)
+data class UserMFAPreference(val enabled: Set<MFAType>?, val preferred: MFAType?)
 
 /**
  * Input for updating the MFA preference for a MFA Type
  */
-enum class MFAPreference(
-    internal val mfaEnabled: Boolean,
-    internal val mfaPreferred: Boolean? = null
-) {
+enum class MFAPreference(internal val mfaEnabled: Boolean, internal val mfaPreferred: Boolean? = null) {
     /**
      * MFA not enabled
      */

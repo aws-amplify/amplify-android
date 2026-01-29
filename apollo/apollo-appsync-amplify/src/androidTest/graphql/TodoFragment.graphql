@@ -1,7 +1,0 @@
-fragment todoFragment on Todo {
-  id
-  updatedAt
-  createdAt
-  content
-  owner
-}

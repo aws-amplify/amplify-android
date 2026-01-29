@@ -37,50 +37,46 @@ open class CognitoCredentialsProvider @InternalAmplifyApi constructor(
     /**
      * Request [Credentials] from the provider.
      */
-    override suspend fun resolve(attributes: Attributes): Credentials {
-        return suspendCoroutine { continuation ->
-            authCategory.fetchAuthSession(
-                { authSession ->
-                    authSession.toAWSAuthSession()?.awsCredentialsResult?.value?.let {
-                        continuation.resume(it.toSdkCredentials())
-                    } ?: continuation.resumeWithException(
-                        AuthException(
-                            "Failed to get credentials. " +
-                                "Check if you are signed in and configured identity pools correctly.",
-                            AmplifyException.TODO_RECOVERY_SUGGESTION,
-                            authSession.toAWSAuthSession()?.awsCredentialsResult?.error
-                        )
+    override suspend fun resolve(attributes: Attributes): Credentials = suspendCoroutine { continuation ->
+        authCategory.fetchAuthSession(
+            { authSession ->
+                authSession.toAWSAuthSession()?.awsCredentialsResult?.value?.let {
+                    continuation.resume(it.toSdkCredentials())
+                } ?: continuation.resumeWithException(
+                    AuthException(
+                        "Failed to get credentials. " +
+                            "Check if you are signed in and configured identity pools correctly.",
+                        AmplifyException.TODO_RECOVERY_SUGGESTION,
+                        authSession.toAWSAuthSession()?.awsCredentialsResult?.error
                     )
-                },
-                {
-                    continuation.resumeWithException(it)
-                }
-            )
-        }
+                )
+            },
+            {
+                continuation.resumeWithException(it)
+            }
+        )
     }
 
     /**
      * Request identityId from the provider.
      */
-    override suspend fun getIdentityId(): String {
-        return suspendCoroutine { continuation ->
-            authCategory.fetchAuthSession(
-                { authSession ->
-                    authSession.toAWSAuthSession()?.identityIdResult?.value?.let {
-                        continuation.resume(it)
-                    } ?: continuation.resumeWithException(
-                        AuthException(
-                            "Failed to get identity ID. " +
-                                "Check if you are signed in and configured identity pools correctly.",
-                            AmplifyException.TODO_RECOVERY_SUGGESTION
-                        )
+    override suspend fun getIdentityId(): String = suspendCoroutine { continuation ->
+        authCategory.fetchAuthSession(
+            { authSession ->
+                authSession.toAWSAuthSession()?.identityIdResult?.value?.let {
+                    continuation.resume(it)
+                } ?: continuation.resumeWithException(
+                    AuthException(
+                        "Failed to get identity ID. " +
+                            "Check if you are signed in and configured identity pools correctly.",
+                        AmplifyException.TODO_RECOVERY_SUGGESTION
                     )
-                },
-                {
-                    continuation.resumeWithException(it)
-                }
-            )
-        }
+                )
+            },
+            {
+                continuation.resumeWithException(it)
+            }
+        )
     }
 
     override fun getAccessToken(onResult: Consumer<String>, onFailure: Consumer<Exception>) {
@@ -102,6 +98,4 @@ open class CognitoCredentialsProvider @InternalAmplifyApi constructor(
     }
 }
 
-private fun AuthSession.toAWSAuthSession(): AWSAuthSessionBehavior<*>? {
-    return this as? AWSAuthSessionBehavior<*>
-}
+private fun AuthSession.toAWSAuthSession(): AWSAuthSessionBehavior<*>? = this as? AWSAuthSessionBehavior<*>

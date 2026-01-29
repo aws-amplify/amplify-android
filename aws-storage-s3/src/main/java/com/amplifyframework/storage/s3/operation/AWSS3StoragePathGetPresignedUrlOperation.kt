@@ -38,7 +38,6 @@ internal class AWSS3StoragePathGetPresignedUrlOperation(
 ) : StorageGetUrlOperation<AWSS3StoragePathGetPresignedUrlRequest>(request) {
     override fun start() {
         executorService.submit {
-
             val serviceKey = try {
                 runBlocking {
                     request.path.toS3ServiceKey(authCredentialsProvider)

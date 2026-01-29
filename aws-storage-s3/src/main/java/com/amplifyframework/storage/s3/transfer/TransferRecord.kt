@@ -155,7 +155,5 @@ internal data class TransferRecord(
         }
     }
 
-    internal fun isMainRecord(): Boolean {
-        return isMultipart == 0 || (isMultipart == 1 && mainUploadId == 0)
-    }
+    internal fun isMainRecord(): Boolean = isMultipart == 0 || (isMultipart == 1 && mainUploadId == 0)
 }

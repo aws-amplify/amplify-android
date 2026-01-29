@@ -26,6 +26,8 @@ import org.junit.Test
 
 class AppSyncEndpointTest {
     private val standardAppSyncUrl = "https://example1234567890123456789.appsync-api.us-east-1.amazonaws.com/graphql"
+    private val standardAppSyncUrlChina =
+        "https://example1234567890123456789.appsync-api.us-east-1.amazonaws.com.cn/graphql"
     private val customAppSyncUrl = "https://api.example.com/graphql"
 
     @Test
@@ -44,14 +46,21 @@ class AppSyncEndpointTest {
     @Test
     fun `uses expected realtime URL for standard endpoint`() {
         val endpoint = AppSyncEndpoint(standardAppSyncUrl)
-        endpoint.websocketConnection.toString() shouldBe
-            "https://example1234567890123456789.appsync-realtime-api.us-east-1.amazonaws.com/graphql/connect"
+        endpoint.realtime.toString() shouldBe
+            "https://example1234567890123456789.appsync-realtime-api.us-east-1.amazonaws.com/graphql"
+    }
+
+    @Test
+    fun `uses expected realtime URL for standard endpoint in China`() {
+        val endpoint = AppSyncEndpoint(standardAppSyncUrlChina)
+        endpoint.realtime.toString() shouldBe
+            "https://example1234567890123456789.appsync-realtime-api.us-east-1.amazonaws.com.cn/graphql"
     }
 
     @Test
     fun `uses expected realtime URL for custom endpoint`() {
         val endpoint = AppSyncEndpoint(customAppSyncUrl)
-        endpoint.websocketConnection.toString() shouldBe "https://api.example.com/graphql/realtime/connect"
+        endpoint.realtime.toString() shouldBe "https://api.example.com/graphql/realtime"
     }
 
     @Test

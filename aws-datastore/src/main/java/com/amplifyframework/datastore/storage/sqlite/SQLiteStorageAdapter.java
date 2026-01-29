@@ -58,6 +58,7 @@ import com.amplifyframework.datastore.storage.StorageResult;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.datastore.storage.sqlite.migrations.ModelMigrations;
+import com.amplifyframework.datastore.syncengine.MigrationFlagsTable;
 import com.amplifyframework.datastore.utils.ErrorInspector;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.GsonFactory;
@@ -96,11 +97,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private static final long THREAD_POOL_TERMINATE_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
     // Database Version
     private static final int DATABASE_VERSION = 1;
-
-    // Thread pool size is determined as number of processors multiplied by this value.  We want to allow more threads
-    // than available processors to parallelize primarily IO bound work, but still provide a limit to avoid out of
-    // memory errors.
-    private static final int THREAD_POOL_SIZE_MULTIPLIER = 20;
 
     @VisibleForTesting @SuppressWarnings("checkstyle:all") // Keep logger first
     static final String DEFAULT_DATABASE_NAME = "AmplifyDatastore.db";
@@ -232,8 +228,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(onError);
         // Create a thread pool large enough to take advantage of parallelization, but small enough to avoid
         // OutOfMemoryError and CursorWindowAllocationException issues.
-        this.threadPool = Executors.newFixedThreadPool(
-                Runtime.getRuntime().availableProcessors() * THREAD_POOL_SIZE_MULTIPLIER);
+        this.threadPool = Executors.newFixedThreadPool(dataStoreConfiguration.getLocalStorageThreadPoolSize());
         this.context = context;
         this.dataStoreConfiguration = dataStoreConfiguration;
         threadPool.submit(() -> {
@@ -866,6 +861,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private CreateSqlCommands getCreateCommands(@NonNull Set<String> modelNames) {
         final Set<SqlCommand> createTableCommands = new HashSet<>();
         final Set<SqlCommand> createIndexCommands = new HashSet<>();
+        final Set<SqlCommand> createInsertCommands = new HashSet<>();
         for (String modelName : modelNames) {
             final ModelSchema modelSchema =
                 schemaRegistry.getModelSchemaForModelClass(modelName);
@@ -873,7 +869,13 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             createIndexCommands.addAll(sqlCommandFactory.createIndexesFor(modelSchema));
             createIndexCommands.addAll(sqlCommandFactory.createIndexesForForeignKeys(modelSchema));
         }
-        return new CreateSqlCommands(createTableCommands, createIndexCommands);
+
+        // Create the Migrations Table and insert all known migrations
+        createTableCommands.add(new SqlCommand(MigrationFlagsTable.TABLE_NAME, MigrationFlagsTable.CREATE_SQL));
+        for (String insertCommand : MigrationFlagsTable.initialInsertStatements()) {
+            createInsertCommands.add(new SqlCommand(MigrationFlagsTable.TABLE_NAME, insertCommand));
+        }
+        return new CreateSqlCommands(createTableCommands, createIndexCommands, createInsertCommands);
     }
 
     private <T extends Model> void writeData(
@@ -934,7 +936,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     Objects.requireNonNull(databaseConnectionHandle);
                     sqliteStorageHelper.update(databaseConnectionHandle, oldVersion, newVersion);
                 } else {
-                    LOG.debug("Database up to date. Checking ModelMetadata.");
+                    // We only need to do the model migration here because the current implementation of
+                    // sqliteStorageHelper.update will drop all existing tables and recreate tables with new schemas,
+                    // However, this might be changed in the future
+                    LOG.debug("Database up to date. Checking System Models.");
                     new ModelMigrations(databaseConnectionHandle, modelsProvider).apply();
                 }
             }

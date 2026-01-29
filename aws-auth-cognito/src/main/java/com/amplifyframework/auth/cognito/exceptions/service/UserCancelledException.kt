@@ -20,6 +20,7 @@ import com.amplifyframework.auth.exceptions.ServiceException
  * Could not complete an action because it was cancelled by the user.
  * @param message An error message describing why this exception was thrown
  * @param recoverySuggestion Text suggesting a way to recover from the error being described
+ * @param cause The cause of the cancellation, if any
  */
-open class UserCancelledException(message: String, recoverySuggestion: String) :
-    ServiceException(message, recoverySuggestion)
+open class UserCancelledException(message: String, recoverySuggestion: String, cause: Throwable? = null) :
+    ServiceException(message, recoverySuggestion, cause)

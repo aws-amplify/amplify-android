@@ -22,33 +22,6 @@ import java.time.temporal.ChronoUnit
 
 internal object SessionHelper {
     /**
-     * Returns expiration of this id token.
-     * @return id token expiration claim as {@link java.time.Instant} in UTC.
-     */
-    internal fun getExpiration(token: String): Instant? {
-        val claim = JWTParser.getClaim(token, "exp")
-        return claim?.let {
-            Instant.ofEpochSecond(claim.toLong())
-        }
-    }
-
-    /**
-     * Returns the username set in the access token.
-     * @return Username.
-     */
-    fun getUsername(token: String): String? {
-        return JWTParser.getClaim(token, "username")
-    }
-
-    /**
-     * Returns the usersub set in the access token.
-     * @return usersub
-     */
-    fun getUserSub(token: String): String? {
-        return JWTParser.getClaim(token, "sub")
-    }
-
-    /**
      * Returns true if the access and id tokens have not expired.
      * @return boolean to indicate if the access and id tokens are expired.
      */
@@ -57,9 +30,9 @@ internal object SessionHelper {
         return when {
             userPoolTokens.idToken == null -> false
             userPoolTokens.accessToken == null -> false
-            else -> currentTimeStamp < getExpiration(userPoolTokens.idToken) && currentTimeStamp < getExpiration(
-                userPoolTokens.accessToken
-            )
+            else ->
+                currentTimeStamp < userPoolTokens.idToken.expiration &&
+                    currentTimeStamp < userPoolTokens.accessToken.expiration
         }
     }
 
@@ -80,3 +53,5 @@ internal object SessionHelper {
             )
     }
 }
+
+internal fun CognitoUserPoolTokens.isValid() = SessionHelper.isValidTokens(this)

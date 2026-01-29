@@ -14,12 +14,9 @@
  */
 
 plugins {
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.10"
-    id("com.android.library")
-    id("kotlin-android")
+    alias(libs.plugins.amplify.android.library)
+    alias(libs.plugins.kotlin.parcelize)
 }
-
-apply(from = rootProject.file("configuration/checkstyle.gradle"))
 
 android {
     namespace = "com.amplifyframework.testutils"
@@ -30,6 +27,7 @@ dependencies {
     implementation(libs.test.junit)
     implementation(libs.test.mockito.core)
     implementation(libs.test.androidx.core)
+    implementation(libs.test.kotest.assertions)
     implementation(libs.rxjava)
 
     implementation(libs.kotlin.serializationJson)

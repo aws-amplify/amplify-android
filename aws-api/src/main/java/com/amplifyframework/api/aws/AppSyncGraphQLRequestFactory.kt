@@ -51,10 +51,7 @@ object AppSyncGraphQLRequestFactory {
      * @throws IllegalStateException when the model schema does not contain the expected information.
      </T></R> */
     @JvmStatic
-    fun <R, T : Model> buildQuery(
-        modelClass: Class<T>,
-        objectId: String,
-    ): GraphQLRequest<R> {
+    fun <R, T : Model> buildQuery(modelClass: Class<T>, objectId: String): GraphQLRequest<R> {
         val variable: GraphQLRequestVariable = try {
             val modelSchema = ModelSchema.fromModelClass(modelClass)
             val primaryKeyName = modelSchema.primaryKeyName
@@ -116,10 +113,7 @@ object AppSyncGraphQLRequestFactory {
      * @throws IllegalStateException when the model schema does not contain the expected information.
      </T></R> */
     @JvmStatic
-    fun <R, T : Model> buildQuery(
-        modelClass: Class<T>,
-        modelIdentifier: ModelIdentifier<T>,
-    ): GraphQLRequest<R> {
+    fun <R, T : Model> buildQuery(modelClass: Class<T>, modelIdentifier: ModelIdentifier<T>): GraphQLRequest<R> {
         try {
             val modelSchema = ModelSchema.fromModelClass(modelClass)
             val primaryIndexFields = modelSchema.primaryIndexFields
@@ -199,27 +193,25 @@ object AppSyncGraphQLRequestFactory {
         modelClass: Class<T>,
         includes: ((P) -> List<PropertyContainerPath>)?,
         vararg variables: GraphQLRequestVariable
-    ): GraphQLRequest<R> {
-        return try {
-            val builder = AppSyncGraphQLRequest.builder()
-                .modelClass(modelClass)
-                .operation(QueryType.GET)
-                .requestOptions(ApiGraphQLRequestOptions())
-                .responseType(modelClass)
-            for ((key, value, type) in variables) {
-                builder.variable(key, type, value)
-            }
-
-            val customSelectionSet = includes?.let { createApiSelectionSet(modelClass, QueryType.GET, it) }
-            customSelectionSet?.let { builder.selectionSet(it) }
-
-            builder.build()
-        } catch (exception: AmplifyException) {
-            throw IllegalStateException(
-                "Could not generate a schema for the specified class",
-                exception
-            )
+    ): GraphQLRequest<R> = try {
+        val builder = AppSyncGraphQLRequest.builder()
+            .modelClass(modelClass)
+            .operation(QueryType.GET)
+            .requestOptions(ApiGraphQLRequestOptions())
+            .responseType(modelClass)
+        for ((key, value, type) in variables) {
+            builder.variable(key, type, value)
         }
+
+        val customSelectionSet = includes?.let { createApiSelectionSet(modelClass, QueryType.GET, it) }
+        customSelectionSet?.let { builder.selectionSet(it) }
+
+        builder.build()
+    } catch (exception: AmplifyException) {
+        throw IllegalStateException(
+            "Could not generate a schema for the specified class",
+            exception
+        )
     }
 
     /**
@@ -234,10 +226,7 @@ object AppSyncGraphQLRequestFactory {
      * @throws IllegalStateException when the model schema does not contain the expected information.
      </T></R> */
     @JvmStatic
-    fun <R, T : Model> buildQuery(
-        modelClass: Class<T>,
-        predicate: QueryPredicate
-    ): GraphQLRequest<R> {
+    fun <R, T : Model> buildQuery(modelClass: Class<T>, predicate: QueryPredicate): GraphQLRequest<R> {
         val dataType = TypeMaker.getParameterizedType(PaginatedResult::class.java, modelClass)
         return buildListQueryInternal(modelClass, predicate, DEFAULT_QUERY_LIMIT, dataType, null)
     }
@@ -268,7 +257,7 @@ object AppSyncGraphQLRequestFactory {
     fun <R, T : Model, P : ModelPath<T>> buildQuery(
         modelClass: Class<T>,
         predicate: QueryPredicate,
-        includes: ((P) -> List<PropertyContainerPath>),
+        includes: ((P) -> List<PropertyContainerPath>)
     ): GraphQLRequest<R> {
         val dataType = TypeMaker.getParameterizedType(PaginatedResult::class.java, modelClass)
         return buildListQueryInternal(modelClass, predicate, DEFAULT_QUERY_LIMIT, dataType, includes)
@@ -319,7 +308,7 @@ object AppSyncGraphQLRequestFactory {
         modelClass: Class<T>,
         predicate: QueryPredicate,
         limit: Int,
-        includes: ((P) -> List<PropertyContainerPath>),
+        includes: ((P) -> List<PropertyContainerPath>)
     ): GraphQLRequest<R> {
         val responseType = TypeMaker.getParameterizedType(PaginatedResult::class.java, modelClass)
         return buildListQueryInternal(modelClass, predicate, limit, responseType, includes)
@@ -349,40 +338,38 @@ object AppSyncGraphQLRequestFactory {
         responseType: Type,
         includes: ((P) -> List<PropertyContainerPath>)?,
         pageToken: String? = null
-    ): GraphQLRequest<R> {
-        return try {
-            val modelName = ModelSchema.fromModelClass(
-                modelClass
-            ).name
-            val builder = AppSyncGraphQLRequest.builder()
-                .modelClass(modelClass)
-                .operation(QueryType.LIST)
-                .requestOptions(ApiGraphQLRequestOptions())
-                .responseType(responseType)
-            if (QueryPredicates.all() != predicate) {
-                val filterType = "Model" + Casing.capitalizeFirst(modelName) + "FilterInput"
-                builder.variable(
-                    "filter",
-                    filterType,
-                    GraphQLRequestHelper.parsePredicate(predicate)
-                )
-            }
-            builder.variable("limit", "Int", limit)
-
-            if (pageToken != null) {
-                builder.variable("nextToken", "String", pageToken)
-            }
-
-            val customSelectionSet = includes?.let { createApiSelectionSet(modelClass, QueryType.LIST, it) }
-            customSelectionSet?.let { builder.selectionSet(it) }
-
-            builder.build()
-        } catch (exception: AmplifyException) {
-            throw IllegalStateException(
-                "Could not generate a schema for the specified class",
-                exception
+    ): GraphQLRequest<R> = try {
+        val modelName = ModelSchema.fromModelClass(
+            modelClass
+        ).name
+        val builder = AppSyncGraphQLRequest.builder()
+            .modelClass(modelClass)
+            .operation(QueryType.LIST)
+            .requestOptions(ApiGraphQLRequestOptions())
+            .responseType(responseType)
+        if (QueryPredicates.all() != predicate) {
+            val filterType = "Model" + Casing.capitalizeFirst(modelName) + "FilterInput"
+            builder.variable(
+                "filter",
+                filterType,
+                GraphQLRequestHelper.parsePredicate(predicate)
             )
         }
+        builder.variable("limit", "Int", limit)
+
+        if (pageToken != null) {
+            builder.variable("nextToken", "String", pageToken)
+        }
+
+        val customSelectionSet = includes?.let { createApiSelectionSet(modelClass, QueryType.LIST, it) }
+        customSelectionSet?.let { builder.selectionSet(it) }
+
+        builder.build()
+    } catch (exception: AmplifyException) {
+        throw IllegalStateException(
+            "Could not generate a schema for the specified class",
+            exception
+        )
     }
 
     /**
@@ -396,13 +383,8 @@ object AppSyncGraphQLRequestFactory {
      * @throws IllegalStateException when the model schema does not contain the expected information.
      </T></R> */
     @JvmStatic
-    fun <R, T : Model> buildMutation(
-        model: T,
-        predicate: QueryPredicate,
-        type: MutationType
-    ): GraphQLRequest<R> {
-        return buildMutationInternal(model, predicate, type, null)
-    }
+    fun <R, T : Model> buildMutation(model: T, predicate: QueryPredicate, type: MutationType): GraphQLRequest<R> =
+        buildMutationInternal(model, predicate, type, null)
 
     /**
      * Creates a [GraphQLRequest] that represents a mutation of a given type.
@@ -422,60 +404,58 @@ object AppSyncGraphQLRequestFactory {
         predicate: QueryPredicate,
         type: MutationType,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<R> {
-        return buildMutationInternal(model, predicate, type, includes)
-    }
+    ): GraphQLRequest<R> = buildMutationInternal(model, predicate, type, includes)
 
     private fun <R, T : Model, P : ModelPath<T>> buildMutationInternal(
         model: T,
         predicate: QueryPredicate,
         type: MutationType,
         includes: ((P) -> List<PropertyContainerPath>)?
-    ): GraphQLRequest<R> {
-        return try {
-            val modelClass: Class<out Model> = model.javaClass
-            val schema = ModelSchema.fromModelClass(modelClass)
-            val graphQlTypeName = schema.name
-            val builder = AppSyncGraphQLRequest.builder()
-                .operation(type)
-                .modelClass(modelClass)
-                .requestOptions(ApiGraphQLRequestOptions())
-                .responseType(modelClass)
-            val inputType = Casing.capitalize(type.toString()) +
-                Casing.capitalizeFirst(graphQlTypeName) +
-                "Input!" // CreateTodoInput
-            if (MutationType.DELETE == type) {
-                builder.variable(
-                    "input",
-                    inputType,
-                    GraphQLRequestHelper.getDeleteMutationInputMap(schema, model)
-                )
-            } else {
-                builder.variable(
-                    "input",
-                    inputType,
-                    GraphQLRequestHelper.getMapOfFieldNameAndValues(schema, model, type)
-                )
-            }
-            if (QueryPredicates.all() != predicate) {
-                val conditionType = "Model" +
-                    Casing.capitalizeFirst(graphQlTypeName) +
-                    "ConditionInput"
-                builder.variable(
-                    "condition", conditionType, GraphQLRequestHelper.parsePredicate(predicate)
-                )
-            }
-
-            val customSelectionSet = includes?.let { createApiSelectionSet(modelClass, type, it) }
-            customSelectionSet?.let { builder.selectionSet(it) }
-
-            builder.build()
-        } catch (exception: AmplifyException) {
-            throw IllegalStateException(
-                "Could not generate a schema for the specified class",
-                exception
+    ): GraphQLRequest<R> = try {
+        val modelClass: Class<out Model> = model.javaClass
+        val schema = ModelSchema.fromModelClass(modelClass)
+        val graphQlTypeName = schema.name
+        val builder = AppSyncGraphQLRequest.builder()
+            .operation(type)
+            .modelClass(modelClass)
+            .requestOptions(ApiGraphQLRequestOptions())
+            .responseType(modelClass)
+        val inputType = Casing.capitalize(type.toString()) +
+            Casing.capitalizeFirst(graphQlTypeName) +
+            "Input!" // CreateTodoInput
+        if (MutationType.DELETE == type) {
+            builder.variable(
+                "input",
+                inputType,
+                GraphQLRequestHelper.getDeleteMutationInputMap(schema, model)
+            )
+        } else {
+            builder.variable(
+                "input",
+                inputType,
+                GraphQLRequestHelper.getMapOfFieldNameAndValues(schema, model, type)
             )
         }
+        if (QueryPredicates.all() != predicate) {
+            val conditionType = "Model" +
+                Casing.capitalizeFirst(graphQlTypeName) +
+                "ConditionInput"
+            builder.variable(
+                "condition",
+                conditionType,
+                GraphQLRequestHelper.parsePredicate(predicate)
+            )
+        }
+
+        val customSelectionSet = includes?.let { createApiSelectionSet(modelClass, type, it) }
+        customSelectionSet?.let { builder.selectionSet(it) }
+
+        builder.build()
+    } catch (exception: AmplifyException) {
+        throw IllegalStateException(
+            "Could not generate a schema for the specified class",
+            exception
+        )
     }
 
     /**
@@ -488,12 +468,8 @@ object AppSyncGraphQLRequestFactory {
      * @throws IllegalStateException when the model schema does not contain the expected information.
      </T></R> */
     @JvmStatic
-    fun <R, T : Model> buildSubscription(
-        modelClass: Class<T>,
-        subscriptionType: SubscriptionType
-    ): GraphQLRequest<R> {
-        return buildSubscriptionInternal(modelClass, subscriptionType, null)
-    }
+    fun <R, T : Model> buildSubscription(modelClass: Class<T>, subscriptionType: SubscriptionType): GraphQLRequest<R> =
+        buildSubscriptionInternal(modelClass, subscriptionType, null)
 
     /**
      * Creates a [GraphQLRequest] that represents a subscription of a given type.
@@ -511,32 +487,28 @@ object AppSyncGraphQLRequestFactory {
         modelClass: Class<T>,
         subscriptionType: SubscriptionType,
         includes: ((P) -> List<PropertyContainerPath>)
-    ): GraphQLRequest<R> {
-        return buildSubscriptionInternal(modelClass, subscriptionType, includes)
-    }
+    ): GraphQLRequest<R> = buildSubscriptionInternal(modelClass, subscriptionType, includes)
 
     private fun <R, T : Model, P : ModelPath<T>> buildSubscriptionInternal(
         modelClass: Class<T>,
         subscriptionType: SubscriptionType,
         includes: ((P) -> List<PropertyContainerPath>)?
-    ): GraphQLRequest<R> {
-        return try {
-            val builder = AppSyncGraphQLRequest.builder()
-                .modelClass(modelClass)
-                .operation(subscriptionType)
-                .requestOptions(ApiGraphQLRequestOptions())
-                .responseType(modelClass)
+    ): GraphQLRequest<R> = try {
+        val builder = AppSyncGraphQLRequest.builder()
+            .modelClass(modelClass)
+            .operation(subscriptionType)
+            .requestOptions(ApiGraphQLRequestOptions())
+            .responseType(modelClass)
 
-            val customSelectionSet = includes?.let { createApiSelectionSet(modelClass, subscriptionType, it) }
-            customSelectionSet?.let { builder.selectionSet(it) }
+        val customSelectionSet = includes?.let { createApiSelectionSet(modelClass, subscriptionType, it) }
+        customSelectionSet?.let { builder.selectionSet(it) }
 
-            builder.build()
-        } catch (exception: AmplifyException) {
-            throw IllegalStateException(
-                "Failed to build GraphQLRequest",
-                exception
-            )
-        }
+        builder.build()
+    } catch (exception: AmplifyException) {
+        throw IllegalStateException(
+            "Failed to build GraphQLRequest",
+            exception
+        )
     }
 
     private fun <T : Model, P : ModelPath<T>> createApiSelectionSet(

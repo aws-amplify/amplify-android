@@ -16,9 +16,9 @@
 package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
+import androidx.core.content.edit
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.cognito.AuthConfiguration
-import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.cognito.helpers.identityProviderName
 import com.amplifyframework.core.store.KeyValueRepository
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
@@ -29,6 +29,7 @@ import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.SignedInData
+import java.io.File
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Date
@@ -74,6 +75,7 @@ internal class AWSCognitoLegacyCredentialStore(
         const val TOKEN_KEY = "token"
     }
 
+    private val userDeviceDetailsCacheKeyPrefix = "$APP_DEVICE_INFO_CACHE.${authConfiguration.userPool?.poolId}."
     private val userDeviceDetailsCacheKey = "$APP_DEVICE_INFO_CACHE.${authConfiguration.userPool?.poolId}.%s"
 
     private val idAndCredentialsKeyValue: KeyValueRepository by lazy {
@@ -120,10 +122,14 @@ internal class AWSCognitoLegacyCredentialStore(
                             awsCredentials
                         )
                     }
-                    else -> { AmplifyCredential.IdentityPool(identityId, awsCredentials) }
+                    else -> {
+                        AmplifyCredential.IdentityPool(identityId, awsCredentials)
+                    }
                 }
             }
-            signedInData != null -> { AmplifyCredential.UserPool(signedInData) }
+            signedInData != null -> {
+                AmplifyCredential.UserPool(signedInData)
+            }
             else -> AmplifyCredential.Empty
         }
     }
@@ -154,7 +160,7 @@ internal class AWSCognitoLegacyCredentialStore(
 
     override fun deleteASFDevice() {
         val sharedPreferences = context.getSharedPreferences(LOCAL_STORAGE_PATH, Context.MODE_PRIVATE)
-        sharedPreferences.edit().remove(LOCAL_STORAGE_DEVICE_ID_KEY).apply()
+        sharedPreferences.edit { remove(LOCAL_STORAGE_DEVICE_ID_KEY) }
     }
 
     private fun deleteCognitoUserPoolTokens() {
@@ -209,13 +215,13 @@ internal class AWSCognitoLegacyCredentialStore(
         val signInMethod = retrieveUserPoolSignInMethod() ?: return null
         val tokenUserId =
             try {
-                cognitoUserPoolTokens.accessToken?.let { SessionHelper.getUserSub(it) } ?: ""
+                cognitoUserPoolTokens.accessToken?.userSub ?: ""
             } catch (e: Exception) {
                 ""
             }
         val tokenUsername =
             try {
-                cognitoUserPoolTokens.accessToken?.let { SessionHelper.getUsername(it) } ?: ""
+                cognitoUserPoolTokens.accessToken?.username ?: ""
             } catch (e: Exception) {
                 ""
             }
@@ -227,6 +233,22 @@ internal class AWSCognitoLegacyCredentialStore(
             signInMethod,
             cognitoUserPoolTokens
         )
+    }
+
+    /*
+    During migration away from the legacy credential store, we need to find all shared preference files that store
+    device metadata. These filenames contain the real username (not aliased) for the tracked device metadata.
+     */
+    fun retrieveDeviceMetadataUsernameList(): List<String> {
+        return try {
+            val sharedPrefsSuffix = ".xml"
+            File(context.dataDir, "shared_prefs").listFiles { _, filename ->
+                filename.startsWith(userDeviceDetailsCacheKeyPrefix) && filename.endsWith(sharedPrefsSuffix)
+            }?.map { it.name.substringAfter(userDeviceDetailsCacheKeyPrefix).substringBefore(sharedPrefsSuffix) }
+                ?.filter { it.isNotBlank() } ?: emptyList()
+        } catch (e: Exception) {
+            return emptyList()
+        }
     }
 
     @Synchronized
@@ -317,9 +339,7 @@ internal class AWSCognitoLegacyCredentialStore(
     // prefix the key with identity pool id
     private fun namespace(key: String): String = getIdentityPoolId() + "." + key
 
-    private fun getIdentityPoolId(): String? {
-        return authConfiguration.identityPool?.poolId
-    }
+    private fun getIdentityPoolId(): String? = authConfiguration.identityPool?.poolId
 
     private fun retrieveUserPoolSignInMethod() = when (mobileClientKeyValue.get(SIGN_IN_MODE_KEY)) {
         /*

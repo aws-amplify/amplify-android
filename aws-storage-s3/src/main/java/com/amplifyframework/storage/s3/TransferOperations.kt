@@ -38,6 +38,7 @@ import com.amplifyframework.storage.s3.transfer.worker.InitiateMultiPartUploadTr
 import com.amplifyframework.storage.s3.transfer.worker.PartUploadTransferWorker
 import com.amplifyframework.storage.s3.transfer.worker.RouterWorker
 import com.amplifyframework.storage.s3.transfer.worker.SinglePartUploadWorker
+import java.util.concurrent.TimeUnit
 
 internal object TransferOperations {
 
@@ -84,7 +85,13 @@ internal object TransferOperations {
     ): Boolean {
         if (TransferState.isStarted(transferRecord.state) && !TransferState.isInTerminalState(transferRecord.state)) {
             transferStatusUpdater.updateTransferState(transferRecord.id, TransferState.PENDING_PAUSE)
-            workManager.cancelUniqueWork(transferRecord.id.toString())
+            try {
+                workManager.cancelUniqueWork(
+                    transferRecord.id.toString()
+                ).result.get(1, TimeUnit.SECONDS)
+            } catch (_: Exception) {
+                // do nothing
+            }
             return true
         }
         return false
@@ -161,9 +168,11 @@ internal object TransferOperations {
     ) {
         val type = transferRecord.type ?: throw IllegalStateException("Transfer type missing")
         val workerClassName =
-            if (type == TransferType.UPLOAD)
-                SinglePartUploadWorker::class.java.name else
+            if (type == TransferType.UPLOAD) {
+                SinglePartUploadWorker::class.java.name
+            } else {
                 DownloadWorker::class.java.name
+            }
 
         val transferRequest = getOneTimeWorkRequest(
             transferRecord,
@@ -237,7 +246,7 @@ internal object TransferOperations {
             ),
             listOf(
                 transferRecord.id.toString(),
-                BaseTransferWorker.initiationRequestTag.format(transferRecord.id.toString()),
+                BaseTransferWorker.INITIATION_REQUEST_TAG.format(transferRecord.id.toString()),
                 pluginKey
             )
         )
@@ -245,11 +254,7 @@ internal object TransferOperations {
         return request
     }
 
-    private fun pendingParts(
-        transferRecord: TransferRecord,
-        pluginKey: String,
-        transferDB: TransferDB
-    ) = let {
+    private fun pendingParts(transferRecord: TransferRecord, pluginKey: String, transferDB: TransferDB) = let {
         val listOfPendingParts = transferDB.getNonCompletedPartRequestsFromDB(transferRecord.id)
         val pendingPartRequest = mutableListOf<OneTimeWorkRequest>()
         for (part in listOfPendingParts) {
@@ -285,7 +290,7 @@ internal object TransferOperations {
             listOf(
                 transferRecord.id.toString(),
                 pluginKey,
-                BaseTransferWorker.completionRequestTag.format(transferRecord.id.toString())
+                BaseTransferWorker.COMPLETION_REQUEST_TAG.format(transferRecord.id.toString())
             )
         )
         transferStatusUpdater.addWorkRequest(request.id.toString(), transferRecord.id, true)

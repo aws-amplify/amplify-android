@@ -15,7 +15,9 @@
 
 package com.amplifyframework.core.model.query.predicate;
 
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -25,6 +27,8 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Gson adapters to serialize/deserialize to/from data modeling types.
@@ -33,13 +37,15 @@ public final class GsonPredicateAdapters {
     private GsonPredicateAdapters() {}
 
     /**
-     * Registers the adapters into an {@link GsonBuilder}.
+     * Registers the QueryPredicate adapter into an {@link GsonBuilder}.
+     * registerTypeHierarchyAdapter enables objects assigned to concrete QueryPredicate classes
+     * (e.g., QueryPredicateOperation) to use this adapter.
+     * 
      * @param builder A GsonBuilder.
      */
     public static void register(GsonBuilder builder) {
         builder
-            .registerTypeAdapter(QueryOperator.class, new QueryOperatorAdapter())
-            .registerTypeAdapter(QueryPredicate.class, new QueryPredicateAdapter());
+            .registerTypeHierarchyAdapter(QueryPredicate.class, new QueryPredicateAdapter());
     }
 
     /**
@@ -127,10 +133,17 @@ public final class GsonPredicateAdapters {
             JsonDeserializer<QueryPredicate>, JsonSerializer<QueryPredicate> {
         private static final String TYPE = "_type";
 
+        // internal Gson instance for avoiding infinite loop
+        private final Gson gson = new GsonBuilder()
+                .registerTypeAdapter(QueryOperator.class, new QueryOperatorAdapter())
+                .serializeNulls()
+                .create();
+
         private enum PredicateType {
             OPERATION,
             GROUP,
-            ALL
+            ALL,
+            NONE
         }
 
         /**
@@ -147,11 +160,15 @@ public final class GsonPredicateAdapters {
             String predicateType = jsonObject.get(TYPE).getAsString();
             switch (PredicateType.valueOf(predicateType)) {
                 case OPERATION:
-                    return context.deserialize(json, QueryPredicateOperation.class);
+                    return gson.fromJson(json, QueryPredicateOperation.class);
                 case GROUP:
-                    return context.deserialize(json, QueryPredicateGroup.class);
+                    // We need to manually deserialize Groups to ensure we handle nested groups
+                    // and update _types correctly.
+                    return deserializeQueryPredicateGroup(jsonObject);
                 case ALL:
-                    return context.deserialize(json, MatchAllQueryPredicate.class);
+                    return gson.fromJson(json, MatchAllQueryPredicate.class);
+                case NONE:
+                    return gson.fromJson(json, MatchNoneQueryPredicate.class);
                 default:
                     throw new JsonParseException("Unable to deserialize " +
                             json.toString() + " to QueryPredicate instance.");
@@ -166,21 +183,96 @@ public final class GsonPredicateAdapters {
                 throws JsonParseException {
             JsonElement json;
             PredicateType predicateType;
-            if (predicate instanceof MatchAllQueryPredicate) {
-                predicateType = PredicateType.ALL;
-                json = context.serialize(predicate, MatchAllQueryPredicate.class);
-            } else if (predicate instanceof QueryPredicateOperation) {
-                json = context.serialize(predicate, QueryPredicateOperation.class);
-                predicateType = PredicateType.OPERATION;
-            } else if (predicate instanceof QueryPredicateGroup) {
-                json = context.serialize(predicate, QueryPredicateGroup.class);
+            if (predicate instanceof QueryPredicateGroup) {
+                // We need to manually serialize Groups to ensure we handle nested groups and
+                // update _types correctly.
                 predicateType = PredicateType.GROUP;
+                json = serializeQueryPredicateGroup((QueryPredicateGroup) predicate, context);
             } else {
-                throw new JsonParseException("Unable to identify the predicate type.");
+                json = gson.toJsonTree(predicate);
+                if (predicate instanceof MatchAllQueryPredicate) {
+                    predicateType = PredicateType.ALL;
+                } else if (predicate instanceof MatchNoneQueryPredicate) {
+                    predicateType = PredicateType.NONE;
+                } else if (predicate instanceof QueryPredicateOperation) {
+                    predicateType = PredicateType.OPERATION;
+                } else {
+                    throw new JsonParseException("Unable to identify the predicate type.");
+                }
             }
             JsonObject jsonObject = json.getAsJsonObject();
             jsonObject.addProperty(TYPE, predicateType.name());
             return jsonObject;
+        }
+
+        /**
+         * Serializes a QueryPredicateGroup to JSON format.
+         * <p>
+         * This method is necessary because QueryPredicateGroup contains nested QueryPredicate objects
+         * that need to be recursively serialized. We cannot use context.serialize() directly on
+         * QueryPredicateGroup because:
+         * 1. Using context.serialize() would cause infinite recursion back to this adapter
+         * 2. We need to manually construct the JSON structure with proper "_type" fields
+         * <p>
+         * The method handles:
+         * - Serializing the group type (AND, OR, NOT)
+         * - Recursively serializing each nested predicate in the predicates array
+         * - Maintaining the correct JSON structure expected by the deserializer
+         * 
+         * @param group The QueryPredicateGroup to serialize
+         * @param context The serialization context for handling nested QueryOperator objects
+         * @return JsonElement representing the serialized group
+         */
+        private JsonElement serializeQueryPredicateGroup(QueryPredicateGroup group, JsonSerializationContext context) {
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty("type", group.type().name());
+            
+            JsonArray predicatesArray = new JsonArray();
+            for (QueryPredicate predicate : group.predicates()) {
+                // Recursively serialize nested predicates using this adapter
+                predicatesArray.add(serialize(predicate, QueryPredicate.class, context));
+            }
+            jsonObject.add("predicates", predicatesArray);
+            
+            return jsonObject;
+        }
+        
+        /**
+         * Deserializes a JSON object into a QueryPredicateGroup.
+         * <p>
+         * This method is necessary because QueryPredicateGroup contains nested QueryPredicate objects
+         * that need to be recursively deserialized. We cannot use context.deserialize() directly
+         * because:
+         * 1. Using context.deserialize() would cause infinite recursion back to this adapter
+         * 2. We need to manually parse the JSON structure and handle nested predicates
+         * <p>
+         * The method handles:
+         * - Parsing the group type (AND, OR, NOT) from the "type" field
+         * - Recursively deserializing each predicate in the "predicates" array
+         * - Creating the QueryPredicateGroup with the correct constructor (no builder available)
+         * <p>
+         * This is critical for DataStore sync expressions that contain nested predicate groups,
+         * which caused the "Interfaces can't be instantiated" error before this fix.
+         * 
+         * @param jsonObject The JSON object containing the group data
+         * @return QueryPredicateGroup instance with all nested predicates deserialized
+         */
+        private QueryPredicateGroup deserializeQueryPredicateGroup(JsonObject jsonObject) {
+            QueryPredicateGroup.Type type = QueryPredicateGroup.Type.valueOf(
+                jsonObject.get("type").getAsString()
+            );
+            
+            List<QueryPredicate> predicates = new ArrayList<>();
+            JsonArray predicatesArray = jsonObject.getAsJsonArray("predicates");
+            for (JsonElement predicateElement : predicatesArray) {
+                // Recursively deserialize nested predicates using this adapter
+                // Note: Passing null for context since we handle recursion manually
+                QueryPredicate predicate = deserialize(predicateElement, QueryPredicate.class, null);
+                predicates.add(predicate);
+            }
+            
+            // Use constructor since QueryPredicateGroup doesn't have a builder
+            return new QueryPredicateGroup(type, predicates);
         }
     }
 }

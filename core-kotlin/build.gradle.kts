@@ -14,12 +14,9 @@
  */
 
 plugins {
-    id("com.android.library")
-    id("kotlin-android")
+    alias(libs.plugins.amplify.android.library)
+    alias(libs.plugins.amplify.publishing)
 }
-apply(from = rootProject.file("configuration/publishing.gradle"))
-
-group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.kotlin"
@@ -38,9 +35,4 @@ dependencies {
     testImplementation(libs.test.kotlin.coroutines)
     testImplementation(project(":testmodels"))
     testImplementation(libs.test.kotest.assertions)
-}
-
-android.kotlinOptions {
-    jvmTarget = "11"
-    freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
 }

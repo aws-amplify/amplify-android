@@ -14,24 +14,14 @@
  */
 
 plugins {
-    id("com.android.library")
-    id("kotlin-android")
+    alias(libs.plugins.amplify.android.library)
+    alias(libs.plugins.amplify.publishing)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
-apply(from = rootProject.file("configuration/publishing.gradle"))
-
-group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.api.aws"
-    defaultConfig {
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    testOptions {
-        execution = "ANDROIDX_TEST_ORCHESTRATOR"
-    }
 }
 
 dependencies {
@@ -68,8 +58,4 @@ dependencies {
     androidTestImplementation(libs.test.kotlin.coroutines)
 
     androidTestUtil(libs.test.androidx.orchestrator)
-}
-
-android.kotlinOptions {
-    jvmTarget = "11"
 }

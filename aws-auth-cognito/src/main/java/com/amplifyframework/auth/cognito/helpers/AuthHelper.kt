@@ -15,10 +15,18 @@
 
 package com.amplifyframework.auth.cognito.helpers
 
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthenticationResultType
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.InitiateAuthResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeResponse
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidParameterException
 import com.amplifyframework.auth.exceptions.UnknownException
+import com.amplifyframework.statemachine.codegen.data.ChallengeParameter
+import com.amplifyframework.statemachine.codegen.data.asAccessToken
+import com.amplifyframework.statemachine.codegen.data.asIdToken
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
+
+private typealias ChallengeParameters = Map<String, String>
 
 internal open class AuthHelper {
 
@@ -33,38 +41,52 @@ internal open class AuthHelper {
          * @param clientSecret Client secret
          * @return secret hash as a `String`, `null ` if `clientSecret` is `null`
          */
-        fun getSecretHash(userId: String?, clientId: String?, clientSecret: String?): String? {
-            return when {
-                userId == null -> throw InvalidParameterException(
-                    cause = Exception("user ID cannot be null")
-                )
-                clientId == null -> throw InvalidParameterException(
-                    cause = Exception("client ID cannot be null")
-                )
-                clientSecret.isNullOrEmpty() -> null
-                else ->
-                    try {
-                        val mac = Mac.getInstance(HMAC_SHA_256)
-                        val keySpec = SecretKeySpec(clientSecret.toByteArray(), HMAC_SHA_256)
-                        mac.init(keySpec)
-                        mac.update(userId.toByteArray())
-                        val raw = mac.doFinal(clientId.toByteArray())
-                        String(android.util.Base64.encode(raw, android.util.Base64.NO_WRAP))
-                    } catch (e: Exception) {
-                        throw UnknownException(cause = Exception("errors in HMAC calculation"))
-                    }
-            }
+        fun getSecretHash(userId: String?, clientId: String?, clientSecret: String?): String? = when {
+            userId == null -> throw InvalidParameterException(
+                cause = Exception("user ID cannot be null")
+            )
+            clientId == null -> throw InvalidParameterException(
+                cause = Exception("client ID cannot be null")
+            )
+            clientSecret.isNullOrEmpty() -> null
+            else ->
+                try {
+                    val mac = Mac.getInstance(HMAC_SHA_256)
+                    val keySpec = SecretKeySpec(clientSecret.toByteArray(), HMAC_SHA_256)
+                    mac.init(keySpec)
+                    mac.update(userId.toByteArray())
+                    val raw = mac.doFinal(clientId.toByteArray())
+                    String(android.util.Base64.encode(raw, android.util.Base64.NO_WRAP))
+                } catch (e: Exception) {
+                    throw UnknownException(cause = Exception("errors in HMAC calculation"))
+                }
         }
 
         /**
-         * This method is used to capture the activeUsername we should be using to store and retreive device Metadata.
+         * This method is used to capture the activeUsername we should be using to store and retrieve device Metadata.
          * This becomes more important when an alias is used to signin instead of a username where cognito then
          * generates the username on the customers behalf and returns it. We need to then use that username to store
          * and retrieve device information as the username that the customer entered will no longer be available when
          * respondToAuthChallenge/confirmSignIn calls are made.
          * */
-        fun getActiveUsername(username: String, alternateUsername: String?, userIDForSRP: String?): String {
-            return alternateUsername ?: (userIDForSRP ?: username)
+        fun getActiveUsername(usernameSentInRequest: String, response: InitiateAuthResponse): String =
+            getActiveUsername(usernameSentInRequest, response.authenticationResult, response.challengeParameters)
+        fun getActiveUsername(usernameSentInRequest: String, response: RespondToAuthChallengeResponse): String =
+            getActiveUsername(usernameSentInRequest, response.authenticationResult, response.challengeParameters)
+
+        private fun getActiveUsername(
+            usernameSentInRequest: String,
+            authenticationResult: AuthenticationResultType?,
+            challengeParameters: ChallengeParameters?
+        ): String = authenticationResult?.getUsername() ?: challengeParameters?.getUsername() ?: usernameSentInRequest
+
+        private fun AuthenticationResultType.getUsername(): String? {
+            val idToken = idToken?.asIdToken()
+            val accessToken = accessToken?.asAccessToken()
+            return idToken?.username ?: accessToken?.username
         }
+
+        private fun ChallengeParameters.getUsername(): String? =
+            get(ChallengeParameter.Username.key) ?: get(ChallengeParameter.UserIdForSrp.key)
     }
 }

@@ -87,7 +87,7 @@ __pycache__/
 **/credentials.json
 **/google_client_creds.json
 **/amplifyconfiguration*.json
-**/amplify_outputs.json
+**/amplify_outputs*.json
 
 # IDE files
 .idea/**
@@ -98,12 +98,13 @@ __pycache__/
 #amplify
 .amplify/
 amplify/
+#keep amplify gen2 backend projects
+!**/androidTest/backend/amplify/
 build/
 dist/
 node_modules/
 aws-exports.js
 awsconfiguration.json
-amplifyconfiguration.json
 
 test-results/
 build-artifacts/

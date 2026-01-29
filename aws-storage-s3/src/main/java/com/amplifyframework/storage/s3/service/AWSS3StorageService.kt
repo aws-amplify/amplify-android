@@ -37,6 +37,7 @@ import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.TransferManager
 import com.amplifyframework.storage.s3.transfer.TransferObserver
 import com.amplifyframework.storage.s3.transfer.TransferRecord
+import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import com.amplifyframework.storage.s3.transfer.UploadOptions
 import com.amplifyframework.storage.s3.utils.S3Keys
 import java.io.File
@@ -57,13 +58,14 @@ internal class AWSS3StorageService(
     private val s3BucketName: String,
     private val authCredentialsProvider: AuthCredentialsProvider,
     private val awsS3StoragePluginKey: String,
-    private val clientProvider: StorageTransferClientProvider
+    private val clientProvider: StorageTransferClientProvider,
+    private val transferStatusUpdater: TransferStatusUpdater
 ) : StorageService {
 
     private var s3Client: S3Client = S3StorageTransferClientProvider.getS3Client(awsRegion, authCredentialsProvider)
 
     val transferManager: TransferManager =
-        TransferManager(context, clientProvider, awsS3StoragePluginKey)
+        TransferManager(context, clientProvider, awsS3StoragePluginKey, transferStatusUpdater)
 
     /**
      * Generate pre-signed URL for an object.
@@ -125,16 +127,14 @@ internal class AWSS3StorageService(
         serviceKey: String,
         file: File,
         useAccelerateEndpoint: Boolean
-    ): TransferObserver {
-        return transferManager.download(
-            transferId,
-            s3BucketName,
-            awsRegion,
-            serviceKey,
-            file,
-            useAccelerateEndpoint = useAccelerateEndpoint
-        )
-    }
+    ): TransferObserver = transferManager.download(
+        transferId,
+        s3BucketName,
+        awsRegion,
+        serviceKey,
+        file,
+        useAccelerateEndpoint = useAccelerateEndpoint
+    )
 
     /**
      * Begin uploading a file.
@@ -149,17 +149,15 @@ internal class AWSS3StorageService(
         file: File,
         metadata: ObjectMetadata,
         useAccelerateEndpoint: Boolean
-    ): TransferObserver {
-        return transferManager.upload(
-            transferId,
-            s3BucketName,
-            awsRegion,
-            serviceKey,
-            file,
-            metadata,
-            useAccelerateEndpoint = useAccelerateEndpoint
-        )
-    }
+    ): TransferObserver = transferManager.upload(
+        transferId,
+        s3BucketName,
+        awsRegion,
+        serviceKey,
+        file,
+        metadata,
+        useAccelerateEndpoint = useAccelerateEndpoint
+    )
 
     /**
      * Begin uploading an inputStream.
@@ -213,8 +211,8 @@ internal class AWSS3StorageService(
         return items
     }
 
-    override fun listFiles(path: String, prefix: String, pageSize: Int, nextToken: String?): StorageListResult {
-        return runBlocking {
+    override fun listFiles(path: String, prefix: String, pageSize: Int, nextToken: String?): StorageListResult =
+        runBlocking {
             val result = s3Client.listObjectsV2 {
                 this.bucket = s3BucketName
                 this.prefix = path
@@ -240,7 +238,6 @@ internal class AWSS3StorageService(
             }
             StorageListResult.fromItems(items, result.nextContinuationToken)
         }
-    }
 
     /**
      * List items inside an S3 path.
@@ -249,8 +246,8 @@ internal class AWSS3StorageService(
      * @param subPathStrategy The SubpathStrategy to include/exclude sub-paths
      * @return A list of parsed items
      */
-    override fun listFiles(path: String, prefix: String, subPathStrategy: SubpathStrategy?): StorageListResult {
-        return runBlocking {
+    override fun listFiles(path: String, prefix: String, subPathStrategy: SubpathStrategy?): StorageListResult =
+        runBlocking {
             val items = mutableListOf<StorageItem>()
             val excludedSubPaths = mutableListOf<String>()
             val delimiter: String? = (subPathStrategy as? Exclude)?.delimiter
@@ -285,7 +282,6 @@ internal class AWSS3StorageService(
 
             StorageListResult.fromItems(items, null, excludedSubPaths)
         }
-    }
 
     override fun listFiles(
         path: String,
@@ -293,37 +289,35 @@ internal class AWSS3StorageService(
         pageSize: Int,
         nextToken: String?,
         subPathStrategy: SubpathStrategy?
-    ): StorageListResult {
-        return runBlocking {
-            val delimiter = (subPathStrategy as? Exclude)?.delimiter
-            val result = s3Client.listObjectsV2 {
-                this.bucket = s3BucketName
-                this.prefix = path
-                this.maxKeys = pageSize
-                this.continuationToken = nextToken
-                this.delimiter = delimiter
-            }
-            val items = result.contents?.mapNotNull { value ->
-                val serviceKey = value.key
-                val lastModified = value.lastModified
-                val eTag = value.eTag
-                if (serviceKey != null && lastModified != null && eTag != null) {
-                    StorageItem(
-                        serviceKey,
-                        S3Keys.extractAmplifyKey(serviceKey, prefix),
-                        value.size ?: 0,
-                        Date.from(Instant.ofEpochMilli(lastModified.epochSeconds)),
-                        eTag,
-                        null
-                    )
-                } else {
-                    null
-                }
-            }
-
-            val subPaths = result.commonPrefixes?.mapNotNull { it.prefix }
-            StorageListResult.fromItems(items, result.nextContinuationToken, subPaths)
+    ): StorageListResult = runBlocking {
+        val delimiter = (subPathStrategy as? Exclude)?.delimiter
+        val result = s3Client.listObjectsV2 {
+            this.bucket = s3BucketName
+            this.prefix = path
+            this.maxKeys = pageSize
+            this.continuationToken = nextToken
+            this.delimiter = delimiter
         }
+        val items = result.contents?.mapNotNull { value ->
+            val serviceKey = value.key
+            val lastModified = value.lastModified
+            val eTag = value.eTag
+            if (serviceKey != null && lastModified != null && eTag != null) {
+                StorageItem(
+                    serviceKey,
+                    S3Keys.extractAmplifyKey(serviceKey, prefix),
+                    value.size ?: 0,
+                    Date.from(Instant.ofEpochMilli(lastModified.epochSeconds)),
+                    eTag,
+                    null
+                )
+            } else {
+                null
+            }
+        }
+
+        val subPaths = result.commonPrefixes?.mapNotNull { it.prefix }
+        StorageListResult.fromItems(items, result.nextContinuationToken, subPaths)
     }
 
     /**
@@ -335,36 +329,34 @@ internal class AWSS3StorageService(
         pageSize: Int,
         nextToken: String?,
         subPathStrategy: SubpathStrategy?
-    ): StorageListResult {
-        return runBlocking {
-            val delimiter = (subPathStrategy as? Exclude)?.delimiter
-            val result = s3Client.listObjectsV2 {
-                this.bucket = s3BucketName
-                this.prefix = path
-                this.maxKeys = pageSize
-                this.continuationToken = nextToken
-                this.delimiter = delimiter
-            }
-            val items = result.contents?.mapNotNull { value ->
-                val serviceKey = value.key
-                val lastModified = value.lastModified
-                val eTag = value.eTag
-                if (serviceKey != null && lastModified != null && eTag != null) {
-                    StorageItem(
-                        serviceKey,
-                        serviceKey,
-                        value.size ?: 0,
-                        Date.from(Instant.ofEpochMilli(lastModified.epochSeconds)),
-                        eTag,
-                        null
-                    )
-                } else {
-                    null
-                }
-            }
-            val subPaths = result.commonPrefixes?.mapNotNull { it.prefix }
-            StorageListResult.fromItems(items, result.nextContinuationToken, subPaths)
+    ): StorageListResult = runBlocking {
+        val delimiter = (subPathStrategy as? Exclude)?.delimiter
+        val result = s3Client.listObjectsV2 {
+            this.bucket = s3BucketName
+            this.prefix = path
+            this.maxKeys = pageSize
+            this.continuationToken = nextToken
+            this.delimiter = delimiter
         }
+        val items = result.contents?.mapNotNull { value ->
+            val serviceKey = value.key
+            val lastModified = value.lastModified
+            val eTag = value.eTag
+            if (serviceKey != null && lastModified != null && eTag != null) {
+                StorageItem(
+                    serviceKey,
+                    serviceKey,
+                    value.size ?: 0,
+                    Date.from(Instant.ofEpochMilli(lastModified.epochSeconds)),
+                    eTag,
+                    null
+                )
+            } else {
+                null
+            }
+        }
+        val subPaths = result.commonPrefixes?.mapNotNull { it.prefix }
+        StorageListResult.fromItems(items, result.nextContinuationToken, subPaths)
     }
 
     /**
@@ -410,17 +402,13 @@ internal class AWSS3StorageService(
      * @param transferId the unique identifier of the object in storage
      * @return transfer record matching the transfer id
      */
-    override fun getTransfer(transferId: String): TransferRecord? {
-        return transferManager.getTransferOperationById(transferId)
-    }
+    override fun getTransfer(transferId: String): TransferRecord? = transferManager.getTransferOperationById(transferId)
 
     /**
      * Gets a handle of S3 client underlying this service.
      * @return S3 client instance
      */
-    fun getClient(): S3Client {
-        return s3Client
-    }
+    fun getClient(): S3Client = s3Client
 
     interface Factory {
         /**
@@ -435,7 +423,8 @@ internal class AWSS3StorageService(
             context: Context,
             region: String,
             bucketName: String,
-            clientProvider: StorageTransferClientProvider
+            clientProvider: StorageTransferClientProvider,
+            transferStatusUpdater: TransferStatusUpdater
         ): AWSS3StorageService
     }
 }

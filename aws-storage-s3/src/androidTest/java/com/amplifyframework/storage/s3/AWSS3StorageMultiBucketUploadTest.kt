@@ -204,7 +204,7 @@ class AWSS3StorageMultiBucketUploadTest {
         // Assert that all the required conditions have been met
         resumed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS) shouldBe true
         completed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS) shouldBe true
-        errorContainer.get()shouldBe null
+        errorContainer.get() shouldBe null
     }
 
     @Test

@@ -18,24 +18,24 @@ package com.amplifyframework.auth.cognito
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.api.aws.AWSApiPlugin
-import com.amplifyframework.api.graphql.SimpleGraphQLRequest
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.MFAType
 import com.amplifyframework.auth.cognito.exceptions.service.CodeMismatchException
 import com.amplifyframework.auth.cognito.test.R
+import com.amplifyframework.auth.cognito.testutils.blockForCode
+import com.amplifyframework.auth.cognito.testutils.blockUntilEstablished
+import com.amplifyframework.auth.cognito.testutils.createMfaSubscription
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.step.AuthSignInStep
 import com.amplifyframework.core.configuration.AmplifyOutputs
 import com.amplifyframework.core.configuration.AmplifyOutputsData
 import com.amplifyframework.datastore.generated.model.MfaInfo
-import com.amplifyframework.testutils.Assets
+import com.amplifyframework.testutils.api.SubscriptionHolder
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import java.util.Random
 import java.util.UUID
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import org.junit.After
@@ -45,14 +45,13 @@ import org.junit.Test
 class AWSCognitoAuthPluginEmailMFATests {
 
     private val password = "${UUID.randomUUID()}BleepBloop1234!"
-    private val userName = "test${Random().nextInt()}"
-    private val email = "$userName@amplify-swift-gamma.awsapps.com"
+    private val username = "test${Random().nextInt()}"
+    private val email = "$username@amplify-swift-gamma.awsapps.com"
 
     private var authPlugin = AWSCognitoAuthPlugin()
     private var apiPlugin = AWSApiPlugin()
     private lateinit var synchronousAuth: SynchronousAuth
-    private var mfaCode = ""
-    private var latch: CountDownLatch? = null
+    private lateinit var subscription: SubscriptionHolder<MfaInfo>
 
     @Before
     fun initializePlugin() {
@@ -64,26 +63,12 @@ class AWSCognitoAuthPluginEmailMFATests {
         apiPlugin.configure(config, context)
         synchronousAuth = SynchronousAuth.delegatingTo(authPlugin)
 
-        apiPlugin.subscribe(
-            SimpleGraphQLRequest<MfaInfo>(
-                Assets.readAsString("create-mfa-subscription.graphql"),
-                MfaInfo::class.java,
-                null
-            ),
-            { println("====== Subscription Established ======") },
-            {
-                println("====== Received some MFA Info ======")
-                mfaCode = it.data.code
-                latch?.countDown()
-            },
-            { println("====== Subscription Failed $it ======") },
-            { }
-        )
+        subscription = apiPlugin.createMfaSubscription()
     }
 
     @After
     fun tearDown() {
-        mfaCode = ""
+        subscription.cancel()
         synchronousAuth.deleteUser()
     }
 
@@ -93,7 +78,7 @@ class AWSCognitoAuthPluginEmailMFATests {
         signUpNewUser()
 
         // Step 2: Attempt to sign in with the newly created user
-        var signInResult = synchronousAuth.signIn(userName, password)
+        var signInResult = synchronousAuth.signIn(username, password)
 
         // Validation 1: Validate that the next step is MFA Setup Selection
         assertEquals(AuthSignInStep.CONTINUE_SIGN_IN_WITH_MFA_SETUP_SELECTION, signInResult.nextStep.signInStep)
@@ -107,15 +92,17 @@ class AWSCognitoAuthPluginEmailMFATests {
         // Validation 2: Validate that the next step is to input the user's email address
         assertEquals(AuthSignInStep.CONTINUE_SIGN_IN_WITH_EMAIL_MFA_SETUP, signInResult.nextStep.signInStep)
 
+        // Ensure subscription is ready to receive MFA code
+        subscription.blockUntilEstablished()
+
         // Step 4: Input the email address to send the code to then wait for the MFA code
-        latch = CountDownLatch(1)
         signInResult = synchronousAuth.confirmSignIn(email)
 
         // Validation 3: Validate that the next step is to confirm the emailed MFA code
         assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP, signInResult.nextStep.signInStep)
 
         // Wait until the MFA code has been received
-        latch?.await(20, TimeUnit.SECONDS)
+        val mfaCode = subscription.blockForCode(username)
 
         // Step 5: Input the emailed MFA code for confirmation
         signInResult = synchronousAuth.confirmSignIn(mfaCode)
@@ -129,15 +116,17 @@ class AWSCognitoAuthPluginEmailMFATests {
         // Step 1: Sign up a new user with an existing email address
         signUpNewUser(email)
 
+        // Ensure subscription is ready to receive MFA code
+        subscription.blockUntilEstablished()
+
         // Step 2: Attempt to sign in with the newly created user
-        latch = CountDownLatch(1)
-        var signInResult = synchronousAuth.signIn(userName, password)
+        var signInResult = synchronousAuth.signIn(username, password)
 
         // Validation 1: Validate that the next step is to confirm the emailed MFA code
         assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP, signInResult.nextStep.signInStep)
 
         // Wait until the MFA code has been received
-        latch?.await(20, TimeUnit.SECONDS)
+        val mfaCode = subscription.blockForCode(username)
 
         // Step 4: Input the emailed MFA code for confirmation
         signInResult = synchronousAuth.confirmSignIn(mfaCode)
@@ -151,20 +140,22 @@ class AWSCognitoAuthPluginEmailMFATests {
         // Step 1: Sign up a new user with an existing email address
         signUpNewUser(email)
 
+        // Ensure subscription is ready to receive MFA code
+        subscription.blockUntilEstablished()
+
         // Step 2: Attempt to sign in with the newly created user
-        latch = CountDownLatch(1)
-        var signInResult = synchronousAuth.signIn(userName, password)
+        var signInResult = synchronousAuth.signIn(username, password)
 
         // Validation 1: Validate that the next step is to confirm the emailed MFA code
         assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP, signInResult.nextStep.signInStep)
 
         // Wait until the MFA code has been received
-        latch?.await(20, TimeUnit.SECONDS)
+        val mfaCode = subscription.blockForCode(username)
 
         // Step 4: Input the an incorrect MFA code
         // Validation 2: Validate that an incorrect MFA code throws a CodeMismatchException
         assertFailsWith<CodeMismatchException> {
-            signInResult = synchronousAuth.confirmSignIn(mfaCode.reversed())
+            synchronousAuth.confirmSignIn(mfaCode.reversed())
         }
 
         // Step 5: Input the correct MFA code for validation
@@ -184,6 +175,6 @@ class AWSCognitoAuthPluginEmailMFATests {
             .userAttributes(
                 attributes
             ).build()
-        return synchronousAuth.signUp(userName, password, options)
+        return synchronousAuth.signUp(username, password, options)
     }
 }

@@ -60,10 +60,13 @@ internal class HostedUIClient private constructor(
 
     @Throws(RuntimeException::class)
     fun launchCustomTabsSignIn(hostedUIOptions: HostedUIOptions) {
+        session = client?.newSession(null)
+
         launchCustomTabs(
             uri = createAuthorizeUri(hostedUIOptions),
             activity = hostedUIOptions.callingActivity,
             customBrowserPackage = hostedUIOptions.browserPackage,
+            preferPrivateSession = hostedUIOptions.preferPrivateSession
         )
     }
 
@@ -71,18 +74,26 @@ internal class HostedUIClient private constructor(
     fun launchCustomTabsSignOut(browserPackage: String?) {
         launchCustomTabs(
             uri = createSignOutUri(),
-            customBrowserPackage = browserPackage,
+            customBrowserPackage = browserPackage
         )
     }
 
-    private fun launchCustomTabs(uri: Uri, activity: Activity? = null, customBrowserPackage: String?) {
+    private fun launchCustomTabs(
+        uri: Uri,
+        activity: Activity? = null,
+        customBrowserPackage: String?,
+        preferPrivateSession: Boolean? = null // allowing nullable, as null means customer didn't specify
+    ) {
         if (!BrowserHelper.isBrowserInstalled(context)) {
             throw RuntimeException("No browsers installed")
         }
 
         val browserPackage = customBrowserPackage ?: defaultCustomTabsPackage
 
-        val customTabsIntent = CustomTabsIntent.Builder(session).build().apply {
+        val customTabsIntent = CustomTabsIntent.Builder(session).apply {
+            // If customer didn't specify (null), don't add any Intent extra
+            preferPrivateSession?.let { setEphemeralBrowsingEnabled(it) }
+        }.build().apply {
             browserPackage?.let { intent.`package` = it }
             intent.data = uri
         }
@@ -155,18 +166,42 @@ internal class HostedUIClient private constructor(
             builder.appendQueryParameter("scope", it)
         }
 
+        // check if nonce is set as param.
+        hostedUIOptions.nonce?.takeIf { it.isNotEmpty() }?.let {
+            builder.appendQueryParameter("nonce", it)
+        }
+
+        // check if language is set as param.
+        hostedUIOptions.language?.takeIf { it.isNotEmpty() }?.let {
+            builder.appendQueryParameter("lang", it)
+        }
+
+        // check if loginHint is set as param.
+        hostedUIOptions.loginHint?.takeIf { it.isNotEmpty() }?.let {
+            builder.appendQueryParameter("login_hint", it)
+        }
+
+        // check if prompt is set as param.
+        hostedUIOptions.prompt?.joinToString(" ") { it.value }.let {
+            builder.appendQueryParameter("prompt", it)
+        }
+
+        // check if resource is set as param.
+        hostedUIOptions.resource?.takeIf { it.isNotEmpty() }?.let {
+            builder.appendQueryParameter("resource", it)
+        }
+
         return builder.build()
     }
 
-    private fun createFetchTokenUrl() =
-        URL(
-            Uri.Builder()
-                .scheme("https")
-                .authority(configuration.domain)
-                .appendPath("oauth2")
-                .appendPath("token")
-                .build().toString()
-        )
+    private fun createFetchTokenUrl() = URL(
+        Uri.Builder()
+            .scheme("https")
+            .authority(configuration.domain)
+            .appendPath("oauth2")
+            .appendPath("token")
+            .build().toString()
+    )
 
     private fun createFetchTokenHeaders(): Map<String, String> =
         mutableMapOf("Content-Type" to "application/x-www-form-urlencoded").apply {
@@ -178,13 +213,12 @@ internal class HostedUIClient private constructor(
             }
         }
 
-    internal fun createSignOutUri(): Uri =
-        Uri.Builder()
-            .scheme("https")
-            .authority(configuration.domain).appendPath("logout")
-            .appendQueryParameter("client_id", configuration.appClient)
-            .appendQueryParameter("logout_uri", configuration.signOutRedirectURI)
-            .build()
+    internal fun createSignOutUri(): Uri = Uri.Builder()
+        .scheme("https")
+        .authority(configuration.domain).appendPath("logout")
+        .appendQueryParameter("client_id", configuration.appClient)
+        .appendQueryParameter("logout_uri", configuration.signOutRedirectURI)
+        .build()
 
     override fun onCustomTabsServiceConnected(name: ComponentName, client: CustomTabsClient) {
         this.client = client
@@ -210,11 +244,10 @@ internal class HostedUIClient private constructor(
     companion object {
         const val CUSTOM_TABS_ACTIVITY_CODE = 49281
 
-        fun create(context: Context, configuration: OauthConfiguration?, logger: Logger) =
-            if (configuration != null) {
-                HostedUIClient(context, configuration, logger)
-            } else {
-                null
-            }
+        fun create(context: Context, configuration: OauthConfiguration?, logger: Logger) = if (configuration != null) {
+            HostedUIClient(context, configuration, logger)
+        } else {
+            null
+        }
     }
 }

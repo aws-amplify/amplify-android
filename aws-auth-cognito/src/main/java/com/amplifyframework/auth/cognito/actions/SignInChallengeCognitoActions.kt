@@ -29,6 +29,8 @@ import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.SignInChallengeActions
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.CredentialType
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
+import com.amplifyframework.statemachine.codegen.data.challengeNameType
 import com.amplifyframework.statemachine.codegen.events.CustomSignInEvent
 import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 
@@ -39,8 +41,9 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
     override fun verifyChallengeAuthAction(
         answer: String,
         metadata: Map<String, String>,
-        attributes: List<AuthUserAttribute>,
-        challenge: AuthChallenge
+        userAttributes: List<AuthUserAttribute>,
+        challenge: AuthChallenge,
+        signInMethod: SignInMethod
     ): Action = Action<AuthEnvironment>("VerifySignInChallenge") { id, dispatcher ->
         logger.verbose("$id Starting execution")
         val evt = try {
@@ -54,7 +57,8 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
                     challengeNameType = ChallengeNameType.MfaSetup,
                     session = challenge.session,
                     challengeParameters = mapOf("MFAS_CAN_SETUP" to answer),
-                    authenticationResult = null
+                    authenticationResult = null,
+                    signInMethod = signInMethod
                 )
                 logger.verbose("$id Sending event ${event.type}")
                 dispatcher.send(event)
@@ -72,7 +76,7 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
             }
 
             challengeResponses.putAll(
-                attributes.map {
+                userAttributes.map {
                     Pair("${KEY_PREFIX_USER_ATTRIBUTE}${it.key.keyString}", it.value)
                 }
             )
@@ -88,7 +92,7 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
             val pinpointEndpointId = getPinpointEndpointId()
             val response = cognitoAuthService.cognitoIdentityProviderClient?.respondToAuthChallenge {
                 clientId = configuration.userPool?.appClient
-                challengeName = ChallengeNameType.fromValue(challenge.challengeName)
+                challengeName = challenge.challengeNameType
                 this.challengeResponses = challengeResponses
                 session = challenge.session
                 clientMetadata = metadata
@@ -101,7 +105,8 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
                     challengeNameType = response.challengeName,
                     session = response.session,
                     challengeParameters = response.challengeParameters,
-                    authenticationResult = response.authenticationResult
+                    authenticationResult = response.authenticationResult,
+                    signInMethod = signInMethod
                 )
             } ?: CustomSignInEvent(
                 CustomSignInEvent.EventType.ThrowAuthError(
@@ -117,37 +122,39 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
                     SignInChallengeEvent.EventType.RetryVerifyChallengeAnswer(
                         answer,
                         metadata,
-                        attributes,
+                        userAttributes,
                         challenge
                     )
                 )
             } else {
-                SignInChallengeEvent(SignInChallengeEvent.EventType.ThrowError(e, challenge, true))
+                SignInChallengeEvent(SignInChallengeEvent.EventType.ThrowError(e, challenge))
             }
         }
         logger.verbose("$id Sending event ${evt.type}")
         dispatcher.send(evt)
     }
 
-    private fun getChallengeResponseKey(challenge: AuthChallenge): String? {
-        val challengeName = challenge.challengeName
-        return when (ChallengeNameType.fromValue(challengeName)) {
-            is ChallengeNameType.SmsMfa -> "SMS_MFA_CODE"
-            is ChallengeNameType.NewPasswordRequired -> "NEW_PASSWORD"
-            is ChallengeNameType.CustomChallenge, ChallengeNameType.SelectMfaType -> "ANSWER"
-            is ChallengeNameType.SoftwareTokenMfa -> "SOFTWARE_TOKEN_MFA_CODE"
-            is ChallengeNameType.EmailOtp -> "EMAIL_OTP_CODE"
-            // TOTP is not part of this because, it follows a completely different setup path
-            is ChallengeNameType.MfaSetup -> {
-                if (isMfaSetupSelectionChallenge(challenge)) {
-                    "MFA_SETUP"
-                } else if (isEmailMfaSetupChallenge(challenge)) {
-                    "EMAIL"
-                } else {
-                    null
-                }
-            }
-            else -> null
+    private fun getChallengeResponseKey(challenge: AuthChallenge): String? = when (challenge.challengeNameType) {
+        is ChallengeNameType.SmsMfa -> "SMS_MFA_CODE"
+        is ChallengeNameType.EmailOtp -> "EMAIL_OTP_CODE"
+        is ChallengeNameType.SmsOtp -> "SMS_OTP_CODE"
+        is ChallengeNameType.NewPasswordRequired -> "NEW_PASSWORD"
+        is ChallengeNameType.CustomChallenge,
+        is ChallengeNameType.SelectMfaType,
+        is ChallengeNameType.SelectChallenge -> {
+            "ANSWER"
         }
+        is ChallengeNameType.SoftwareTokenMfa -> "SOFTWARE_TOKEN_MFA_CODE"
+        // TOTP is not part of this because, it follows a completely different setup path
+        is ChallengeNameType.MfaSetup -> {
+            if (isMfaSetupSelectionChallenge(challenge)) {
+                "MFA_SETUP"
+            } else if (isEmailMfaSetupChallenge(challenge)) {
+                "EMAIL"
+            } else {
+                null
+            }
+        }
+        else -> null
     }
 }

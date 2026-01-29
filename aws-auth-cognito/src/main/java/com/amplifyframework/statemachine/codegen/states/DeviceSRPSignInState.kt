@@ -32,9 +32,8 @@ internal sealed class DeviceSRPSignInState : State {
     class Resolver(private val deviceSRPSignInActions: DeviceSRPSignInActions) :
         StateMachineResolver<DeviceSRPSignInState> {
         override val defaultState = NotStarted()
-        private fun asDeviceSRPSignInEvent(event: StateMachineEvent): DeviceSRPSignInEvent.EventType? {
-            return (event as? DeviceSRPSignInEvent)?.eventType
-        }
+        private fun asDeviceSRPSignInEvent(event: StateMachineEvent): DeviceSRPSignInEvent.EventType? =
+            (event as? DeviceSRPSignInEvent)?.eventType
 
         override fun resolve(
             oldState: DeviceSRPSignInState,

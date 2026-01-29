@@ -32,7 +32,7 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.core.configuration.AmplifyOutputsData
-import com.amplifyframework.core.store.EncryptedKeyValueRepository
+import com.amplifyframework.core.store.AmplifyKeyValueRepository
 import com.amplifyframework.core.store.KeyValueRepository
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 import com.amplifyframework.notifications.pushnotifications.PushNotificationResult
@@ -44,11 +44,13 @@ import com.amplifyframework.pinpoint.core.data.AndroidAppDetails
 import com.amplifyframework.pinpoint.core.data.AndroidDeviceDetails
 import com.amplifyframework.pinpoint.core.database.PinpointDatabase
 import com.amplifyframework.pinpoint.core.util.getUniqueId
+import com.amplifyframework.util.setHttpEngine
 import com.google.firebase.messaging.FirebaseMessaging
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
 import org.json.JSONObject
 
+@Deprecated("AWS will end support for Amazon Pinpoint on October 30, 2026.")
 class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClient>() {
 
     companion object {
@@ -101,6 +103,17 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     }
 
     private fun configure(context: Context, configuration: AWSPinpointPushNotificationsConfiguration) {
+        LOG.warn(
+            """
+            AWS will end support for Amazon Pinpoint on October 30, 2026.
+            The guidance is to use AWS End User Messaging for push notifications and SMS,
+            Amazon Simple Email Service for sending emails, Amazon Connect for campaigns, journeys, endpoints, 
+            and engagement analytics. Pinpoint recommends Amazon Kinesis for event collection and mobile analytics.
+            
+            See https://docs.aws.amazon.com/pinpoint/latest/userguide/migrate.html for more details.
+            """.trimIndent()
+        )
+
         this.context = context
         this.configuration = configuration
         pushNotificationsUtils = PushNotificationsUtils(context)
@@ -120,7 +133,7 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
             configuration.appId + AWS_PINPOINT_PUSHNOTIFICATIONS_PREFERENCES_SUFFIX,
             Context.MODE_PRIVATE
         )
-        store = EncryptedKeyValueRepository(
+        store = AmplifyKeyValueRepository(
             context,
             configuration.appId + AWS_PINPOINT_PUSHNOTIFICATIONS_PREFERENCES_SUFFIX
         )
@@ -133,6 +146,7 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     }
 
     private fun createPinpointClient() = PinpointClient {
+        setHttpEngine()
         region = configuration.region
         credentialsProvider = CognitoCredentialsProvider()
         interceptors += object : HttpInterceptor {
@@ -146,16 +160,14 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
     private fun createTargetingClient(
         androidAppDetails: AndroidAppDetails,
         androidDeviceDetails: AndroidDeviceDetails
-    ): TargetingClient {
-        return TargetingClient(
-            context,
-            pinpointClient,
-            store,
-            preferences,
-            androidAppDetails,
-            androidDeviceDetails
-        )
-    }
+    ): TargetingClient = TargetingClient(
+        context,
+        pinpointClient,
+        store,
+        preferences,
+        androidAppDetails,
+        androidDeviceDetails
+    )
 
     private fun createAnalyticsClient(
         androidAppDetails: AndroidAppDetails,
@@ -198,20 +210,17 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         }
     }
 
-    override fun identifyUser(
-        userId: String,
-        onSuccess: Action,
-        onError: Consumer<PushNotificationsException>
-    ) = _identifyUser(userId, null, onSuccess, onError)
+    override fun identifyUser(userId: String, onSuccess: Action, onError: Consumer<PushNotificationsException>) =
+        doIdentifyUser(userId, null, onSuccess, onError)
 
     override fun identifyUser(
         userId: String,
         profile: UserProfile,
         onSuccess: Action,
         onError: Consumer<PushNotificationsException>
-    ) = _identifyUser(userId, profile, onSuccess, onError)
+    ) = doIdentifyUser(userId, profile, onSuccess, onError)
 
-    private fun _identifyUser(
+    private fun doIdentifyUser(
         userId: String,
         profile: UserProfile?,
         onSuccess: Action,
@@ -306,9 +315,8 @@ class AWSPinpointPushNotificationsPlugin : PushNotificationsPlugin<PinpointClien
         }
     }
 
-    override fun shouldHandleNotification(
-        payload: NotificationPayload
-    ) = PinpointNotificationPayload.isPinpointNotificationPayload(payload)
+    override fun shouldHandleNotification(payload: NotificationPayload) =
+        PinpointNotificationPayload.isPinpointNotificationPayload(payload)
 
     override fun handleNotificationReceived(
         payload: NotificationPayload,

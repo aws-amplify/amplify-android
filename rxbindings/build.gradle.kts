@@ -14,14 +14,11 @@
  */
 
 plugins {
-    id("com.android.library")
-    id("kotlin-android")
+    alias(libs.plugins.amplify.android.library)
+    alias(libs.plugins.amplify.publishing)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
-apply(from = rootProject.file("configuration/publishing.gradle"))
-
-group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.rx"
@@ -41,8 +38,4 @@ dependencies {
     testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.robolectric)
     testImplementation(project(":rxbindings"))
-}
-
-android.kotlinOptions {
-    jvmTarget = "11"
 }

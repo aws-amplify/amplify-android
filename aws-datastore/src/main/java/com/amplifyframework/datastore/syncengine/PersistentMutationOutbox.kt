@@ -42,6 +42,7 @@ import io.reactivex.rxjava3.subjects.PublishSubject
 import io.reactivex.rxjava3.subjects.Subject
 import java.util.Objects
 import java.util.concurrent.Semaphore
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -93,8 +94,7 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
                 }
             )
         }
-            .doOnSubscribe { semaphore.acquire() }
-            .doOnTerminate { semaphore.release() }
+            .acquireSemaphore(semaphore, "getMutationForModelId")
             .blockingAwait()
         return mutationResult.get()
     }
@@ -106,7 +106,10 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
     ): Set<String> {
         // We chunk sql query to 950 items to prevent hitting 1k sqlite predicate limit
         // Improvement would be to use IN, but not currently supported in our query builders
+        val methodName = "fetchPendingMutations"
+        LOG.debug { "[$methodName] Acquiring outbox semaphore (permits: ${semaphore.availablePermits()})" }
         semaphore.acquire()
+        LOG.debug { "[$methodName] Acquired outbox semaphore (permits: ${semaphore.availablePermits()})" }
         val pendingMutations: Set<String> = models.chunked(950).fold(mutableSetOf()) { acc, chunk ->
             val queryOptions = Where.matches(
                 QueryPredicateGroup(
@@ -149,12 +152,14 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
             }
             acc
         }
+        LOG.debug { "[$methodName] Releasing outbox semaphore (permits: ${semaphore.availablePermits()})" }
         semaphore.release()
         return pendingMutations
     }
 
     private fun getMutationById(mutationId: String): PendingMutation<out Model>? {
         val mutationResult = AtomicReference<PendingMutation<out Model>>()
+
         Completable.create { emitter: CompletableEmitter ->
             storage.query(
                 PersistentRecord::class.java,
@@ -175,8 +180,7 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
                 }
             )
         }
-            .doOnSubscribe { semaphore.acquire() }
-            .doOnTerminate { semaphore.release() }
+            .acquireSemaphore(semaphore, "getMutationById")
             .blockingAwait()
         return mutationResult.get()
     }
@@ -195,8 +199,7 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
                 return@defer resolveConflict<T>(existingMutation, incomingMutation)
             }
         }
-            .doOnSubscribe { semaphore.acquire() }
-            .doOnTerminate { semaphore.release() }
+            .acquireSemaphore(semaphore, "enqueue")
     }
 
     private fun <T : Model> resolveConflict(
@@ -208,10 +211,7 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
         return mutationConflictHandler.resolve()
     }
 
-    private fun <T : Model> save(
-        pendingMutation: PendingMutation<T>,
-        addingNewMutation: Boolean
-    ): Completable {
+    private fun <T : Model> save(pendingMutation: PendingMutation<T>, addingNewMutation: Boolean): Completable {
         val item = converter.toRecord(pendingMutation)
         return Completable.create { emitter: CompletableEmitter ->
             storage.save(
@@ -224,7 +224,7 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
                     // to get identically the thing that was saved. But we know the save succeeded.
                     // So, let's skip the unwrapping, and use the thing that was enqueued,
                     // the pendingMutation, directly.
-                    LOG.info("Successfully enqueued $pendingMutation")
+                    LOG.info { "Successfully enqueued $pendingMutation" }
                     if (addingNewMutation) {
                         numMutationsInOutbox += 1
                     }
@@ -239,11 +239,8 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
         }
     }
 
-    override fun remove(pendingMutationId: TimeBasedUuid): Completable {
-        return removeNotLocking(pendingMutationId)
-            .doOnSubscribe { semaphore.acquire() }
-            .doOnTerminate { semaphore.release() }
-    }
+    override fun remove(pendingMutationId: TimeBasedUuid): Completable =
+        removeNotLocking(pendingMutationId).acquireSemaphore(semaphore, "remove")
 
     private fun removeNotLocking(pendingMutationId: TimeBasedUuid): Completable {
         Objects.requireNonNull(pendingMutationId)
@@ -261,7 +258,7 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
                     QueryPredicates.all(),
                     {
                         inFlightMutations.remove(pendingMutationId)
-                        LOG.info("Successfully removed from mutations outbox$pendingMutation")
+                        LOG.info { "Successfully removed from mutations outbox$pendingMutation" }
                         numMutationsInOutbox -= 1
                         val contentAvailable = numMutationsInOutbox > 0
                         if (contentAvailable) {
@@ -325,16 +322,13 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
                 }
             )
         }
-            .doOnSubscribe { semaphore.acquire() }
-            .doOnTerminate { semaphore.release() }
+            .acquireSemaphore(semaphore, "load")
     }
 
-    override fun events(): Observable<OutboxEvent> {
-        return events
-    }
+    override fun events(): Observable<OutboxEvent> = events
 
-    private fun notifyContentAvailable(): Completable {
-        return Completable.fromAction { events.onNext(OutboxEvent.CONTENT_AVAILABLE) }
+    private fun notifyContentAvailable(): Completable = Completable.fromAction {
+        events.onNext(OutboxEvent.CONTENT_AVAILABLE)
     }
 
     override fun peek(): PendingMutation<out Model>? {
@@ -380,6 +374,31 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
         )
     }
 
+    internal fun Completable.acquireSemaphore(semaphore: Semaphore, methodName: String): Completable {
+        val semaphoreReleased = AtomicBoolean(false)
+        return this.doOnSubscribe {
+            LOG.debug { "[$methodName] Acquiring outbox semaphore (permits: ${semaphore.availablePermits()})" }
+            semaphore.acquire()
+            LOG.debug { "[$methodName] Acquired outbox semaphore (permits: ${semaphore.availablePermits()})" }
+        }
+            .doOnTerminate {
+                if (semaphoreReleased.compareAndSet(false, true)) {
+                    LOG.debug {
+                        "[$methodName] Releasing outbox semaphore in onTerminate (permits: ${semaphore.availablePermits()})"
+                    }
+                    semaphore.release()
+                }
+            }
+            .doFinally {
+                if (semaphoreReleased.compareAndSet(false, true)) {
+                    LOG.debug {
+                        "[$methodName] Releasing outbox semaphore in onFinally (permits: ${semaphore.availablePermits()})"
+                    }
+                    semaphore.release()
+                }
+            }
+    }
+
     /**
      * Encapsulate the logic to determine which actions to take based on incoming and existing
      * mutations. Non-static so we can access instance methods of the outer class. Private because
@@ -397,11 +416,11 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
          * @return A completable with the actions to resolve the conflict.
          */
         fun resolve(): Completable {
-            LOG.debug(
+            LOG.debug {
                 "IncomingMutationConflict - " +
                     " existing " + existing.mutationType +
                     " incoming " + incoming.mutationType
-            )
+            }
             return when (incoming.mutationType) {
                 PendingMutation.Type.CREATE -> handleIncomingCreate()
                 PendingMutation.Type.UPDATE -> handleIncomingUpdate()
@@ -413,32 +432,53 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
          * Determine which action to take when the incoming mutation type is [PendingMutation.Type.CREATE].
          * @return A completable with the actions needed to resolve the conflict
          */
-        private fun handleIncomingCreate(): Completable {
-            return when (existing.mutationType) {
-                PendingMutation.Type.CREATE ->
-                    // Double create, return an different error than in the default block of the switch
-                    // statement. This way, we can differentiate between an incoming create being processed
-                    // multiple times (this case), versus outgoing mutations being processed out of order.
-                    conflictingCreationError()
+        private fun handleIncomingCreate(): Completable = when (existing.mutationType) {
+            PendingMutation.Type.CREATE ->
+                // Double create, return an different error than in the default block of the switch
+                // statement. This way, we can differentiate between an incoming create being processed
+                // multiple times (this case), versus outgoing mutations being processed out of order.
+                conflictingCreationError()
 
-                PendingMutation.Type.DELETE, PendingMutation.Type.UPDATE ->
-                    // A create mutation should never show up after an update or delete for the same modelId.
-                    unexpectedMutationScenario()
-            }
+            PendingMutation.Type.DELETE, PendingMutation.Type.UPDATE ->
+                // A create mutation should never show up after an update or delete for the same modelId.
+                unexpectedMutationScenario()
         }
 
         /**
          * Determine which action to take when the incoming mutation type is [PendingMutation.Type.UPDATE].
          * @return A completable with the actions needed to resolve the conflict
          */
-        private fun handleIncomingUpdate(): Completable {
-            return when (existing.mutationType) {
-                PendingMutation.Type.CREATE ->
-                    // Update after the create -> if the incoming & existing is of type SerializedModel
-                    // then merge the existing model.
-                    // If not, then replace the item of the create mutation (and keep it as a create).
-                    // No condition needs to be provided, because as far as the remote store is concerned,
-                    // we're simply performing the create (with the updated item item contents)
+        private fun handleIncomingUpdate(): Completable = when (existing.mutationType) {
+            PendingMutation.Type.CREATE ->
+                // Update after the create -> if the incoming & existing is of type SerializedModel
+                // then merge the existing model.
+                // If not, then replace the item of the create mutation (and keep it as a create).
+                // No condition needs to be provided, because as far as the remote store is concerned,
+                // we're simply performing the create (with the updated item item contents)
+                if (incoming.mutatedItem is SerializedModel &&
+                    existing.mutatedItem is SerializedModel
+                ) {
+                    val mergedPendingMutation = mergeAndCreatePendingMutation(
+                        incoming.mutatedItem as SerializedModel,
+                        existing.mutatedItem as SerializedModel,
+                        incoming.modelSchema,
+                        PendingMutation.Type.CREATE
+                    )
+                    removeNotLocking(existing.mutationId)
+                        .andThen(saveAndNotify(mergedPendingMutation, true))
+                } else {
+                    overwriteExistingAndNotify(
+                        PendingMutation.Type.CREATE,
+                        QueryPredicates.all()
+                    )
+                }
+
+            PendingMutation.Type.UPDATE ->
+                // If the incoming update does not have a condition, we want to delete any
+                // existing mutations for the modelId before saving the incoming one.
+                if (QueryPredicates.all() == incoming.predicate) {
+                    // If the incoming & existing update is of type serializedModel
+                    // then merge the existing model data into incoming.
                     if (incoming.mutatedItem is SerializedModel &&
                         existing.mutatedItem is SerializedModel
                     ) {
@@ -446,79 +486,49 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
                             incoming.mutatedItem as SerializedModel,
                             existing.mutatedItem as SerializedModel,
                             incoming.modelSchema,
-                            PendingMutation.Type.CREATE
+                            PendingMutation.Type.UPDATE
                         )
                         removeNotLocking(existing.mutationId)
                             .andThen(saveAndNotify(mergedPendingMutation, true))
                     } else {
-                        overwriteExistingAndNotify(
-                            PendingMutation.Type.CREATE,
-                            QueryPredicates.all()
+                        removeNotLocking(existing.mutationId).andThen(
+                            saveAndNotify(
+                                incoming,
+                                true
+                            )
                         )
                     }
+                } else {
+                    // If it has a condition, we want to just add it to the queue
+                    saveAndNotify(incoming, true)
+                }
 
-                PendingMutation.Type.UPDATE ->
-                    // If the incoming update does not have a condition, we want to delete any
-                    // existing mutations for the modelId before saving the incoming one.
-                    if (QueryPredicates.all() == incoming.predicate) {
-                        // If the incoming & existing update is of type serializedModel
-                        // then merge the existing model data into incoming.
-                        if (incoming.mutatedItem is SerializedModel &&
-                            existing.mutatedItem is SerializedModel
-                        ) {
-                            val mergedPendingMutation = mergeAndCreatePendingMutation(
-                                incoming.mutatedItem as SerializedModel,
-                                existing.mutatedItem as SerializedModel,
-                                incoming.modelSchema,
-                                PendingMutation.Type.UPDATE
-                            )
-                            removeNotLocking(existing.mutationId)
-                                .andThen(saveAndNotify(mergedPendingMutation, true))
-                        } else {
-                            removeNotLocking(existing.mutationId).andThen(
-                                saveAndNotify(
-                                    incoming,
-                                    true
-                                )
-                            )
-                        }
-                    } else {
-                        // If it has a condition, we want to just add it to the queue
-                        saveAndNotify(incoming, true)
-                    }
-
-                PendingMutation.Type.DELETE ->
-                    // Incoming update after a delete -> throw exception
-                    modelAlreadyScheduledForDeletion()
-            }
+            PendingMutation.Type.DELETE ->
+                // Incoming update after a delete -> throw exception
+                modelAlreadyScheduledForDeletion()
         }
 
         /**
          * Determine which action to take when the incoming mutation type is [PendingMutation.Type.DELETE].
          * @return A completable with the actions needed to resolve the conflict
          */
-        private fun handleIncomingDelete(): Completable {
-            return when (existing.mutationType) {
-                PendingMutation.Type.CREATE ->
-                    if (inFlightMutations.contains(existing.mutationId)) {
-                        // Existing create is already in flight, then save the delete
-                        save(incoming, true)
-                    } else {
-                        // The existing create mutation hasn't made it to the remote store, so we
-                        // ignore the incoming and remove the existing create mutation from outbox.
-                        removeNotLocking(existing.mutationId)
-                    }
+        private fun handleIncomingDelete(): Completable = when (existing.mutationType) {
+            PendingMutation.Type.CREATE ->
+                if (inFlightMutations.contains(existing.mutationId)) {
+                    // Existing create is already in flight, then save the delete
+                    save(incoming, true)
+                } else {
+                    // The existing create mutation hasn't made it to the remote store, so we
+                    // ignore the incoming and remove the existing create mutation from outbox.
+                    removeNotLocking(existing.mutationId)
+                }
 
-                PendingMutation.Type.UPDATE, PendingMutation.Type.DELETE ->
-                    // If there's a pending update OR delete, we want to replace it with the incoming delete.
-                    overwriteExistingAndNotify(PendingMutation.Type.DELETE, incoming.predicate)
-            }
+            PendingMutation.Type.UPDATE, PendingMutation.Type.DELETE ->
+                // If there's a pending update OR delete, we want to replace it with the incoming delete.
+                overwriteExistingAndNotify(PendingMutation.Type.DELETE, incoming.predicate)
         }
 
-        private fun overwriteExistingAndNotify(
-            type: PendingMutation.Type,
-            predicate: QueryPredicate
-        ): Completable {
+        private fun overwriteExistingAndNotify(type: PendingMutation.Type, predicate: QueryPredicate): Completable {
             // Keep the old mutation ID, but update the contents of that mutation.
             // Now, it will have the contents of the incoming update mutation.
             val id = existing.mutationId
@@ -528,50 +538,38 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
                 .andThen(notifyContentAvailable())
         }
 
-        private fun saveAndNotify(
-            incoming: PendingMutation<T>,
-            addedNewMutation: Boolean
-        ): Completable {
-            return save(incoming, addedNewMutation)
+        private fun saveAndNotify(incoming: PendingMutation<T>, addedNewMutation: Boolean): Completable =
+            save(incoming, addedNewMutation)
                 .andThen(notifyContentAvailable())
-        }
 
-        private fun conflictingCreationError(): Completable {
-            return Completable.error(
-                DataStoreException(
-                    "Attempted to enqueue a model creation, but there is already a pending creation for that model ID.",
-                    "Please report at https://github.com/aws-amplify/amplify-android/issues."
-                )
+        private fun conflictingCreationError(): Completable = Completable.error(
+            DataStoreException(
+                "Attempted to enqueue a model creation, but there is already a pending creation for that model ID.",
+                "Please report at https://github.com/aws-amplify/amplify-android/issues."
             )
-        }
+        )
 
-        private fun modelAlreadyScheduledForDeletion(): Completable {
-            return Completable.error(
-                DataStoreException(
-                    "Attempted to enqueue a model mutation, but that model already had a delete mutation pending.",
-                    "This should not be possible. Please report on GitHub issues."
-                )
+        private fun modelAlreadyScheduledForDeletion(): Completable = Completable.error(
+            DataStoreException(
+                "Attempted to enqueue a model mutation, but that model already had a delete mutation pending.",
+                "This should not be possible. Please report on GitHub issues."
             )
-        }
+        )
 
-        private fun unknownMutationType(unknownType: PendingMutation.Type): Completable {
-            return Completable.error(
-                DataStoreException(
-                    "Existing mutation of unknown type = $unknownType",
-                    "Please report at https://github.com/aws-amplify/amplify-android/issues."
-                )
+        private fun unknownMutationType(unknownType: PendingMutation.Type): Completable = Completable.error(
+            DataStoreException(
+                "Existing mutation of unknown type = $unknownType",
+                "Please report at https://github.com/aws-amplify/amplify-android/issues."
             )
-        }
+        )
 
-        private fun unexpectedMutationScenario(): Completable {
-            return Completable.error(
-                DataStoreException(
-                    "Unable to handle existing mutation of type = " + existing.mutationType +
-                        " and incoming mutation of type = " + incoming.mutationType,
-                    "Please report at https://github.com/aws-amplify/amplify-android/issues."
-                )
+        private fun unexpectedMutationScenario(): Completable = Completable.error(
+            DataStoreException(
+                "Unable to handle existing mutation of type = " + existing.mutationType +
+                    " and incoming mutation of type = " + incoming.mutationType,
+                "Please report at https://github.com/aws-amplify/amplify-android/issues."
             )
-        }
+        )
 
         private fun mergeAndCreatePendingMutation(
             incomingItem: SerializedModel,
@@ -592,7 +590,6 @@ internal class PersistentMutationOutbox(private val storage: LocalStorageAdapter
             ) as PendingMutation<T>
         }
     }
-
     companion object {
         private val LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore")
     }

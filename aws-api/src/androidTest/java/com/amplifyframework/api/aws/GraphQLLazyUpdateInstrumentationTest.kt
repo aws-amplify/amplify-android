@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.amplifyframework.api.aws.extensions.fetchAllPages
 import com.amplifyframework.api.aws.test.R
 import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.core.AmplifyConfiguration
@@ -78,8 +79,8 @@ class GraphQLLazyUpdateInstrumentationTest {
             assertEquals(hasOneChild2.id, it.id)
             assertEquals(hasOneChild2.content, it.content)
         } ?: fail("Response child was null or not a LazyModelReference")
-        (updatedParent.children as? LazyModelList)?.fetchPage()?.let {
-            assertEquals(1, it.items.size)
+        (updatedParent.children as? LazyModelList)?.fetchAllPages()?.let {
+            assertEquals(1, it.size)
         } ?: fail("Response child was null or not a LazyModelList")
 
         // CLEANUP

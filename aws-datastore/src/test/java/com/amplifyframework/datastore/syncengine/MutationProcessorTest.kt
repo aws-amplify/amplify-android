@@ -229,13 +229,15 @@ class MutationProcessorTest {
             .name("Exceptional Blogger")
             .build()
         val metadata = ModelMetadata(
-            model.modelName + "|" + model.primaryKeyString, false, 1,
+            model.modelName + "|" + model.primaryKeyString,
+            false,
+            1,
             Temporal.Timestamp.now()
         )
         val schema = schemaRegistry.getModelSchemaForModelClass(
             BlogOwner::class.java
         )
-        val lastSyncMetadata = LastSyncMetadata.baseSyncedAt<Model>(schema.name, 1000L)
+        val lastSyncMetadata = LastSyncMetadata.baseSyncedAt<Model>(schema.name, 1000L, null)
         synchronousStorageAdapter.save(model, metadata, lastSyncMetadata)
 
         // Enqueue an update in the mutation outbox
@@ -286,7 +288,9 @@ class MutationProcessorTest {
             .name("Average Joe")
             .build()
         val metadata = ModelMetadata(
-            model.modelName + "|" + model.primaryKeyString, false, 1,
+            model.modelName + "|" + model.primaryKeyString,
+            false,
+            1,
             Temporal.Timestamp.now()
         )
         val schema = schemaRegistry.getModelSchemaForModelClass(
@@ -385,7 +389,8 @@ class MutationProcessorTest {
             .build()
         synchronousStorageAdapter.save(model)
         val error = GraphQLResponseException(
-            "Some exception.", emptyList()
+            "Some exception.",
+            emptyList()
         )
         AppSyncMocking.create(appSync).mockResponseFailure(model, error)
 
@@ -432,7 +437,9 @@ class MutationProcessorTest {
             .name("Exceptional Blogger")
             .build()
         val metadata = ModelMetadata(
-            model.modelName + "|" + model.primaryKeyString, false, 1,
+            model.modelName + "|" + model.primaryKeyString,
+            false,
+            1,
             Temporal.Timestamp.now()
         )
         Mockito.doAnswer { invocation: InvocationOnMock ->
@@ -450,7 +457,9 @@ class MutationProcessorTest {
                     indexOfResponseConsumer
                 )
             val modelMetadata = ModelMetadata(
-                model.id, false, 1,
+                model.id,
+                false,
+                1,
                 Temporal.Timestamp.now()
             )
             val modelWithMetadata = ModelWithMetadata(
@@ -473,7 +482,8 @@ class MutationProcessorTest {
         )
         val lastSyncMetadata = LastSyncMetadata.baseSyncedAt<Model>(
             schema.name,
-            1000L
+            1000L,
+            null
         )
         synchronousStorageAdapter.save(model, metadata, lastSyncMetadata)
 

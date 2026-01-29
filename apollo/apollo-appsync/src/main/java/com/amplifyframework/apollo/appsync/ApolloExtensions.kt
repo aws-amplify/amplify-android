@@ -48,7 +48,7 @@ internal fun ApolloRequest<*>.toJson() =
  */
 fun WebSocketNetworkTransport.Builder.appSync(endpoint: AppSyncEndpoint, authorizer: AppSyncAuthorizer) = apply {
     // Set the connection URL
-    serverUrl(endpoint.websocketConnection.toString())
+    serverUrl(endpoint.realtime.toString())
 
     // Add User-agent header
     addHeader(UserAgentHeader.NAME, UserAgentHeader.value)

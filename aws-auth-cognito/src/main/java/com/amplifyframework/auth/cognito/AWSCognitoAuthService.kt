@@ -22,6 +22,8 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.endpoints.CognitoIdentity
 import aws.smithy.kotlin.runtime.client.RequestInterceptorContext
 import aws.smithy.kotlin.runtime.client.endpoints.Endpoint
 import aws.smithy.kotlin.runtime.http.interceptors.HttpInterceptor
+import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
+import com.amplifyframework.util.setHttpEngine
 
 interface AWSCognitoAuthService {
     val cognitoIdentityProviderClient: CognitoIdentityProviderClient?
@@ -33,6 +35,8 @@ interface AWSCognitoAuthService {
             val customPairs: MutableMap<String, String> = mutableMapOf()
             val cognitoIdentityProviderClient = configuration.userPool?.let { it ->
                 CognitoIdentityProviderClient {
+                    setHttpEngine()
+
                     this.region = it.region
                     this.endpointProvider = it.endpoint?.let { endpoint ->
                         CognitoIdentityProviderEndpointProvider { Endpoint(endpoint) }
@@ -50,6 +54,8 @@ interface AWSCognitoAuthService {
 
             val cognitoIdentityClient = configuration.identityPool?.let { it ->
                 CognitoIdentityClient {
+                    setHttpEngine()
+
                     this.region = it.region
                     this.interceptors += object : HttpInterceptor {
                         override suspend fun modifyBeforeSerialization(context: RequestInterceptorContext<Any>): Any {
@@ -70,3 +76,6 @@ interface AWSCognitoAuthService {
         }
     }
 }
+
+internal fun AWSCognitoAuthService.requireIdentityClient() =
+    cognitoIdentityProviderClient ?: throw InvalidUserPoolConfigurationException()

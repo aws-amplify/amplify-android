@@ -33,7 +33,7 @@ import org.junit.Test
 class AWSS3StorageServiceContainerTest {
 
     private val storageServiceFactory = mockk<AWSS3StorageService.Factory> {
-        every { create(any(), any(), any(), any()) } returns mockk<AWSS3StorageService>()
+        every { create(any(), any(), any(), any(), any()) } returns mockk<AWSS3StorageService>()
     }
     private val context = mockk<Context>()
     private val clientProvider = mockk<StorageTransferClientProvider>()
@@ -42,6 +42,7 @@ class AWSS3StorageServiceContainerTest {
 
     private lateinit var serviceContainerHashMap: ConcurrentHashMap<String, AWSS3StorageService>
     private lateinit var serviceContainer: AWSS3StorageServiceContainer
+
     @Before
     fun setUp() {
         serviceContainerHashMap = ConcurrentHashMap()
@@ -49,13 +50,14 @@ class AWSS3StorageServiceContainerTest {
             context,
             storageServiceFactory,
             clientProvider,
-            serviceContainerHashMap
+            serviceContainerHashMap,
+            mockk()
         )
     }
 
     @Test
     fun `put default AWSS3Service in container`() {
-        val service = storageServiceFactory.create(context, region, bucketName, clientProvider)
+        val service = storageServiceFactory.create(context, region, bucketName, clientProvider, mockk())
         serviceContainer.put(bucketName, service)
 
         serviceContainerHashMap.size shouldBe 1
@@ -105,7 +107,6 @@ class AWSS3StorageServiceContainerTest {
 
     @Test
     fun `get WSS3Service in container multiple times with bucket name and region creates only one service`() {
-
         val service = serviceContainer.get(bucketName, region)
         val service2 = serviceContainer.get(bucketName, region)
 

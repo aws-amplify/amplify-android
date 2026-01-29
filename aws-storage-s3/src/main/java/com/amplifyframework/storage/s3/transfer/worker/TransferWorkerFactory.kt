@@ -15,6 +15,7 @@
 package com.amplifyframework.storage.s3.transfer.worker
 
 import android.content.Context
+import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
 import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider
@@ -33,7 +34,7 @@ internal class TransferWorkerFactory(
         appContext: Context,
         workerClassName: String,
         workerParameters: WorkerParameters
-    ): BaseTransferWorker {
+    ): ListenableWorker {
         when (workerClassName) {
             DownloadWorker::class.java.name ->
                 return DownloadWorker(

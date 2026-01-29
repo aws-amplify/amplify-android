@@ -15,6 +15,7 @@
 
 package com.amplifyframework.statemachine.codegen.data
 
+import com.amplifyframework.statemachine.util.mask
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -80,45 +81,10 @@ internal sealed class AmplifyCredential {
  */
 @Serializable
 internal data class FederatedToken(val token: String, val providerName: String) {
-    override fun toString(): String {
-        return "FederatedToken(" +
-            "token = ${token.substring(0..4)}***, " +
-            "providerName = $providerName" +
-            ")"
-    }
-}
-
-/**
- * Contains cognito user pool JWT tokens
- * @param idToken User Pool id token
- * @param accessToken User Pool access token
- * @param refreshToken User Pool refresh token
- * @param expiration Auth result expiration but not token expiration
- */
-@Serializable
-internal data class CognitoUserPoolTokens(
-    val idToken: String?,
-    val accessToken: String?,
-    val refreshToken: String?,
-    val expiration: Long?,
-) {
-    override fun toString(): String {
-        return "CognitoUserPoolTokens(" +
-            "idToken = ${idToken?.substring(0..4)}***, " +
-            "accessToken = ${accessToken?.substring(0..4)}***, " +
-            "refreshToken = ${refreshToken?.substring(0..4)}***" +
-            ")"
-    }
-
-    override fun equals(other: Any?): Boolean {
-        return if (super.equals(other)) {
-            true
-        } else if (other == null || javaClass != other.javaClass || other !is CognitoUserPoolTokens) {
-            false
-        } else {
-            idToken == other.idToken && accessToken == other.accessToken && refreshToken == other.refreshToken
-        }
-    }
+    override fun toString(): String = "FederatedToken(" +
+        "token = ${token.mask()}, " +
+        "providerName = $providerName" +
+        ")"
 }
 
 /**
@@ -133,20 +99,18 @@ internal data class AWSCredentials(
     val accessKeyId: String?,
     val secretAccessKey: String?,
     val sessionToken: String?,
-    val expiration: Long?,
+    val expiration: Long?
 ) {
     companion object {
         val empty = AWSCredentials(null, null, null, 0)
     }
 
-    override fun toString(): String {
-        return "AWSCredentials(" +
-            "accessKeyId = ${accessKeyId?.substring(0..4)}***, " +
-            "secretAccessKey = ${secretAccessKey?.substring(0..4)}***, " +
-            "sessionToken = ${sessionToken?.substring(0..4)}***, " +
-            "expiration = $expiration" +
-            ")"
-    }
+    override fun toString(): String = "AWSCredentials(" +
+        "accessKeyId = ${accessKeyId.mask()}, " +
+        "secretAccessKey = ${secretAccessKey.mask()}, " +
+        "sessionToken = ${sessionToken.mask()}, " +
+        "expiration = $expiration" +
+        ")"
 }
 
 internal sealed class CredentialType {

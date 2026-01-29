@@ -30,6 +30,7 @@ internal sealed class SignInMethod {
             USER_SRP_AUTH,
             CUSTOM_AUTH,
             USER_PASSWORD_AUTH,
+            USER_AUTH,
             UNKNOWN
         }
     }

@@ -39,7 +39,7 @@ data class ObjectMetadata @JvmOverloads constructor(
     var expirationTime: Date? = null,
     var expirationTimeRuleId: String? = null,
     var ongoingRestore: Boolean? = false,
-    var restoreExpirationTime: Date? = null,
+    var restoreExpirationTime: Date? = null
 ) {
     companion object {
         const val CONTENT_TYPE = "Content-Type"

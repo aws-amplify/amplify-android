@@ -24,8 +24,11 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.InvalidPasswordExce
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UserNotFoundException
 import com.amplifyframework.auth.AuthException
-import com.amplifyframework.auth.cognito.featuretest.generators.authstategenerators.AuthStateJsonGenerator.dummyToken
+import com.amplifyframework.auth.cognito.featuretest.generators.authstategenerators.AuthStateJsonGenerator.DUMMY_TOKEN
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
+import com.amplifyframework.auth.cognito.usecases.SignInUseCase
+import com.amplifyframework.auth.cognito.usecases.SignOutUseCase
+import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.logging.Logger
@@ -36,6 +39,8 @@ import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
+import com.amplifyframework.statemachine.codegen.states.SignUpState
+import io.kotest.assertions.throwables.shouldThrow
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
@@ -66,18 +71,18 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-private const val configurationPath = "/feature-test/configuration/authconfiguration_oauth.json"
-private const val username1 = "username"
-private const val username2 = "username2"
-private const val password1 = "password"
-private const val password2 = "password2"
-private const val incorrectPassword = "wrong"
-private const val invalidUsername = "invalid"
-private const val userId = "userId"
+private const val CONFIGURATION_PATH = "/feature-test/configuration/authconfiguration_oauth.json"
+private const val USERNAME_1 = "username"
+private const val USERNAME_2 = "username2"
+private const val PASSWORD_1 = "password"
+private const val PASSWORD_2 = "password2"
+private const val INCORRECT_PASSWORD = "wrong"
+private const val INVALID_USERNAME = "invalid"
+private const val USER_ID = "userId"
 
 private val validLogins = mapOf(
-    username1 to password1,
-    username2 to password2
+    USERNAME_1 to PASSWORD_1,
+    USERNAME_2 to PASSWORD_2
 )
 
 /**
@@ -93,9 +98,9 @@ class AuthValidationTest {
     private val identityProviderClient = mockk<CognitoIdentityProviderClient>()
     private val hostedUIClient = mockk<HostedUIClient> {
         every { fetchToken(any()) } returns CognitoUserPoolTokens(
-            idToken = dummyToken,
-            accessToken = dummyToken,
-            refreshToken = dummyToken,
+            idToken = DUMMY_TOKEN,
+            accessToken = DUMMY_TOKEN,
+            refreshToken = DUMMY_TOKEN,
             expiration = 300
         )
         every { createSignOutUri() } returns mockk()
@@ -121,7 +126,8 @@ class AuthValidationTest {
         environment,
         initialState = AuthState.Configured(
             authNState = AuthenticationState.SignedOut(signedOutData = SignedOutData()),
-            authZState = AuthorizationState.Configured()
+            authZState = AuthorizationState.Configured(),
+            authSignUpState = SignUpState.NotStarted()
         )
     )
 
@@ -130,6 +136,15 @@ class AuthValidationTest {
         authEnvironment = environment,
         authStateMachine = stateMachine,
         logger = logger
+    )
+
+    private val signInUseCase = SignInUseCase(
+        stateMachine = stateMachine,
+        configuration = configuration
+    )
+
+    private val signOutUseCase = SignOutUseCase(
+        stateMachine = stateMachine
     )
 
     private val mainThreadSurrogate = newSingleThreadContext("Main thread")
@@ -161,51 +176,54 @@ class AuthValidationTest {
     // Expected: Sign in and sign out successful
     @Test
     fun `SRP sign in existing user with correct password, SRP sign out`() {
-        signIn(username1, password1)
-        assertSignedInAs(username1)
+        signIn(USERNAME_1, PASSWORD_1)
+        assertSignedInAs(USERNAME_1)
         signOut()
         assertSignedOut()
     }
 
     // SRP 2
     // Expected: Sign in with incorrect password fails
+    @Suppress("ktlint:standard:max-line-length")
     @Test
-    fun `SRP sign in existing user with correct password, SRP sign out, SRP sign in same user with incorrect password`() { // ktlint-disable max-line-length
-        signIn(username1, password1)
+    fun `SRP sign in existing user with correct password, SRP sign out, SRP sign in same user with incorrect password`() {
+        signIn(USERNAME_1, PASSWORD_1)
         signOut()
         assertSignedOut()
-        assertFails { signIn(username1, incorrectPassword) }
+        assertFails { signIn(USERNAME_1, INCORRECT_PASSWORD) }
     }
 
     // SPR 3
     // Expected: Each action is successful
+    @Suppress("ktlint:standard:max-line-length")
     @Test
-    fun `SRP sign in existing user with correct password, SRP sign out, SRP sign in different user with correct password`() { // ktlint-disable max-line-length
-        signIn(username1, password1)
+    fun `SRP sign in existing user with correct password, SRP sign out, SRP sign in different user with correct password`() {
+        signIn(USERNAME_1, PASSWORD_1)
         signOut()
         assertSignedOut()
-        signIn(username2, password2)
-        assertSignedInAs(username2)
+        signIn(USERNAME_2, PASSWORD_2)
+        assertSignedInAs(USERNAME_2)
     }
 
     // SPR 4
     // Expected: Sign in with incorrect password fails
+    @Suppress("ktlint:standard:max-line-length")
     @Test
-    fun `SRP sign in existing user with correct password, SRP sign out, SRP sign in different user with incorrect password`() { // ktlint-disable max-line-length
-        signIn(username1, password1)
+    fun `SRP sign in existing user with correct password, SRP sign out, SRP sign in different user with incorrect password`() {
+        signIn(USERNAME_1, PASSWORD_1)
         signOut()
         assertSignedOut()
-        assertFails { signIn(username2, incorrectPassword) }
+        shouldThrow<InvalidPasswordException> { signIn(USERNAME_2, INCORRECT_PASSWORD) }
     }
 
     // SPR 5
     // Expected: Sign in with non-existent user fails
     @Test
     fun `SRP sign in existing user with correct password, SRP sign out, SRP sign in non-existent user`() {
-        signIn(username1, password1)
+        signIn(USERNAME_1, PASSWORD_1)
         signOut()
         assertSignedOut()
-        assertFails { signIn(invalidUsername, password1) }
+        shouldThrow<UserNotFoundException> { signIn(INVALID_USERNAME, PASSWORD_1) }
     }
 
 //endregion
@@ -239,9 +257,9 @@ class AuthValidationTest {
     // Expected: SRP sign in succeeded, Hosted UI sign in fails, user is still signed in
     @Test
     fun `SRP sign in existing user with correct password, Hosted UI sign in`() {
-        signIn(username1, password1)
-        assertFails { signInHostedUi() }
-        assertSignedInAs(username1)
+        signIn(USERNAME_1, PASSWORD_1)
+        shouldThrow<InvalidStateException> { signInHostedUi() }
+        assertSignedInAs(USERNAME_1)
     }
 
     // SRP/Hosted 2
@@ -249,8 +267,8 @@ class AuthValidationTest {
     @Test
     fun `Hosted UI sign in, SRP sign in existing user with correct password`() {
         signInHostedUi()
-        assertFails { signIn(username1, password1) }
-        assertSignedInAs(username1)
+        shouldThrow<InvalidStateException> { signIn(USERNAME_1, PASSWORD_1) }
+        assertSignedInAs(USERNAME_1)
     }
 
     // SRP/Hosted 3
@@ -258,8 +276,8 @@ class AuthValidationTest {
     @Test
     fun `Hosted UI sign in, SRP sign in existing user with incorrect password`() {
         signInHostedUi()
-        assertFails { signIn(username1, incorrectPassword) }
-        assertSignedInAs(username1)
+        shouldThrow<InvalidStateException> { signIn(USERNAME_1, INCORRECT_PASSWORD) }
+        assertSignedInAs(USERNAME_1)
     }
 
     // SRP/Hosted 4
@@ -267,17 +285,17 @@ class AuthValidationTest {
     @Test
     fun `Hosted UI sign in, SRP sign in non-existent user`() {
         signInHostedUi()
-        assertFails { signIn(invalidUsername, password1) }
+        shouldThrow<InvalidStateException> { signIn(INVALID_USERNAME, PASSWORD_1) }
     }
 
     // SRP/Hosted 5
     // Expected: Each action is successful
     @Test
     fun `SRP sign in existing user with correct password, SRP sign out, Hosted UI sign in`() {
-        signIn(username1, password1)
+        signIn(USERNAME_1, PASSWORD_1)
         signOut()
         signInHostedUi()
-        assertSignedInAs(username1)
+        assertSignedInAs(USERNAME_1)
     }
 
     // SRP/Hosted 6
@@ -286,8 +304,8 @@ class AuthValidationTest {
     fun `Hosted UI sign in, Hosted UI sign out, SRP sign in existing user with correct password`() {
         signInHostedUi()
         signOutHostedUi()
-        signIn(username1, password1)
-        assertSignedInAs(username1)
+        signIn(USERNAME_1, PASSWORD_1)
+        assertSignedInAs(USERNAME_1)
     }
 
     // SRP/Hosted 7
@@ -296,7 +314,7 @@ class AuthValidationTest {
     fun `Hosted UI sign in, Hosted UI sign out, SRP sign in existing user with incorrect password`() {
         signInHostedUi()
         signOutHostedUi()
-        assertFails { signIn(username1, incorrectPassword) }
+        shouldThrow<InvalidPasswordException> { signIn(USERNAME_1, INCORRECT_PASSWORD) }
     }
 
     // SRP/Hosted 8
@@ -305,120 +323,130 @@ class AuthValidationTest {
     fun `Hosted UI sign in, Hosted UI sign out, SRP sign in non-existent user`() {
         signInHostedUi()
         signOutHostedUi()
-        assertFails { signIn(invalidUsername, password1) }
+        shouldThrow<UserNotFoundException> { signIn(INVALID_USERNAME, PASSWORD_1) }
     }
 
     // SRP/Hosted 9
     // Expected: Each action is successful
+    @Suppress("ktlint:standard:max-line-length")
     @Test
-    fun `Hosted UI sign in, Hosted UI sign out, SRP sign in existing user with correct password, SRP sign out, SRP sign in same user with correct password`() { // ktlint-disable max-line-length
+    fun `Hosted UI sign in, Hosted UI sign out, SRP sign in existing user with correct password, SRP sign out, SRP sign in same user with correct password`() {
         signInHostedUi()
         signOutHostedUi()
-        signIn(username1, password1)
+        signIn(USERNAME_1, PASSWORD_1)
         signOut()
-        signIn(username1, password1)
-        assertSignedInAs(username1)
+        signIn(USERNAME_1, PASSWORD_1)
+        assertSignedInAs(USERNAME_1)
     }
 
     // SRP/Hosted 10
     // Expected: SRP sign in with incorrect password fails
+    @Suppress("ktlint:standard:max-line-length")
     @Test
-    fun `Hosted UI sign in, Hosted UI sign out, SRP sign in existing user with correct password, SRP sign out, SRP sign in same user with incorrect password`() { // ktlint-disable max-line-length
+    fun `Hosted UI sign in, Hosted UI sign out, SRP sign in existing user with correct password, SRP sign out, SRP sign in same user with incorrect password`() {
         signInHostedUi()
         signOutHostedUi()
-        signIn(username1, password1)
+        signIn(USERNAME_1, PASSWORD_1)
         signOut()
-        assertFails { signIn(username1, incorrectPassword) }
+        shouldThrow<InvalidPasswordException> { signIn(USERNAME_1, INCORRECT_PASSWORD) }
     }
 
     // SRP/Hosted 11
     // Expected: Each action is successful
+    @Suppress("ktlint:standard:max-line-length")
     @Test
-    fun `Hosted UI sign in, Hosted UI sign out, SRP sign in existing user with correct password, SRP sign out, SRP sign in different user with correct password`() { // ktlint-disable max-line-length
+    fun `Hosted UI sign in, Hosted UI sign out, SRP sign in existing user with correct password, SRP sign out, SRP sign in different user with correct password`() {
         signInHostedUi()
         signOutHostedUi()
-        signIn(username1, password1)
+        signIn(USERNAME_1, PASSWORD_1)
         signOut()
         assertSignedOut()
-        signIn(username2, password2)
-        assertSignedInAs(username2)
+        signIn(USERNAME_2, PASSWORD_2)
+        assertSignedInAs(USERNAME_2)
     }
 
     // SRP/Hosted 12
     // Expected: SRP sign in different user with incorrect password fails
+    @Suppress("ktlint:standard:max-line-length")
     @Test
-    fun `Hosted UI sign in, Hosted UI sign out, SRP sign in existing user with correct password, SRP sign out, SRP sign in different user with incorrect password`() { // ktlint-disable max-line-length
+    fun `Hosted UI sign in, Hosted UI sign out, SRP sign in existing user with correct password, SRP sign out, SRP sign in different user with incorrect password`() {
         signInHostedUi()
         signOutHostedUi()
-        signIn(username1, password1)
+        signIn(USERNAME_1, PASSWORD_1)
         signOut()
-        assertFails { signIn(username2, incorrectPassword) }
+        shouldThrow<InvalidPasswordException> { signIn(USERNAME_2, INCORRECT_PASSWORD) }
     }
 
     // SRP/Hosted 13
     // Expected: SRP sign in with non-existent user fails
+    @Suppress("ktlint:standard:max-line-length")
     @Test
-    fun `Hosted UI sign in, Hosted UI sign out, SRP sign in existing user with correct password, SRP sign out, SRP sign in non-existent user`() { // ktlint-disable max-line-length
+    fun `Hosted UI sign in, Hosted UI sign out, SRP sign in existing user with correct password, SRP sign out, SRP sign in non-existent user`() {
         signInHostedUi()
         signOutHostedUi()
-        signIn(username1, password1)
+        signIn(USERNAME_1, PASSWORD_1)
         signOut()
-        assertFails { signIn(invalidUsername, password1) }
+        shouldThrow<UserNotFoundException> { signIn(INVALID_USERNAME, PASSWORD_1) }
     }
 
     // SRP/Hosted 14
     // Expected: Each action is successful
+    @Suppress("ktlint:standard:max-line-length")
     @Test
-    fun ` SRP sign in existing user with correct password, SRP sign out, Hosted UI sign in, Hosted UI sign out, SRP sign in same user with correct password`() { // ktlint-disable max-line-length
-        signIn(username1, password1)
+    fun ` SRP sign in existing user with correct password, SRP sign out, Hosted UI sign in, Hosted UI sign out, SRP sign in same user with correct password`() {
+        signIn(USERNAME_1, PASSWORD_1)
         signOut()
         signInHostedUi()
         signOutHostedUi()
-        signIn(username1, password1)
+        signIn(USERNAME_1, PASSWORD_1)
     }
 
     // SRP/Hosted 15
     // Expected: Last SRP sign in with incorrect password fails
+    @Suppress("ktlint:standard:max-line-length")
     @Test
-    fun `SRP sign in existing user with correct password, SRP sign out, Hosted UI sign in, Hosted UI sign out, SRP sign in same user with incorrect password`() { // ktlint-disable max-line-length
-        signIn(username1, password1)
+    fun `SRP sign in existing user with correct password, SRP sign out, Hosted UI sign in, Hosted UI sign out, SRP sign in same user with incorrect password`() {
+        signIn(USERNAME_1, PASSWORD_1)
         signOut()
         signInHostedUi()
         signOutHostedUi()
-        assertFails { signIn(username1, incorrectPassword) }
+        shouldThrow<InvalidPasswordException> { signIn(USERNAME_1, INCORRECT_PASSWORD) }
     }
 
     // SRP/Hosted 16
     // Expected: Each action is successful
+    @Suppress("ktlint:standard:max-line-length")
     @Test
-    fun `SRP sign in existing user with correct password, SRP sign out, Hosted UI sign in, Hosted UI sign out, SRP sign in different user with correct password`() { // ktlint-disable max-line-length
-        signIn(username1, password1)
+    fun `SRP sign in existing user with correct password, SRP sign out, Hosted UI sign in, Hosted UI sign out, SRP sign in different user with correct password`() {
+        signIn(USERNAME_1, PASSWORD_1)
         signOut()
         signInHostedUi()
         signOutHostedUi()
-        signIn(username2, password2)
+        signIn(USERNAME_2, PASSWORD_2)
     }
 
     // SRP/Hosted 17
     // Expected: Last SRP sign in with incorrect password fails
+    @Suppress("ktlint:standard:max-line-length")
     @Test
-    fun `SRP sign in existing user with correct password, SRP sign out, Hosted UI sign in, Hosted UI sign out, SRP sign in different user with incorrect password`() { // ktlint-disable max-line-length
-        signIn(username1, password1)
+    fun `SRP sign in existing user with correct password, SRP sign out, Hosted UI sign in, Hosted UI sign out, SRP sign in different user with incorrect password`() {
+        signIn(USERNAME_1, PASSWORD_1)
         signOut()
         signInHostedUi()
         signOutHostedUi()
-        assertFails { signIn(username2, incorrectPassword) }
+        shouldThrow<InvalidPasswordException> { signIn(USERNAME_2, INCORRECT_PASSWORD) }
     }
 
     // SRP/Hosted 18
     // Expected: SRP sign in with non-existent user fails
+    @Suppress("ktlint:standard:max-line-length")
     @Test
-    fun `SRP sign in existing user with correct password, SRP sign out, Hosted UI sign in, Hosted UI sign out, SRP sign in non-existent user`() { // ktlint-disable max-line-length
-        signIn(username1, password1)
+    fun `SRP sign in existing user with correct password, SRP sign out, Hosted UI sign in, Hosted UI sign out, SRP sign in non-existent user`() {
+        signIn(USERNAME_1, PASSWORD_1)
         signOut()
         signInHostedUi()
         signOutHostedUi()
-        assertFails { signIn(invalidUsername, password1) }
+        shouldThrow<UserNotFoundException> { signIn(INVALID_USERNAME, PASSWORD_1) }
     }
 
 //endregion
@@ -433,14 +461,12 @@ class AuthValidationTest {
             setupMockResponseForSuccessfulSrp(username)
         }
 
-        return blockForResult { success, error ->
-            plugin.signIn(username, password, success, error)
+        return runBlocking {
+            signInUseCase.execute(username, password)
         }
     }
 
-    private fun signOut() = blockForResult { complete ->
-        plugin.signOut(complete)
-    }
+    private fun signOut() = runBlocking { withTimeout(100000L) { signOutUseCase.execute() } }
 
     private fun signInHostedUi(): AuthSignInResult {
         every { hostedUIClient.launchCustomTabsSignIn(any()) } answers {
@@ -455,9 +481,7 @@ class AuthValidationTest {
         }
     }
 
-    private fun signOutHostedUi() = blockForResult { complete ->
-        plugin.signOut(complete)
-    }
+    private fun signOutHostedUi() = signOut()
 
     private fun assertSignedOut() {
         val result = blockForResult { continuation -> stateMachine.getCurrentState { continuation.accept(it) } }
@@ -481,10 +505,8 @@ class AuthValidationTest {
         )
     }
 
-    private fun <T> blockForResult(
-        timeoutMillis: Long = 100000,
-        function: (complete: Consumer<T>) -> Unit
-    ): T = runBlockingWithTimeout(timeoutMillis) { continuation -> function { continuation.resume(it) } }
+    private fun <T> blockForResult(timeoutMillis: Long = 100000, function: (complete: Consumer<T>) -> Unit): T =
+        runBlockingWithTimeout(timeoutMillis) { continuation -> function { continuation.resume(it) } }
 
     // Helper that runs the supplied function in a coroutine, blocking the thread until the continuation is invoked or
     // the timeout is reached
@@ -512,7 +534,7 @@ class AuthValidationTest {
 
     private fun loadConfiguration(): AuthConfiguration {
         val configFileUrl =
-            this::class.java.getResource(configurationPath)
+            this::class.java.getResource(CONFIGURATION_PATH)
         val configJSONObject =
             JSONObject(File(configFileUrl!!.file).readText())
                 .getJSONObject("auth")
@@ -522,52 +544,25 @@ class AuthValidationTest {
     }
 
     private fun mockInitiateAuthSuccessResponse(username: String) = mockk<InitiateAuthResponse> {
+        every { authenticationResult } returns null
         every { challengeName } returns ChallengeNameType.PasswordVerifier
         every { challengeParameters } returns mapOf(
             "SALT" to "abc",
             "SECRET_BLOCK" to "secretBlock",
             "SRP_B" to "def",
             "USERNAME" to username,
-            "USER_ID_FOR_SRP" to userId
+            "USER_ID_FOR_SRP" to USER_ID
         )
         every { session } returns "session"
     }
 
     private val mockRespondToAuthChallengeSuccessResponse = mockk<RespondToAuthChallengeResponse>(relaxed = true) {
         every { authenticationResult } returns mockk {
-            every { idToken } returns dummyToken
-            every { accessToken } returns dummyToken
-            every { refreshToken } returns dummyToken
+            every { idToken } returns DUMMY_TOKEN
+            every { accessToken } returns DUMMY_TOKEN
+            every { refreshToken } returns DUMMY_TOKEN
             every { expiresIn } returns 300
             every { newDeviceMetadata } returns null
         }
-    }
-
-    @Test
-    fun `test getActiveUsername returns correct username when active and userIDforSRP is null`() {
-        val username = AuthHelper.getActiveUsername("username", null, null)
-        assertEquals(username, "username")
-    }
-
-    @Test
-    fun `getActiveUsername returns correct username when userIDforSRP is null & alternate is same as username`() {
-        val username = AuthHelper.getActiveUsername("username", "username", null)
-        assertEquals(username, "username")
-    }
-
-    @Test
-    fun `getActiveUsername returns correct username when userIDforSRP is null & alternate is different as username`() {
-        val username = AuthHelper.getActiveUsername(
-            "username", "userID12322", null
-        )
-        assertEquals(username, "userID12322")
-    }
-
-    @Test
-    fun `test getActiveUsername returns correct username when userIDforSRP is not null null and alternate is null`() {
-        val username = AuthHelper.getActiveUsername(
-            "username", null, "userID12322"
-        )
-        assertEquals(username, "userID12322")
     }
 }

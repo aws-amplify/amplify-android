@@ -15,6 +15,7 @@
 package com.amplifyframework.storage.s3.extensions
 
 import com.amplifyframework.storage.StorageException
+import com.amplifyframework.storage.StorageFilePermissionException
 import com.amplifyframework.storage.StoragePathValidationException
 
 internal fun StoragePathValidationException.Companion.invalidStoragePathException() = StorageException(
@@ -30,4 +31,13 @@ internal fun StoragePathValidationException.Companion.unsupportedStoragePathExce
         "Provided StoragePath not supported by AWS S3 Storage Plugin"
     ),
     "Provided StoragePath not supported by AWS S3 Storage Plugin"
+)
+
+internal fun StorageFilePermissionException.Companion.unableToOverwriteFileException() = StorageException(
+    "Unable to overwrite this file for download.",
+    StorageFilePermissionException(
+        "Unable to overwrite this file for download.",
+        "Acquire write permission for this file before attempting to overwrite it."
+    ),
+    "Acquire write permission for this file before attempting to overwrite it."
 )

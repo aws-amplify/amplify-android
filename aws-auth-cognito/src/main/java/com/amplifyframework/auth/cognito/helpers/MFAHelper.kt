@@ -15,9 +15,12 @@
 
 package com.amplifyframework.auth.cognito.helpers
 
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import com.amplifyframework.auth.MFAType
 import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
+import com.amplifyframework.statemachine.codegen.data.ChallengeParameter
+import com.amplifyframework.statemachine.codegen.data.challengeNameType
 
 @Throws(IllegalArgumentException::class)
 internal fun getMFAType(value: String) = when (value) {
@@ -48,15 +51,15 @@ internal val MFAType.value: String
     }
 
 internal fun isMfaSetupSelectionChallenge(challenge: AuthChallenge) =
-    challenge.challengeName == "MFA_SETUP" &&
+    challenge.challengeNameType == ChallengeNameType.MfaSetup &&
         getAllowedMFASetupTypesFromChallengeParameters(challenge.parameters).size > 1
 
 internal fun isEmailMfaSetupChallenge(challenge: AuthChallenge) =
-    challenge.challengeName == "MFA_SETUP" &&
+    challenge.challengeNameType == ChallengeNameType.MfaSetup &&
         getAllowedMFASetupTypesFromChallengeParameters(challenge.parameters) == setOf(MFAType.EMAIL)
 
 internal fun getAllowedMFATypesFromChallengeParameters(challengeParameters: Map<String, String>?): Set<MFAType> {
-    val mfasCanChoose = challengeParameters?.get("MFAS_CAN_CHOOSE") ?: return emptySet()
+    val mfasCanChoose = challengeParameters?.get(ChallengeParameter.MfasCanChoose.key) ?: return emptySet()
     val result = mutableSetOf<MFAType>()
     mfasCanChoose.replace(Regex("\\[|\\]|\""), "").split(",").forEach {
         when (it) {
@@ -71,7 +74,7 @@ internal fun getAllowedMFATypesFromChallengeParameters(challengeParameters: Map<
 
 // We exclude SMS as a setup type
 internal fun getAllowedMFASetupTypesFromChallengeParameters(challengeParameters: Map<String, String>?): Set<MFAType> {
-    val mfasCanSetup = challengeParameters?.get("MFAS_CAN_SETUP") ?: return emptySet()
+    val mfasCanSetup = challengeParameters?.get(ChallengeParameter.MfasCanSetup.key) ?: return emptySet()
 
     val result = mutableSetOf<MFAType>()
     mfasCanSetup.replace(Regex("\\[|\\]|\""), "").split(",").forEach {

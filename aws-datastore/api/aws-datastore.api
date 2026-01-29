@@ -59,6 +59,7 @@ public final class com/amplifyframework/datastore/DataStoreConfiguration {
 	public fun getConflictHandler ()Lcom/amplifyframework/datastore/DataStoreConflictHandler;
 	public fun getDoSyncRetry ()Ljava/lang/Boolean;
 	public fun getErrorHandler ()Lcom/amplifyframework/datastore/DataStoreErrorHandler;
+	public fun getLocalStorageThreadPoolSize ()I
 	public fun getMaxTimeLapseForObserveQuery ()Ljava/lang/Long;
 	public fun getObserveQueryMaxRecords ()Ljava/lang/Integer;
 	public fun getSyncExpressions ()Ljava/util/Map;
@@ -76,6 +77,7 @@ public final class com/amplifyframework/datastore/DataStoreConfiguration$Builder
 	public fun conflictHandler (Lcom/amplifyframework/datastore/DataStoreConflictHandler;)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
 	public fun doSyncRetry (Z)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
 	public fun errorHandler (Lcom/amplifyframework/datastore/DataStoreErrorHandler;)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
+	public fun localStorageThreadPoolSize (I)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
 	public fun observeQueryMaxRecords (Ljava/lang/Integer;)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
 	public fun observeQueryMaxTime (J)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
 	public fun syncExpression (Ljava/lang/Class;Lcom/amplifyframework/datastore/DataStoreSyncExpression;)Lcom/amplifyframework/datastore/DataStoreConfiguration$Builder;
@@ -502,7 +504,6 @@ public abstract interface class com/amplifyframework/datastore/syncengine/Connec
 }
 
 public final class com/amplifyframework/datastore/syncengine/LastSyncMetadata : com/amplifyframework/core/model/Model {
-	public static fun baseSyncedAt (Ljava/lang/String;J)Lcom/amplifyframework/datastore/syncengine/LastSyncMetadata;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getId ()Ljava/lang/String;
 	public fun getLastSyncTime ()Ljava/lang/Long;

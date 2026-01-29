@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito.featuretest.generators
 
 import aws.sdk.kotlin.services.cognitoidentity.model.CognitoIdentityException
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CognitoIdentityProviderException
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.AuthException
@@ -27,6 +28,7 @@ import com.amplifyframework.auth.cognito.featuretest.serializers.serialize
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.result.AuthSessionResult
 import com.amplifyframework.statemachine.codegen.states.AuthState
+import com.amplifyframework.statemachine.codegen.states.SignUpState
 import com.google.gson.Gson
 import java.io.BufferedWriter
 import java.io.File
@@ -43,10 +45,10 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
-const val basePath = "src/test/resources/feature-test"
+const val BASE_PATH = "src/test/resources/feature-test"
 
 fun writeFile(json: String, dirName: String, fileName: String) {
-    val directory = File("$basePath/$dirName")
+    val directory = File("$BASE_PATH/$dirName")
     directory.mkdirs()
     val filePath = "${directory.path}/$fileName"
 
@@ -57,7 +59,7 @@ fun writeFile(json: String, dirName: String, fileName: String) {
 }
 
 fun cleanDirectory() {
-    val directory = File(basePath)
+    val directory = File(BASE_PATH)
     if (directory.exists()) {
         directory.deleteRecursively()
     }
@@ -81,7 +83,15 @@ internal fun AuthState.exportJson() {
     val reverse = result.deserializeToAuthState()
 
     val dirName = "states"
-    val fileName = "${authNState?.javaClass?.simpleName}_${authZState?.javaClass?.simpleName}.json"
+    val signUpState = authSignUpState?.let { signUpState ->
+        if (signUpState !is SignUpState.NotStarted) {
+            "_${signUpState.javaClass.simpleName}"
+        } else {
+            ""
+        }
+    } ?: ""
+    val fileName = "${authNState?.javaClass?.simpleName}_${authZState?.javaClass?.simpleName}$signUpState.json"
+
     writeFile(result, dirName, fileName)
     println("Json exported:\n $result")
     println("Serialized can be reversed = ${reverse.serialize() == result}")
@@ -114,8 +124,11 @@ internal fun List<FeatureTestCase>.exportToMd() {
                     newLine()
                     write("- **Mock Responses:** ")
                     printCodeBlock {
-                        if (it.preConditions.mockedResponses.isEmpty()) "[]" else
+                        if (it.preConditions.mockedResponses.isEmpty()) {
+                            "[]"
+                        } else {
                             jsonFormat.encodeToString(it.preConditions.mockedResponses)
+                        }
                     }
 
                     // Parameters (WHEN)
@@ -164,25 +177,24 @@ fun Map<*, *>.toJsonElement(): JsonElement {
 
 fun Collection<*>.toJsonElement(): JsonElement = JsonArray(mapNotNull { it.toJsonElement() })
 
-fun Any?.toJsonElement(): JsonElement {
-    return when (this) {
-        null -> JsonNull
-        is Map<*, *> -> toJsonElement()
-        is Collection<*> -> toJsonElement()
-        is Boolean -> JsonPrimitive(this)
-        is Number -> JsonPrimitive(this)
-        is String -> JsonPrimitive(this)
-        is Instant -> JsonPrimitive(this.epochSeconds)
-        is AuthException -> toJsonElement()
-        is AWSCognitoAuthSignInOptions -> toJsonElement()
-        is CognitoIdentityProviderException -> Json.encodeToJsonElement(
-            CognitoIdentityProviderExceptionSerializer,
-            this
-        )
-        is AuthSessionResult<*> -> toJsonElement()
-        is CognitoIdentityException -> Json.encodeToJsonElement(CognitoIdentityExceptionSerializer, this)
-        else -> gsonBasedSerializer(this)
-    }
+fun Any?.toJsonElement(): JsonElement = when (this) {
+    null -> JsonNull
+    is Map<*, *> -> toJsonElement()
+    is Collection<*> -> toJsonElement()
+    is Boolean -> JsonPrimitive(this)
+    is Number -> JsonPrimitive(this)
+    is String -> JsonPrimitive(this)
+    is Instant -> JsonPrimitive(this.epochSeconds)
+    is AuthException -> toJsonElement()
+    is AWSCognitoAuthSignInOptions -> toJsonElement()
+    is CognitoIdentityProviderException -> Json.encodeToJsonElement(
+        CognitoIdentityProviderExceptionSerializer,
+        this
+    )
+    is AuthFlowType -> this.value.toJsonElement()
+    is AuthSessionResult<*> -> toJsonElement()
+    is CognitoIdentityException -> Json.encodeToJsonElement(CognitoIdentityExceptionSerializer, this)
+    else -> gsonBasedSerializer(this)
 }
 
 fun AuthException.toJsonElement(): JsonElement {
@@ -196,9 +208,8 @@ fun AuthException.toJsonElement(): JsonElement {
     return responseMap.toJsonElement()
 }
 
-fun AuthSessionResult<*>.toJsonElement(): JsonElement {
-    return (if (type == AuthSessionResult.Type.SUCCESS) value else error).toJsonElement()
-}
+fun AuthSessionResult<*>.toJsonElement(): JsonElement =
+    (if (type == AuthSessionResult.Type.SUCCESS) value else error).toJsonElement()
 
 /**
  * Uses Gson to convert objects which cannot be serialized,
@@ -218,10 +229,8 @@ fun gsonBasedSerializer(value: Any): JsonElement {
  * Note that this method is similar to what Gson does. But Gson fails when there is name collision in parent and child
  * classes.
  */
-fun reflectionBasedSerializer(value: Any): JsonElement {
-    return (value::class as KClass<*>).declaredMemberProperties.filter {
-        it.visibility == KVisibility.PUBLIC
-    }.associate {
-        it.name to it.getter.call(value)
-    }.toMap().toJsonElement()
-}
+fun reflectionBasedSerializer(value: Any): JsonElement = (value::class as KClass<*>).declaredMemberProperties.filter {
+    it.visibility == KVisibility.PUBLIC
+}.associate {
+    it.name to it.getter.call(value)
+}.toMap().toJsonElement()

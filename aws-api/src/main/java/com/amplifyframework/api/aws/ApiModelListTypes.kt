@@ -32,14 +32,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-internal class ApiLoadedModelList<out M : Model>(
-    override val items: List<M>
-) : LoadedModelList<M>
+internal class ApiLoadedModelList<out M : Model>(override val items: List<M>) : LoadedModelList<M>
 
-internal class ApiModelPage<out M : Model>(
-    override val items: List<M>,
-    override val nextToken: ApiPaginationToken?
-) : ModelPage<M>
+internal class ApiModelPage<out M : Model>(override val items: List<M>, override val nextToken: ApiPaginationToken?) :
+    ModelPage<M>
 
 internal class ApiPaginationToken(val nextToken: String) : PaginationToken
 
@@ -90,13 +86,12 @@ internal class ApiLazyModelList<out M : Model> constructor(
         }
     }
 
-    private fun createRequest(paginationToken: PaginationToken? = null): GraphQLRequest<ModelPage<M>> {
-        return AppSyncGraphQLRequestFactory.buildModelPageQuery(
+    private fun createRequest(paginationToken: PaginationToken? = null): GraphQLRequest<ModelPage<M>> =
+        AppSyncGraphQLRequestFactory.buildModelPageQuery(
             clazz,
             queryPredicate,
             (paginationToken as? ApiPaginationToken)?.nextToken
         )
-    }
 
     private fun createLazyException(exception: AmplifyException) =
         AmplifyException("Error lazy loading the model list.", exception, exception.message ?: "")

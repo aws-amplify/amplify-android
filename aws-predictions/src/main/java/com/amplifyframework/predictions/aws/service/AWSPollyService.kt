@@ -27,6 +27,7 @@ import com.amplifyframework.predictions.PredictionsException
 import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration
 import com.amplifyframework.predictions.aws.models.AWSVoiceType
 import com.amplifyframework.predictions.result.TextToSpeechResult
+import com.amplifyframework.util.setHttpEngine
 import java.io.InputStream
 import java.util.concurrent.Executors
 import kotlinx.coroutines.runBlocking
@@ -40,6 +41,7 @@ internal class AWSPollyService(
 ) {
     val client: PollyClient = AmazonPollyPresigningClient(
         PollyClient {
+            setHttpEngine()
             this.region = pluginConfiguration.defaultRegion
             this.credentialsProvider = authCredentialsProvider
         }

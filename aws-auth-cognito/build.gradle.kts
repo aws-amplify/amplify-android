@@ -14,18 +14,18 @@
  */
 
 plugins {
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.10"
-    id("com.android.library")
-    id("kotlin-android")
+    alias(libs.plugins.amplify.android.library)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.amplify.publishing)
 }
 
-apply(from = rootProject.file("configuration/publishing.gradle"))
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
-
-group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.auth.cognito"
+    defaultConfig {
+        consumerProguardFiles += file("consumer-rules.pro")
+    }
 }
 
 dependencies {
@@ -37,6 +37,8 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.security)
     implementation(libs.androidx.browser)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services)
 
     implementation(libs.aws.http)
     implementation(libs.aws.cognitoidentity)
@@ -61,6 +63,7 @@ dependencies {
     testImplementation(libs.test.kotlin.reflection)
     testImplementation(libs.test.kotest.assertions)
     testImplementation(libs.test.kotest.assertions.json)
+    testImplementation(libs.test.turbine)
 
     androidTestImplementation(libs.gson)
     //noinspection GradleDependency
@@ -70,12 +73,9 @@ dependencies {
     androidTestImplementation(libs.test.kotlin.coroutines)
     androidTestImplementation(libs.test.kotlin.kotlinTest)
     androidTestImplementation(libs.test.totp)
+    androidTestImplementation(libs.test.kotest.assertions)
 
     androidTestImplementation(project(":aws-api"))
     androidTestImplementation(project(":aws-api-appsync"))
     androidTestImplementation(project(":testutils"))
-}
-
-android.kotlinOptions {
-    jvmTarget = "11"
 }

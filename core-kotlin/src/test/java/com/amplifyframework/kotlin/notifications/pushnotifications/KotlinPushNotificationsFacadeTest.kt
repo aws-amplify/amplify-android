@@ -252,7 +252,7 @@ class KotlinPushNotificationsFacadeTest {
     fun shouldHandleNotificationReturns() {
         every {
             pushDelegate.shouldHandleNotification(eq(payload))
-        } returns(true)
+        } returns (true)
 
         push.shouldHandleNotification(payload)
         verify {

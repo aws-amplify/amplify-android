@@ -14,15 +14,12 @@
  */
 
 plugins {
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.10"
-    id("com.android.library")
-    id("kotlin-android")
+    alias(libs.plugins.amplify.android.library)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.amplify.publishing)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
-apply(from = rootProject.file("configuration/publishing.gradle"))
-
-group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.analytics.pinpoint"
@@ -56,8 +53,4 @@ dependencies {
     androidTestImplementation(libs.test.kotlin.coroutines)
     androidTestImplementation(libs.test.androidx.junit)
     androidTestImplementation(project(":aws-analytics-pinpoint"))
-}
-
-android.kotlinOptions {
-    jvmTarget = "11"
 }

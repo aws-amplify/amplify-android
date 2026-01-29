@@ -16,6 +16,7 @@
 package com.amplifyframework.statemachine.codegen.actions
 
 import com.amplifyframework.statemachine.Action
+import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.events.SRPEvent
 
 internal interface SRPActions {
@@ -24,6 +25,7 @@ internal interface SRPActions {
     fun verifyPasswordSRPAction(
         challengeParameters: Map<String, String>,
         metadata: Map<String, String>,
-        session: String?
+        session: String?,
+        signInMethod: SignInMethod
     ): Action
 }

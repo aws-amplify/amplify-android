@@ -9,6 +9,7 @@ on:
         options:
           - AmplifyAndroid
           - ApolloExtensions
+          - AppSyncEvents
       release_tag:
         description: 'Previous Release Tag'
         required: false
@@ -17,6 +18,10 @@ env:
   GIT_USER_NAME: amplify-android-dev+ghops
   GIT_USER_EMAIL: amplify-android-dev+ghops@amazon.com
   BASE_BRANCH: ${{ github.ref_name }}
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   create_pr_for_next_release:
     runs-on: ubuntu-latest
@@ -31,7 +36,7 @@ jobs:
         ref: ${{ env.BASE_BRANCH }}
         fetch-depth: 0
     - name: Set up Ruby
-      uses: ruby/setup-ruby@8575951200e472d5f2d95c625da0c7bec8217c42 # v1.161.0
+      uses: ruby/setup-ruby@32110d4e311bd8996b2a82bf2a43b714ccc91777 # v1.221.0
       with:
         ruby-version: "3.0"
     - name: Install dependencies

@@ -35,6 +35,8 @@ import com.amplifyframework.logging.cloudwatch.db.CloudWatchLoggingDatabase
 import com.amplifyframework.logging.cloudwatch.db.LogEvent
 import com.amplifyframework.logging.cloudwatch.models.AWSCloudWatchLoggingPluginConfiguration
 import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
+import com.amplifyframework.logging.cloudwatch.models.LogStreamContext
+import com.amplifyframework.logging.cloudwatch.models.LogStreamNameFormatter
 import com.amplifyframework.logging.cloudwatch.worker.CloudwatchLogsSyncWorker
 import com.amplifyframework.logging.cloudwatch.worker.CloudwatchRouterWorker
 import java.text.SimpleDateFormat
@@ -57,7 +59,8 @@ internal class CloudWatchLogManager(
     private val loggingConstraintsResolver: LoggingConstraintsResolver,
     private val cloudWatchLoggingDatabase: CloudWatchLoggingDatabase = CloudWatchLoggingDatabase(context),
     private val customCognitoCredentialsProvider: CustomCognitoCredentialsProvider = CustomCognitoCredentialsProvider(),
-    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val logStreamNameFormatter: LogStreamNameFormatter? = null
 ) {
     private val deviceIdKey = "unique_device_id"
     private var stopSync = false
@@ -117,7 +120,14 @@ internal class CloudWatchLogManager(
                         if (queriedEvents.isEmpty()) break
                         while (queriedEvents.isNotEmpty()) {
                             val groupName = pluginConfiguration.logGroupName
-                            val streamName = "$todayDate.${uniqueDeviceId()}.${userIdentityId ?: "guest"}"
+                            val deviceId = uniqueDeviceId()
+                            val context = LogStreamContext(deviceId = deviceId, userId = userIdentityId)
+
+                            // Generate stream name: use custom formatter if provided, otherwise use default format
+                            val streamName = logStreamNameFormatter?.format(context)
+                                ?: // Default format: MM-dd-yyyy.deviceId.userId
+                                "$todayDate.$deviceId.${userIdentityId ?: "guest"}"
+
                             val nextBatch = getNextBatch(queriedEvents)
                             val inputLogEvents = nextBatch.first
                             inputLogEventsIdToBeDeleted = nextBatch.second
@@ -178,8 +188,7 @@ internal class CloudWatchLogManager(
         }
     }
 
-    private fun getNextBatch(queriedEvents: MutableList<LogEvent>):
-        Pair<List<InputLogEvent>, List<Long>> {
+    private fun getNextBatch(queriedEvents: MutableList<LogEvent>): Pair<List<InputLogEvent>, List<Long>> {
         var totalBatchSize = 0L
         val inputLogEvents = mutableListOf<InputLogEvent>()
         val inputLogEventsIdToBeDeleted = mutableListOf<Long>()
@@ -189,9 +198,13 @@ internal class CloudWatchLogManager(
             val cloudWatchEvent = iterator.next()
             totalBatchSize = totalBatchSize.plus(cloudWatchEvent.message.length).plus(26)
             if (
-                inputLogEvents.size >= 10000 || // The maximum number of log events in a batch is 10,000.
-                totalBatchSize >= 1048576 || // The maximum batch size is 1,048,576 bytes.
-                cloudWatchEvent.timestamp - firstEvent.timestamp >= 24 * 60 * 60L // A batch of log events in a single request cannot span more than 24 hours. Otherwise, the operation fails.
+                // The maximum number of log events in a batch is 10,000.
+                inputLogEvents.size >= 10000 ||
+                // The maximum batch size is 1,048,576 bytes.
+                totalBatchSize >= 1048576 ||
+                // A batch of log events in a single request cannot span more than 24 hours.
+                // Otherwise, the operation fails.
+                cloudWatchEvent.timestamp - firstEvent.timestamp >= 24 * 60 * 60L
             ) {
                 break
             }

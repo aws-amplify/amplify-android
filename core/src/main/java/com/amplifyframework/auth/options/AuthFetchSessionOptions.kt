@@ -48,26 +48,22 @@ open class AuthFetchSessionOptions protected constructor(val forceRefresh: Boole
      * When overriding, be sure to include forceRefresh in the comparison.
      * @return True if the two objects are equal, false otherwise
      */
-    override fun equals(other: Any?): Boolean {
-        return if (this === other) {
-            true
-        } else if (other == null || javaClass != other.javaClass) {
-            false
-        } else {
-            val authFetchSessionOptions = other as AuthFetchSessionOptions
-            ObjectsCompat.equals(forceRefresh, authFetchSessionOptions.forceRefresh)
-        }
+    override fun equals(other: Any?): Boolean = if (this === other) {
+        true
+    } else if (other == null || javaClass != other.javaClass) {
+        false
+    } else {
+        val authFetchSessionOptions = other as AuthFetchSessionOptions
+        ObjectsCompat.equals(forceRefresh, authFetchSessionOptions.forceRefresh)
     }
 
     /**
      * When overriding, be sure to include forceRefresh in the output string.
      * @return A string representation of the object
      */
-    override fun toString(): String {
-        return "AuthFetchSessionOptions{" +
-            "forceRefresh=" + forceRefresh +
-            '}'
-    }
+    override fun toString(): String = "AuthFetchSessionOptions{" +
+        "forceRefresh=" + forceRefresh +
+        '}'
 
     /**
      * The builder for this class.

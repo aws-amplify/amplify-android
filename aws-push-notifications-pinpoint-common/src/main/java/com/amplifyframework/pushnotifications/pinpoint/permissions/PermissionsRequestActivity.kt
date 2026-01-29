@@ -27,7 +27,7 @@ class PermissionsRequestActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val requestId = intent.extras?.getString(PermissionRequestId)
+        val requestId = intent.extras?.getString(PERMISSION_REQUEST_ID)
         if (requestId != null) {
             launchPermissionRequest(requestId)
         } else {
@@ -40,13 +40,13 @@ class PermissionsRequestActivity : ComponentActivity() {
             val result = if (granted) {
                 PermissionRequestResult.Granted
             } else {
-                PermissionRequestResult.NotGranted(shouldShowRequestPermissionRationale(PermissionName))
+                PermissionRequestResult.NotGranted(shouldShowRequestPermissionRationale(PERMISSION_NAME))
             }
             PermissionRequestChannel.send(requestId, result)
             finishWithNoAnimation()
         }
 
-        launcher.launch(PermissionName)
+        launcher.launch(PERMISSION_NAME)
     }
 
     private fun finishWithNoAnimation() {

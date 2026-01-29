@@ -6,7 +6,7 @@
         "mockedResponses": [
             {
                 "type": "cognitoIdentityProvider",
-                "apiName": "initiateAuth",
+                "apiName": "getTokensFromRefreshToken",
                 "responseType": "success",
                 "response": {
                     "authenticationResult": {
@@ -39,8 +39,7 @@
     },
     "api": {
         "name": "fetchAuthSession",
-        "params": {
-        },
+        "params": {},
         "options": {
             "forceRefresh": true
         }

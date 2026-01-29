@@ -32,14 +32,10 @@ internal sealed class DeleteUserState : State {
     class Resolver(private val deleteUserActions: DeleteUserActions) :
         StateMachineResolver<DeleteUserState> {
         override val defaultState = NotStarted()
-        private fun asDeleteUserEvent(event: StateMachineEvent): DeleteUserEvent.EventType? {
-            return (event as? DeleteUserEvent)?.eventType
-        }
+        private fun asDeleteUserEvent(event: StateMachineEvent): DeleteUserEvent.EventType? =
+            (event as? DeleteUserEvent)?.eventType
 
-        override fun resolve(
-            oldState: DeleteUserState,
-            event: StateMachineEvent
-        ): StateResolution<DeleteUserState> {
+        override fun resolve(oldState: DeleteUserState, event: StateMachineEvent): StateResolution<DeleteUserState> {
             val deleteUserEvent = asDeleteUserEvent(event) ?: return StateResolution(oldState)
             return when (oldState) {
                 is NotStarted, is Error -> {

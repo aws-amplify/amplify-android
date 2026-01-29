@@ -166,12 +166,9 @@ internal object LivenessEventStream {
         }
     }
 
-    private fun ByteArray.toUInt32(): UInt {
-        return ((this[0].toUInt() and 0xFFu) shl 24) or ((this[1].toUInt() and 0xFFu) shl 16) or
+    private fun ByteArray.toUInt32(): UInt =
+        ((this[0].toUInt() and 0xFFu) shl 24) or ((this[1].toUInt() and 0xFFu) shl 16) or
             ((this[2].toUInt() and 0xFFu) shl 8) or (this[3].toUInt() and 0xFFu)
-    }
 
-    private fun ByteArray.toUInt16(): UInt {
-        return ((this[0].toUInt() and 0xFFu) shl 8) or (this[1].toUInt() and 0xFFu)
-    }
+    private fun ByteArray.toUInt16(): UInt = ((this[0].toUInt() and 0xFFu) shl 8) or (this[1].toUInt() and 0xFFu)
 }
