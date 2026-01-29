@@ -168,6 +168,7 @@ licensee = { id = "app.cash.licensee", version.ref = "licensee" }
 # Internal convention plugins
 amplify-api = { id = "amplify.api" }
 amplify-kotlin = { id = "amplify.kotlin" }
+amplify-kmp = { id = "amplify.kotlin.multiplatform" }
 amplify-kover = { id = "amplify.kover" }
 amplify-ktlint = { id = "amplify.ktlint" }
 amplify-android-library = { id = "amplify.android.library" }
