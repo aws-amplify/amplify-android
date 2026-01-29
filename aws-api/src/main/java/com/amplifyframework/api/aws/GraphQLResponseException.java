@@ -105,6 +105,7 @@ public final class GraphQLResponseException extends IOException {
          * Gets the error type (AWS AppSync extension).
          * @return The error type, or null if not present
          */
+        @Nullable
         public String getErrorType() {
             return errorType;
         }
@@ -113,6 +114,7 @@ public final class GraphQLResponseException extends IOException {
          * Gets the error message.
          * @return The error message, or null if not present
          */
+        @Nullable
         public String getMessage() {
             return message;
         }
@@ -121,6 +123,7 @@ public final class GraphQLResponseException extends IOException {
          * Gets the error code.
          * @return The error code, or null if not present
          */
+        @Nullable
         public Integer getErrorCode() {
             return errorCode;
         }
