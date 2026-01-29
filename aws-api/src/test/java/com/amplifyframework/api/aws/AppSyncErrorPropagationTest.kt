@@ -23,6 +23,7 @@ import com.amplifyframework.testutils.Await
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import java.io.IOException
 import okhttp3.HttpUrl
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -33,7 +34,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.io.IOException
 
 /**
  * Integration tests for error cause propagation in GraphQL operations.
@@ -59,12 +59,15 @@ class AppSyncErrorPropagationTest {
         baseUrl = webServer.url("/")
 
         val configuration = JSONObject()
-            .put("graphQlApi", JSONObject()
-                .put("endpointType", "GraphQL")
-                .put("endpoint", baseUrl.toUrl())
-                .put("region", "us-east-1")
-                .put("authorizationType", "API_KEY")
-                .put("apiKey", "FAKE-API-KEY"))
+            .put(
+                "graphQlApi",
+                JSONObject()
+                    .put("endpointType", "GraphQL")
+                    .put("endpoint", baseUrl.toUrl())
+                    .put("region", "us-east-1")
+                    .put("authorizationType", "API_KEY")
+                    .put("apiKey", "FAKE-API-KEY")
+            )
 
         plugin = AWSApiPlugin.builder().build()
         plugin.configure(configuration, ApplicationProvider.getApplicationContext())
@@ -95,10 +98,12 @@ class AppSyncErrorPropagationTest {
               }]
             }
         """.trimIndent()
-        
-        webServer.enqueue(MockResponse()
-            .setResponseCode(401)
-            .setBody(errorResponse))
+
+        webServer.enqueue(
+            MockResponse()
+                .setResponseCode(401)
+                .setBody(errorResponse)
+        )
 
         // Act - execute query and capture error
         val error = Await.error { onResult, onError ->
@@ -108,13 +113,13 @@ class AppSyncErrorPropagationTest {
         // Assert - verify error has proper cause chain
         error.shouldNotBeNull()
         error.shouldBeInstanceOf<ApiException.NonRetryableException>()
-        
+
         val cause = error.cause
         cause.shouldNotBeNull()
         cause.shouldBeInstanceOf<GraphQLResponseException>()
 
         cause.errors.size.shouldBe(1)
-        
+
         val firstError = cause.errors[0]
         firstError.errorType.shouldBe("UnauthorizedException")
         firstError.message.shouldBe("You are not authorized to make this call.")
@@ -127,10 +132,12 @@ class AppSyncErrorPropagationTest {
     fun queryInvalidJsonPreservesJsonException() {
         // Arrange - mock a 400 response with invalid JSON
         val invalidJson = "not valid json at all"
-        
-        webServer.enqueue(MockResponse()
-            .setResponseCode(400)
-            .setBody(invalidJson))
+
+        webServer.enqueue(
+            MockResponse()
+                .setResponseCode(400)
+                .setBody(invalidJson)
+        )
 
         // Act
         val error = Await.error { onResult, onError ->
@@ -142,7 +149,7 @@ class AppSyncErrorPropagationTest {
         val cause = error.cause
         cause.shouldNotBeNull()
         cause.shouldBeInstanceOf<IOException>()
-        
+
         // The IOException should have a JSONException as its cause
         val jsonCause = cause.cause
         jsonCause.shouldNotBeNull()

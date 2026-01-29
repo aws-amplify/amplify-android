@@ -50,10 +50,10 @@ class GraphQLResponseExceptionTest {
         // Assert
         exception.shouldNotBeNull()
         exception.message.shouldBe("UnauthorizedException: You are not authorized to make this call. (code: null)")
-        
+
         val errors = exception.errors
         errors.size.shouldBe(1)
-        
+
         val error = errors[0]
         error.errorType.shouldBe("UnauthorizedException")
         error.message.shouldBe("You are not authorized to make this call.")
@@ -84,7 +84,7 @@ class GraphQLResponseExceptionTest {
         // Assert
         val errors = exception.errors
         errors.size.shouldBe(1)
-        
+
         val error = errors[0]
         error.errorType.shouldBe("UnauthorizedException")
         error.message.shouldBe("You are not authorized to make this call.")
@@ -121,10 +121,10 @@ class GraphQLResponseExceptionTest {
         // Assert
         val errors = exception.errors
         errors.size.shouldBe(2)
-        
+
         errors[0].errorType.shouldBe("UnauthorizedException")
         errors[0].message.shouldBe("First error")
-        
+
         errors[1].errorType.shouldBe("ValidationException")
         errors[1].message.shouldBe("Second error")
         errors[1].errorCode.shouldBe(400)
@@ -157,8 +157,10 @@ class GraphQLResponseExceptionTest {
 
         // Assert - message should contain both errors separated by semicolon
         val message = exception.message
-        message.shouldBe("FirstError: This should be in the message (code: null); " +
-            "SecondError: This should also be in the message (code: null)")
+        message.shouldBe(
+            "FirstError: This should be in the message (code: null); " +
+                "SecondError: This should also be in the message (code: null)"
+        )
     }
 
     /**
@@ -182,7 +184,7 @@ class GraphQLResponseExceptionTest {
         // Assert
         val errors = exception.errors
         errors.size.shouldBe(1)
-        
+
         val error = errors[0]
         error.errorType.shouldBeNull()
         error.message.shouldBe("Something went wrong")
