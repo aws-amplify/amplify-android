@@ -1,0 +1,120 @@
+public final class com/amplifyframework/kinesis/BuildConfig {
+	public static final field BUILD_TYPE Ljava/lang/String;
+	public static final field DEBUG Z
+	public static final field LIBRARY_PACKAGE_NAME Ljava/lang/String;
+	public static final field VERSION_NAME Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public final class com/amplifyframework/recordcache/ClearCacheData {
+	public fun <init> ()V
+	public fun <init> (I)V
+	public synthetic fun <init> (IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun copy (I)Lcom/amplifyframework/recordcache/ClearCacheData;
+	public static synthetic fun copy$default (Lcom/amplifyframework/recordcache/ClearCacheData;IILjava/lang/Object;)Lcom/amplifyframework/recordcache/ClearCacheData;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRecordsCleared ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/recordcache/FlushData {
+	public fun <init> ()V
+	public fun <init> (I)V
+	public synthetic fun <init> (IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun copy (I)Lcom/amplifyframework/recordcache/FlushData;
+	public static synthetic fun copy$default (Lcom/amplifyframework/recordcache/FlushData;IILjava/lang/Object;)Lcom/amplifyframework/recordcache/FlushData;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRecordsFlushed ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/recordcache/PutRecordsResponse {
+	public fun <init> (Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;Ljava/util/List;Ljava/util/List;)Lcom/amplifyframework/recordcache/PutRecordsResponse;
+	public static synthetic fun copy$default (Lcom/amplifyframework/recordcache/PutRecordsResponse;Ljava/util/List;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lcom/amplifyframework/recordcache/PutRecordsResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFailedIds ()Ljava/util/List;
+	public final fun getRetryableIds ()Ljava/util/List;
+	public final fun getSuccessfulIds ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/recordcache/Record {
+	public fun <init> (JLjava/lang/String;Ljava/lang/String;[BIIJ)V
+	public final fun component1 ()J
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()[B
+	public final fun component5 ()I
+	public final fun component6 ()I
+	public final fun component7 ()J
+	public final fun copy (JLjava/lang/String;Ljava/lang/String;[BIIJ)Lcom/amplifyframework/recordcache/Record;
+	public static synthetic fun copy$default (Lcom/amplifyframework/recordcache/Record;JLjava/lang/String;Ljava/lang/String;[BIIJILjava/lang/Object;)Lcom/amplifyframework/recordcache/Record;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCreatedAt ()J
+	public final fun getData ()[B
+	public final fun getDataSize ()I
+	public final fun getId ()J
+	public final fun getPartitionKey ()Ljava/lang/String;
+	public final fun getRetryCount ()I
+	public final fun getStreamName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/recordcache/RecordData {
+	public fun <init> ()V
+	public fun <init> (Z)V
+	public synthetic fun <init> (ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun copy (Z)Lcom/amplifyframework/recordcache/RecordData;
+	public static synthetic fun copy$default (Lcom/amplifyframework/recordcache/RecordData;ZILjava/lang/Object;)Lcom/amplifyframework/recordcache/RecordData;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSuccess ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/recordcache/RecordInput {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;[BI)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;[BIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()[B
+	public final fun component4 ()I
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;[BI)Lcom/amplifyframework/recordcache/RecordInput;
+	public static synthetic fun copy$default (Lcom/amplifyframework/recordcache/RecordInput;Ljava/lang/String;Ljava/lang/String;[BIILjava/lang/Object;)Lcom/amplifyframework/recordcache/RecordInput;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getData ()[B
+	public final fun getDataSize ()I
+	public final fun getPartitionKey ()Ljava/lang/String;
+	public final fun getStreamName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/amplifyframework/recordcache/RecordSender {
+	public abstract fun putRecords-0E7RQCE (Ljava/lang/String;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract class com/amplifyframework/recordcache/RecordStorage {
+	public fun <init> (IJLjava/lang/String;)V
+	public abstract fun addRecord-gIAlu-s (Lcom/amplifyframework/recordcache/RecordInput;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun clearRecords-IoAF18A (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun deleteRecords-gIAlu-s (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getCurrentCacheSize-IoAF18A (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getIdentifier ()Ljava/lang/String;
+	public final fun getMaxBytes ()J
+	public final fun getMaxRecords ()I
+	public abstract fun getRecordsByStream-IoAF18A (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun incrementRetryCount-gIAlu-s (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
