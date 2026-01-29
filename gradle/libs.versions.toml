@@ -12,7 +12,7 @@ androidx-fragment = "1.3.1"
 androidx-legacy = "1.0.0"
 androidx-lifecycle = "2.4.1"
 androidx-security = "1.0.0"
-androidx-sqlite = "2.2.0"
+androidx-sqlite = "2.6.0"
 androidx-test-core = "1.3.0"
 androidx-test-junit = "1.1.2"
 androidx-test-orchestrator = "1.4.2"
@@ -75,6 +75,7 @@ androidx-nav-fragment = { module = "androidx.navigation:navigation-fragment", ve
 androidx-nav-ui = { module = "androidx.navigation:navigation-ui", version.ref = "navigation" }
 androidx-security = { module = "androidx.security:security-crypto", version.ref = "androidx-security" }
 androidx-sqlite = { module = "androidx.sqlite:sqlite", version.ref = "androidx-sqlite" }
+androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "androidx-sqlite" }
 androidx-v4support = { module = "androidx.legacy:legacy-support-v4", version.ref = "androidx-legacy" }
 androidx-workmanager = { module = "androidx.work:work-runtime", version.ref = "androidx-workmanager" }
 apollo-runtime = { module = "com.apollographql.apollo:apollo-runtime", version.ref = "apollo" }

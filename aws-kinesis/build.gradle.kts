@@ -33,6 +33,7 @@ dependencies {
     implementation(libs.aws.kinesis)
     implementation(libs.kotlin.serializationJson)
     implementation(libs.androidx.sqlite)
+    implementation(libs.androidx.sqlite.bundled)
     implementation(libs.androidx.workmanager)
 
     testImplementation(libs.test.junit)
