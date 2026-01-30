@@ -84,6 +84,7 @@ aws-cognitoidentityprovider = { module = "aws.sdk.kotlin:cognitoidentityprovider
 aws-comprehend = { module = "aws.sdk.kotlin:comprehend", version.ref = "aws-kotlin" }
 aws-credentials = { module = "aws.smithy.kotlin:aws-credentials", version.ref = "aws-smithy" }
 aws-http = { module = "aws.sdk.kotlin:aws-http", version.ref = "aws-kotlin" }
+aws-kinesis = { module = "aws.sdk.kotlin:kinesis", version.ref = "aws-kotlin" }
 aws-location = { module = "aws.sdk.kotlin:location", version.ref = "aws-kotlin" }
 aws-pinpoint = { module = "aws.sdk.kotlin:pinpoint", version.ref = "aws-kotlin" }
 aws-polly = { module = "aws.sdk.kotlin:polly", version.ref = "aws-kotlin" }
