@@ -22,15 +22,20 @@ import com.amplifyframework.analytics.AnalyticsProperties
 import com.amplifyframework.analytics.UserProfile
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.CognitoCredentialsProvider
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.core.configuration.AmplifyOutputsData
 import org.json.JSONObject
 
 /**
  * The plugin implementation for Amazon Pinpoint in Analytics category.
  */
+@Deprecated("AWS will end support for Amazon Pinpoint on October 30, 2026.")
 class AWSPinpointAnalyticsPlugin @JvmOverloads constructor(
     private val userOptions: Options? = null
 ) : AnalyticsPlugin<PinpointClient>() {
+
+    private val logger = Amplify.Logging.logger(CategoryType.ANALYTICS, "amplify:aws-analytics-pinpoint")
 
     private val pluginKey = "awsPinpointAnalyticsPlugin"
     private val analyticsConfigKey = "pinpointAnalytics"
@@ -113,6 +118,17 @@ class AWSPinpointAnalyticsPlugin @JvmOverloads constructor(
     }
 
     private fun configure(configuration: AWSPinpointAnalyticsPluginConfiguration, context: Context) {
+        logger.warn(
+            """
+            AWS will end support for Amazon Pinpoint on October 30, 2026.
+            The guidance is to use AWS End User Messaging for push notifications and SMS,
+            Amazon Simple Email Service for sending emails, Amazon Connect for campaigns, journeys, endpoints, 
+            and engagement analytics. Pinpoint recommends Amazon Kinesis for event collection and mobile analytics.
+            
+            See https://docs.aws.amazon.com/pinpoint/latest/userguide/migrate.html for more details.
+            """.trimIndent()
+        )
+
         pinpointManager = PinpointManager(
             context,
             configuration,

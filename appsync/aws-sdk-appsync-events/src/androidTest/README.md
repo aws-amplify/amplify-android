@@ -1,3 +1,36 @@
+## AWS Amplify + AWS AppSync Events Template
+
+## Getting Started
+
+1. Setup AWS Account with Amplify
+
+https://docs.amplify.aws/android/start/account-setup/
+
+2. The backend is provisioned with creating an Amplify CLI Gen 2 project by runing the following command.
+
+```
+npm create amplify@latest
+```
+
+3. Update `auth/resource.ts`
+
+```
+import { defineAuth } from '@aws-amplify/backend';
+
+/**
+ * Define and configure your auth resource
+ * @see https://docs.amplify.aws/gen2/build-a-backend/auth
+ */
+export const auth = defineAuth({
+  loginWith: {
+    email: true,
+  },
+});
+```
+
+4. Update `backend.ts`
+
+```
 import { defineBackend } from '@aws-amplify/backend'
 import { auth } from './auth/resource'
 import {
@@ -103,3 +136,12 @@ backend.addOutput({
 		},
 	},
 })
+```
+
+6. Deploy your backend.
+
+```
+npx ampx sandbox
+```
+
+7. Make note of the `amplify_outputs.json` file that was generated. You will need to copy this file to the test project.

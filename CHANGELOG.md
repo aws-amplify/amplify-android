@@ -1,3 +1,10 @@
+## [Release 2.33.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.33.0)
+
+### Features
+- **logging:** Add support for custom log stream name formatters ([#3181](https://github.com/aws-amplify/amplify-android/issues/3181))
+
+[See all changes between 2.32.0 and 2.33.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.32.0...release_v2.33.0)
+
 ## [Release 2.32.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.32.0)
 
 ### Features
