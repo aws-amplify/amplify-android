@@ -1,6 +1,7 @@
 package com.amplifyframework.recordcache
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.execSQL
@@ -195,7 +196,8 @@ class SQLiteRecordStorage internal constructor(
      * Resets the cached size by recalculating from the database.
      * Use when manual tracking might be out of sync.
      */
-    private fun resetCacheSizeFromDb() {
+    @VisibleForTesting
+    internal fun resetCacheSizeFromDb() {
         cachedSize.set(
             connection.prepare("SELECT COALESCE(SUM(data_size), 0) FROM records").use { stmt ->
                 if (stmt.step()) stmt.getLong(0) else 0L

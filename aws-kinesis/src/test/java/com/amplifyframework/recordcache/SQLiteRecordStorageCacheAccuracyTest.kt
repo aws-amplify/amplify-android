@@ -1,29 +1,27 @@
 package com.amplifyframework.recordcache
 
-import android.content.Context
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
-import androidx.test.core.app.ApplicationProvider
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
-@RunWith(AndroidJUnit4::class)
+@RunWith(RobolectricTestRunner::class)
 class SQLiteRecordStorageCacheAccuracyTest {
 
     private fun createTestStorage(): SQLiteRecordStorage {
-        val context = ApplicationProvider.getApplicationContext<Context>()
         return SQLiteRecordStorage(
             maxRecords = 1000,
             maxBytes = 1024 * 1024L,
             identifier = "test",
-            connectionFactory = { BundledSQLiteDriver().open(context.getDatabasePath("test.db").absolutePath) },
+            connectionFactory = { BundledSQLiteDriver().open(":memory:") },
             dispatcher = Dispatchers.IO
         )
     }
@@ -105,26 +103,24 @@ class SQLiteRecordStorageCacheAccuracyTest {
     }
 
     @Test
-    fun concurrentProducerConsumerOperationsAreThreadSafe() = runTest {
+    fun concurrentProducerConsumerOperationsAreThreadSafe(): Unit = runBlocking {
         val storage = createTestStorage()
-        val testDurationMs = 2000L
         val recordSize = 10
 
         val createdRecords = mutableMapOf<String, MutableSet<String>>()
         val deletedRecords = mutableSetOf<String>()
 
-        // Create producer coroutines
-        val producers = (0..1).map { producerIndex ->
-            async {
-                var recordCounter = 0
+        // Create producer coroutines with real threading
+        val producers = (0..3).map { producerIndex ->
+            async(Dispatchers.Default) { // Use real thread pool
+                println("Producer $producerIndex running on thread: ${Thread.currentThread().name}")
                 val threadRecords = mutableSetOf<String>()
                 synchronized(createdRecords) {
                     createdRecords["producer$producerIndex"] = threadRecords
                 }
 
-                val endTime = System.currentTimeMillis() + testDurationMs
-                while (System.currentTimeMillis() < endTime) {
-                    val recordKey = "producer${producerIndex}_record${recordCounter++}"
+                repeat(40) { recordCounter ->
+                    val recordKey = "producer${producerIndex}_record${recordCounter}"
                     val record = RecordInput(
                         streamName = "stream$producerIndex",
                         partitionKey = recordKey,
@@ -136,30 +132,34 @@ class SQLiteRecordStorageCacheAccuracyTest {
                     synchronized(threadRecords) {
                         threadRecords.add(recordKey)
                     }
+                    
+                    delay(1) // Small delay to allow thread switching
 
-                    delay(10)
+                    //delay(10)
                 }
             }
         }
 
-        // Create consumer coroutines
+        // Create consumer coroutines with real threading
         val consumers = (0..1).map { consumerIndex ->
-            async {
-                val endTime = System.currentTimeMillis() + testDurationMs
-                while (System.currentTimeMillis() < endTime) {
-                    delay(40)
-
+            async(Dispatchers.Default) { // Use real thread pool
+                println("Consumer $consumerIndex running on thread: ${Thread.currentThread().name}")
+                repeat(10) { iteration ->
+                    delay(1) // Small delay to allow producers to create records
                     val records = storage.getRecordsByStream().getOrThrow().flatten()
                     if (records.isNotEmpty()) {
-                        val recordsToDelete = records.take(2)
+                        val recordsToDelete = records.take(1)
                         val idsToDelete = recordsToDelete.map { it.id }
                         val keysToDelete = recordsToDelete.map { it.partitionKey }
 
+                        println("Consumer $consumerIndex iteration $iteration: found ${records.size} records, deleting ${recordsToDelete.size} - ${recordsToDelete.map { it.id }}")
                         storage.deleteRecords(idsToDelete).getOrThrow()
 
                         synchronized(deletedRecords) {
                             deletedRecords.addAll(keysToDelete)
                         }
+                    } else {
+                        println("Consumer $consumerIndex iteration $iteration: no records found")
                     }
                 }
             }
@@ -168,12 +168,24 @@ class SQLiteRecordStorageCacheAccuracyTest {
         // Wait for all coroutines to complete
         (producers + consumers).awaitAll()
 
+        // Log final counts
+        val totalCreated = createdRecords.values.sumOf { it.size }
+        val totalDeleted = deletedRecords.size
+
         // Verify data integrity
         val finalRecords = storage.getRecordsByStream().getOrThrow().flatten()
-        val finalCacheSize = storage.getCurrentCacheSize().getOrThrow()
+        println("Created $totalCreated records, deleted $totalDeleted records, found in DB ${finalRecords.size}")
 
-        val expectedCacheSize = finalRecords.sumOf { it.dataSize.toInt() }
+        val finalCacheSize = storage.getCurrentCacheSize().getOrThrow()
+        // Reset and get cache size
+//        storage.resetCacheSizeFromDb()
+//        val actualCacheSize = storage.getCurrentCacheSize().getOrThrow()
+        // What we should have written
+        val expectedCacheSize = finalRecords.sumOf { it.dataSize }
+
+//        finalCacheSize shouldBe actualCacheSize
         finalCacheSize shouldBe expectedCacheSize
+
 
         val remainingKeys = finalRecords.map { it.partitionKey }.toSet()
         val allCreatedKeys = createdRecords.values.flatten().toSet()

@@ -76,6 +76,7 @@ androidx-nav-ui = { module = "androidx.navigation:navigation-ui", version.ref = 
 androidx-security = { module = "androidx.security:security-crypto", version.ref = "androidx-security" }
 androidx-sqlite = { module = "androidx.sqlite:sqlite", version.ref = "androidx-sqlite" }
 androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "androidx-sqlite" }
+androidx-sqlite-bundled-jvm = { module = "androidx.sqlite:sqlite-bundled-jvm", version.ref = "androidx-sqlite" }
 androidx-v4support = { module = "androidx.legacy:legacy-support-v4", version.ref = "androidx-legacy" }
 androidx-workmanager = { module = "androidx.work:work-runtime", version.ref = "androidx-workmanager" }
 apollo-runtime = { module = "com.apollographql.apollo:apollo-runtime", version.ref = "apollo" }
