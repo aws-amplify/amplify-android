@@ -76,19 +76,15 @@ class SQLiteRecordStorage internal constructor(
     /**
      * Helper to wrap DB queries in a transaction and suspend
      */
-    private suspend fun <T> wrapDispatchAndTransactionAndCatching(block: () -> T) = Result.runCatching {
-        withContext(dispatcher) {
-            dbMutex.withLock {
-                connection.execSQL("BEGIN IMMEDIATE TRANSACTION")
-                try {
-                    val result = block()
-                    connection.execSQL("END TRANSACTION")
-                    return@withLock result
-                } catch (e: Exception) {
-                    connection.execSQL("ROLLBACK TRANSACTION")
-                    throw e
-                }
-            }
+    private suspend fun <T> wrapDispatchAndTransactionAndCatching(block: () -> T) = wrapDispatchAndLockingAndCatching {
+        connection.execSQL("BEGIN IMMEDIATE TRANSACTION")
+        try {
+            val result = block()
+            connection.execSQL("END TRANSACTION")
+            result
+        } catch (e: Exception) {
+            connection.execSQL("ROLLBACK TRANSACTION")
+            throw e
         }
     }
 

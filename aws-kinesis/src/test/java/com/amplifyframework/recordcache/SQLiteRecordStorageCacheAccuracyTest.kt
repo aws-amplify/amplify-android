@@ -16,15 +16,13 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class SQLiteRecordStorageCacheAccuracyTest {
 
-    private fun createTestStorage(): SQLiteRecordStorage {
-        return SQLiteRecordStorage(
-            maxRecords = 1000,
-            maxBytes = 1024 * 1024L,
-            identifier = "test",
-            connectionFactory = { BundledSQLiteDriver().open(":memory:") },
-            dispatcher = Dispatchers.IO
-        )
-    }
+    private fun createTestStorage(): SQLiteRecordStorage = SQLiteRecordStorage(
+        maxRecords = 1000,
+        maxBytes = 1024 * 1024L,
+        identifier = "test",
+        connectionFactory = { BundledSQLiteDriver().open(":memory:") },
+        dispatcher = Dispatchers.IO
+    )
 
     @Test
     fun cachedSizeMatchesDatabaseAfterAddOperations() = runTest {
@@ -110,17 +108,16 @@ class SQLiteRecordStorageCacheAccuracyTest {
         val createdRecords = mutableMapOf<String, MutableSet<String>>()
         val deletedRecords = mutableSetOf<String>()
 
-        // Create producer coroutines with real threading
         val producers = (0..3).map { producerIndex ->
-            async(Dispatchers.Default) { // Use real thread pool
-                println("Producer $producerIndex running on thread: ${Thread.currentThread().name}")
+            async(Dispatchers.Default) {
+                // Use real thread pool
                 val threadRecords = mutableSetOf<String>()
                 synchronized(createdRecords) {
                     createdRecords["producer$producerIndex"] = threadRecords
                 }
 
-                repeat(40) { recordCounter ->
-                    val recordKey = "producer${producerIndex}_record${recordCounter}"
+                repeat(400) { recordCounter ->
+                    val recordKey = "producer${producerIndex}_record$recordCounter"
                     val record = RecordInput(
                         streamName = "stream$producerIndex",
                         partitionKey = recordKey,
@@ -132,34 +129,30 @@ class SQLiteRecordStorageCacheAccuracyTest {
                     synchronized(threadRecords) {
                         threadRecords.add(recordKey)
                     }
-                    
-                    delay(1) // Small delay to allow thread switching
 
-                    //delay(10)
+                    delay(1)
                 }
             }
         }
 
-        // Create consumer coroutines with real threading
+        // Create consumers
         val consumers = (0..1).map { consumerIndex ->
-            async(Dispatchers.Default) { // Use real thread pool
+            async(Dispatchers.Default) {
                 println("Consumer $consumerIndex running on thread: ${Thread.currentThread().name}")
-                repeat(10) { iteration ->
-                    delay(1) // Small delay to allow producers to create records
+                repeat(100) { _ ->
+                    delay(1)
                     val records = storage.getRecordsByStream().getOrThrow().flatten()
                     if (records.isNotEmpty()) {
                         val recordsToDelete = records.take(1)
                         val idsToDelete = recordsToDelete.map { it.id }
                         val keysToDelete = recordsToDelete.map { it.partitionKey }
 
-                        println("Consumer $consumerIndex iteration $iteration: found ${records.size} records, deleting ${recordsToDelete.size} - ${recordsToDelete.map { it.id }}")
+                        // Note, other consumer might already have deleted what we're trying to delete
                         storage.deleteRecords(idsToDelete).getOrThrow()
 
                         synchronized(deletedRecords) {
                             deletedRecords.addAll(keysToDelete)
                         }
-                    } else {
-                        println("Consumer $consumerIndex iteration $iteration: no records found")
                     }
                 }
             }
@@ -178,14 +171,13 @@ class SQLiteRecordStorageCacheAccuracyTest {
 
         val finalCacheSize = storage.getCurrentCacheSize().getOrThrow()
         // Reset and get cache size
-//        storage.resetCacheSizeFromDb()
-//        val actualCacheSize = storage.getCurrentCacheSize().getOrThrow()
-        // What we should have written
+        storage.resetCacheSizeFromDb()
+        val actualCacheSize = storage.getCurrentCacheSize().getOrThrow()
+        // Size of what we should have written
         val expectedCacheSize = finalRecords.sumOf { it.dataSize }
 
-//        finalCacheSize shouldBe actualCacheSize
+        finalCacheSize shouldBe actualCacheSize
         finalCacheSize shouldBe expectedCacheSize
-
 
         val remainingKeys = finalRecords.map { it.partitionKey }.toSet()
         val allCreatedKeys = createdRecords.values.flatten().toSet()
@@ -195,7 +187,6 @@ class SQLiteRecordStorageCacheAccuracyTest {
             val wasDeleted = deletedRecords.contains(createdKey)
 
             (isInDb || wasDeleted) shouldBe true
-
             (isInDb && wasDeleted) shouldBe false
         }
 
