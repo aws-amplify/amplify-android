@@ -20,7 +20,7 @@ class SQLiteRecordStorageCacheAccuracyTest {
 
     private fun createTestStorage(): SQLiteRecordStorage {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        return SQLiteRecordStorage.forTesting(
+        return SQLiteRecordStorage(
             maxRecords = 1000,
             maxBytes = 1024 * 1024L,
             identifier = "test",

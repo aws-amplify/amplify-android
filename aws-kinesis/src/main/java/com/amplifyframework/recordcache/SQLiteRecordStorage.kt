@@ -1,7 +1,6 @@
 package com.amplifyframework.recordcache
 
 import android.content.Context
-import androidx.annotation.VisibleForTesting
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.execSQL
@@ -13,7 +12,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
-class SQLiteRecordStorage private constructor(
+class SQLiteRecordStorage internal constructor(
     maxRecords: Int,
     maxBytes: Long,
     identifier: String,
@@ -34,18 +33,6 @@ class SQLiteRecordStorage private constructor(
         val dbFile = File(context.getDatabasePath("kinesis_records_$identifier.db").absolutePath)
         BundledSQLiteDriver().open(dbFile.absolutePath)
     }, dispatcher)
-
-    companion object {
-        @JvmStatic
-        @VisibleForTesting
-        internal fun forTesting(
-            maxRecords: Int,
-            maxBytes: Long,
-            identifier: String,
-            connectionFactory: () -> SQLiteConnection,
-            dispatcher: CoroutineDispatcher = Dispatchers.IO
-        ): SQLiteRecordStorage = SQLiteRecordStorage(maxRecords, maxBytes, identifier, connectionFactory, dispatcher)
-    }
 
     init {
         // We rely on transactions to ensure thread safety. Hence set generous timeout
@@ -75,6 +62,17 @@ class SQLiteRecordStorage private constructor(
     }
 
     /**
+     * Helper to wrap DB queries with locking and dispatch
+     */
+    private suspend fun <T> wrapDispatchAndLockingAndCatching(block: () -> T) = Result.runCatching {
+        withContext(dispatcher) {
+            dbMutex.withLock {
+                block()
+            }
+        }
+    }
+
+    /**
      * Helper to wrap DB queries in a transaction and suspend
      */
     private suspend fun <T> wrapDispatchAndTransactionAndCatching(block: () -> T) = Result.runCatching {
@@ -93,7 +91,7 @@ class SQLiteRecordStorage private constructor(
         }
     }
 
-    override suspend fun addRecord(record: RecordInput): Result<Unit> = wrapDispatchAndTransactionAndCatching {
+    override suspend fun addRecord(record: RecordInput): Result<Unit> = wrapDispatchAndLockingAndCatching {
         // Check cache size limit before adding
         if (cachedSize.get() + record.dataSize > maxBytes) {
             throw RecordCacheLimitExceededException(
@@ -113,7 +111,7 @@ class SQLiteRecordStorage private constructor(
         }
         cachedSize.addAndGet(record.dataSize)
 
-        return@wrapDispatchAndTransactionAndCatching
+        return@wrapDispatchAndLockingAndCatching
     }.recoverAsRecordCacheException(
         "Failed to add record to cache",
         "Check database permissions and storage space"
@@ -158,7 +156,7 @@ class SQLiteRecordStorage private constructor(
         }
     }.recoverAsRecordCacheException("Could not retrieve records from storage", "Try again at a later time")
 
-    override suspend fun deleteRecords(ids: List<Long>): Result<Unit> = wrapDispatchAndTransactionAndCatching {
+    override suspend fun deleteRecords(ids: List<Long>): Result<Unit> = wrapDispatchAndLockingAndCatching {
         if (!ids.isEmpty()) {
             val placeholders = ids.joinToString(",") { "?" }
 
@@ -175,7 +173,7 @@ class SQLiteRecordStorage private constructor(
         "Try again at a later time"
     )
 
-    override suspend fun incrementRetryCount(ids: List<Long>): Result<Unit> = wrapDispatchAndTransactionAndCatching {
+    override suspend fun incrementRetryCount(ids: List<Long>): Result<Unit> = wrapDispatchAndLockingAndCatching {
         if (!ids.isEmpty()) {
             val placeholders = ids.joinToString(",") { "?" }
             connection.prepare(
@@ -186,7 +184,7 @@ class SQLiteRecordStorage private constructor(
                 }
                 stmt.step()
             }
-            return@wrapDispatchAndTransactionAndCatching
+            return@wrapDispatchAndLockingAndCatching
         }
     }.recoverAsRecordCacheException(
         "Failed to increment retry count",

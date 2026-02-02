@@ -139,8 +139,6 @@ public abstract class com/amplifyframework/recordcache/RecordStorage {
 }
 
 public final class com/amplifyframework/recordcache/SQLiteRecordStorage : com/amplifyframework/recordcache/RecordStorage {
-	public static final field Companion Lcom/amplifyframework/recordcache/SQLiteRecordStorage$Companion;
-	public synthetic fun <init> (IJLjava/lang/String;Lkotlin/jvm/functions/Function0;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun <init> (Landroid/content/Context;IJLjava/lang/String;Lkotlinx/coroutines/CoroutineDispatcher;)V
 	public synthetic fun <init> (Landroid/content/Context;IJLjava/lang/String;Lkotlinx/coroutines/CoroutineDispatcher;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun addRecord-gIAlu-s (Lcom/amplifyframework/recordcache/RecordInput;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -149,8 +147,5 @@ public final class com/amplifyframework/recordcache/SQLiteRecordStorage : com/am
 	public fun getCurrentCacheSize-IoAF18A (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun getRecordsByStream-IoAF18A (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun incrementRetryCount-gIAlu-s (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-}
-
-public final class com/amplifyframework/recordcache/SQLiteRecordStorage$Companion {
 }
 
