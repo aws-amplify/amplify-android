@@ -36,9 +36,6 @@ class SQLiteRecordStorage internal constructor(
     }, dispatcher)
 
     init {
-        // We rely on transactions to ensure thread safety. Hence set generous timeout
-        connection.execSQL("PRAGMA busy_timeout = 5000")
-
         // Create DB
         connection.execSQL(
             """
@@ -65,7 +62,7 @@ class SQLiteRecordStorage internal constructor(
     /**
      * Helper to wrap DB queries with locking and dispatch
      */
-    private suspend fun <T> wrapDispatchAndLockingAndCatching(block: () -> T) = Result.runCatching {
+    private suspend fun <T> wrapDispatchAndCatching(block: () -> T) = Result.runCatching {
         withContext(dispatcher) {
             dbMutex.withLock {
                 block()
@@ -76,7 +73,7 @@ class SQLiteRecordStorage internal constructor(
     /**
      * Helper to wrap DB queries in a transaction and suspend
      */
-    private suspend fun <T> wrapDispatchAndTransactionAndCatching(block: () -> T) = wrapDispatchAndLockingAndCatching {
+    private suspend fun <T> wrapDispatchAndTransactionAndCatching(block: () -> T) = wrapDispatchAndCatching {
         connection.execSQL("BEGIN IMMEDIATE TRANSACTION")
         try {
             val result = block()
@@ -88,7 +85,7 @@ class SQLiteRecordStorage internal constructor(
         }
     }
 
-    override suspend fun addRecord(record: RecordInput): Result<Unit> = wrapDispatchAndLockingAndCatching {
+    override suspend fun addRecord(record: RecordInput): Result<Unit> = wrapDispatchAndCatching {
         // Check cache size limit before adding
         if (cachedSize.get() + record.dataSize > maxBytes) {
             throw RecordCacheLimitExceededException(
@@ -108,7 +105,7 @@ class SQLiteRecordStorage internal constructor(
         }
         cachedSize.addAndGet(record.dataSize)
 
-        return@wrapDispatchAndLockingAndCatching
+        return@wrapDispatchAndCatching
     }.recoverAsRecordCacheException(
         "Failed to add record to cache",
         "Check database permissions and storage space"
@@ -153,7 +150,7 @@ class SQLiteRecordStorage internal constructor(
         }
     }.recoverAsRecordCacheException("Could not retrieve records from storage", "Try again at a later time")
 
-    override suspend fun deleteRecords(ids: List<Long>): Result<Unit> = wrapDispatchAndLockingAndCatching {
+    override suspend fun deleteRecords(ids: List<Long>): Result<Unit> = wrapDispatchAndCatching {
         if (!ids.isEmpty()) {
             val placeholders = ids.joinToString(",") { "?" }
 
@@ -170,7 +167,7 @@ class SQLiteRecordStorage internal constructor(
         "Try again at a later time"
     )
 
-    override suspend fun incrementRetryCount(ids: List<Long>): Result<Unit> = wrapDispatchAndLockingAndCatching {
+    override suspend fun incrementRetryCount(ids: List<Long>): Result<Unit> = wrapDispatchAndCatching {
         if (!ids.isEmpty()) {
             val placeholders = ids.joinToString(",") { "?" }
             connection.prepare(
@@ -181,7 +178,7 @@ class SQLiteRecordStorage internal constructor(
                 }
                 stmt.step()
             }
-            return@wrapDispatchAndLockingAndCatching
+            return@wrapDispatchAndCatching
         }
     }.recoverAsRecordCacheException(
         "Failed to increment retry count",
