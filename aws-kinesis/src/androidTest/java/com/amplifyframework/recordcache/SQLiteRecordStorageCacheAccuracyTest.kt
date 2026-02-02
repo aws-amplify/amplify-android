@@ -4,14 +4,13 @@ import android.content.Context
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -40,7 +39,7 @@ class SQLiteRecordStorageCacheAccuracyTest {
         storage.addRecord(record2).getOrThrow()
 
         val cachedSize = storage.getCurrentCacheSize().getOrThrow()
-        assertEquals("Total size should be 7", 7, cachedSize)
+        cachedSize shouldBe 7
     }
 
     @Test
@@ -63,7 +62,7 @@ class SQLiteRecordStorageCacheAccuracyTest {
         storage.deleteRecords(idsToDelete).getOrThrow()
 
         val cachedSize = storage.getCurrentCacheSize().getOrThrow()
-        assertEquals("Remaining size should be 2", 2, cachedSize)
+        cachedSize shouldBe 2
     }
 
     @Test
@@ -77,7 +76,7 @@ class SQLiteRecordStorageCacheAccuracyTest {
         storage.clearRecords().getOrThrow()
 
         val cachedSize = storage.getCurrentCacheSize().getOrThrow()
-        assertEquals("Size should be 0 after clear", 0, cachedSize)
+        cachedSize shouldBe 0
     }
 
     @Test
@@ -89,20 +88,20 @@ class SQLiteRecordStorageCacheAccuracyTest {
         storage.addRecord(RecordInput("stream2", "key2", byteArrayOf(6, 7, 8), 3)).getOrThrow()
 
         var cachedSize = storage.getCurrentCacheSize().getOrThrow()
-        assertEquals("After adds", 8, cachedSize)
+        cachedSize shouldBe 8
 
         // Delete one record
         val records = storage.getRecordsByStream().getOrThrow().flatten()
         storage.deleteRecords(listOf(records.first().id)).getOrThrow()
 
         cachedSize = storage.getCurrentCacheSize().getOrThrow()
-        assertEquals("After delete", 3, cachedSize)
+        cachedSize shouldBe 3
 
         // Add another record
         storage.addRecord(RecordInput("stream3", "key3", byteArrayOf(9, 10), 2)).getOrThrow()
 
         cachedSize = storage.getCurrentCacheSize().getOrThrow()
-        assertEquals("After final add", 5, cachedSize)
+        cachedSize shouldBe 5
     }
 
     @Test
@@ -174,7 +173,7 @@ class SQLiteRecordStorageCacheAccuracyTest {
         val finalCacheSize = storage.getCurrentCacheSize().getOrThrow()
 
         val expectedCacheSize = finalRecords.sumOf { it.dataSize.toInt() }
-        assertEquals("Cache size should match actual remaining records", expectedCacheSize, finalCacheSize)
+        finalCacheSize shouldBe expectedCacheSize
 
         val remainingKeys = finalRecords.map { it.partitionKey }.toSet()
         val allCreatedKeys = createdRecords.values.flatten().toSet()
@@ -183,26 +182,17 @@ class SQLiteRecordStorageCacheAccuracyTest {
             val isInDb = remainingKeys.contains(createdKey)
             val wasDeleted = deletedRecords.contains(createdKey)
 
-            assertTrue(
-                "Record $createdKey must be either in DB or marked as deleted",
-                isInDb || wasDeleted
-            )
+            (isInDb || wasDeleted) shouldBe true
 
-            assertFalse(
-                "Record $createdKey cannot be both in DB and deleted",
-                isInDb && wasDeleted
-            )
+            (isInDb && wasDeleted) shouldBe false
         }
 
         for (remainingKey in remainingKeys) {
-            assertTrue(
-                "Record $remainingKey in DB must have been created by a producer",
-                allCreatedKeys.contains(remainingKey)
-            )
+            allCreatedKeys.contains(remainingKey) shouldBe true
         }
 
-        assertTrue("Should have created some records", allCreatedKeys.isNotEmpty())
-        assertTrue("Should have deleted some records", deletedRecords.isNotEmpty())
-        assertTrue("Should have some records remaining", remainingKeys.isNotEmpty())
+        allCreatedKeys.shouldNotBeEmpty()
+        deletedRecords.shouldNotBeEmpty()
+        remainingKeys.shouldNotBeEmpty()
     }
 }

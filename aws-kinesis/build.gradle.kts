@@ -54,6 +54,7 @@ dependencies {
     androidTestImplementation(libs.test.androidx.runner)
     androidTestImplementation(libs.test.kotlin.coroutines)
     androidTestImplementation(libs.test.androidx.junit)
+    androidTestImplementation(libs.test.kotest.assertions)
     androidTestImplementation(project(":aws-kinesis"))
     androidTestImplementation(libs.androidx.sqlite)
 
