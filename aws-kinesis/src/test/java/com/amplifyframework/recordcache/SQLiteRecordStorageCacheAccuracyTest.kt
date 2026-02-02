@@ -25,7 +25,7 @@ class SQLiteRecordStorageCacheAccuracyTest {
     )
 
     @Test
-    fun cachedSizeMatchesDatabaseAfterAddOperations() = runTest {
+    fun `cached size matches database after add operations`() = runTest {
         val storage = createTestStorage()
 
         val record1 = RecordInput("stream1", "key1", byteArrayOf(1, 2, 3), 3)
@@ -39,7 +39,7 @@ class SQLiteRecordStorageCacheAccuracyTest {
     }
 
     @Test
-    fun cachedSizeMatchesDatabaseAfterDeleteOperations() = runTest {
+    fun `cached size matches database after delete operations`() = runTest {
         val storage = createTestStorage()
 
         // Add records
@@ -62,7 +62,7 @@ class SQLiteRecordStorageCacheAccuracyTest {
     }
 
     @Test
-    fun cachedSizeMatchesDatabaseAfterClearOperations() = runTest {
+    fun `cached size matches database after clear operations`() = runTest {
         val storage = createTestStorage()
 
         // Add records
@@ -76,7 +76,7 @@ class SQLiteRecordStorageCacheAccuracyTest {
     }
 
     @Test
-    fun cachedSizeRemainsAccurateThroughMixedOperations() = runTest {
+    fun `cached size remains accurate through mixed operations`() = runTest {
         val storage = createTestStorage()
 
         // Complex sequence of operations
@@ -101,7 +101,7 @@ class SQLiteRecordStorageCacheAccuracyTest {
     }
 
     @Test
-    fun concurrentProducerConsumerOperationsAreThreadSafe(): Unit = runBlocking {
+    fun `concurrent producer consumer operations are thread safe`(): Unit = runBlocking {
         val storage = createTestStorage()
         val recordSize = 10
 
