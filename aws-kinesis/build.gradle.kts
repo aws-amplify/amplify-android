@@ -33,6 +33,7 @@ dependencies {
     implementation(libs.aws.kinesis)
     implementation(libs.kotlin.serializationJson)
     implementation(libs.androidx.sqlite)
+    implementation(libs.androidx.sqlite.bundled)
     implementation(libs.androidx.workmanager)
 
     testImplementation(libs.test.junit)
@@ -44,6 +45,7 @@ dependencies {
     testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.kotlin.coroutines)
     testImplementation(libs.test.kotest.assertions)
+    testImplementation(libs.androidx.sqlite.bundled.jvm)
     testImplementation(project(":testutils"))
     testImplementation(project(":aws-kinesis"))
 
@@ -53,6 +55,7 @@ dependencies {
     androidTestImplementation(libs.test.androidx.runner)
     androidTestImplementation(libs.test.kotlin.coroutines)
     androidTestImplementation(libs.test.androidx.junit)
+    androidTestImplementation(libs.test.kotest.assertions)
     androidTestImplementation(project(":aws-kinesis"))
     androidTestImplementation(libs.androidx.sqlite)
 
