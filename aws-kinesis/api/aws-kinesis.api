@@ -32,6 +32,21 @@ public final class com/amplifyframework/recordcache/FlushData {
 	public fun toString ()Ljava/lang/String;
 }
 
+public abstract class com/amplifyframework/recordcache/FlushStrategy {
+}
+
+public final class com/amplifyframework/recordcache/FlushStrategy$Interval : com/amplifyframework/recordcache/FlushStrategy {
+	public synthetic fun <init> (JILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (JLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1-UwyO8pc ()J
+	public final fun copy-LRDsOJo (J)Lcom/amplifyframework/recordcache/FlushStrategy$Interval;
+	public static synthetic fun copy-LRDsOJo$default (Lcom/amplifyframework/recordcache/FlushStrategy$Interval;JILjava/lang/Object;)Lcom/amplifyframework/recordcache/FlushStrategy$Interval;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getInterval-UwyO8pc ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class com/amplifyframework/recordcache/PutRecordsResponse {
 	public fun <init> (Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
 	public final fun component1 ()Ljava/util/List;
@@ -88,6 +103,14 @@ public final class com/amplifyframework/recordcache/RecordCacheNetworkException 
 public final class com/amplifyframework/recordcache/RecordCacheStorageException : com/amplifyframework/recordcache/RecordCacheException {
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/amplifyframework/recordcache/RecordClient {
+	public fun <init> (Lcom/amplifyframework/recordcache/RecordSender;Lcom/amplifyframework/recordcache/RecordStorage;Lkotlin/jvm/functions/Function1;)V
+	public final fun clearCache-IoAF18A (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun flush-IoAF18A (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun mapErrorResult-bjn95JY (Ljava/lang/Object;)Ljava/lang/Object;
+	public final fun record-gIAlu-s (Lcom/amplifyframework/recordcache/RecordInput;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class com/amplifyframework/recordcache/RecordData {

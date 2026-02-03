@@ -1,9 +1,6 @@
 package com.amplifyframework.recordcache
 
-import android.content.Context
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
-import androidx.test.core.app.ApplicationProvider
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -12,8 +9,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
-@RunWith(AndroidJUnit4::class)
+@RunWith(RobolectricTestRunner::class)
 class RecordClientFlushTest {
 
     private lateinit var storage: SQLiteRecordStorage
@@ -22,12 +20,11 @@ class RecordClientFlushTest {
 
     @Before
     fun setup() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        storage = SQLiteRecordStorage.forTesting(
+        storage = SQLiteRecordStorage(
             maxRecords = 1000,
             maxBytes = 1024 * 1024L,
             identifier = "test_flush",
-            connectionFactory = { BundledSQLiteDriver().open(context.getDatabasePath("test_flush.db").absolutePath) },
+            connectionFactory = { BundledSQLiteDriver().open(":memory:") },
             dispatcher = Dispatchers.IO
         )
         mockSender = TestRecordSender()
@@ -42,7 +39,7 @@ class RecordClientFlushTest {
     }
 
     @Test
-    fun flushShouldHandleMixedRecordStates() = runTest {
+    fun `flush should handle mixed record states correctly`() = runTest {
         // Given: Records with different states
         val streamName = "test-stream"
 
