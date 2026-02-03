@@ -15,10 +15,13 @@
 
 package com.amplifyframework.foundation.credentials
 
+import aws.smithy.kotlin.runtime.collections.emptyAttributes
 import aws.smithy.kotlin.runtime.time.Instant as SmithyInstant
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
+import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 @OptIn(ExperimentalTime::class)
@@ -36,6 +39,8 @@ class SmithyCredentialsTest {
 
         mapped.accessKeyId shouldBe "access"
         mapped.secretAccessKey shouldBe "secret"
+        mapped.sessionToken.shouldBeNull()
+        mapped.expiration.shouldBeNull()
     }
 
     @Test
@@ -53,5 +58,38 @@ class SmithyCredentialsTest {
         mapped.secretAccessKey shouldBe "secret"
         mapped.sessionToken shouldBe "session"
         mapped.expiration shouldBe SmithyInstant.fromEpochSeconds(expiration.epochSeconds)
+    }
+
+    @Test
+    fun `provider maps static credentials`() = runTest {
+        val staticProvider = AwsCredentialsProvider<AwsCredentials> {
+            AwsCredentials.Static(accessKeyId = "access", secretAccessKey = "secret")
+        }
+        val mappedProvider = staticProvider.toSmithyProvider()
+        val credentials = mappedProvider.resolve(emptyAttributes())
+
+        credentials.accessKeyId shouldBe "access"
+        credentials.secretAccessKey shouldBe "secret"
+        credentials.sessionToken.shouldBeNull()
+        credentials.expiration.shouldBeNull()
+    }
+
+    @Test
+    fun `provider maps temporary credentials`() = runTest {
+        val temporaryProvider = AwsCredentialsProvider<AwsCredentials> {
+            AwsCredentials.Temporary(
+                accessKeyId = "access",
+                secretAccessKey = "secret",
+                sessionToken = "session",
+                expiration = expiration
+            )
+        }
+        val mappedProvider = temporaryProvider.toSmithyProvider()
+        val credentials = mappedProvider.resolve(emptyAttributes())
+
+        credentials.accessKeyId shouldBe "access"
+        credentials.secretAccessKey shouldBe "secret"
+        credentials.sessionToken shouldBe "session"
+        credentials.expiration shouldBe SmithyInstant.fromEpochSeconds(expiration.epochSeconds)
     }
 }
