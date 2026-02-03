@@ -49,7 +49,7 @@ class GraphQLResponseExceptionTest {
 
         // Assert
         exception.shouldNotBeNull()
-        exception.message.shouldBe("UnauthorizedException: You are not authorized to make this call. (code: null)")
+        exception.message.shouldBe("UnauthorizedException: You are not authorized to make this call.")
 
         val errors = exception.errors
         errors.size.shouldBe(1)
@@ -57,39 +57,7 @@ class GraphQLResponseExceptionTest {
         val error = errors[0]
         error.errorType.shouldBe("UnauthorizedException")
         error.message.shouldBe("You are not authorized to make this call.")
-        error.errorCode.shouldBeNull()
-        error.toString().shouldBe("UnauthorizedException: You are not authorized to make this call. (code: null)")
-    }
-
-    /**
-     * Tests parsing an AppSync error with errorCode field.
-     */
-    @Test
-    fun parsesErrorWithErrorCode() {
-        // Arrange
-        val jsonString = """
-            {
-              "errors": [{
-                "errorType": "UnauthorizedException",
-                "message": "You are not authorized to make this call.",
-                "errorCode": 401
-              }]
-            }
-        """.trimIndent()
-        val json = JSONObject(jsonString)
-
-        // Act
-        val exception = GraphQLResponseException(json)
-
-        // Assert
-        val errors = exception.errors
-        errors.size.shouldBe(1)
-
-        val error = errors[0]
-        error.errorType.shouldBe("UnauthorizedException")
-        error.message.shouldBe("You are not authorized to make this call.")
-        error.errorCode.shouldBe(401)
-        error.toString().shouldBe("UnauthorizedException: You are not authorized to make this call. (code: 401)")
+        error.toString().shouldBe("UnauthorizedException: You are not authorized to make this call.")
     }
 
     /**
@@ -107,8 +75,7 @@ class GraphQLResponseExceptionTest {
                 },
                 {
                   "errorType": "ValidationException",
-                  "message": "Second error",
-                  "errorCode": 400
+                  "message": "Second error"
                 }
               ]
             }
@@ -127,7 +94,6 @@ class GraphQLResponseExceptionTest {
 
         errors[1].errorType.shouldBe("ValidationException")
         errors[1].message.shouldBe("Second error")
-        errors[1].errorCode.shouldBe(400)
     }
 
     /**
@@ -158,8 +124,8 @@ class GraphQLResponseExceptionTest {
         // Assert - message should contain both errors separated by semicolon
         val message = exception.message
         message.shouldBe(
-            "FirstError: This should be in the message (code: null); " +
-                "SecondError: This should also be in the message (code: null)"
+            "FirstError: This should be in the message; " +
+                "SecondError: This should also be in the message"
         )
     }
 
@@ -168,7 +134,7 @@ class GraphQLResponseExceptionTest {
      */
     @Test
     fun handlesPartialErrorFields() {
-        // Arrange - only message, no errorType or errorCode
+        // Arrange - only message, no errorType
         val jsonString = """
             {
               "errors": [{
@@ -188,8 +154,7 @@ class GraphQLResponseExceptionTest {
         val error = errors[0]
         error.errorType.shouldBeNull()
         error.message.shouldBe("Something went wrong")
-        error.errorCode.shouldBeNull()
-        error.toString().shouldBe("null: Something went wrong (code: null)")
+        error.toString().shouldBe("null: Something went wrong")
     }
 
     /**
@@ -256,29 +221,6 @@ class GraphQLResponseExceptionTest {
         val exception = GraphQLResponseException(json)
 
         // Assert
-        exception.errors[0].toString().shouldBe("SomeError: null (code: null)")
-    }
-
-    /**
-     * Tests GraphQLError toString with errorType and errorCode but no message.
-     */
-    @Test
-    fun errorToStringWithTypeAndCode() {
-        // Arrange
-        val jsonString = """
-            {
-              "errors": [{
-                "errorType": "SomeError",
-                "errorCode": 500
-              }]
-            }
-        """.trimIndent()
-        val json = JSONObject(jsonString)
-
-        // Act
-        val exception = GraphQLResponseException(json)
-
-        // Assert
-        exception.errors[0].toString().shouldBe("SomeError: null (code: 500)")
+        exception.errors[0].toString().shouldBe("SomeError: null")
     }
 }

@@ -114,7 +114,6 @@ public final class com/amplifyframework/api/aws/GraphQLResponseException : java/
 }
 
 public final class com/amplifyframework/api/aws/GraphQLResponseException$GraphQLError {
-	public fun getErrorCode ()Ljava/lang/Integer;
 	public fun getErrorType ()Ljava/lang/String;
 	public fun getMessage ()Ljava/lang/String;
 	public fun toString ()Ljava/lang/String;

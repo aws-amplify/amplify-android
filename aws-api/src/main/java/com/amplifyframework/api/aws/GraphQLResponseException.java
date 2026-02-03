@@ -29,6 +29,16 @@ import java.util.List;
 
 /**
  * Exception representing a GraphQL error response from AppSync.
+ * <p>
+ * This exception is thrown when AppSync returns errors during connection establishment
+ * for GraphQL queries or subscriptions (e.g., authentication failures, authorization errors).
+ * <p>
+ * Use {@link GraphQLError#getErrorType()} for programmatic error handling.
+ * For information on error types, see
+ * <a href="https://docs.aws.amazon.com/appsync/latest/APIReference/CommonErrors.html">
+ * AWS AppSync Common Errors</a>.
+ *
+ * @see GraphQLError
  */
 public final class GraphQLResponseException extends IOException {
     private static final long serialVersionUID = 1L;
@@ -77,11 +87,9 @@ public final class GraphQLResponseException extends IOException {
         List<GraphQLError> errorList = new ArrayList<>();
         for (int i = 0; i < errorsArray.length(); i++) {
             JSONObject errorObj = errorsArray.getJSONObject(i);
-            Integer errorCode = errorObj.has("errorCode") ? errorObj.getInt("errorCode") : null;
             errorList.add(new GraphQLError(
                 errorObj.optString("errorType", null),
-                errorObj.optString("message", null),
-                errorCode
+                errorObj.optString("message", null)
             ));
         }
         return errorList;
@@ -89,20 +97,30 @@ public final class GraphQLResponseException extends IOException {
     
     /**
      * Represents a single GraphQL error from the errors array.
+     * <p>
+     * Each error contains:
+     * <ul>
+     *   <li><b>errorType</b> - The primary error identifier (use this for error handling)</li>
+     *   <li><b>message</b> - Human-readable error description</li>
+     * </ul>
      */
     public static final class GraphQLError {
         private final String errorType;
         private final String message;
-        private final Integer errorCode;
         
-        GraphQLError(@Nullable String errorType, @Nullable String message, @Nullable Integer errorCode) {
+        GraphQLError(@Nullable String errorType, @Nullable String message) {
             this.errorType = errorType;
             this.message = message;
-            this.errorCode = errorCode;
         }
         
         /**
          * Gets the error type (AWS AppSync extension).
+         * Use this field for programmatic error handling.
+         * <p>
+         * For information on error types, see
+         * <a href="https://docs.aws.amazon.com/appsync/latest/APIReference/CommonErrors.html">
+         * AWS AppSync Common Errors</a>.
+         *
          * @return The error type, or null if not present
          */
         @Nullable
@@ -119,18 +137,9 @@ public final class GraphQLResponseException extends IOException {
             return message;
         }
         
-        /**
-         * Gets the error code.
-         * @return The error code, or null if not present
-         */
-        @Nullable
-        public Integer getErrorCode() {
-            return errorCode;
-        }
-        
         @Override
         public String toString() {
-            return String.format("%s: %s (code: %s)", errorType, message, errorCode);
+            return String.format("%s: %s", errorType, message);
         }
     }
 }
