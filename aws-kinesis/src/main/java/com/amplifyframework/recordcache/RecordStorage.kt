@@ -1,6 +1,6 @@
 package com.amplifyframework.recordcache
 
-abstract class RecordStorage(
+internal abstract class RecordStorage(
     val maxRecords: Int,
     val maxBytes: Long,
     val identifier: String

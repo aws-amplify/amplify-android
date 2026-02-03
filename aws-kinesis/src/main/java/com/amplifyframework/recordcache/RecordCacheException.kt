@@ -2,25 +2,25 @@ package com.amplifyframework.recordcache
 
 import com.amplifyframework.AmplifyException
 
-open class RecordCacheException(
+internal open class RecordCacheException(
     message: String,
     recoverySuggestion: String,
     cause: Throwable? = null
 ) : AmplifyException(message, cause, recoverySuggestion)
 
-class RecordCacheStorageException(
+internal class RecordCacheStorageException(
     message: String,
     recoverySuggestion: String,
     cause: Throwable? = null
 ) : RecordCacheException(message, recoverySuggestion, cause)
 
-class RecordCacheLimitExceededException(
+internal class RecordCacheLimitExceededException(
     message: String,
     recoverySuggestion: String,
     cause: Throwable? = null
 ) : RecordCacheException(message, recoverySuggestion, cause)
 
-class RecordCacheNetworkException(
+internal class RecordCacheNetworkException(
     message: String,
     recoverySuggestion: String,
     cause: Throwable? = null

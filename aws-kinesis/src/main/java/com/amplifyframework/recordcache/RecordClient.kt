@@ -2,7 +2,7 @@ package com.amplifyframework.recordcache
 
 import kotlin.mapCatching
 
-class RecordClient<E : Exception>(
+internal class RecordClient<E : Exception>(
     private val sender: RecordSender,
     private val storage: RecordStorage,
     private val exceptionMapper: (RecordCacheException) -> E

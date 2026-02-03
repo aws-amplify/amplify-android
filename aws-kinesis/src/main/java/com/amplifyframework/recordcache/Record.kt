@@ -1,6 +1,6 @@
 package com.amplifyframework.recordcache
 
-data class RecordInput(
+internal data class RecordInput(
     val streamName: String,
     val partitionKey: String,
     val data: ByteArray,
