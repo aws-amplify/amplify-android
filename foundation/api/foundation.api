@@ -3,13 +3,13 @@ public abstract interface class com/amplifyframework/foundation/credentials/AwsC
 	public abstract fun getSecretAccessKey ()Ljava/lang/String;
 }
 
-public class com/amplifyframework/foundation/credentials/AwsCredentials$Static : com/amplifyframework/foundation/credentials/AwsCredentials {
+public final class com/amplifyframework/foundation/credentials/AwsCredentials$Static : com/amplifyframework/foundation/credentials/AwsCredentials {
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
 	public fun getAccessKeyId ()Ljava/lang/String;
 	public fun getSecretAccessKey ()Ljava/lang/String;
 }
 
-public class com/amplifyframework/foundation/credentials/AwsCredentials$Temporary : com/amplifyframework/foundation/credentials/AwsCredentials {
+public final class com/amplifyframework/foundation/credentials/AwsCredentials$Temporary : com/amplifyframework/foundation/credentials/AwsCredentials {
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/time/Instant;)V
 	public fun getAccessKeyId ()Ljava/lang/String;
 	public final fun getExpiration ()Lkotlin/time/Instant;
