@@ -39,33 +39,9 @@ fun AwsCredentials.toSmithyCredentials(): Credentials = when (this) {
 }
 
 @InternalAmplifyApi
-@OptIn(ExperimentalTime::class)
-fun Credentials.toAwsCredentials(): AwsCredentials {
-    val sessionToken = this.sessionToken
-    val expiration = this.expiration
-
-    return if (sessionToken != null && expiration != null) {
-        AwsCredentials.Temporary(
-            accessKeyId = accessKeyId,
-            secretAccessKey = secretAccessKey,
-            sessionToken = sessionToken,
-            expiration = expiration.toKotlinInstant()
-        )
-    } else {
-        AwsCredentials.Static(
-            accessKeyId = accessKeyId,
-            secretAccessKey = secretAccessKey
-        )
-    }
-}
-
-@InternalAmplifyApi
 fun AwsCredentialsProvider<*>.toSmithyProvider() = object : CredentialsProvider {
     override suspend fun resolve(attributes: Attributes) = this@toSmithyProvider.resolve().toSmithyCredentials()
 }
-
-@OptIn(ExperimentalTime::class)
-private fun SmithyInstant.toKotlinInstant() = Instant.fromEpochSeconds(epochSeconds)
 
 @OptIn(ExperimentalTime::class)
 private fun Instant.toSmithyInstant() = SmithyInstant.fromEpochSeconds(epochSeconds)
