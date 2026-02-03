@@ -10,5 +10,12 @@ kotlin {
                 api(project(":annotations"))
             }
         }
+
+        commonTest {
+            dependencies {
+                implementation(libs.test.kotest.assertions)
+                implementation(project(":testutils"))
+            }
+        }
     }
 }
