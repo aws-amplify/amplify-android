@@ -15,6 +15,8 @@
 
 package com.amplifyframework.foundation.results
 
+import com.amplifyframework.annotations.InternalAmplifyApi
+
 /**
  * The result of a single operation.
  */
@@ -30,3 +32,27 @@ sealed interface Result<out T, out E> {
     data class Failure<out E>(val error: E) : Result<Nothing, E>
 }
 
+@InternalAmplifyApi
+fun <T, E : Throwable> Result<T, E>.getOrThrow(): T = when (this) {
+    is Result.Failure -> throw error
+    is Result.Success -> data
+}
+
+@InternalAmplifyApi
+inline fun <T, E, E2> Result<T, E>.mapFailure(mapper: (E) -> E2): Result<T, E2> = when (this) {
+    is Result.Success -> this
+    is Result.Failure -> Result.Failure(mapper(this.error))
+}
+
+@InternalAmplifyApi
+inline fun <T, E, T2> Result<T, E>.mapSuccess(mapper: (T) -> T2): Result<T2, E> = when (this) {
+    is Result.Failure -> this
+    is Result.Success -> Result.Success(mapper(this.data))
+}
+
+@InternalAmplifyApi
+inline fun <T, E, T2, E2> Result<T, E>.mapBoth(mapSuccess: (T) -> T2, mapFailure: (E) -> E2): Result<T2, E2> =
+    when (this) {
+        is Result.Failure -> Result.Failure(mapFailure(this.error))
+        is Result.Success -> Result.Success(mapSuccess(this.data))
+    }
