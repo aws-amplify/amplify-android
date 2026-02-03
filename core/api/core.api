@@ -231,6 +231,7 @@ public final class com/amplifyframework/api/ApiException$ApiAuthException : com/
 
 public final class com/amplifyframework/api/ApiException$NonRetryableException : com/amplifyframework/api/ApiException {
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
 }
 
 public abstract class com/amplifyframework/api/ApiOperation : com/amplifyframework/core/async/AmplifyOperation, com/amplifyframework/core/async/Cancelable {
