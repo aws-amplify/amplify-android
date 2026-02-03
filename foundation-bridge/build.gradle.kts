@@ -10,5 +10,11 @@ kotlin {
                 api(libs.aws.credentials)
             }
         }
+
+        commonTest {
+            dependencies {
+                implementation(libs.test.kotest.assertions)
+            }
+        }
     }
 }

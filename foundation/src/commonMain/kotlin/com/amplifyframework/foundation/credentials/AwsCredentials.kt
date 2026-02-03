@@ -40,7 +40,7 @@ sealed interface AwsCredentials {
     /**
      * Long-term AWS credentials, such as those granted to Admin Users
      */
-    open class Static(
+    class Static(
         override val accessKeyId: String,
         override val secretAccessKey: String
     ) : AwsCredentials
@@ -49,7 +49,7 @@ sealed interface AwsCredentials {
      * Temporary credentials, such as those vended by STS
      */
     @OptIn(ExperimentalTime::class)
-    open class Temporary(
+    class Temporary(
         override val accessKeyId: String,
         override val secretAccessKey: String,
         val sessionToken: String,
