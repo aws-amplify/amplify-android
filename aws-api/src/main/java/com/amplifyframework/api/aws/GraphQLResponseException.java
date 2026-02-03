@@ -34,7 +34,7 @@ import java.util.List;
  * for GraphQL queries or subscriptions (e.g., authentication failures, authorization errors).
  * <p>
  * Use {@link GraphQLError#getErrorType()} for programmatic error handling.
- * For information on error types, see
+ * For information on existing error types, see
  * <a href="https://docs.aws.amazon.com/appsync/latest/APIReference/CommonErrors.html">
  * AWS AppSync Common Errors</a>.
  *
@@ -100,7 +100,7 @@ public final class GraphQLResponseException extends IOException {
      * <p>
      * Each error contains:
      * <ul>
-     *   <li><b>errorType</b> - The primary error identifier (use this for error handling)</li>
+     *   <li><b>errorType</b> - The error type, can be used to identify errors</li>
      *   <li><b>message</b> - Human-readable error description</li>
      * </ul>
      */
@@ -115,9 +115,9 @@ public final class GraphQLResponseException extends IOException {
         
         /**
          * Gets the error type (AWS AppSync extension).
-         * Use this field for programmatic error handling.
+         * Can be used for programmatic error handling. 
          * <p>
-         * For information on error types, see
+         * For information on existing error types, see
          * <a href="https://docs.aws.amazon.com/appsync/latest/APIReference/CommonErrors.html">
          * AWS AppSync Common Errors</a>.
          *
