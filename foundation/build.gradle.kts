@@ -18,4 +18,8 @@ kotlin {
             }
         }
     }
+
+    compilerOptions {
+        optIn.add("kotlin.contracts.ExperimentalContracts")
+    }
 }

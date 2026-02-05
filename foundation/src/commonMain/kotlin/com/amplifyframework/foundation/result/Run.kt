@@ -16,10 +16,17 @@
 package com.amplifyframework.foundation.result
 
 import com.amplifyframework.annotations.InternalAmplifyApi
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 
 @InternalAmplifyApi
-inline fun <T> runCatching(block: () -> T): Result<T, Throwable> = try {
-    Result.Success(block())
-} catch (e: Throwable) {
-    Result.Failure(e)
+inline fun <T> runCatching(block: () -> T): Result<T, Throwable> {
+    contract {
+        callsInPlace(block, InvocationKind.AT_MOST_ONCE)
+    }
+    return try {
+        Result.Success(block())
+    } catch (e: Throwable) {
+        Result.Failure(e)
+    }
 }

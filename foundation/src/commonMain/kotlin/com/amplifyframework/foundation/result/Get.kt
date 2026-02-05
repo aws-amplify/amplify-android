@@ -16,12 +16,24 @@
 package com.amplifyframework.foundation.result
 
 import com.amplifyframework.annotations.InternalAmplifyApi
+import kotlin.contracts.contract
 
 @InternalAmplifyApi
-fun <T, E : Throwable> Result<T, E>.getOrThrow(): T = when (this) {
-    is Result.Failure -> throw error
-    is Result.Success -> data
+fun <T, E : Throwable> Result<T, E>.getOrThrow(): T {
+    contract {
+        returns() implies (this@getOrThrow is Result.Success)
+    }
+    return when (this) {
+        is Result.Failure -> throw error
+        is Result.Success -> data
+    }
 }
 
 @InternalAmplifyApi
-fun <T> Result<T, *>.getOrNull(): T? = if (this is Result.Success) data else null
+fun <T> Result<T, *>.getOrNull(): T? {
+    contract {
+        returnsNotNull() implies (this@getOrNull is Result.Success)
+        returns(null) implies (this@getOrNull is Result.Failure)
+    }
+    return if (this is Result.Success) data else null
+}
