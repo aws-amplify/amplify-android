@@ -15,6 +15,7 @@
 
 package com.amplifyframework.foundation.credentials
 
+import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.collections.emptyAttributes
 import aws.smithy.kotlin.runtime.time.Instant as SmithyInstant
 import io.kotest.matchers.nulls.shouldBeNull
@@ -35,7 +36,7 @@ class SmithyCredentialsTest {
             secretAccessKey = "secret"
         )
 
-        val mapped = awsCredentials.toSmithyCredentials()
+        val mapped: Credentials = awsCredentials.toSmithyCredentials()
 
         mapped.accessKeyId shouldBe "access"
         mapped.secretAccessKey shouldBe "secret"
@@ -52,7 +53,7 @@ class SmithyCredentialsTest {
             expiration = expiration
         )
 
-        val mapped = awsCredentials.toSmithyCredentials()
+        val mapped: Credentials = awsCredentials.toSmithyCredentials()
 
         mapped.accessKeyId shouldBe "access"
         mapped.secretAccessKey shouldBe "secret"
@@ -66,7 +67,7 @@ class SmithyCredentialsTest {
             AwsCredentials.Static(accessKeyId = "access", secretAccessKey = "secret")
         }
         val mappedProvider = staticProvider.toSmithyProvider()
-        val credentials = mappedProvider.resolve(emptyAttributes())
+        val credentials: Credentials = mappedProvider.resolve(emptyAttributes())
 
         credentials.accessKeyId shouldBe "access"
         credentials.secretAccessKey shouldBe "secret"
@@ -85,7 +86,7 @@ class SmithyCredentialsTest {
             )
         }
         val mappedProvider = temporaryProvider.toSmithyProvider()
-        val credentials = mappedProvider.resolve(emptyAttributes())
+        val credentials: Credentials = mappedProvider.resolve(emptyAttributes())
 
         credentials.accessKeyId shouldBe "access"
         credentials.secretAccessKey shouldBe "secret"
