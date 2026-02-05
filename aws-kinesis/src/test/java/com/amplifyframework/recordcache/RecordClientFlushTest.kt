@@ -1,11 +1,13 @@
 package com.amplifyframework.recordcache
 
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.shouldBe
+import io.mockk.coEvery
+import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -15,7 +17,7 @@ import org.robolectric.RobolectricTestRunner
 class RecordClientFlushTest {
 
     private lateinit var storage: SQLiteRecordStorage
-    private lateinit var mockSender: TestRecordSender
+    private lateinit var mockSender: RecordSender
     private lateinit var recordClient: RecordClient<Exception>
 
     @Before
@@ -27,7 +29,7 @@ class RecordClientFlushTest {
             connectionFactory = { BundledSQLiteDriver().open(":memory:") },
             dispatcher = Dispatchers.IO
         )
-        mockSender = TestRecordSender()
+        mockSender = mockk()
         recordClient = RecordClient(mockSender, storage) { it }
     }
 
@@ -61,30 +63,25 @@ class RecordClientFlushTest {
         storage.incrementRetryCount(listOf(record3Id)).getOrThrow() // Now at max retries (3)
 
         // Configure mock sender response
-        mockSender.mockResponse = PutRecordsResponse(
-            successfulIds = listOf(allRecords[0].id),
-            retryableIds = listOf(allRecords[1].id),
-            failedIds = listOf(record3Id)
+        coEvery { mockSender.putRecords(streamName, any()) } returns Result.success(
+            PutRecordsResponse(
+                successfulIds = listOf(allRecords[0].id),
+                retryableIds = listOf(allRecords[1].id),
+                failedIds = listOf(record3Id)
+            )
         )
 
         // When
         val result = recordClient.flush()
 
         // Then
-        assertTrue(result.isSuccess)
+        result.isSuccess.shouldBeTrue()
 
         // Verify final state
         val remainingRecordsByStream = storage.getRecordsByStream().getOrThrow()
         val remainingRecords = remainingRecordsByStream.flatten()
-        assertEquals(1, remainingRecords.size)
-        assertEquals(allRecords[1].id, remainingRecords[0].id)
-        assertEquals(1, remainingRecords[0].retryCount)
-    }
-
-    private class TestRecordSender : RecordSender {
-        var mockResponse: PutRecordsResponse? = null
-
-        override suspend fun putRecords(streamName: String, records: List<Record>): Result<PutRecordsResponse> =
-            Result.success(mockResponse ?: PutRecordsResponse(emptyList(), emptyList(), emptyList()))
+        remainingRecords.size shouldBe 1
+        remainingRecords[0].id shouldBe allRecords[1].id
+        remainingRecords[0].retryCount shouldBe 1
     }
 }

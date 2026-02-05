@@ -17,11 +17,17 @@ internal class RecordClient<E : Exception>(
                 .getOrThrow()
                 .map { records ->
                     val streamName = records.first().streamName
-                    // TODO: Here we should make sure all OPs start even if one fails
                     val result = sender.putRecords(streamName, records).getOrThrow()
-                    storage.deleteRecords(result.successfulIds).getOrThrow()
-                    storage.deleteRecords(result.failedIds).getOrThrow()
-                    storage.incrementRetryCount(result.retryableIds).getOrThrow()
+
+                    val deleteSuccessful = storage.deleteRecords(result.successfulIds)
+                    val deleteFailed = storage.deleteRecords(result.failedIds)
+                    val incrementRetry = storage.incrementRetryCount(result.retryableIds)
+
+                    // Ensure all updates are triggered before checking for exceptions
+                    deleteSuccessful.getOrThrow()
+                    deleteFailed.getOrThrow()
+                    incrementRetry.getOrThrow()
+                    
                     result.successfulIds
                 }
                 .map { it.size }.sum()
