@@ -6,9 +6,8 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
+import io.kotest.matchers.shouldBe
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,12 +22,11 @@ class RecordClientFlushTest {
     @Before
     fun setup() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        storage = SQLiteRecordStorage.forTesting(
+        storage = SQLiteRecordStorage(
+            context,
             maxRecords = 1000,
             maxBytes = 1024 * 1024L,
-            identifier = "test_flush",
-            connectionFactory = { BundledSQLiteDriver().open(context.getDatabasePath("test_flush.db").absolutePath) },
-            dispatcher = Dispatchers.IO
+            identifier = "test_flush"
         )
         mockSender = TestRecordSender()
         recordClient = RecordClient(mockSender, storage) { it }
@@ -74,14 +72,14 @@ class RecordClientFlushTest {
         val result = recordClient.flush()
 
         // Then
-        assertTrue(result.isSuccess)
+        result.isSuccess shouldBe true
 
         // Verify final state
         val remainingRecordsByStream = storage.getRecordsByStream().getOrThrow()
         val remainingRecords = remainingRecordsByStream.flatten()
-        assertEquals(1, remainingRecords.size)
-        assertEquals(allRecords[1].id, remainingRecords[0].id)
-        assertEquals(1, remainingRecords[0].retryCount)
+        remainingRecords.size shouldBe 1
+        remainingRecords[0].id shouldBe allRecords[1].id
+        remainingRecords[0].retryCount shouldBe 1
     }
 
     private class TestRecordSender : RecordSender {
