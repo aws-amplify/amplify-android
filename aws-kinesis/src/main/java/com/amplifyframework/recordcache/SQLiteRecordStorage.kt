@@ -13,7 +13,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
-class SQLiteRecordStorage internal constructor(
+internal class SQLiteRecordStorage internal constructor(
     maxRecords: Int,
     maxBytes: Long,
     identifier: String,
