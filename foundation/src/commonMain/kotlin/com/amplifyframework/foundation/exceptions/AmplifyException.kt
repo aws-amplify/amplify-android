@@ -26,11 +26,6 @@ abstract class AmplifyException(
     val recoverySuggestion: String,
     cause: Throwable? = null
 ) : Exception(message, cause) {
-    override fun toString() = (
-        this::class.simpleName + "{" +
-            "message=" + message +
-            ", cause=" + cause +
-            ", recoverySuggestion=" + recoverySuggestion +
-            '}'
-        )
+    override fun toString() =
+        "${this::class.simpleName}(message=$message, cause=$cause, recoverySuggestion=$recoverySuggestion)"
 }
