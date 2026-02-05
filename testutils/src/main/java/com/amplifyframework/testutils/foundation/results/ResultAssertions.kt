@@ -13,13 +13,17 @@
  * permissions and limitations under the License.
  */
 
+@file:OptIn(ExperimentalContracts::class)
+
 package com.amplifyframework.testutils.foundation.results
 
-import com.amplifyframework.foundation.results.Result
+import com.amplifyframework.foundation.result.Result
 import io.kotest.matchers.Matcher
 import io.kotest.matchers.MatcherResult
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 
 private fun <T, E> beFailure() = Matcher<Result<T, E>> { value ->
     MatcherResult(
@@ -38,25 +42,27 @@ private fun <T, E> beSuccess() = Matcher<Result<T, E>> { value ->
 }
 
 fun <T, E> Result<T, E>.shouldBeFailure(): Result.Failure<E> {
+    contract {
+        returns() implies (this@shouldBeFailure is Result.Failure<E>)
+    }
     this should beFailure()
     return this as Result.Failure
 }
 
 fun <T, E> Result<T, E>.shouldBeSuccess(): Result.Success<T> {
+    contract {
+        returns() implies (this@shouldBeSuccess is Result.Success)
+    }
     this should beSuccess()
     return this as Result.Success
 }
 
 infix fun <T, E> Result<T, E>.shouldBeFailure(expected: E): Result.Failure<E> {
-    this should beFailure()
-    val failure = this as Result.Failure
-    failure.error shouldBe expected
-    return failure
+    this.shouldBeFailure().error shouldBe expected
+    return this
 }
 
 infix fun <T, E> Result<T, E>.shouldBeSuccess(expected: T): Result.Success<T> {
-    this should beSuccess()
-    val success = this as Result.Success
-    success.data shouldBe expected
-    return success
+    this.shouldBeSuccess().data shouldBe expected
+    return this
 }

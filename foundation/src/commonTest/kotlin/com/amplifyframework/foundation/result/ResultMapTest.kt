@@ -13,16 +13,13 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.foundation.results
+package com.amplifyframework.foundation.result
 
 import com.amplifyframework.testutils.foundation.results.shouldBeFailure
 import com.amplifyframework.testutils.foundation.results.shouldBeSuccess
-import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.shouldBe
-import java.io.IOException
 import org.junit.Test
 
-class ResultTest {
+class ResultMapTest {
 
     enum class OriginalFailure {
         BadNetwork,
@@ -34,20 +31,6 @@ class ResultTest {
     enum class MappedFailure {
         NetworkProblem,
         InputProblem
-    }
-
-    @Test
-    fun `getOrThrow throws exception for failure`() {
-        shouldThrow<IOException> {
-            val failure = Result.Failure(IOException("failed"))
-            failure.getOrThrow()
-        }
-    }
-
-    @Test
-    fun `getOrThrow returns data for success`() {
-        val success = Result.Success("yay")
-        success.getOrThrow() shouldBe "yay"
     }
 
     @Test
