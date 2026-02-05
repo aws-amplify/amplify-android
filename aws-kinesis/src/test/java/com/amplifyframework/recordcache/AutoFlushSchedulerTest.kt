@@ -5,7 +5,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -20,11 +20,11 @@ class AutoFlushSchedulerTest {
         coEvery { mockClient.flush() } returns Result.success(FlushData(0))
 
         val interval = FlushStrategy.Interval(1.seconds)
-        val scheduler = AutoFlushScheduler(interval, mockClient, TestScope(testScheduler))
+        val scheduler = AutoFlushScheduler(interval, mockClient, StandardTestDispatcher(testScheduler))
 
         // When
         scheduler.start()
-        advanceTimeBy(2500L) // Advance 2.5 seconds
+        advanceTimeBy(2.5.seconds) // Advance 2.5 seconds
         scheduler.disable()
 
         // Then
@@ -38,7 +38,7 @@ class AutoFlushSchedulerTest {
         coEvery { mockClient.flush() } returns Result.success(FlushData(0))
 
         val interval = FlushStrategy.Interval(1.seconds)
-        val scheduler = AutoFlushScheduler(interval, mockClient, TestScope(testScheduler))
+        val scheduler = AutoFlushScheduler(interval, mockClient, StandardTestDispatcher(testScheduler))
 
         // When
         scheduler.start()
@@ -57,7 +57,7 @@ class AutoFlushSchedulerTest {
         coEvery { mockClient.flush() } returns Result.success(FlushData(0))
 
         val interval = FlushStrategy.Interval(1.seconds)
-        val scheduler = AutoFlushScheduler(interval, mockClient, TestScope(testScheduler))
+        val scheduler = AutoFlushScheduler(interval, mockClient, StandardTestDispatcher(testScheduler))
 
         // When
         scheduler.start()
