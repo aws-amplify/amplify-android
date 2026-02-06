@@ -1,0 +1,131 @@
+package com.amplifyframework.kinesis
+
+import android.content.Context
+import com.amplifyframework.auth.AWSCredentials
+import com.amplifyframework.auth.AWSCredentialsProvider
+import com.amplifyframework.recordcache.AutoFlushScheduler
+import com.amplifyframework.recordcache.ClearCacheResult
+import com.amplifyframework.recordcache.FlushResult
+import com.amplifyframework.recordcache.FlushStrategy
+import com.amplifyframework.recordcache.FlushStrategy.Interval
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.category.CategoryType
+import com.amplifyframework.logging.Logger
+import com.amplifyframework.recordcache.RecordClient
+import com.amplifyframework.recordcache.RecordInput
+import com.amplifyframework.recordcache.RecordResult
+import com.amplifyframework.recordcache.SQLiteRecordStorage
+import kotlin.system.measureTimeMillis
+
+class KinesisDataStreams(
+    val context: Context,
+    val region: String,
+    val credentialsProvider: AWSCredentialsProvider<AWSCredentials>,
+    options: KinesisDataStreamsOptions = KinesisDataStreamsOptions.defaults()
+) {
+    private val logger: Logger = Amplify.Logging.logger(CategoryType.ANALYTICS, "KinesisDataStreams")
+    
+    private val recordClient: RecordClient<KinesisException> = RecordClient(
+        sender = KinesisRecordSender(
+            credentialsProvider = this@KinesisDataStreams.credentialsProvider,
+            region = this.region,
+            maxRetries = options.maxRetries
+        ),
+        storage = SQLiteRecordStorage(
+            context = context,
+            identifier = region,
+            maxRecords = options.maxRecords,
+            maxBytes = options.cacheMaxBytes
+        ),
+        exceptionMapper = { it.toKinesisException() }
+    )
+    private val scheduler: AutoFlushScheduler
+
+    init {
+        if (options.flushStrategy is FlushStrategy.Interval) {
+            scheduler = AutoFlushScheduler(
+                options.flushStrategy,
+                client = recordClient
+            )
+        } else {
+            throw IllegalArgumentException("Flush strategy must be interval")
+        }
+    }
+
+    /**
+     * Records data to the specified Kinesis stream.
+     *
+     * @param data The data to record as byte array
+     * @param partitionKey The partition key for the record
+     * @param streamName The name of the Kinesis stream
+     * @return Result.success(RecordData) on success, or Result.failure with:
+     *   - KinesisException wrapping RecordCacheLimitExceededException (cache full)
+     *   - KinesisException wrapping RecordCacheStorageException (database errors)
+     */
+    suspend fun record(data: ByteArray, partitionKey: String, streamName: String): RecordResult {
+        logger.verbose("Recording to stream: $streamName")
+        return logOp(
+            operation = { recordClient.record(RecordInput(streamName, partitionKey, data)) },
+            logSuccess = { _, timeMs -> logger.debug("Record completed successfully in ${timeMs}ms") },
+            logFailure = { error, timeMs -> logger.warn("Record failed in ${timeMs}ms: ${error?.message}") }
+        )
+    }
+
+    /**
+     * Flushes all cached records to their respective Kinesis streams.
+     *
+     * @return Result.success(FlushData) on success, or Result.failure with:
+     *   - KinesisException wrapping RecordCacheNetworkException (API/network failures)
+     *   - KinesisException wrapping RecordCacheStorageException (database errors)
+     */
+    suspend fun flush(): FlushResult {
+        logger.info("Starting flush")
+        return logOp(
+            operation = { recordClient.flush() },
+            logSuccess = { data, timeMs -> logger.info("Flush completed successfully in ${timeMs}ms - ${data.recordsFlushed} records flushed") },
+            logFailure = { error, timeMs -> logger.warn("Flush failed in ${timeMs}ms: ${error?.message}") }
+        )
+    }
+
+    /**
+     * Clears all cached records from local storage.
+     *
+     * @return Result.success(ClearCacheData) on success, or Result.failure with:
+     *   - KinesisException wrapping RecordCacheStorageException (database errors)
+     */
+    suspend fun clearCache(): ClearCacheResult {
+        logger.info("Clearing cache")
+        return logOp(
+            operation = { recordClient.clearCache() },
+            logSuccess = { data, timeMs -> logger.info("Clear cache completed successfully in ${timeMs}ms - ${data.recordsCleared} records cleared") },
+            logFailure = { error, timeMs -> logger.warn("Clear cache failed in ${timeMs}ms: ${error?.message}") }
+        )
+    }
+
+    /**
+     * Enables automatic flushing of cached records based on the configured interval.
+     */
+    fun enable() = scheduler.start()
+
+    /**
+     * Disables automatic flushing of cached records.
+     */
+    fun disable() = scheduler.disable()
+
+    private suspend inline fun <T> logOp(
+        operation: suspend () -> Result<T>,
+        logSuccess: (T, Long) -> Unit,
+        logFailure: (Throwable?, Long) -> Unit
+    ): Result<T> {
+        val result: Result<T>
+        val timeMs = measureTimeMillis {
+            result = operation()
+        }
+        if (result.isSuccess) {
+            logSuccess(result.getOrThrow(), timeMs)
+        } else {
+            logFailure(result.exceptionOrNull(), timeMs)
+        }
+        return result
+    }
+}
