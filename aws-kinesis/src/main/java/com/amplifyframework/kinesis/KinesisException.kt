@@ -3,6 +3,13 @@ package com.amplifyframework.kinesis
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.recordcache.RecordCacheException
 
+/**
+ * Exception thrown by Kinesis operations.
+ *
+ * @param message Error message describing what went wrong
+ * @param recoverySuggestion Suggested action to resolve the error
+ * @param cause Underlying cause of the exception
+ */
 class KinesisException(
     message: String,
     recoverySuggestion: String,
