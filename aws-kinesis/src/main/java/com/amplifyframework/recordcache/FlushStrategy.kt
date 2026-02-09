@@ -3,7 +3,15 @@ package com.amplifyframework.recordcache
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
+/**
+ * Strategy for automatically flushing cached records to Kinesis.
+ */
 sealed class FlushStrategy {
+    /**
+     * Flush records at regular time intervals.
+     *
+     * @param interval Time between automatic flush operations
+     */
     data class Interval(
         /**
          * The interval between automatic flush operations.

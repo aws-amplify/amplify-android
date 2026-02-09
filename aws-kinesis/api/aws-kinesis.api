@@ -104,29 +104,6 @@ public final class com/amplifyframework/recordcache/FlushStrategy$Interval : com
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class com/amplifyframework/recordcache/Record {
-	public fun <init> (JLjava/lang/String;Ljava/lang/String;[BIIJ)V
-	public final fun component1 ()J
-	public final fun component2 ()Ljava/lang/String;
-	public final fun component3 ()Ljava/lang/String;
-	public final fun component4 ()[B
-	public final fun component5 ()I
-	public final fun component6 ()I
-	public final fun component7 ()J
-	public final fun copy (JLjava/lang/String;Ljava/lang/String;[BIIJ)Lcom/amplifyframework/recordcache/Record;
-	public static synthetic fun copy$default (Lcom/amplifyframework/recordcache/Record;JLjava/lang/String;Ljava/lang/String;[BIIJILjava/lang/Object;)Lcom/amplifyframework/recordcache/Record;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getCreatedAt ()J
-	public final fun getData ()[B
-	public final fun getDataSize ()I
-	public final fun getId ()J
-	public final fun getPartitionKey ()Ljava/lang/String;
-	public final fun getRetryCount ()I
-	public final fun getStreamName ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
 public final class com/amplifyframework/recordcache/RecordData {
 	public fun <init> ()V
 	public fun <init> (Z)V
