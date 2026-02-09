@@ -15,21 +15,13 @@ import com.amplifyframework.recordcache.RecordSender
 typealias PutRecordsResponseSdk = aws.sdk.kotlin.services.kinesis.model.PutRecordsResponse
 
 internal class KinesisRecordSender(
-    val credentialsProvider: AWSCredentialsProvider<out AWSCredentials>,
-    val region: String,
-    val maxRetries: Int
+    private val credentialsProvider: AWSCredentialsProvider<AWSCredentials>,
+    private val region: String,
+    private val maxRetries: Int,
 ) : RecordSender {
-    @VisibleForTesting
-    lateinit var kinesisSDKClient: KinesisClient
-
-    init {
-        createKinesisSDKClient()
-    }
-    private fun createKinesisSDKClient() {
-        kinesisSDKClient = KinesisClient {
-            region = this@KinesisRecordSender.region
-            credentialsProvider = convertToSdkCredentialsProvider(this@KinesisRecordSender.credentialsProvider)
-        }
+    private val kinesisSDKClient: KinesisClient = KinesisClient {
+        this.region = this@KinesisRecordSender.region
+        this.credentialsProvider = convertToSdkCredentialsProvider(this@KinesisRecordSender.credentialsProvider)
     }
 
     override suspend fun putRecords(streamName: String, records: List<Record>): Result<PutRecordsResponse> =
@@ -50,7 +42,7 @@ internal class KinesisRecordSender(
         }
 
     @VisibleForTesting
-    fun createRequest(streamName: String, records: List<Record>) = PutRecordsRequest {
+    internal fun createRequest(streamName: String, records: List<Record>) = PutRecordsRequest {
         this.streamName = streamName
         this.records = records.map { record ->
             PutRecordsRequestEntry {
@@ -61,7 +53,7 @@ internal class KinesisRecordSender(
     }
 
     @VisibleForTesting
-    fun splitResponse(response: PutRecordsResponseSdk, records: List<Record>): PutRecordsResponse {
+    internal fun splitResponse(response: PutRecordsResponseSdk, records: List<Record>): PutRecordsResponse {
         val successfulIds = mutableListOf<Long>()
         val retryableIds = mutableListOf<Long>()
         val failedIds = mutableListOf<Long>()
