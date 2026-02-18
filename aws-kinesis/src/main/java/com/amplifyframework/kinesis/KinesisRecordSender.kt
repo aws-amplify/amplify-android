@@ -12,7 +12,7 @@ typealias PutRecordsResponseSdk = aws.sdk.kotlin.services.kinesis.model.PutRecor
 
 internal class KinesisRecordSender(
     private val kinesisClient: KinesisClient,
-    private val maxRetries: Int,
+    private val maxRetries: Int
 ) : RecordSender {
 
     override suspend fun putRecords(streamName: String, records: List<Record>): Result<PutRecordsResponse> =

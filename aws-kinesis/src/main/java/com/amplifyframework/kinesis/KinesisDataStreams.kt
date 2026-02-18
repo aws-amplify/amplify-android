@@ -1,22 +1,21 @@
 package com.amplifyframework.kinesis
 
 import android.content.Context
+import aws.sdk.kotlin.services.kinesis.KinesisClient
 import com.amplifyframework.auth.AWSCredentials
 import com.amplifyframework.auth.AWSCredentialsProvider
 import com.amplifyframework.auth.convertToSdkCredentialsProvider
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.category.CategoryType
+import com.amplifyframework.logging.Logger
 import com.amplifyframework.recordcache.AutoFlushScheduler
 import com.amplifyframework.recordcache.ClearCacheResult
 import com.amplifyframework.recordcache.FlushResult
 import com.amplifyframework.recordcache.FlushStrategy
 import com.amplifyframework.recordcache.FlushStrategy.Interval
-import com.amplifyframework.core.Amplify
-import com.amplifyframework.core.category.CategoryType
-import com.amplifyframework.logging.Logger
 import com.amplifyframework.recordcache.RecordClient
 import com.amplifyframework.recordcache.RecordInput
-import com.amplifyframework.recordcache.RecordResult
 import com.amplifyframework.recordcache.SQLiteRecordStorage
-import aws.sdk.kotlin.services.kinesis.KinesisClient
 import kotlin.system.measureTimeMillis
 
 /**
@@ -32,14 +31,14 @@ import kotlin.system.measureTimeMillis
  *     region = "us-east-1",
  *     credentialsProvider = credentialsProvider
  * )
- * 
+ *
  * // Record data
  * kinesis.record(
  *     data = "Hello Kinesis".toByteArray(),
  *     streamName = "my-stream",
  *     partitionKey = "partition-1"
  * )
- * 
+ *
  * // Flush cached records
  * val result = kinesis.flush()
  * ```
@@ -77,6 +76,7 @@ class KinesisDataStreams(
         )
     )
     private val scheduler: AutoFlushScheduler
+
     @Volatile private var isEnabled = false
 
     init {
@@ -108,8 +108,14 @@ class KinesisDataStreams(
         logger.verbose { "Recording to stream: $streamName" }
         return logOp(
             operation = { recordClient.record(RecordInput(streamName, partitionKey, data)).map { }.wrapError() },
-            logSuccess = { _, timeMs -> logger.debug("Record completed successfully in ${timeMs}ms") }, // TODO: Use lazy evaluation for log messages
-            logFailure = { error, timeMs -> logger.warn("Record failed in ${timeMs}ms: ${error?.message}") } // TODO: Use lazy evaluation for log messages
+            logSuccess = { _, timeMs ->
+                // TODO: Use lazy evaluation for log messages
+                logger.debug("Record completed successfully in ${timeMs}ms")
+            },
+            logFailure = { error, timeMs ->
+                // TODO: Use lazy evaluation for log messages
+                logger.warn("Record failed in ${timeMs}ms: ${error?.message}")
+            }
         )
     }
 
@@ -117,15 +123,25 @@ class KinesisDataStreams(
      * Flushes all cached records to their respective Kinesis streams.
      *
      * @return Result.success(FlushData) on success, or Result.failure with:
-     *   - [KinesisServiceException] (API/network failures)
+     *   - [KinesisServiceException] (API failures)
      *   - [KinesisStorageException] (database errors)
+     *   - [KinesisUnknownException] (unexpected failures)
      */
     suspend fun flush(): FlushResult {
         logger.info("Starting flush")
         return logOp(
             operation = { recordClient.flush().wrapError() },
-            logSuccess = { data, timeMs -> logger.info("Flush completed successfully in ${timeMs}ms - ${data.recordsFlushed} records flushed") }, // TODO: Use lazy evaluation for log messages
-            logFailure = { error, timeMs -> logger.warn("Flush failed in ${timeMs}ms: ${error?.message}") } // TODO: Use lazy evaluation for log messages
+            logSuccess = { data, timeMs ->
+                // TODO: Use lazy evaluation for log messages
+                logger.info(
+                    "Flush completed successfully in ${timeMs}ms" +
+                        " - ${data.recordsFlushed} records flushed"
+                )
+            },
+            logFailure = { error, timeMs ->
+                // TODO: Use lazy evaluation for log messages
+                logger.warn("Flush failed in ${timeMs}ms: ${error?.message}")
+            }
         )
     }
 
@@ -139,8 +155,17 @@ class KinesisDataStreams(
         logger.info("Clearing cache")
         return logOp(
             operation = { recordClient.clearCache().wrapError() },
-            logSuccess = { data, timeMs -> logger.info("Clear cache completed successfully in ${timeMs}ms - ${data.recordsCleared} records cleared") }, // TODO: Use lazy evaluation for log messages
-            logFailure = { error, timeMs -> logger.warn("Clear cache failed in ${timeMs}ms: ${error?.message}") } // TODO: Use lazy evaluation for log messages
+            logSuccess = { data, timeMs ->
+                // TODO: Use lazy evaluation for log messages
+                logger.info(
+                    "Clear cache completed successfully in ${timeMs}ms" +
+                        " - ${data.recordsCleared} records cleared"
+                )
+            },
+            logFailure = { error, timeMs ->
+                // TODO: Use lazy evaluation for log messages
+                logger.warn("Clear cache failed in ${timeMs}ms: ${error?.message}")
+            }
         )
     }
 

@@ -5,7 +5,7 @@ package com.amplifyframework.recordcache
  * Mapped to the public Kinesis exception type at the KinesisDataStreams boundary.
  */
 internal sealed class RecordCacheException(
-    message: String,
+    override val message: String,
     recoverySuggestion: String,
     cause: Throwable? = null
 ) : Exception(message, cause) {

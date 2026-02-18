@@ -1,16 +1,13 @@
 package com.amplifyframework.recordcache
 
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.mapCatching
 
 internal class RecordClient(
     private val sender: RecordSender,
     private val storage: RecordStorage
 ) {
     private val isFlushing = AtomicBoolean(false)
-    suspend fun record(record: RecordInput): RecordResult = mapErrorResult(
-        storage.addRecord(record).mapCatching { RecordData() }
-    )
+    suspend fun record(record: RecordInput): RecordResult = storage.addRecord(record).mapCatching { RecordData() }
 
     suspend fun flush(): FlushResult {
         // Guard against concurrent flushes to return early

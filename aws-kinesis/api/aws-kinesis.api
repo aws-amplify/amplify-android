@@ -69,8 +69,13 @@ public final class com/amplifyframework/kinesis/KinesisDataStreamsOptions$Compan
 }
 
 public abstract class com/amplifyframework/kinesis/KinesisException : com/amplifyframework/AmplifyException {
+	public static final field Companion Lcom/amplifyframework/kinesis/KinesisException$Companion;
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/amplifyframework/kinesis/KinesisException$Companion {
+	public final fun from (Ljava/lang/Throwable;)Lcom/amplifyframework/kinesis/KinesisException;
 }
 
 public final class com/amplifyframework/kinesis/KinesisLimitExceededException : com/amplifyframework/kinesis/KinesisException {
@@ -78,12 +83,18 @@ public final class com/amplifyframework/kinesis/KinesisLimitExceededException : 
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
-public final class com/amplifyframework/kinesis/KinesisNetworkException : com/amplifyframework/kinesis/KinesisException {
+public final class com/amplifyframework/kinesis/KinesisServiceException : com/amplifyframework/kinesis/KinesisException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Laws/sdk/kotlin/services/kinesis/model/KinesisException;)V
+	public fun getCause ()Laws/sdk/kotlin/services/kinesis/model/KinesisException;
+	public synthetic fun getCause ()Ljava/lang/Throwable;
+}
+
+public final class com/amplifyframework/kinesis/KinesisStorageException : com/amplifyframework/kinesis/KinesisException {
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
-public final class com/amplifyframework/kinesis/KinesisStorageException : com/amplifyframework/kinesis/KinesisException {
+public final class com/amplifyframework/kinesis/KinesisUnknownException : com/amplifyframework/kinesis/KinesisException {
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
