@@ -16,11 +16,15 @@ class AutoFlushSchedulerTest {
     @Test
     fun `start should begin periodic flushing`() = runTest {
         // Given
-        val mockClient = mockk<RecordClient<Exception>>()
+        val mockClient = mockk<RecordClient>()
         coEvery { mockClient.flush() } returns Result.success(FlushData(0))
 
         val interval = FlushStrategy.Interval(1.seconds)
-        val scheduler = AutoFlushScheduler(interval, mockClient, StandardTestDispatcher(testScheduler))
+        val scheduler = AutoFlushScheduler(
+            interval,
+            mockClient,
+            StandardTestDispatcher(testScheduler)
+        )
 
         // When
         scheduler.start()
@@ -34,11 +38,15 @@ class AutoFlushSchedulerTest {
     @Test
     fun `disable should stop periodic flushing`() = runTest {
         // Given
-        val mockClient = mockk<RecordClient<Exception>>()
+        val mockClient = mockk<RecordClient>()
         coEvery { mockClient.flush() } returns Result.success(FlushData(0))
 
         val interval = FlushStrategy.Interval(1.seconds)
-        val scheduler = AutoFlushScheduler(interval, mockClient, StandardTestDispatcher(testScheduler))
+        val scheduler = AutoFlushScheduler(
+            interval,
+            mockClient,
+            StandardTestDispatcher(testScheduler)
+        )
 
         // When
         scheduler.start()
@@ -53,11 +61,15 @@ class AutoFlushSchedulerTest {
     @Test
     fun `start should cancel previous job and restart`() = runTest {
         // Given
-        val mockClient = mockk<RecordClient<Exception>>()
+        val mockClient = mockk<RecordClient>()
         coEvery { mockClient.flush() } returns Result.success(FlushData(0))
 
         val interval = FlushStrategy.Interval(1.seconds)
-        val scheduler = AutoFlushScheduler(interval, mockClient, StandardTestDispatcher(testScheduler))
+        val scheduler = AutoFlushScheduler(
+            interval,
+            mockClient,
+            StandardTestDispatcher(testScheduler)
+        )
 
         // When
         scheduler.start()

@@ -18,7 +18,7 @@ class RecordClientFlushTest {
 
     private lateinit var storage: SQLiteRecordStorage
     private lateinit var mockSender: RecordSender
-    private lateinit var recordClient: RecordClient<Exception>
+    private lateinit var recordClient: RecordClient
 
     @Before
     fun setup() {
@@ -30,7 +30,7 @@ class RecordClientFlushTest {
             dispatcher = Dispatchers.IO
         )
         mockSender = mockk()
-        recordClient = RecordClient(mockSender, storage) { it }
+        recordClient = RecordClient(mockSender, storage)
     }
 
     @After
