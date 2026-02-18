@@ -1,5 +1,6 @@
 package com.amplifyframework.recordcache
 
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.mapCatching
 
 internal class RecordClient<E : Exception>(
@@ -7,33 +8,44 @@ internal class RecordClient<E : Exception>(
     private val storage: RecordStorage,
     private val exceptionMapper: (RecordCacheException) -> E
 ) {
+    private val isFlushing = AtomicBoolean(false)
     suspend fun record(record: RecordInput): RecordResult = mapErrorResult(
         storage.addRecord(record).mapCatching { RecordData() }
     )
 
-    suspend fun flush(): FlushResult = mapErrorResult(
-        runCatching {
-            val r = storage.getRecordsByStream()
-                .getOrThrow()
-                .map { records ->
-                    val streamName = records.first().streamName
-                    val result = sender.putRecords(streamName, records).getOrThrow()
-
-                    val deleteSuccessful = storage.deleteRecords(result.successfulIds)
-                    val deleteFailed = storage.deleteRecords(result.failedIds)
-                    val incrementRetry = storage.incrementRetryCount(result.retryableIds)
-
-                    // Ensure all updates are triggered before checking for exceptions
-                    deleteSuccessful.getOrThrow()
-                    deleteFailed.getOrThrow()
-                    incrementRetry.getOrThrow()
-                    
-                    result.successfulIds
-                }
-                .map { it.size }.sum()
-            FlushData(r)
+    suspend fun flush(): FlushResult {
+        // Guard against concurrent flushes to return early
+        if (!isFlushing.compareAndSet(false, true)) {
+            return Result.success(FlushData(recordsFlushed = 0, flushInProgress = true))
         }
-    )
+        return try {
+            mapErrorResult(
+                runCatching {
+                    val r = storage.getRecordsByStream()
+                        .getOrThrow()
+                        .map { records ->
+                            val streamName = records.first().streamName
+                            val result = sender.putRecords(streamName, records).getOrThrow()
+
+                            val deleteSuccessful = storage.deleteRecords(result.successfulIds)
+                            val deleteFailed = storage.deleteRecords(result.failedIds)
+                            val incrementRetry = storage.incrementRetryCount(result.retryableIds)
+
+                            // Ensure all updates are triggered before checking for exceptions
+                            deleteSuccessful.getOrThrow()
+                            deleteFailed.getOrThrow()
+                            incrementRetry.getOrThrow()
+
+                            result.successfulIds
+                        }
+                        .map { it.size }.sum()
+                    FlushData(r)
+                }
+            )
+        } finally {
+            isFlushing.set(false)
+        }
+    }
 
     suspend fun clearCache(): ClearCacheResult = mapErrorResult(storage.clearRecords())
 

@@ -9,7 +9,8 @@ data class KinesisDataStreamsOptions internal constructor(
     val cacheMaxBytes: Long,
     val maxRecords: Int,
     val maxRetries: Int,
-    val flushStrategy: FlushStrategy
+    val flushStrategy: FlushStrategy,
+    val configureClient: KinesisClientConfigurationProvider? = null
 ) {
     companion object {
         @JvmStatic
@@ -35,11 +36,15 @@ data class KinesisDataStreamsOptions internal constructor(
         var flushStrategy: FlushStrategy = FlushStrategy.Interval(30.seconds)
             @JvmSynthetic set
         
+        var configureClient: KinesisClientConfigurationProvider? = null
+            @JvmSynthetic set
+        
         fun cacheMaxBytes(value: Long) = apply { cacheMaxBytes = value }
         fun maxRecords(value: Int) = apply { maxRecords = value }
         fun maxRetries(value: Int) = apply { maxRetries = value }
         fun flushStrategy(value: FlushStrategy) = apply { flushStrategy = value }
+        fun configureClient(value: KinesisClientConfigurationProvider?) = apply { configureClient = value }
         
-        fun build() = KinesisDataStreamsOptions(cacheMaxBytes, maxRecords, maxRetries, flushStrategy)
+        fun build() = KinesisDataStreamsOptions(cacheMaxBytes, maxRecords, maxRetries, flushStrategy, configureClient)
     }
 }
