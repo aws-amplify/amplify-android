@@ -9,11 +9,15 @@ import com.amplifyframework.recordcache.RecordCacheStorageException
 /**
  * Base exception for all Kinesis operations.
  *
- * This is a sealed hierarchy — callers can exhaustively match on the subtype
+ * This is a sealed hierarchy. Callers can exhaustively match on the subtype
  * to determine the category of failure:
- * - [KinesisStorageException] — local cache / database errors
- * - [KinesisNetworkException] — API / connectivity errors
- * - [KinesisLimitExceededException] — local cache is full
+ * - [KinesisStorageException] - local cache / database errors
+ * - [KinesisNetworkException] - API / connectivity errors
+ * - [KinesisLimitExceededException] - local cache is full
+ *
+ * @param message Error message describing what went wrong
+ * @param recoverySuggestion Suggested action to resolve the error
+ * @param cause Underlying cause of the exception
  */
 sealed class KinesisException(
     message: String,
