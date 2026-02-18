@@ -7,7 +7,7 @@ internal data class RecordInput(
     val dataSize: Int = data.size
 )
 
-data class Record(
+internal data class Record(
     val id: Long,
     val streamName: String,
     val partitionKey: String,

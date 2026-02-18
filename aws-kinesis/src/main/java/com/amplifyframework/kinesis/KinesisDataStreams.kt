@@ -17,6 +17,36 @@ import com.amplifyframework.recordcache.RecordResult
 import com.amplifyframework.recordcache.SQLiteRecordStorage
 import kotlin.system.measureTimeMillis
 
+/**
+ * A client for sending data to Amazon Kinesis Data Streams.
+ *
+ * Provides automatic batching, retry logic, and local caching for high-throughput
+ * data streaming to Kinesis with configurable flush strategies.
+ *
+ * Example usage:
+ * ```kotlin
+ * val kinesis = KinesisDataStreams(
+ *     context = applicationContext,
+ *     region = "us-east-1",
+ *     credentialsProvider = credentialsProvider
+ * )
+ * 
+ * // Record data
+ * kinesis.record(
+ *     data = "Hello Kinesis".toByteArray(),
+ *     streamName = "my-stream",
+ *     partitionKey = "partition-1"
+ * )
+ * 
+ * // Flush cached records
+ * val result = kinesis.flush()
+ * ```
+ *
+ * @param context Android application context for database access
+ * @param region AWS region where the Kinesis stream is located
+ * @param credentialsProvider AWS credentials for authentication
+ * @param options Configuration options with sensible defaults
+ */
 class KinesisDataStreams(
     val context: Context,
     val region: String,
