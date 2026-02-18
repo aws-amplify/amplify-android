@@ -3,10 +3,9 @@ package com.amplifyframework.recordcache
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.mapCatching
 
-internal class RecordClient<E : Exception>(
+internal class RecordClient(
     private val sender: RecordSender,
-    private val storage: RecordStorage,
-    private val exceptionMapper: (RecordCacheException) -> E
+    private val storage: RecordStorage
 ) {
     private val isFlushing = AtomicBoolean(false)
     suspend fun record(record: RecordInput): RecordResult = mapErrorResult(
@@ -19,46 +18,31 @@ internal class RecordClient<E : Exception>(
             return Result.success(FlushData(recordsFlushed = 0, flushInProgress = true))
         }
         return try {
-            mapErrorResult(
-                runCatching {
-                    val r = storage.getRecordsByStream()
-                        .getOrThrow()
-                        .map { records ->
-                            val streamName = records.first().streamName
-                            val result = sender.putRecords(streamName, records).getOrThrow()
+            runCatching {
+                val r = storage.getRecordsByStream()
+                    .getOrThrow()
+                    .map { records ->
+                        val streamName = records.first().streamName
+                        val result = sender.putRecords(streamName, records).getOrThrow()
 
-                            val deleteSuccessful = storage.deleteRecords(result.successfulIds)
-                            val deleteFailed = storage.deleteRecords(result.failedIds)
-                            val incrementRetry = storage.incrementRetryCount(result.retryableIds)
+                        val deleteSuccessful = storage.deleteRecords(result.successfulIds)
+                        val deleteFailed = storage.deleteRecords(result.failedIds)
+                        val incrementRetry = storage.incrementRetryCount(result.retryableIds)
 
-                            // Ensure all updates are triggered before checking for exceptions
-                            deleteSuccessful.getOrThrow()
-                            deleteFailed.getOrThrow()
-                            incrementRetry.getOrThrow()
+                        // Ensure all updates are triggered before checking for exceptions
+                        deleteSuccessful.getOrThrow()
+                        deleteFailed.getOrThrow()
+                        incrementRetry.getOrThrow()
 
-                            result.successfulIds
-                        }
-                        .map { it.size }.sum()
-                    FlushData(r)
-                }
-            )
+                        result.successfulIds
+                    }
+                    .map { it.size }.sum()
+                FlushData(r)
+            }
         } finally {
             isFlushing.set(false)
         }
     }
 
-    suspend fun clearCache(): ClearCacheResult = mapErrorResult(storage.clearRecords())
-
-    fun <T> mapErrorResult(result: Result<T>): Result<T> = if (result.isSuccess) {
-        result
-    } else {
-        val exc = result.exceptionOrNull()
-        Result.failure(
-            exceptionMapper(
-                exc as? RecordCacheException
-                    ?: // TODO: What to pass here?
-                    RecordCacheException("", "", exc)
-            )
-        )
-    }
+    suspend fun clearCache(): ClearCacheResult = storage.clearRecords()
 }

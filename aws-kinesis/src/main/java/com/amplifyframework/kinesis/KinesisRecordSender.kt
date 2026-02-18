@@ -6,7 +6,6 @@ import aws.sdk.kotlin.services.kinesis.model.PutRecordsRequest
 import aws.sdk.kotlin.services.kinesis.model.PutRecordsRequestEntry
 import com.amplifyframework.recordcache.PutRecordsResponse
 import com.amplifyframework.recordcache.Record
-import com.amplifyframework.recordcache.RecordCacheNetworkException
 import com.amplifyframework.recordcache.RecordSender
 
 typealias PutRecordsResponseSdk = aws.sdk.kotlin.services.kinesis.model.PutRecordsResponse
@@ -18,20 +17,10 @@ internal class KinesisRecordSender(
 
     override suspend fun putRecords(streamName: String, records: List<Record>): Result<PutRecordsResponse> =
         runCatching {
-            // Create request
             val request = createRequest(streamName, records)
-
             val sdkResponse = kinesisClient.putRecords(request)
-
-            val response = splitResponse(sdkResponse, records)
-            return@runCatching response
-        }.recoverCatching { cause ->
-            throw RecordCacheNetworkException(
-                "Failed to send records to Kinesis",
-                "Check network connectivity and AWS credentials",
-                cause
-            )
-        }
+            splitResponse(sdkResponse, records)
+        }.recoverCatching { throw KinesisException.from(it) }
 
     @VisibleForTesting
     internal fun createRequest(streamName: String, records: List<Record>) = PutRecordsRequest {

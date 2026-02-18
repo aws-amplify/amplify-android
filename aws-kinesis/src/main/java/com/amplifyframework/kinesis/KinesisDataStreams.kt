@@ -64,7 +64,7 @@ class KinesisDataStreams(
         options.configureClient?.applyConfiguration(this)
     }
 
-    private val recordClient: RecordClient<KinesisException> = RecordClient(
+    private val recordClient: RecordClient = RecordClient(
         sender = KinesisRecordSender(
             kinesisClient = kinesisClient,
             maxRetries = options.maxRetries
@@ -74,8 +74,7 @@ class KinesisDataStreams(
             identifier = region,
             maxRecords = options.maxRecords,
             maxBytes = options.cacheMaxBytes
-        ),
-        exceptionMapper = { it.toKinesisException() }
+        )
     )
     private val scheduler: AutoFlushScheduler
     @Volatile private var isEnabled = false
@@ -98,8 +97,8 @@ class KinesisDataStreams(
      * @param partitionKey The partition key for the record
      * @param streamName The name of the Kinesis stream
      * @return Result.success(Unit) on success, or Result.failure with:
-     *   - KinesisException wrapping RecordCacheLimitExceededException (cache full)
-     *   - KinesisException wrapping RecordCacheStorageException (database errors)
+     *   - [KinesisLimitExceededException] (cache full)
+     *   - [KinesisStorageException] (database errors)
      */
     suspend fun record(data: ByteArray, partitionKey: String, streamName: String): Result<Unit> {
         if (!isEnabled) {
@@ -108,7 +107,7 @@ class KinesisDataStreams(
         }
         logger.verbose { "Recording to stream: $streamName" }
         return logOp(
-            operation = { recordClient.record(RecordInput(streamName, partitionKey, data)).map { } },
+            operation = { recordClient.record(RecordInput(streamName, partitionKey, data)).map { }.wrapError() },
             logSuccess = { _, timeMs -> logger.debug("Record completed successfully in ${timeMs}ms") }, // TODO: Use lazy evaluation for log messages
             logFailure = { error, timeMs -> logger.warn("Record failed in ${timeMs}ms: ${error?.message}") } // TODO: Use lazy evaluation for log messages
         )
@@ -118,13 +117,13 @@ class KinesisDataStreams(
      * Flushes all cached records to their respective Kinesis streams.
      *
      * @return Result.success(FlushData) on success, or Result.failure with:
-     *   - KinesisException wrapping RecordCacheNetworkException (API/network failures)
-     *   - KinesisException wrapping RecordCacheStorageException (database errors)
+     *   - [KinesisServiceException] (API/network failures)
+     *   - [KinesisStorageException] (database errors)
      */
     suspend fun flush(): FlushResult {
         logger.info("Starting flush")
         return logOp(
-            operation = { recordClient.flush() },
+            operation = { recordClient.flush().wrapError() },
             logSuccess = { data, timeMs -> logger.info("Flush completed successfully in ${timeMs}ms - ${data.recordsFlushed} records flushed") }, // TODO: Use lazy evaluation for log messages
             logFailure = { error, timeMs -> logger.warn("Flush failed in ${timeMs}ms: ${error?.message}") } // TODO: Use lazy evaluation for log messages
         )
@@ -134,12 +133,12 @@ class KinesisDataStreams(
      * Clears all cached records from local storage.
      *
      * @return Result.success(ClearCacheData) on success, or Result.failure with:
-     *   - KinesisException wrapping RecordCacheStorageException (database errors)
+     *   - [KinesisStorageException] (database errors)
      */
     suspend fun clearCache(): ClearCacheResult {
         logger.info("Clearing cache")
         return logOp(
-            operation = { recordClient.clearCache() },
+            operation = { recordClient.clearCache().wrapError() },
             logSuccess = { data, timeMs -> logger.info("Clear cache completed successfully in ${timeMs}ms - ${data.recordsCleared} records cleared") }, // TODO: Use lazy evaluation for log messages
             logFailure = { error, timeMs -> logger.warn("Clear cache failed in ${timeMs}ms: ${error?.message}") } // TODO: Use lazy evaluation for log messages
         )
@@ -160,6 +159,13 @@ class KinesisDataStreams(
     fun disable() {
         isEnabled = false
         scheduler.disable()
+    }
+
+    /** Maps any failure in the [Result] to a [KinesisException] via [KinesisException.from]. */
+    private fun <T> Result<T>.wrapError(): Result<T> {
+        if (isSuccess) return this
+        val error = exceptionOrNull() ?: return this
+        return Result.failure(KinesisException.from(error))
     }
 
     private suspend inline fun <T> logOp(
