@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.amplify.kmp)
+    alias(libs.plugins.amplify.publishing)
 }
 
 kotlin {
