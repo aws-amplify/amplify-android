@@ -13,6 +13,8 @@
  * permissions and limitations under the License.
  */
 
+@file:JvmName("SmithyCredentials")
+
 package com.amplifyframework.foundation.credentials
 
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials

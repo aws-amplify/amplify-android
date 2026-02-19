@@ -1,4 +1,4 @@
-public final class com/amplifyframework/foundation/credentials/SmithyCredentialsKt {
+public final class com/amplifyframework/foundation/credentials/SmithyCredentials {
 	public static final fun toAwsCredentials (Laws/smithy/kotlin/runtime/auth/awscredentials/Credentials;)Lcom/amplifyframework/foundation/credentials/AwsCredentials;
 	public static final fun toAwsCredentialsProvider (Laws/smithy/kotlin/runtime/auth/awscredentials/CredentialsProvider;)Lcom/amplifyframework/foundation/credentials/AwsCredentialsProvider;
 	public static final fun toSmithyCredentials (Lcom/amplifyframework/foundation/credentials/AwsCredentials;)Laws/smithy/kotlin/runtime/auth/awscredentials/Credentials;
