@@ -16,10 +16,13 @@
 package com.amplifyframework.foundation.credentials
 
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
+import aws.smithy.kotlin.runtime.collections.Attributes
 import aws.smithy.kotlin.runtime.collections.emptyAttributes
 import aws.smithy.kotlin.runtime.time.Instant as SmithyInstant
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 import kotlinx.coroutines.test.runTest
@@ -62,6 +65,38 @@ class SmithyCredentialsTest {
     }
 
     @Test
+    fun `maps smithy credentials to static credentials`() {
+        val smithyCredentials = Credentials(
+            accessKeyId = "access",
+            secretAccessKey = "secret"
+        )
+
+        val mapped = smithyCredentials.toAwsCredentials()
+
+        mapped.shouldBeInstanceOf<AwsCredentials.Static>()
+        mapped.accessKeyId shouldBe "access"
+        mapped.secretAccessKey shouldBe "secret"
+    }
+
+    @Test
+    fun `maps smithy credentials to temporary credentials`() {
+        val smithyCredentials = Credentials(
+            accessKeyId = "access",
+            secretAccessKey = "secret",
+            sessionToken = "session",
+            expiration = SmithyInstant.fromEpochSeconds(expiration.epochSeconds)
+        )
+
+        val mapped = smithyCredentials.toAwsCredentials()
+
+        mapped.shouldBeInstanceOf<AwsCredentials.Temporary>()
+        mapped.accessKeyId shouldBe "access"
+        mapped.secretAccessKey shouldBe "secret"
+        mapped.sessionToken shouldBe "session"
+        mapped.expiration shouldBe expiration
+    }
+
+    @Test
     fun `provider maps static credentials`() = runTest {
         val staticProvider = AwsCredentialsProvider<AwsCredentials> {
             AwsCredentials.Static(accessKeyId = "access", secretAccessKey = "secret")
@@ -92,5 +127,41 @@ class SmithyCredentialsTest {
         credentials.secretAccessKey shouldBe "secret"
         credentials.sessionToken shouldBe "session"
         credentials.expiration shouldBe SmithyInstant.fromEpochSeconds(expiration.epochSeconds)
+    }
+
+    @Test
+    fun `smithy provider maps static credentials`() = runTest {
+        val smithyProvider = object : CredentialsProvider {
+            override suspend fun resolve(attributes: Attributes) = Credentials(
+                accessKeyId = "access",
+                secretAccessKey = "secret"
+            )
+        }
+
+        val mapped = smithyProvider.toAwsCredentialsProvider().resolve()
+
+        mapped.shouldBeInstanceOf<AwsCredentials.Static>()
+        mapped.accessKeyId shouldBe "access"
+        mapped.secretAccessKey shouldBe "secret"
+    }
+
+    @Test
+    fun `smithy provider maps temporary credentials`() = runTest {
+        val smithyProvider = object : CredentialsProvider {
+            override suspend fun resolve(attributes: Attributes) = Credentials(
+                accessKeyId = "access",
+                secretAccessKey = "secret",
+                sessionToken = "session",
+                expiration = SmithyInstant.fromEpochSeconds(expiration.epochSeconds)
+            )
+        }
+
+        val mapped = smithyProvider.toAwsCredentialsProvider().resolve()
+
+        mapped.shouldBeInstanceOf<AwsCredentials.Temporary>()
+        mapped.accessKeyId shouldBe "access"
+        mapped.secretAccessKey shouldBe "secret"
+        mapped.sessionToken shouldBe "session"
+        mapped.expiration shouldBe expiration
     }
 }
