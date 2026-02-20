@@ -13,17 +13,21 @@
  * permissions and limitations under the License.
  */
 
+@file:JvmName("SmithyCredentials")
+
 package com.amplifyframework.foundation.credentials
 
 import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import aws.smithy.kotlin.runtime.collections.Attributes
+import aws.smithy.kotlin.runtime.collections.emptyAttributes
 import aws.smithy.kotlin.runtime.time.Instant as SmithyInstant
-import com.amplifyframework.annotations.InternalAmplifyApi
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
-@InternalAmplifyApi
+/**
+ * Converts Amplify Credentials to Smithy Credentials
+ */
 @OptIn(ExperimentalTime::class)
 fun AwsCredentials.toSmithyCredentials(): Credentials = when (this) {
     is AwsCredentials.Static -> Credentials(
@@ -38,10 +42,43 @@ fun AwsCredentials.toSmithyCredentials(): Credentials = when (this) {
     )
 }
 
-@InternalAmplifyApi
+/**
+ * Converts Smithy Credentials to Amplify Credentials
+ */
+@OptIn(ExperimentalTime::class)
+fun Credentials.toAwsCredentials(): AwsCredentials {
+    val sessionToken = this.sessionToken
+    val expiration = this.expiration
+    return when {
+        sessionToken != null && expiration != null -> AwsCredentials.Temporary(
+            accessKeyId = this.accessKeyId,
+            secretAccessKey = this.secretAccessKey,
+            sessionToken = sessionToken,
+            expiration = expiration.toKotlinInstant()
+        )
+        else -> AwsCredentials.Static(
+            accessKeyId = this.accessKeyId,
+            secretAccessKey = this.secretAccessKey
+        )
+    }
+}
+
+/**
+ * Converts an Amplify CredentialsProvider to a Smithy CredentialsProvider
+ */
 fun AwsCredentialsProvider<*>.toSmithyProvider() = object : CredentialsProvider {
     override suspend fun resolve(attributes: Attributes) = this@toSmithyProvider.resolve().toSmithyCredentials()
 }
 
+/**
+ * Converts a Smithy CredentialsProvider to an Amplify CredentialsProvider
+ */
+fun CredentialsProvider.toAwsCredentialsProvider() = AwsCredentialsProvider {
+    resolve(emptyAttributes()).toAwsCredentials()
+}
+
 @OptIn(ExperimentalTime::class)
 private fun Instant.toSmithyInstant() = SmithyInstant.fromEpochSeconds(epochSeconds)
+
+@OptIn(ExperimentalTime::class)
+private fun SmithyInstant.toKotlinInstant() = Instant.fromEpochSeconds(epochSeconds)

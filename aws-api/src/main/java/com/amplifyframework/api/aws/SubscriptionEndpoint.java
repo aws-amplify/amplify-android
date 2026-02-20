@@ -36,6 +36,7 @@ import com.amplifyframework.util.UserAgent;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -151,7 +152,8 @@ final class SubscriptionEndpoint {
                 if (pendingSubscriptionIds.remove(subscriptionId)) {
                     // The subscription was pending, so we need to emit an error.
                     onSubscriptionError.accept(
-                        new ApiException(connection.getFailureReason(), AmplifyException.TODO_RECOVERY_SUGGESTION));
+                        new ApiException(connection.getFailureReason(), connection.getFailureCause(), 
+                            AmplifyException.TODO_RECOVERY_SUGGESTION));
                     return;
                 }
             }
@@ -523,6 +525,7 @@ final class SubscriptionEndpoint {
     final class AmplifyWebSocketListener extends WebSocketListener {
         private final CountDownLatch connectionResponse;
         private final AtomicReference<EndpointStatus> endpointStatus;
+        private Throwable connectionFailureCause;
 
         AmplifyWebSocketListener() {
             this(new CountDownLatch(1));
@@ -556,6 +559,7 @@ final class SubscriptionEndpoint {
         public void onFailure(@NonNull WebSocket webSocket, @NonNull Throwable failure, Response response) {
             LOG.warn("Websocket connection failed.", failure);
             endpointStatus.set(EndpointStatus.CONNECTION_FAILED);
+            connectionFailureCause = failure;
             webSocket.cancel();
             // This will free up any pending subscriptions that haven't been established yet.
             connectionResponse.countDown();
@@ -581,11 +585,11 @@ final class SubscriptionEndpoint {
                 }
             } catch (InterruptedException exception) {
                 LOG.warn("Thread interrupted waiting for connection acknowledgement");
-                return new Connection("Thread interrupted waiting for connection acknowledgement");
+                return new Connection("Thread interrupted waiting for connection acknowledgement", exception);
             }
             LOG.debug("Current endpoint status: " + endpointStatus.get());
             if (EndpointStatus.CONNECTION_FAILED.equals(endpointStatus.get())) {
-                return new Connection("Connection failed.");
+                return new Connection("Connection failed.", connectionFailureCause);
             }
             return new Connection();
         }
@@ -628,6 +632,19 @@ final class SubscriptionEndpoint {
                     case CONNECTION_ERROR:
                         endpointStatus.set(EndpointStatus.CONNECTION_FAILED);
                         LOG.warn("Websocket listener received a CONNECTION_ERROR event. " + message);
+                        
+                        // Convert error payload to GraphQLResponseException
+                        try {
+                            if (jsonMessage.has("payload")) {
+                                JSONObject payload = jsonMessage.getJSONObject("payload");
+                                connectionFailureCause = new GraphQLResponseException(payload);
+                            }
+                        } catch (JSONException exception) {
+                            LOG.warn("Failed to parse CONNECTION_ERROR payload as GraphQL error");
+                            // Fall back to simple IOException with JSONException as cause
+                            connectionFailureCause = new IOException(message, exception);
+                        }
+                        
                         connectionResponse.countDown();
                         break;
                     case SUBSCRIPTION_ACK:
@@ -664,17 +681,28 @@ final class SubscriptionEndpoint {
 
     static final class Connection {
         private final String failureReason;
+        private final Throwable failureCause;
 
         Connection() {
             this.failureReason = null;
+            this.failureCause = null;
         }
 
         Connection(String failureReason) {
+            this(failureReason, null);
+        }
+
+        Connection(String failureReason, Throwable failureCause) {
             this.failureReason = failureReason;
+            this.failureCause = failureCause;
         }
 
         public String getFailureReason() {
             return failureReason;
+        }
+
+        public Throwable getFailureCause() {
+            return failureCause;
         }
 
         public boolean hasFailure() {

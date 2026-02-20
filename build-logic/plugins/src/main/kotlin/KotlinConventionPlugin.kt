@@ -1,13 +1,3 @@
-
-import org.gradle.api.Plugin
-import org.gradle.api.Project
-import org.gradle.api.tasks.compile.JavaCompile
-import org.gradle.api.tasks.testing.Test
-import org.gradle.kotlin.dsl.configure
-import org.gradle.kotlin.dsl.withType
-import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 /*
  * Copyright 2025 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -22,6 +12,15 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.api.tasks.testing.Test
+import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 class KotlinConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {

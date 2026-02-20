@@ -70,29 +70,23 @@ class PublishingConventionPlugin : Plugin<Project> {
                 withJavadocJar()
             }
         }
-
-        // KMP projects handle sources/javadoc jars automatically
-        pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
-            // No additional configuration needed - KMP plugin handles this
-        }
     }
 
     // Configure the publishing extension in the project
     @Suppress("LocalVariableName", "ktlint:standard:property-naming")
     private fun Project.configureMavenPublishing() {
+        val POM_GROUP: String by project
+        val POM_ARTIFACT_ID: String by project
+        val VERSION_NAME: String by project
+
+        group = POM_GROUP
+        version = VERSION_NAME
+
         configure<PublishingExtension> {
             // For KMP projects, publications are created automatically by the KMP plugin
             pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
                 // Configure all KMP publications
                 publications.withType<MavenPublication>().configureEach {
-                    val POM_GROUP: String by project
-                    val POM_ARTIFACT_ID: String by project
-                    val VERSION_NAME: String by project
-
-                    groupId = POM_GROUP
-                    artifactId = POM_ARTIFACT_ID
-                    version = VERSION_NAME
-
                     configurePom(this@configureMavenPublishing)
                 }
             }
@@ -101,13 +95,7 @@ class PublishingConventionPlugin : Plugin<Project> {
             if (!isKotlinMultiplatform) {
                 publications {
                     create("maven", MavenPublication::class.java) {
-                        val POM_GROUP: String by project
-                        val POM_ARTIFACT_ID: String by project
-                        val VERSION_NAME: String by project
-
-                        groupId = POM_GROUP
                         artifactId = POM_ARTIFACT_ID
-                        version = VERSION_NAME
 
                         pluginManager.withPlugin("com.android.library") {
                             from(components["release"])

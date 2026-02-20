@@ -17,6 +17,12 @@ kotlin {
                 implementation(project(":testutils"))
             }
         }
+
+        getByName("androidHostTest") {
+            dependencies {
+                implementation(libs.test.mockk)
+            }
+        }
     }
 
     compilerOptions {
