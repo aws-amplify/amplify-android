@@ -14,7 +14,6 @@
  */
 package com.amplifyframework.kinesis
 
-import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
@@ -22,6 +21,10 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.foundation.credentials.AwsCredentials
 import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
 import com.amplifyframework.foundation.credentials.toAwsCredentialsProvider
+import com.amplifyframework.foundation.result.exceptionOrNull
+import com.amplifyframework.foundation.result.getOrThrow
+import com.amplifyframework.foundation.result.isFailure
+import com.amplifyframework.foundation.result.isSuccess
 import com.amplifyframework.recordcache.FlushStrategy
 import com.amplifyframework.testutils.Sleep
 import com.amplifyframework.testutils.sync.SynchronousAuth

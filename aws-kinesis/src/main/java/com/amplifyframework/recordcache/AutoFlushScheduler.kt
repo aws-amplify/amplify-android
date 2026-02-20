@@ -2,6 +2,9 @@ package com.amplifyframework.recordcache
 
 import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.foundation.logging.Logger
+import com.amplifyframework.foundation.result.exceptionOrNull
+import com.amplifyframework.foundation.result.getOrThrow
+import com.amplifyframework.foundation.result.isSuccess
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -36,7 +39,7 @@ internal class AutoFlushScheduler(
             delay(interval.interval)
             try {
                 val result = client.flush()
-                if (result.isSuccess) {
+                if (result.isSuccess()) {
                     val data = result.getOrThrow()
                     logger.debug { "Auto-flush completed: ${data.recordsFlushed} records flushed" }
                 } else {

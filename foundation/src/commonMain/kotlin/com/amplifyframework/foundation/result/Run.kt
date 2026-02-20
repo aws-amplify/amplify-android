@@ -20,7 +20,7 @@ import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 
 @InternalAmplifyApi
-inline fun <T> runCatching(block: () -> T): Result<T, Throwable> {
+inline fun <T> amplifyRunCatching(block: () -> T): Result<T, Throwable> {
     contract {
         callsInPlace(block, InvocationKind.AT_MOST_ONCE)
     }

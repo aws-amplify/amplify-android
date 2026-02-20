@@ -1,6 +1,9 @@
 package com.amplifyframework.recordcache
 
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import com.amplifyframework.foundation.result.Result
+import com.amplifyframework.foundation.result.getOrThrow
+import com.amplifyframework.foundation.result.isSuccess
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
@@ -63,7 +66,7 @@ class RecordClientFlushTest {
         storage.incrementRetryCount(listOf(record3Id)).getOrThrow() // Now at max retries (3)
 
         // Configure mock sender response
-        coEvery { mockSender.putRecords(streamName, any()) } returns Result.success(
+        coEvery { mockSender.putRecords(streamName, any()) } returns Result.Success(
             PutRecordsResponse(
                 successfulIds = listOf(allRecords[0].id),
                 retryableIds = listOf(allRecords[1].id),
@@ -75,7 +78,7 @@ class RecordClientFlushTest {
         val result = recordClient.flush()
 
         // Then
-        result.isSuccess.shouldBeTrue()
+        result.isSuccess().shouldBeTrue()
 
         // Verify final state
         val remainingRecordsByStream = storage.getRecordsByStream().getOrThrow()

@@ -1,6 +1,7 @@
 package com.amplifyframework.recordcache
 
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import com.amplifyframework.foundation.result.getOrThrow
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.Dispatchers

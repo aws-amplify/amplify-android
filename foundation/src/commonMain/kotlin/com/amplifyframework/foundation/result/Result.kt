@@ -29,3 +29,13 @@ sealed interface Result<out T, out E> {
      */
     data class Failure<out E>(val error: E) : Result<Nothing, E>
 }
+
+/**
+ * Returns `true` if this result is a success, `false` otherwise.
+ */
+fun <T, E> Result<T, E>.isSuccess(): Boolean = this is Result.Success
+
+/**
+ * Returns `true` if this result is a failure, `false` otherwise.
+ */
+fun <T, E> Result<T, E>.isFailure(): Boolean = this is Result.Failure

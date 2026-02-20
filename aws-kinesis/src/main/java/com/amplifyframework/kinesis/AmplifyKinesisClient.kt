@@ -7,6 +7,10 @@ import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
 import com.amplifyframework.foundation.credentials.toSmithyProvider
 import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.foundation.logging.Logger
+import com.amplifyframework.foundation.result.Result
+import com.amplifyframework.foundation.result.exceptionOrNull
+import com.amplifyframework.foundation.result.getOrThrow
+import com.amplifyframework.foundation.result.isSuccess
 import com.amplifyframework.recordcache.AutoFlushScheduler
 import com.amplifyframework.recordcache.ClearCacheResult
 import com.amplifyframework.recordcache.FlushResult
@@ -108,7 +112,7 @@ class AmplifyKinesisClient(
     suspend fun record(data: ByteArray, partitionKey: String, streamName: String): RecordResult {
         if (!isEnabled) {
             logger.debug { "Record collection is disabled, dropping record" }
-            return Result.success(RecordData())
+            return Result.Success(RecordData())
         }
         logger.verbose { "Recording to stream: $streamName" }
         return logOp(
@@ -183,23 +187,21 @@ class AmplifyKinesisClient(
         scheduler.disable()
     }
 
-    /** Maps any failure in the [Result] to a [AmplifyKinesisException] via [AmplifyKinesisException.from]. */
-    private fun <T> Result<T>.wrapError(): Result<T> {
-        if (isSuccess) return this
-        val error = exceptionOrNull() ?: return this
-        return Result.failure(AmplifyKinesisException.from(error))
+    private fun <T> Result<T, Throwable>.wrapError(): Result<T, AmplifyKinesisException> = when (this) {
+        is Result.Success -> this
+        is Result.Failure -> Result.Failure(AmplifyKinesisException.from(error))
     }
 
     private suspend inline fun <T> logOp(
-        operation: suspend () -> Result<T>,
+        operation: suspend () -> Result<T, AmplifyKinesisException>,
         logSuccess: (T, Long) -> Unit,
         logFailure: (Throwable?, Long) -> Unit
-    ): Result<T> {
-        val result: Result<T>
+    ): Result<T, AmplifyKinesisException> {
+        val result: Result<T, AmplifyKinesisException>
         val timeMs = measureTimeMillis {
             result = operation()
         }
-        if (result.isSuccess) {
+        if (result.isSuccess()) {
             logSuccess(result.getOrThrow(), timeMs)
         } else {
             logFailure(result.exceptionOrNull(), timeMs)
