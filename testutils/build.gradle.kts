@@ -24,6 +24,8 @@ android {
 
 dependencies {
     implementation(project(":core"))
+    implementation(project(":foundation"))
+
     implementation(libs.test.junit)
     implementation(libs.test.mockito.core)
     implementation(libs.test.androidx.core)

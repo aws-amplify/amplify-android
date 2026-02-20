@@ -46,6 +46,10 @@ gradlePlugin {
             id = libs.plugins.amplify.kotlin.get().pluginId
             implementationClass = "KotlinConventionPlugin"
         }
+        register("kotlinMultiplatform") {
+            id = libs.plugins.amplify.kmp.get().pluginId
+            implementationClass = "KotlinMultiplatformConventionPlugin"
+        }
         register("kover") {
             id = libs.plugins.amplify.kover.get().pluginId
             implementationClass = "KoverConventionPlugin"
