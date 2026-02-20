@@ -15,25 +15,24 @@
 
 package com.amplifyframework.foundation.result
 
-import com.amplifyframework.foundation.result.runCatching as localRunCatching
 import com.amplifyframework.testutils.foundation.results.shouldBeFailure
 import com.amplifyframework.testutils.foundation.results.shouldBeSuccess
 import org.junit.Test
 
-class ResultRunTest {
+class ResultCatchingTest {
     @Test
-    fun `runCatching returns success result`() {
-        val result = localRunCatching {
+    fun `resultCatching returns success result`() {
+        val result = resultCatching {
             10
         }
         result shouldBeSuccess 10
     }
 
     @Test
-    fun `runCatching returns failure result for thrown exception`() {
+    fun `resultCatching returns failure result for thrown exception`() {
         val exception = RuntimeException("failed")
 
-        val result = localRunCatching {
+        val result = resultCatching {
             throw exception
         }
 

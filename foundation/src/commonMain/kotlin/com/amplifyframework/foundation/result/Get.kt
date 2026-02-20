@@ -18,6 +18,9 @@ package com.amplifyframework.foundation.result
 import com.amplifyframework.annotations.InternalAmplifyApi
 import kotlin.contracts.contract
 
+/**
+ * Returns the Success data or throws the Failure error
+ */
 @InternalAmplifyApi
 fun <T, E : Throwable> Result<T, E>.getOrThrow(): T {
     contract {
@@ -29,6 +32,9 @@ fun <T, E : Throwable> Result<T, E>.getOrThrow(): T {
     }
 }
 
+/**
+ * Returns the Success data or null in the case of Failure
+ */
 @InternalAmplifyApi
 fun <T> Result<T, *>.getOrNull(): T? {
     contract {
