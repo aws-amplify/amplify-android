@@ -19,8 +19,13 @@ import com.amplifyframework.annotations.InternalAmplifyApi
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 
+/**
+ * Runs the supplied block and returns the return value as a Result.Success. If an exception is thrown it returns
+ * it as a Result.Failure.
+ */
 @InternalAmplifyApi
-inline fun <T> amplifyRunCatching(block: () -> T): Result<T, Throwable> {
+
+inline fun <T> resultCatching(block: () -> T): Result<T, Throwable> {
     contract {
         callsInPlace(block, InvocationKind.AT_MOST_ONCE)
     }

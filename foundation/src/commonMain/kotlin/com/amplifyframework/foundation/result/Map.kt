@@ -19,6 +19,9 @@ import com.amplifyframework.annotations.InternalAmplifyApi
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 
+/**
+ * Maps a Failure but returns a Success as-is
+ */
 @InternalAmplifyApi
 inline infix fun <T, E, E2> Result<T, E>.mapFailure(mapper: (E) -> E2): Result<T, E2> {
     contract {
@@ -30,6 +33,9 @@ inline infix fun <T, E, E2> Result<T, E>.mapFailure(mapper: (E) -> E2): Result<T
     }
 }
 
+/**
+ * Maps a Success but returns a Failure as-is
+ */
 @InternalAmplifyApi
 inline infix fun <T, E, T2> Result<T, E>.mapSuccess(mapper: (T) -> T2): Result<T2, E> {
     contract {
@@ -41,6 +47,9 @@ inline infix fun <T, E, T2> Result<T, E>.mapSuccess(mapper: (T) -> T2): Result<T
     }
 }
 
+/**
+ * Maps either a Success or Failure by invoking the appropriate mapping function.
+ */
 @InternalAmplifyApi
 inline fun <T, E, T2, E2> Result<T, E>.mapBoth(mapSuccess: (T) -> T2, mapFailure: (E) -> E2): Result<T2, E2> {
     contract {
