@@ -5,6 +5,8 @@ import androidx.annotation.VisibleForTesting
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.execSQL
+import com.amplifyframework.foundation.logging.AmplifyLogging
+import com.amplifyframework.foundation.logging.Logger
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CoroutineDispatcher
@@ -20,6 +22,7 @@ internal class SQLiteRecordStorage internal constructor(
     connectionFactory: () -> SQLiteConnection,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : RecordStorage(maxRecords, maxBytes, identifier) {
+    private val logger: Logger = AmplifyLogging.logger<SQLiteRecordStorage>()
     private val connection: SQLiteConnection = connectionFactory()
     private var cachedSize = AtomicInteger(0)
     private val dbMutex = Mutex()
@@ -148,7 +151,7 @@ internal class SQLiteRecordStorage internal constructor(
     }.recoverAsRecordCacheException("Could not retrieve records from storage")
 
     override suspend fun deleteRecords(ids: List<Long>): Result<Unit> = wrapDispatchAndCatching {
-        if (!ids.isEmpty()) {
+        if (ids.isNotEmpty()) {
             val placeholders = ids.joinToString(",") { "?" }
 
             connection.prepare("DELETE FROM records WHERE id IN ($placeholders)").use { stmt ->
@@ -162,7 +165,7 @@ internal class SQLiteRecordStorage internal constructor(
     }.recoverAsRecordCacheException("Failed to delete records from cache")
 
     override suspend fun incrementRetryCount(ids: List<Long>): Result<Unit> = wrapDispatchAndCatching {
-        if (!ids.isEmpty()) {
+        if (ids.isNotEmpty()) {
             val placeholders = ids.joinToString(",") { "?" }
             connection.prepare(
                 "UPDATE records SET retry_count = retry_count + 1 WHERE id IN ($placeholders)"

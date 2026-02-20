@@ -6,23 +6,23 @@ import kotlin.time.Duration.Companion.seconds
 private const val DEFAULT_CACHE_SIZE_LIMIT_IN_BYTES = 500L * 1024 * 1024
 
 /**
- * Configuration options for [KinesisDataStreams].
+ * Configuration options for [AmplifyKinesisClient].
  *
  * @param cacheMaxBytes Maximum size of the local cache in bytes (default: 500MB)
  * @param maxRecords Maximum number of records to cache before forcing a flush (default: 500)
  * @param maxRetries Maximum number of retry attempts for failed records (default: 5)
  * @param flushStrategy Strategy for automatic flushing of cached records
  */
-data class KinesisDataStreamsOptions internal constructor(
+data class AmplifyKinesisClientConfiguration internal constructor(
     val cacheMaxBytes: Long,
     val maxRecords: Int,
     val maxRetries: Int,
     val flushStrategy: FlushStrategy,
-    val configureClient: KinesisClientConfigurationProvider? = null
+    val configureClient: AmplifyKinesisClientConfigurationProvider? = null
 ) {
     companion object {
         /**
-         * Creates a new builder for configuring [KinesisDataStreamsOptions].
+         * Creates a new builder for configuring [AmplifyKinesisClientConfiguration].
          *
          * @return A new builder instance with default values
          */
@@ -33,7 +33,7 @@ data class KinesisDataStreamsOptions internal constructor(
         operator fun invoke(func: Builder.() -> Unit) = Builder().apply(func).build()
 
         /**
-         * Creates [KinesisDataStreamsOptions] with default values.
+         * Creates [AmplifyKinesisClientConfiguration] with default values.
          *
          * @return Options with default values
          */
@@ -42,7 +42,7 @@ data class KinesisDataStreamsOptions internal constructor(
     }
 
     /**
-     * Builder for [KinesisDataStreamsOptions].
+     * Builder for [AmplifyKinesisClientConfiguration].
      */
     class Builder internal constructor() {
         var cacheMaxBytes: Long = DEFAULT_CACHE_SIZE_LIMIT_IN_BYTES
@@ -57,7 +57,7 @@ data class KinesisDataStreamsOptions internal constructor(
         var flushStrategy: FlushStrategy = FlushStrategy.Interval(30.seconds)
             @JvmSynthetic set
 
-        var configureClient: KinesisClientConfigurationProvider? = null
+        var configureClient: AmplifyKinesisClientConfigurationProvider? = null
             @JvmSynthetic set
 
         /**
@@ -91,13 +91,19 @@ data class KinesisDataStreamsOptions internal constructor(
          * @return This builder instance
          */
         fun flushStrategy(value: FlushStrategy) = apply { flushStrategy = value }
-        fun configureClient(value: KinesisClientConfigurationProvider?) = apply { configureClient = value }
+        fun configureClient(value: AmplifyKinesisClientConfigurationProvider?) = apply { configureClient = value }
 
         /**
-         * Builds the [KinesisDataStreamsOptions] with configured values.
+         * Builds the [AmplifyKinesisClientConfiguration] with configured values.
          *
          * @return Configured options instance
          */
-        fun build() = KinesisDataStreamsOptions(cacheMaxBytes, maxRecords, maxRetries, flushStrategy, configureClient)
+        fun build() = AmplifyKinesisClientConfiguration(
+            cacheMaxBytes,
+            maxRecords,
+            maxRetries,
+            flushStrategy,
+            configureClient
+        )
     }
 }

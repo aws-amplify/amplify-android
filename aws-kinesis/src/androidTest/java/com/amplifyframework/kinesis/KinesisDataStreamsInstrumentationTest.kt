@@ -16,16 +16,15 @@ package com.amplifyframework.kinesis
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.amplifyframework.auth.AWSCredentials
-import com.amplifyframework.auth.AWSCredentialsProvider
-import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
-import com.amplifyframework.core.Consumer
+import com.amplifyframework.foundation.credentials.AwsCredentials
+import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
+import com.amplifyframework.foundation.credentials.toAwsCredentialsProvider
 import com.amplifyframework.recordcache.FlushStrategy
 import com.amplifyframework.testutils.Sleep
 import com.amplifyframework.testutils.sync.SynchronousAuth
-import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -43,7 +42,7 @@ import org.junit.BeforeClass
 import org.junit.Test
 
 /**
- * Instrumented tests for [KinesisDataStreams].
+ * Instrumented tests for [AmplifyKinesisClient].
  *
  * These tests run against a real Kinesis stream and require:
  * - A provisioned Kinesis Data Stream (stream name configured below)
@@ -61,7 +60,7 @@ class KinesisDataStreamsInstrumentationTest {
         private const val REGION = "us-east-1"
 
         private lateinit var synchronousAuth: SynchronousAuth
-        private lateinit var credentialsProvider: AWSCredentialsProvider<AWSCredentials>
+        private lateinit var credentialsProvider: AwsCredentialsProvider<AwsCredentials>
 
         @BeforeClass
         @JvmStatic
@@ -73,7 +72,11 @@ class KinesisDataStreamsInstrumentationTest {
             synchronousAuth = SynchronousAuth.delegatingTo(Amplify.Auth)
 
             // Sign in with test credentials
-            @androidx.annotation.RawRes val resourceId = com.amplifyframework.testutils.Resources.getRawResourceId(context, CREDENTIALS_RESOURCE_NAME)
+            @androidx.annotation.RawRes val resourceId =
+                com.amplifyframework.testutils.Resources.getRawResourceId(
+                    context,
+                    CREDENTIALS_RESOURCE_NAME
+                )
             val userAndPasswordPair = readCredentialsFromResource(context, resourceId)
             synchronousAuth.signOut()
             synchronousAuth.signIn(
@@ -81,41 +84,14 @@ class KinesisDataStreamsInstrumentationTest {
                 userAndPasswordPair.second
             )
 
-            credentialsProvider = object : AWSCredentialsProvider<AWSCredentials> {
-                override fun fetchAWSCredentials(
-                    onSuccess: Consumer<AWSCredentials>,
-                    onError: Consumer<AuthException>
-                ) {
-                    Amplify.Auth.fetchAuthSession(
-                        { session ->
-                            val awsSession =
-                                session as com.amplifyframework.auth.AWSAuthSessionBehavior<*>
-                            val credentials = awsSession.awsCredentialsResult.value
-                            if (credentials != null) {
-                                onSuccess.accept(credentials)
-                            } else {
-                                onError.accept(
-                                    AuthException(
-                                        "No AWS credentials available",
-                                        "Check auth configuration"
-                                    )
-                                )
-                            }
-                        },
-                        { error ->
-                            onError.accept(
-                                AuthException(
-                                    "Failed to fetch auth session",
-                                    error.toString()
-                                )
-                            )
-                        }
-                    )
-                }
-            }
+            // Bridge V2 Auth to foundation credentials via Smithy types
+            credentialsProvider = CognitoCredentialsProvider().toAwsCredentialsProvider()
         }
 
-        private fun readCredentialsFromResource(context: Context, @androidx.annotation.RawRes resourceId: Int): android.util.Pair<String, String>? {
+        private fun readCredentialsFromResource(
+            context: Context,
+            @androidx.annotation.RawRes resourceId: Int
+        ): android.util.Pair<String, String>? {
             val resource = com.amplifyframework.testutils.Resources.readAsJson(context, resourceId)
             var userCredentials: android.util.Pair<String, String>? = null
             return try {
@@ -133,12 +109,12 @@ class KinesisDataStreamsInstrumentationTest {
         }
     }
 
-    private lateinit var kinesis: KinesisDataStreams
+    private lateinit var kinesis: AmplifyKinesisClient
 
     @Before
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        kinesis = KinesisDataStreams(
+        kinesis = AmplifyKinesisClient(
             context = context,
             region = REGION,
             credentialsProvider = credentialsProvider
@@ -262,16 +238,16 @@ class KinesisDataStreamsInstrumentationTest {
     // Cache behavior
     // ---------------------------------------------------------------
 
-    /** Fill cache to limit, then verify the next record fails with KinesisLimitExceededException. */
+    /** Fill cache to limit, then verify the next record fails with AmplifyKinesisLimitExceededException. */
     @Test
     fun testCacheLimitExceeded(): Unit = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         // Create a client with a tiny cache
-        val smallCacheKinesis = KinesisDataStreams(
+        val smallCacheKinesis = AmplifyKinesisClient(
             context = context,
             region = REGION,
             credentialsProvider = credentialsProvider,
-            options = KinesisDataStreamsOptions {
+            configuration = AmplifyKinesisClientConfiguration {
                 cacheMaxBytes = 100L // 100 bytes
                 maxRecords = 500
             }
@@ -295,7 +271,7 @@ class KinesisDataStreamsInstrumentationTest {
             )
 
             result.isFailure.shouldBeTrue()
-            result.exceptionOrNull().shouldBeInstanceOf<KinesisLimitExceededException>()
+            result.exceptionOrNull().shouldBeInstanceOf<AmplifyKinesisLimitExceededException>()
         } finally {
             smallCacheKinesis.disable()
             smallCacheKinesis.clearCache()
@@ -324,25 +300,18 @@ class KinesisDataStreamsInstrumentationTest {
     // Error paths
     // ---------------------------------------------------------------
 
-    /** Flush with invalid credentials should fail with KinesisServiceException. */
+    /** Flush with invalid credentials should fail with AmplifyKinesisServiceException. */
     @Test
     fun testFlushWithInvalidCredentials(): Unit = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val badCredentials = object : AWSCredentialsProvider<AWSCredentials> {
-            override fun fetchAWSCredentials(
-                onSuccess: Consumer<AWSCredentials>,
-                onError: Consumer<AuthException>
-            ) {
-                onSuccess.accept(
-                    AWSCredentials(
-                        accessKeyId = "INVALID_ACCESS_KEY",
-                        secretAccessKey = "INVALID_SECRET_KEY"
-                    )
-                )
-            }
+        val badCredentials = AwsCredentialsProvider {
+            AwsCredentials.Static(
+                accessKeyId = "INVALID_ACCESS_KEY",
+                secretAccessKey = "INVALID_SECRET_KEY"
+            )
         }
 
-        val badKinesis = KinesisDataStreams(
+        val badKinesis = AmplifyKinesisClient(
             context = context,
             region = REGION,
             credentialsProvider = badCredentials
@@ -358,7 +327,7 @@ class KinesisDataStreamsInstrumentationTest {
 
             val flushResult = badKinesis.flush()
             flushResult.isFailure.shouldBeTrue()
-            flushResult.exceptionOrNull().shouldBeInstanceOf<KinesisServiceException>()
+            flushResult.exceptionOrNull().shouldBeInstanceOf<AmplifyKinesisServiceException>()
         } finally {
             badKinesis.disable()
             badKinesis.clearCache()
@@ -419,11 +388,11 @@ class KinesisDataStreamsInstrumentationTest {
     fun testAutoFlush(): Unit = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         // Create client with short flush interval
-        val autoFlushKinesis = KinesisDataStreams(
+        val autoFlushKinesis = AmplifyKinesisClient(
             context = context,
             region = REGION,
             credentialsProvider = credentialsProvider,
-            options = KinesisDataStreamsOptions {
+            configuration = AmplifyKinesisClientConfiguration {
                 flushStrategy = FlushStrategy.Interval(5.seconds)
             }
         )

@@ -28,6 +28,8 @@ android {
 dependencies {
     implementation(project(":core"))
     implementation(project(":aws-core"))
+    implementation(project(":foundation"))
+    implementation(project(":foundation-bridge"))
 
     implementation(libs.androidx.appcompat)
     implementation(libs.aws.kinesis)

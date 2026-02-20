@@ -20,7 +20,7 @@ internal class KinesisRecordSender(
             val request = createRequest(streamName, records)
             val sdkResponse = kinesisClient.putRecords(request)
             splitResponse(sdkResponse, records)
-        }.recoverCatching { throw KinesisException.from(it) }
+        }.recoverCatching { throw AmplifyKinesisException.from(it) }
 
     @VisibleForTesting
     internal fun createRequest(streamName: String, records: List<Record>) = PutRecordsRequest {
