@@ -14,7 +14,6 @@ kotlin {
         commonTest {
             dependencies {
                 implementation(libs.test.kotest.assertions)
-                implementation(project(":testutils"))
             }
         }
 
