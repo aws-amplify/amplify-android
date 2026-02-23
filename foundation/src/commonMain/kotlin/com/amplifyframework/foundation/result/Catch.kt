@@ -24,7 +24,6 @@ import kotlin.contracts.contract
  * it as a Result.Failure.
  */
 @InternalAmplifyApi
-
 inline fun <T> resultCatching(block: () -> T): Result<T, Throwable> {
     contract {
         callsInPlace(block, InvocationKind.AT_MOST_ONCE)
