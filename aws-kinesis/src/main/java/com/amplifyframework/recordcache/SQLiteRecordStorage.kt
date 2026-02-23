@@ -33,7 +33,7 @@ internal class SQLiteRecordStorage internal constructor(
 
     constructor(
         context: Context,
-        maxRecords: Int,
+        maxRecordsByStream: Int,
         maxBytes: Long,
         identifier: String,
         dispatcher: CoroutineDispatcher = Dispatchers.IO
@@ -127,9 +127,9 @@ internal class SQLiteRecordStorage internal constructor(
                 ) 
                 WHERE rn <= ? AND running_size <= ?
                 ORDER BY stream_name, id
-            """
+                """
             ).use { stmt ->
-                stmt.bindInt(1, maxRecords)
+                stmt.bindInt(1, maxRecordsByStream)
                 stmt.bindLong(2, maxBytes)
 
                 val recordsByStream = mutableMapOf<String, MutableList<Record>>()

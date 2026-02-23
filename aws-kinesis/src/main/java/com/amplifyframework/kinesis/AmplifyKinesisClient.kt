@@ -24,6 +24,12 @@ import com.amplifyframework.recordcache.SQLiteRecordStorage
 import kotlin.system.measureTimeMillis
 
 /**
+ * Kinesis supports up to 500 records per stream. 
+ * See [the docs](https://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecords.html)
+ */ 
+private const val MAX_RECORDS_PER_STREAM = 500
+
+/**
  * A client for sending data to Amazon Kinesis Data Streams.
  *
  * Provides automatic batching, retry logic, and local caching for high-throughput
@@ -80,7 +86,7 @@ class AmplifyKinesisClient(
         storage = SQLiteRecordStorage(
             context = context,
             identifier = region,
-            maxRecords = configuration.maxRecords,
+            maxRecordsByStream = MAX_RECORDS_PER_STREAM,
             maxBytes = configuration.cacheMaxBytes
         )
     )

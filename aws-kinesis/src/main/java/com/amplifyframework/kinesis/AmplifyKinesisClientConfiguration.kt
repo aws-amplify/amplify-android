@@ -15,7 +15,6 @@ private const val DEFAULT_CACHE_SIZE_LIMIT_IN_BYTES = 500L * 1024 * 1024
  */
 data class AmplifyKinesisClientConfiguration internal constructor(
     val cacheMaxBytes: Long,
-    val maxRecords: Int,
     val maxRetries: Int,
     val flushStrategy: FlushStrategy,
     val configureClient: AmplifyKinesisClientConfigurationProvider? = null
@@ -46,9 +45,6 @@ data class AmplifyKinesisClientConfiguration internal constructor(
      */
     class Builder internal constructor() {
         var cacheMaxBytes: Long = DEFAULT_CACHE_SIZE_LIMIT_IN_BYTES
-            @JvmSynthetic set
-
-        var maxRecords: Int = 500
             @JvmSynthetic set
 
         var maxRetries: Int = 5
