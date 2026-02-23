@@ -27,7 +27,6 @@ import com.amplifyframework.foundation.result.getOrThrow
 import com.amplifyframework.foundation.result.isFailure
 import com.amplifyframework.foundation.result.isSuccess
 import com.amplifyframework.recordcache.FlushStrategy
-import com.amplifyframework.testutils.Sleep
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -74,7 +73,10 @@ class KinesisDataStreamsInstrumentationTest {
             synchronousAuth = SynchronousAuth.delegatingTo(Amplify.Auth)
 
             // Sign in with test credentials
-            @androidx.annotation.RawRes val resourceId = com.amplifyframework.testutils.Resources.getRawResourceId(context, CREDENTIALS_RESOURCE_NAME)
+            @androidx.annotation.RawRes val resourceId = com.amplifyframework.testutils.Resources.getRawResourceId(
+                context,
+                CREDENTIALS_RESOURCE_NAME
+            )
             val (user, password) = readCredentialsFromResource(context, resourceId)
             synchronousAuth.signOut()
             synchronousAuth.signIn(user, password)
@@ -83,7 +85,10 @@ class KinesisDataStreamsInstrumentationTest {
             credentialsProvider = CognitoCredentialsProvider().toAwsCredentialsProvider()
         }
 
-        private fun readCredentialsFromResource(context: Context, @androidx.annotation.RawRes resourceId: Int): Pair<String, String> {
+        private fun readCredentialsFromResource(
+            context: Context,
+            @androidx.annotation.RawRes resourceId: Int
+        ): Pair<String, String> {
             val resource = com.amplifyframework.testutils.Resources.readAsJson(context, resourceId)
             return try {
                 val credentials = resource.getJSONArray("credentials")

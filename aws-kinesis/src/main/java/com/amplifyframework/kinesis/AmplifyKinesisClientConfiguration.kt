@@ -78,7 +78,7 @@ data class AmplifyKinesisClientConfiguration internal constructor(
          * @return This builder instance
          */
         fun flushStrategy(value: FlushStrategy) = apply { flushStrategy = value }
-        
+
         fun configureClient(value: AmplifyKinesisClientConfigurationProvider?) = apply { configureClient = value }
 
         /**
