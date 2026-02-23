@@ -10,7 +10,7 @@ import kotlinx.coroutines.launch
 
 internal class AutoFlushScheduler(
     val interval: FlushStrategy.Interval,
-    val client: RecordClient<*>,
+    val client: RecordClient,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private val scope = CoroutineScope(dispatcher + CoroutineName("AutoFlushScheduler"))

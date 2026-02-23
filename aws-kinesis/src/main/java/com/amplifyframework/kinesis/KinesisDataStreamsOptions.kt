@@ -17,7 +17,8 @@ data class KinesisDataStreamsOptions internal constructor(
     val cacheMaxBytes: Long,
     val maxRecords: Int,
     val maxRetries: Int,
-    val flushStrategy: FlushStrategy
+    val flushStrategy: FlushStrategy,
+    val configureClient: KinesisClientConfigurationProvider? = null
 ) {
     companion object {
         /**
@@ -27,10 +28,10 @@ data class KinesisDataStreamsOptions internal constructor(
          */
         @JvmStatic
         fun builder() = Builder()
-        
+
         @JvmSynthetic
         operator fun invoke(func: Builder.() -> Unit) = Builder().apply(func).build()
-        
+
         /**
          * Creates [KinesisDataStreamsOptions] with default values.
          *
@@ -39,23 +40,26 @@ data class KinesisDataStreamsOptions internal constructor(
         @JvmStatic
         fun defaults() = builder().build()
     }
-    
+
     /**
      * Builder for [KinesisDataStreamsOptions].
      */
     class Builder internal constructor() {
         var cacheMaxBytes: Long = DEFAULT_CACHE_SIZE_LIMIT_IN_BYTES
             @JvmSynthetic set
-        
+
         var maxRecords: Int = 500
             @JvmSynthetic set
-        
+
         var maxRetries: Int = 5
             @JvmSynthetic set
-        
+
         var flushStrategy: FlushStrategy = FlushStrategy.Interval(30.seconds)
             @JvmSynthetic set
-        
+
+        var configureClient: KinesisClientConfigurationProvider? = null
+            @JvmSynthetic set
+
         /**
          * Sets the maximum cache size in bytes.
          *
@@ -63,7 +67,7 @@ data class KinesisDataStreamsOptions internal constructor(
          * @return This builder instance
          */
         fun cacheMaxBytes(value: Long) = apply { cacheMaxBytes = value }
-        
+
         /**
          * Sets the maximum number of records to cache.
          *
@@ -71,7 +75,7 @@ data class KinesisDataStreamsOptions internal constructor(
          * @return This builder instance
          */
         fun maxRecords(value: Int) = apply { maxRecords = value }
-        
+
         /**
          * Sets the maximum number of retry attempts.
          *
@@ -79,7 +83,7 @@ data class KinesisDataStreamsOptions internal constructor(
          * @return This builder instance
          */
         fun maxRetries(value: Int) = apply { maxRetries = value }
-        
+
         /**
          * Sets the flush strategy for automatic record flushing.
          *
@@ -87,12 +91,13 @@ data class KinesisDataStreamsOptions internal constructor(
          * @return This builder instance
          */
         fun flushStrategy(value: FlushStrategy) = apply { flushStrategy = value }
-        
+        fun configureClient(value: KinesisClientConfigurationProvider?) = apply { configureClient = value }
+
         /**
          * Builds the [KinesisDataStreamsOptions] with configured values.
          *
          * @return Configured options instance
          */
-        fun build() = KinesisDataStreamsOptions(cacheMaxBytes, maxRecords, maxRetries, flushStrategy)
+        fun build() = KinesisDataStreamsOptions(cacheMaxBytes, maxRecords, maxRetries, flushStrategy, configureClient)
     }
 }

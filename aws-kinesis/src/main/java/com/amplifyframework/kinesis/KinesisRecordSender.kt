@@ -4,42 +4,23 @@ import androidx.annotation.VisibleForTesting
 import aws.sdk.kotlin.services.kinesis.KinesisClient
 import aws.sdk.kotlin.services.kinesis.model.PutRecordsRequest
 import aws.sdk.kotlin.services.kinesis.model.PutRecordsRequestEntry
-import com.amplifyframework.auth.AWSCredentials
-import com.amplifyframework.auth.AWSCredentialsProvider
-import com.amplifyframework.auth.convertToSdkCredentialsProvider
 import com.amplifyframework.recordcache.PutRecordsResponse
 import com.amplifyframework.recordcache.Record
-import com.amplifyframework.recordcache.RecordCacheNetworkException
 import com.amplifyframework.recordcache.RecordSender
 
 typealias PutRecordsResponseSdk = aws.sdk.kotlin.services.kinesis.model.PutRecordsResponse
 
 internal class KinesisRecordSender(
-    private val credentialsProvider: AWSCredentialsProvider<AWSCredentials>,
-    private val region: String,
-    private val maxRetries: Int,
+    private val kinesisClient: KinesisClient,
+    private val maxRetries: Int
 ) : RecordSender {
-    private val kinesisSDKClient: KinesisClient = KinesisClient {
-        this.region = this@KinesisRecordSender.region
-        this.credentialsProvider = convertToSdkCredentialsProvider(this@KinesisRecordSender.credentialsProvider)
-    }
 
     override suspend fun putRecords(streamName: String, records: List<Record>): Result<PutRecordsResponse> =
         runCatching {
-            // Create request
             val request = createRequest(streamName, records)
-
-            val sdkResponse = kinesisSDKClient.putRecords(request)
-
-            val response = splitResponse(sdkResponse, records)
-            return@runCatching response
-        }.recoverCatching { cause ->
-            throw RecordCacheNetworkException(
-                "Failed to send records to Kinesis",
-                "Check network connectivity and AWS credentials",
-                cause
-            )
-        }
+            val sdkResponse = kinesisClient.putRecords(request)
+            splitResponse(sdkResponse, records)
+        }.recoverCatching { throw KinesisException.from(it) }
 
     @VisibleForTesting
     internal fun createRequest(streamName: String, records: List<Record>) = PutRecordsRequest {

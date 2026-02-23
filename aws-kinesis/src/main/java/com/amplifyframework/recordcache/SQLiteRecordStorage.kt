@@ -106,10 +106,7 @@ internal class SQLiteRecordStorage internal constructor(
         cachedSize.addAndGet(record.dataSize)
 
         return@wrapDispatchAndCatching
-    }.recoverAsRecordCacheException(
-        "Failed to add record to cache",
-        "Check database permissions and storage space"
-    )
+    }.recoverAsRecordCacheException("Failed to add record to cache")
 
     override suspend fun getRecordsByStream(): Result<List<List<Record>>> = wrapDispatchAndTransactionAndCatching {
         connection.prepare(
@@ -148,7 +145,7 @@ internal class SQLiteRecordStorage internal constructor(
 
             recordsByStream.values.toList()
         }
-    }.recoverAsRecordCacheException("Could not retrieve records from storage", "Try again at a later time")
+    }.recoverAsRecordCacheException("Could not retrieve records from storage")
 
     override suspend fun deleteRecords(ids: List<Long>): Result<Unit> = wrapDispatchAndCatching {
         if (!ids.isEmpty()) {
@@ -162,10 +159,7 @@ internal class SQLiteRecordStorage internal constructor(
             }
             resetCacheSizeFromDb()
         }
-    }.recoverAsRecordCacheException(
-        "Failed to delete records from cache",
-        "Try again at a later time"
-    )
+    }.recoverAsRecordCacheException("Failed to delete records from cache")
 
     override suspend fun incrementRetryCount(ids: List<Long>): Result<Unit> = wrapDispatchAndCatching {
         if (!ids.isEmpty()) {
@@ -180,10 +174,7 @@ internal class SQLiteRecordStorage internal constructor(
             }
             return@wrapDispatchAndCatching
         }
-    }.recoverAsRecordCacheException(
-        "Failed to increment retry count",
-        "Try again at a later time"
-    )
+    }.recoverAsRecordCacheException("Failed to increment retry count")
 
     /**
      * Resets the cached size by recalculating from the database.
@@ -208,22 +199,19 @@ internal class SQLiteRecordStorage internal constructor(
         connection.execSQL("DELETE FROM records")
         cachedSize.set(0)
         return@wrapDispatchAndTransactionAndCatching ClearCacheData(count)
-    }.recoverAsRecordCacheException(
-        "Failed to clear cache",
-        "Try again at a later time"
-    )
+    }.recoverAsRecordCacheException("Failed to clear cache")
 }
 
-private fun <R> Result<R>.recoverAsRecordCacheException(message: String, recoverySuggestion: String): Result<R> {
+private fun <R> Result<R>.recoverAsRecordCacheException(message: String): Result<R> {
     if (this.isSuccess) {
         return this
     }
 
     val transformedException = when (val exception = this.exceptionOrNull()) {
         is RecordCacheException -> exception
-        else -> RecordCacheStorageException(
+        else -> RecordCacheDatabaseException(
             message,
-            recoverySuggestion,
+            DEFAULT_RECOVERY_SUGGESTION,
             exception
         )
     }
