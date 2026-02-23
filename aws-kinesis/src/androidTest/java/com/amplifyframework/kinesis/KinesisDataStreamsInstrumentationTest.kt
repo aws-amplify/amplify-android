@@ -60,7 +60,6 @@ class KinesisDataStreamsInstrumentationTest {
         private const val STREAM_NAME = "amplify-kinesis-test-stream"
         private const val CREDENTIALS_RESOURCE_NAME = "credentials"
         private const val CONFIGURATION_NAME = "amplifyconfiguration"
-        private const val COGNITO_CONFIGURATION_TIMEOUT = 5_000L
         private const val REGION = "us-east-1"
 
         private lateinit var synchronousAuth: SynchronousAuth
@@ -72,43 +71,29 @@ class KinesisDataStreamsInstrumentationTest {
             val context = ApplicationProvider.getApplicationContext<Context>()
             Amplify.Auth.addPlugin(AWSCognitoAuthPlugin())
             Amplify.configure(context)
-            Sleep.milliseconds(COGNITO_CONFIGURATION_TIMEOUT)
             synchronousAuth = SynchronousAuth.delegatingTo(Amplify.Auth)
 
             // Sign in with test credentials
-            @androidx.annotation.RawRes val resourceId =
-                com.amplifyframework.testutils.Resources.getRawResourceId(
-                    context,
-                    CREDENTIALS_RESOURCE_NAME
-                )
-            val userAndPasswordPair = readCredentialsFromResource(context, resourceId)
+            @androidx.annotation.RawRes val resourceId = com.amplifyframework.testutils.Resources.getRawResourceId(context, CREDENTIALS_RESOURCE_NAME)
+            val (user, password) = readCredentialsFromResource(context, resourceId)
             synchronousAuth.signOut()
-            synchronousAuth.signIn(
-                userAndPasswordPair!!.first,
-                userAndPasswordPair.second
-            )
+            synchronousAuth.signIn(user, password)
 
             // Bridge V2 Auth to foundation credentials via Smithy types
             credentialsProvider = CognitoCredentialsProvider().toAwsCredentialsProvider()
         }
 
-        private fun readCredentialsFromResource(
-            context: Context,
-            @androidx.annotation.RawRes resourceId: Int
-        ): android.util.Pair<String, String>? {
+        private fun readCredentialsFromResource(context: Context, @androidx.annotation.RawRes resourceId: Int): Pair<String, String> {
             val resource = com.amplifyframework.testutils.Resources.readAsJson(context, resourceId)
-            var userCredentials: android.util.Pair<String, String>? = null
             return try {
                 val credentials = resource.getJSONArray("credentials")
-                for (index in 0 until credentials.length()) {
-                    val credential = credentials.getJSONObject(index)
-                    val username = credential.getString("username")
-                    val password = credential.getString("password")
-                    userCredentials = android.util.Pair(username, password)
-                }
-                userCredentials
+                val lastIndex = credentials.length() - 1
+                val credential = credentials.getJSONObject(lastIndex)
+                val username = credential.getString("username")
+                val password = credential.getString("password")
+                Pair(username, password)
             } catch (jsonReadingFailure: org.json.JSONException) {
-                throw RuntimeException(jsonReadingFailure)
+                throw jsonReadingFailure
             }
         }
     }
