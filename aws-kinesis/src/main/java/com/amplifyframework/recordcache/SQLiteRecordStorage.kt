@@ -5,12 +5,13 @@ import androidx.annotation.VisibleForTesting
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.execSQL
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.foundation.logging.Logger
 import com.amplifyframework.foundation.result.Result
-import com.amplifyframework.foundation.result.amplifyRunCatching
 import com.amplifyframework.foundation.result.exceptionOrNull
 import com.amplifyframework.foundation.result.isSuccess
+import com.amplifyframework.foundation.result.resultCatching
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CoroutineDispatcher
@@ -19,17 +20,19 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
+@OptIn(InternalAmplifyApi::class)
 internal class SQLiteRecordStorage internal constructor(
-    maxRecords: Int,
+    maxRecordsByStream: Int,
     maxBytes: Long,
     identifier: String,
     connectionFactory: () -> SQLiteConnection,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
-) : RecordStorage(maxRecords, maxBytes, identifier) {
+) : RecordStorage(maxRecordsByStream, maxBytes, identifier) {
     private val logger: Logger = AmplifyLogging.logger<SQLiteRecordStorage>()
     private val connection: SQLiteConnection = connectionFactory()
     private var cachedSize = AtomicInteger(0)
     private val dbMutex = Mutex()
+    private val maxRecordsByStream = maxRecordsByStream
 
     constructor(
         context: Context,
@@ -37,7 +40,7 @@ internal class SQLiteRecordStorage internal constructor(
         maxBytes: Long,
         identifier: String,
         dispatcher: CoroutineDispatcher = Dispatchers.IO
-    ) : this(maxRecords, maxBytes, identifier, {
+    ) : this(maxRecordsByStream, maxBytes, identifier, {
         val dbFile = File(context.getDatabasePath("kinesis_records_$identifier.db").absolutePath)
         BundledSQLiteDriver().open(dbFile.absolutePath)
     }, dispatcher)
@@ -69,7 +72,7 @@ internal class SQLiteRecordStorage internal constructor(
     /**
      * Helper to wrap DB queries with locking and dispatch
      */
-    private suspend fun <T> wrapDispatchAndCatching(block: () -> T): Result<T, Throwable> = amplifyRunCatching {
+    private suspend fun <T> wrapDispatchAndCatching(block: () -> T): Result<T, Throwable> = resultCatching {
         withContext(dispatcher) {
             dbMutex.withLock {
                 block()
@@ -80,18 +83,19 @@ internal class SQLiteRecordStorage internal constructor(
     /**
      * Helper to wrap DB queries in a transaction and suspend
      */
-    private suspend fun <T> wrapDispatchAndTransactionAndCatching(block: () -> T): Result<T, Throwable> = wrapDispatchAndCatching {
-        connection.execSQL("BEGIN IMMEDIATE TRANSACTION")
-        try {
-            val result = block()
-            connection.execSQL("END TRANSACTION")
-            result
-        } catch (e: Exception) {
-            connection.execSQL("ROLLBACK TRANSACTION")
-            throw e
+    private suspend fun <T> wrapDispatchAndTransactionAndCatching(block: () -> T): Result<T, Throwable> =
+        wrapDispatchAndCatching {
+            connection.execSQL("BEGIN IMMEDIATE TRANSACTION")
+            try {
+                val result = block()
+                connection.execSQL("END TRANSACTION")
+                result
+            } catch (e: Exception) {
+                connection.execSQL("ROLLBACK TRANSACTION")
+                throw e
+            }
         }
-    }
-            
+
     override suspend fun addRecord(record: RecordInput): Result<Unit, RecordCacheException> = wrapDispatchAndCatching {
         // Check cache size limit before adding
         if (cachedSize.get() + record.dataSize > maxBytes) {

@@ -18,7 +18,7 @@ import org.robolectric.RobolectricTestRunner
 class SQLiteRecordStorageCacheAccuracyTest {
 
     private fun createTestStorage(): SQLiteRecordStorage = SQLiteRecordStorage(
-        maxRecords = 1000,
+        maxRecordsByStream = 1000,
         maxBytes = 1024 * 1024L,
         identifier = "test",
         connectionFactory = { BundledSQLiteDriver().open(":memory:") },

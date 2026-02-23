@@ -26,7 +26,7 @@ class RecordClientFlushTest {
     @Before
     fun setup() {
         storage = SQLiteRecordStorage(
-            maxRecords = 1000,
+            maxRecordsByStream = 1000,
             maxBytes = 1024 * 1024L,
             identifier = "test_flush",
             connectionFactory = { BundledSQLiteDriver().open(":memory:") },

@@ -17,15 +17,13 @@ public final class com/amplifyframework/kinesis/AmplifyKinesisClientConfiguratio
 	public static final fun builder ()Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfiguration$Builder;
 	public final fun component1 ()J
 	public final fun component2 ()I
-	public final fun component3 ()I
-	public final fun component4 ()Lcom/amplifyframework/recordcache/FlushStrategy;
-	public final fun component5 ()Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfigurationProvider;
+	public final fun component3 ()Lcom/amplifyframework/recordcache/FlushStrategy;
+	public final fun component4 ()Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfigurationProvider;
 	public static final fun defaults ()Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfiguration;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getCacheMaxBytes ()J
 	public final fun getConfigureClient ()Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfigurationProvider;
 	public final fun getFlushStrategy ()Lcom/amplifyframework/recordcache/FlushStrategy;
-	public final fun getMaxRecords ()I
 	public final fun getMaxRetries ()I
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -39,14 +37,11 @@ public final class com/amplifyframework/kinesis/AmplifyKinesisClientConfiguratio
 	public final fun getCacheMaxBytes ()J
 	public final fun getConfigureClient ()Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfigurationProvider;
 	public final fun getFlushStrategy ()Lcom/amplifyframework/recordcache/FlushStrategy;
-	public final fun getMaxRecords ()I
 	public final fun getMaxRetries ()I
-	public final fun maxRecords (I)Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfiguration$Builder;
 	public final fun maxRetries (I)Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfiguration$Builder;
 	public final synthetic fun setCacheMaxBytes (J)V
 	public final synthetic fun setConfigureClient (Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfigurationProvider;)V
 	public final synthetic fun setFlushStrategy (Lcom/amplifyframework/recordcache/FlushStrategy;)V
-	public final synthetic fun setMaxRecords (I)V
 	public final synthetic fun setMaxRetries (I)V
 }
 

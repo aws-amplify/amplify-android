@@ -9,7 +9,6 @@ private const val DEFAULT_CACHE_SIZE_LIMIT_IN_BYTES = 500L * 1024 * 1024
  * Configuration options for [AmplifyKinesisClient].
  *
  * @param cacheMaxBytes Maximum size of the local cache in bytes (default: 500MB)
- * @param maxRecords Maximum number of records to cache before forcing a flush (default: 500)
  * @param maxRetries Maximum number of retry attempts for failed records (default: 5)
  * @param flushStrategy Strategy for automatic flushing of cached records
  */
@@ -65,14 +64,6 @@ data class AmplifyKinesisClientConfiguration internal constructor(
         fun cacheMaxBytes(value: Long) = apply { cacheMaxBytes = value }
 
         /**
-         * Sets the maximum number of records to cache.
-         *
-         * @param value Maximum number of records
-         * @return This builder instance
-         */
-        fun maxRecords(value: Int) = apply { maxRecords = value }
-
-        /**
          * Sets the maximum number of retry attempts.
          *
          * @param value Maximum retry attempts
@@ -96,7 +87,6 @@ data class AmplifyKinesisClientConfiguration internal constructor(
          */
         fun build() = AmplifyKinesisClientConfiguration(
             cacheMaxBytes,
-            maxRecords,
             maxRetries,
             flushStrategy,
             configureClient
