@@ -75,77 +75,44 @@ class PublishingConventionPlugin : Plugin<Project> {
     // Configure the publishing extension in the project
     @Suppress("LocalVariableName", "ktlint:standard:property-naming")
     private fun Project.configureMavenPublishing() {
+        val POM_GROUP: String by project
+        val POM_ARTIFACT_ID: String by project
+        val VERSION_NAME: String by project
+
+        group = POM_GROUP
+        version = VERSION_NAME
+
         configure<PublishingExtension> {
-            publications {
-                create("maven", MavenPublication::class.java) {
-                    val POM_GROUP: String by project
-                    val POM_ARTIFACT_ID: String by project
-                    val VERSION_NAME: String by project
+            // For KMP projects, publications are created automatically by the KMP plugin
+            pluginManager.withPlugin("org.jetbrains.kotlin.multiplatform") {
+                // Configure all KMP publications
+                publications.withType<MavenPublication>().configureEach {
+                    configurePom(this@configureMavenPublishing)
+                }
+            }
 
-                    groupId = POM_GROUP
-                    artifactId = POM_ARTIFACT_ID
-                    version = VERSION_NAME
+            // For non-KMP projects, create the maven publication manually
+            if (!isKotlinMultiplatform) {
+                publications {
+                    create("maven", MavenPublication::class.java) {
+                        artifactId = POM_ARTIFACT_ID
 
-                    pluginManager.withPlugin("com.android.library") {
-                        from(components["release"])
+                        pluginManager.withPlugin("com.android.library") {
+                            from(components["release"])
+                        }
+                        pluginManager.withPlugin("java-library") {
+                            from(components["java"])
+                        }
+
+                        configurePom(this@configureMavenPublishing)
                     }
-                    pluginManager.withPlugin("java-library") {
-                        from(components["java"])
-                    }
+                }
 
-                    pom {
-                        val POM_NAME: String? by project
-                        val POM_PACKAGING: String? by project
-                        val POM_DESCRIPTION: String? by project
-                        val POM_URL: String? by project
-                        name.set(POM_NAME)
-                        packaging = POM_PACKAGING
-                        description.set(POM_DESCRIPTION)
-                        url.set(POM_URL)
-
-                        scm {
-                            val POM_SCM_URL: String? by project
-                            val POM_SCM_CONNECTION: String? by project
-                            val POM_SCM_DEV_CONNECTION: String? by project
-                            url.set(POM_SCM_URL)
-                            connection.set(POM_SCM_CONNECTION)
-                            developerConnection.set(POM_SCM_DEV_CONNECTION)
-                        }
-
-                        licenses {
-                            license {
-                                val POM_LICENSE_NAME: String? by project
-                                val POM_LICENSE_URL: String? by project
-                                val POM_LICENSE_DIST: String? by project
-                                name.set(POM_LICENSE_NAME)
-                                url.set(POM_LICENSE_URL)
-                                distribution.set(POM_LICENSE_DIST)
-                            }
-                        }
-
-                        developers {
-                            developer {
-                                val POM_DEVELOPER_ID: String? by project
-                                val POM_DEVELOPER_ORGANIZATION_URL: String? by project
-                                id.set(POM_DEVELOPER_ID)
-                                organizationUrl.set(POM_DEVELOPER_ORGANIZATION_URL)
-                                roles.set(listOf("developer"))
-                            }
-                        }
-
-                        if (useLegacyPublishingConventions) {
-                            // Remove the scope information for all dependencies. This puts
-                            // everything at "compile" scope, which matches the way Amplify V2 has been
-                            // published historically. For v3 we should remove this and include the
-                            // scope information for our dependencies.
-                            withXml {
-                                val dependencies = asNode().childNodes("dependencies").first()
-                                for (dependency in dependencies.childNodes("dependency")) {
-                                    val scope = dependency.childNodes("scope").first()
-                                    dependency.remove(scope)
-                                }
-                            }
-                        }
+                if (useLegacyPublishingConventions) {
+                    // Turn off Gradle metadata. This is to maintain compatibility with the way Amplify V2 has
+                    // been published historically. For v3 we should remove this and publish the gradle metadata.
+                    tasks.withType<GenerateModuleMetadata>().configureEach {
+                        enabled = false
                     }
                 }
             }
@@ -161,12 +128,63 @@ class PublishingConventionPlugin : Plugin<Project> {
                 }
             }
         }
+    }
 
-        if (useLegacyPublishingConventions) {
-            // Turn off Gradle metadata. This is to maintain compatibility with the way Amplify V2 has
-            // been published historically. For v3 we should remove this and publish the gradle metadata.
-            tasks.withType<GenerateModuleMetadata>().configureEach {
-                enabled = false
+    // Configure POM metadata for a publication
+    @Suppress("LocalVariableName", "ktlint:standard:property-naming")
+    private fun MavenPublication.configurePom(project: Project) {
+        pom {
+            val POM_NAME: String? by project
+            val POM_PACKAGING: String? by project
+            val POM_DESCRIPTION: String? by project
+            val POM_URL: String? by project
+            name.set(POM_NAME)
+            packaging = POM_PACKAGING
+            description.set(POM_DESCRIPTION)
+            url.set(POM_URL)
+
+            scm {
+                val POM_SCM_URL: String? by project
+                val POM_SCM_CONNECTION: String? by project
+                val POM_SCM_DEV_CONNECTION: String? by project
+                url.set(POM_SCM_URL)
+                connection.set(POM_SCM_CONNECTION)
+                developerConnection.set(POM_SCM_DEV_CONNECTION)
+            }
+
+            licenses {
+                license {
+                    val POM_LICENSE_NAME: String? by project
+                    val POM_LICENSE_URL: String? by project
+                    val POM_LICENSE_DIST: String? by project
+                    name.set(POM_LICENSE_NAME)
+                    url.set(POM_LICENSE_URL)
+                    distribution.set(POM_LICENSE_DIST)
+                }
+            }
+
+            developers {
+                developer {
+                    val POM_DEVELOPER_ID: String? by project
+                    val POM_DEVELOPER_ORGANIZATION_URL: String? by project
+                    id.set(POM_DEVELOPER_ID)
+                    organizationUrl.set(POM_DEVELOPER_ORGANIZATION_URL)
+                    roles.set(listOf("developer"))
+                }
+            }
+
+            if (project.useLegacyPublishingConventions) {
+                // Remove the scope information for all dependencies. This puts
+                // everything at "compile" scope, which matches the way Amplify V2 has been
+                // published historically. For v3 we should remove this and include the
+                // scope information for our dependencies.
+                withXml {
+                    val dependencies = asNode().childNodes("dependencies").first()
+                    for (dependency in dependencies.childNodes("dependency")) {
+                        val scope = dependency.childNodes("scope").first()
+                        dependency.remove(scope)
+                    }
+                }
             }
         }
     }
@@ -188,7 +206,14 @@ class PublishingConventionPlugin : Plugin<Project> {
                 val keyId = findProperty("signing.keyId").toString()
                 useInMemoryPgpKeys(keyId, signingKey, signingPassword)
             }
-            sign(extensions.findByType(PublishingExtension::class.java)?.publications?.get("maven"))
+
+            // Sign all publications
+            val publishingExtension = extensions.findByType(PublishingExtension::class.java)
+            publishingExtension?.publications?.configureEach {
+                if (this is MavenPublication) {
+                    sign(this)
+                }
+            }
         }
     }
 
@@ -227,7 +252,12 @@ class PublishingConventionPlugin : Plugin<Project> {
     // This check should be controlled from the module's build.gradle.kts via extension instead of by looking at
     // the project name
     private val Project.useLegacyPublishingConventions: Boolean
-        get() = !name.startsWith("apollo") && !name.startsWith("aws-sdk-appsync")
+        get() = !name.startsWith("apollo") &&
+            !name.startsWith("aws-sdk-appsync") &&
+            !isKotlinMultiplatform
 
     private fun Node.childNodes(name: String) = (get(name) as? NodeList)?.filterIsInstance<Node>() ?: emptyList()
+
+    private val Project.isKotlinMultiplatform: Boolean
+        get() = pluginManager.hasPlugin("org.jetbrains.kotlin.multiplatform")
 }

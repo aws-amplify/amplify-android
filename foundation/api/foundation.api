@@ -1,0 +1,102 @@
+public final class com/amplifyframework/foundation/AndroidLogSink : com/amplifyframework/foundation/logging/LogSink {
+	public fun <init> ()V
+	public fun <init> (Lcom/amplifyframework/foundation/logging/LogLevel;)V
+	public synthetic fun <init> (Lcom/amplifyframework/foundation/logging/LogLevel;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun emit (Lcom/amplifyframework/foundation/logging/LogMessage;)V
+	public fun isEnabledFor (Lcom/amplifyframework/foundation/logging/LogLevel;)Z
+}
+
+public abstract interface class com/amplifyframework/foundation/credentials/AwsCredentials {
+	public abstract fun getAccessKeyId ()Ljava/lang/String;
+	public abstract fun getSecretAccessKey ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/foundation/credentials/AwsCredentials$Static : com/amplifyframework/foundation/credentials/AwsCredentials {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public fun getAccessKeyId ()Ljava/lang/String;
+	public fun getSecretAccessKey ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/foundation/credentials/AwsCredentials$Temporary : com/amplifyframework/foundation/credentials/AwsCredentials {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/time/Instant;)V
+	public fun getAccessKeyId ()Ljava/lang/String;
+	public final fun getExpiration ()Lkotlin/time/Instant;
+	public fun getSecretAccessKey ()Ljava/lang/String;
+	public final fun getSessionToken ()Ljava/lang/String;
+}
+
+public abstract interface class com/amplifyframework/foundation/credentials/AwsCredentialsProvider {
+	public abstract fun resolve (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract class com/amplifyframework/foundation/exceptions/AmplifyException : java/lang/Exception {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getRecoverySuggestion ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/foundation/logging/AmplifyLogging {
+	public static final field INSTANCE Lcom/amplifyframework/foundation/logging/AmplifyLogging;
+	public static final fun addSink (Lcom/amplifyframework/foundation/logging/LogSink;)V
+}
+
+public final class com/amplifyframework/foundation/logging/LogLevel : java/lang/Enum {
+	public static final field Debug Lcom/amplifyframework/foundation/logging/LogLevel;
+	public static final field Error Lcom/amplifyframework/foundation/logging/LogLevel;
+	public static final field Info Lcom/amplifyframework/foundation/logging/LogLevel;
+	public static final field None Lcom/amplifyframework/foundation/logging/LogLevel;
+	public static final field Verbose Lcom/amplifyframework/foundation/logging/LogLevel;
+	public static final field Warn Lcom/amplifyframework/foundation/logging/LogLevel;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/foundation/logging/LogLevel;
+	public static fun values ()[Lcom/amplifyframework/foundation/logging/LogLevel;
+}
+
+public final class com/amplifyframework/foundation/logging/LogMessage {
+	public fun <init> (Lcom/amplifyframework/foundation/logging/LogLevel;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public final fun component1 ()Lcom/amplifyframework/foundation/logging/LogLevel;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/Throwable;
+	public final fun copy (Lcom/amplifyframework/foundation/logging/LogLevel;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)Lcom/amplifyframework/foundation/logging/LogMessage;
+	public static synthetic fun copy$default (Lcom/amplifyframework/foundation/logging/LogMessage;Lcom/amplifyframework/foundation/logging/LogLevel;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lcom/amplifyframework/foundation/logging/LogMessage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCause ()Ljava/lang/Throwable;
+	public final fun getContent ()Ljava/lang/String;
+	public final fun getLevel ()Lcom/amplifyframework/foundation/logging/LogLevel;
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/amplifyframework/foundation/logging/LogSink {
+	public abstract fun emit (Lcom/amplifyframework/foundation/logging/LogMessage;)V
+	public abstract fun isEnabledFor (Lcom/amplifyframework/foundation/logging/LogLevel;)Z
+}
+
+public abstract interface class com/amplifyframework/foundation/result/Result {
+}
+
+public final class com/amplifyframework/foundation/result/Result$Failure : com/amplifyframework/foundation/result/Result {
+	public fun <init> (Ljava/lang/Object;)V
+	public final fun component1 ()Ljava/lang/Object;
+	public final fun copy (Ljava/lang/Object;)Lcom/amplifyframework/foundation/result/Result$Failure;
+	public static synthetic fun copy$default (Lcom/amplifyframework/foundation/result/Result$Failure;Ljava/lang/Object;ILjava/lang/Object;)Lcom/amplifyframework/foundation/result/Result$Failure;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/foundation/result/Result$Success : com/amplifyframework/foundation/result/Result {
+	public fun <init> (Ljava/lang/Object;)V
+	public final fun component1 ()Ljava/lang/Object;
+	public final fun copy (Ljava/lang/Object;)Lcom/amplifyframework/foundation/result/Result$Success;
+	public static synthetic fun copy$default (Lcom/amplifyframework/foundation/result/Result$Success;Ljava/lang/Object;ILjava/lang/Object;)Lcom/amplifyframework/foundation/result/Result$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getData ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+

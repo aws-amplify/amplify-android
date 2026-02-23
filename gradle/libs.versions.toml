@@ -13,10 +13,10 @@ androidx-legacy = "1.0.0"
 androidx-lifecycle = "2.4.1"
 androidx-security = "1.0.0"
 androidx-sqlite = "2.6.0"
-androidx-test-core = "1.3.0"
-androidx-test-junit = "1.1.2"
+androidx-test-core = "1.5.0"
+androidx-test-junit = "1.1.5"
 androidx-test-orchestrator = "1.4.2"
-androidx-test-runner = "1.3.0"
+androidx-test-runner = "1.5.2"
 androidx-workmanager = "2.9.1"
 apollo = "4.3.1"
 aws-kotlin = "1.5.15" # ensure proper aws-smithy version also set
@@ -37,7 +37,7 @@ junit-ktx = "1.2.0"
 kotest = "5.9.0"
 kotlin = "2.2.0"
 kotlin-serialization = "1.6.0"
-kover = "0.9.1"
+kover = "0.9.7"
 ktlint = "12.2.0"
 licensee = "1.7.0"
 litert = "1.4.0"
@@ -157,11 +157,14 @@ plugin-ktlint = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref =
 plugin-licensee = { module = "app.cash.licensee:app.cash.licensee.gradle.plugin", version.ref = "licensee" }
 
 [plugins]
+android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
+android-lint = { id = "com.android.lint", version.ref = "agp" }
 apollo = { id = "com.apollographql.apollo", version.ref = "apollo" }
 binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binary-compatibility-validator" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
@@ -170,6 +173,7 @@ licensee = { id = "app.cash.licensee", version.ref = "licensee" }
 
 # Internal convention plugins
 amplify-api = { id = "amplify.api" }
+amplify-kmp = { id = "amplify.kotlin.multiplatform" }
 amplify-kotlin = { id = "amplify.kotlin" }
 amplify-kover = { id = "amplify.kover" }
 amplify-ktlint = { id = "amplify.ktlint" }

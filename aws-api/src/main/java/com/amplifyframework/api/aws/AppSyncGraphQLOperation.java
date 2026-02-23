@@ -30,6 +30,9 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.logging.Logger;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -143,8 +146,17 @@ public final class AppSyncGraphQLOperation<R> extends AWSGraphQLOperation<R> {
                 }
             }
             if (response.code() >= START_OF_CLIENT_ERROR_CODE && response.code() <= END_OF_CLIENT_ERROR_CODE) {
+                IOException cause;
+                try {
+                    JSONObject responseJson = new JSONObject(jsonResponse);
+                    cause = new GraphQLResponseException(responseJson);
+                } catch (JSONException jsonException) {
+                    // Fall back to IOException if response cannot be parsed
+                    String errorMessage = "HTTP error occurred: " + response.code() + " " + jsonResponse;
+                    cause = new IOException(errorMessage, jsonException);
+                }
                 onFailure.accept(new ApiException
-                        .NonRetryableException("OkHttp client request failed.", "Irrecoverable error")
+                        .NonRetryableException("OkHttp client request failed.", cause, "Irrecoverable error")
                 );
                 return;
             }
