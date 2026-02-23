@@ -1,6 +1,6 @@
 package com.amplifyframework.recordcache
 
-import com.amplifyframework.foundation.result.Result as AmplifyResult
+import com.amplifyframework.foundation.result.Result
 import com.amplifyframework.kinesis.AmplifyKinesisException
 
 /**
@@ -27,6 +27,6 @@ data class FlushData(val recordsFlushed: Int = 0, val flushInProgress: Boolean =
  */
 data class ClearCacheData(val recordsCleared: Int = 0)
 
-typealias RecordResult = AmplifyResult<RecordData, AmplifyKinesisException>
-typealias FlushResult = AmplifyResult<FlushData, AmplifyKinesisException>
-typealias ClearCacheResult = AmplifyResult<ClearCacheData, AmplifyKinesisException>
+typealias RecordResult = Result<RecordData, AmplifyKinesisException>
+typealias FlushResult = Result<FlushData, AmplifyKinesisException>
+typealias ClearCacheResult = Result<ClearCacheData, AmplifyKinesisException>
