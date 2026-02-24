@@ -34,6 +34,7 @@ import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.testutils.rules.CanaryTestRule
 import com.amplifyframework.testutils.sync.SynchronousApi
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import io.kotest.assertions.throwables.shouldThrow
@@ -47,6 +48,7 @@ import org.junit.After
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.BeforeClass
+import org.junit.Rule
 import org.junit.Test
 
 class AuthCanaryTest {
@@ -80,6 +82,9 @@ class AuthCanaryTest {
             }
         }
     }
+
+    @get:Rule
+    val testRule = CanaryTestRule()
 
     private lateinit var username: String
     private lateinit var password: String

@@ -21,10 +21,12 @@ import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.geo.models.Coordinates
+import com.amplifyframework.testutils.rules.CanaryTestRule
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousGeo
 import org.junit.After
 import org.junit.BeforeClass
+import org.junit.Rule
 import org.junit.Test
 
 class GeoCanaryTest {
@@ -44,6 +46,9 @@ class GeoCanaryTest {
             }
         }
     }
+
+    @get:Rule
+    val testRule = CanaryTestRule()
 
     private val syncAuth = SynchronousAuth.delegatingToAmplify()
     private val syncGeo = SynchronousGeo.delegatingToAmplify()

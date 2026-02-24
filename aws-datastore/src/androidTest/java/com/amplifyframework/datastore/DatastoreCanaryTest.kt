@@ -23,11 +23,13 @@ import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider
 import com.amplifyframework.testmodels.commentsblog.Post
 import com.amplifyframework.testmodels.commentsblog.PostStatus
 import com.amplifyframework.testutils.HubAccumulator
+import com.amplifyframework.testutils.rules.CanaryTestRule
 import com.amplifyframework.testutils.sync.SynchronousDataStore
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import org.junit.After
 import org.junit.BeforeClass
+import org.junit.Rule
 import org.junit.Test
 
 class DatastoreCanaryTest {
@@ -50,6 +52,9 @@ class DatastoreCanaryTest {
             }
         }
     }
+
+    @get:Rule
+    val testRule = CanaryTestRule()
 
     val syncDatastore = SynchronousDataStore.delegatingTo(Amplify.DataStore)
 

@@ -23,10 +23,12 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.configuration.AmplifyOutputs
 import com.amplifyframework.geo.location.test.R
 import com.amplifyframework.geo.models.Coordinates
+import com.amplifyframework.testutils.rules.CanaryTestRule
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousGeo
 import org.junit.After
 import org.junit.BeforeClass
+import org.junit.Rule
 import org.junit.Test
 
 class GeoCanaryTestGen2 {
@@ -54,6 +56,9 @@ class GeoCanaryTestGen2 {
     fun tearDown() {
         signOutFromCognito()
     }
+
+    @get:Rule
+    val testRule = CanaryTestRule()
 
     @Test
     fun searchByText() {

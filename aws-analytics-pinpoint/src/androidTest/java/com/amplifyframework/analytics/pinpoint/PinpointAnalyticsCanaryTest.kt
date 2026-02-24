@@ -35,6 +35,7 @@ import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.testutils.HubAccumulator
 import com.amplifyframework.testutils.Resources
 import com.amplifyframework.testutils.Sleep
+import com.amplifyframework.testutils.rules.CanaryTestRule
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -43,6 +44,7 @@ import org.json.JSONException
 import org.junit.Assert
 import org.junit.Before
 import org.junit.BeforeClass
+import org.junit.Rule
 import org.junit.Test
 
 class PinpointAnalyticsCanaryTest {
@@ -114,6 +116,9 @@ class PinpointAnalyticsCanaryTest {
             }
         }
     }
+
+    @get:Rule
+    val testRule = CanaryTestRule()
 
     @Before
     fun flushEvents() {
