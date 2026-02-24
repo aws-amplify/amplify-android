@@ -1,6 +1,6 @@
 public final class com/amplifyframework/kinesis/AmplifyKinesisClient {
-	public fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/amplifyframework/foundation/credentials/AwsCredentialsProvider;Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfiguration;)V
-	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/amplifyframework/foundation/credentials/AwsCredentialsProvider;Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfiguration;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/amplifyframework/foundation/credentials/AwsCredentialsProvider;Lcom/amplifyframework/kinesis/AmplifyKinesisClientOptions;)V
+	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/amplifyframework/foundation/credentials/AwsCredentialsProvider;Lcom/amplifyframework/kinesis/AmplifyKinesisClientOptions;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun clearCache (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun disable ()V
 	public final fun enable ()V
@@ -12,14 +12,18 @@ public final class com/amplifyframework/kinesis/AmplifyKinesisClient {
 	public final fun record ([BLjava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
-public final class com/amplifyframework/kinesis/AmplifyKinesisClientConfiguration {
-	public static final field Companion Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfiguration$Companion;
-	public static final fun builder ()Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfiguration$Builder;
+public abstract interface class com/amplifyframework/kinesis/AmplifyKinesisClientConfigurationProvider {
+	public abstract fun applyConfiguration (Laws/sdk/kotlin/services/kinesis/KinesisClient$Config$Builder;)V
+}
+
+public final class com/amplifyframework/kinesis/AmplifyKinesisClientOptions {
+	public static final field Companion Lcom/amplifyframework/kinesis/AmplifyKinesisClientOptions$Companion;
+	public static final fun builder ()Lcom/amplifyframework/kinesis/AmplifyKinesisClientOptions$Builder;
 	public final fun component1 ()J
 	public final fun component2 ()I
 	public final fun component3 ()Lcom/amplifyframework/recordcache/FlushStrategy;
 	public final fun component4 ()Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfigurationProvider;
-	public static final fun defaults ()Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfiguration;
+	public static final fun defaults ()Lcom/amplifyframework/kinesis/AmplifyKinesisClientOptions;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getCacheMaxBytes ()J
 	public final fun getConfigureClient ()Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfigurationProvider;
@@ -29,30 +33,26 @@ public final class com/amplifyframework/kinesis/AmplifyKinesisClientConfiguratio
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class com/amplifyframework/kinesis/AmplifyKinesisClientConfiguration$Builder {
-	public final fun build ()Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfiguration;
-	public final fun cacheMaxBytes (J)Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfiguration$Builder;
-	public final fun configureClient (Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfigurationProvider;)Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfiguration$Builder;
-	public final fun flushStrategy (Lcom/amplifyframework/recordcache/FlushStrategy;)Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfiguration$Builder;
+public final class com/amplifyframework/kinesis/AmplifyKinesisClientOptions$Builder {
+	public final fun build ()Lcom/amplifyframework/kinesis/AmplifyKinesisClientOptions;
+	public final fun cacheMaxBytes (J)Lcom/amplifyframework/kinesis/AmplifyKinesisClientOptions$Builder;
+	public final fun configureClient (Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfigurationProvider;)Lcom/amplifyframework/kinesis/AmplifyKinesisClientOptions$Builder;
+	public final fun flushStrategy (Lcom/amplifyframework/recordcache/FlushStrategy;)Lcom/amplifyframework/kinesis/AmplifyKinesisClientOptions$Builder;
 	public final fun getCacheMaxBytes ()J
 	public final fun getConfigureClient ()Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfigurationProvider;
 	public final fun getFlushStrategy ()Lcom/amplifyframework/recordcache/FlushStrategy;
 	public final fun getMaxRetries ()I
-	public final fun maxRetries (I)Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfiguration$Builder;
+	public final fun maxRetries (I)Lcom/amplifyframework/kinesis/AmplifyKinesisClientOptions$Builder;
 	public final synthetic fun setCacheMaxBytes (J)V
 	public final synthetic fun setConfigureClient (Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfigurationProvider;)V
 	public final synthetic fun setFlushStrategy (Lcom/amplifyframework/recordcache/FlushStrategy;)V
 	public final synthetic fun setMaxRetries (I)V
 }
 
-public final class com/amplifyframework/kinesis/AmplifyKinesisClientConfiguration$Companion {
-	public final fun builder ()Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfiguration$Builder;
-	public final fun defaults ()Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfiguration;
-	public final synthetic fun invoke (Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/kinesis/AmplifyKinesisClientConfiguration;
-}
-
-public abstract interface class com/amplifyframework/kinesis/AmplifyKinesisClientConfigurationProvider {
-	public abstract fun applyConfiguration (Laws/sdk/kotlin/services/kinesis/KinesisClient$Config$Builder;)V
+public final class com/amplifyframework/kinesis/AmplifyKinesisClientOptions$Companion {
+	public final fun builder ()Lcom/amplifyframework/kinesis/AmplifyKinesisClientOptions$Builder;
+	public final fun defaults ()Lcom/amplifyframework/kinesis/AmplifyKinesisClientOptions;
+	public final synthetic fun invoke (Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/kinesis/AmplifyKinesisClientOptions;
 }
 
 public abstract class com/amplifyframework/kinesis/AmplifyKinesisException : com/amplifyframework/AmplifyException {

@@ -9,8 +9,6 @@ import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.foundation.logging.Logger
 import com.amplifyframework.foundation.result.Result
-import com.amplifyframework.foundation.result.exceptionOrNull
-import com.amplifyframework.foundation.result.isSuccess
 import com.amplifyframework.foundation.result.mapFailure
 import com.amplifyframework.foundation.result.resultCatching
 import java.io.File
@@ -217,7 +215,7 @@ internal class SQLiteRecordStorage internal constructor(
     private fun <R> Result<R, Throwable>.recoverAsRecordCacheException(
         message: String
     ): Result<R, RecordCacheException> = mapFailure { exception ->
-        when(exception) {
+        when (exception) {
             is RecordCacheException -> exception
             else -> RecordCacheDatabaseException(message, DEFAULT_RECOVERY_SUGGESTION, exception)
         }

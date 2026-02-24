@@ -22,13 +22,11 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.foundation.credentials.AwsCredentials
 import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
 import com.amplifyframework.foundation.credentials.toAwsCredentialsProvider
-import com.amplifyframework.foundation.result.exceptionOrNull
-import com.amplifyframework.foundation.result.getOrThrow
-import com.amplifyframework.foundation.result.isFailure
-import com.amplifyframework.foundation.result.isSuccess
+import com.amplifyframework.foundation.result.Result
 import com.amplifyframework.recordcache.FlushStrategy
+import com.amplifyframework.testutils.assertions.shouldBeFailure
+import com.amplifyframework.testutils.assertions.shouldBeSuccess
 import com.amplifyframework.testutils.sync.SynchronousAuth
-import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -136,20 +134,17 @@ class KinesisDataStreamsInstrumentationTest {
             partitionKey = "partition-1",
             streamName = STREAM_NAME
         )
-        result.isSuccess().shouldBeTrue()
+        result.shouldBeSuccess()
 
         val flushResult = kinesis.flush()
-        flushResult.isSuccess().shouldBeTrue()
-        flushResult.getOrThrow().recordsFlushed shouldBeGreaterThan 0
+        flushResult.shouldBeSuccess().data.recordsFlushed shouldBeGreaterThan 0
     }
 
     /** Flush with no cached records returns zero flushed. */
     @Test
     fun testFlushWhenEmpty(): Unit = runBlocking {
         val flushResult = kinesis.flush()
-        flushResult.isSuccess().shouldBeTrue()
-
-        val data = flushResult.getOrThrow()
+        val data = flushResult.shouldBeSuccess().data
         data.recordsFlushed shouldBe 0
         data.flushInProgress.shouldBeFalse()
     }
@@ -165,12 +160,11 @@ class KinesisDataStreamsInstrumentationTest {
             streamName = STREAM_NAME
         )
         // record() returns success even when disabled (silently dropped)
-        result.isSuccess().shouldBeTrue()
+        result.shouldBeSuccess()
 
         kinesis.enable()
         val flushResult = kinesis.flush()
-        flushResult.isSuccess().shouldBeTrue()
-        flushResult.getOrThrow().recordsFlushed shouldBe 0
+        flushResult.shouldBeSuccess().data.recordsFlushed shouldBe 0
     }
 
     /** Enable → record → disable → enable → flush verifies only pre-disable records flush. */
@@ -195,9 +189,8 @@ class KinesisDataStreamsInstrumentationTest {
         kinesis.enable()
 
         val flushResult = kinesis.flush()
-        flushResult.isSuccess().shouldBeTrue()
         // Only the pre-disable record should be flushed
-        flushResult.getOrThrow().recordsFlushed shouldBe 1
+        flushResult.shouldBeSuccess().data.recordsFlushed shouldBe 1
     }
 
     /** Two concurrent flushes — one should return flushInProgress = true. */
@@ -217,10 +210,10 @@ class KinesisDataStreamsInstrumentationTest {
             async { kinesis.flush() }
         ).awaitAll()
 
-        val successResults = results.filter { it.isSuccess() }
+        val successResults = results.filter { it is Result.Success }
         successResults.size shouldBe 2
 
-        val flushDatas = successResults.map { it.getOrThrow() }
+        val flushDatas = successResults.map { (it as Result.Success).data }
         // At least one should have done actual work, and one may report flushInProgress
         val anyFlushed = flushDatas.any { it.recordsFlushed > 0 }
         val anyInProgress = flushDatas.any { it.flushInProgress }
@@ -263,8 +256,7 @@ class KinesisDataStreamsInstrumentationTest {
                 streamName = STREAM_NAME
             )
 
-            result.isFailure().shouldBeTrue()
-            result.exceptionOrNull().shouldBeInstanceOf<AmplifyKinesisLimitExceededException>()
+            result.shouldBeFailure().error.shouldBeInstanceOf<AmplifyKinesisLimitExceededException>()
         } finally {
             smallCacheKinesis.disable()
             smallCacheKinesis.clearCache()
@@ -281,12 +273,10 @@ class KinesisDataStreamsInstrumentationTest {
         )
 
         val clearResult = kinesis.clearCache()
-        clearResult.isSuccess().shouldBeTrue()
-        clearResult.getOrThrow().recordsCleared shouldBeGreaterThan 0
+        clearResult.shouldBeSuccess().data.recordsCleared shouldBeGreaterThan 0
 
         val flushResult = kinesis.flush()
-        flushResult.isSuccess().shouldBeTrue()
-        flushResult.getOrThrow().recordsFlushed shouldBe 0
+        flushResult.shouldBeSuccess().data.recordsFlushed shouldBe 0
     }
 
     // ---------------------------------------------------------------
@@ -319,8 +309,7 @@ class KinesisDataStreamsInstrumentationTest {
             )
 
             val flushResult = badKinesis.flush()
-            flushResult.isFailure().shouldBeTrue()
-            flushResult.exceptionOrNull().shouldBeInstanceOf<AmplifyKinesisServiceException>()
+            flushResult.shouldBeFailure().error.shouldBeInstanceOf<AmplifyKinesisServiceException>()
         } finally {
             badKinesis.disable()
             badKinesis.clearCache()
@@ -341,12 +330,11 @@ class KinesisDataStreamsInstrumentationTest {
                 partitionKey = "partition-${i % 5}",
                 streamName = STREAM_NAME
             )
-            result.isSuccess().shouldBeTrue()
+            result.shouldBeSuccess()
         }
 
         val flushResult = kinesis.flush()
-        flushResult.isSuccess().shouldBeTrue()
-        flushResult.getOrThrow().recordsFlushed shouldBe count
+        flushResult.shouldBeSuccess().data.recordsFlushed shouldBe count
     }
 
     /** Record + flush in a loop — verify consistency across cycles. */
@@ -365,8 +353,8 @@ class KinesisDataStreamsInstrumentationTest {
                 )
             }
             val flushResult = kinesis.flush()
-            flushResult.isSuccess().shouldBeTrue()
-            totalFlushed += flushResult.getOrThrow().recordsFlushed
+            flushResult.shouldBeSuccess()
+            totalFlushed += flushResult.data.recordsFlushed
         }
 
         totalFlushed shouldBe (cycles * recordsPerCycle)
@@ -403,8 +391,7 @@ class KinesisDataStreamsInstrumentationTest {
 
             // After auto-flush, a manual flush should find nothing left
             val flushResult = autoFlushKinesis.flush()
-            flushResult.isSuccess().shouldBeTrue()
-            flushResult.getOrThrow().recordsFlushed shouldBe 0
+            flushResult.shouldBeSuccess().data.recordsFlushed shouldBe 0
         } finally {
             autoFlushKinesis.disable()
             autoFlushKinesis.clearCache()

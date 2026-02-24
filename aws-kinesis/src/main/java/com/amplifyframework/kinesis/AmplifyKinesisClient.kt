@@ -9,9 +9,6 @@ import com.amplifyframework.foundation.credentials.toSmithyProvider
 import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.foundation.logging.Logger
 import com.amplifyframework.foundation.result.Result
-import com.amplifyframework.foundation.result.exceptionOrNull
-import com.amplifyframework.foundation.result.getOrThrow
-import com.amplifyframework.foundation.result.isSuccess
 import com.amplifyframework.foundation.result.mapFailure
 import com.amplifyframework.recordcache.AutoFlushScheduler
 import com.amplifyframework.recordcache.ClearCacheResult
