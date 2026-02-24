@@ -76,6 +76,9 @@ class GeoCanaryTestGen2 {
     }
 
     private fun signInWithCognito() {
+        // Ensure we're not already signed in
+        signOutFromCognito()
+
         val context = ApplicationProvider.getApplicationContext<Context>()
         val (username, password) = Credentials.load(context)
         syncAuth.signIn(username, password)
