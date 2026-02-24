@@ -20,6 +20,7 @@ kotlin {
         getByName("androidHostTest") {
             dependencies {
                 implementation(libs.test.mockk)
+                implementation(project(":testutils"))
             }
         }
     }
