@@ -26,8 +26,6 @@ android {
 }
 
 dependencies {
-    implementation(project(":core"))
-    implementation(project(":aws-core"))
     implementation(project(":foundation"))
     implementation(project(":foundation-bridge"))
 
