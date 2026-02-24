@@ -213,20 +213,13 @@ internal class SQLiteRecordStorage internal constructor(
             ClearCacheData(count)
         }.recoverAsRecordCacheException("Failed to clear cache")
 
-    private fun <R> Result<R, Throwable>.recoverAsRecordCacheException(
+private fun <R> Result<R, Throwable>.recoverAsRecordCacheException(
         message: String
-    ): Result<R, RecordCacheException> {
-        if (this.isSuccess()) {
-            return this as Result.Success<R>
-        }
-        val transformedException = when (val exception = this.exceptionOrNull()) {
+    ): Result<R, RecordCacheException> = mapFailure { exception ->
+        when(exception) {
             is RecordCacheException -> exception
-            else -> RecordCacheDatabaseException(
-                message,
-                DEFAULT_RECOVERY_SUGGESTION,
-                exception
-            )
+            else -> RecordCacheDatabaseException(message, DEFAULT_RECOVERY_SUGGESTION, exception)
         }
-        return Result.Failure(transformedException)
+    }
     }
 }
