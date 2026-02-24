@@ -16,7 +16,7 @@ import aws.sdk.kotlin.services.kinesis.KinesisClient
  *     context = context,
  *     region = "us-east-1",
  *     credentialsProvider = provider,
- *     configuration = AmplifyKinesisClientConfiguration {
+ *     options = AmplifyKinesisClientOptions {
  *         configureClient = AmplifyKinesisClientConfigurationProvider { builder ->
  *             builder.httpClient { /* custom http config */ }
  *         }

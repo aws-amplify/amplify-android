@@ -12,7 +12,7 @@ private const val DEFAULT_CACHE_SIZE_LIMIT_IN_BYTES = 500L * 1024 * 1024
  * @param maxRetries Maximum number of retry attempts for failed records (default: 5)
  * @param flushStrategy Strategy for automatic flushing of cached records
  */
-data class AmplifyKinesisClientConfiguration internal constructor(
+data class AmplifyKinesisClientOptions internal constructor(
     val cacheMaxBytes: Long,
     val maxRetries: Int,
     val flushStrategy: FlushStrategy,
@@ -20,7 +20,7 @@ data class AmplifyKinesisClientConfiguration internal constructor(
 ) {
     companion object {
         /**
-         * Creates a new builder for configuring [AmplifyKinesisClientConfiguration].
+         * Creates a new builder for configuring [AmplifyKinesisClientOptions].
          *
          * @return A new builder instance with default values
          */
@@ -31,7 +31,7 @@ data class AmplifyKinesisClientConfiguration internal constructor(
         operator fun invoke(func: Builder.() -> Unit) = Builder().apply(func).build()
 
         /**
-         * Creates [AmplifyKinesisClientConfiguration] with default values.
+         * Creates [AmplifyKinesisClientOptions] with default values.
          *
          * @return Options with default values
          */
@@ -40,7 +40,7 @@ data class AmplifyKinesisClientConfiguration internal constructor(
     }
 
     /**
-     * Builder for [AmplifyKinesisClientConfiguration].
+     * Builder for [AmplifyKinesisClientOptions].
      */
     class Builder internal constructor() {
         var cacheMaxBytes: Long = DEFAULT_CACHE_SIZE_LIMIT_IN_BYTES
@@ -82,11 +82,11 @@ data class AmplifyKinesisClientConfiguration internal constructor(
         fun configureClient(value: AmplifyKinesisClientConfigurationProvider?) = apply { configureClient = value }
 
         /**
-         * Builds the [AmplifyKinesisClientConfiguration] with configured values.
+         * Builds the [AmplifyKinesisClientOptions] with configured values.
          *
          * @return Configured options instance
          */
-        fun build() = AmplifyKinesisClientConfiguration(
+        fun build() = AmplifyKinesisClientOptions(
             cacheMaxBytes,
             maxRetries,
             flushStrategy,

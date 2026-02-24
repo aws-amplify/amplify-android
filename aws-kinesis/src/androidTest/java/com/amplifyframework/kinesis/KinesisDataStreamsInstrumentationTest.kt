@@ -241,7 +241,7 @@ class KinesisDataStreamsInstrumentationTest {
             context = context,
             region = REGION,
             credentialsProvider = credentialsProvider,
-            configuration = AmplifyKinesisClientConfiguration {
+            options = AmplifyKinesisClientOptions {
                 cacheMaxBytes = 100L // 100 bytes
             }
         )
@@ -385,7 +385,7 @@ class KinesisDataStreamsInstrumentationTest {
             context = context,
             region = REGION,
             credentialsProvider = credentialsProvider,
-            configuration = AmplifyKinesisClientConfiguration {
+            options = AmplifyKinesisClientOptions {
                 flushStrategy = FlushStrategy.Interval(5.seconds)
             }
         )

@@ -61,13 +61,13 @@ private const val MAX_RECORDS_PER_STREAM = 500
  * @param region AWS region where the Kinesis stream is located
  * @param credentialsProvider AWS credentials for authentication. Use
  *   `CognitoCredentialsProvider().toAwsCredentialsProvider()` to bridge from V2 Auth.
- * @param configuration Configuration options with sensible defaults
+ * @param options Configuration options with sensible defaults
  */
 class AmplifyKinesisClient(
     val context: Context,
     val region: String,
     val credentialsProvider: AwsCredentialsProvider<out AwsCredentials>,
-    configuration: AmplifyKinesisClientConfiguration = AmplifyKinesisClientConfiguration.defaults()
+    options: AmplifyKinesisClientOptions = AmplifyKinesisClientOptions.defaults()
 ) {
     private val logger: Logger = AmplifyLogging.logger<AmplifyKinesisClient>()
 
@@ -75,19 +75,19 @@ class AmplifyKinesisClient(
     val kinesisClient: KinesisClient = KinesisClient {
         this.region = this@AmplifyKinesisClient.region
         this.credentialsProvider = this@AmplifyKinesisClient.credentialsProvider.toSmithyProvider()
-        configuration.configureClient?.applyConfiguration(this)
+        options.configureClient?.applyConfiguration(this)
     }
 
     private val recordClient: RecordClient = RecordClient(
         sender = KinesisRecordSender(
             kinesisClient = kinesisClient,
-            maxRetries = configuration.maxRetries
+            maxRetries = options.maxRetries
         ),
         storage = SQLiteRecordStorage(
             context = context,
             identifier = region,
             maxRecordsByStream = MAX_RECORDS_PER_STREAM,
-            maxBytes = configuration.cacheMaxBytes
+            maxBytes = options.cacheMaxBytes
         )
     )
     private val scheduler: AutoFlushScheduler
@@ -95,9 +95,9 @@ class AmplifyKinesisClient(
     @Volatile private var isEnabled = false
 
     init {
-        if (configuration.flushStrategy is FlushStrategy.Interval) {
+        if (options.flushStrategy is FlushStrategy.Interval) {
             scheduler = AutoFlushScheduler(
-                configuration.flushStrategy,
+                options.flushStrategy,
                 client = recordClient
             )
         } else {
