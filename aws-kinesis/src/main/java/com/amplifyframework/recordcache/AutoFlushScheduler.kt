@@ -38,13 +38,11 @@ internal class AutoFlushScheduler(
         while (true) {
             delay(interval.interval)
             try {
-                val result = client.flush()
-                if (result.isSuccess()) {
-                    val data = result.getOrThrow()
-                    logger.debug { "Auto-flush completed: ${data.recordsFlushed} records flushed" }
-                } else {
-                    // Expected failures (network, throttling, etc.) - will retry on next cycle
-                    logger.warn(result.exceptionOrNull()) { "Auto-flush failed" }
+                when (val result = client.flush()) {
+                    is Result.Success -> logger.debug {
+                        "Auto-flush completed: ${result.data.recordsFlushed} records flushed"
+                    }
+                    is Result.Failure -> logger.warn(result.error) { "Auto-flush failed" }
                 }
             } catch (e: Exception) {
                 // Defensive catch for unexpected exceptions to prevent scheduler from crashing
