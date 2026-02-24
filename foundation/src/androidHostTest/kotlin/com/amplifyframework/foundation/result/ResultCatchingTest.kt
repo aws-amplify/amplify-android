@@ -15,8 +15,8 @@
 
 package com.amplifyframework.foundation.result
 
-import com.amplifyframework.foundation.shouldBeFailure
-import com.amplifyframework.foundation.shouldBeSuccess
+import com.amplifyframework.testutils.assertions.shouldBeFailure
+import com.amplifyframework.testutils.assertions.shouldBeSuccess
 import org.junit.Test
 
 class ResultCatchingTest {
