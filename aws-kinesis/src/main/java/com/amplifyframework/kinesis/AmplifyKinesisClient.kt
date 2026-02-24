@@ -193,9 +193,8 @@ class AmplifyKinesisClient(
         scheduler.disable()
     }
 
-    private fun <T> Result<T, Throwable>.wrapError(): Result<T, AmplifyKinesisException> = when (this) {
-        is Result.Success -> this
-        is Result.Failure -> Result.Failure(AmplifyKinesisException.from(error))
+    private fun <T> Result<T, Throwable>.wrapError(): Result<T, AmplifyKinesisException> = mapFailure {
+        AmplifyKinesisException.from(it)
     }
 
     private suspend inline fun <T> logOp(
