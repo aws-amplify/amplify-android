@@ -210,6 +210,9 @@ class AmplifyKinesisClient(
             logSuccess(result.getOrThrow(), timeMs)
         } else {
             logFailure(result.exceptionOrNull(), timeMs)
+     when (result) {
+            is Result.Failure -> logFailure(result.error, timeMs)
+            is Result.Success -> logSuccess(result.data, timeMs)
         }
         return result
     }
