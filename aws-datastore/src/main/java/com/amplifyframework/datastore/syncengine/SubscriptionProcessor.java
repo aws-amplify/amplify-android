@@ -260,7 +260,10 @@ final class SubscriptionProcessor {
                 .flatMapCompletable(this::mergeEvent)
                 .doOnError(failure -> LOG.warn("Reading subscriptions buffer has failed.", failure))
                 .doOnComplete(() -> LOG.warn("Reading from subscriptions buffer is completed."))
-                .subscribe()
+                .subscribe(
+                    () -> LOG.info("Subscription data buffer processing complete"),
+                    error -> LOG.warn("Error draining subscription data buffer", error)
+                )
         );
     }
 

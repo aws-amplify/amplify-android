@@ -66,6 +66,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /**
@@ -98,6 +100,12 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     private final boolean isSyncRetryEnabled;
 
     private final ReachabilityMonitor reachabilityMonitor;
+
+    // Subscriptions that should be disposed when datastore is stopped
+    private final CompositeDisposable startedDisposables = new CompositeDisposable();
+
+    // Subscriptions that have the same lifetime as the plugin
+    private final CompositeDisposable pluginDisposables = new CompositeDisposable();
 
     private AWSDataStorePlugin(
             @NonNull ModelProvider modelProvider,
@@ -291,7 +299,11 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
         reachabilityMonitor.configure(context);
 
-        waitForInitialization().subscribe(this::observeNetworkStatus);
+        Disposable subscription = waitForInitialization().subscribe(
+            this::observeNetworkStatus,
+            error -> LOG.error("Datastore did not initialize", error)
+        );
+        pluginDisposables.add(subscription);
     }
 
     private void publishNetworkStatusEvent(boolean active) {
@@ -301,8 +313,12 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
     @SuppressLint({"CheckResult", "RxLeakedSubscription", "RxSubscribeOnError"})
     private void observeNetworkStatus() {
-        reachabilityMonitor.getObservable()
-                .subscribe(this::publishNetworkStatusEvent);
+        Disposable subscription = reachabilityMonitor.getObservable()
+                .subscribe(
+                    this::publishNetworkStatusEvent,
+                    error -> LOG.warn("Unable to subscribe to network status events", error)
+                );
+        pluginDisposables.add(subscription);
     }
 
     @SuppressLint("CheckResult")
@@ -310,8 +326,14 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @Override
     public void initialize(@NonNull Context context) throws AmplifyException {
         try {
-            initializeStorageAdapter(context)
-                .blockingAwait(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            boolean initialized = initializeStorageAdapter(context)
+                                      .blockingAwait(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            if (!initialized) {
+                throw new DataStoreException(
+                    "Storage adapter did not initialize within allotted timeout",
+                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
+                );
+            }
         } catch (Throwable initError) {
             throw new AmplifyException(
                 "Failed to initialize the local storage adapter for the DataStore plugin.",
@@ -335,8 +357,8 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
     @SuppressLint("RxDefaultScheduler")
     private Completable waitForInitialization() {
-        return Completable.fromAction(() -> categoryInitializationsPending.await())
-            .timeout(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+        return Completable.fromAction(categoryInitializationsPending::await)
+            .timeout(LIFECYCLE_TIMEOUT_MS, TimeUnit.MILLISECONDS, Schedulers.io())
             .subscribeOn(Schedulers.io())
             .doOnComplete(() -> LOG.info("DataStore plugin initialized."))
             .doOnError(error -> LOG.error("DataStore initialization timed out.", error));
@@ -348,13 +370,14 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @SuppressLint({"RxLeakedSubscription", "CheckResult"})
     @Override
     public void start(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
-        waitForInitialization()
+        Disposable subscription = waitForInitialization()
             .andThen(orchestrator.start())
             .subscribeOn(Schedulers.io())
             .subscribe(
                 onComplete::call,
                 error -> onError.accept(new DataStoreException("Failed to start DataStore.", error, "Retry."))
             );
+        startedDisposables.add(subscription);
     }
 
     /**
@@ -363,13 +386,15 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @SuppressLint({"RxLeakedSubscription", "CheckResult"})
     @Override
     public void stop(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
-        waitForInitialization()
+        startedDisposables.dispose();
+        Disposable subscription = waitForInitialization()
             .andThen(orchestrator.stop())
             .subscribeOn(Schedulers.io())
             .subscribe(
                 onComplete::call,
                 error -> onError.accept(new DataStoreException("Failed to stop DataStore.", error, "Retry."))
             );
+        startedDisposables.add(subscription);
     }
 
     /**
@@ -382,12 +407,19 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      */
     @Override
     public void clear(@NonNull Action onComplete, @NonNull Consumer<DataStoreException> onError) {
-        stop(() -> Completable.create(emitter -> sqliteStorageAdapter.clear(emitter::onComplete, emitter::onError))
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(onComplete::call,
-                            throwable -> onError.accept(new DataStoreException("Clear operation failed",
-                                    throwable, AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION))),
-                onError);
+        stop(
+            () -> {
+                Disposable completable = Completable.create(
+                    emitter -> sqliteStorageAdapter.clear(emitter::onComplete, emitter::onError)
+                )
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(onComplete::call,
+                        throwable -> onError.accept(new DataStoreException("Clear operation failed",
+                                                         throwable, AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION)));
+                pluginDisposables.add(completable);
+            },
+            onError
+        );
     }
 
     /**
