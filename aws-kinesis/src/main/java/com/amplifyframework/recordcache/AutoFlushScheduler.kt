@@ -2,6 +2,7 @@ package com.amplifyframework.recordcache
 
 import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.foundation.logging.Logger
+import com.amplifyframework.foundation.result.Result
 import com.amplifyframework.foundation.result.exceptionOrNull
 import com.amplifyframework.foundation.result.getOrThrow
 import com.amplifyframework.foundation.result.isSuccess

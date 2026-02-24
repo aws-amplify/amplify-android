@@ -61,33 +61,3 @@ inline fun <T, E, T2, E2> Result<T, E>.mapBoth(mapSuccess: (T) -> T2, mapFailure
         is Result.Success -> Result.Success(mapSuccess(this.data))
     }
 }
-
-@InternalAmplifyApi
-inline fun <T, E : Throwable, R> Result<T, E>.mapCatching(transform: (T) -> R): Result<R, Throwable> {
-    contract {
-        callsInPlace(transform, InvocationKind.AT_MOST_ONCE)
-    }
-    return when (this) {
-        is Result.Success -> try {
-            Result.Success(transform(data))
-        } catch (e: Throwable) {
-            Result.Failure(e)
-        }
-        is Result.Failure -> this
-    }
-}
-
-@InternalAmplifyApi
-inline fun <T, E : Throwable> Result<T, E>.recoverCatching(transform: (E) -> T): Result<T, Throwable> {
-    contract {
-        callsInPlace(transform, InvocationKind.AT_MOST_ONCE)
-    }
-    return when (this) {
-        is Result.Success -> this
-        is Result.Failure -> try {
-            Result.Success(transform(error))
-        } catch (e: Throwable) {
-            Result.Failure(e)
-        }
-    }
-}

@@ -11,6 +11,7 @@ import com.amplifyframework.foundation.logging.Logger
 import com.amplifyframework.foundation.result.Result
 import com.amplifyframework.foundation.result.exceptionOrNull
 import com.amplifyframework.foundation.result.isSuccess
+import com.amplifyframework.foundation.result.mapFailure
 import com.amplifyframework.foundation.result.resultCatching
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
@@ -213,13 +214,12 @@ internal class SQLiteRecordStorage internal constructor(
             ClearCacheData(count)
         }.recoverAsRecordCacheException("Failed to clear cache")
 
-private fun <R> Result<R, Throwable>.recoverAsRecordCacheException(
+    private fun <R> Result<R, Throwable>.recoverAsRecordCacheException(
         message: String
     ): Result<R, RecordCacheException> = mapFailure { exception ->
         when(exception) {
             is RecordCacheException -> exception
             else -> RecordCacheDatabaseException(message, DEFAULT_RECOVERY_SUGGESTION, exception)
         }
-    }
     }
 }

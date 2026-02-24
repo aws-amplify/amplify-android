@@ -2,6 +2,7 @@ package com.amplifyframework.kinesis
 
 import android.content.Context
 import aws.sdk.kotlin.services.kinesis.KinesisClient
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.foundation.credentials.AwsCredentials
 import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
 import com.amplifyframework.foundation.credentials.toSmithyProvider
@@ -11,6 +12,7 @@ import com.amplifyframework.foundation.result.Result
 import com.amplifyframework.foundation.result.exceptionOrNull
 import com.amplifyframework.foundation.result.getOrThrow
 import com.amplifyframework.foundation.result.isSuccess
+import com.amplifyframework.foundation.result.mapFailure
 import com.amplifyframework.recordcache.AutoFlushScheduler
 import com.amplifyframework.recordcache.ClearCacheResult
 import com.amplifyframework.recordcache.FlushResult
@@ -63,6 +65,7 @@ private const val MAX_RECORDS_PER_STREAM = 500
  *   `CognitoCredentialsProvider().toAwsCredentialsProvider()` to bridge from V2 Auth.
  * @param options Configuration options with sensible defaults
  */
+@OptIn(InternalAmplifyApi::class)
 class AmplifyKinesisClient(
     val context: Context,
     val region: String,
@@ -206,11 +209,7 @@ class AmplifyKinesisClient(
         val timeMs = measureTimeMillis {
             result = operation()
         }
-        if (result.isSuccess()) {
-            logSuccess(result.getOrThrow(), timeMs)
-        } else {
-            logFailure(result.exceptionOrNull(), timeMs)
-     when (result) {
+        when (result) {
             is Result.Failure -> logFailure(result.error, timeMs)
             is Result.Success -> logSuccess(result.data, timeMs)
         }

@@ -43,15 +43,3 @@ fun <T> Result<T, *>.getOrNull(): T? {
     }
     return if (this is Result.Success) data else null
 }
-
-@InternalAmplifyApi
-fun <T, E : Throwable> Result<T, E>.exceptionOrNull(): E? {
-    contract {
-        returnsNotNull() implies (this@exceptionOrNull is Result.Failure)
-        returns(null) implies (this@exceptionOrNull is Result.Success)
-    }
-    return when (this) {
-        is Result.Failure -> error
-        is Result.Success -> null
-    }
-}
