@@ -18,14 +18,14 @@ import com.amplifyframework.recordcache.RecordCacheLimitExceededException
  * - [AmplifyKinesisUnknownException] — unexpected / uncategorized errors
  *
  * @param message Error message describing what went wrong
- * @param cause Underlying cause of the exception
  * @param recoverySuggestion Suggested action to resolve the error
+ * @param cause Underlying cause of the exception
  */
 sealed class AmplifyKinesisException(
     message: String,
-    cause: Throwable? = null,
-    recoverySuggestion: String
-) : AmplifyException(message, cause, recoverySuggestion) {
+    recoverySuggestion: String,
+    cause: Throwable? = null
+) : AmplifyException(message, recoverySuggestion, cause) {
     companion object {
         /**
          * Maps a [Throwable] into the appropriate [AmplifyKinesisException] subtype,
@@ -35,28 +35,28 @@ sealed class AmplifyKinesisException(
             is AmplifyKinesisException -> error
             is RecordCacheDatabaseException -> AmplifyKinesisStorageException(
                 message = error.message,
-                cause = error,
-                recoverySuggestion = error.recoverySuggestion
+                recoverySuggestion = error.recoverySuggestion,
+                cause = error
             )
             is RecordCacheLimitExceededException -> AmplifyKinesisLimitExceededException(
                 message = error.message,
-                cause = error,
-                recoverySuggestion = error.recoverySuggestion
+                recoverySuggestion = error.recoverySuggestion,
+                cause = error
             )
             is RecordCacheException -> AmplifyKinesisStorageException(
                 message = error.message,
-                cause = error,
-                recoverySuggestion = error.recoverySuggestion
+                recoverySuggestion = error.recoverySuggestion,
+                cause = error
             )
             is SdkKinesisException -> AmplifyKinesisServiceException(
                 message = "A service error occurred",
-                cause = error,
-                recoverySuggestion = DEFAULT_RECOVERY_SUGGESTION
+                recoverySuggestion = DEFAULT_RECOVERY_SUGGESTION,
+                cause = error
             )
             else -> AmplifyKinesisUnknownException(
                 message = error.message ?: "An unknown error occurred",
-                cause = error,
-                recoverySuggestion = DEFAULT_RECOVERY_SUGGESTION
+                recoverySuggestion = DEFAULT_RECOVERY_SUGGESTION,
+                cause = error
             )
         }
     }
@@ -65,27 +65,27 @@ sealed class AmplifyKinesisException(
 /** Local storage / database error. */
 class AmplifyKinesisStorageException(
     message: String,
-    cause: Throwable? = null,
-    recoverySuggestion: String
-) : AmplifyKinesisException(message, cause, recoverySuggestion)
+    recoverySuggestion: String,
+    cause: Throwable? = null
+) : AmplifyKinesisException(message, recoverySuggestion, cause)
 
 /** Kinesis API / SDK error. */
 class AmplifyKinesisServiceException(
     message: String,
-    override val cause: SdkKinesisException,
-    recoverySuggestion: String
-) : AmplifyKinesisException(message, cause, recoverySuggestion)
+    recoverySuggestion: String,
+    override val cause: SdkKinesisException
+) : AmplifyKinesisException(message, recoverySuggestion, cause)
 
 /** Local cache size or record limit exceeded. */
 class AmplifyKinesisLimitExceededException(
     message: String,
-    cause: Throwable? = null,
-    recoverySuggestion: String
-) : AmplifyKinesisException(message, cause, recoverySuggestion)
+    recoverySuggestion: String,
+    cause: Throwable? = null
+) : AmplifyKinesisException(message, recoverySuggestion, cause)
 
 /** Unexpected / uncategorized error. */
 class AmplifyKinesisUnknownException(
     message: String,
-    cause: Throwable? = null,
-    recoverySuggestion: String
-) : AmplifyKinesisException(message, cause, recoverySuggestion)
+    recoverySuggestion: String,
+    cause: Throwable? = null
+) : AmplifyKinesisException(message, recoverySuggestion, cause)

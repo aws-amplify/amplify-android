@@ -18,13 +18,13 @@ package com.amplifyframework.foundation.exceptions
 /**
  * Top-level exception in the Amplify framework. All other Amplify exceptions should extend this.
  * @param message An error message describing why this exception was thrown
- * @param cause The underlying cause of this exception
  * @param recoverySuggestion Text suggesting a way to recover from the error being described
+ * @param cause The underlying cause of this exception
  */
 abstract class AmplifyException(
     message: String,
-    cause: Throwable? = null,
-    val recoverySuggestion: String
+    val recoverySuggestion: String,
+    cause: Throwable? = null
 ) : Exception(message, cause) {
     override fun toString() =
         "${this::class.simpleName}(message=$message, cause=$cause, recoverySuggestion=$recoverySuggestion)"

@@ -57,8 +57,8 @@ public final class com/amplifyframework/kinesis/AmplifyKinesisClientOptions$Comp
 
 public abstract class com/amplifyframework/kinesis/AmplifyKinesisException : com/amplifyframework/foundation/exceptions/AmplifyException {
 	public static final field Companion Lcom/amplifyframework/kinesis/AmplifyKinesisException$Companion;
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
 public final class com/amplifyframework/kinesis/AmplifyKinesisException$Companion {
@@ -66,24 +66,24 @@ public final class com/amplifyframework/kinesis/AmplifyKinesisException$Companio
 }
 
 public final class com/amplifyframework/kinesis/AmplifyKinesisLimitExceededException : com/amplifyframework/kinesis/AmplifyKinesisException {
-	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
 public final class com/amplifyframework/kinesis/AmplifyKinesisServiceException : com/amplifyframework/kinesis/AmplifyKinesisException {
-	public fun <init> (Ljava/lang/String;Laws/sdk/kotlin/services/kinesis/model/KinesisException;Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Laws/sdk/kotlin/services/kinesis/model/KinesisException;)V
 	public fun getCause ()Laws/sdk/kotlin/services/kinesis/model/KinesisException;
 	public synthetic fun getCause ()Ljava/lang/Throwable;
 }
 
 public final class com/amplifyframework/kinesis/AmplifyKinesisStorageException : com/amplifyframework/kinesis/AmplifyKinesisException {
-	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
 public final class com/amplifyframework/kinesis/AmplifyKinesisUnknownException : com/amplifyframework/kinesis/AmplifyKinesisException {
-	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
 public final class com/amplifyframework/kinesis/BuildConfig {
