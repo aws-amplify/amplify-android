@@ -27,6 +27,7 @@ import com.amplifyframework.recordcache.FlushStrategy
 import com.amplifyframework.testutils.assertions.shouldBeFailure
 import com.amplifyframework.testutils.assertions.shouldBeSuccess
 import com.amplifyframework.testutils.sync.SynchronousAuth
+import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull

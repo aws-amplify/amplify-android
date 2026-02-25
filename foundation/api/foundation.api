@@ -100,8 +100,3 @@ public final class com/amplifyframework/foundation/result/Result$Success : com/a
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class com/amplifyframework/foundation/result/ResultKt {
-	public static final fun isFailure (Lcom/amplifyframework/foundation/result/Result;)Z
-	public static final fun isSuccess (Lcom/amplifyframework/foundation/result/Result;)Z
-}
-
