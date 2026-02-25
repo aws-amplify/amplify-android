@@ -23,10 +23,12 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.configuration.AmplifyOutputs
 import com.amplifyframework.geo.location.test.R
 import com.amplifyframework.geo.models.Coordinates
+import com.amplifyframework.testutils.rules.CanaryTestRule
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousGeo
 import org.junit.After
 import org.junit.BeforeClass
+import org.junit.Rule
 import org.junit.Test
 
 class GeoCanaryTestGen2 {
@@ -55,6 +57,9 @@ class GeoCanaryTestGen2 {
         signOutFromCognito()
     }
 
+    @get:Rule
+    val testRule = CanaryTestRule()
+
     @Test
     fun searchByText() {
         signInWithCognito()
@@ -76,6 +81,9 @@ class GeoCanaryTestGen2 {
     }
 
     private fun signInWithCognito() {
+        // Ensure we're not already signed in
+        signOutFromCognito()
+
         val context = ApplicationProvider.getApplicationContext<Context>()
         val (username, password) = Credentials.load(context)
         syncAuth.signIn(username, password)
