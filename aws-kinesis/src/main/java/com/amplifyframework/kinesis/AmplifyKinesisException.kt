@@ -2,7 +2,7 @@ package com.amplifyframework.kinesis
 
 import aws.sdk.kotlin.services.kinesis.model.KinesisException as SdkKinesisException
 import com.amplifyframework.foundation.exceptions.AmplifyException
-import com.amplifyframework.recordcache.DEFAULT_RECOVERY_SUGGESTION
+import com.amplifyframework.foundation.exceptions.DEFAULT_RECOVERY_SUGGESTION
 import com.amplifyframework.recordcache.RecordCacheDatabaseException
 import com.amplifyframework.recordcache.RecordCacheException
 import com.amplifyframework.recordcache.RecordCacheLimitExceededException
