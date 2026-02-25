@@ -2,21 +2,31 @@ package com.amplifyframework.kinesis
 
 import android.content.Context
 import aws.sdk.kotlin.services.kinesis.KinesisClient
-import com.amplifyframework.auth.AWSCredentials
-import com.amplifyframework.auth.AWSCredentialsProvider
-import com.amplifyframework.auth.convertToSdkCredentialsProvider
-import com.amplifyframework.core.Amplify
-import com.amplifyframework.core.category.CategoryType
-import com.amplifyframework.logging.Logger
+import com.amplifyframework.annotations.InternalAmplifyApi
+import com.amplifyframework.foundation.credentials.AwsCredentials
+import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
+import com.amplifyframework.foundation.credentials.toSmithyProvider
+import com.amplifyframework.foundation.logging.AmplifyLogging
+import com.amplifyframework.foundation.logging.Logger
+import com.amplifyframework.foundation.result.Result
+import com.amplifyframework.foundation.result.mapFailure
 import com.amplifyframework.recordcache.AutoFlushScheduler
 import com.amplifyframework.recordcache.ClearCacheResult
 import com.amplifyframework.recordcache.FlushResult
 import com.amplifyframework.recordcache.FlushStrategy
 import com.amplifyframework.recordcache.FlushStrategy.Interval
 import com.amplifyframework.recordcache.RecordClient
+import com.amplifyframework.recordcache.RecordData
 import com.amplifyframework.recordcache.RecordInput
+import com.amplifyframework.recordcache.RecordResult
 import com.amplifyframework.recordcache.SQLiteRecordStorage
 import kotlin.system.measureTimeMillis
+
+/**
+ * Kinesis supports up to 500 records per stream.
+ * See [the docs](https://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecords.html)
+ */
+private const val MAX_RECORDS_PER_STREAM = 500
 
 /**
  * A client for sending data to Amazon Kinesis Data Streams.
@@ -26,7 +36,10 @@ import kotlin.system.measureTimeMillis
  *
  * Example usage:
  * ```kotlin
- * val kinesis = KinesisDataStreams(
+ * // Bridge V2 Auth to foundation credentials via Smithy types
+ * val credentialsProvider = CognitoCredentialsProvider().toAwsCredentialsProvider()
+ *
+ * val kinesis = AmplifyKinesisClient(
  *     context = applicationContext,
  *     region = "us-east-1",
  *     credentialsProvider = credentialsProvider
@@ -45,21 +58,23 @@ import kotlin.system.measureTimeMillis
  *
  * @param context Android application context for database access
  * @param region AWS region where the Kinesis stream is located
- * @param credentialsProvider AWS credentials for authentication
+ * @param credentialsProvider AWS credentials for authentication. Use
+ *   `CognitoCredentialsProvider().toAwsCredentialsProvider()` to bridge from V2 Auth.
  * @param options Configuration options with sensible defaults
  */
-class KinesisDataStreams(
+@OptIn(InternalAmplifyApi::class)
+class AmplifyKinesisClient(
     val context: Context,
     val region: String,
-    val credentialsProvider: AWSCredentialsProvider<AWSCredentials>, // TODO: Pending V3 types
-    options: KinesisDataStreamsOptions = KinesisDataStreamsOptions.defaults()
+    val credentialsProvider: AwsCredentialsProvider<out AwsCredentials>,
+    options: AmplifyKinesisClientOptions = AmplifyKinesisClientOptions.defaults()
 ) {
-    private val logger: Logger = Amplify.Logging.logger(CategoryType.ANALYTICS, "KinesisDataStreams")
+    private val logger: Logger = AmplifyLogging.logger<AmplifyKinesisClient>()
 
     /** The underlying SDK [KinesisClient] for direct access. */
     val kinesisClient: KinesisClient = KinesisClient {
-        this.region = this@KinesisDataStreams.region
-        this.credentialsProvider = convertToSdkCredentialsProvider(this@KinesisDataStreams.credentialsProvider)
+        this.region = this@AmplifyKinesisClient.region
+        this.credentialsProvider = this@AmplifyKinesisClient.credentialsProvider.toSmithyProvider()
         options.configureClient?.applyConfiguration(this)
     }
 
@@ -71,23 +86,25 @@ class KinesisDataStreams(
         storage = SQLiteRecordStorage(
             context = context,
             identifier = region,
-            maxRecords = options.maxRecords,
+            maxRecordsByStream = MAX_RECORDS_PER_STREAM,
             maxBytes = options.cacheMaxBytes
         )
     )
-    private val scheduler: AutoFlushScheduler
+    private val scheduler: AutoFlushScheduler?
 
-    @Volatile private var isEnabled = false
+    @Volatile private var isEnabled = true
 
     init {
-        if (options.flushStrategy is FlushStrategy.Interval) {
-            scheduler = AutoFlushScheduler(
+        scheduler = when (options.flushStrategy) {
+            is FlushStrategy.Interval -> AutoFlushScheduler(
                 options.flushStrategy,
                 client = recordClient
             )
-        } else {
-            throw IllegalArgumentException("Flush strategy must be interval")
+            is FlushStrategy.None -> null
         }
+
+        // Auto-start the scheduler if present
+        scheduler?.start()
     }
 
     /**
@@ -96,25 +113,23 @@ class KinesisDataStreams(
      * @param data The data to record as byte array
      * @param partitionKey The partition key for the record
      * @param streamName The name of the Kinesis stream
-     * @return Result.success(Unit) on success, or Result.failure with:
-     *   - [KinesisLimitExceededException] (cache full)
-     *   - [KinesisStorageException] (database errors)
+     * @return Result.success(RecordData) on success, or Result.failure with:
+     *   - [AmplifyKinesisLimitExceededException] (cache full)
+     *   - [AmplifyKinesisStorageException] (database errors)
      */
-    suspend fun record(data: ByteArray, partitionKey: String, streamName: String): Result<Unit> {
+    suspend fun record(data: ByteArray, partitionKey: String, streamName: String): RecordResult {
         if (!isEnabled) {
-            logger.debug("Record collection is disabled, dropping record")
-            return Result.success(Unit)
+            logger.debug { "Record collection is disabled, dropping record" }
+            return Result.Success(RecordData())
         }
         logger.verbose { "Recording to stream: $streamName" }
         return logOp(
-            operation = { recordClient.record(RecordInput(streamName, partitionKey, data)).map { }.wrapError() },
+            operation = { recordClient.record(RecordInput(streamName, partitionKey, data)).wrapError() },
             logSuccess = { _, timeMs ->
-                // TODO: Use lazy evaluation for log messages
-                logger.debug("Record completed successfully in ${timeMs}ms")
+                logger.debug { "Record completed successfully in ${timeMs}ms" }
             },
             logFailure = { error, timeMs ->
-                // TODO: Use lazy evaluation for log messages
-                logger.warn("Record failed in ${timeMs}ms: ${error?.message}")
+                logger.warn { "Record failed in ${timeMs}ms: ${error?.message}" }
             }
         )
     }
@@ -123,24 +138,21 @@ class KinesisDataStreams(
      * Flushes all cached records to their respective Kinesis streams.
      *
      * @return Result.success(FlushData) on success, or Result.failure with:
-     *   - [KinesisServiceException] (API failures)
-     *   - [KinesisStorageException] (database errors)
-     *   - [KinesisUnknownException] (unexpected failures)
+     *   - [AmplifyKinesisServiceException] (API failures)
+     *   - [AmplifyKinesisStorageException] (database errors)
+     *   - [AmplifyKinesisUnknownException] (unexpected failures)
      */
     suspend fun flush(): FlushResult {
-        logger.info("Starting flush")
+        logger.info { "Starting flush" }
         return logOp(
             operation = { recordClient.flush().wrapError() },
             logSuccess = { data, timeMs ->
-                // TODO: Use lazy evaluation for log messages
-                logger.info(
-                    "Flush completed successfully in ${timeMs}ms" +
-                        " - ${data.recordsFlushed} records flushed"
-                )
+                logger.info {
+                    "Flush completed successfully in ${timeMs}ms - ${data.recordsFlushed} records flushed"
+                }
             },
             logFailure = { error, timeMs ->
-                // TODO: Use lazy evaluation for log messages
-                logger.warn("Flush failed in ${timeMs}ms: ${error?.message}")
+                logger.warn { "Flush failed in ${timeMs}ms: ${error?.message}" }
             }
         )
     }
@@ -149,22 +161,19 @@ class KinesisDataStreams(
      * Clears all cached records from local storage.
      *
      * @return Result.success(ClearCacheData) on success, or Result.failure with:
-     *   - [KinesisStorageException] (database errors)
+     *   - [AmplifyKinesisStorageException] (database errors)
      */
     suspend fun clearCache(): ClearCacheResult {
-        logger.info("Clearing cache")
+        logger.info { "Clearing cache" }
         return logOp(
             operation = { recordClient.clearCache().wrapError() },
             logSuccess = { data, timeMs ->
-                // TODO: Use lazy evaluation for log messages
-                logger.info(
-                    "Clear cache completed successfully in ${timeMs}ms" +
-                        " - ${data.recordsCleared} records cleared"
-                )
+                logger.info {
+                    "Clear cache completed successfully in ${timeMs}ms - ${data.recordsCleared} records cleared"
+                }
             },
             logFailure = { error, timeMs ->
-                // TODO: Use lazy evaluation for log messages
-                logger.warn("Clear cache failed in ${timeMs}ms: ${error?.message}")
+                logger.warn { "Clear cache failed in ${timeMs}ms: ${error?.message}" }
             }
         )
     }
@@ -174,7 +183,7 @@ class KinesisDataStreams(
      */
     fun enable() {
         isEnabled = true
-        scheduler.start()
+        scheduler?.start()
     }
 
     /**
@@ -183,29 +192,25 @@ class KinesisDataStreams(
      */
     fun disable() {
         isEnabled = false
-        scheduler.disable()
+        scheduler?.disable()
     }
 
-    /** Maps any failure in the [Result] to a [KinesisException] via [KinesisException.from]. */
-    private fun <T> Result<T>.wrapError(): Result<T> {
-        if (isSuccess) return this
-        val error = exceptionOrNull() ?: return this
-        return Result.failure(KinesisException.from(error))
+    private fun <T> Result<T, Throwable>.wrapError(): Result<T, AmplifyKinesisException> = mapFailure {
+        AmplifyKinesisException.from(it)
     }
 
     private suspend inline fun <T> logOp(
-        operation: suspend () -> Result<T>,
+        operation: suspend () -> Result<T, AmplifyKinesisException>,
         logSuccess: (T, Long) -> Unit,
         logFailure: (Throwable?, Long) -> Unit
-    ): Result<T> {
-        val result: Result<T>
+    ): Result<T, AmplifyKinesisException> {
+        val result: Result<T, AmplifyKinesisException>
         val timeMs = measureTimeMillis {
             result = operation()
         }
-        if (result.isSuccess) {
-            logSuccess(result.getOrThrow(), timeMs)
-        } else {
-            logFailure(result.exceptionOrNull(), timeMs)
+        when (result) {
+            is Result.Failure -> logFailure(result.error, timeMs)
+            is Result.Success -> logSuccess(result.data, timeMs)
         }
         return result
     }

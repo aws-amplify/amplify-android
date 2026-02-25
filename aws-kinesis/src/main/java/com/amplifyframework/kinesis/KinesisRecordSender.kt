@@ -4,23 +4,28 @@ import androidx.annotation.VisibleForTesting
 import aws.sdk.kotlin.services.kinesis.KinesisClient
 import aws.sdk.kotlin.services.kinesis.model.PutRecordsRequest
 import aws.sdk.kotlin.services.kinesis.model.PutRecordsRequestEntry
+import com.amplifyframework.annotations.InternalAmplifyApi
+import com.amplifyframework.foundation.result.Result
+import com.amplifyframework.foundation.result.mapFailure
+import com.amplifyframework.foundation.result.resultCatching
 import com.amplifyframework.recordcache.PutRecordsResponse
 import com.amplifyframework.recordcache.Record
 import com.amplifyframework.recordcache.RecordSender
 
 typealias PutRecordsResponseSdk = aws.sdk.kotlin.services.kinesis.model.PutRecordsResponse
 
+@OptIn(InternalAmplifyApi::class)
 internal class KinesisRecordSender(
     private val kinesisClient: KinesisClient,
     private val maxRetries: Int
 ) : RecordSender {
 
-    override suspend fun putRecords(streamName: String, records: List<Record>): Result<PutRecordsResponse> =
-        runCatching {
+    override suspend fun putRecords(streamName: String, records: List<Record>): Result<PutRecordsResponse, Throwable> =
+        resultCatching {
             val request = createRequest(streamName, records)
             val sdkResponse = kinesisClient.putRecords(request)
             splitResponse(sdkResponse, records)
-        }.recoverCatching { throw KinesisException.from(it) }
+        } mapFailure { AmplifyKinesisException.from(it) }
 
     @VisibleForTesting
     internal fun createRequest(streamName: String, records: List<Record>) = PutRecordsRequest {

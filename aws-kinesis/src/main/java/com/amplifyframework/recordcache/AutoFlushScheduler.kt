@@ -1,5 +1,8 @@
 package com.amplifyframework.recordcache
 
+import com.amplifyframework.foundation.logging.AmplifyLogging
+import com.amplifyframework.foundation.logging.Logger
+import com.amplifyframework.foundation.result.Result
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -13,6 +16,7 @@ internal class AutoFlushScheduler(
     val client: RecordClient,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
+    private val logger: Logger = AmplifyLogging.logger<AutoFlushScheduler>()
     private val scope = CoroutineScope(dispatcher + CoroutineName("AutoFlushScheduler"))
     private var flushJob: Job? = null
 
@@ -32,9 +36,15 @@ internal class AutoFlushScheduler(
         while (true) {
             delay(interval.interval)
             try {
-                client.flush()
+                when (val result = client.flush()) {
+                    is Result.Success -> logger.debug {
+                        "Auto-flush completed: ${result.data.recordsFlushed} records flushed"
+                    }
+                    is Result.Failure -> logger.warn(result.error) { "Auto-flush failed" }
+                }
             } catch (e: Exception) {
-                // TODO: Log
+                // Defensive catch for unexpected exceptions to prevent scheduler from crashing
+                logger.error(e) { "Unexpected error during auto-flush" }
             }
         }
     }

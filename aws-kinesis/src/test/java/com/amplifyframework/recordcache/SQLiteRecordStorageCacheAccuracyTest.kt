@@ -1,6 +1,7 @@
 package com.amplifyframework.recordcache
 
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import com.amplifyframework.foundation.result.getOrThrow
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.Dispatchers
@@ -17,7 +18,7 @@ import org.robolectric.RobolectricTestRunner
 class SQLiteRecordStorageCacheAccuracyTest {
 
     private fun createTestStorage(): SQLiteRecordStorage = SQLiteRecordStorage(
-        maxRecords = 1000,
+        maxRecordsByStream = 1000,
         maxBytes = 1024 * 1024L,
         identifier = "test",
         connectionFactory = { BundledSQLiteDriver().open(":memory:") },

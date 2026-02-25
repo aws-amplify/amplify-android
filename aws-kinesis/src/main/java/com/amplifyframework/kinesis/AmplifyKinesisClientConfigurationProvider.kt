@@ -6,23 +6,25 @@ import aws.sdk.kotlin.services.kinesis.KinesisClient
  * Provides custom configuration for the underlying [KinesisClient].
  *
  * Implement this interface to customize the [KinesisClient.Config.Builder] used
- * by [KinesisDataStreams]. The builder passed to [applyConfiguration] will already
+ * by [AmplifyKinesisClient]. The builder passed to [applyConfiguration] will already
  * have the default configurations (region, credentials) applied — your overrides
  * are applied on top.
  *
  * This is a SAM interface, so it can be used as a lambda in Kotlin:
  * ```kotlin
- * KinesisDataStreams(
+ * AmplifyKinesisClient(
  *     context = context,
  *     region = "us-east-1",
  *     credentialsProvider = provider,
- *     clientConfigurationProvider = KinesisClientConfigurationProvider { builder ->
- *         builder.httpClient { /* custom http config */ }
+ *     options = AmplifyKinesisClientOptions {
+ *         configureClient = AmplifyKinesisClientConfigurationProvider { builder ->
+ *             builder.httpClient { /* custom http config */ }
+ *         }
  *     }
  * )
  * ```
  */
-fun interface KinesisClientConfigurationProvider {
+fun interface AmplifyKinesisClientConfigurationProvider {
     /**
      * Applies custom configuration to the KinesisClient builder.
      *

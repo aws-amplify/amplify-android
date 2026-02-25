@@ -1,8 +1,8 @@
 package com.amplifyframework.kinesis
 
 import aws.sdk.kotlin.services.kinesis.model.KinesisException as SdkKinesisException
-import com.amplifyframework.AmplifyException
-import com.amplifyframework.recordcache.DEFAULT_RECOVERY_SUGGESTION
+import com.amplifyframework.foundation.exceptions.AmplifyException
+import com.amplifyframework.foundation.exceptions.DEFAULT_RECOVERY_SUGGESTION
 import com.amplifyframework.recordcache.RecordCacheDatabaseException
 import com.amplifyframework.recordcache.RecordCacheException
 import com.amplifyframework.recordcache.RecordCacheLimitExceededException
@@ -12,48 +12,48 @@ import com.amplifyframework.recordcache.RecordCacheLimitExceededException
  *
  * This is a sealed hierarchy. Callers can exhaustively match on the subtype
  * to determine the category of failure:
- * - [KinesisStorageException] — local cache / database errors
- * - [KinesisLimitExceededException] — local cache is full
- * - [KinesisServiceException] — Kinesis API / SDK errors
- * - [KinesisUnknownException] — unexpected / uncategorized errors
+ * - [AmplifyKinesisStorageException] — local cache / database errors
+ * - [AmplifyKinesisLimitExceededException] — local cache is full
+ * - [AmplifyKinesisServiceException] — Kinesis API / SDK errors
+ * - [AmplifyKinesisUnknownException] — unexpected / uncategorized errors
  *
  * @param message Error message describing what went wrong
  * @param recoverySuggestion Suggested action to resolve the error
  * @param cause Underlying cause of the exception
  */
-sealed class KinesisException(
+sealed class AmplifyKinesisException(
     message: String,
     recoverySuggestion: String,
     cause: Throwable? = null
-) : AmplifyException(message, cause, recoverySuggestion) {
+) : AmplifyException(message, recoverySuggestion, cause) {
     companion object {
         /**
-         * Maps a [Throwable] into the appropriate [KinesisException] subtype,
+         * Maps a [Throwable] into the appropriate [AmplifyKinesisException] subtype,
          * handling [RecordCacheException], Kinesis SDK exceptions, and unknown errors.
          */
-        fun from(error: Throwable): KinesisException = when (error) {
-            is KinesisException -> error
-            is RecordCacheDatabaseException -> KinesisStorageException(
+        fun from(error: Throwable): AmplifyKinesisException = when (error) {
+            is AmplifyKinesisException -> error
+            is RecordCacheDatabaseException -> AmplifyKinesisStorageException(
                 message = error.message,
                 recoverySuggestion = error.recoverySuggestion,
                 cause = error
             )
-            is RecordCacheLimitExceededException -> KinesisLimitExceededException(
+            is RecordCacheLimitExceededException -> AmplifyKinesisLimitExceededException(
                 message = error.message,
                 recoverySuggestion = error.recoverySuggestion,
                 cause = error
             )
-            is RecordCacheException -> KinesisStorageException(
+            is RecordCacheException -> AmplifyKinesisStorageException(
                 message = error.message,
                 recoverySuggestion = error.recoverySuggestion,
                 cause = error
             )
-            is SdkKinesisException -> KinesisServiceException(
+            is SdkKinesisException -> AmplifyKinesisServiceException(
                 message = "A service error occurred",
                 recoverySuggestion = DEFAULT_RECOVERY_SUGGESTION,
                 cause = error
             )
-            else -> KinesisUnknownException(
+            else -> AmplifyKinesisUnknownException(
                 message = error.message ?: "An unknown error occurred",
                 recoverySuggestion = DEFAULT_RECOVERY_SUGGESTION,
                 cause = error
@@ -63,29 +63,29 @@ sealed class KinesisException(
 }
 
 /** Local storage / database error. */
-class KinesisStorageException(
+class AmplifyKinesisStorageException(
     message: String,
     recoverySuggestion: String,
     cause: Throwable? = null
-) : KinesisException(message, recoverySuggestion, cause)
+) : AmplifyKinesisException(message, recoverySuggestion, cause)
 
 /** Kinesis API / SDK error. */
-class KinesisServiceException(
+class AmplifyKinesisServiceException(
     message: String,
     recoverySuggestion: String,
     override val cause: SdkKinesisException
-) : KinesisException(message, recoverySuggestion, cause)
+) : AmplifyKinesisException(message, recoverySuggestion, cause)
 
 /** Local cache size or record limit exceeded. */
-class KinesisLimitExceededException(
+class AmplifyKinesisLimitExceededException(
     message: String,
     recoverySuggestion: String,
     cause: Throwable? = null
-) : KinesisException(message, recoverySuggestion, cause)
+) : AmplifyKinesisException(message, recoverySuggestion, cause)
 
 /** Unexpected / uncategorized error. */
-class KinesisUnknownException(
+class AmplifyKinesisUnknownException(
     message: String,
     recoverySuggestion: String,
     cause: Throwable? = null
-) : KinesisException(message, recoverySuggestion, cause)
+) : AmplifyKinesisException(message, recoverySuggestion, cause)

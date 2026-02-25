@@ -1,5 +1,6 @@
 package com.amplifyframework.recordcache
 
+import com.amplifyframework.foundation.result.Result
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -17,7 +18,7 @@ class AutoFlushSchedulerTest {
     fun `start should begin periodic flushing`() = runTest {
         // Given
         val mockClient = mockk<RecordClient>()
-        coEvery { mockClient.flush() } returns Result.success(FlushData(0))
+        coEvery { mockClient.flush() } returns Result.Success(FlushData(0))
 
         val interval = FlushStrategy.Interval(1.seconds)
         val scheduler = AutoFlushScheduler(
@@ -39,7 +40,7 @@ class AutoFlushSchedulerTest {
     fun `disable should stop periodic flushing`() = runTest {
         // Given
         val mockClient = mockk<RecordClient>()
-        coEvery { mockClient.flush() } returns Result.success(FlushData(0))
+        coEvery { mockClient.flush() } returns Result.Success(FlushData(0))
 
         val interval = FlushStrategy.Interval(1.seconds)
         val scheduler = AutoFlushScheduler(
@@ -62,7 +63,7 @@ class AutoFlushSchedulerTest {
     fun `start should cancel previous job and restart`() = runTest {
         // Given
         val mockClient = mockk<RecordClient>()
-        coEvery { mockClient.flush() } returns Result.success(FlushData(0))
+        coEvery { mockClient.flush() } returns Result.Success(FlushData(0))
 
         val interval = FlushStrategy.Interval(1.seconds)
         val scheduler = AutoFlushScheduler(

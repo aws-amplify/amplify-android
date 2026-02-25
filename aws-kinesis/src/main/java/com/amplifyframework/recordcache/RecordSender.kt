@@ -1,5 +1,7 @@
 package com.amplifyframework.recordcache
 
+import com.amplifyframework.foundation.result.Result
+
 internal data class PutRecordsResponse(
     val successfulIds: List<Long>,
     val retryableIds: List<Long>,
@@ -7,5 +9,5 @@ internal data class PutRecordsResponse(
 )
 
 internal interface RecordSender {
-    suspend fun putRecords(streamName: String, records: List<Record>): Result<PutRecordsResponse>
+    suspend fun putRecords(streamName: String, records: List<Record>): Result<PutRecordsResponse, Throwable>
 }

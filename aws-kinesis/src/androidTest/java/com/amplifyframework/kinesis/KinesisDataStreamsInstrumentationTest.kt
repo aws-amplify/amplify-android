@@ -16,16 +16,17 @@ package com.amplifyframework.kinesis
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.amplifyframework.auth.AWSCredentials
-import com.amplifyframework.auth.AWSCredentialsProvider
-import com.amplifyframework.auth.AuthException
+import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
-import com.amplifyframework.core.Consumer
+import com.amplifyframework.foundation.credentials.AwsCredentials
+import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
+import com.amplifyframework.foundation.credentials.toAwsCredentialsProvider
+import com.amplifyframework.foundation.result.Result
 import com.amplifyframework.recordcache.FlushStrategy
-import com.amplifyframework.testutils.Sleep
+import com.amplifyframework.testutils.assertions.shouldBeFailure
+import com.amplifyframework.testutils.assertions.shouldBeSuccess
 import com.amplifyframework.testutils.sync.SynchronousAuth
-import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -43,7 +44,7 @@ import org.junit.BeforeClass
 import org.junit.Test
 
 /**
- * Instrumented tests for [KinesisDataStreams].
+ * Instrumented tests for [AmplifyKinesisClient].
  *
  * These tests run against a real Kinesis stream and require:
  * - A provisioned Kinesis Data Stream (stream name configured below)
@@ -60,7 +61,7 @@ class KinesisDataStreamsInstrumentationTest {
         private const val REGION = "us-east-1"
 
         private lateinit var synchronousAuth: SynchronousAuth
-        private lateinit var credentialsProvider: AWSCredentialsProvider<AWSCredentials>
+        private lateinit var credentialsProvider: AwsCredentialsProvider<AwsCredentials>
 
         @BeforeClass
         @JvmStatic
@@ -71,46 +72,22 @@ class KinesisDataStreamsInstrumentationTest {
             synchronousAuth = SynchronousAuth.delegatingTo(Amplify.Auth)
 
             // Sign in with test credentials
-            @androidx.annotation.RawRes val resourceId = com.amplifyframework.testutils.Resources.getRawResourceId(context, CREDENTIALS_RESOURCE_NAME)
+            @androidx.annotation.RawRes val resourceId = com.amplifyframework.testutils.Resources.getRawResourceId(
+                context,
+                CREDENTIALS_RESOURCE_NAME
+            )
             val (user, password) = readCredentialsFromResource(context, resourceId)
             synchronousAuth.signOut()
             synchronousAuth.signIn(user, password)
 
-            credentialsProvider = object : AWSCredentialsProvider<AWSCredentials> {
-                override fun fetchAWSCredentials(
-                    onSuccess: Consumer<AWSCredentials>,
-                    onError: Consumer<AuthException>
-                ) {
-                    Amplify.Auth.fetchAuthSession(
-                        { session ->
-                            val awsSession =
-                                session as com.amplifyframework.auth.AWSAuthSessionBehavior<*>
-                            val credentials = awsSession.awsCredentialsResult.value
-                            if (credentials != null) {
-                                onSuccess.accept(credentials)
-                            } else {
-                                onError.accept(
-                                    AuthException(
-                                        "No AWS credentials available",
-                                        "Check auth configuration"
-                                    )
-                                )
-                            }
-                        },
-                        { error ->
-                            onError.accept(
-                                AuthException(
-                                    "Failed to fetch auth session",
-                                    error.toString()
-                                )
-                            )
-                        }
-                    )
-                }
-            }
+            // Bridge V2 Auth to foundation credentials via Smithy types
+            credentialsProvider = CognitoCredentialsProvider().toAwsCredentialsProvider()
         }
 
-        private fun readCredentialsFromResource(context: Context, @androidx.annotation.RawRes resourceId: Int): Pair<String, String> {
+        private fun readCredentialsFromResource(
+            context: Context,
+            @androidx.annotation.RawRes resourceId: Int
+        ): Pair<String, String> {
             val resource = com.amplifyframework.testutils.Resources.readAsJson(context, resourceId)
             return try {
                 val credentials = resource.getJSONArray("credentials")
@@ -125,12 +102,12 @@ class KinesisDataStreamsInstrumentationTest {
         }
     }
 
-    private lateinit var kinesis: KinesisDataStreams
+    private lateinit var kinesis: AmplifyKinesisClient
 
     @Before
     fun setUp() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        kinesis = KinesisDataStreams(
+        kinesis = AmplifyKinesisClient(
             context = context,
             region = REGION,
             credentialsProvider = credentialsProvider
@@ -158,20 +135,17 @@ class KinesisDataStreamsInstrumentationTest {
             partitionKey = "partition-1",
             streamName = STREAM_NAME
         )
-        result.isSuccess.shouldBeTrue()
+        result.shouldBeSuccess()
 
         val flushResult = kinesis.flush()
-        flushResult.isSuccess.shouldBeTrue()
-        flushResult.getOrThrow().recordsFlushed shouldBeGreaterThan 0
+        flushResult.shouldBeSuccess().data.recordsFlushed shouldBeGreaterThan 0
     }
 
     /** Flush with no cached records returns zero flushed. */
     @Test
     fun testFlushWhenEmpty(): Unit = runBlocking {
         val flushResult = kinesis.flush()
-        flushResult.isSuccess.shouldBeTrue()
-
-        val data = flushResult.getOrThrow()
+        val data = flushResult.shouldBeSuccess().data
         data.recordsFlushed shouldBe 0
         data.flushInProgress.shouldBeFalse()
     }
@@ -187,12 +161,11 @@ class KinesisDataStreamsInstrumentationTest {
             streamName = STREAM_NAME
         )
         // record() returns success even when disabled (silently dropped)
-        result.isSuccess.shouldBeTrue()
+        result.shouldBeSuccess()
 
         kinesis.enable()
         val flushResult = kinesis.flush()
-        flushResult.isSuccess.shouldBeTrue()
-        flushResult.getOrThrow().recordsFlushed shouldBe 0
+        flushResult.shouldBeSuccess().data.recordsFlushed shouldBe 0
     }
 
     /** Enable → record → disable → enable → flush verifies only pre-disable records flush. */
@@ -217,9 +190,8 @@ class KinesisDataStreamsInstrumentationTest {
         kinesis.enable()
 
         val flushResult = kinesis.flush()
-        flushResult.isSuccess.shouldBeTrue()
         // Only the pre-disable record should be flushed
-        flushResult.getOrThrow().recordsFlushed shouldBe 1
+        flushResult.shouldBeSuccess().data.recordsFlushed shouldBe 1
     }
 
     /** Two concurrent flushes — one should return flushInProgress = true. */
@@ -239,10 +211,10 @@ class KinesisDataStreamsInstrumentationTest {
             async { kinesis.flush() }
         ).awaitAll()
 
-        val successResults = results.filter { it.isSuccess }
+        val successResults = results.filter { it is Result.Success }
         successResults.size shouldBe 2
 
-        val flushDatas = successResults.map { it.getOrThrow() }
+        val flushDatas = successResults.map { (it as Result.Success).data }
         // At least one should have done actual work, and one may report flushInProgress
         val anyFlushed = flushDatas.any { it.recordsFlushed > 0 }
         val anyInProgress = flushDatas.any { it.flushInProgress }
@@ -254,18 +226,17 @@ class KinesisDataStreamsInstrumentationTest {
     // Cache behavior
     // ---------------------------------------------------------------
 
-    /** Fill cache to limit, then verify the next record fails with KinesisLimitExceededException. */
+    /** Fill cache to limit, then verify the next record fails with AmplifyKinesisLimitExceededException. */
     @Test
     fun testCacheLimitExceeded(): Unit = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         // Create a client with a tiny cache
-        val smallCacheKinesis = KinesisDataStreams(
+        val smallCacheKinesis = AmplifyKinesisClient(
             context = context,
             region = REGION,
             credentialsProvider = credentialsProvider,
-            options = KinesisDataStreamsOptions {
+            options = AmplifyKinesisClientOptions {
                 cacheMaxBytes = 100L // 100 bytes
-                maxRecords = 500
             }
         )
         smallCacheKinesis.enable()
@@ -286,8 +257,7 @@ class KinesisDataStreamsInstrumentationTest {
                 streamName = STREAM_NAME
             )
 
-            result.isFailure.shouldBeTrue()
-            result.exceptionOrNull().shouldBeInstanceOf<KinesisLimitExceededException>()
+            result.shouldBeFailure().error.shouldBeInstanceOf<AmplifyKinesisLimitExceededException>()
         } finally {
             smallCacheKinesis.disable()
             smallCacheKinesis.clearCache()
@@ -304,37 +274,28 @@ class KinesisDataStreamsInstrumentationTest {
         )
 
         val clearResult = kinesis.clearCache()
-        clearResult.isSuccess.shouldBeTrue()
-        clearResult.getOrThrow().recordsCleared shouldBeGreaterThan 0
+        clearResult.shouldBeSuccess().data.recordsCleared shouldBeGreaterThan 0
 
         val flushResult = kinesis.flush()
-        flushResult.isSuccess.shouldBeTrue()
-        flushResult.getOrThrow().recordsFlushed shouldBe 0
+        flushResult.shouldBeSuccess().data.recordsFlushed shouldBe 0
     }
 
     // ---------------------------------------------------------------
     // Error paths
     // ---------------------------------------------------------------
 
-    /** Flush with invalid credentials should fail with KinesisServiceException. */
+    /** Flush with invalid credentials should fail with AmplifyKinesisServiceException. */
     @Test
     fun testFlushWithInvalidCredentials(): Unit = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val badCredentials = object : AWSCredentialsProvider<AWSCredentials> {
-            override fun fetchAWSCredentials(
-                onSuccess: Consumer<AWSCredentials>,
-                onError: Consumer<AuthException>
-            ) {
-                onSuccess.accept(
-                    AWSCredentials(
-                        accessKeyId = "INVALID_ACCESS_KEY",
-                        secretAccessKey = "INVALID_SECRET_KEY"
-                    )
-                )
-            }
+        val badCredentials = AwsCredentialsProvider {
+            AwsCredentials.Static(
+                accessKeyId = "INVALID_ACCESS_KEY",
+                secretAccessKey = "INVALID_SECRET_KEY"
+            )
         }
 
-        val badKinesis = KinesisDataStreams(
+        val badKinesis = AmplifyKinesisClient(
             context = context,
             region = REGION,
             credentialsProvider = badCredentials
@@ -349,8 +310,7 @@ class KinesisDataStreamsInstrumentationTest {
             )
 
             val flushResult = badKinesis.flush()
-            flushResult.isFailure.shouldBeTrue()
-            flushResult.exceptionOrNull().shouldBeInstanceOf<KinesisServiceException>()
+            flushResult.shouldBeFailure().error.shouldBeInstanceOf<AmplifyKinesisServiceException>()
         } finally {
             badKinesis.disable()
             badKinesis.clearCache()
@@ -371,12 +331,11 @@ class KinesisDataStreamsInstrumentationTest {
                 partitionKey = "partition-${i % 5}",
                 streamName = STREAM_NAME
             )
-            result.isSuccess.shouldBeTrue()
+            result.shouldBeSuccess()
         }
 
         val flushResult = kinesis.flush()
-        flushResult.isSuccess.shouldBeTrue()
-        flushResult.getOrThrow().recordsFlushed shouldBe count
+        flushResult.shouldBeSuccess().data.recordsFlushed shouldBe count
     }
 
     /** Record + flush in a loop — verify consistency across cycles. */
@@ -395,8 +354,8 @@ class KinesisDataStreamsInstrumentationTest {
                 )
             }
             val flushResult = kinesis.flush()
-            flushResult.isSuccess.shouldBeTrue()
-            totalFlushed += flushResult.getOrThrow().recordsFlushed
+            flushResult.shouldBeSuccess()
+            totalFlushed += flushResult.data.recordsFlushed
         }
 
         totalFlushed shouldBe (cycles * recordsPerCycle)
@@ -411,11 +370,11 @@ class KinesisDataStreamsInstrumentationTest {
     fun testAutoFlush(): Unit = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         // Create client with short flush interval
-        val autoFlushKinesis = KinesisDataStreams(
+        val autoFlushKinesis = AmplifyKinesisClient(
             context = context,
             region = REGION,
             credentialsProvider = credentialsProvider,
-            options = KinesisDataStreamsOptions {
+            options = AmplifyKinesisClientOptions {
                 flushStrategy = FlushStrategy.Interval(5.seconds)
             }
         )
@@ -433,8 +392,7 @@ class KinesisDataStreamsInstrumentationTest {
 
             // After auto-flush, a manual flush should find nothing left
             val flushResult = autoFlushKinesis.flush()
-            flushResult.isSuccess.shouldBeTrue()
-            flushResult.getOrThrow().recordsFlushed shouldBe 0
+            flushResult.shouldBeSuccess().data.recordsFlushed shouldBe 0
         } finally {
             autoFlushKinesis.disable()
             autoFlushKinesis.clearCache()

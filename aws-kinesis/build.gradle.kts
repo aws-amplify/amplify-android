@@ -26,8 +26,8 @@ android {
 }
 
 dependencies {
-    implementation(project(":core"))
-    implementation(project(":aws-core"))
+    implementation(project(":foundation"))
+    implementation(project(":foundation-bridge"))
 
     implementation(libs.androidx.appcompat)
     implementation(libs.aws.kinesis)
@@ -51,6 +51,8 @@ dependencies {
 
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(libs.test.androidx.core)
+    androidTestImplementation(project(":core"))
+    androidTestImplementation(project(":aws-core"))
     androidTestImplementation(project(":aws-auth-cognito"))
     androidTestImplementation(libs.test.androidx.runner)
     androidTestImplementation(libs.test.kotlin.coroutines)

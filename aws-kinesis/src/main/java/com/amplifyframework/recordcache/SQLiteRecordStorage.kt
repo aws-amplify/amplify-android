@@ -5,6 +5,13 @@ import androidx.annotation.VisibleForTesting
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.execSQL
+import com.amplifyframework.annotations.InternalAmplifyApi
+import com.amplifyframework.foundation.exceptions.DEFAULT_RECOVERY_SUGGESTION
+import com.amplifyframework.foundation.logging.AmplifyLogging
+import com.amplifyframework.foundation.logging.Logger
+import com.amplifyframework.foundation.result.Result
+import com.amplifyframework.foundation.result.mapFailure
+import com.amplifyframework.foundation.result.resultCatching
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CoroutineDispatcher
@@ -13,24 +20,27 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
+@OptIn(InternalAmplifyApi::class)
 internal class SQLiteRecordStorage internal constructor(
-    maxRecords: Int,
+    maxRecordsByStream: Int,
     maxBytes: Long,
     identifier: String,
     connectionFactory: () -> SQLiteConnection,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
-) : RecordStorage(maxRecords, maxBytes, identifier) {
+) : RecordStorage(maxRecordsByStream, maxBytes, identifier) {
+    private val logger: Logger = AmplifyLogging.logger<SQLiteRecordStorage>()
     private val connection: SQLiteConnection = connectionFactory()
     private var cachedSize = AtomicInteger(0)
     private val dbMutex = Mutex()
+    private val maxRecordsByStream = maxRecordsByStream
 
     constructor(
         context: Context,
-        maxRecords: Int,
+        maxRecordsByStream: Int,
         maxBytes: Long,
         identifier: String,
         dispatcher: CoroutineDispatcher = Dispatchers.IO
-    ) : this(maxRecords, maxBytes, identifier, {
+    ) : this(maxRecordsByStream, maxBytes, identifier, {
         val dbFile = File(context.getDatabasePath("kinesis_records_$identifier.db").absolutePath)
         BundledSQLiteDriver().open(dbFile.absolutePath)
     }, dispatcher)
@@ -62,7 +72,7 @@ internal class SQLiteRecordStorage internal constructor(
     /**
      * Helper to wrap DB queries with locking and dispatch
      */
-    private suspend fun <T> wrapDispatchAndCatching(block: () -> T) = Result.runCatching {
+    private suspend fun <T> wrapDispatchAndCatching(block: () -> T): Result<T, Throwable> = resultCatching {
         withContext(dispatcher) {
             dbMutex.withLock {
                 block()
@@ -73,19 +83,20 @@ internal class SQLiteRecordStorage internal constructor(
     /**
      * Helper to wrap DB queries in a transaction and suspend
      */
-    private suspend fun <T> wrapDispatchAndTransactionAndCatching(block: () -> T) = wrapDispatchAndCatching {
-        connection.execSQL("BEGIN IMMEDIATE TRANSACTION")
-        try {
-            val result = block()
-            connection.execSQL("END TRANSACTION")
-            result
-        } catch (e: Exception) {
-            connection.execSQL("ROLLBACK TRANSACTION")
-            throw e
+    private suspend fun <T> wrapDispatchAndTransactionAndCatching(block: () -> T): Result<T, Throwable> =
+        wrapDispatchAndCatching {
+            connection.execSQL("BEGIN IMMEDIATE TRANSACTION")
+            try {
+                val result = block()
+                connection.execSQL("END TRANSACTION")
+                result
+            } catch (e: Exception) {
+                connection.execSQL("ROLLBACK TRANSACTION")
+                throw e
+            }
         }
-    }
 
-    override suspend fun addRecord(record: RecordInput): Result<Unit> = wrapDispatchAndCatching {
+    override suspend fun addRecord(record: RecordInput): Result<Unit, RecordCacheException> = wrapDispatchAndCatching {
         // Check cache size limit before adding
         if (cachedSize.get() + record.dataSize > maxBytes) {
             throw RecordCacheLimitExceededException(
@@ -104,13 +115,13 @@ internal class SQLiteRecordStorage internal constructor(
             stmt.step()
         }
         cachedSize.addAndGet(record.dataSize)
-
-        return@wrapDispatchAndCatching
+        Unit
     }.recoverAsRecordCacheException("Failed to add record to cache")
 
-    override suspend fun getRecordsByStream(): Result<List<List<Record>>> = wrapDispatchAndTransactionAndCatching {
-        connection.prepare(
-            """
+    override suspend fun getRecordsByStream(): Result<List<List<Record>>, RecordCacheException> =
+        wrapDispatchAndTransactionAndCatching {
+            connection.prepare(
+                """
                 SELECT id, stream_name, partition_key, data, data_size, retry_count, created_at
                 FROM (
                     SELECT *, 
@@ -120,35 +131,35 @@ internal class SQLiteRecordStorage internal constructor(
                 ) 
                 WHERE rn <= ? AND running_size <= ?
                 ORDER BY stream_name, id
-            """
-        ).use { stmt ->
-            stmt.bindInt(1, maxRecords)
-            stmt.bindLong(2, maxBytes)
+                """
+            ).use { stmt ->
+                stmt.bindInt(1, maxRecordsByStream)
+                stmt.bindLong(2, maxBytes)
 
-            val recordsByStream = mutableMapOf<String, MutableList<Record>>()
+                val recordsByStream = mutableMapOf<String, MutableList<Record>>()
 
-            while (stmt.step()) {
-                val streamName = stmt.getText(1)
+                while (stmt.step()) {
+                    val streamName = stmt.getText(1)
 
-                recordsByStream.getOrPut(streamName) { mutableListOf() }.add(
-                    Record(
-                        id = stmt.getLong(0),
-                        streamName = streamName,
-                        partitionKey = stmt.getText(2),
-                        data = stmt.getBlob(3),
-                        dataSize = stmt.getInt(4),
-                        retryCount = stmt.getInt(5),
-                        createdAt = stmt.getLong(6)
+                    recordsByStream.getOrPut(streamName) { mutableListOf() }.add(
+                        Record(
+                            id = stmt.getLong(0),
+                            streamName = streamName,
+                            partitionKey = stmt.getText(2),
+                            data = stmt.getBlob(3),
+                            dataSize = stmt.getInt(4),
+                            retryCount = stmt.getInt(5),
+                            createdAt = stmt.getLong(6)
+                        )
                     )
-                )
+                }
+
+                recordsByStream.values.toList()
             }
+        }.recoverAsRecordCacheException("Could not retrieve records from storage")
 
-            recordsByStream.values.toList()
-        }
-    }.recoverAsRecordCacheException("Could not retrieve records from storage")
-
-    override suspend fun deleteRecords(ids: List<Long>): Result<Unit> = wrapDispatchAndCatching {
-        if (!ids.isEmpty()) {
+    override suspend fun deleteRecords(ids: List<Long>): Result<Unit, RecordCacheException> = wrapDispatchAndCatching {
+        if (ids.isNotEmpty()) {
             val placeholders = ids.joinToString(",") { "?" }
 
             connection.prepare("DELETE FROM records WHERE id IN ($placeholders)").use { stmt ->
@@ -161,20 +172,20 @@ internal class SQLiteRecordStorage internal constructor(
         }
     }.recoverAsRecordCacheException("Failed to delete records from cache")
 
-    override suspend fun incrementRetryCount(ids: List<Long>): Result<Unit> = wrapDispatchAndCatching {
-        if (!ids.isEmpty()) {
-            val placeholders = ids.joinToString(",") { "?" }
-            connection.prepare(
-                "UPDATE records SET retry_count = retry_count + 1 WHERE id IN ($placeholders)"
-            ).use { stmt ->
-                ids.forEachIndexed { index, id ->
-                    stmt.bindLong(index + 1, id)
+    override suspend fun incrementRetryCount(ids: List<Long>): Result<Unit, RecordCacheException> =
+        wrapDispatchAndCatching {
+            if (ids.isNotEmpty()) {
+                val placeholders = ids.joinToString(",") { "?" }
+                connection.prepare(
+                    "UPDATE records SET retry_count = retry_count + 1 WHERE id IN ($placeholders)"
+                ).use { stmt ->
+                    ids.forEachIndexed { index, id ->
+                        stmt.bindLong(index + 1, id)
+                    }
+                    stmt.step()
                 }
-                stmt.step()
             }
-            return@wrapDispatchAndCatching
-        }
-    }.recoverAsRecordCacheException("Failed to increment retry count")
+        }.recoverAsRecordCacheException("Failed to increment retry count")
 
     /**
      * Resets the cached size by recalculating from the database.
@@ -189,31 +200,25 @@ internal class SQLiteRecordStorage internal constructor(
         )
     }
 
-    override suspend fun getCurrentCacheSize(): Result<Int> = Result.success(cachedSize.toInt())
+    override suspend fun getCurrentCacheSize(): Result<Int, RecordCacheException> = Result.Success(cachedSize.toInt())
 
-    override suspend fun clearRecords(): Result<ClearCacheData> = wrapDispatchAndTransactionAndCatching {
-        val count = connection.prepare("SELECT COUNT(*) FROM records").use { stmt ->
-            if (stmt.step()) stmt.getInt(0) else 0
+    override suspend fun clearRecords(): Result<ClearCacheData, RecordCacheException> =
+        wrapDispatchAndTransactionAndCatching {
+            val count = connection.prepare("SELECT COUNT(*) FROM records").use { stmt ->
+                if (stmt.step()) stmt.getInt(0) else 0
+            }
+
+            connection.execSQL("DELETE FROM records")
+            cachedSize.set(0)
+            ClearCacheData(count)
+        }.recoverAsRecordCacheException("Failed to clear cache")
+
+    private fun <R> Result<R, Throwable>.recoverAsRecordCacheException(
+        message: String
+    ): Result<R, RecordCacheException> = mapFailure { exception ->
+        when (exception) {
+            is RecordCacheException -> exception
+            else -> RecordCacheDatabaseException(message, DEFAULT_RECOVERY_SUGGESTION, exception)
         }
-
-        connection.execSQL("DELETE FROM records")
-        cachedSize.set(0)
-        return@wrapDispatchAndTransactionAndCatching ClearCacheData(count)
-    }.recoverAsRecordCacheException("Failed to clear cache")
-}
-
-private fun <R> Result<R>.recoverAsRecordCacheException(message: String): Result<R> {
-    if (this.isSuccess) {
-        return this
     }
-
-    val transformedException = when (val exception = this.exceptionOrNull()) {
-        is RecordCacheException -> exception
-        else -> RecordCacheDatabaseException(
-            message,
-            DEFAULT_RECOVERY_SUGGESTION,
-            exception
-        )
-    }
-    return Result.failure(transformedException)
 }

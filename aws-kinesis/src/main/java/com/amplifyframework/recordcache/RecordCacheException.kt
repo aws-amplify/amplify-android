@@ -2,7 +2,7 @@ package com.amplifyframework.recordcache
 
 /**
  * Internal error type used by [RecordClient] / [RecordStorage].
- * Mapped to the public Kinesis exception type at the KinesisDataStreams boundary.
+ * Mapped to the public Kinesis exception type at the AmplifyKinesisClient boundary.
  */
 internal sealed class RecordCacheException(
     override val message: String,
@@ -25,6 +25,3 @@ internal class RecordCacheLimitExceededException(
     recoverySuggestion: String,
     cause: Throwable? = null
 ) : RecordCacheException(message, recoverySuggestion, cause)
-
-/** Default recovery suggestion for errors. */
-internal const val DEFAULT_RECOVERY_SUGGESTION = "Inspect the underlying error for more details."
