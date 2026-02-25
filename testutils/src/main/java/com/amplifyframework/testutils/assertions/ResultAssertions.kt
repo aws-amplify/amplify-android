@@ -15,7 +15,7 @@
 
 @file:OptIn(ExperimentalContracts::class)
 
-package com.amplifyframework.foundation
+package com.amplifyframework.testutils.assertions
 
 import com.amplifyframework.foundation.result.Result
 import io.kotest.matchers.Matcher
