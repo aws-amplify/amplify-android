@@ -29,8 +29,10 @@ import com.amplifyframework.predictions.result.IdentifyEntitiesResult
 import com.amplifyframework.predictions.result.IdentifyLabelsResult
 import com.amplifyframework.predictions.result.IdentifyTextResult
 import com.amplifyframework.testutils.Assets
+import com.amplifyframework.testutils.rules.CanaryTestRule
 import com.amplifyframework.testutils.sync.SynchronousPredictions
 import org.junit.BeforeClass
+import org.junit.Rule
 import org.junit.Test
 
 class PredictionsCanaryTest {
@@ -50,6 +52,9 @@ class PredictionsCanaryTest {
             }
         }
     }
+
+    @get:Rule
+    val testRule = CanaryTestRule()
 
     val syncPredictions = SynchronousPredictions.delegatingTo(Amplify.Predictions)
 
