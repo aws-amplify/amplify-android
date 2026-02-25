@@ -6,6 +6,7 @@ import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import androidx.sqlite.execSQL
 import com.amplifyframework.annotations.InternalAmplifyApi
+import com.amplifyframework.foundation.exceptions.DEFAULT_RECOVERY_SUGGESTION
 import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.foundation.logging.Logger
 import com.amplifyframework.foundation.result.Result
