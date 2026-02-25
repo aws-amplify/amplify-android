@@ -90,19 +90,21 @@ class AmplifyKinesisClient(
             maxBytes = options.cacheMaxBytes
         )
     )
-    private val scheduler: AutoFlushScheduler
+    private val scheduler: AutoFlushScheduler?
 
-    @Volatile private var isEnabled = false
+    @Volatile private var isEnabled = true
 
     init {
-        if (options.flushStrategy is FlushStrategy.Interval) {
-            scheduler = AutoFlushScheduler(
+        scheduler = when (options.flushStrategy) {
+            is FlushStrategy.Interval -> AutoFlushScheduler(
                 options.flushStrategy,
                 client = recordClient
             )
-        } else {
-            throw IllegalArgumentException("Flush strategy must be interval")
+            is FlushStrategy.None -> null
         }
+
+        // Auto-start the scheduler if present
+        scheduler?.start()
     }
 
     /**
@@ -181,7 +183,7 @@ class AmplifyKinesisClient(
      */
     fun enable() {
         isEnabled = true
-        scheduler.start()
+        scheduler?.start()
     }
 
     /**
@@ -190,7 +192,7 @@ class AmplifyKinesisClient(
      */
     fun disable() {
         isEnabled = false
-        scheduler.disable()
+        scheduler?.disable()
     }
 
     private fun <T> Result<T, Throwable>.wrapError(): Result<T, AmplifyKinesisException> = mapFailure {

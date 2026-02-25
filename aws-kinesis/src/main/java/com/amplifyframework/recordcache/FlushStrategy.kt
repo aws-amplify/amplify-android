@@ -24,4 +24,9 @@ sealed class FlushStrategy {
          */
         val interval: Duration = 30.seconds
     ) : FlushStrategy()
+
+    /**
+     * Disable automatic flushing. Records must be flushed manually by calling flush().
+     */
+    data object None : FlushStrategy()
 }
