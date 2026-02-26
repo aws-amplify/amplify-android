@@ -64,7 +64,7 @@ private const val MAX_RECORDS_PER_STREAM = 500
  */
 @OptIn(InternalAmplifyApi::class)
 class AmplifyKinesisClient(
-    val context: Context,
+    context: Context,
     val region: String,
     val credentialsProvider: AwsCredentialsProvider<out AwsCredentials>,
     options: AmplifyKinesisClientOptions = AmplifyKinesisClientOptions.defaults()
@@ -84,7 +84,7 @@ class AmplifyKinesisClient(
             maxRetries = options.maxRetries
         ),
         storage = SQLiteRecordStorage(
-            context = context,
+            context = context.applicationContext,
             identifier = region,
             maxRecordsByStream = MAX_RECORDS_PER_STREAM,
             maxBytes = options.cacheMaxBytes
@@ -182,6 +182,7 @@ class AmplifyKinesisClient(
      * Enables record collection and automatic flushing of cached records.
      */
     fun enable() {
+        logger.info { "Enabling record collection and automatic flushing" }
         isEnabled = true
         scheduler?.start()
     }
@@ -191,6 +192,7 @@ class AmplifyKinesisClient(
      * disabled are silently dropped. Already-cached records remain in storage.
      */
     fun disable() {
+        logger.info { "Disabling record collection and automatic flushing" }
         isEnabled = false
         scheduler?.disable()
     }
