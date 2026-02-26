@@ -67,7 +67,7 @@ class AmplifyKinesisClient(
     val context: Context,
     val region: String,
     val credentialsProvider: AwsCredentialsProvider<out AwsCredentials>,
-    options: AmplifyKinesisClientOptions = AmplifyKinesisClientOptions.defaults()
+    val options: AmplifyKinesisClientOptions = AmplifyKinesisClientOptions.defaults()
 ) {
     private val logger: Logger = AmplifyLogging.logger<AmplifyKinesisClient>()
 

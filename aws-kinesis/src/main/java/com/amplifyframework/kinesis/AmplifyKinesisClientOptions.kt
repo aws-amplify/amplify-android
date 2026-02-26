@@ -1,5 +1,6 @@
 package com.amplifyframework.kinesis
 
+import aws.sdk.kotlin.services.kinesis.KinesisClient
 import com.amplifyframework.recordcache.FlushStrategy
 import kotlin.time.Duration.Companion.seconds
 
@@ -16,7 +17,7 @@ data class AmplifyKinesisClientOptions internal constructor(
     val cacheMaxBytes: Long,
     val maxRetries: Int,
     val flushStrategy: FlushStrategy,
-    val configureClient: AmplifyKinesisClientConfigurationProvider? = null
+    val configureClient: KinesisClientConfigurationProvider? = null
 ) {
     companion object {
         /**
@@ -52,8 +53,8 @@ data class AmplifyKinesisClientOptions internal constructor(
         var flushStrategy: FlushStrategy = FlushStrategy.Interval(30.seconds)
             @JvmSynthetic set
 
-        var configureClient: AmplifyKinesisClientConfigurationProvider? = null
-            @JvmSynthetic set
+        var configureClient: KinesisClientConfigurationProvider? = null
+            @JvmSynthetic private set
 
         /**
          * Sets the maximum cache size in bytes.
@@ -79,7 +80,36 @@ data class AmplifyKinesisClientOptions internal constructor(
          */
         fun flushStrategy(value: FlushStrategy) = apply { flushStrategy = value }
 
-        fun configureClient(value: AmplifyKinesisClientConfigurationProvider?) = apply { configureClient = value }
+        /**
+         * Sets a custom configuration provider for the underlying [KinesisClient].
+         *
+         * @param value Configuration provider, or null to use defaults
+         * @return This builder instance
+         */
+        fun configureClient(value: KinesisClientConfigurationProvider?) = apply { configureClient = value }
+
+        /**
+         * Configures the underlying [KinesisClient] using a DSL-style lambda.
+         *
+         * Example (Kotlin):
+         * ```kotlin
+         * val options = AmplifyKinesisClientOptions {
+         *     maxRetries = 5
+         *     configureClient {
+         *         retryStrategy {
+         *             maxAttempts = 10
+         *         }
+         *     }
+         * }
+         * ```
+         *
+         * @param value Lambda with receiver on [KinesisClient.Config.Builder]
+         * @return This builder instance
+         */
+        @JvmSynthetic
+        fun configureClient(value: KinesisClient.Config.Builder.() -> Unit) = apply {
+            configureClient = KinesisClientConfigurationProvider { it.value() }
+        }
 
         /**
          * Builds the [AmplifyKinesisClientOptions] with configured values.
