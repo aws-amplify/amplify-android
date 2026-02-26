@@ -1,7 +1,10 @@
 package com.amplifyframework.kinesis
 
 import android.content.Context
+import aws.sdk.kotlin.runtime.http.operation.customUserAgentMetadata
 import aws.sdk.kotlin.services.kinesis.KinesisClient
+import aws.smithy.kotlin.runtime.client.RequestInterceptorContext
+import aws.smithy.kotlin.runtime.http.interceptors.HttpInterceptor
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.foundation.credentials.AwsCredentials
 import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
@@ -75,6 +78,18 @@ class AmplifyKinesisClient(
     val kinesisClient: KinesisClient = KinesisClient {
         this.region = this@AmplifyKinesisClient.region
         this.credentialsProvider = this@AmplifyKinesisClient.credentialsProvider.toSmithyProvider()
+        
+        // Add user agent metadata for tracking Kinesis feature usage
+        this.interceptors += object : HttpInterceptor {
+            override suspend fun modifyBeforeSerialization(context: RequestInterceptorContext<Any>): Any {
+                context.executionContext.customUserAgentMetadata.add(
+                    "kinesis",
+                    BuildConfig.VERSION_NAME
+                )
+                return super.modifyBeforeSerialization(context)
+            }
+        }
+        
         options.configureClient?.applyConfiguration(this)
     }
 

@@ -30,6 +30,7 @@ dependencies {
     implementation(project(":foundation-bridge"))
 
     implementation(libs.androidx.appcompat)
+    implementation(libs.aws.http)
     implementation(libs.aws.kinesis)
     implementation(libs.kotlin.serializationJson)
     implementation(libs.androidx.sqlite)
