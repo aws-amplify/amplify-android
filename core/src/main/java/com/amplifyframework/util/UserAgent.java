@@ -21,7 +21,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.amplifyframework.AmplifyException;
+import com.amplifyframework.annotations.InternalApiWarning;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.BuildConfig;
 import com.amplifyframework.logging.Logger;
@@ -63,17 +63,14 @@ public final class UserAgent {
      *
      * @param platformVersions A map of additional platforms that are calling this library
      *                         and their respective versions.
-     * @throws AmplifyException If called twice or user-agent exceeds size limit.
      */
-    public static synchronized void configure(@NonNull Map<Platform, String> platformVersions)
-            throws AmplifyException {
+    @InternalApiWarning
+    public static synchronized void configure(@NonNull Map<Platform, String> platformVersions) {
         // Block any sub-sequent configuration call.
+        // This may happen legitimately when DataStore is being used on Flutter
         if (instance != null) {
-            throw new AmplifyException(
-                    "User-Agent was already configured successfully.",
-                    "User-Agent is configured internally during Amplify configuration. " +
-                            "This method should not be called externally."
-            );
+            LOG.info("Skipping second user agent configuration call");
+            return;
         }
 
         HashMap<String, String> extras = new HashMap<>();

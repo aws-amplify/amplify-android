@@ -41,6 +41,7 @@ import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.UserAgent;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -206,6 +207,9 @@ public final class Amplify {
             if (CONFIGURATION_LOCK.get()) {
                 throw new AlreadyConfiguredException("Remove the duplicate call to `Amplify.configure()`.");
             }
+
+            // Configure User-Agent utility
+            UserAgent.configure(Collections.emptyMap());
 
             AmplifyOutputsData configuration = AmplifyOutputsData.deserialize(context, amplifyOutputs);
 
