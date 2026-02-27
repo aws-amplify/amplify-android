@@ -1,6 +1,7 @@
 package com.amplifyframework.kinesis
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import aws.sdk.kotlin.services.kinesis.KinesisClient
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.foundation.credentials.AwsCredentials
@@ -66,7 +67,7 @@ class AmplifyKinesisClient(
     context: Context,
     private val region: String,
     private val credentialsProvider: AwsCredentialsProvider<AwsCredentials>,
-    private val options: AmplifyKinesisClientOptions = AmplifyKinesisClientOptions.defaults()
+    @field:VisibleForTesting val options: AmplifyKinesisClientOptions = AmplifyKinesisClientOptions.defaults()
 ) {
     private val logger: Logger = AmplifyLogging.logger<AmplifyKinesisClient>()
 
