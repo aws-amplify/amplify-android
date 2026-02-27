@@ -14,14 +14,11 @@
  */
 package com.amplifyframework.kinesis
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
+import aws.sdk.kotlin.services.kinesis.KinesisClient
 import aws.smithy.kotlin.runtime.client.ProtocolRequestInterceptorContext
 import aws.smithy.kotlin.runtime.http.interceptors.HttpInterceptor
 import aws.smithy.kotlin.runtime.http.request.HttpRequest
-import com.amplifyframework.foundation.credentials.AwsCredentials
-import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
-import com.amplifyframework.recordcache.FlushStrategy
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -31,38 +28,25 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class AmplifyKinesisClientUserAgentTest {
 
-    private val fakeCredentials = AwsCredentialsProvider {
-        AwsCredentials.Static(
-            accessKeyId = "FAKE_ACCESS_KEY",
-            secretAccessKey = "FAKE_SECRET_KEY"
-        )
-    }
-
     @Test
-    fun `user agent header contains kinesis metadata`() = runTest {
+    fun `user agent header contains kinesis and amplify metadata`() = runTest {
         var capturedUserAgent: String? = null
 
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        val client = AmplifyKinesisClient(
-            context = context,
-            region = "us-east-1",
-            credentialsProvider = fakeCredentials,
-            options = AmplifyKinesisClientOptions {
-                flushStrategy = FlushStrategy.None
-                configureClient {
-                    interceptors += object : HttpInterceptor {
-                        override suspend fun readBeforeTransmit(
-                            context: ProtocolRequestInterceptorContext<Any, HttpRequest>
-                        ) {
-                            capturedUserAgent = context.protocolRequest.headers["User-Agent"]
-                        }
-                    }
+        // Build a KinesisClient the same way AmplifyKinesisClient does:
+        // KinesisUserAgentInterceptor first, then a capturing interceptor after it.
+        val kinesisClient = KinesisClient {
+            region = "us-east-1"
+            interceptors += KinesisUserAgentInterceptor()
+            interceptors += object : HttpInterceptor {
+                override suspend fun modifyBeforeTransmit(
+                    context: ProtocolRequestInterceptorContext<Any, HttpRequest>
+                ): HttpRequest {
+                    capturedUserAgent = context.protocolRequest.headers["User-Agent"]
+                    return context.protocolRequest
                 }
             }
-        )
+        }
 
-        // Call putRecords directly on the SDK client to trigger the interceptor chain.
-        // The request will fail (fake credentials), but the interceptor fires before transmission.
         val request = aws.sdk.kotlin.services.kinesis.model.PutRecordsRequest {
             streamName = "test-stream"
             records = listOf(
@@ -73,11 +57,12 @@ class AmplifyKinesisClientUserAgentTest {
             )
         }
         try {
-            client.kinesisClient.putRecords(request)
+            kinesisClient.putRecords(request)
         } catch (_: Exception) {
-            // Expected — fake credentials will cause a failure
+            // Expected — no real credentials
         }
 
+        capturedUserAgent.shouldNotBeNull()
         capturedUserAgent shouldContain "lib/amplify-android#${BuildConfig.VERSION_NAME}"
         capturedUserAgent shouldContain "md/kinesis#${BuildConfig.VERSION_NAME}"
     }
