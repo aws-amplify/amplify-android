@@ -17,14 +17,16 @@ import aws.sdk.kotlin.services.kinesis.KinesisClient
  *     region = "us-east-1",
  *     credentialsProvider = provider,
  *     options = AmplifyKinesisClientOptions {
- *         configureClient = AmplifyKinesisClientConfigurationProvider { builder ->
- *             builder.httpClient { /* custom http config */ }
+ *         configureClient {
+ *             retryStrategy {
+ *                 maxAttempts = 10
+ *             }
  *         }
  *     }
  * )
  * ```
  */
-fun interface AmplifyKinesisClientConfigurationProvider {
+fun interface KinesisClientConfigurationProvider {
     /**
      * Applies custom configuration to the KinesisClient builder.
      *
