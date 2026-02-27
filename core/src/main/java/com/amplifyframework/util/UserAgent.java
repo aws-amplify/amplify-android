@@ -22,6 +22,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.annotations.InternalApiWarning;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.BuildConfig;
 import com.amplifyframework.logging.Logger;
@@ -65,6 +66,7 @@ public final class UserAgent {
      *                         and their respective versions.
      * @throws AmplifyException If called twice or user-agent exceeds size limit.
      */
+    @InternalApiWarning
     public static synchronized void configure(@NonNull Map<Platform, String> platformVersions)
             throws AmplifyException {
         // Block any sub-sequent configuration call.

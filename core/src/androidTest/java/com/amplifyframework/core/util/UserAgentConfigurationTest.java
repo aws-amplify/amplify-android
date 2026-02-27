@@ -26,8 +26,6 @@ import com.amplifyframework.util.UserAgent;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.LinkedHashMap;
-
 import static org.junit.Assert.assertTrue;
 
 /**
