@@ -64,6 +64,6 @@ class AmplifyKinesisClientUserAgentTest {
 
         capturedUserAgent.shouldNotBeNull()
         capturedUserAgent shouldContain "lib/amplify-android#${BuildConfig.VERSION_NAME}"
-        capturedUserAgent shouldContain "md/kinesis#${BuildConfig.VERSION_NAME}"
+        capturedUserAgent shouldContain "md/amplify-kinesis#${BuildConfig.VERSION_NAME}"
     }
 }

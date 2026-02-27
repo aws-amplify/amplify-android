@@ -26,7 +26,7 @@ import aws.smithy.kotlin.runtime.http.request.toBuilder
  *
  * Adds two pieces of tracking information:
  *
- * 1. `md/kinesis#<version>` — Identifies this request as coming from the AmplifyKinesisClient.
+ * 1. `md/amplify-kinesis#<version>` — Identifies this request as coming from the AmplifyKinesisClient.
  *    Added via [customUserAgentMetadata] during serialization, which the SDK formats into the
  *    standard `md/` metadata section of the User-Agent header.
  *
@@ -40,11 +40,11 @@ internal class KinesisUserAgentInterceptor : HttpInterceptor {
     private val libToken = "lib/amplify-android#${BuildConfig.VERSION_NAME}"
 
     /**
-     * Adds `md/kinesis#<version>` to the SDK's custom user agent metadata.
+     * Adds `md/amplify-kinesis#<version>` to the SDK's custom user agent metadata.
      * The SDK picks this up and formats it into the User-Agent header automatically.
      */
     override suspend fun modifyBeforeSerialization(context: RequestInterceptorContext<Any>): Any {
-        context.executionContext.customUserAgentMetadata.add("kinesis", BuildConfig.VERSION_NAME)
+        context.executionContext.customUserAgentMetadata.add("amplify-kinesis", BuildConfig.VERSION_NAME)
         return super.modifyBeforeSerialization(context)
     }
 
