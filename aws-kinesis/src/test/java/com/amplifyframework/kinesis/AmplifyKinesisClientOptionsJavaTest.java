@@ -16,7 +16,6 @@
 package com.amplifyframework.kinesis;
 
 import android.content.Context;
-
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.foundation.credentials.AwsCredentials;
