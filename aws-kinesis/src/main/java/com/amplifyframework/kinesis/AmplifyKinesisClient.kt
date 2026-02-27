@@ -14,7 +14,6 @@ import com.amplifyframework.recordcache.AutoFlushScheduler
 import com.amplifyframework.recordcache.ClearCacheResult
 import com.amplifyframework.recordcache.FlushResult
 import com.amplifyframework.recordcache.FlushStrategy
-import com.amplifyframework.recordcache.FlushStrategy.Interval
 import com.amplifyframework.recordcache.RecordClient
 import com.amplifyframework.recordcache.RecordData
 import com.amplifyframework.recordcache.RecordInput
@@ -66,7 +65,7 @@ private const val MAX_RECORDS_PER_STREAM = 500
 class AmplifyKinesisClient(
     context: Context,
     val region: String,
-    val credentialsProvider: AwsCredentialsProvider<out AwsCredentials>,
+    val credentialsProvider: AwsCredentialsProvider<AwsCredentials>,
     val options: AmplifyKinesisClientOptions = AmplifyKinesisClientOptions.defaults()
 ) {
     private val logger: Logger = AmplifyLogging.logger<AmplifyKinesisClient>()
