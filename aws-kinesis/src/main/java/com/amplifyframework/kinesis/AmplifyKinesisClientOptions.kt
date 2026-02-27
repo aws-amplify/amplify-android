@@ -4,12 +4,12 @@ import aws.sdk.kotlin.services.kinesis.KinesisClient
 import com.amplifyframework.recordcache.FlushStrategy
 import kotlin.time.Duration.Companion.seconds
 
-private const val DEFAULT_CACHE_SIZE_LIMIT_IN_BYTES = 500L * 1024 * 1024
+private const val DEFAULT_CACHE_SIZE_LIMIT_IN_BYTES = 5L * 1024 * 1024
 
 /**
  * Configuration options for [AmplifyKinesisClient].
  *
- * @param cacheMaxBytes Maximum size of the local cache in bytes (default: 500MB)
+ * @param cacheMaxBytes Maximum size of the local cache in bytes (default: 5MB)
  * @param maxRetries Maximum number of retry attempts for failed records (default: 5)
  * @param flushStrategy Strategy for automatic flushing of cached records
  */

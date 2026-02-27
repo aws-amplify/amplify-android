@@ -36,7 +36,7 @@ private const val MAX_RECORDS_PER_STREAM = 500
  *
  * Example usage:
  * ```kotlin
- * // Bridge V2 Auth to foundation credentials via Smithy types
+ * // Bridge V2 AuthPlugin credentials to foundation credentials via Smithy types
  * val credentialsProvider = CognitoCredentialsProvider().toAwsCredentialsProvider()
  *
  * val kinesis = AmplifyKinesisClient(
@@ -48,8 +48,8 @@ private const val MAX_RECORDS_PER_STREAM = 500
  * // Record data
  * kinesis.record(
  *     data = "Hello Kinesis".toByteArray(),
- *     streamName = "my-stream",
- *     partitionKey = "partition-1"
+ *     partitionKey = "partition-1",
+ *     streamName = "my-stream"
  * )
  *
  * // Flush cached records
@@ -76,6 +76,7 @@ class AmplifyKinesisClient(
         this.region = this@AmplifyKinesisClient.region
         this.credentialsProvider = this@AmplifyKinesisClient.credentialsProvider.toSmithyProvider()
         options.configureClient?.applyConfiguration(this)
+        interceptors += KinesisUserAgentInterceptor()
     }
 
     private val recordClient: RecordClient = RecordClient(
@@ -113,7 +114,7 @@ class AmplifyKinesisClient(
      * @param data The data to record as byte array
      * @param partitionKey The partition key for the record
      * @param streamName The name of the Kinesis stream
-     * @return Result.success(RecordData) on success, or Result.failure with:
+     * @return Result.Success(RecordData) on success, or Result.Failure with:
      *   - [AmplifyKinesisLimitExceededException] (cache full)
      *   - [AmplifyKinesisStorageException] (database errors)
      */
@@ -137,7 +138,7 @@ class AmplifyKinesisClient(
     /**
      * Flushes all cached records to their respective Kinesis streams.
      *
-     * @return Result.success(FlushData) on success, or Result.failure with:
+     * @return Result.Success(FlushData) on success, or Result.Failure with:
      *   - [AmplifyKinesisServiceException] (API failures)
      *   - [AmplifyKinesisStorageException] (database errors)
      *   - [AmplifyKinesisUnknownException] (unexpected failures)
@@ -160,7 +161,7 @@ class AmplifyKinesisClient(
     /**
      * Clears all cached records from local storage.
      *
-     * @return Result.success(ClearCacheData) on success, or Result.failure with:
+     * @return Result.Success(ClearCacheData) on success, or Result.Failure with:
      *   - [AmplifyKinesisStorageException] (database errors)
      */
     suspend fun clearCache(): ClearCacheResult {

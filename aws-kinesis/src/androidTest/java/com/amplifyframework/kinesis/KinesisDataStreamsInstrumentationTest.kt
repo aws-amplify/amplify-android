@@ -19,6 +19,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.configuration.AmplifyOutputs
 import com.amplifyframework.foundation.credentials.AwsCredentials
 import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
 import com.amplifyframework.foundation.credentials.toAwsCredentialsProvider
@@ -57,7 +58,6 @@ class KinesisDataStreamsInstrumentationTest {
     companion object {
         private const val STREAM_NAME = "amplify-kinesis-test-stream"
         private const val CREDENTIALS_RESOURCE_NAME = "credentials"
-        private const val CONFIGURATION_NAME = "amplifyconfiguration"
         private const val REGION = "us-east-1"
 
         private lateinit var synchronousAuth: SynchronousAuth
@@ -68,7 +68,7 @@ class KinesisDataStreamsInstrumentationTest {
         fun setupBefore() {
             val context = ApplicationProvider.getApplicationContext<Context>()
             Amplify.Auth.addPlugin(AWSCognitoAuthPlugin())
-            Amplify.configure(context)
+            Amplify.configure(AmplifyOutputs(com.amplifyframework.kinesis.test.R.raw.amplify_outputs), context)
             synchronousAuth = SynchronousAuth.delegatingTo(Amplify.Auth)
 
             // Sign in with test credentials
