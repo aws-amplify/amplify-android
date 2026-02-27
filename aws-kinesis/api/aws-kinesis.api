@@ -5,10 +5,7 @@ public final class com/amplifyframework/kinesis/AmplifyKinesisClient {
 	public final fun disable ()V
 	public final fun enable ()V
 	public final fun flush (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public final fun getCredentialsProvider ()Lcom/amplifyframework/foundation/credentials/AwsCredentialsProvider;
 	public final fun getKinesisClient ()Laws/sdk/kotlin/services/kinesis/KinesisClient;
-	public final fun getOptions ()Lcom/amplifyframework/kinesis/AmplifyKinesisClientOptions;
-	public final fun getRegion ()Ljava/lang/String;
 	public final fun record ([BLjava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
@@ -58,7 +55,6 @@ public abstract class com/amplifyframework/kinesis/AmplifyKinesisException : com
 }
 
 public final class com/amplifyframework/kinesis/AmplifyKinesisException$Companion {
-	public final fun from (Ljava/lang/Throwable;)Lcom/amplifyframework/kinesis/AmplifyKinesisException;
 }
 
 public final class com/amplifyframework/kinesis/AmplifyKinesisLimitExceededException : com/amplifyframework/kinesis/AmplifyKinesisException {

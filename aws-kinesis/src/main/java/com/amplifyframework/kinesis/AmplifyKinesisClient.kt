@@ -64,9 +64,9 @@ private const val MAX_RECORDS_PER_STREAM = 500
 @OptIn(InternalAmplifyApi::class)
 class AmplifyKinesisClient(
     context: Context,
-    val region: String,
-    val credentialsProvider: AwsCredentialsProvider<AwsCredentials>,
-    val options: AmplifyKinesisClientOptions = AmplifyKinesisClientOptions.defaults()
+    private val region: String,
+    private val credentialsProvider: AwsCredentialsProvider<AwsCredentials>,
+    private val options: AmplifyKinesisClientOptions = AmplifyKinesisClientOptions.defaults()
 ) {
     private val logger: Logger = AmplifyLogging.logger<AmplifyKinesisClient>()
 

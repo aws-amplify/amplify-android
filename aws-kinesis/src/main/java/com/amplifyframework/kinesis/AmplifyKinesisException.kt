@@ -31,7 +31,7 @@ sealed class AmplifyKinesisException(
          * Maps a [Throwable] into the appropriate [AmplifyKinesisException] subtype,
          * handling [RecordCacheException], Kinesis SDK exceptions, and unknown errors.
          */
-        fun from(error: Throwable): AmplifyKinesisException = when (error) {
+        internal fun from(error: Throwable): AmplifyKinesisException = when (error) {
             is AmplifyKinesisException -> error
             is RecordCacheDatabaseException -> AmplifyKinesisStorageException(
                 message = error.message,
@@ -49,7 +49,7 @@ sealed class AmplifyKinesisException(
                 cause = error
             )
             is SdkKinesisException -> AmplifyKinesisServiceException(
-                message = error.message ?: "A service error occurred",
+                message = error.message,
                 recoverySuggestion = DEFAULT_RECOVERY_SUGGESTION,
                 cause = error
             )
