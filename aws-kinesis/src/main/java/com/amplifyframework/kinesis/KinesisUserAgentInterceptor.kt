@@ -17,9 +17,9 @@ package com.amplifyframework.kinesis
 import aws.sdk.kotlin.runtime.http.operation.customUserAgentMetadata
 import aws.smithy.kotlin.runtime.client.ProtocolRequestInterceptorContext
 import aws.smithy.kotlin.runtime.client.RequestInterceptorContext
-import aws.smithy.kotlin.runtime.http.Headers
 import aws.smithy.kotlin.runtime.http.interceptors.HttpInterceptor
 import aws.smithy.kotlin.runtime.http.request.HttpRequest
+import aws.smithy.kotlin.runtime.http.request.toBuilder
 
 /**
  * HTTP interceptor that injects Amplify user agent metadata into Kinesis SDK requests.
@@ -57,16 +57,9 @@ internal class KinesisUserAgentInterceptor : HttpInterceptor {
     ): HttpRequest {
         val existing = context.protocolRequest.headers["User-Agent"] ?: ""
         if (!existing.contains(libToken)) {
-            val updatedHeaders = Headers {
-                appendAll(context.protocolRequest.headers)
-                set("User-Agent", "$existing $libToken")
-            }
-            return HttpRequest(
-                method = context.protocolRequest.method,
-                url = context.protocolRequest.url,
-                headers = updatedHeaders,
-                body = context.protocolRequest.body
-            )
+            val builder = context.protocolRequest.toBuilder()
+            builder.headers["User-Agent"] = "$existing $libToken"
+            return builder.build()
         }
         return context.protocolRequest
     }
