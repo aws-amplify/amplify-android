@@ -38,7 +38,7 @@ class AmplifyKinesisClientUserAgentTest {
             region = "us-east-1"
             interceptors += KinesisUserAgentInterceptor()
             interceptors += object : HttpInterceptor {
-                override suspend fun modifyBeforeTransmit(
+                override suspend fun modifyBeforeSigning(
                     context: ProtocolRequestInterceptorContext<Any, HttpRequest>
                 ): HttpRequest {
                     capturedUserAgent = context.protocolRequest.headers["User-Agent"]

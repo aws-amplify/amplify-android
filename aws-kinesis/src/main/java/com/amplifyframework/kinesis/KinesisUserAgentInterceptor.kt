@@ -50,9 +50,9 @@ internal class KinesisUserAgentInterceptor : HttpInterceptor {
 
     /**
      * Appends `lib/amplify-android#<version>` to the User-Agent header if not already present.
-     * Runs after the SDK has built the header, so we can check whether Amplify core already added it.
+     * Runs before signing so the header is included in the request signature.
      */
-    override suspend fun modifyBeforeTransmit(
+    override suspend fun modifyBeforeSigning(
         context: ProtocolRequestInterceptorContext<Any, HttpRequest>
     ): HttpRequest {
         val existing = context.protocolRequest.headers["User-Agent"] ?: ""
