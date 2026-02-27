@@ -49,7 +49,7 @@ sealed class AmplifyKinesisException(
                 cause = error
             )
             is SdkKinesisException -> AmplifyKinesisServiceException(
-                message = "A service error occurred",
+                message = error.message ?: "A service error occurred",
                 recoverySuggestion = DEFAULT_RECOVERY_SUGGESTION,
                 cause = error
             )
