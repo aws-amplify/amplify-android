@@ -76,6 +76,7 @@ class AmplifyKinesisClient(
         this.region = this@AmplifyKinesisClient.region
         this.credentialsProvider = this@AmplifyKinesisClient.credentialsProvider.toSmithyProvider()
         options.configureClient?.applyConfiguration(this)
+        interceptors += KinesisUserAgentInterceptor()
     }
 
     private val recordClient: RecordClient = RecordClient(

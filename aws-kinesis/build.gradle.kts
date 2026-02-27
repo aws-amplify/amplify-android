@@ -31,6 +31,7 @@ dependencies {
 
     implementation(libs.androidx.appcompat)
     implementation(libs.aws.kinesis)
+    implementation(libs.aws.http)
     implementation(libs.kotlin.serializationJson)
     implementation(libs.androidx.sqlite)
     implementation(libs.androidx.sqlite.bundled)
