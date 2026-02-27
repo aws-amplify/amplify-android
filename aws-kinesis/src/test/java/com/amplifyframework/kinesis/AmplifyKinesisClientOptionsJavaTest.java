@@ -12,20 +12,25 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+
 package com.amplifyframework.kinesis;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 import android.content.Context;
+
 import androidx.test.core.app.ApplicationProvider;
+
 import com.amplifyframework.foundation.credentials.AwsCredentials;
 import com.amplifyframework.foundation.credentials.AwsCredentialsProvider;
 import com.amplifyframework.recordcache.FlushStrategy;
-import kotlin.coroutines.Continuation;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+
+import kotlin.coroutines.Continuation;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Verifies that the configureClient API is ergonomic from Java —
@@ -35,9 +40,10 @@ import org.robolectric.RobolectricTestRunner;
 public class AmplifyKinesisClientOptionsJavaTest {
 
     private final AwsCredentialsProvider<AwsCredentials> fakeCredentials =
-            (Continuation<? super AwsCredentials> continuation) ->
-                    new AwsCredentials.Static("FAKE_KEY", "FAKE_SECRET");
+        (Continuation<? super AwsCredentials> continuation) ->
+            new AwsCredentials.Static("FAKE_KEY", "FAKE_SECRET");
 
+    /** Verifies that configureClient properly configures the SDK client. */
     @Test
     public void configureClientConfiguresSdkClient() {
         Context context = ApplicationProvider.getApplicationContext();
@@ -61,5 +67,6 @@ public class AmplifyKinesisClientOptionsJavaTest {
         assertEquals(3, client.getOptions().getMaxRetries());
         assertNotNull(client.getOptions().getConfigureClient());
         assertNotNull(client.getKinesisClient());
+        assertEquals(10, client.getKinesisClient().getConfig().getRetryStrategy().getConfig().getMaxAttempts());
     }
 }

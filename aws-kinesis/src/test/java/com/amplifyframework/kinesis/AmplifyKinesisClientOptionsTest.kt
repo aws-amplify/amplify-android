@@ -54,5 +54,6 @@ class AmplifyKinesisClientOptionsTest {
         client.options.maxRetries shouldBe 3
         client.options.configureClient.shouldNotBeNull()
         client.kinesisClient.shouldNotBeNull()
+        client.kinesisClient.config.retryStrategy.config.maxAttempts shouldBe 10
     }
 }
