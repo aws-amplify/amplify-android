@@ -56,14 +56,4 @@ public final class UserAgentConfigurationTest {
                 BuildConfig.VERSION_NAME + " md/"; // "(" asserts that system info follows this prefix
         assertTrue(UserAgent.string().startsWith(expectedUserAgentPrefix));
     }
-
-    /**
-     * Tests that attempting to configure {@link UserAgent} externally
-     * (after configuring Amplify) fails.
-     * @throws AmplifyException if configuration fails.
-     */
-    @Test(expected = AmplifyException.class)
-    public void configuringUserAgentExternallyFails() throws AmplifyException {
-        UserAgent.configure(new LinkedHashMap<>());
-    }
 }

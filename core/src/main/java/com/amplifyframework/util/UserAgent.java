@@ -68,12 +68,10 @@ public final class UserAgent {
     public static synchronized void configure(@NonNull Map<Platform, String> platformVersions)
             throws AmplifyException {
         // Block any sub-sequent configuration call.
+        // This may happen legitimately when DataStore is being used on Flutter
         if (instance != null) {
-            throw new AmplifyException(
-                    "User-Agent was already configured successfully.",
-                    "User-Agent is configured internally during Amplify configuration. " +
-                            "This method should not be called externally."
-            );
+            LOG.info("Skipping second user agent configuration call");
+            return;
         }
 
         HashMap<String, String> extras = new HashMap<>();
