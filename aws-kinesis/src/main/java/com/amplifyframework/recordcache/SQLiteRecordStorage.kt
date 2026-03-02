@@ -103,12 +103,12 @@ internal class SQLiteRecordStorage internal constructor(
         }
 
     override suspend fun addRecord(record: RecordInput): Result<Unit, RecordCacheException> = wrapDispatchAndCatching {
-        // Validate partition key length
-        val partitionKeyCodePointCount = record.partitionKey.codePointCount(0, record.partitionKey.length)
-        if (partitionKeyCodePointCount == 0 || partitionKeyCodePointCount > maxPartitionKeyLength) {
+        // Validate partition key length (in bytes, matching dataSize calculation)
+        val partitionKeyByteCount = record.partitionKey.toByteArray(Charsets.UTF_8).size
+        if (partitionKeyByteCount == 0 || partitionKeyByteCount > maxPartitionKeyLength) {
             throw RecordCacheValidationException(
-                "Partition key length $partitionKeyCodePointCount is outside the allowed range of 1-$maxPartitionKeyLength characters",
-                "Use a partition key between 1 and $maxPartitionKeyLength characters."
+                "Partition key length $partitionKeyByteCount bytes is outside the allowed range of 1-$maxPartitionKeyLength bytes",
+                "Use a partition key between 1 and $maxPartitionKeyLength bytes."
             )
         }
 
