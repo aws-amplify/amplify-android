@@ -1,6 +1,7 @@
 package com.amplifyframework.kinesis
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import aws.sdk.kotlin.services.kinesis.KinesisClient
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.foundation.credentials.AwsCredentials
@@ -14,7 +15,6 @@ import com.amplifyframework.recordcache.AutoFlushScheduler
 import com.amplifyframework.recordcache.ClearCacheResult
 import com.amplifyframework.recordcache.FlushResult
 import com.amplifyframework.recordcache.FlushStrategy
-import com.amplifyframework.recordcache.FlushStrategy.Interval
 import com.amplifyframework.recordcache.RecordClient
 import com.amplifyframework.recordcache.RecordData
 import com.amplifyframework.recordcache.RecordInput
@@ -82,10 +82,10 @@ private const val MAX_PARTITION_KEY_LENGTH = 256
  */
 @OptIn(InternalAmplifyApi::class)
 class AmplifyKinesisClient(
-    val context: Context,
-    val region: String,
-    val credentialsProvider: AwsCredentialsProvider<out AwsCredentials>,
-    val options: AmplifyKinesisClientOptions = AmplifyKinesisClientOptions.defaults()
+    context: Context,
+    private val region: String,
+    private val credentialsProvider: AwsCredentialsProvider<AwsCredentials>,
+    @field:VisibleForTesting val options: AmplifyKinesisClientOptions = AmplifyKinesisClientOptions.defaults()
 ) {
     private val logger: Logger = AmplifyLogging.logger<AmplifyKinesisClient>()
 
@@ -103,7 +103,7 @@ class AmplifyKinesisClient(
             maxRetries = options.maxRetries
         ),
         storage = SQLiteRecordStorage(
-            context = context,
+            context = context.applicationContext,
             identifier = region,
             maxRecordsByStream = MAX_RECORDS_PER_STREAM,
             cacheMaxBytes = options.cacheMaxBytes,
@@ -204,7 +204,7 @@ class AmplifyKinesisClient(
      * Enables record collection and automatic flushing of cached records.
      */
     fun enable() {
-        logger.info { "Enabling record collection" }
+        logger.info { "Enabling record collection and automatic flushing" }
         isEnabled = true
         scheduler?.start()
     }
@@ -214,7 +214,7 @@ class AmplifyKinesisClient(
      * disabled are silently dropped. Already-cached records remain in storage.
      */
     fun disable() {
-        logger.info { "Disabling record collection" }
+        logger.info { "Disabling record collection and automatic flushing" }
         isEnabled = false
         scheduler?.disable()
     }

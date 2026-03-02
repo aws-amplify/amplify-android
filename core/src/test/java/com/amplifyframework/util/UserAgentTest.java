@@ -24,6 +24,7 @@ import com.amplifyframework.testutils.random.RandomString;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -46,13 +47,18 @@ public final class UserAgentTest {
     }
 
     /**
-     * Tests that configuring User-Agent more than once fails.
-     * @throws AmplifyException if User-Agent was configured more than once.
+     * Tests that configuring User-Agent more than once discards the second call.
      */
-    @Test(expected = AmplifyException.class)
-    public void testDoubleConfiguration() throws AmplifyException {
+    @Test
+    public void testDoubleConfiguration() {
+        final String version = RandomString.string();
+        platforms.put(UserAgent.Platform.FLUTTER, version);
+
         UserAgent.configure(platforms);
-        UserAgent.configure(platforms);
+        UserAgent.configure(Collections.emptyMap());
+
+        final String userAgent = UserAgent.string();
+        assertTrue(userAgent.startsWith("amplify-flutter:" + version));
     }
 
     /**
