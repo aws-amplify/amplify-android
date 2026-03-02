@@ -15,6 +15,7 @@
 package com.amplifyframework.kinesis
 
 import android.content.Context
+import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
@@ -397,6 +398,105 @@ class KinesisDataStreamsInstrumentationTest {
             autoFlushKinesis.disable()
             autoFlushKinesis.clearCache()
         }
+    }
+
+    // ---------------------------------------------------------------
+    // PutRecords size limits
+    // ---------------------------------------------------------------
+
+    /**
+     * Fills the cache with >5 MB of data for a single stream using large partition
+     * keys, then flushes. This exercises the PutRecords API limit of 10 MiB per
+     * request and verifies the client handles batching/size correctly.
+     *
+     * Per the API spec, record size = partition key + data blob. Large partition
+     * keys increase the effective record size beyond just the data blob.
+     */
+    @Test
+    fun testFlushLargePayloadWithLargePartitionKeys(): Unit = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val largeKinesis = AmplifyKinesisClient(
+            context = context,
+            region = REGION,
+            credentialsProvider = credentialsProvider,
+            options = AmplifyKinesisClientOptions {
+                cacheMaxBytes = 12L * 1_024 * 1_024 // 12 MB cache to hold >10 MB
+                flushStrategy = FlushStrategy.None
+            }
+        )
+        largeKinesis.enable()
+
+        try {
+            // Each record: ~50 KB data + ~200-char partition key ≈ 51 KB
+            // 210 records ≈ 10.5 MB total (exceeds the 10 MiB PutRecords request limit)
+            val recordDataSize = 50 * 1_024 // 50 KB
+            val recordCount = 210
+
+            repeat(recordCount) { i ->
+                val partitionKey = "k".repeat(200) + "-$i"
+                val data = ByteArray(recordDataSize) { (i % 256).toByte() }
+                val result = largeKinesis.record(
+                    data = data,
+                    partitionKey = partitionKey,
+                    streamName = STREAM_NAME
+                )
+                result.shouldBeSuccess()
+            }
+
+            // First flush: sends up to 10 MiB worth of records
+            val flush1 = largeKinesis.flush()
+            flush1.shouldBeSuccess()
+            val flushed1 = flush1.data.recordsFlushed
+            flushed1 shouldBeGreaterThan 0
+
+            // Second flush: sends the remaining records
+            val flush2 = largeKinesis.flush()
+            flush2.shouldBeSuccess()
+            val flushed2 = flush2.data.recordsFlushed
+            flushed2 shouldBeGreaterThan 0
+
+            (flushed1 + flushed2) shouldBe recordCount
+
+            // Third flush: nothing left
+            val flush3 = largeKinesis.flush()
+            flush3.shouldBeSuccess().data.recordsFlushed shouldBe 0
+        } finally {
+            largeKinesis.disable()
+            largeKinesis.clearCache()
+        }
+    }
+
+    /**
+     * Attempts to record a single entry whose total size (partition key + data blob)
+     * exceeds the 10 MiB per-record limit. The record call should fail, and a
+     * subsequent flush of a valid record should still succeed — proving the client
+     * is not left in a broken state.
+     */
+    @Test
+    fun testOversizedRecordIsRejectedAndFlushStillWorks(): Unit = runBlocking {
+        // 10 MiB = 10_485_760 bytes. Use a 256-char partition key (~256 bytes UTF-8)
+        // plus a data blob that pushes the total over 10 MiB.
+        val largePartitionKey = "k".repeat(256)
+        val oversizedData = ByteArray(10_485_760) { 0x42 } // 10 MiB data + 256 bytes key > 10 MiB
+
+        val oversizedResult = kinesis.record(
+            data = oversizedData,
+            partitionKey = largePartitionKey,
+            streamName = STREAM_NAME
+        )
+        oversizedResult.shouldBeFailure().error
+            .shouldBeInstanceOf<AmplifyKinesisValidationException>()
+
+        // Now record a valid small record and flush — client should still work
+        val validResult = kinesis.record(
+            data = "still-works".toByteArray(),
+            partitionKey = "partition-1",
+            streamName = STREAM_NAME
+        )
+        validResult.shouldBeSuccess()
+
+        val flushResult = kinesis.flush()
+        flushResult.shouldBeSuccess().data.recordsFlushed shouldBe 1
     }
 
     // ---------------------------------------------------------------

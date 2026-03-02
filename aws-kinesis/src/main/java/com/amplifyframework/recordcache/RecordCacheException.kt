@@ -25,3 +25,10 @@ internal class RecordCacheLimitExceededException(
     recoverySuggestion: String,
     cause: Throwable? = null
 ) : RecordCacheException(message, recoverySuggestion, cause)
+
+/** Record input validation failed (e.g. oversized record, invalid partition key). */
+internal class RecordCacheValidationException(
+    message: String,
+    recoverySuggestion: String,
+    cause: Throwable? = null
+) : RecordCacheException(message, recoverySuggestion, cause)

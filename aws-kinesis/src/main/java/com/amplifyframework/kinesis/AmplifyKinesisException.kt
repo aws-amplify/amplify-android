@@ -6,6 +6,7 @@ import com.amplifyframework.foundation.exceptions.DEFAULT_RECOVERY_SUGGESTION
 import com.amplifyframework.recordcache.RecordCacheDatabaseException
 import com.amplifyframework.recordcache.RecordCacheException
 import com.amplifyframework.recordcache.RecordCacheLimitExceededException
+import com.amplifyframework.recordcache.RecordCacheValidationException
 
 /**
  * Base exception for all Kinesis operations.
@@ -14,6 +15,7 @@ import com.amplifyframework.recordcache.RecordCacheLimitExceededException
  * to determine the category of failure:
  * - [AmplifyKinesisStorageException] — local cache / database errors
  * - [AmplifyKinesisLimitExceededException] — local cache is full
+ * - [AmplifyKinesisValidationException] — record input validation failed
  * - [AmplifyKinesisServiceException] — Kinesis API / SDK errors
  * - [AmplifyKinesisUnknownException] — unexpected / uncategorized errors
  *
@@ -33,6 +35,11 @@ sealed class AmplifyKinesisException(
          */
         fun from(error: Throwable): AmplifyKinesisException = when (error) {
             is AmplifyKinesisException -> error
+            is RecordCacheValidationException -> AmplifyKinesisValidationException(
+                message = error.message,
+                recoverySuggestion = error.recoverySuggestion,
+                cause = error
+            )
             is RecordCacheDatabaseException -> AmplifyKinesisStorageException(
                 message = error.message,
                 recoverySuggestion = error.recoverySuggestion,
@@ -85,6 +92,13 @@ class AmplifyKinesisLimitExceededException(
 
 /** Unexpected / uncategorized error. */
 class AmplifyKinesisUnknownException(
+    message: String,
+    recoverySuggestion: String,
+    cause: Throwable? = null
+) : AmplifyKinesisException(message, recoverySuggestion, cause)
+
+/** Record input validation failed (e.g. oversized record, invalid partition key). */
+class AmplifyKinesisValidationException(
     message: String,
     recoverySuggestion: String,
     cause: Throwable? = null

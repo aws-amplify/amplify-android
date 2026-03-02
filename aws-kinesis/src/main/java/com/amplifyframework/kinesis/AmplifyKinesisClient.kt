@@ -23,10 +23,28 @@ import com.amplifyframework.recordcache.SQLiteRecordStorage
 import kotlin.system.measureTimeMillis
 
 /**
- * Kinesis supports up to 500 records per stream.
+ * Kinesis supports up to 500 records per PutRecords request.
  * See [the docs](https://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecords.html)
  */
 private const val MAX_RECORDS_PER_STREAM = 500
+
+/**
+ * Maximum size of a single record (partition key + data blob) in bytes (10 MiB).
+ * See [PutRecordsRequestEntry](https://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecordsRequestEntry.html)
+ */
+private const val MAX_RECORD_SIZE_BYTES = 10L * 1_024 * 1_024
+
+/**
+ * Maximum total payload size per PutRecords request in bytes (10 MiB).
+ * See [PutRecords](https://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecords.html)
+ */
+private const val MAX_PUT_RECORDS_SIZE_BYTES = 10L * 1_024 * 1_024
+
+/**
+ * Maximum length of a partition key in characters.
+ * See [PutRecordsRequestEntry](https://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecordsRequestEntry.html)
+ */
+private const val MAX_PARTITION_KEY_LENGTH = 256
 
 /**
  * A client for sending data to Amazon Kinesis Data Streams.
@@ -88,7 +106,10 @@ class AmplifyKinesisClient(
             context = context,
             identifier = region,
             maxRecordsByStream = MAX_RECORDS_PER_STREAM,
-            maxBytes = options.cacheMaxBytes
+            cacheMaxBytes = options.cacheMaxBytes,
+            maxRecordSizeBytes = MAX_RECORD_SIZE_BYTES,
+            maxBytesPerStream = MAX_PUT_RECORDS_SIZE_BYTES,
+            maxPartitionKeyLength = MAX_PARTITION_KEY_LENGTH
         )
     )
     private val scheduler: AutoFlushScheduler?
@@ -183,6 +204,7 @@ class AmplifyKinesisClient(
      * Enables record collection and automatic flushing of cached records.
      */
     fun enable() {
+        logger.info { "Enabling record collection" }
         isEnabled = true
         scheduler?.start()
     }
@@ -192,6 +214,7 @@ class AmplifyKinesisClient(
      * disabled are silently dropped. Already-cached records remain in storage.
      */
     fun disable() {
+        logger.info { "Disabling record collection" }
         isEnabled = false
         scheduler?.disable()
     }
