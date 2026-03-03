@@ -26,9 +26,12 @@ class RecordClientFlushTest {
     fun setup() {
         storage = SQLiteRecordStorage(
             maxRecordsByStream = 1000,
-            maxBytes = 1024 * 1024L,
+            cacheMaxBytes = 1024 * 1024L,
             identifier = "test_flush",
             connectionFactory = { BundledSQLiteDriver().open(":memory:") },
+            maxRecordSizeBytes = 10L * 1_024 * 1_024,
+            maxBytesPerStream = 10L * 1_024 * 1_024,
+            maxPartitionKeyLength = 256,
             dispatcher = Dispatchers.IO
         )
         mockSender = mockk()

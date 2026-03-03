@@ -19,9 +19,12 @@ class SQLiteRecordStorageCacheAccuracyTest {
 
     private fun createTestStorage(): SQLiteRecordStorage = SQLiteRecordStorage(
         maxRecordsByStream = 1000,
-        maxBytes = 1024 * 1024L,
+        cacheMaxBytes = 1024 * 1024L,
         identifier = "test",
         connectionFactory = { BundledSQLiteDriver().open(":memory:") },
+        maxRecordSizeBytes = 10L * 1024 * 1024,
+        maxBytesPerStream = 10L * 1024 * 1024,
+        maxPartitionKeyLength = 256,
         dispatcher = Dispatchers.IO
     )
 
@@ -29,14 +32,14 @@ class SQLiteRecordStorageCacheAccuracyTest {
     fun `cached size matches database after add operations`() = runTest {
         val storage = createTestStorage()
 
-        val record1 = RecordInput("stream1", "key1", byteArrayOf(1, 2, 3), 3)
-        val record2 = RecordInput("stream1", "key2", byteArrayOf(4, 5, 6, 7), 4)
+        val record1 = RecordInput("stream1", "a", byteArrayOf(1, 2, 3))
+        val record2 = RecordInput("stream1", "b", byteArrayOf(4, 5, 6, 7))
 
         storage.addRecord(record1).getOrThrow()
         storage.addRecord(record2).getOrThrow()
 
         val cachedSize = storage.getCurrentCacheSize().getOrThrow()
-        cachedSize shouldBe 7
+        cachedSize shouldBe 9
     }
 
     @Test
@@ -44,9 +47,9 @@ class SQLiteRecordStorageCacheAccuracyTest {
         val storage = createTestStorage()
 
         // Add records
-        val record1 = RecordInput("stream1", "key1", byteArrayOf(1, 2, 3), 3)
-        val record2 = RecordInput("stream1", "key2", byteArrayOf(4, 5, 6, 7), 4)
-        val record3 = RecordInput("stream2", "key3", byteArrayOf(8, 9), 2)
+        val record1 = RecordInput("stream1", "a", byteArrayOf(1, 2, 3))
+        val record2 = RecordInput("stream1", "b", byteArrayOf(4, 5, 6, 7))
+        val record3 = RecordInput("stream2", "c", byteArrayOf(8, 9))
 
         storage.addRecord(record1).getOrThrow()
         storage.addRecord(record2).getOrThrow()
@@ -59,7 +62,7 @@ class SQLiteRecordStorageCacheAccuracyTest {
         storage.deleteRecords(idsToDelete).getOrThrow()
 
         val cachedSize = storage.getCurrentCacheSize().getOrThrow()
-        cachedSize shouldBe 2
+        cachedSize shouldBe 3
     }
 
     @Test
@@ -67,8 +70,8 @@ class SQLiteRecordStorageCacheAccuracyTest {
         val storage = createTestStorage()
 
         // Add records
-        storage.addRecord(RecordInput("stream1", "key1", byteArrayOf(1, 2, 3), 3)).getOrThrow()
-        storage.addRecord(RecordInput("stream2", "key2", byteArrayOf(4, 5), 2)).getOrThrow()
+        storage.addRecord(RecordInput("stream1", "a", byteArrayOf(1, 2, 3))).getOrThrow()
+        storage.addRecord(RecordInput("stream2", "b", byteArrayOf(4, 5))).getOrThrow()
 
         storage.clearRecords().getOrThrow()
 
@@ -81,24 +84,24 @@ class SQLiteRecordStorageCacheAccuracyTest {
         val storage = createTestStorage()
 
         // Complex sequence of operations
-        storage.addRecord(RecordInput("stream1", "key1", byteArrayOf(1, 2, 3, 4, 5), 5)).getOrThrow()
-        storage.addRecord(RecordInput("stream2", "key2", byteArrayOf(6, 7, 8), 3)).getOrThrow()
+        storage.addRecord(RecordInput("stream1", "a", byteArrayOf(1, 2, 3, 4, 5))).getOrThrow()
+        storage.addRecord(RecordInput("stream2", "b", byteArrayOf(6, 7, 8))).getOrThrow()
 
         var cachedSize = storage.getCurrentCacheSize().getOrThrow()
-        cachedSize shouldBe 8
+        cachedSize shouldBe 10 
 
-        // Delete one record
+        // Delete one record 
         val records = storage.getRecordsByStream().getOrThrow().flatten()
         storage.deleteRecords(listOf(records.first().id)).getOrThrow()
 
         cachedSize = storage.getCurrentCacheSize().getOrThrow()
-        cachedSize shouldBe 3
+        cachedSize shouldBe 4
 
         // Add another record
-        storage.addRecord(RecordInput("stream3", "key3", byteArrayOf(9, 10), 2)).getOrThrow()
+        storage.addRecord(RecordInput("stream3", "c", byteArrayOf(9, 10))).getOrThrow()
 
         cachedSize = storage.getCurrentCacheSize().getOrThrow()
-        cachedSize shouldBe 5
+        cachedSize shouldBe 7 
     }
 
     @Test
@@ -122,8 +125,7 @@ class SQLiteRecordStorageCacheAccuracyTest {
                     val record = RecordInput(
                         streamName = "stream$producerIndex",
                         partitionKey = recordKey,
-                        data = ByteArray(recordSize) { (it + producerIndex).toByte() },
-                        dataSize = recordSize
+                        data = ByteArray(recordSize) { (it + producerIndex).toByte() }
                     )
 
                     storage.addRecord(record).getOrThrow()
@@ -198,5 +200,45 @@ class SQLiteRecordStorageCacheAccuracyTest {
         allCreatedKeys.shouldNotBeEmpty()
         deletedRecords.shouldNotBeEmpty()
         remainingKeys.shouldNotBeEmpty()
+    }
+
+    @Test
+    fun `getRecordsByStream respects per-stream byte limit across multiple streams`() = runTest {
+        // Storage with a large cache but a tight 200-byte per-stream limit
+        val storage = SQLiteRecordStorage(
+            maxRecordsByStream = 100,
+            cacheMaxBytes = 10_000L,
+            identifier = "test_per_stream",
+            connectionFactory = { BundledSQLiteDriver().open(":memory:") },
+            maxRecordSizeBytes = 1024,
+            maxBytesPerStream = 200L,
+            maxPartitionKeyLength = 256,
+            dispatcher = Dispatchers.IO
+        )
+
+        // Each record: "a" (1 byte key) + 50 bytes data = 51 bytes per record
+        // 200 / 51 = 3.9 → at most 3 records per stream fit under 200 bytes (3 × 51 = 153)
+        // The 4th record would push running_size to 204, exceeding 200
+        repeat(6) { i ->
+            storage.addRecord(RecordInput("stream-A", "a", ByteArray(50) { i.toByte() })).getOrThrow()
+        }
+        repeat(6) { i ->
+            storage.addRecord(RecordInput("stream-B", "b", ByteArray(50) { i.toByte() })).getOrThrow()
+        }
+
+        val recordsByStream = storage.getRecordsByStream().getOrThrow()
+        recordsByStream.size shouldBe 2
+
+        for (records in recordsByStream) {
+            val streamName = records.first().streamName
+            val totalSize = records.sumOf { it.dataSize }
+
+            // Each stream should return at most 3 records (153 bytes ≤ 200)
+            records.size shouldBe 3
+            totalSize shouldBe 153
+
+            // Verify all records belong to the same stream
+            records.forEach { it.streamName shouldBe streamName }
+        }
     }
 }

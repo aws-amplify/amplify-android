@@ -4,7 +4,7 @@ internal data class RecordInput(
     val streamName: String,
     val partitionKey: String,
     val data: ByteArray,
-    val dataSize: Int = data.size
+    val dataSize: Int = data.size + partitionKey.toByteArray(Charsets.UTF_8).size
 )
 
 internal data class Record(

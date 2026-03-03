@@ -23,11 +23,14 @@ import kotlinx.coroutines.withContext
 @OptIn(InternalAmplifyApi::class)
 internal class SQLiteRecordStorage internal constructor(
     maxRecordsByStream: Int,
-    maxBytes: Long,
+    cacheMaxBytes: Long,
     identifier: String,
     connectionFactory: () -> SQLiteConnection,
+    maxRecordSizeBytes: Long,
+    maxBytesPerStream: Long,
+    maxPartitionKeyLength: Int,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
-) : RecordStorage(maxRecordsByStream, maxBytes, identifier) {
+) : RecordStorage(maxRecordsByStream, cacheMaxBytes, identifier, maxRecordSizeBytes, maxBytesPerStream, maxPartitionKeyLength) {
     private val logger: Logger = AmplifyLogging.logger<SQLiteRecordStorage>()
     private val connection: SQLiteConnection = connectionFactory()
     private var cachedSize = AtomicInteger(0)
@@ -37,13 +40,16 @@ internal class SQLiteRecordStorage internal constructor(
     constructor(
         context: Context,
         maxRecordsByStream: Int,
-        maxBytes: Long,
+        cacheMaxBytes: Long,
         identifier: String,
+        maxRecordSizeBytes: Long,
+        maxBytesPerStream: Long,
+        maxPartitionKeyLength: Int,
         dispatcher: CoroutineDispatcher = Dispatchers.IO
-    ) : this(maxRecordsByStream, maxBytes, identifier, {
+    ) : this(maxRecordsByStream, cacheMaxBytes, identifier, {
         val dbFile = File(context.getDatabasePath("kinesis_records_$identifier.db").absolutePath)
         BundledSQLiteDriver().open(dbFile.absolutePath)
-    }, dispatcher)
+    }, maxRecordSizeBytes, maxBytesPerStream, maxPartitionKeyLength, dispatcher)
 
     init {
         // Create DB
@@ -97,10 +103,27 @@ internal class SQLiteRecordStorage internal constructor(
         }
 
     override suspend fun addRecord(record: RecordInput): Result<Unit, RecordCacheException> = wrapDispatchAndCatching {
+        // Validate partition key length (must be between 1 and 256 Unicode code points)
+        val partitionKeyCodePointCount = record.partitionKey.codePointCount(0, record.partitionKey.length)
+        if (partitionKeyCodePointCount == 0 || partitionKeyCodePointCount > maxPartitionKeyLength) {
+            throw RecordCacheValidationException(
+                "Partition key length $partitionKeyCodePointCount characters is outside the allowed range of 1-$maxPartitionKeyLength characters",
+                "Use a partition key between 1 and $maxPartitionKeyLength characters."
+            )
+        }
+
+        // Validate per-record size limit (partition key bytes + data bytes must not exceed maxRecordSizeBytes)
+        if (record.dataSize > maxRecordSizeBytes) {
+            throw RecordCacheValidationException(
+                "Record size ${record.dataSize} bytes exceeds the maximum of $maxRecordSizeBytes bytes (partition key + data blob)",
+                "Reduce the size of the data blob or partition key so their combined size does not exceed $maxRecordSizeBytes bytes."
+            )
+        }
+
         // Check cache size limit before adding
-        if (cachedSize.get() + record.dataSize > maxBytes) {
+        if (cachedSize.get() + record.dataSize > cacheMaxBytes) {
             throw RecordCacheLimitExceededException(
-                "Cache size limit exceeded: ${cachedSize.get() + record.dataSize} bytes > $maxBytes bytes",
+                "Cache size limit exceeded: ${cachedSize.get() + record.dataSize} bytes > $cacheMaxBytes bytes",
                 "Call flush() to send cached records or increase cache size limit"
             )
         }
@@ -134,7 +157,7 @@ internal class SQLiteRecordStorage internal constructor(
                 """
             ).use { stmt ->
                 stmt.bindInt(1, maxRecordsByStream)
-                stmt.bindLong(2, maxBytes)
+                stmt.bindLong(2, maxBytesPerStream)
 
                 val recordsByStream = mutableMapOf<String, MutableList<Record>>()
 

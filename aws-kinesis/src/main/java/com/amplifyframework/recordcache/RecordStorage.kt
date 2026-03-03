@@ -4,8 +4,11 @@ import com.amplifyframework.foundation.result.Result
 
 internal abstract class RecordStorage(
     val maxRecords: Int,
-    val maxBytes: Long,
-    val identifier: String
+    val cacheMaxBytes: Long,
+    val identifier: String,
+    val maxRecordSizeBytes: Long,
+    val maxBytesPerStream: Long,
+    val maxPartitionKeyLength: Int
 ) {
     abstract suspend fun addRecord(record: RecordInput): Result<Unit, RecordCacheException>
     abstract suspend fun getRecordsByStream(): Result<List<List<Record>>, RecordCacheException>
