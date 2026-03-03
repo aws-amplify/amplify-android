@@ -41,7 +41,7 @@ private const val MAX_RECORD_SIZE_BYTES = 10L * 1_024 * 1_024
 private const val MAX_PUT_RECORDS_SIZE_BYTES = 10L * 1_024 * 1_024
 
 /**
- * Maximum length of a partition key in characters.
+ * Maximum length of a partition key in Unicode code points.
  * See [PutRecordsRequestEntry](https://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecordsRequestEntry.html)
  */
 private const val MAX_PARTITION_KEY_LENGTH = 256

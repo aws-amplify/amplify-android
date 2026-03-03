@@ -16,12 +16,12 @@ import org.robolectric.RobolectricTestRunner
 /**
  * Unit tests for PutRecords record-level validation.
  *
- * Uses a small maxRecordSizeBytes (100 bytes) to keep allocations tiny while
+ * Uses a small maxRecordSizeBytes (1000 bytes) to keep allocations tiny while
  * exercising the same boundary logic that applies to the real 10 MiB limit.
  *
  * Per the Kinesis PutRecords API spec:
  * - Each record's total size (partition key bytes + data blob bytes) must not exceed 10 MiB
- * - Partition key: 1–256 characters (String.length)
+ * - Partition key: 1–256 Unicode code points
  * - dataSize should account for both partition key bytes (UTF-8 encoded) and data blob bytes
  *
  * See: https://docs.aws.amazon.com/kinesis/latest/APIReference/API_PutRecordsRequestEntry.html
@@ -135,7 +135,7 @@ class RecordValidationTest {
     }
 
     // ---------------------------------------------------------------
-    // Partition key validation (1–256 characters)
+    // Partition key validation (1–256 Unicode code points)
     // ---------------------------------------------------------------
 
     @Test
@@ -148,7 +148,7 @@ class RecordValidationTest {
     }
 
     @Test
-    fun `partition key at max length 256 characters is accepted`() = runTest {
+    fun `partition key at max length 256 code points is accepted`() = runTest {
         val result = storage.addRecord(
             RecordInput("stream", "k".repeat(256), byteArrayOf(1))
         )
@@ -156,9 +156,32 @@ class RecordValidationTest {
     }
 
     @Test
-    fun `partition key exceeding 256 characters is rejected`() = runTest {
+    fun `partition key exceeding 256 code points is rejected`() = runTest {
         val result = storage.addRecord(
             RecordInput("stream", "k".repeat(257), byteArrayOf(1))
+        )
+        result.shouldBeFailure().error
+            .shouldBeInstanceOf<RecordCacheValidationException>()
+    }
+
+    @Test
+    fun `partition key with emoji counts code points correctly`() = runTest {
+        // Each emoji (U+1F600) is 1 code point but 2 UTF-16 chars (surrogate pair) and 4 UTF-8 bytes
+        // 10 emoji = 10 code points (within 256 limit), 20 chars, 40 bytes
+        val partitionKey = "\uD83D\uDE00".repeat(10)
+        val result = storage.addRecord(
+            RecordInput("stream", partitionKey, byteArrayOf(1))
+        )
+        result.shouldBeSuccess()
+    }
+
+    @Test
+    fun `partition key exceeding 256 code points with emoji is rejected`() = runTest {
+        // Each emoji (U+1F600) is 1 code point
+        // 257 emoji = 257 code points > 256 limit
+        val partitionKey = "\uD83D\uDE00".repeat(257)
+        val result = storage.addRecord(
+            RecordInput("stream", partitionKey, byteArrayOf(1))
         )
         result.shouldBeFailure().error
             .shouldBeInstanceOf<RecordCacheValidationException>()
