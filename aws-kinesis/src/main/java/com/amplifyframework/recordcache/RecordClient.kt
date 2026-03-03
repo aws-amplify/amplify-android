@@ -72,7 +72,6 @@ internal class RecordClient(
             
             Result.Success(FlushData(totalFlushed))
         } catch (e: Throwable) {
-            // Storage errors (e.g., can't read from cache) or critical errors from stream processing
             logger.error { "Critical error during flush: ${e.message}" }
             Result.Failure(e)
         } finally {
