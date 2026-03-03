@@ -110,7 +110,8 @@ class AmplifyKinesisClient(
             maxRecordSizeBytes = MAX_RECORD_SIZE_BYTES,
             maxBytesPerStream = MAX_PUT_RECORDS_SIZE_BYTES,
             maxPartitionKeyLength = MAX_PARTITION_KEY_LENGTH
-        )
+        ),
+        maxRetries = options.maxRetries
     )
     private val scheduler: AutoFlushScheduler?
 
