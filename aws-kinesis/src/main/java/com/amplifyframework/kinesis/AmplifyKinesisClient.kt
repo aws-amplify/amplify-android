@@ -160,8 +160,10 @@ class AmplifyKinesisClient(
     /**
      * Flushes all cached records to their respective Kinesis streams.
      *
+     * SDK Kinesis errors (throttling, invalid stream, etc.) are handled silently
+     * and logged. Records that fail due to SDK errors are retried automatically.
+     *
      * @return Result.Success(FlushData) on success, or Result.Failure with:
-     *   - [AmplifyKinesisServiceException] (API failures)
      *   - [AmplifyKinesisStorageException] (database errors)
      *   - [AmplifyKinesisUnknownException] (unexpected failures)
      */

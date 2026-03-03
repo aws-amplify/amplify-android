@@ -1,5 +1,6 @@
 package com.amplifyframework.recordcache
 
+import aws.sdk.kotlin.services.kinesis.model.KinesisException as SdkKinesisException
 import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.foundation.logging.Logger
 import com.amplifyframework.foundation.result.Result
@@ -28,7 +29,6 @@ internal class RecordClient(
             val recordsByStream = storage.getRecordsByStream().getOrThrow()
             logger.debug { "Retrieved ${recordsByStream.size} stream(s) with records to flush" }
 
-            var firstError: Throwable? = null
             val totalFlushed = recordsByStream
                 .mapNotNull { records ->
                     val streamName = records.first().streamName
@@ -54,21 +54,26 @@ internal class RecordClient(
 
                         result.successfulIds
                     } catch (e: Throwable) {
-                        logger.error { "Error flushing stream $streamName: ${e.message}" }
-                        
                         // Increment retry count for all records in the failed request and delete the ones at the limit
                         handleFailedRequest(records)
                         
-                        if (firstError == null) {
-                            firstError = e
+                        // SDK Kinesis exceptions are logged but not thrown
+                        if (e is SdkKinesisException) {
+                            logger.warn { "Kinesis SDK error flushing stream $streamName: ${e.message}" }
+                            null
+                        } else {
+                            // Cache/storage errors, network errors, and unexpected errors are critical - throw immediately
+                            logger.error { "Critical error flushing stream $streamName: ${e.message}" }
+                            throw e
                         }
-                        null
                     }
                 }
                 .sumOf { it.size }
-
-            firstError?.let { Result.Failure(it) } ?: Result.Success(FlushData(totalFlushed))
+            
+            Result.Success(FlushData(totalFlushed))
         } catch (e: Throwable) {
+            // Storage errors (e.g., can't read from cache) or critical errors from stream processing
+            logger.error { "Critical error during flush: ${e.message}" }
             Result.Failure(e)
         } finally {
             isFlushing.set(false)
