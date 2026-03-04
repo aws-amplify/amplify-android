@@ -38,8 +38,7 @@ class AmplifyKinesisClientUserAgentTest {
         val kinesisClient = KinesisClient {
             region = "us-east-1"
             credentialsProvider = object : CredentialsProvider {
-                override suspend fun resolve(attributes: Attributes) =
-                    Credentials("fake-access-key", "fake-secret-key")
+                override suspend fun resolve(attributes: Attributes) = Credentials("fake-access-key", "fake-secret-key")
             }
             interceptors += KinesisUserAgentInterceptor()
             interceptors += object : HttpInterceptor {
