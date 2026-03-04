@@ -349,6 +349,70 @@ class KinesisDataStreamsInstrumentationTest {
     }
 
     // ---------------------------------------------------------------
+    // Retry exhaustion
+    // ---------------------------------------------------------------
+
+    /**
+     * Records to both a nonexistent stream and a valid stream with maxRetries = 5.
+     * On the first flush the valid record is sent and the invalid-stream record
+     * stays in the cache (retry count incremented). After 6 total flushes the
+     * invalid-stream record should be evicted (retryCount >= maxRetries) and a
+     * final flush returns 0.
+     */
+    @Test
+    fun testInvalidStreamRecordIsDroppedAfterMaxRetries(): Unit = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val maxRetries = 5
+        val retryKinesis = AmplifyKinesisClient(
+            context = context,
+            region = REGION,
+            credentialsProvider = credentialsProvider,
+            options = AmplifyKinesisClientOptions {
+                this.maxRetries = maxRetries
+                flushStrategy = FlushStrategy.None
+            }
+        )
+        retryKinesis.enable()
+
+        try {
+            retryKinesis.clearCache()
+
+            // Record to a nonexistent stream and a valid stream
+            retryKinesis.record(
+                data = "invalid-stream-record".toByteArray(),
+                partitionKey = "partition-1",
+                streamName = "nonexistent-stream-name"
+            )
+            retryKinesis.record(
+                data = "valid-stream-record".toByteArray(),
+                partitionKey = "partition-1",
+                streamName = STREAM_NAME
+            )
+
+            // First flush: valid record should be flushed, invalid stays
+            val firstFlush = retryKinesis.flush()
+            firstFlush.shouldBeSuccess().data.recordsFlushed shouldBe 1
+
+            // Flush maxRetries more times (flushes 2–6) to exhaust retries on the invalid record
+            repeat(maxRetries) {
+                val result = retryKinesis.flush()
+                result.shouldBeSuccess().data.recordsFlushed shouldBe 0
+            }
+
+            // Final flush: invalid record should have been evicted, nothing left
+            val finalFlush = retryKinesis.flush()
+            finalFlush.shouldBeSuccess().data.recordsFlushed shouldBe 0
+
+            // Confirm cache is truly empty
+            val clearResult = retryKinesis.clearCache()
+            clearResult.shouldBeSuccess().data.recordsCleared shouldBe 0
+        } finally {
+            retryKinesis.disable()
+            retryKinesis.clearCache()
+        }
+    }
+
+    // ---------------------------------------------------------------
     // Stress tests
     // ---------------------------------------------------------------
 
