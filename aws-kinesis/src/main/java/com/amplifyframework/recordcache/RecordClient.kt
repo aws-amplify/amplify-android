@@ -80,7 +80,11 @@ internal class RecordClient(
 
     private suspend fun handleFailedRequest(records: List<Record>) {
         try {
+<<<<<<< jv/kinesis-fix-retry-logic
             val (recordsToRetry, recordsToDelete) = records.partition { it.retryCount < maxRetries }
+=======
+            val (recordsToRetry, recordsToDelete) = records.partition { it.retryCount + 1 < maxRetries }
+>>>>>>> main
             val recordIdsToIncrement = recordsToRetry.map { it.id }
             val recordIdsToDelete = recordsToDelete.map { it.id }
 
@@ -91,7 +95,11 @@ internal class RecordClient(
                 val streamName = records.first().streamName
                 logger.warn {
                     "Deleted ${recordIdsToDelete.size} records from stream $streamName " +
+<<<<<<< jv/kinesis-fix-retry-logic
                         "that exceeded retry limit of $maxRetries after failed retries"
+=======
+                        "that exceeded retry limit of $maxRetries after failed request"
+>>>>>>> main
                 }
             }
         } catch (storageError: Throwable) {
