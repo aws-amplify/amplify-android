@@ -126,12 +126,12 @@ class RecordClientFlushTest {
         storage.addRecord(RecordInput(streamName, "key2", byteArrayOf(2))).getOrThrow()
         storage.addRecord(RecordInput(streamName, "key3", byteArrayOf(3))).getOrThrow()
 
-        // Set record 2 and 3 to retry count 2 (will be deleted on next failure since retryCount + 1 >= maxRetries)
+        // Set record 2 and 3 to retry count 3 (will be deleted on next failure since retryCount >= maxRetries)
         val allRecords = storage.getRecordsByStream().getOrThrow().flatten()
         val record2Id = allRecords[1].id
         val record3Id = allRecords[2].id
 
-        repeat(2) { storage.incrementRetryCount(listOf(record2Id, record3Id)).getOrThrow() }
+        repeat(3) { storage.incrementRetryCount(listOf(record2Id, record3Id)).getOrThrow() }
 
         // Configure mock sender to fail with a non-SDK error
         coEvery { mockSender.putRecords(streamName, any()) } returns
