@@ -36,6 +36,10 @@ public abstract class com/amplifyframework/foundation/exceptions/AmplifyExceptio
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class com/amplifyframework/foundation/exceptions/AmplifyExceptionKt {
+	public static final field DEFAULT_RECOVERY_SUGGESTION Ljava/lang/String;
+}
+
 public final class com/amplifyframework/foundation/logging/AmplifyLogging {
 	public static final field INSTANCE Lcom/amplifyframework/foundation/logging/AmplifyLogging;
 	public static final fun addSink (Lcom/amplifyframework/foundation/logging/LogSink;)V

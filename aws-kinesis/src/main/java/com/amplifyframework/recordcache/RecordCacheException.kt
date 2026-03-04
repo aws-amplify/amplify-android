@@ -1,0 +1,34 @@
+package com.amplifyframework.recordcache
+
+/**
+ * Internal error type used by [RecordClient] / [RecordStorage].
+ * Mapped to the public Kinesis exception type at the AmplifyKinesisClient boundary.
+ */
+internal sealed class RecordCacheException(
+    override val message: String,
+    recoverySuggestion: String,
+    cause: Throwable? = null
+) : Exception(message, cause) {
+    val recoverySuggestion: String = recoverySuggestion
+}
+
+/** Database operation failed. */
+internal class RecordCacheDatabaseException(
+    message: String,
+    recoverySuggestion: String,
+    cause: Throwable? = null
+) : RecordCacheException(message, recoverySuggestion, cause)
+
+/** Cache limit exceeded — no space for new records. */
+internal class RecordCacheLimitExceededException(
+    message: String,
+    recoverySuggestion: String,
+    cause: Throwable? = null
+) : RecordCacheException(message, recoverySuggestion, cause)
+
+/** Record input validation failed (e.g. oversized record, invalid partition key). */
+internal class RecordCacheValidationException(
+    message: String,
+    recoverySuggestion: String,
+    cause: Throwable? = null
+) : RecordCacheException(message, recoverySuggestion, cause)

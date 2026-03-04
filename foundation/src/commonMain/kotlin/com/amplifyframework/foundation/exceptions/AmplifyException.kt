@@ -15,6 +15,9 @@
 
 package com.amplifyframework.foundation.exceptions
 
+/** Default recovery suggestion for errors. */
+const val DEFAULT_RECOVERY_SUGGESTION = "Inspect the underlying error for more details."
+
 /**
  * Top-level exception in the Amplify framework. All other Amplify exceptions should extend this.
  * @param message An error message describing why this exception was thrown
