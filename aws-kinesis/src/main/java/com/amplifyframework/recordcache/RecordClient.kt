@@ -56,7 +56,7 @@ internal class RecordClient(
                     } catch (e: Throwable) {
                         // Increment retry count for all records in the failed request and delete the ones at the limit
                         handleFailedRequest(records)
-                        
+
                         // SDK Kinesis exceptions are logged but not thrown
                         if (e is SdkKinesisException) {
                             logger.warn { "Kinesis SDK error flushing stream $streamName: ${e.message}. Skipping" }
@@ -69,7 +69,7 @@ internal class RecordClient(
                     }
                 }
                 .sumOf { it.size }
-            
+
             Result.Success(FlushData(totalFlushed))
         } catch (e: Throwable) {
             Result.Failure(e)
@@ -83,15 +83,15 @@ internal class RecordClient(
             val (recordsToRetry, recordsToDelete) = records.partition { it.retryCount + 1 < maxRetries }
             val recordIdsToIncrement = recordsToRetry.map { it.id }
             val recordIdsToDelete = recordsToDelete.map { it.id }
-            
+
             storage.incrementRetryCount(recordIdsToIncrement).getOrThrow()
             storage.deleteRecords(recordIdsToDelete).getOrThrow()
-            
+
             if (recordIdsToDelete.isNotEmpty()) {
                 val streamName = records.first().streamName
-                logger.warn { 
+                logger.warn {
                     "Deleted ${recordIdsToDelete.size} records from stream $streamName " +
-                    "that exceeded retry limit of $maxRetries after failed request" 
+                        "that exceeded retry limit of $maxRetries after failed request"
                 }
             }
         } catch (storageError: Throwable) {

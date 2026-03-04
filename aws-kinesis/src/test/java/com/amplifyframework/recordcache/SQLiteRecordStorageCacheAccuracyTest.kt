@@ -88,9 +88,9 @@ class SQLiteRecordStorageCacheAccuracyTest {
         storage.addRecord(RecordInput("stream2", "b", byteArrayOf(6, 7, 8))).getOrThrow()
 
         var cachedSize = storage.getCurrentCacheSize().getOrThrow()
-        cachedSize shouldBe 10 
+        cachedSize shouldBe 10
 
-        // Delete one record 
+        // Delete one record
         val records = storage.getRecordsByStream().getOrThrow().flatten()
         storage.deleteRecords(listOf(records.first().id)).getOrThrow()
 
@@ -101,7 +101,7 @@ class SQLiteRecordStorageCacheAccuracyTest {
         storage.addRecord(RecordInput("stream3", "c", byteArrayOf(9, 10))).getOrThrow()
 
         cachedSize = storage.getCurrentCacheSize().getOrThrow()
-        cachedSize shouldBe 7 
+        cachedSize shouldBe 7
     }
 
     @Test

@@ -130,7 +130,7 @@ class RecordClientFlushTest {
         val allRecords = storage.getRecordsByStream().getOrThrow().flatten()
         val record2Id = allRecords[1].id
         val record3Id = allRecords[2].id
-        
+
         repeat(2) { storage.incrementRetryCount(listOf(record2Id, record3Id)).getOrThrow() }
 
         // Configure mock sender to fail with a non-SDK error
@@ -219,7 +219,7 @@ class RecordClientFlushTest {
         // Given: Records in two streams
         val stream1 = "stream-1" // Will have SDK error
         val stream2 = "stream-2" // Will succeed
-        
+
         storage.addRecord(RecordInput(stream1, "key1", byteArrayOf(1))).getOrThrow()
         storage.addRecord(RecordInput(stream2, "key2", byteArrayOf(2))).getOrThrow()
 
@@ -250,10 +250,10 @@ class RecordClientFlushTest {
         // Verify final state
         val remainingRecords = storage.getRecordsByStream().getOrThrow().flatten()
         remainingRecords.size shouldBe 1
-        
+
         // Stream2 should be deleted (successfully flushed)
         remainingRecords.none { it.streamName == stream2 } shouldBe true
-        
+
         // Stream1 should have retry incremented (SDK error)
         remainingRecords.find { it.streamName == stream1 }!!.retryCount shouldBe 1
     }

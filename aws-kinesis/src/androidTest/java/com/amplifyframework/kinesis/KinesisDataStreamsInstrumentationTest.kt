@@ -309,7 +309,7 @@ class KinesisDataStreamsInstrumentationTest {
         kinesis.clearCache()
     }
 
-    /** 
+    /**
      * Flush with invalid credentials should return Success (SDK errors are handled silently).
      * Records are incremented and potentially deleted if they exceed retry limits.
      */

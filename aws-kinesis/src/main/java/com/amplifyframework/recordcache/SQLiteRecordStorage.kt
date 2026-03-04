@@ -30,7 +30,14 @@ internal class SQLiteRecordStorage internal constructor(
     maxBytesPerStream: Long,
     maxPartitionKeyLength: Int,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
-) : RecordStorage(maxRecordsByStream, cacheMaxBytes, identifier, maxRecordSizeBytes, maxBytesPerStream, maxPartitionKeyLength) {
+) : RecordStorage(
+    maxRecordsByStream,
+    cacheMaxBytes,
+    identifier,
+    maxRecordSizeBytes,
+    maxBytesPerStream,
+    maxPartitionKeyLength
+) {
     private val logger: Logger = AmplifyLogging.logger<SQLiteRecordStorage>()
     private val connection: SQLiteConnection = connectionFactory()
     private var cachedSize = AtomicInteger(0)
