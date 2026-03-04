@@ -15,7 +15,10 @@
 package com.amplifyframework.kinesis
 
 import aws.sdk.kotlin.services.kinesis.KinesisClient
+import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import aws.smithy.kotlin.runtime.client.ProtocolRequestInterceptorContext
+import aws.smithy.kotlin.runtime.collections.Attributes
 import aws.smithy.kotlin.runtime.http.interceptors.HttpInterceptor
 import aws.smithy.kotlin.runtime.http.request.HttpRequest
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -36,9 +39,13 @@ class AmplifyKinesisClientUserAgentTest {
         // KinesisUserAgentInterceptor first, then a capturing interceptor after it.
         val kinesisClient = KinesisClient {
             region = "us-east-1"
+            credentialsProvider = object : CredentialsProvider {
+                override suspend fun resolve(attributes: Attributes) =
+                    Credentials("fake-access-key", "fake-secret-key")
+            }
             interceptors += KinesisUserAgentInterceptor()
             interceptors += object : HttpInterceptor {
-                override suspend fun modifyBeforeSigning(
+                override suspend fun modifyBeforeTransmit(
                     context: ProtocolRequestInterceptorContext<Any, HttpRequest>
                 ): HttpRequest {
                     capturedUserAgent = context.protocolRequest.headers["User-Agent"]
