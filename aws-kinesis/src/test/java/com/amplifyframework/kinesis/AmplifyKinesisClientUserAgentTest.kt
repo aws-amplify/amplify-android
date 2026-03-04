@@ -35,8 +35,6 @@ class AmplifyKinesisClientUserAgentTest {
     fun `user agent header contains kinesis and amplify metadata`() = runTest {
         var capturedUserAgent: String? = null
 
-        // Build a KinesisClient the same way AmplifyKinesisClient does:
-        // KinesisUserAgentInterceptor first, then a capturing interceptor after it.
         val kinesisClient = KinesisClient {
             region = "us-east-1"
             credentialsProvider = object : CredentialsProvider {
@@ -49,7 +47,8 @@ class AmplifyKinesisClientUserAgentTest {
                     context: ProtocolRequestInterceptorContext<Any, HttpRequest>
                 ): HttpRequest {
                     capturedUserAgent = context.protocolRequest.headers["User-Agent"]
-                    return context.protocolRequest
+                    // Throw to short-circuit the actual HTTP call
+                    throw CapturedUserAgentException()
                 }
             }
         }
@@ -66,11 +65,13 @@ class AmplifyKinesisClientUserAgentTest {
         try {
             kinesisClient.putRecords(request)
         } catch (_: Exception) {
-            // Expected — no real credentials
+            // Expected — interceptor throws to avoid network call
         }
 
         capturedUserAgent.shouldNotBeNull()
         capturedUserAgent shouldContain "lib/amplify-android#${BuildConfig.VERSION_NAME}"
         capturedUserAgent shouldContain "md/amplify-kinesis#${BuildConfig.VERSION_NAME}"
     }
+
+    private class CapturedUserAgentException : RuntimeException("User-Agent captured")
 }
