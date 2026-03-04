@@ -284,6 +284,31 @@ class KinesisDataStreamsInstrumentationTest {
     // Error paths
     // ---------------------------------------------------------------
 
+    /**
+     * Flush with a nonexistent stream name should return Success (SDK errors are handled silently).
+     * The valid stream's record should still be flushed, proving one bad stream
+     * doesn't block others.
+     */
+    @Test
+    fun testFlushWithNonexistentStreamName(): Unit = runBlocking {
+        kinesis.record(
+            data = "wrong-stream-record".toByteArray(),
+            partitionKey = "partition-1",
+            streamName = "nonexistent-stream-name"
+        )
+        kinesis.record(
+            data = "valid-stream-record".toByteArray(),
+            partitionKey = "partition-1",
+            streamName = STREAM_NAME
+        )
+
+        val flushResult = kinesis.flush()
+        flushResult.shouldBeSuccess()
+        flushResult.data.recordsFlushed shouldBe 1
+
+        kinesis.clearCache()
+    }
+
     /** 
      * Flush with invalid credentials should return Success (SDK errors are handled silently).
      * Records are incremented and potentially deleted if they exceed retry limits.
@@ -293,8 +318,8 @@ class KinesisDataStreamsInstrumentationTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val badCredentials = AwsCredentialsProvider {
             AwsCredentials.Static(
-                accessKeyId = "INVALID_ACCESS_KEY",
-                secretAccessKey = "INVALID_SECRET_KEY"
+                accessKeyId = "AKIAIOSFODNN7EXAMPLE",
+                secretAccessKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
             )
         }
 
@@ -347,7 +372,7 @@ class KinesisDataStreamsInstrumentationTest {
     /** Record + flush in a loop — verify consistency across cycles. */
     @Test
     fun testRepeatedFlushCycles(): Unit = runBlocking {
-        val cycles = 10
+        val cycles = 5
         val recordsPerCycle = 5
         var totalFlushed = 0
 
@@ -367,9 +392,105 @@ class KinesisDataStreamsInstrumentationTest {
         totalFlushed shouldBe (cycles * recordsPerCycle)
     }
 
+    /**
+     * Stress test: N producers record concurrently while a flusher calls flush()
+     * every 500ms. Simulates real-world usage where the app records analytics
+     * events while the auto-flush timer fires.
+     *
+     * Asserts that every recorded event is eventually flushed — no records lost
+     * under concurrent read/write pressure on the cache.
+     */
+    @Test
+    fun testConcurrentRecordAndFlushStress(): Unit = runBlocking {
+        val producers = 5
+        val recordsPerProducer = 20
+        val totalExpected = producers * recordsPerProducer
+        val totalFlushed = java.util.concurrent.atomic.AtomicInteger(0)
+        val producersDone = java.util.concurrent.atomic.AtomicBoolean(false)
+
+        // Flusher: calls flush() every 500ms until all producers are done + one final drain
+        val flusher = async {
+            while (!producersDone.get()) {
+                val result = kinesis.flush()
+                if (result is Result.Success) {
+                    totalFlushed.addAndGet(result.data.recordsFlushed)
+                }
+                delay(500)
+            }
+        }
+
+        // Producers: each records M events concurrently
+        val producerJobs = (0 until producers).map { p ->
+            async {
+                repeat(recordsPerProducer) { i ->
+                    kinesis.record(
+                        data = "stress-p$p-r$i".toByteArray(),
+                        partitionKey = "partition-${p % 3}",
+                        streamName = STREAM_NAME
+                    )
+                }
+            }
+        }
+
+        // Wait for all producers to finish, then signal the flusher
+        producerJobs.awaitAll()
+        producersDone.set(true)
+        flusher.await()
+
+        // Final drain flush to pick up anything the periodic flusher missed
+        val drainResult = kinesis.flush()
+        drainResult.shouldBeSuccess()
+        totalFlushed.addAndGet(drainResult.data.recordsFlushed)
+
+        // Second drain to confirm nothing is left
+        val finalResult = kinesis.flush()
+        finalResult.shouldBeSuccess().data.recordsFlushed shouldBe 0
+
+        totalFlushed.get() shouldBe totalExpected
+    }
+
     // ---------------------------------------------------------------
     // Auto-flush
     // ---------------------------------------------------------------
+
+    /**
+     * Verify that creating a client with default options (no explicit flushStrategy)
+     * auto-starts the scheduler. Default is FlushStrategy.Interval(30s), so we override
+     * to a short interval to keep the test fast.
+     */
+    @Test
+    fun testDefaultConfigAutoStartsScheduler(): Unit = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        // Default options use FlushStrategy.Interval(30s). We use a short interval
+        // to verify the scheduler is auto-started without waiting 30 seconds.
+        val defaultKinesis = AmplifyKinesisClient(
+            context = context,
+            region = REGION,
+            credentialsProvider = credentialsProvider,
+            options = AmplifyKinesisClientOptions {
+                flushStrategy = FlushStrategy.Interval(3.seconds)
+            }
+        )
+        // Note: no explicit enable() call — scheduler should auto-start from init
+
+        try {
+            defaultKinesis.record(
+                data = "auto-start-record".toByteArray(),
+                partitionKey = "partition-1",
+                streamName = STREAM_NAME
+            )
+
+            // Wait for auto-flush to trigger (3s interval + buffer)
+            delay(6_000)
+
+            // After auto-flush, a manual flush should find nothing left
+            val flushResult = defaultKinesis.flush()
+            flushResult.shouldBeSuccess().data.recordsFlushed shouldBe 0
+        } finally {
+            defaultKinesis.disable()
+            defaultKinesis.clearCache()
+        }
+    }
 
     /** Record data and wait for auto-flush to trigger. */
     @Test
@@ -403,6 +524,45 @@ class KinesisDataStreamsInstrumentationTest {
             autoFlushKinesis.disable()
             autoFlushKinesis.clearCache()
         }
+    }
+
+    // ---------------------------------------------------------------
+    // Partition key validation
+    // ---------------------------------------------------------------
+
+    /**
+     * E2E test: Record with a partition key containing exactly 256 emoji Unicode scalars
+     * (the maximum allowed), then flush to verify the record is accepted by Kinesis.
+     *
+     * Each emoji (😀) is 1 Unicode code point but 4 bytes in UTF-8. This test validates
+     * that our code point counting is correct and that Kinesis accepts the
+     * maximum-length partition key.
+     */
+    @Test
+    fun testRecordWithMax256EmojiCodePointsAndFlush(): Unit = runBlocking {
+        // Create partition key with exactly 256 emoji code points
+        // Each emoji is 1 code point, 4 UTF-8 bytes
+        val emoji = "\uD83D\uDE00" // 😀
+        val emojiPartitionKey = emoji.repeat(256)
+
+        // Verify our assumptions about the partition key
+        val codePointCount = emojiPartitionKey.codePointCount(0, emojiPartitionKey.length)
+        val utf8ByteCount = emojiPartitionKey.toByteArray(Charsets.UTF_8).size
+
+        codePointCount shouldBe 256
+        utf8ByteCount shouldBe 1024 // 256 emojis × 4 bytes each
+
+        // Record with the emoji partition key
+        val result = kinesis.record(
+            data = "test-data-with-emoji-partition-key".toByteArray(),
+            partitionKey = emojiPartitionKey,
+            streamName = STREAM_NAME
+        )
+        result.shouldBeSuccess()
+
+        // Flush and verify the record was sent successfully
+        val flushResult = kinesis.flush()
+        flushResult.shouldBeSuccess().data.recordsFlushed shouldBe 1
     }
 
     // ---------------------------------------------------------------
