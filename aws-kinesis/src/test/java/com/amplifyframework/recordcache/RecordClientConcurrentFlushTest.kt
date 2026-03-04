@@ -71,8 +71,8 @@ class RecordClientConcurrentFlushTest {
         val results = listOf(result1, result2)
         val successResults = results.map { it.shouldBeSuccess() }
 
-        val anyFlushed = successResults.any { it.recordsFlushed > 0 }
-        val anyInProgress = successResults.any { it.flushInProgress }
+        val anyFlushed = successResults.any { it.data.recordsFlushed > 0 }
+        val anyInProgress = successResults.any { it.data.flushInProgress }
 
         anyFlushed shouldBe true
         anyInProgress shouldBe true
