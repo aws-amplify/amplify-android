@@ -284,7 +284,10 @@ class KinesisDataStreamsInstrumentationTest {
     // Error paths
     // ---------------------------------------------------------------
 
-    /** Flush with invalid credentials should fail with AmplifyKinesisServiceException. */
+    /** 
+     * Flush with invalid credentials should return Success (SDK errors are handled silently).
+     * Records are incremented and potentially deleted if they exceed retry limits.
+     */
     @Test
     fun testFlushWithInvalidCredentials(): Unit = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
@@ -309,8 +312,11 @@ class KinesisDataStreamsInstrumentationTest {
                 streamName = STREAM_NAME
             )
 
+            // SDK exceptions are handled silently - flush returns Success
             val flushResult = badKinesis.flush()
-            flushResult.shouldBeFailure().error.shouldBeInstanceOf<AmplifyKinesisServiceException>()
+            flushResult.shouldBeSuccess()
+            // Records are not flushed (SDK error), but the operation succeeds
+            flushResult.data.recordsFlushed shouldBe 0
         } finally {
             badKinesis.disable()
             badKinesis.clearCache()

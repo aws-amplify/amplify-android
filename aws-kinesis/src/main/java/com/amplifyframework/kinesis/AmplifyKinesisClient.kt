@@ -110,7 +110,8 @@ class AmplifyKinesisClient(
             maxRecordSizeBytes = MAX_RECORD_SIZE_BYTES,
             maxBytesPerStream = MAX_PUT_RECORDS_SIZE_BYTES,
             maxPartitionKeyLength = MAX_PARTITION_KEY_LENGTH
-        )
+        ),
+        maxRetries = options.maxRetries
     )
     private val scheduler: AutoFlushScheduler?
 
@@ -159,17 +160,19 @@ class AmplifyKinesisClient(
     /**
      * Flushes all cached records to their respective Kinesis streams.
      *
+     * SDK Kinesis errors (throttling, invalid stream, etc.) are handled silently
+     * and logged. Records that fail due to SDK errors are retried automatically.
+     *
      * @return Result.Success(FlushData) on success, or Result.Failure with:
-     *   - [AmplifyKinesisServiceException] (API failures)
      *   - [AmplifyKinesisStorageException] (database errors)
      *   - [AmplifyKinesisUnknownException] (unexpected failures)
      */
     suspend fun flush(): FlushResult {
-        logger.info { "Starting flush" }
+        logger.verbose { "Starting flush" }
         return logOp(
             operation = { recordClient.flush().wrapError() },
             logSuccess = { data, timeMs ->
-                logger.info {
+                logger.debug {
                     "Flush completed successfully in ${timeMs}ms - ${data.recordsFlushed} records flushed"
                 }
             },
@@ -186,11 +189,11 @@ class AmplifyKinesisClient(
      *   - [AmplifyKinesisStorageException] (database errors)
      */
     suspend fun clearCache(): ClearCacheResult {
-        logger.info { "Clearing cache" }
+        logger.verbose { "Clearing cache" }
         return logOp(
             operation = { recordClient.clearCache().wrapError() },
             logSuccess = { data, timeMs ->
-                logger.info {
+                logger.debug {
                     "Clear cache completed successfully in ${timeMs}ms - ${data.recordsCleared} records cleared"
                 }
             },
