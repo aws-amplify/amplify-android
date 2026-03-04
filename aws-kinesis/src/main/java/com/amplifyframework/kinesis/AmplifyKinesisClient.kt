@@ -168,11 +168,11 @@ class AmplifyKinesisClient(
      *   - [AmplifyKinesisUnknownException] (unexpected failures)
      */
     suspend fun flush(): FlushResult {
-        logger.info { "Starting flush" }
+        logger.verbose { "Starting flush" }
         return logOp(
             operation = { recordClient.flush().wrapError() },
             logSuccess = { data, timeMs ->
-                logger.info {
+                logger.debug {
                     "Flush completed successfully in ${timeMs}ms - ${data.recordsFlushed} records flushed"
                 }
             },
@@ -189,11 +189,11 @@ class AmplifyKinesisClient(
      *   - [AmplifyKinesisStorageException] (database errors)
      */
     suspend fun clearCache(): ClearCacheResult {
-        logger.info { "Clearing cache" }
+        logger.verbose { "Clearing cache" }
         return logOp(
             operation = { recordClient.clearCache().wrapError() },
             logSuccess = { data, timeMs ->
-                logger.info {
+                logger.debug {
                     "Clear cache completed successfully in ${timeMs}ms - ${data.recordsCleared} records cleared"
                 }
             },

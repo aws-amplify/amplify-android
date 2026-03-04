@@ -47,7 +47,7 @@ internal class RecordClient(
                         deleteFailed.getOrThrow()
                         incrementRetry.getOrThrow()
 
-                        logger.verbose {
+                        logger.debug {
                             "Stream $streamName: ${result.successfulIds.size} succeeded, " +
                                 "${result.retryableIds.size} retryable, ${result.failedIds.size} failed"
                         }
@@ -59,11 +59,11 @@ internal class RecordClient(
                         
                         // SDK Kinesis exceptions are logged but not thrown
                         if (e is SdkKinesisException) {
-                            logger.warn { "Kinesis SDK error flushing stream $streamName: ${e.message}" }
+                            logger.warn { "Kinesis SDK error flushing stream $streamName: ${e.message}. Skipping" }
                             null
                         } else {
-                            // Cache/storage errors, network errors, and unexpected errors are critical - throw immediately
-                            logger.error { "Critical error flushing stream $streamName: ${e.message}" }
+                            // Network errors, storage errors, and unexpected errors — throw to caller
+                            logger.warn { "Error flushing stream $streamName: ${e.message}. Aborting flush" }
                             throw e
                         }
                     }
@@ -72,7 +72,6 @@ internal class RecordClient(
             
             Result.Success(FlushData(totalFlushed))
         } catch (e: Throwable) {
-            logger.error { "Critical error during flush: ${e.message}" }
             Result.Failure(e)
         } finally {
             isFlushing.set(false)
@@ -88,10 +87,12 @@ internal class RecordClient(
             storage.incrementRetryCount(recordIdsToIncrement).getOrThrow()
             storage.deleteRecords(recordIdsToDelete).getOrThrow()
             
-            val streamName = records.first().streamName
-            logger.warn { 
-                "Deleted ${recordIdsToDelete.size} records from stream $streamName " +
-                "that exceeded retry limit of $maxRetries after failed request" 
+            if (recordIdsToDelete.isNotEmpty()) {
+                val streamName = records.first().streamName
+                logger.warn { 
+                    "Deleted ${recordIdsToDelete.size} records from stream $streamName " +
+                    "that exceeded retry limit of $maxRetries after failed request" 
+                }
             }
         } catch (storageError: Throwable) {
             logger.error { "Failed to update records for failed request: ${storageError.message}" }
