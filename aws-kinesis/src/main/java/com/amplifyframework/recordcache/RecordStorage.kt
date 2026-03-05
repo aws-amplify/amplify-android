@@ -11,9 +11,7 @@ internal abstract class RecordStorage(
     val maxPartitionKeyLength: Int
 ) {
     abstract suspend fun addRecord(record: RecordInput): Result<Unit, RecordCacheException>
-    abstract suspend fun getRecordsByStream(
-        excludingIds: Set<Long>
-    ): Result<List<List<Record>>, RecordCacheException>
+    abstract suspend fun getRecordsByStream(excludingIds: Set<Long>): Result<List<List<Record>>, RecordCacheException>
     abstract suspend fun deleteRecords(ids: List<Long>): Result<Unit, RecordCacheException>
     abstract suspend fun incrementRetryCount(ids: List<Long>): Result<Unit, RecordCacheException>
     abstract suspend fun getCurrentCacheSize(): Result<Int, RecordCacheException>

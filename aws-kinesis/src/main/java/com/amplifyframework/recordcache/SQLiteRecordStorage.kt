@@ -148,9 +148,7 @@ internal class SQLiteRecordStorage internal constructor(
         Unit
     }.recoverAsRecordCacheException("Failed to add record to cache")
 
-    override suspend fun getRecordsByStream(
-        excludingIds: Set<Long>
-    ): Result<List<List<Record>>, RecordCacheException> =
+    override suspend fun getRecordsByStream(excludingIds: Set<Long>): Result<List<List<Record>>, RecordCacheException> =
         wrapDispatchAndTransactionAndCatching {
             val excludeClause = if (excludingIds.isNotEmpty()) {
                 val placeholders = excludingIds.joinToString(",") { "?" }

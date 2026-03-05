@@ -31,7 +31,6 @@ internal class RecordClient(
 
             var recordsByStream = storage.getRecordsByStream(attemptedIds).getOrThrow()
             while (recordsByStream.isNotEmpty()) {
-
                 logger.debug { "Retrieved ${recordsByStream.size} stream(s) with records to flush" }
 
                 val batchFlushed = recordsByStream
