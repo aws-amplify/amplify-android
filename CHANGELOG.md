@@ -1,3 +1,15 @@
+## [Release 2.34.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.34.0)
+
+### Features
+- **api:** Add cause for graphql connection errors ([#3183](https://github.com/aws-amplify/amplify-android/issues/3183))
+- **foundation:** Add Foundation libraries ([#3203](https://github.com/aws-amplify/amplify-android/issues/3203))
+- **kinesis:** Add Kinesis Client ([#3194](https://github.com/aws-amplify/amplify-android/issues/3194))
+
+### Bug Fixes
+- **core:** Set userAgent when using AmplifyOutputs to configure ([#3215](https://github.com/aws-amplify/amplify-android/issues/3215))
+
+[See all changes between 2.33.0 and 2.34.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.33.0...release_v2.34.0)
+
 ## [Release 2.33.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.33.0)
 
 ### Features
