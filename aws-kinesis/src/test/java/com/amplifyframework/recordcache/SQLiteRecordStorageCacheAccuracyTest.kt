@@ -56,7 +56,7 @@ class SQLiteRecordStorageCacheAccuracyTest {
         storage.addRecord(record3).getOrThrow()
 
         // Get record IDs for deletion
-        val records = storage.getRecordsByStream().getOrThrow().flatten()
+        val records = storage.getRecordsByStream(emptySet()).getOrThrow().flatten()
         val idsToDelete = records.take(2).map { it.id }
 
         storage.deleteRecords(idsToDelete).getOrThrow()
@@ -91,7 +91,7 @@ class SQLiteRecordStorageCacheAccuracyTest {
         cachedSize shouldBe 10
 
         // Delete one record
-        val records = storage.getRecordsByStream().getOrThrow().flatten()
+        val records = storage.getRecordsByStream(emptySet()).getOrThrow().flatten()
         storage.deleteRecords(listOf(records.first().id)).getOrThrow()
 
         cachedSize = storage.getCurrentCacheSize().getOrThrow()
@@ -144,7 +144,7 @@ class SQLiteRecordStorageCacheAccuracyTest {
                 println("Consumer $consumerIndex running on thread: ${Thread.currentThread().name}")
                 repeat(100) { _ ->
                     delay(1)
-                    val records = storage.getRecordsByStream().getOrThrow().flatten()
+                    val records = storage.getRecordsByStream(emptySet()).getOrThrow().flatten()
                     if (records.isNotEmpty()) {
                         val recordsToDelete = records.take(1)
                         val idsToDelete = recordsToDelete.map { it.id }
@@ -169,7 +169,7 @@ class SQLiteRecordStorageCacheAccuracyTest {
         val totalDeleted = deletedRecords.size
 
         // Verify data integrity
-        val finalRecords = storage.getRecordsByStream().getOrThrow().flatten()
+        val finalRecords = storage.getRecordsByStream(emptySet()).getOrThrow().flatten()
         println("Created $totalCreated records, deleted $totalDeleted records, found in DB ${finalRecords.size}")
 
         val finalCacheSize = storage.getCurrentCacheSize().getOrThrow()
@@ -226,7 +226,7 @@ class SQLiteRecordStorageCacheAccuracyTest {
             storage.addRecord(RecordInput("stream-B", "b", ByteArray(50) { i.toByte() })).getOrThrow()
         }
 
-        val recordsByStream = storage.getRecordsByStream().getOrThrow()
+        val recordsByStream = storage.getRecordsByStream(emptySet()).getOrThrow()
         recordsByStream.size shouldBe 2
 
         for (records in recordsByStream) {

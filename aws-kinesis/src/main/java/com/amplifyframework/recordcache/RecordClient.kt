@@ -26,49 +26,61 @@ internal class RecordClient(
             return Result.Success(FlushData(recordsFlushed = 0, flushInProgress = true))
         }
         return try {
-            val recordsByStream = storage.getRecordsByStream().getOrThrow()
-            logger.debug { "Retrieved ${recordsByStream.size} stream(s) with records to flush" }
+            var totalFlushed = 0
+            val attemptedIds = mutableSetOf<Long>()
 
-            val totalFlushed = recordsByStream
-                .mapNotNull { records ->
-                    val streamName = records.first().streamName
-                    val recordCount = records.size
-                    logger.verbose { "Flushing $recordCount records to stream: $streamName" }
+            var recordsByStream = storage.getRecordsByStream(attemptedIds).getOrThrow()
+            while (recordsByStream.isNotEmpty()) {
 
-                    try {
-                        val result = sender.putRecords(streamName, records).getOrThrow()
+                logger.debug { "Retrieved ${recordsByStream.size} stream(s) with records to flush" }
 
-                        val deleteSuccessful = storage.deleteRecords(result.successfulIds)
-                        val deleteFailed = storage.deleteRecords(result.failedIds)
-                        val incrementRetry = storage.incrementRetryCount(result.retryableIds)
+                val batchFlushed = recordsByStream
+                    .mapNotNull { records ->
+                        val streamName = records.first().streamName
+                        val recordCount = records.size
+                        logger.verbose { "Flushing $recordCount records to stream: $streamName" }
 
-                        // Ensure all updates are triggered before checking for exceptions
-                        deleteSuccessful.getOrThrow()
-                        deleteFailed.getOrThrow()
-                        incrementRetry.getOrThrow()
+                        // Track all attempted record IDs so they are excluded from the next batch
+                        attemptedIds.addAll(records.map { it.id })
 
-                        logger.debug {
-                            "Stream $streamName: ${result.successfulIds.size} succeeded, " +
-                                "${result.retryableIds.size} retryable, ${result.failedIds.size} failed"
-                        }
+                        try {
+                            val result = sender.putRecords(streamName, records).getOrThrow()
 
-                        result.successfulIds
-                    } catch (e: Throwable) {
-                        // Increment retry count for all records in the failed request and delete the ones at the limit
-                        handleFailedRequest(records)
+                            val deleteSuccessful = storage.deleteRecords(result.successfulIds)
+                            val deleteFailed = storage.deleteRecords(result.failedIds)
+                            val incrementRetry = storage.incrementRetryCount(result.retryableIds)
 
-                        // SDK Kinesis exceptions are logged but not thrown
-                        if (e is SdkKinesisException) {
-                            logger.warn { "Kinesis SDK error flushing stream $streamName: ${e.message}. Skipping" }
-                            null
-                        } else {
-                            // Network errors, storage errors, and unexpected errors — throw to caller
-                            logger.warn { "Error flushing stream $streamName: ${e.message}. Aborting flush" }
-                            throw e
+                            // Ensure all updates are triggered before checking for exceptions
+                            deleteSuccessful.getOrThrow()
+                            deleteFailed.getOrThrow()
+                            incrementRetry.getOrThrow()
+
+                            logger.debug {
+                                "Stream $streamName: ${result.successfulIds.size} succeeded, " +
+                                    "${result.retryableIds.size} retryable, ${result.failedIds.size} failed"
+                            }
+
+                            result.successfulIds
+                        } catch (e: Throwable) {
+                            // Increment retry count for all records in the failed request and delete the ones at the limit
+                            handleFailedRequest(records)
+
+                            // SDK Kinesis exceptions are logged but not thrown
+                            if (e is SdkKinesisException) {
+                                logger.warn { "Kinesis SDK error flushing stream $streamName: ${e.message}. Skipping" }
+                                null
+                            } else {
+                                // Network errors, storage errors, and unexpected errors — throw to caller
+                                logger.warn { "Error flushing stream $streamName: ${e.message}. Aborting flush" }
+                                throw e
+                            }
                         }
                     }
-                }
-                .sumOf { it.size }
+                    .sumOf { it.size }
+
+                totalFlushed += batchFlushed
+                recordsByStream = storage.getRecordsByStream(attemptedIds).getOrThrow()
+            }
 
             Result.Success(FlushData(totalFlushed))
         } catch (e: Throwable) {
