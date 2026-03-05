@@ -241,4 +241,106 @@ class SQLiteRecordStorageCacheAccuracyTest {
             records.forEach { it.streamName shouldBe streamName }
         }
     }
+
+    @Test
+    fun `getRecordsByStream with empty excludingIds returns all records`() = runTest {
+        val storage = createTestStorage()
+
+        storage.addRecord(RecordInput("stream1", "key1", byteArrayOf(1))).getOrThrow()
+        storage.addRecord(RecordInput("stream1", "key2", byteArrayOf(2))).getOrThrow()
+        storage.addRecord(RecordInput("stream2", "key3", byteArrayOf(3))).getOrThrow()
+
+        val result = storage.getRecordsByStream(emptySet()).getOrThrow()
+        val allRecords = result.flatten()
+
+        allRecords.size shouldBe 3
+    }
+
+    @Test
+    fun `getRecordsByStream excludes specified record ids`() = runTest {
+        val storage = createTestStorage()
+
+        storage.addRecord(RecordInput("stream1", "key1", byteArrayOf(1))).getOrThrow()
+        storage.addRecord(RecordInput("stream1", "key2", byteArrayOf(2))).getOrThrow()
+        storage.addRecord(RecordInput("stream1", "key3", byteArrayOf(3))).getOrThrow()
+
+        val allRecords = storage.getRecordsByStream(emptySet()).getOrThrow().flatten()
+        allRecords.size shouldBe 3
+
+        val excludeIds = setOf(allRecords[0].id, allRecords[2].id)
+        val filtered = storage.getRecordsByStream(excludeIds).getOrThrow().flatten()
+
+        filtered.size shouldBe 1
+        filtered[0].id shouldBe allRecords[1].id
+    }
+
+    @Test
+    fun `getRecordsByStream with all ids excluded returns empty`() = runTest {
+        val storage = createTestStorage()
+
+        storage.addRecord(RecordInput("stream1", "key1", byteArrayOf(1))).getOrThrow()
+        storage.addRecord(RecordInput("stream1", "key2", byteArrayOf(2))).getOrThrow()
+
+        val allRecords = storage.getRecordsByStream(emptySet()).getOrThrow().flatten()
+        val excludeAll = allRecords.map { it.id }.toSet()
+
+        val result = storage.getRecordsByStream(excludeAll).getOrThrow()
+        result shouldBe emptyList()
+    }
+
+    @Test
+    fun `getRecordsByStream excludes ids across multiple streams`() = runTest {
+        val storage = createTestStorage()
+
+        storage.addRecord(RecordInput("stream1", "key1", byteArrayOf(1))).getOrThrow()
+        storage.addRecord(RecordInput("stream1", "key2", byteArrayOf(2))).getOrThrow()
+        storage.addRecord(RecordInput("stream2", "key3", byteArrayOf(3))).getOrThrow()
+        storage.addRecord(RecordInput("stream2", "key4", byteArrayOf(4))).getOrThrow()
+
+        val allRecords = storage.getRecordsByStream(emptySet()).getOrThrow().flatten()
+        val stream1Record = allRecords.first { it.streamName == "stream1" }
+        val stream2Record = allRecords.first { it.streamName == "stream2" }
+
+        val filtered = storage.getRecordsByStream(setOf(stream1Record.id, stream2Record.id)).getOrThrow()
+        val remaining = filtered.flatten()
+
+        remaining.size shouldBe 2
+        remaining.none { it.id == stream1Record.id } shouldBe true
+        remaining.none { it.id == stream2Record.id } shouldBe true
+    }
+
+    @Test
+    fun `getRecordsByStream respects batch limit after excluding ids`() = runTest {
+        val storage = SQLiteRecordStorage(
+            maxRecordsByStream = 2,
+            cacheMaxBytes = 1024 * 1024L,
+            identifier = "test_batch_exclude",
+            connectionFactory = { BundledSQLiteDriver().open(":memory:") },
+            maxRecordSizeBytes = 10L * 1024 * 1024,
+            maxBytesPerStream = 10L * 1024 * 1024,
+            maxPartitionKeyLength = 256,
+            dispatcher = Dispatchers.IO
+        )
+
+        // Add 4 records to one stream
+        storage.addRecord(RecordInput("stream1", "key1", byteArrayOf(1))).getOrThrow()
+        storage.addRecord(RecordInput("stream1", "key2", byteArrayOf(2))).getOrThrow()
+        storage.addRecord(RecordInput("stream1", "key3", byteArrayOf(3))).getOrThrow()
+        storage.addRecord(RecordInput("stream1", "key4", byteArrayOf(4))).getOrThrow()
+
+        // First batch: 2 records (batch limit)
+        val batch1 = storage.getRecordsByStream(emptySet()).getOrThrow().flatten()
+        batch1.size shouldBe 2
+
+        // Second batch: exclude first 2, get next 2
+        val excludeIds = batch1.map { it.id }.toSet()
+        val batch2 = storage.getRecordsByStream(excludeIds).getOrThrow().flatten()
+        batch2.size shouldBe 2
+        batch2.none { it.id in excludeIds } shouldBe true
+
+        // Third batch: exclude all 4, get nothing
+        val allIds = (batch1 + batch2).map { it.id }.toSet()
+        val batch3 = storage.getRecordsByStream(allIds).getOrThrow()
+        batch3 shouldBe emptyList()
+    }
 }
