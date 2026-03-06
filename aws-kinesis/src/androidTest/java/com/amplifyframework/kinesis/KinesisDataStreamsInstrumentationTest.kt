@@ -21,6 +21,7 @@ import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.configuration.AmplifyOutputs
+import com.amplifyframework.kinesis.test.R
 import com.amplifyframework.foundation.credentials.AwsCredentials
 import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
 import com.amplifyframework.foundation.credentials.toAwsCredentialsProvider
@@ -59,7 +60,6 @@ class KinesisDataStreamsInstrumentationTest {
 
     companion object {
         private const val STREAM_NAME = "amplify-kinesis-test-stream"
-        private const val CREDENTIALS_RESOURCE_NAME = "credentials"
         private const val REGION = "us-east-1"
 
         private lateinit var synchronousAuth: SynchronousAuth
@@ -69,16 +69,12 @@ class KinesisDataStreamsInstrumentationTest {
         @JvmStatic
         fun setupBefore() {
             val context = ApplicationProvider.getApplicationContext<Context>()
-            val outputsResourceId = Resources.getRawResourceId(context, "amplify_outputs")
             Amplify.Auth.addPlugin(AWSCognitoAuthPlugin())
-            Amplify.configure(AmplifyOutputs(outputsResourceId), context)
+            Amplify.configure(AmplifyOutputs(R.raw.amplify_outputs), context)
             synchronousAuth = SynchronousAuth.delegatingTo(Amplify.Auth)
 
             // Sign in with test credentials
-            @RawRes val resourceId = Resources.getRawResourceId(
-                context,
-                CREDENTIALS_RESOURCE_NAME
-            )
+            @RawRes val resourceId = R.raw.credentials
             val (user, password) = readCredentialsFromResource(context, resourceId)
             synchronousAuth.signOut()
             synchronousAuth.signIn(user, password)
