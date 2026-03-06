@@ -148,23 +148,38 @@ internal class SQLiteRecordStorage internal constructor(
         Unit
     }.recoverAsRecordCacheException("Failed to add record to cache")
 
-    override suspend fun getRecordsByStream(): Result<List<List<Record>>, RecordCacheException> =
+    override suspend fun getRecordsByStream(excludingIds: Set<Long>): Result<List<List<Record>>, RecordCacheException> =
         wrapDispatchAndTransactionAndCatching {
-            connection.prepare(
-                """
+            val excludeClause = if (excludingIds.isNotEmpty()) {
+                val placeholders = excludingIds.joinToString(",") { "?" }
+                "WHERE id NOT IN ($placeholders)"
+            } else {
+                ""
+            }
+
+            val sql = """
                 SELECT id, stream_name, partition_key, data, data_size, retry_count, created_at
                 FROM (
                     SELECT *, 
                            ROW_NUMBER() OVER (PARTITION BY stream_name ORDER BY id) as rn,
                            SUM(data_size) OVER (PARTITION BY stream_name ORDER BY id) as running_size
                     FROM records
+                    $excludeClause
                 ) 
                 WHERE rn <= ? AND running_size <= ?
                 ORDER BY stream_name, id
                 """
-            ).use { stmt ->
-                stmt.bindInt(1, maxRecordsByStream)
-                stmt.bindLong(2, maxBytesPerStream)
+
+            connection.prepare(sql).use { stmt ->
+                var bindIndex = 1
+
+                // Bind excluded IDs
+                for (id in excludingIds) {
+                    stmt.bindLong(bindIndex++, id)
+                }
+
+                stmt.bindInt(bindIndex++, maxRecordsByStream)
+                stmt.bindLong(bindIndex, maxBytesPerStream)
 
                 val recordsByStream = mutableMapOf<String, MutableList<Record>>()
 
