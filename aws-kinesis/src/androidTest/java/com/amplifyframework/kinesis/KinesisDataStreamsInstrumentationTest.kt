@@ -21,11 +21,11 @@ import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.configuration.AmplifyOutputs
-import com.amplifyframework.kinesis.test.R
 import com.amplifyframework.foundation.credentials.AwsCredentials
 import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
 import com.amplifyframework.foundation.credentials.toAwsCredentialsProvider
 import com.amplifyframework.foundation.result.Result
+import com.amplifyframework.kinesis.test.R
 import com.amplifyframework.recordcache.FlushStrategy
 import com.amplifyframework.testutils.Resources
 import com.amplifyframework.testutils.assertions.shouldBeFailure
