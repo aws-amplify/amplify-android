@@ -56,7 +56,7 @@ class KotlinConventionPlugin : Plugin<Project> {
 
             tasks.withType<KotlinCompile>().configureEach {
                 compilerOptions {
-                    freeCompilerArgs.addAll(amplifyInternalMarkers.map { "-opt-in=$it" })
+                    freeCompilerArgs.addAll(optInAnnotations.map { "-opt-in=$it" })
                     freeCompilerArgs.add("-Xconsistent-data-class-copy-visibility")
                 }
             }
