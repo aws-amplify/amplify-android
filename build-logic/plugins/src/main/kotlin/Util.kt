@@ -18,10 +18,14 @@ import org.gradle.kotlin.dsl.getByType
  * permissions and limitations under the License.
  */
 
-val amplifyInternalMarkers = listOf(
+internal val amplifyInternalMarkers = listOf(
     "com.amplifyframework.annotations.InternalApiWarning",
     "com.amplifyframework.annotations.InternalAmplifyApi",
     "com.amplifyframework.annotations.AmplifyFlutterApi"
+)
+
+internal val optInAnnotations = amplifyInternalMarkers + listOf(
+    "com.amplifyframework.annotations.ExperimentalAmplifyApi"
 )
 
 internal val Project.libs
