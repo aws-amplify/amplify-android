@@ -264,7 +264,7 @@ internal class EventsWebSocketClientTest {
             val client = createClient(StandardTestDispatcher(testScheduler))
             val channel = "default/channel"
 
-            setupSendResult { _, id ->
+            setupSendResult { _, _ ->
                 launch {
                     websocketListenerSlot.captured.onClosed(websocket, 1000, "User initiated disconnect")
                 }
@@ -280,10 +280,8 @@ internal class EventsWebSocketClientTest {
         val client = createClient(StandardTestDispatcher(testScheduler))
         val channel = "default/channel"
         setupSendResult { _, id -> subscribeSuccessResult(id) }
-        every { websocket.close(any(), any()) } answers {
-            launch {
-                websocketListenerSlot.captured.onClosed(websocket, 1000, "User initiated disconnect")
-            }
+        every { websocket.close(any(), any()) } coAnswers {
+            websocketListenerSlot.captured.onClosed(websocket, 1000, "User initiated disconnect")
             true
         }
 
@@ -304,10 +302,8 @@ internal class EventsWebSocketClientTest {
         val client = createClient(StandardTestDispatcher(testScheduler))
         val channel = "default/channel"
         setupSendResult { _, id -> subscribeSuccessResult(id) }
-        every { websocket.cancel() } answers {
-            launch {
-                websocketListenerSlot.captured.onFailure(websocket, Throwable("Cancelled"), null)
-            }
+        every { websocket.cancel() } coAnswers {
+            websocketListenerSlot.captured.onFailure(websocket, Throwable("Cancelled"), null)
         }
 
         client.subscribe(channel).test {
