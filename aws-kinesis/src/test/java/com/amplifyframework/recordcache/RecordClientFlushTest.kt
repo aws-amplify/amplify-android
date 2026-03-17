@@ -61,7 +61,7 @@ class RecordClientFlushTest {
         storage.addRecord(record3).getOrThrow() // Will fail (max retries)
 
         // Get all records and set retry count for record 3 to max (3)
-        val allRecordsByStream = storage.getRecordsByStream(emptySet()).getOrThrow()
+        val allRecordsByStream = storage.getRecordsByStream().getOrThrow()
         val allRecords = allRecordsByStream.flatten() // Flatten the list of lists
         val record3Id = allRecords[2].id
         storage.incrementRetryCount(listOf(record3Id)).getOrThrow()
@@ -85,7 +85,7 @@ class RecordClientFlushTest {
         result.shouldBeSuccess()
 
         // Verify final state
-        val remainingRecordsByStream = storage.getRecordsByStream(emptySet()).getOrThrow()
+        val remainingRecordsByStream = storage.getRecordsByStream().getOrThrow()
         val remainingRecords = remainingRecordsByStream.flatten()
         remainingRecords.size shouldBe 1
         remainingRecords[0].id shouldBe allRecords[1].id
@@ -111,7 +111,7 @@ class RecordClientFlushTest {
         result.shouldBeFailure() // Should return failure for non-SDK errors
 
         // Verify all records had retry count incremented
-        val remainingRecords = storage.getRecordsByStream(emptySet()).getOrThrow().flatten()
+        val remainingRecords = storage.getRecordsByStream().getOrThrow().flatten()
         remainingRecords.size shouldBe 3
         remainingRecords.forEach { record ->
             record.retryCount shouldBe 1
@@ -127,7 +127,7 @@ class RecordClientFlushTest {
         storage.addRecord(RecordInput(streamName, "key3", byteArrayOf(3))).getOrThrow()
 
         // Set record 2 and 3 to retry count 3 (will be deleted on next failure since retryCount >= maxRetries)
-        val allRecords = storage.getRecordsByStream(emptySet()).getOrThrow().flatten()
+        val allRecords = storage.getRecordsByStream().getOrThrow().flatten()
         val record2Id = allRecords[1].id
         val record3Id = allRecords[2].id
 
@@ -144,7 +144,7 @@ class RecordClientFlushTest {
         result.shouldBeFailure() // Non-SDK errors should fail
 
         // Verify only record 1 remains (records 2 and 3 were deleted)
-        val remainingRecords = storage.getRecordsByStream(emptySet()).getOrThrow().flatten()
+        val remainingRecords = storage.getRecordsByStream().getOrThrow().flatten()
         remainingRecords.size shouldBe 1
         remainingRecords[0].id shouldBe allRecords[0].id
         remainingRecords[0].retryCount shouldBe 1
@@ -164,7 +164,7 @@ class RecordClientFlushTest {
         coEvery { mockSender.putRecords(stream2, any()) } returns
             Result.Success(
                 PutRecordsResponse(
-                    successfulIds = storage.getRecordsByStream(emptySet()).getOrThrow()
+                    successfulIds = storage.getRecordsByStream().getOrThrow()
                         .flatten()
                         .filter { it.streamName == stream2 }
                         .map { it.id },
@@ -180,7 +180,7 @@ class RecordClientFlushTest {
         result.shouldBeFailure()
 
         // Verify stream1 record has retry count incremented, stream2 record still exists (not processed)
-        val remainingRecords = storage.getRecordsByStream(emptySet()).getOrThrow().flatten()
+        val remainingRecords = storage.getRecordsByStream().getOrThrow().flatten()
         remainingRecords.size shouldBe 2
         remainingRecords.find { it.streamName == stream1 }!!.retryCount shouldBe 1
         remainingRecords.find { it.streamName == stream2 }!!.retryCount shouldBe 0 // Not processed
@@ -207,7 +207,7 @@ class RecordClientFlushTest {
         result.getOrThrow().recordsFlushed shouldBe 0
 
         // Verify records had retry count incremented (will be retried later)
-        val remainingRecords = storage.getRecordsByStream(emptySet()).getOrThrow().flatten()
+        val remainingRecords = storage.getRecordsByStream().getOrThrow().flatten()
         remainingRecords.size shouldBe 2
         remainingRecords.forEach { record ->
             record.retryCount shouldBe 1
@@ -223,7 +223,7 @@ class RecordClientFlushTest {
         storage.addRecord(RecordInput(stream1, "key1", byteArrayOf(1))).getOrThrow()
         storage.addRecord(RecordInput(stream2, "key2", byteArrayOf(2))).getOrThrow()
 
-        val initialRecords = storage.getRecordsByStream(emptySet()).getOrThrow().flatten()
+        val initialRecords = storage.getRecordsByStream().getOrThrow().flatten()
         val stream2RecordId = initialRecords.find { it.streamName == stream2 }!!.id
 
         // Configure mock sender
@@ -248,7 +248,7 @@ class RecordClientFlushTest {
         result.getOrThrow().recordsFlushed shouldBe 1
 
         // Verify final state
-        val remainingRecords = storage.getRecordsByStream(emptySet()).getOrThrow().flatten()
+        val remainingRecords = storage.getRecordsByStream().getOrThrow().flatten()
         remainingRecords.size shouldBe 1
 
         // Stream2 should be deleted (successfully flushed)

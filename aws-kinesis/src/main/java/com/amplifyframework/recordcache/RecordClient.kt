@@ -27,9 +27,9 @@ internal class RecordClient(
         }
         return try {
             var totalFlushed = 0
-            val attemptedIds = mutableSetOf<Long>()
+            val lastIdByStream = mutableMapOf<String, Long>()
 
-            var recordsByStream = storage.getRecordsByStream(attemptedIds).getOrThrow()
+            var recordsByStream = storage.getRecordsByStream(lastIdByStream).getOrThrow()
             while (recordsByStream.isNotEmpty()) {
                 logger.debug { "Retrieved ${recordsByStream.size} stream(s) with records to flush" }
 
@@ -39,8 +39,9 @@ internal class RecordClient(
                         val recordCount = records.size
                         logger.verbose { "Flushing $recordCount records to stream: $streamName" }
 
-                        // Track all attempted record IDs so they are excluded from the next batch
-                        attemptedIds.addAll(records.map { it.id })
+                        // Track the last record ID per stream so subsequent batches start after it
+                        val maxId = records.maxOf { it.id }
+                        lastIdByStream[streamName] = maxId
 
                         try {
                             val result = sender.putRecords(streamName, records).getOrThrow()
@@ -78,7 +79,7 @@ internal class RecordClient(
                     .sumOf { it.size }
 
                 totalFlushed += batchFlushed
-                recordsByStream = storage.getRecordsByStream(attemptedIds).getOrThrow()
+                recordsByStream = storage.getRecordsByStream(lastIdByStream).getOrThrow()
             }
 
             Result.Success(FlushData(totalFlushed))

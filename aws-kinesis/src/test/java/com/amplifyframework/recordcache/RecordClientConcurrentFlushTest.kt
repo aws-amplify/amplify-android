@@ -46,7 +46,7 @@ class RecordClientConcurrentFlushTest {
             storage.addRecord(RecordInput(streamName, "key$i", byteArrayOf(i.toByte()))).getOrThrow()
         }
 
-        val allRecords = storage.getRecordsByStream(emptySet()).getOrThrow().flatten()
+        val allRecords = storage.getRecordsByStream().getOrThrow().flatten()
 
         // Make the sender slow so the first flush holds the lock
         coEvery { mockSender.putRecords(streamName, any()) } coAnswers {

@@ -148,60 +148,65 @@ internal class SQLiteRecordStorage internal constructor(
         Unit
     }.recoverAsRecordCacheException("Failed to add record to cache")
 
-    override suspend fun getRecordsByStream(excludingIds: Set<Long>): Result<List<List<Record>>, RecordCacheException> =
-        wrapDispatchAndTransactionAndCatching {
-            val excludeClause = if (excludingIds.isNotEmpty()) {
-                val placeholders = excludingIds.joinToString(",") { "?" }
-                "WHERE id NOT IN ($placeholders)"
-            } else {
-                ""
+    override suspend fun getRecordsByStream(
+        afterIdByStream: Map<String, Long>
+    ): Result<List<List<Record>>, RecordCacheException> = wrapDispatchAndTransactionAndCatching {
+        // Build per-stream WHERE clauses: id > lastProcessedId for streams we've already seen
+        val streamFilter = if (afterIdByStream.isNotEmpty()) {
+            val conditions = afterIdByStream.entries.joinToString(" AND ") {
+                "NOT (stream_name = ? AND id <= ?)"
             }
+            "WHERE $conditions"
+        } else {
+            ""
+        }
 
-            val sql = """
+        val sql = """
                 SELECT id, stream_name, partition_key, data, data_size, retry_count, created_at
                 FROM (
                     SELECT *, 
                            ROW_NUMBER() OVER (PARTITION BY stream_name ORDER BY id) as rn,
                            SUM(data_size) OVER (PARTITION BY stream_name ORDER BY id) as running_size
                     FROM records
-                    $excludeClause
+                    $streamFilter
                 ) 
                 WHERE rn <= ? AND running_size <= ?
                 ORDER BY stream_name, id
                 """
 
-            connection.prepare(sql).use { stmt ->
-                var bindIndex = 1
+        connection.prepare(sql).use { stmt ->
+            var bindIndex = 1
 
-                // Bind excluded IDs
-                for (id in excludingIds) {
-                    stmt.bindLong(bindIndex++, id)
-                }
-
-                stmt.bindInt(bindIndex++, maxRecordsByStream)
-                stmt.bindLong(bindIndex, maxBytesPerStream)
-
-                val recordsByStream = mutableMapOf<String, MutableList<Record>>()
-
-                while (stmt.step()) {
-                    val streamName = stmt.getText(1)
-
-                    recordsByStream.getOrPut(streamName) { mutableListOf() }.add(
-                        Record(
-                            id = stmt.getLong(0),
-                            streamName = streamName,
-                            partitionKey = stmt.getText(2),
-                            data = stmt.getBlob(3),
-                            dataSize = stmt.getInt(4),
-                            retryCount = stmt.getInt(5),
-                            createdAt = stmt.getLong(6)
-                        )
-                    )
-                }
-
-                recordsByStream.values.toList()
+            // Bind per-stream after-id filters
+            for ((streamName, afterId) in afterIdByStream) {
+                stmt.bindText(bindIndex++, streamName)
+                stmt.bindLong(bindIndex++, afterId)
             }
-        }.recoverAsRecordCacheException("Could not retrieve records from storage")
+
+            stmt.bindInt(bindIndex++, maxRecordsByStream)
+            stmt.bindLong(bindIndex, maxBytesPerStream)
+
+            val recordsByStream = mutableMapOf<String, MutableList<Record>>()
+
+            while (stmt.step()) {
+                val streamName = stmt.getText(1)
+
+                recordsByStream.getOrPut(streamName) { mutableListOf() }.add(
+                    Record(
+                        id = stmt.getLong(0),
+                        streamName = streamName,
+                        partitionKey = stmt.getText(2),
+                        data = stmt.getBlob(3),
+                        dataSize = stmt.getInt(4),
+                        retryCount = stmt.getInt(5),
+                        createdAt = stmt.getLong(6)
+                    )
+                )
+            }
+
+            recordsByStream.values.toList()
+        }
+    }.recoverAsRecordCacheException("Could not retrieve records from storage")
 
     override suspend fun deleteRecords(ids: List<Long>): Result<Unit, RecordCacheException> = wrapDispatchAndCatching {
         if (ids.isNotEmpty()) {
