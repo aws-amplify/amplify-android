@@ -510,6 +510,37 @@ class KinesisDataStreamsInstrumentationTest {
     }
 
     // ---------------------------------------------------------------
+    // Multi-batch flush
+    // ---------------------------------------------------------------
+
+    /**
+     * Records more than 500 entries (the PutRecords per-request limit) to a single
+     * stream, then calls flush() once. Verifies that a single flush drains all
+     * records across multiple batches.
+     */
+    @Test
+    fun testSingleFlushDrainsMultipleBatches(): Unit = runBlocking {
+        val recordCount = 1100 // Exceeds MAX_RECORDS_PER_STREAM (500) — requires 3 batches
+
+        repeat(recordCount) { i ->
+            val result = kinesis.record(
+                data = "batch-record-$i".toByteArray(),
+                partitionKey = "partition-${i % 10}",
+                streamName = STREAM_NAME
+            )
+            result.shouldBeSuccess()
+        }
+
+        // Single flush should drain all 1100 records across three batches (500 + 500 + 100)
+        val flushResult = kinesis.flush()
+        flushResult.shouldBeSuccess().data.recordsFlushed shouldBe recordCount
+
+        // Nothing left
+        val secondFlush = kinesis.flush()
+        secondFlush.shouldBeSuccess().data.recordsFlushed shouldBe 0
+    }
+
+    // ---------------------------------------------------------------
     // Auto-flush
     // ---------------------------------------------------------------
 
