@@ -77,7 +77,14 @@ class PinpointAnalyticsCanaryTest {
             )
             setUniqueId()
             Amplify.Auth.addPlugin(AWSCognitoAuthPlugin() as AuthPlugin<*>)
-            Amplify.addPlugin(AWSPinpointAnalyticsPlugin())
+            Amplify.addPlugin(
+                AWSPinpointAnalyticsPlugin(
+                    AWSPinpointAnalyticsPlugin.Options {
+                        autoFlushEventsInterval = Long.MAX_VALUE
+                        trackLifecycleEvents = false
+                    }
+                )
+            )
             Amplify.configure(context)
             Sleep.milliseconds(SHORT_TIMEOUT)
             synchronousAuth = SynchronousAuth.delegatingTo(Amplify.Auth)
@@ -146,7 +153,7 @@ class PinpointAnalyticsCanaryTest {
     @Test
     fun recordEvent_flushEvent() {
         val hubAccumulator =
-            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 2).start()
+            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 1).start()
         val eventName = "Amplify-event" + UUID.randomUUID().toString()
         val event = AnalyticsEvent.builder()
             .name(eventName)
@@ -167,7 +174,7 @@ class PinpointAnalyticsCanaryTest {
     @Test
     fun registerGlobalProperties() {
         val hubAccumulator =
-            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 2).start()
+            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 1).start()
         val eventName = "Amplify-event" + UUID.randomUUID().toString()
         val event = AnalyticsEvent.builder()
             .name(eventName)
@@ -193,7 +200,7 @@ class PinpointAnalyticsCanaryTest {
     @Test
     fun unregisterGlobalProperties() {
         val hubAccumulator =
-            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 2).start()
+            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 1).start()
         val eventName = "Amplify-event" + UUID.randomUUID().toString()
         val event = AnalyticsEvent.builder()
             .name(eventName)
