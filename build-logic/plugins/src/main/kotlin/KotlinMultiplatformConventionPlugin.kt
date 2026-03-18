@@ -79,7 +79,7 @@ class KotlinMultiplatformConventionPlugin : Plugin<Project> {
             }
 
             compilerOptions {
-                freeCompilerArgs.addAll(amplifyInternalMarkers.map { "-opt-in=$it" })
+                freeCompilerArgs.addAll(optInAnnotations.map { "-opt-in=$it" })
                 freeCompilerArgs.add("-Xconsistent-data-class-copy-visibility")
             }
         }
