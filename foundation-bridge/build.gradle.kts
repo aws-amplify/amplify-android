@@ -9,6 +9,8 @@ kotlin {
             dependencies {
                 api(project(":foundation"))
                 api(libs.aws.credentials)
+                implementation(libs.aws.http)
+                implementation(libs.aws.smithy.http.kmp)
             }
         }
 

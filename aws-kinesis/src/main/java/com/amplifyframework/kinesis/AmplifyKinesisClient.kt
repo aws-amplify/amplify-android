@@ -11,6 +11,7 @@ import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.foundation.logging.Logger
 import com.amplifyframework.foundation.result.Result
 import com.amplifyframework.foundation.result.mapFailure
+import com.amplifyframework.foundation.useragent.AmplifyUserAgentInterceptor
 import com.amplifyframework.recordcache.AutoFlushScheduler
 import com.amplifyframework.recordcache.ClearCacheResult
 import com.amplifyframework.recordcache.FlushResult
@@ -20,7 +21,7 @@ import com.amplifyframework.recordcache.RecordData
 import com.amplifyframework.recordcache.RecordInput
 import com.amplifyframework.recordcache.RecordResult
 import com.amplifyframework.recordcache.SQLiteRecordStorage
-import kotlin.system.measureTimeMillis
+import com.amplifyframework.recordcache.logOp
 
 /**
  * Kinesis supports up to 500 records per PutRecords request.
@@ -94,7 +95,7 @@ class AmplifyKinesisClient(
         this.region = this@AmplifyKinesisClient.region
         this.credentialsProvider = this@AmplifyKinesisClient.credentialsProvider.toSmithyProvider()
         options.configureClient?.applyConfiguration(this)
-        interceptors += KinesisUserAgentInterceptor()
+        interceptors += AmplifyUserAgentInterceptor("amplify-kinesis", BuildConfig.VERSION_NAME)
     }
 
     private val recordClient: RecordClient = RecordClient(
@@ -104,6 +105,7 @@ class AmplifyKinesisClient(
         ),
         storage = SQLiteRecordStorage(
             context = context.applicationContext,
+            dbPrefix = "kinesis_records",
             identifier = region,
             maxRecordsByStream = MAX_RECORDS_PER_STREAM,
             cacheMaxBytes = options.cacheMaxBytes,
@@ -237,21 +239,5 @@ class AmplifyKinesisClient(
 
     private fun <T> Result<T, Throwable>.wrapError(): Result<T, AmplifyKinesisException> = mapFailure {
         AmplifyKinesisException.from(it)
-    }
-
-    private suspend inline fun <T> logOp(
-        operation: suspend () -> Result<T, AmplifyKinesisException>,
-        logSuccess: (T, Long) -> Unit,
-        logFailure: (Throwable?, Long) -> Unit
-    ): Result<T, AmplifyKinesisException> {
-        val result: Result<T, AmplifyKinesisException>
-        val timeMs = measureTimeMillis {
-            result = operation()
-        }
-        when (result) {
-            is Result.Failure -> logFailure(result.error, timeMs)
-            is Result.Success -> logSuccess(result.data, timeMs)
-        }
-        return result
     }
 }

@@ -28,7 +28,7 @@ internal class SQLiteRecordStorage internal constructor(
     connectionFactory: () -> SQLiteConnection,
     maxRecordSizeBytes: Long,
     maxBytesPerStream: Long,
-    maxPartitionKeyLength: Int,
+    maxPartitionKeyLength: Int? = null,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : RecordStorage(
     maxRecordsByStream,
@@ -43,29 +43,32 @@ internal class SQLiteRecordStorage internal constructor(
     private var cachedSize = AtomicInteger(0)
     private val dbMutex = Mutex()
     private val maxRecordsByStream = maxRecordsByStream
+    private val hasPartitionKey = maxPartitionKeyLength != null
 
     constructor(
         context: Context,
+        dbPrefix: String,
         maxRecordsByStream: Int,
         cacheMaxBytes: Long,
         identifier: String,
         maxRecordSizeBytes: Long,
         maxBytesPerStream: Long,
-        maxPartitionKeyLength: Int,
+        maxPartitionKeyLength: Int? = null,
         dispatcher: CoroutineDispatcher = Dispatchers.IO
     ) : this(maxRecordsByStream, cacheMaxBytes, identifier, {
-        val dbFile = File(context.getDatabasePath("kinesis_records_$identifier.db").absolutePath)
+        val dbFile = File(context.getDatabasePath("${dbPrefix}_$identifier.db").absolutePath)
         BundledSQLiteDriver().open(dbFile.absolutePath)
     }, maxRecordSizeBytes, maxBytesPerStream, maxPartitionKeyLength, dispatcher)
 
     init {
         // Create DB
+        val partitionKeyColumn = if (hasPartitionKey) "partition_key TEXT NOT NULL," else ""
         connection.execSQL(
             """
             CREATE TABLE IF NOT EXISTS records (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 stream_name TEXT NOT NULL,
-                partition_key TEXT NOT NULL,
+                $partitionKeyColumn
                 data BLOB NOT NULL,
                 data_size INTEGER NOT NULL,
                 retry_count INTEGER DEFAULT 0,
@@ -110,13 +113,20 @@ internal class SQLiteRecordStorage internal constructor(
         }
 
     override suspend fun addRecord(record: RecordInput): Result<Unit, RecordCacheException> = wrapDispatchAndCatching {
-        // Validate partition key length (must be between 1 and 256 Unicode code points)
-        val partitionKeyCodePointCount = record.partitionKey.codePointCount(0, record.partitionKey.length)
-        if (partitionKeyCodePointCount == 0 || partitionKeyCodePointCount > maxPartitionKeyLength) {
-            throw RecordCacheValidationException(
-                "Partition key length $partitionKeyCodePointCount characters is outside the allowed range of 1-$maxPartitionKeyLength characters",
-                "Use a partition key between 1 and $maxPartitionKeyLength characters."
-            )
+        // Validate partition key length when partition keys are supported
+        if (hasPartitionKey) {
+            val partitionKey = record.partitionKey
+                ?: throw RecordCacheValidationException(
+                    "Partition key is required but was null",
+                    "Provide a non-null partition key between 1 and $maxPartitionKeyLength characters."
+                )
+            val partitionKeyCodePointCount = partitionKey.codePointCount(0, partitionKey.length)
+            if (partitionKeyCodePointCount == 0 || partitionKeyCodePointCount > maxPartitionKeyLength!!) {
+                throw RecordCacheValidationException(
+                    "Partition key length $partitionKeyCodePointCount characters is outside the allowed range of 1-$maxPartitionKeyLength characters",
+                    "Use a partition key between 1 and $maxPartitionKeyLength characters."
+                )
+            }
         }
 
         // Validate per-record size limit (partition key bytes + data bytes must not exceed maxRecordSizeBytes)
@@ -135,42 +145,75 @@ internal class SQLiteRecordStorage internal constructor(
             )
         }
 
-        connection.prepare(
-            "INSERT INTO records (stream_name, partition_key, data, data_size) VALUES (?, ?, ?, ?)"
-        ).use { stmt ->
-            stmt.bindText(1, record.streamName)
-            stmt.bindText(2, record.partitionKey)
-            stmt.bindBlob(3, record.data)
-            stmt.bindInt(4, record.dataSize)
-            stmt.step()
+        if (hasPartitionKey) {
+            connection.prepare(
+                "INSERT INTO records (stream_name, partition_key, data, data_size) VALUES (?, ?, ?, ?)"
+            ).use { stmt ->
+                stmt.bindText(1, record.streamName)
+                stmt.bindText(2, record.partitionKey!!)
+                stmt.bindBlob(3, record.data)
+                stmt.bindInt(4, record.dataSize)
+                stmt.step()
+            }
+        } else {
+            connection.prepare(
+                "INSERT INTO records (stream_name, data, data_size) VALUES (?, ?, ?)"
+            ).use { stmt ->
+                stmt.bindText(1, record.streamName)
+                stmt.bindBlob(2, record.data)
+                stmt.bindInt(3, record.dataSize)
+                stmt.step()
+            }
         }
         cachedSize.addAndGet(record.dataSize)
         Unit
     }.recoverAsRecordCacheException("Failed to add record to cache")
 
-    override suspend fun getRecordsByStream(): Result<List<List<Record>>, RecordCacheException> =
-        wrapDispatchAndTransactionAndCatching {
-            connection.prepare(
-                """
-                SELECT id, stream_name, partition_key, data, data_size, retry_count, created_at
+    override suspend fun getRecordsByStream(
+        afterIdByStream: Map<String, Long>
+    ): Result<List<List<Record>>, RecordCacheException> = wrapDispatchAndTransactionAndCatching {
+        val streamFilter = if (afterIdByStream.isNotEmpty()) {
+            val conditions = afterIdByStream.entries.joinToString(" AND ") {
+                "NOT (stream_name = ? AND id <= ?)"
+            }
+            "WHERE $conditions"
+        } else {
+            ""
+        }
+
+        val columns = if (hasPartitionKey) {
+            "id, stream_name, partition_key, data, data_size, retry_count, created_at"
+        } else {
+            "id, stream_name, data, data_size, retry_count, created_at"
+        }
+
+        val sql = """
+                SELECT $columns
                 FROM (
                     SELECT *, 
                            ROW_NUMBER() OVER (PARTITION BY stream_name ORDER BY id) as rn,
                            SUM(data_size) OVER (PARTITION BY stream_name ORDER BY id) as running_size
                     FROM records
+                    $streamFilter
                 ) 
                 WHERE rn <= ? AND running_size <= ?
                 ORDER BY stream_name, id
                 """
-            ).use { stmt ->
-                stmt.bindInt(1, maxRecordsByStream)
-                stmt.bindLong(2, maxBytesPerStream)
 
-                val recordsByStream = mutableMapOf<String, MutableList<Record>>()
+        connection.prepare(sql).use { stmt ->
+            var bindIndex = 1
+            for ((streamName, afterId) in afterIdByStream) {
+                stmt.bindText(bindIndex++, streamName)
+                stmt.bindLong(bindIndex++, afterId)
+            }
+            stmt.bindInt(bindIndex++, maxRecordsByStream)
+            stmt.bindLong(bindIndex, maxBytesPerStream)
 
-                while (stmt.step()) {
-                    val streamName = stmt.getText(1)
+            val recordsByStream = mutableMapOf<String, MutableList<Record>>()
 
+            while (stmt.step()) {
+                val streamName = stmt.getText(1)
+                if (hasPartitionKey) {
                     recordsByStream.getOrPut(streamName) { mutableListOf() }.add(
                         Record(
                             id = stmt.getLong(0),
@@ -182,11 +225,22 @@ internal class SQLiteRecordStorage internal constructor(
                             createdAt = stmt.getLong(6)
                         )
                     )
+                } else {
+                    recordsByStream.getOrPut(streamName) { mutableListOf() }.add(
+                        Record(
+                            id = stmt.getLong(0),
+                            streamName = streamName,
+                            data = stmt.getBlob(2),
+                            dataSize = stmt.getInt(3),
+                            retryCount = stmt.getInt(4),
+                            createdAt = stmt.getLong(5)
+                        )
+                    )
                 }
-
-                recordsByStream.values.toList()
             }
-        }.recoverAsRecordCacheException("Could not retrieve records from storage")
+            recordsByStream.values.toList()
+        }
+    }.recoverAsRecordCacheException("Could not retrieve records from storage")
 
     override suspend fun deleteRecords(ids: List<Long>): Result<Unit, RecordCacheException> = wrapDispatchAndCatching {
         if (ids.isNotEmpty()) {

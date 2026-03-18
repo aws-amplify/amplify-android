@@ -148,7 +148,7 @@ class SQLiteRecordStorageCacheAccuracyTest {
                     if (records.isNotEmpty()) {
                         val recordsToDelete = records.take(1)
                         val idsToDelete = recordsToDelete.map { it.id }
-                        val keysToDelete = recordsToDelete.map { it.partitionKey }
+                        val keysToDelete = recordsToDelete.mapNotNull { it.partitionKey }
 
                         // Note, other consumer might already have deleted what we're trying to delete
                         storage.deleteRecords(idsToDelete).getOrThrow()
@@ -182,7 +182,7 @@ class SQLiteRecordStorageCacheAccuracyTest {
         finalCacheSize shouldBe actualCacheSize
         finalCacheSize shouldBe expectedCacheSize
 
-        val remainingKeys = finalRecords.map { it.partitionKey }.toSet()
+        val remainingKeys = finalRecords.mapNotNull { it.partitionKey }.toSet()
         val allCreatedKeys = createdRecords.values.flatten().toSet()
 
         for (createdKey in allCreatedKeys) {
