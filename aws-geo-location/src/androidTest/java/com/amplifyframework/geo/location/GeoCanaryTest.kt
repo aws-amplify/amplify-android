@@ -26,14 +26,15 @@ import com.amplifyframework.geo.models.Coordinates
 import com.amplifyframework.testutils.rules.CanaryTestRule
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousGeo
+import java.util.concurrent.TimeUnit
 import org.junit.After
+import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Rule
 import org.junit.Test
 
 class GeoCanaryTest {
     companion object {
-        private const val TIMEOUT_S = 20L
         private val TAG = GeoCanaryTest::class.simpleName
 
         @BeforeClass
@@ -52,8 +53,13 @@ class GeoCanaryTest {
     @get:Rule
     val testRule = CanaryTestRule()
 
-    private val syncAuth = SynchronousAuth.delegatingToAmplify()
+    private val syncAuth = SynchronousAuth.delegatingToAmplify(TimeUnit.SECONDS.toMillis(20))
     private val syncGeo = SynchronousGeo.delegatingToAmplify()
+
+    @Before
+    fun setup() {
+        signOutFromCognito()
+    }
 
     @After
     fun tearDown() {
