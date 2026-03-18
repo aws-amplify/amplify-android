@@ -32,6 +32,58 @@ checkstyle {
 
 afterEvaluate {
     check.dependsOn 'checkstyle'
+    check.dependsOn 'checkKotlinLicenseHeaders'
+}
+
+/**
+ * Verifies that all Kotlin source files contain the full Apache 2.0 license header.
+ * Mirrors the RegexpHeader check in checkstyle-rules.xml for Java files.
+ * Uses the same regex patterns from configuration/java.header.
+ */
+task checkKotlinLicenseHeaders {
+    description = "Check that Kotlin source files contain the license header"
+    group = "verification"
+
+    doLast {
+        // Read the same header patterns used by Checkstyle for Java files
+        def headerLines = rootProject.file("configuration/java.header")
+            .readLines()
+            .findAll { !it.isEmpty() }
+
+        def missing = []
+
+        android.sourceSets.each { sourceSet ->
+            sourceSet.java.srcDirs.each { srcDir ->
+                if (srcDir.exists()) {
+                    fileTree(dir: srcDir, includes: ['**/*.kt']).each { file ->
+                        def lines = file.readLines()
+                        def valid = true
+
+                        if (lines.size() < headerLines.size()) {
+                            valid = false
+                        } else {
+                            headerLines.eachWithIndex { pattern, index ->
+                                if (!(lines[index] ==~ pattern)) {
+                                    valid = false
+                                }
+                            }
+                        }
+
+                        if (!valid) {
+                            missing << file.path
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!missing.isEmpty()) {
+            throw new GradleException(
+                "The following Kotlin files are missing or have an incorrect license header:\n" +
+                missing.collect { "  - ${it}" }.join("\n")
+            )
+        }
+    }
 }
 
 def javaSources() {
