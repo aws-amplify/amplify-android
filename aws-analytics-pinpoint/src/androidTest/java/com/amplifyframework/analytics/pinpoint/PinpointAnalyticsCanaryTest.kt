@@ -35,10 +35,11 @@ import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.testutils.HubAccumulator
 import com.amplifyframework.testutils.Resources
 import com.amplifyframework.testutils.Sleep
+import com.amplifyframework.testutils.await
 import com.amplifyframework.testutils.rules.CanaryTestRule
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import java.util.UUID
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.runBlocking
 import org.json.JSONException
 import org.junit.Assert
@@ -51,9 +52,10 @@ class PinpointAnalyticsCanaryTest {
     companion object {
         private const val CREDENTIALS_RESOURCE_NAME = "credentials"
         private const val CONFIGURATION_NAME = "amplifyconfiguration"
-        private const val COGNITO_CONFIGURATION_TIMEOUT = 5 * 1000L
-        private const val PINPOINT_ROUNDTRIP_TIMEOUT = 10 * 1000L
-        private const val TIMEOUT_S = 20
+        private const val SHORT_TIMEOUT = 1 * 1000L
+        private const val LONG_TIMEOUT = 10 * 1000L
+
+        private val HubTimeout = 20.seconds
         private const val UNIQUE_ID_KEY = "UniqueId"
         private const val PREFERENCES_AND_FILE_MANAGER_SUFFIX = "515d6767-01b7-49e5-8273-c8d11b0f331d"
         private lateinit var synchronousAuth: SynchronousAuth
@@ -77,7 +79,7 @@ class PinpointAnalyticsCanaryTest {
             Amplify.Auth.addPlugin(AWSCognitoAuthPlugin() as AuthPlugin<*>)
             Amplify.addPlugin(AWSPinpointAnalyticsPlugin())
             Amplify.configure(context)
-            Sleep.milliseconds(COGNITO_CONFIGURATION_TIMEOUT)
+            Sleep.milliseconds(SHORT_TIMEOUT)
             synchronousAuth = SynchronousAuth.delegatingTo(Amplify.Auth)
         }
 
@@ -134,7 +136,7 @@ class PinpointAnalyticsCanaryTest {
         val hubAccumulator =
             HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 1).start()
         Amplify.Analytics.flushEvents()
-        hubAccumulator.await(10, TimeUnit.SECONDS)
+        hubAccumulator.await(HubTimeout)
         pinpointClient = Amplify.Analytics.getPlugin("awsPinpointAnalyticsPlugin").escapeHatch as
             PinpointClient
         uniqueId = preferences.getString(UNIQUE_ID_KEY, "error-no-unique-id")!!
@@ -155,8 +157,9 @@ class PinpointAnalyticsCanaryTest {
             .build()
 
         Amplify.Analytics.recordEvent(event)
+        Sleep.milliseconds(SHORT_TIMEOUT)
         Amplify.Analytics.flushEvents()
-        val hubEvents = hubAccumulator.await(TIMEOUT_S, TimeUnit.SECONDS)
+        val hubEvents = hubAccumulator.await(HubTimeout)
         val submittedEvents = combineAndFilterEvents(hubEvents)
         Assert.assertEquals(1, submittedEvents.size.toLong())
     }
@@ -180,8 +183,9 @@ class PinpointAnalyticsCanaryTest {
                 .add("AppStyle", "DarkMode")
                 .build()
         )
+        Sleep.milliseconds(SHORT_TIMEOUT)
         Amplify.Analytics.flushEvents()
-        val hubEvents = hubAccumulator.await(TIMEOUT_S, TimeUnit.SECONDS)
+        val hubEvents = hubAccumulator.await(HubTimeout)
         val submittedEvents = combineAndFilterEvents(hubEvents)
         Assert.assertEquals(1, submittedEvents.size.toLong())
     }
@@ -201,8 +205,9 @@ class PinpointAnalyticsCanaryTest {
 
         Amplify.Analytics.recordEvent(event)
         Amplify.Analytics.unregisterGlobalProperties("AppStyle")
+        Sleep.milliseconds(SHORT_TIMEOUT)
         Amplify.Analytics.flushEvents()
-        val hubEvents = hubAccumulator.await(TIMEOUT_S, TimeUnit.SECONDS)
+        val hubEvents = hubAccumulator.await(HubTimeout)
         val submittedEvents = combineAndFilterEvents(hubEvents)
         Assert.assertEquals(1, submittedEvents.size.toLong())
     }
@@ -219,7 +224,7 @@ class PinpointAnalyticsCanaryTest {
             .customProperties(properties)
             .build()
         Amplify.Analytics.identifyUser(UUID.randomUUID().toString(), userProfile)
-        Sleep.milliseconds(PINPOINT_ROUNDTRIP_TIMEOUT)
+        Sleep.milliseconds(LONG_TIMEOUT)
         val endpointResponse = fetchEndpointResponse()
         assertCommonEndpointResponseProperties(endpointResponse)
         assert(null == endpointResponse.user!!.userAttributes)
