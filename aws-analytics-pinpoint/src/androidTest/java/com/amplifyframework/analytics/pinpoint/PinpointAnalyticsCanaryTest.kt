@@ -51,7 +51,7 @@ class PinpointAnalyticsCanaryTest : DeviceFarmTestBase() {
     companion object {
         private const val CREDENTIALS_RESOURCE_NAME = "credentials"
         private const val CONFIGURATION_NAME = "amplifyconfiguration"
-        private const val SHORT_TIMEOUT = 1 * 1000L
+        private const val SHORT_TIMEOUT = 5 * 1000L
         private const val LONG_TIMEOUT = 10 * 1000L
 
         private val HubTimeout = 20.seconds
@@ -86,7 +86,7 @@ class PinpointAnalyticsCanaryTest : DeviceFarmTestBase() {
             )
             Amplify.configure(context)
             Sleep.milliseconds(SHORT_TIMEOUT)
-            synchronousAuth = SynchronousAuth.delegatingTo(Amplify.Auth)
+            synchronousAuth = SynchronousAuth.delegatingTo(Amplify.Auth, 20_000L)
         }
 
         private fun setUniqueId() {
