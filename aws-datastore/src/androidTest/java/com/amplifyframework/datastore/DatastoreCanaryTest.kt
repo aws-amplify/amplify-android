@@ -25,6 +25,7 @@ import com.amplifyframework.testmodels.commentsblog.PostStatus
 import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.HubAccumulator
 import com.amplifyframework.testutils.sync.SynchronousDataStore
+import io.reactivex.rxjava3.plugins.RxJavaPlugins
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import org.junit.After
@@ -39,6 +40,9 @@ class DatastoreCanaryTest : DeviceFarmTestBase() {
         @BeforeClass
         @JvmStatic
         fun setup() {
+            RxJavaPlugins.setErrorHandler { e ->
+                Log.w(TAG, "RxJava undeliverable exception (suppressed)", e)
+            }
             try {
                 Amplify.addPlugin(
                     AWSDataStorePlugin.builder()
