@@ -30,8 +30,60 @@ checkstyle {
     toolVersion = '8.29'
 }
 
+abstract class KotlinLicenseHeaderCheck extends DefaultTask {
+
+    @InputFile
+    abstract RegularFileProperty getHeaderFile()
+
+    @InputFiles
+    abstract ConfigurableFileCollection getSourceFiles()
+
+    @OutputFile
+    abstract RegularFileProperty getReportFile()
+
+    @TaskAction
+    void check() {
+        def patterns = headerFile.get().asFile.readLines().collect { it.trim() }
+        def failures = []
+
+        sourceFiles.each { file ->
+            def lines = file.readLines()
+            if (lines.size() < patterns.size()) {
+                failures.add(file.path)
+                return
+            }
+            for (int i = 0; i < patterns.size(); i++) {
+                if (!(lines[i] ==~ patterns[i])) {
+                    failures.add(file.path)
+                    break
+                }
+            }
+        }
+
+        def report = reportFile.get().asFile
+        report.text = failures.isEmpty()
+            ? "All Kotlin files have valid license headers.\n"
+            : "Missing license headers:\n" + failures.collect { "  - $it" }.join("\n") + "\n"
+
+        if (!failures.isEmpty()) {
+            throw new GradleException(
+                "The following Kotlin files are missing a valid license header:\n" +
+                failures.collect { "  - $it" }.join("\n")
+            )
+        }
+    }
+}
+
+tasks.register('kotlinLicenseHeaderCheck', KotlinLicenseHeaderCheck) {
+    description = "Verify Kotlin source files have the required license header"
+    headerFile = rootProject.file("configuration/java.header")
+    sourceFiles.from(fileTree(projectDir) { include "src/**/*.kt" })
+    reportFile = project.layout.buildDirectory.file("reports/kotlinLicenseHeader.txt")
+}
+
 afterEvaluate {
     check.dependsOn 'checkstyle'
+    check.dependsOn 'kotlinLicenseHeaderCheck'
 }
 
 def javaSources() {
