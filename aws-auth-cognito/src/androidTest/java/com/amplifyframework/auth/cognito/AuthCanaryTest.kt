@@ -175,7 +175,7 @@ class AuthCanaryTest : DeviceFarmTestBase() {
     @Test
     fun forgetDevice() {
         signInUser(username, password)
-        syncAuth.rememberDevice()
+        syncAuth.forgetDevice()
     }
 
     @Test
