@@ -32,6 +32,8 @@ import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
+import com.amplifyframework.logging.AndroidLoggingPlugin
+import com.amplifyframework.logging.LogLevel
 import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.HubAccumulator
 import com.amplifyframework.testutils.Resources
@@ -75,6 +77,7 @@ class PinpointAnalyticsCanaryTest : DeviceFarmTestBase() {
                 Context.MODE_PRIVATE
             )
             setUniqueId()
+            Amplify.addPlugin(AndroidLoggingPlugin(LogLevel.VERBOSE))
             Amplify.Auth.addPlugin(AWSCognitoAuthPlugin() as AuthPlugin<*>)
             Amplify.addPlugin(
                 AWSPinpointAnalyticsPlugin(
