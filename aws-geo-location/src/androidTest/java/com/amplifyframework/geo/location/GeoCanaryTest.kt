@@ -28,7 +28,6 @@ import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousGeo
 import java.util.concurrent.TimeUnit
 import org.junit.After
-import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
 
@@ -51,11 +50,6 @@ class GeoCanaryTest : DeviceFarmTestBase() {
 
     private val syncAuth = SynchronousAuth.delegatingToAmplify(TimeUnit.SECONDS.toMillis(20))
     private val syncGeo = SynchronousGeo.delegatingToAmplify()
-
-    @Before
-    fun setup() {
-        signOutFromCognito()
-    }
 
     @After
     fun tearDown() {
