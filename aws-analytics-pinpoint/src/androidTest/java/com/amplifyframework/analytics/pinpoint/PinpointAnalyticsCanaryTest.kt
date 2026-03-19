@@ -41,6 +41,7 @@ import com.amplifyframework.testutils.Sleep
 import com.amplifyframework.testutils.await
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import java.util.UUID
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.runBlocking
 import org.json.JSONException
@@ -82,7 +83,7 @@ class PinpointAnalyticsCanaryTest : DeviceFarmTestBase() {
             Amplify.addPlugin(
                 AWSPinpointAnalyticsPlugin(
                     AWSPinpointAnalyticsPlugin.Options {
-                        autoFlushEventsInterval = Long.MAX_VALUE
+                        autoFlushEventsInterval = 60.minutes.inWholeMilliseconds
                         trackLifecycleEvents = false
                     }
                 )
