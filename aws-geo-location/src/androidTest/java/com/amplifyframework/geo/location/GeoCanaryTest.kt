@@ -38,7 +38,7 @@ class GeoCanaryTest : DeviceFarmTestBase() {
 
         @BeforeClass
         @JvmStatic
-        fun setup() {
+        fun setupClass() {
             try {
                 Amplify.addPlugin(AWSCognitoAuthPlugin())
                 Amplify.addPlugin(AWSLocationGeoPlugin())
