@@ -36,6 +36,7 @@ import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.logging.AndroidLoggingPlugin
 import com.amplifyframework.logging.LogLevel
 import com.amplifyframework.pinpoint.core.endpointProfile.EndpointProfile
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.HubAccumulator
 import com.amplifyframework.testutils.Resources
 import com.amplifyframework.testutils.Sleep
@@ -49,7 +50,7 @@ import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
 
-class PinpointAnalyticsInstrumentationTest {
+class PinpointAnalyticsInstrumentationTest : DeviceFarmTestBase() {
     @Before
     fun flushEvents() {
         val context = ApplicationProvider.getApplicationContext<Context>()

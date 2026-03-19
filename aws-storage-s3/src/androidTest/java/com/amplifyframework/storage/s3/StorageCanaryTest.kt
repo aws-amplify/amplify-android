@@ -29,7 +29,7 @@ import com.amplifyframework.storage.options.StorageRemoveOptions
 import com.amplifyframework.storage.options.StorageUploadFileOptions
 import com.amplifyframework.storage.options.StorageUploadInputStreamOptions
 import com.amplifyframework.storage.s3.test.R
-import com.amplifyframework.testutils.rules.CanaryTestRule
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.sync.SynchronousStorage
 import java.io.File
 import java.io.FileInputStream
@@ -38,10 +38,9 @@ import java.util.UUID
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import org.junit.BeforeClass
-import org.junit.Rule
 import org.junit.Test
 
-class StorageCanaryTest {
+class StorageCanaryTest : DeviceFarmTestBase() {
     companion object {
         private const val TIMEOUT_S = 20L
         private val TAG = StorageCanaryTest::class.simpleName
@@ -60,9 +59,6 @@ class StorageCanaryTest {
             }
         }
     }
-
-    @get:Rule
-    val testRule = CanaryTestRule()
 
     private val syncStorage = SynchronousStorage.delegatingToAmplify()
 

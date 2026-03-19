@@ -32,11 +32,11 @@ import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.HubAccumulator
 import com.amplifyframework.testutils.Resources
 import com.amplifyframework.testutils.Sleep
 import com.amplifyframework.testutils.await
-import com.amplifyframework.testutils.rules.CanaryTestRule
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
@@ -45,10 +45,9 @@ import org.json.JSONException
 import org.junit.Assert
 import org.junit.Before
 import org.junit.BeforeClass
-import org.junit.Rule
 import org.junit.Test
 
-class PinpointAnalyticsCanaryTest {
+class PinpointAnalyticsCanaryTest : DeviceFarmTestBase() {
     companion object {
         private const val CREDENTIALS_RESOURCE_NAME = "credentials"
         private const val CONFIGURATION_NAME = "amplifyconfiguration"
@@ -125,9 +124,6 @@ class PinpointAnalyticsCanaryTest {
             }
         }
     }
-
-    @get:Rule
-    val testRule = CanaryTestRule()
 
     @Before
     fun flushEvents() {
