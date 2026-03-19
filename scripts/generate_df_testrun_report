@@ -6,6 +6,7 @@ import os
 import sys
 import argparse
 import logging
+import requests
 import boto3
 from botocore.config import Config
 from junit_xml import TestSuite, TestCase
@@ -39,6 +40,25 @@ def get_artifacts(test_arn):
             artifacts[artifact_type] = []
     return artifacts
 
+def download_artifact_content(url):
+    """Download artifact content from a presigned S3 URL."""
+    try:
+        response = requests.get(url, timeout=30)
+        response.raise_for_status()
+        return response.text
+    except Exception as e:
+        LOGGER.warning(f"Failed to download artifact: {e}")
+        return None
+
+def get_instrumentation_log(artifacts):
+    """Find and download the Instrumentation.txt log from artifacts."""
+    for artifact in artifacts.get('FILE', []):
+        if artifact.get('name', '').lower() == 'instrumentation output':
+            url = artifact.get('url')
+            if url:
+                return download_artifact_content(url)
+    return None
+
 def build_failure_detail(test, job, artifacts):
     """Build a detailed failure message from test data, job context, and artifacts."""
     lines = []
@@ -52,6 +72,11 @@ def build_failure_detail(test, job, artifacts):
     message = test.get('message', '')
     if message:
         lines.append(f"\n--- Test Message ---\n{message}")
+
+    # Include inline stack trace from Instrumentation output
+    instrumentation_log = get_instrumentation_log(artifacts)
+    if instrumentation_log:
+        lines.append(f"\n--- Stack Trace (Instrumentation Output) ---\n{instrumentation_log}")
 
     # Append log artifact URLs so engineers can drill into full logs
     log_artifacts = artifacts.get('LOG', [])
