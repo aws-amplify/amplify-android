@@ -22,17 +22,17 @@ import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider
 import com.amplifyframework.testmodels.commentsblog.Post
 import com.amplifyframework.testmodels.commentsblog.PostStatus
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.HubAccumulator
-import com.amplifyframework.testutils.rules.CanaryTestRule
 import com.amplifyframework.testutils.sync.SynchronousDataStore
+import io.reactivex.rxjava3.plugins.RxJavaPlugins
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import org.junit.After
 import org.junit.BeforeClass
-import org.junit.Rule
 import org.junit.Test
 
-class DatastoreCanaryTest {
+class DatastoreCanaryTest : DeviceFarmTestBase() {
     companion object {
         private const val TIMEOUT_S = 20L
         private val TAG = DatastoreCanaryTest::class.simpleName
@@ -40,6 +40,9 @@ class DatastoreCanaryTest {
         @BeforeClass
         @JvmStatic
         fun setup() {
+            RxJavaPlugins.setErrorHandler { e ->
+                Log.w(TAG, "RxJava undeliverable exception (suppressed)", e)
+            }
             try {
                 Amplify.addPlugin(
                     AWSDataStorePlugin.builder()
@@ -52,9 +55,6 @@ class DatastoreCanaryTest {
             }
         }
     }
-
-    @get:Rule
-    val testRule = CanaryTestRule()
 
     val syncDatastore = SynchronousDataStore.delegatingTo(Amplify.DataStore)
 

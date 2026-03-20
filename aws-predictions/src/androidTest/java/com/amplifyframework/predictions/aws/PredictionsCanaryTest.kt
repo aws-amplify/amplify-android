@@ -29,13 +29,12 @@ import com.amplifyframework.predictions.result.IdentifyEntitiesResult
 import com.amplifyframework.predictions.result.IdentifyLabelsResult
 import com.amplifyframework.predictions.result.IdentifyTextResult
 import com.amplifyframework.testutils.Assets
-import com.amplifyframework.testutils.rules.CanaryTestRule
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.sync.SynchronousPredictions
 import org.junit.BeforeClass
-import org.junit.Rule
 import org.junit.Test
 
-class PredictionsCanaryTest {
+class PredictionsCanaryTest : DeviceFarmTestBase() {
     companion object {
         private const val TIMEOUT_S = 20L
         private val TAG = PredictionsCanaryTest::class.simpleName
@@ -52,9 +51,6 @@ class PredictionsCanaryTest {
             }
         }
     }
-
-    @get:Rule
-    val testRule = CanaryTestRule()
 
     val syncPredictions = SynchronousPredictions.delegatingTo(Amplify.Predictions)
 
