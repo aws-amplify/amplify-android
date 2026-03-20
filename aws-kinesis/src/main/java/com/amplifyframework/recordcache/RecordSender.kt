@@ -58,11 +58,7 @@ internal inline fun <reified E : Exception> resultCatchingSkippable(
  * @param records The records that were sent, in the same order
  * @param maxRetries Maximum retry attempts before a record is considered failed
  */
-internal fun splitResults(
-    errorCodes: List<String?>,
-    records: List<Record>,
-    maxRetries: Int
-): PutRecordsResponse {
+internal fun splitResults(errorCodes: List<String?>, records: List<Record>, maxRetries: Int): PutRecordsResponse {
     val successfulIds = mutableListOf<Long>()
     val retryableIds = mutableListOf<Long>()
     val failedIds = mutableListOf<Long>()

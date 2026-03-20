@@ -94,6 +94,7 @@ aws-rekognition = { module = "aws.sdk.kotlin:rekognition", version.ref = "aws-ko
 aws-s3 = { module = "aws.sdk.kotlin:s3", version.ref = "aws-kotlin" }
 aws-signing = { module = "aws.smithy.kotlin:aws-signing-default", version.ref = "aws-smithy" }
 aws-smithy-http = { module = "aws.smithy.kotlin:http-client-jvm", version.ref = "aws-smithy" }
+aws-smithy-http-kmp = { module = "aws.smithy.kotlin:http-client", version.ref = "aws-smithy" }
 aws-smithy-okhttp4 = { module = "aws.smithy.kotlin:http-client-engine-okhttp4", version.ref = "aws-smithy" }
 aws-textract = { module = "aws.sdk.kotlin:textract", version.ref = "aws-kotlin" }
 aws-translate = { module = "aws.sdk.kotlin:translate", version.ref = "aws-kotlin" }

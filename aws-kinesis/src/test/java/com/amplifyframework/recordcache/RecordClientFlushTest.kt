@@ -207,10 +207,11 @@ class RecordClientFlushTest {
         storage.addRecord(RecordInput(streamName, "key1", byteArrayOf(1))).getOrThrow()
         storage.addRecord(RecordInput(streamName, "key2", byteArrayOf(2))).getOrThrow()
 
-        // Configure mock sender to fail with SDK Kinesis exception
-        val sdkException = aws.sdk.kotlin.services.kinesis.model.ResourceNotFoundException.invoke {
-            message = "Stream not found"
-        }
+        // Configure mock sender to fail with a SkippableSdkException (simulates SDK error wrapped by RecordSender)
+        val sdkException = SkippableSdkException(
+            "Stream not found",
+            RuntimeException("Stream not found")
+        )
         coEvery { mockSender.putRecords(streamName, any()) } returns Result.Failure(sdkException)
 
         // When
@@ -241,9 +242,10 @@ class RecordClientFlushTest {
         val stream2RecordId = initialRecords.find { it.streamName == stream2 }!!.id
 
         // Configure mock sender
-        val sdkException = aws.sdk.kotlin.services.kinesis.model.ResourceNotFoundException.invoke {
-            message = "Stream not found"
-        }
+        val sdkException = SkippableSdkException(
+            "Stream not found",
+            RuntimeException("Stream not found")
+        )
         coEvery { mockSender.putRecords(stream1, any()) } returns Result.Failure(sdkException)
         coEvery { mockSender.putRecords(stream2, any()) } returns
             Result.Success(
