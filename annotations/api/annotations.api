@@ -1,6 +1,9 @@
 public abstract interface annotation class com/amplifyframework/annotations/AmplifyFlutterApi : java/lang/annotation/Annotation {
 }
 
+public abstract interface annotation class com/amplifyframework/annotations/ExperimentalAmplifyApi : java/lang/annotation/Annotation {
+}
+
 public abstract interface annotation class com/amplifyframework/annotations/InternalAmplifyApi : java/lang/annotation/Annotation {
 }
 

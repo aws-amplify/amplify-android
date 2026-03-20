@@ -1,3 +1,17 @@
+/*
+ * Copyright 2026 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 package com.amplifyframework.recordcache
 
 import android.content.Context
@@ -172,6 +186,7 @@ internal class SQLiteRecordStorage internal constructor(
     override suspend fun getRecordsByStream(
         afterIdByStream: Map<String, Long>
     ): Result<List<List<Record>>, RecordCacheException> = wrapDispatchAndTransactionAndCatching {
+        // Build per-stream WHERE clauses: id > lastProcessedId for streams we've already seen
         val streamFilter = if (afterIdByStream.isNotEmpty()) {
             val conditions = afterIdByStream.entries.joinToString(" AND ") {
                 "NOT (stream_name = ? AND id <= ?)"
@@ -202,10 +217,13 @@ internal class SQLiteRecordStorage internal constructor(
 
         connection.prepare(sql).use { stmt ->
             var bindIndex = 1
+
+            // Bind per-stream after-id filters
             for ((streamName, afterId) in afterIdByStream) {
                 stmt.bindText(bindIndex++, streamName)
                 stmt.bindLong(bindIndex++, afterId)
             }
+
             stmt.bindInt(bindIndex++, maxRecordsByStream)
             stmt.bindLong(bindIndex, maxBytesPerStream)
 
@@ -238,6 +256,7 @@ internal class SQLiteRecordStorage internal constructor(
                     )
                 }
             }
+
             recordsByStream.values.toList()
         }
     }.recoverAsRecordCacheException("Could not retrieve records from storage")
