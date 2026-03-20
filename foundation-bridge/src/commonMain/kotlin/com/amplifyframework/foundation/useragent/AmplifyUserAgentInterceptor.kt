@@ -12,7 +12,7 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.kinesis
+package com.amplifyframework.foundation.useragent
 
 import aws.sdk.kotlin.runtime.http.operation.customUserAgentMetadata
 import aws.smithy.kotlin.runtime.client.ProtocolRequestInterceptorContext
@@ -20,38 +20,34 @@ import aws.smithy.kotlin.runtime.client.RequestInterceptorContext
 import aws.smithy.kotlin.runtime.http.interceptors.HttpInterceptor
 import aws.smithy.kotlin.runtime.http.request.HttpRequest
 import aws.smithy.kotlin.runtime.http.request.toBuilder
+import com.amplifyframework.annotations.InternalAmplifyApi
 
 /**
- * HTTP interceptor that injects Amplify user agent metadata into Kinesis SDK requests.
+ * HTTP interceptor that injects Amplify user agent metadata into AWS SDK requests.
  *
  * Adds two pieces of tracking information:
  *
- * 1. `md/amplify-kinesis#<version>` — Identifies this request as coming from the AmplifyKinesisClient.
- *    Added via [customUserAgentMetadata] during serialization, which the SDK formats into the
- *    standard `md/` metadata section of the User-Agent header.
+ * 1. `md/<componentName>#<componentVersion>` — Identifies the Amplify component making the request.
+ * 2. `lib/amplify-android#<amplifyVersion>` — Identifies the Amplify framework.
  *
- * 2. `lib/amplify-android#<version>` — Identifies the Amplify framework. When used alongside
- *    `Amplify.configure()`, the SDK already includes this via the `aws.frameworkMetadata` system
- *    property. For standalone usage (without Amplify core), this interceptor appends it directly
- *    to the User-Agent header if not already present.
+ * @param componentName The component identifier (e.g. "amplify-kinesis", "amplify-firehose")
+ * @param componentVersion The version of the component
+ * @param amplifyVersion The version of the Amplify framework
  */
-internal class KinesisUserAgentInterceptor : HttpInterceptor {
+@InternalAmplifyApi
+class AmplifyUserAgentInterceptor(
+    private val componentName: String,
+    private val componentVersion: String,
+    private val amplifyVersion: String = componentVersion
+) : HttpInterceptor {
 
-    private val libToken = "lib/amplify-android#${BuildConfig.VERSION_NAME}"
+    private val libToken = "lib/amplify-android#$amplifyVersion"
 
-    /**
-     * Adds `md/amplify-kinesis#<version>` to the SDK's custom user agent metadata.
-     * The SDK picks this up and formats it into the User-Agent header automatically.
-     */
     override suspend fun modifyBeforeSerialization(context: RequestInterceptorContext<Any>): Any {
-        context.executionContext.customUserAgentMetadata.add("amplify-kinesis", BuildConfig.VERSION_NAME)
+        context.executionContext.customUserAgentMetadata.add(componentName, componentVersion)
         return super.modifyBeforeSerialization(context)
     }
 
-    /**
-     * Appends `lib/amplify-android#<version>` to the User-Agent header if not already present.
-     * Runs before signing so the header is included in the request signature.
-     */
     override suspend fun modifyBeforeSigning(
         context: ProtocolRequestInterceptorContext<Any, HttpRequest>
     ): HttpRequest {
