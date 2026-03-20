@@ -1,6 +1,5 @@
 package com.amplifyframework.recordcache
 
-import aws.sdk.kotlin.services.kinesis.model.KinesisException as SdkKinesisException
 import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.foundation.logging.Logger
 import com.amplifyframework.foundation.result.Result
@@ -57,9 +56,9 @@ internal class RecordClient(
                         // Increment retry count for all records in the failed request and delete the ones at the limit
                         handleFailedRequest(records)
 
-                        // SDK Kinesis exceptions are logged but not thrown
-                        if (e is SdkKinesisException) {
-                            logger.warn { "Kinesis SDK error flushing stream $streamName: ${e.message}. Skipping" }
+                        // SDK exceptions (wrapped as SkippableSdkException) are logged but not thrown
+                        if (e is SkippableSdkException) {
+                            logger.warn { "SDK error flushing stream $streamName: ${e.message}. Skipping" }
                             null
                         } else {
                             // Network errors, storage errors, and unexpected errors — throw to caller
