@@ -106,7 +106,10 @@ class KinesisDataStreamsInstrumentationTest {
         kinesis = AmplifyKinesisClient(
             context = context,
             region = REGION,
-            credentialsProvider = credentialsProvider
+            credentialsProvider = credentialsProvider,
+            options = AmplifyKinesisClientOptions {
+                flushStrategy = FlushStrategy.None // Don't auto-flush as it may impact other tests
+            }
         )
         // Clear any leftover records from previous test runs
         runBlocking { kinesis.clearCache() }

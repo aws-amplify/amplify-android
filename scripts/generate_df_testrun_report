@@ -4,9 +4,9 @@
 
 import os
 import sys
-import subprocess
 import argparse
 import logging
+import requests
 import boto3
 from botocore.config import Config
 from junit_xml import TestSuite, TestCase
@@ -28,11 +28,103 @@ def parse_arguments():
     parser.add_argument("--pr", help="The github PR number.")
     return parser.parse_args()
 
+def get_artifacts(test_arn):
+    """Retrieve artifacts (logs, screenshots, etc.) for a given test ARN."""
+    artifacts = {}
+    for artifact_type in ['FILE', 'LOG', 'SCREENSHOT']:
+        try:
+            result = client.list_artifacts(arn=test_arn, type=artifact_type)
+            artifacts[artifact_type] = result.get('artifacts', [])
+        except Exception as e:
+            LOGGER.warning(f"Failed to retrieve {artifact_type} artifacts for {test_arn}: {e}")
+            artifacts[artifact_type] = []
+    return artifacts
+
+def download_artifact_content(url):
+    """Download artifact content from a presigned S3 URL."""
+    try:
+        response = requests.get(url, timeout=30)
+        response.raise_for_status()
+        return response.text
+    except Exception as e:
+        LOGGER.warning(f"Failed to download artifact: {e}")
+        return None
+
+def get_instrumentation_log(artifacts):
+    """Find and download the Instrumentation.txt log from artifacts."""
+    for artifact in artifacts.get('FILE', []):
+        if artifact.get('name', '').lower() == 'instrumentation output':
+            url = artifact.get('url')
+            if url:
+                return download_artifact_content(url)
+    return None
+
+def build_failure_detail(test, job, artifacts):
+    """Build a detailed failure message from test data, job context, and artifacts."""
+    lines = []
+    lines.append(f"Test: {test['name']}")
+    lines.append(f"Result: {test['result']}")
+    lines.append(f"Device: {job.get('device', {}).get('name', 'Unknown')} "
+                 f"(OS {job.get('device', {}).get('os', 'Unknown')})")
+    lines.append(f"Device Minutes: {test['deviceMinutes'].get('total', 'N/A')}")
+
+    # Include the original test message
+    message = test.get('message', '')
+    if message:
+        lines.append(f"\n--- Test Message ---\n{message}")
+
+    # Include inline stack trace from Instrumentation output
+    instrumentation_log = get_instrumentation_log(artifacts)
+    if instrumentation_log:
+        lines.append(f"\n--- Stack Trace (Instrumentation Output) ---\n{instrumentation_log}")
+
+    # Append log artifact URLs so engineers can drill into full logs
+    log_artifacts = artifacts.get('LOG', [])
+    if log_artifacts:
+        lines.append("\n--- Log Artifacts ---")
+        for artifact in log_artifacts:
+            lines.append(f"  {artifact.get('name', 'log')}: {artifact.get('url', 'N/A')}")
+
+    # Append screenshot artifact URLs for visual context
+    screenshot_artifacts = artifacts.get('SCREENSHOT', [])
+    if screenshot_artifacts:
+        lines.append("\n--- Screenshots ---")
+        for artifact in screenshot_artifacts:
+            lines.append(f"  {artifact.get('name', 'screenshot')}: {artifact.get('url', 'N/A')}")
+
+    # Append file artifact URLs (e.g. device logs, instrumentation output)
+    file_artifacts = artifacts.get('FILE', [])
+    if file_artifacts:
+        lines.append("\n--- File Artifacts ---")
+        for artifact in file_artifacts:
+            lines.append(f"  {artifact.get('name', 'file')}: {artifact.get('url', 'N/A')}")
+
+    return "\n".join(lines)
+
 def generate_junit_report(run_arn, output_path):
     LOGGER.debug(f"Retrieving test jobs for run {run_arn}")
+
+    # Pre-fetch unique problems for the run to include in failure context
+    problems_by_test = {}
+    try:
+        problems_response = get_problems(run_arn)
+        for severity, problem_list in problems_response.get('uniqueProblems', {}).items():
+            for problem in problem_list:
+                for p in problem.get('problems', []):
+                    test_arn = p.get('test', {}).get('arn', '')
+                    if test_arn:
+                        problems_by_test.setdefault(test_arn, []).append({
+                            'severity': severity,
+                            'message': p.get('message', ''),
+                            'device': p.get('device', {}).get('name', 'Unknown'),
+                        })
+    except Exception as e:
+        LOGGER.warning(f"Failed to retrieve unique problems for run: {e}")
+
     jobs = get_test_jobs(run_arn)
     for job_no, job in enumerate(jobs):
-        LOGGER.debug(f"Retrieving test suites for job {job['arn']}")
+        device_name = job.get('device', {}).get('name', 'Unknown')
+        LOGGER.debug(f"Retrieving test suites for job {job['arn']} (device: {device_name})")
         suites = get_test_suites(job['arn'])
         for suite in suites:
             LOGGER.debug(f"Retrieving tests for suite {suite['arn']}")
@@ -40,23 +132,36 @@ def generate_junit_report(run_arn, output_path):
             test_cases = []
             for test in tests:
                 tc = TestCase(test['name'],
-                                classname=suite['name'], 
+                                classname=suite['name'],
                                 elapsed_sec=test['deviceMinutes']['total']*60,
-                                stdout=test['message'],
-                                status=test['result'] )
-                if test['result'] == 'FAILED':
-                    tc.add_failure_info(message=test['message'])
-                if test['result'] == 'ERROR':
-                    tc.add_error_info(message=test['message'])
+                                stdout=test.get('message', ''),
+                                status=test['result'])
+
+                if test['result'] in ('FAILED', 'ERROR'):
+                    artifacts = get_artifacts(test['arn'])
+                    detail = build_failure_detail(test, job, artifacts)
+
+                    # Append unique problem info if available
+                    test_problems = problems_by_test.get(test.get('arn', ''), [])
+                    if test_problems:
+                        detail += "\n\n--- Unique Problems ---"
+                        for tp in test_problems:
+                            detail += (f"\n  [{tp['severity']}] {tp['device']}: "
+                                       f"{tp['message']}")
+
+                    if test['result'] == 'FAILED':
+                        tc.add_failure_info(message=detail)
+                    else:
+                        tc.add_error_info(message=detail)
                 test_cases.append(tc)
-            ts = TestSuite(suite['name'] + "-" + str(job_no),test_cases=test_cases)
+
+            ts = TestSuite(suite['name'] + "-" + str(job_no), test_cases=test_cases)
             ts_output = TestSuite.to_xml_string([ts])
             LOGGER.info(f"Saving test suite {suite['name']} report.")
-            if not os.path.exists(output_path):
-                os.makedirs(output_path)
-            f = open(output_path + suite['name'] + "-" + str(job_no) + ".xml", "w")
-            f.write(ts_output)
-            f.close()
+            os.makedirs(output_path, exist_ok=True)
+            report_file = os.path.join(output_path, f"{suite['name']}-{job_no}.xml")
+            with open(report_file, "w") as f:
+                f.write(ts_output)
 
 def get_test_jobs(run_arn):
     result = client.list_jobs(arn=run_arn)
