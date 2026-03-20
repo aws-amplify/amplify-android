@@ -1,3 +1,17 @@
+/*
+ * Copyright 2026 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 package com.amplifyframework.recordcache
 
 import android.content.Context
@@ -148,45 +162,65 @@ internal class SQLiteRecordStorage internal constructor(
         Unit
     }.recoverAsRecordCacheException("Failed to add record to cache")
 
-    override suspend fun getRecordsByStream(): Result<List<List<Record>>, RecordCacheException> =
-        wrapDispatchAndTransactionAndCatching {
-            connection.prepare(
-                """
+    override suspend fun getRecordsByStream(
+        afterIdByStream: Map<String, Long>
+    ): Result<List<List<Record>>, RecordCacheException> = wrapDispatchAndTransactionAndCatching {
+        // Build per-stream WHERE clauses: id > lastProcessedId for streams we've already seen
+        val streamFilter = if (afterIdByStream.isNotEmpty()) {
+            val conditions = afterIdByStream.entries.joinToString(" AND ") {
+                "NOT (stream_name = ? AND id <= ?)"
+            }
+            "WHERE $conditions"
+        } else {
+            ""
+        }
+
+        val sql = """
                 SELECT id, stream_name, partition_key, data, data_size, retry_count, created_at
                 FROM (
                     SELECT *, 
                            ROW_NUMBER() OVER (PARTITION BY stream_name ORDER BY id) as rn,
                            SUM(data_size) OVER (PARTITION BY stream_name ORDER BY id) as running_size
                     FROM records
+                    $streamFilter
                 ) 
                 WHERE rn <= ? AND running_size <= ?
                 ORDER BY stream_name, id
                 """
-            ).use { stmt ->
-                stmt.bindInt(1, maxRecordsByStream)
-                stmt.bindLong(2, maxBytesPerStream)
 
-                val recordsByStream = mutableMapOf<String, MutableList<Record>>()
+        connection.prepare(sql).use { stmt ->
+            var bindIndex = 1
 
-                while (stmt.step()) {
-                    val streamName = stmt.getText(1)
-
-                    recordsByStream.getOrPut(streamName) { mutableListOf() }.add(
-                        Record(
-                            id = stmt.getLong(0),
-                            streamName = streamName,
-                            partitionKey = stmt.getText(2),
-                            data = stmt.getBlob(3),
-                            dataSize = stmt.getInt(4),
-                            retryCount = stmt.getInt(5),
-                            createdAt = stmt.getLong(6)
-                        )
-                    )
-                }
-
-                recordsByStream.values.toList()
+            // Bind per-stream after-id filters
+            for ((streamName, afterId) in afterIdByStream) {
+                stmt.bindText(bindIndex++, streamName)
+                stmt.bindLong(bindIndex++, afterId)
             }
-        }.recoverAsRecordCacheException("Could not retrieve records from storage")
+
+            stmt.bindInt(bindIndex++, maxRecordsByStream)
+            stmt.bindLong(bindIndex, maxBytesPerStream)
+
+            val recordsByStream = mutableMapOf<String, MutableList<Record>>()
+
+            while (stmt.step()) {
+                val streamName = stmt.getText(1)
+
+                recordsByStream.getOrPut(streamName) { mutableListOf() }.add(
+                    Record(
+                        id = stmt.getLong(0),
+                        streamName = streamName,
+                        partitionKey = stmt.getText(2),
+                        data = stmt.getBlob(3),
+                        dataSize = stmt.getInt(4),
+                        retryCount = stmt.getInt(5),
+                        createdAt = stmt.getLong(6)
+                    )
+                )
+            }
+
+            recordsByStream.values.toList()
+        }
+    }.recoverAsRecordCacheException("Could not retrieve records from storage")
 
     override suspend fun deleteRecords(ids: List<Long>): Result<Unit, RecordCacheException> = wrapDispatchAndCatching {
         if (ids.isNotEmpty()) {

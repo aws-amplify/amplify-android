@@ -1,3 +1,17 @@
+/*
+ * Copyright 2026 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 package com.amplifyframework.recordcache
 
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
@@ -240,5 +254,150 @@ class SQLiteRecordStorageCacheAccuracyTest {
             // Verify all records belong to the same stream
             records.forEach { it.streamName shouldBe streamName }
         }
+    }
+
+    @Test
+    fun `getRecordsByStream with empty afterIdByStream returns all records`() = runTest {
+        val storage = createTestStorage()
+
+        storage.addRecord(RecordInput("stream1", "key1", byteArrayOf(1))).getOrThrow()
+        storage.addRecord(RecordInput("stream1", "key2", byteArrayOf(2))).getOrThrow()
+        storage.addRecord(RecordInput("stream2", "key3", byteArrayOf(3))).getOrThrow()
+
+        val result = storage.getRecordsByStream().getOrThrow()
+        val allRecords = result.flatten()
+
+        allRecords.size shouldBe 3
+    }
+
+    @Test
+    fun `getRecordsByStream skips records at or before afterId per stream`() = runTest {
+        val storage = createTestStorage()
+
+        storage.addRecord(RecordInput("stream1", "key1", byteArrayOf(1))).getOrThrow()
+        storage.addRecord(RecordInput("stream1", "key2", byteArrayOf(2))).getOrThrow()
+        storage.addRecord(RecordInput("stream1", "key3", byteArrayOf(3))).getOrThrow()
+
+        val allRecords = storage.getRecordsByStream().getOrThrow().flatten()
+        allRecords.size shouldBe 3
+
+        // Skip past the second record for stream1
+        val afterId = mapOf("stream1" to allRecords[1].id)
+        val filtered = storage.getRecordsByStream(afterId).getOrThrow().flatten()
+
+        filtered.size shouldBe 1
+        filtered[0].id shouldBe allRecords[2].id
+    }
+
+    @Test
+    fun `getRecordsByStream with afterId past last record returns empty`() = runTest {
+        val storage = createTestStorage()
+
+        storage.addRecord(RecordInput("stream1", "key1", byteArrayOf(1))).getOrThrow()
+        storage.addRecord(RecordInput("stream1", "key2", byteArrayOf(2))).getOrThrow()
+
+        val allRecords = storage.getRecordsByStream().getOrThrow().flatten()
+        val lastId = allRecords.maxOf { it.id }
+
+        val result = storage.getRecordsByStream(mapOf("stream1" to lastId)).getOrThrow()
+        result shouldBe emptyList()
+    }
+
+    @Test
+    fun `getRecordsByStream applies afterId independently per stream`() = runTest {
+        val storage = createTestStorage()
+
+        storage.addRecord(RecordInput("stream1", "key1", byteArrayOf(1))).getOrThrow()
+        storage.addRecord(RecordInput("stream1", "key2", byteArrayOf(2))).getOrThrow()
+        storage.addRecord(RecordInput("stream2", "key3", byteArrayOf(3))).getOrThrow()
+        storage.addRecord(RecordInput("stream2", "key4", byteArrayOf(4))).getOrThrow()
+
+        val allRecords = storage.getRecordsByStream().getOrThrow().flatten()
+        val stream1First = allRecords.first { it.streamName == "stream1" }
+        val stream2First = allRecords.first { it.streamName == "stream2" }
+
+        // Skip past the first record of each stream
+        val afterIds = mapOf("stream1" to stream1First.id, "stream2" to stream2First.id)
+        val filtered = storage.getRecordsByStream(afterIds).getOrThrow()
+        val remaining = filtered.flatten()
+
+        remaining.size shouldBe 2
+        remaining.none { it.id == stream1First.id } shouldBe true
+        remaining.none { it.id == stream2First.id } shouldBe true
+    }
+
+    @Test
+    fun `getRecordsByStream respects batch limit with afterId pagination`() = runTest {
+        val storage = SQLiteRecordStorage(
+            maxRecordsByStream = 2,
+            cacheMaxBytes = 1024 * 1024L,
+            identifier = "test_batch_afterid",
+            connectionFactory = { BundledSQLiteDriver().open(":memory:") },
+            maxRecordSizeBytes = 10L * 1024 * 1024,
+            maxBytesPerStream = 10L * 1024 * 1024,
+            maxPartitionKeyLength = 256,
+            dispatcher = Dispatchers.IO
+        )
+
+        // Add 4 records to one stream
+        storage.addRecord(RecordInput("stream1", "key1", byteArrayOf(1))).getOrThrow()
+        storage.addRecord(RecordInput("stream1", "key2", byteArrayOf(2))).getOrThrow()
+        storage.addRecord(RecordInput("stream1", "key3", byteArrayOf(3))).getOrThrow()
+        storage.addRecord(RecordInput("stream1", "key4", byteArrayOf(4))).getOrThrow()
+
+        // First batch: 2 records (batch limit)
+        val batch1 = storage.getRecordsByStream().getOrThrow().flatten()
+        batch1.size shouldBe 2
+
+        // Second batch: start after last id of batch1
+        val lastId1 = batch1.maxOf { it.id }
+        val batch2 = storage.getRecordsByStream(mapOf("stream1" to lastId1)).getOrThrow().flatten()
+        batch2.size shouldBe 2
+        batch2.all { it.id > lastId1 } shouldBe true
+
+        // Third batch: start after last id of batch2 — nothing left
+        val lastId2 = batch2.maxOf { it.id }
+        val batch3 = storage.getRecordsByStream(mapOf("stream1" to lastId2)).getOrThrow()
+        batch3 shouldBe emptyList()
+    }
+
+    @Test
+    fun `getRecordsByStream handles large number of records efficiently with afterId`() = runTest {
+        val storage = SQLiteRecordStorage(
+            maxRecordsByStream = 100,
+            cacheMaxBytes = 50 * 1024 * 1024L,
+            identifier = "test_stress",
+            connectionFactory = { BundledSQLiteDriver().open(":memory:") },
+            maxRecordSizeBytes = 10L * 1024 * 1024,
+            maxBytesPerStream = 10L * 1024 * 1024,
+            maxPartitionKeyLength = 256,
+            dispatcher = Dispatchers.IO
+        )
+
+        val totalRecords = 5000
+        val streams = listOf("stream-A", "stream-B", "stream-C")
+
+        // Insert many records across multiple streams
+        repeat(totalRecords) { i ->
+            val stream = streams[i % streams.size]
+            storage.addRecord(RecordInput(stream, "key$i", ByteArray(32) { i.toByte() })).getOrThrow()
+        }
+
+        // Drain all records using afterId pagination (simulating flush loop)
+        val lastIdByStream = mutableMapOf<String, Long>()
+        var totalDrained = 0
+
+        var batches = storage.getRecordsByStream(lastIdByStream).getOrThrow()
+        while (batches.isNotEmpty()) {
+            for (records in batches) {
+                val streamName = records.first().streamName
+                val maxId = records.maxOf { it.id }
+                lastIdByStream[streamName] = maxId
+                totalDrained += records.size
+            }
+            batches = storage.getRecordsByStream(lastIdByStream).getOrThrow()
+        }
+
+        totalDrained shouldBe totalRecords
     }
 }
