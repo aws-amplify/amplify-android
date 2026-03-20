@@ -172,16 +172,15 @@ class AmplifyKinesisClient(
     }
 
     /**
-     * Flushes cached records to their respective Kinesis streams.
+     * Flushes all locally stored records to their respective Kinesis streams.
      *
-     * Each invocation sends at most one batch per stream, limited by the Kinesis
-     * `PutRecords` constraints (up to 500 records or 10 MB per stream). If the cache
-     * contains more records than a single batch can hold, the remaining records are
-     * sent on subsequent flush invocations — either manually or via the auto-flush
-     * scheduler.
+     * Each flush drains all pending records in batches per stream, limited by the
+     * Kinesis `PutRecords` constraints (up to 500 records or 10 MB per batch).
+     * Progress is tracked per stream so that records already attempted in the
+     * current flush cycle are not sent again. Failed records have their retry
+     * count incremented and are picked up in the next flush cycle.
      *
-     * Records that fail within a batch are marked for retry on the next flush. Records
-     * that exceed [AmplifyKinesisClientOptions.maxRetries] are removed from the cache.
+     * Records that exceed [AmplifyKinesisClientOptions.maxRetries] are removed from the cache.
      *
      * SDK Kinesis errors (throttling, invalid stream, etc.) are logged and skipped so
      * other streams can still flush. Non-SDK errors (e.g. network, storage) abort the
