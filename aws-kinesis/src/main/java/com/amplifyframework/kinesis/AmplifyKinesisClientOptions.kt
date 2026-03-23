@@ -15,8 +15,12 @@
 package com.amplifyframework.kinesis
 
 import aws.sdk.kotlin.services.kinesis.KinesisClient
+import com.amplifyframework.foundation.config.SdkClientConfigurationProvider
 import com.amplifyframework.recordcache.FlushStrategy
 import kotlin.time.Duration.Companion.seconds
+
+/** Provides custom configuration for the underlying [KinesisClient]. */
+typealias KinesisClientConfigurationProvider = SdkClientConfigurationProvider<KinesisClient.Config.Builder>
 
 private const val DEFAULT_CACHE_SIZE_LIMIT_IN_BYTES = 5L * 1024 * 1024
 
