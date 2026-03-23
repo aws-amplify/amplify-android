@@ -106,7 +106,10 @@ class KinesisDataStreamsInstrumentationTest {
         kinesis = AmplifyKinesisClient(
             context = context,
             region = REGION,
-            credentialsProvider = credentialsProvider
+            credentialsProvider = credentialsProvider,
+            options = AmplifyKinesisClientOptions {
+                flushStrategy = FlushStrategy.None // Don't auto-flush as it may impact other tests
+            }
         )
         // Clear any leftover records from previous test runs
         runBlocking { kinesis.clearCache() }
@@ -510,6 +513,37 @@ class KinesisDataStreamsInstrumentationTest {
     }
 
     // ---------------------------------------------------------------
+    // Multi-batch flush
+    // ---------------------------------------------------------------
+
+    /**
+     * Records more than 500 entries (the PutRecords per-request limit) to a single
+     * stream, then calls flush() once. Verifies that a single flush drains all
+     * records across multiple batches.
+     */
+    @Test
+    fun testSingleFlushDrainsMultipleBatches(): Unit = runBlocking {
+        val recordCount = 1100 // Exceeds MAX_RECORDS_PER_STREAM (500) — requires 3 batches
+
+        repeat(recordCount) { i ->
+            val result = kinesis.record(
+                data = "batch-record-$i".toByteArray(),
+                partitionKey = "partition-${i % 10}",
+                streamName = STREAM_NAME
+            )
+            result.shouldBeSuccess()
+        }
+
+        // Single flush should drain all 1100 records across three batches (500 + 500 + 100)
+        val flushResult = kinesis.flush()
+        flushResult.shouldBeSuccess().data.recordsFlushed shouldBe recordCount
+
+        // Nothing left
+        val secondFlush = kinesis.flush()
+        secondFlush.shouldBeSuccess().data.recordsFlushed shouldBe 0
+    }
+
+    // ---------------------------------------------------------------
     // Auto-flush
     // ---------------------------------------------------------------
 
@@ -668,23 +702,15 @@ class KinesisDataStreamsInstrumentationTest {
                 result.shouldBeSuccess()
             }
 
-            // First flush: sends up to 10 MiB worth of records
+            // Flush sends all records across multiple batches (up to 10 MiB per batch)
             val flush1 = largeKinesis.flush()
             flush1.shouldBeSuccess()
             val flushed1 = flush1.data.recordsFlushed
-            flushed1 shouldBeGreaterThan 0
+            flushed1 shouldBe recordCount
 
-            // Second flush: sends the remaining records
+            // Second flush: nothing left
             val flush2 = largeKinesis.flush()
-            flush2.shouldBeSuccess()
-            val flushed2 = flush2.data.recordsFlushed
-            flushed2 shouldBeGreaterThan 0
-
-            (flushed1 + flushed2) shouldBe recordCount
-
-            // Third flush: nothing left
-            val flush3 = largeKinesis.flush()
-            flush3.shouldBeSuccess().data.recordsFlushed shouldBe 0
+            flush2.shouldBeSuccess().data.recordsFlushed shouldBe 0
         } finally {
             largeKinesis.disable()
             largeKinesis.clearCache()

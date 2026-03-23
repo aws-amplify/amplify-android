@@ -23,22 +23,21 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.configuration.AmplifyOutputs
 import com.amplifyframework.geo.location.test.R
 import com.amplifyframework.geo.models.Coordinates
-import com.amplifyframework.testutils.rules.CanaryTestRule
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousGeo
+import java.util.concurrent.TimeUnit
 import org.junit.After
 import org.junit.BeforeClass
-import org.junit.Rule
 import org.junit.Test
 
-class GeoCanaryTest {
+class GeoCanaryTest : DeviceFarmTestBase() {
     companion object {
-        private const val TIMEOUT_S = 20L
         private val TAG = GeoCanaryTest::class.simpleName
 
         @BeforeClass
         @JvmStatic
-        fun setup() {
+        fun setupClass() {
             try {
                 Amplify.addPlugin(AWSCognitoAuthPlugin())
                 Amplify.addPlugin(AWSLocationGeoPlugin())
@@ -49,10 +48,7 @@ class GeoCanaryTest {
         }
     }
 
-    @get:Rule
-    val testRule = CanaryTestRule()
-
-    private val syncAuth = SynchronousAuth.delegatingToAmplify()
+    private val syncAuth = SynchronousAuth.delegatingToAmplify(TimeUnit.SECONDS.toMillis(20))
     private val syncGeo = SynchronousGeo.delegatingToAmplify()
 
     @After

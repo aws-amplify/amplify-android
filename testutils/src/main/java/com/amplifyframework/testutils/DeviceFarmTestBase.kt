@@ -12,21 +12,16 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.recordcache
 
-internal data class RecordInput(
-    val streamName: String,
-    val partitionKey: String? = null,
-    val data: ByteArray,
-    val dataSize: Int = data.size + (partitionKey?.toByteArray(Charsets.UTF_8)?.size ?: 0)
-)
+package com.amplifyframework.testutils
 
-internal data class Record(
-    val id: Long,
-    val streamName: String,
-    val partitionKey: String? = null,
-    val data: ByteArray,
-    val dataSize: Int,
-    val retryCount: Int,
-    val createdAt: Long
-)
+import com.amplifyframework.testutils.rules.RepeatKnownFailuresRule
+import org.junit.Rule
+
+/**
+ * A base class for all tests that run on device farm
+ */
+abstract class DeviceFarmTestBase {
+    @get:Rule
+    val testRule = RepeatKnownFailuresRule()
+}

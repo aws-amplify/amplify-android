@@ -32,28 +32,30 @@ import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.HubAccumulator
 import com.amplifyframework.testutils.Resources
 import com.amplifyframework.testutils.Sleep
-import com.amplifyframework.testutils.rules.CanaryTestRule
+import com.amplifyframework.testutils.await
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import java.util.UUID
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.runBlocking
 import org.json.JSONException
 import org.junit.Assert
 import org.junit.Before
 import org.junit.BeforeClass
-import org.junit.Rule
 import org.junit.Test
 
-class PinpointAnalyticsCanaryTest {
+class PinpointAnalyticsCanaryTest : DeviceFarmTestBase() {
     companion object {
         private const val CREDENTIALS_RESOURCE_NAME = "credentials"
         private const val CONFIGURATION_NAME = "amplifyconfiguration"
-        private const val COGNITO_CONFIGURATION_TIMEOUT = 5 * 1000L
-        private const val PINPOINT_ROUNDTRIP_TIMEOUT = 10 * 1000L
-        private const val TIMEOUT_S = 20
+        private const val SHORT_TIMEOUT = 5 * 1000L
+        private const val LONG_TIMEOUT = 10 * 1000L
+
+        private val HubTimeout = 20.seconds
         private const val UNIQUE_ID_KEY = "UniqueId"
         private const val PREFERENCES_AND_FILE_MANAGER_SUFFIX = "515d6767-01b7-49e5-8273-c8d11b0f331d"
         private lateinit var synchronousAuth: SynchronousAuth
@@ -75,10 +77,17 @@ class PinpointAnalyticsCanaryTest {
             )
             setUniqueId()
             Amplify.Auth.addPlugin(AWSCognitoAuthPlugin() as AuthPlugin<*>)
-            Amplify.addPlugin(AWSPinpointAnalyticsPlugin())
+            Amplify.addPlugin(
+                AWSPinpointAnalyticsPlugin(
+                    AWSPinpointAnalyticsPlugin.Options {
+                        autoFlushEventsInterval = 60.minutes.inWholeMilliseconds
+                        trackLifecycleEvents = false
+                    }
+                )
+            )
             Amplify.configure(context)
-            Sleep.milliseconds(COGNITO_CONFIGURATION_TIMEOUT)
-            synchronousAuth = SynchronousAuth.delegatingTo(Amplify.Auth)
+            Sleep.milliseconds(SHORT_TIMEOUT)
+            synchronousAuth = SynchronousAuth.delegatingTo(Amplify.Auth, 20_000L)
         }
 
         private fun setUniqueId() {
@@ -117,9 +126,6 @@ class PinpointAnalyticsCanaryTest {
         }
     }
 
-    @get:Rule
-    val testRule = CanaryTestRule()
-
     @Before
     fun flushEvents() {
         val context = ApplicationProvider.getApplicationContext<Context>()
@@ -134,7 +140,7 @@ class PinpointAnalyticsCanaryTest {
         val hubAccumulator =
             HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 1).start()
         Amplify.Analytics.flushEvents()
-        hubAccumulator.await(10, TimeUnit.SECONDS)
+        hubAccumulator.await(HubTimeout)
         pinpointClient = Amplify.Analytics.getPlugin("awsPinpointAnalyticsPlugin").escapeHatch as
             PinpointClient
         uniqueId = preferences.getString(UNIQUE_ID_KEY, "error-no-unique-id")!!
@@ -144,7 +150,7 @@ class PinpointAnalyticsCanaryTest {
     @Test
     fun recordEvent_flushEvent() {
         val hubAccumulator =
-            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 2).start()
+            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 1).start()
         val eventName = "Amplify-event" + UUID.randomUUID().toString()
         val event = AnalyticsEvent.builder()
             .name(eventName)
@@ -155,8 +161,9 @@ class PinpointAnalyticsCanaryTest {
             .build()
 
         Amplify.Analytics.recordEvent(event)
+        Sleep.milliseconds(SHORT_TIMEOUT)
         Amplify.Analytics.flushEvents()
-        val hubEvents = hubAccumulator.await(TIMEOUT_S, TimeUnit.SECONDS)
+        val hubEvents = hubAccumulator.await(HubTimeout)
         val submittedEvents = combineAndFilterEvents(hubEvents)
         Assert.assertEquals(1, submittedEvents.size.toLong())
     }
@@ -164,7 +171,7 @@ class PinpointAnalyticsCanaryTest {
     @Test
     fun registerGlobalProperties() {
         val hubAccumulator =
-            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 2).start()
+            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 1).start()
         val eventName = "Amplify-event" + UUID.randomUUID().toString()
         val event = AnalyticsEvent.builder()
             .name(eventName)
@@ -180,8 +187,9 @@ class PinpointAnalyticsCanaryTest {
                 .add("AppStyle", "DarkMode")
                 .build()
         )
+        Sleep.milliseconds(SHORT_TIMEOUT)
         Amplify.Analytics.flushEvents()
-        val hubEvents = hubAccumulator.await(TIMEOUT_S, TimeUnit.SECONDS)
+        val hubEvents = hubAccumulator.await(HubTimeout)
         val submittedEvents = combineAndFilterEvents(hubEvents)
         Assert.assertEquals(1, submittedEvents.size.toLong())
     }
@@ -189,7 +197,7 @@ class PinpointAnalyticsCanaryTest {
     @Test
     fun unregisterGlobalProperties() {
         val hubAccumulator =
-            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 2).start()
+            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 1).start()
         val eventName = "Amplify-event" + UUID.randomUUID().toString()
         val event = AnalyticsEvent.builder()
             .name(eventName)
@@ -201,8 +209,9 @@ class PinpointAnalyticsCanaryTest {
 
         Amplify.Analytics.recordEvent(event)
         Amplify.Analytics.unregisterGlobalProperties("AppStyle")
+        Sleep.milliseconds(SHORT_TIMEOUT)
         Amplify.Analytics.flushEvents()
-        val hubEvents = hubAccumulator.await(TIMEOUT_S, TimeUnit.SECONDS)
+        val hubEvents = hubAccumulator.await(HubTimeout)
         val submittedEvents = combineAndFilterEvents(hubEvents)
         Assert.assertEquals(1, submittedEvents.size.toLong())
     }
@@ -219,7 +228,7 @@ class PinpointAnalyticsCanaryTest {
             .customProperties(properties)
             .build()
         Amplify.Analytics.identifyUser(UUID.randomUUID().toString(), userProfile)
-        Sleep.milliseconds(PINPOINT_ROUNDTRIP_TIMEOUT)
+        Sleep.milliseconds(LONG_TIMEOUT)
         val endpointResponse = fetchEndpointResponse()
         assertCommonEndpointResponseProperties(endpointResponse)
         assert(null == endpointResponse.user!!.userAttributes)
