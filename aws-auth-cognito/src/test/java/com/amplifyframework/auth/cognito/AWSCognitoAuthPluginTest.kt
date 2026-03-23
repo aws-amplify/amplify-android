@@ -652,18 +652,13 @@ class AWSCognitoAuthPluginTest {
         val expectedProvider = AuthProvider.amazon()
         val expectedOnSuccess = Consumer<FederateToIdentityPoolResult> { }
         val expectedOnError = Consumer<AuthException> { }
-        val options = FederateToIdentityPoolOptions.builder().build()
+
+        val useCase = authPlugin.useCaseFactory.federateToIdentityPool()
 
         authPlugin.federateToIdentityPool(expectedToken, expectedProvider, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.federateToIdentityPool(
-                expectedToken,
-                expectedProvider,
-                options,
-                any(),
-                any()
-            )
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute(expectedToken, expectedProvider)
         }
     }
 
@@ -678,16 +673,12 @@ class AWSCognitoAuthPluginTest {
             .developerProvidedIdentityId("devid")
             .build()
 
+        val useCase = authPlugin.useCaseFactory.federateToIdentityPool()
+
         authPlugin.federateToIdentityPool(expectedToken, expectedProvider, options, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.federateToIdentityPool(
-                expectedToken,
-                expectedProvider,
-                options,
-                any(),
-                any()
-            )
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute(expectedToken, expectedProvider, options)
         }
     }
 

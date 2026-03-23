@@ -21,8 +21,6 @@ import androidx.annotation.WorkerThread
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.AWSCognitoAuthMetadataType
-import com.amplifyframework.auth.AWSCredentials
-import com.amplifyframework.auth.AWSTemporaryCredentials
 import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthProvider
@@ -34,10 +32,7 @@ import com.amplifyframework.auth.cognito.exceptions.service.HostedUISignOutExcep
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidAccountTypeException
 import com.amplifyframework.auth.cognito.exceptions.service.UserCancelledException
 import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
-import com.amplifyframework.auth.cognito.helpers.identityProviderName
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions
-import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
-import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
 import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.exceptions.NotAuthorizedException
@@ -57,7 +52,6 @@ import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.data.FederatedToken
 import com.amplifyframework.statemachine.codegen.data.HostedUIErrorData
 import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
@@ -506,111 +500,6 @@ internal class RealAWSCognitoAuthPlugin(
             },
             {
                 authStateMachine.send(AuthEvent(AuthEvent.EventType.ConfigureAuth(configuration)))
-            }
-        )
-    }
-
-    fun federateToIdentityPool(
-        providerToken: String,
-        authProvider: AuthProvider,
-        options: FederateToIdentityPoolOptions?,
-        onSuccess: Consumer<FederateToIdentityPoolResult>,
-        onError: Consumer<AuthException>
-    ) {
-        authStateMachine.getCurrentState { authState ->
-            val authNState = authState.authNState
-            val authZState = authState.authZState
-            when {
-                authState !is AuthState.Configured -> onError.accept(
-                    InvalidStateException("Federation could not be completed.")
-                )
-                (
-                    authNState is AuthenticationState.SignedOut ||
-                        authNState is AuthenticationState.Error ||
-                        authNState is AuthenticationState.NotConfigured ||
-                        authNState is AuthenticationState.FederatedToIdentityPool
-                    ) &&
-                    (
-                        authZState is AuthorizationState.Configured ||
-                            authZState is AuthorizationState.SessionEstablished ||
-                            authZState is AuthorizationState.Error
-                        ) -> {
-                    val existingCredential = when (authZState) {
-                        is AuthorizationState.SessionEstablished -> authZState.amplifyCredential
-                        is AuthorizationState.Error -> {
-                            (authZState.exception as? SessionError)?.amplifyCredential
-                        }
-                        else -> null
-                    }
-                    authStateMachine.send(
-                        AuthorizationEvent(
-                            AuthorizationEvent.EventType.StartFederationToIdentityPool(
-                                token = FederatedToken(providerToken, authProvider.identityProviderName),
-                                identityId = options?.developerProvidedIdentityId,
-                                existingCredential
-                            )
-                        )
-                    )
-
-                    _federateToIdentityPool(onSuccess, onError)
-                }
-                else -> onError.accept(
-                    InvalidStateException("Federation could not be completed.")
-                )
-            }
-        }
-    }
-
-    private fun _federateToIdentityPool(
-        onSuccess: Consumer<FederateToIdentityPoolResult>,
-        onError: Consumer<AuthException>
-    ) {
-        val token = StateChangeListenerToken()
-        authStateMachine.listen(
-            token,
-            { authState ->
-                val authNState = authState.authNState
-                val authZState = authState.authZState
-                when {
-                    authNState is AuthenticationState.FederatedToIdentityPool &&
-                        authZState is AuthorizationState.SessionEstablished -> {
-                        authStateMachine.cancel(token)
-                        val credential = authZState.amplifyCredential as? AmplifyCredential.IdentityPoolFederated
-                        val identityId = credential?.identityId
-                        val awsCredentials = credential?.credentials
-                        val temporaryAwsCredentials = AWSCredentials.createAWSCredentials(
-                            awsCredentials?.accessKeyId,
-                            awsCredentials?.secretAccessKey,
-                            awsCredentials?.sessionToken,
-                            awsCredentials?.expiration
-                        ) as? AWSTemporaryCredentials
-                        if (identityId != null && temporaryAwsCredentials != null) {
-                            val result = FederateToIdentityPoolResult(
-                                credentials = temporaryAwsCredentials,
-                                identityId = identityId
-                            )
-                            onSuccess.accept(result)
-                            sendHubEvent(AWSCognitoAuthChannelEventName.FEDERATED_TO_IDENTITY_POOL.toString())
-                        } else {
-                            onError.accept(
-                                UnknownException(
-                                    message = "Unable to parse credentials to expected output."
-                                )
-                            )
-                        }
-                    }
-                    authNState is AuthenticationState.Error && authZState is AuthorizationState.Error -> {
-                        authStateMachine.cancel(token)
-                        onError.accept(
-                            CognitoAuthExceptionConverter.lookup(
-                                authZState.exception,
-                                "Federation could not be completed."
-                            )
-                        )
-                    }
-                }
-            },
-            {
             }
         )
     }

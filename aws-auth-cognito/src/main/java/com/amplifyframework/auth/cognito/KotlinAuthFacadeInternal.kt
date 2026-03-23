@@ -19,8 +19,6 @@ import android.app.Activity
 import android.content.Intent
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthSession
-import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
-import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.result.AuthSignInResult
@@ -85,19 +83,6 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
 
     suspend fun fetchAuthSession(options: AuthFetchSessionOptions): AuthSession = suspendCoroutine { continuation ->
         delegate.fetchAuthSession(
-            options,
-            { continuation.resume(it) },
-            { continuation.resumeWithException(it) }
-        )
-    }
-    suspend fun federateToIdentityPool(
-        providerToken: String,
-        authProvider: AuthProvider,
-        options: FederateToIdentityPoolOptions?
-    ): FederateToIdentityPoolResult = suspendCoroutine { continuation ->
-        delegate.federateToIdentityPool(
-            providerToken,
-            authProvider,
             options,
             { continuation.resume(it) },
             { continuation.resumeWithException(it) }

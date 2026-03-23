@@ -172,6 +172,8 @@ internal class AuthUseCaseFactory(
         stateMachine = stateMachine
     )
 
+    fun federateToIdentityPool() = FederateToIdentityPoolUseCase(stateMachine)
+
     fun clearFederationToIdentityPool() = ClearFederationToIdentityPoolUseCase(
         stateMachine = stateMachine,
         signOut = signOut()
