@@ -15,11 +15,11 @@ public final class com/amplifyframework/firehose/AmplifyFirehoseClientOptions {
 	public final fun component1 ()J
 	public final fun component2 ()I
 	public final fun component3 ()Lcom/amplifyframework/recordcache/FlushStrategy;
-	public final fun component4 ()Lcom/amplifyframework/recordcache/SdkClientConfigurationProvider;
+	public final fun component4 ()Lcom/amplifyframework/foundation/config/SdkClientConfigurationProvider;
 	public static final fun defaults ()Lcom/amplifyframework/firehose/AmplifyFirehoseClientOptions;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getCacheMaxBytes ()J
-	public final fun getConfigureClient ()Lcom/amplifyframework/recordcache/SdkClientConfigurationProvider;
+	public final fun getConfigureClient ()Lcom/amplifyframework/foundation/config/SdkClientConfigurationProvider;
 	public final fun getFlushStrategy ()Lcom/amplifyframework/recordcache/FlushStrategy;
 	public final fun getMaxRetries ()I
 	public fun hashCode ()I
@@ -29,11 +29,11 @@ public final class com/amplifyframework/firehose/AmplifyFirehoseClientOptions {
 public final class com/amplifyframework/firehose/AmplifyFirehoseClientOptions$Builder {
 	public final fun build ()Lcom/amplifyframework/firehose/AmplifyFirehoseClientOptions;
 	public final fun cacheMaxBytes (J)Lcom/amplifyframework/firehose/AmplifyFirehoseClientOptions$Builder;
-	public final fun configureClient (Lcom/amplifyframework/recordcache/SdkClientConfigurationProvider;)Lcom/amplifyframework/firehose/AmplifyFirehoseClientOptions$Builder;
+	public final fun configureClient (Lcom/amplifyframework/foundation/config/SdkClientConfigurationProvider;)Lcom/amplifyframework/firehose/AmplifyFirehoseClientOptions$Builder;
 	public final synthetic fun configureClient (Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/firehose/AmplifyFirehoseClientOptions$Builder;
 	public final fun flushStrategy (Lcom/amplifyframework/recordcache/FlushStrategy;)Lcom/amplifyframework/firehose/AmplifyFirehoseClientOptions$Builder;
 	public final fun getCacheMaxBytes ()J
-	public final fun getConfigureClient ()Lcom/amplifyframework/recordcache/SdkClientConfigurationProvider;
+	public final fun getConfigureClient ()Lcom/amplifyframework/foundation/config/SdkClientConfigurationProvider;
 	public final fun getFlushStrategy ()Lcom/amplifyframework/recordcache/FlushStrategy;
 	public final fun getMaxRetries ()I
 	public final fun maxRetries (I)Lcom/amplifyframework/firehose/AmplifyFirehoseClientOptions$Builder;
@@ -94,11 +94,11 @@ public final class com/amplifyframework/kinesis/AmplifyKinesisClientOptions {
 	public final fun component1 ()J
 	public final fun component2 ()I
 	public final fun component3 ()Lcom/amplifyframework/recordcache/FlushStrategy;
-	public final fun component4 ()Lcom/amplifyframework/recordcache/SdkClientConfigurationProvider;
+	public final fun component4 ()Lcom/amplifyframework/foundation/config/SdkClientConfigurationProvider;
 	public static final fun defaults ()Lcom/amplifyframework/kinesis/AmplifyKinesisClientOptions;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getCacheMaxBytes ()J
-	public final fun getConfigureClient ()Lcom/amplifyframework/recordcache/SdkClientConfigurationProvider;
+	public final fun getConfigureClient ()Lcom/amplifyframework/foundation/config/SdkClientConfigurationProvider;
 	public final fun getFlushStrategy ()Lcom/amplifyframework/recordcache/FlushStrategy;
 	public final fun getMaxRetries ()I
 	public fun hashCode ()I
@@ -108,11 +108,11 @@ public final class com/amplifyframework/kinesis/AmplifyKinesisClientOptions {
 public final class com/amplifyframework/kinesis/AmplifyKinesisClientOptions$Builder {
 	public final fun build ()Lcom/amplifyframework/kinesis/AmplifyKinesisClientOptions;
 	public final fun cacheMaxBytes (J)Lcom/amplifyframework/kinesis/AmplifyKinesisClientOptions$Builder;
-	public final fun configureClient (Lcom/amplifyframework/recordcache/SdkClientConfigurationProvider;)Lcom/amplifyframework/kinesis/AmplifyKinesisClientOptions$Builder;
+	public final fun configureClient (Lcom/amplifyframework/foundation/config/SdkClientConfigurationProvider;)Lcom/amplifyframework/kinesis/AmplifyKinesisClientOptions$Builder;
 	public final synthetic fun configureClient (Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/kinesis/AmplifyKinesisClientOptions$Builder;
 	public final fun flushStrategy (Lcom/amplifyframework/recordcache/FlushStrategy;)Lcom/amplifyframework/kinesis/AmplifyKinesisClientOptions$Builder;
 	public final fun getCacheMaxBytes ()J
-	public final fun getConfigureClient ()Lcom/amplifyframework/recordcache/SdkClientConfigurationProvider;
+	public final fun getConfigureClient ()Lcom/amplifyframework/foundation/config/SdkClientConfigurationProvider;
 	public final fun getFlushStrategy ()Lcom/amplifyframework/recordcache/FlushStrategy;
 	public final fun getMaxRetries ()I
 	public final fun maxRetries (I)Lcom/amplifyframework/kinesis/AmplifyKinesisClientOptions$Builder;
@@ -225,9 +225,5 @@ public final class com/amplifyframework/recordcache/RecordData {
 	public final fun getSuccess ()Z
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
-}
-
-public abstract interface class com/amplifyframework/recordcache/SdkClientConfigurationProvider {
-	public abstract fun applyConfiguration (Laws/sdk/kotlin/runtime/config/AwsSdkClientConfig$Builder;)V
 }
 

@@ -15,7 +15,7 @@
 package com.amplifyframework.kinesis
 
 import aws.sdk.kotlin.services.kinesis.KinesisClient
-import com.amplifyframework.recordcache.SdkClientConfigurationProvider
+import com.amplifyframework.foundation.config.SdkClientConfigurationProvider
 
 /**
  * Provides custom configuration for the underlying [KinesisClient].

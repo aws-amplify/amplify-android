@@ -12,9 +12,10 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.recordcache
+package com.amplifyframework.foundation.config
 
 import aws.sdk.kotlin.runtime.config.AwsSdkClientConfig
+import com.amplifyframework.annotations.InternalAmplifyApi
 
 /**
  * Provides custom configuration for an underlying AWS SDK client.
@@ -30,6 +31,7 @@ import aws.sdk.kotlin.runtime.config.AwsSdkClientConfig
  *
  * @param B The SDK client's [AwsSdkClientConfig.Builder] subtype
  */
+@InternalAmplifyApi
 fun interface SdkClientConfigurationProvider<B : AwsSdkClientConfig.Builder> {
     /**
      * Applies custom configuration to the SDK client builder.

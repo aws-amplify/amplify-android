@@ -15,7 +15,7 @@
 package com.amplifyframework.firehose
 
 import aws.sdk.kotlin.services.firehose.FirehoseClient
-import com.amplifyframework.recordcache.SdkClientConfigurationProvider
+import com.amplifyframework.foundation.config.SdkClientConfigurationProvider
 
 /**
  * Provides custom configuration for the underlying [FirehoseClient].
