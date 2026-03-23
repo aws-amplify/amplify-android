@@ -137,7 +137,7 @@ class AmplifyFirehoseClient(
         scheduler?.start()
     }
 
-        /**
+    /**
      * Records data to the specified Firehose stream.
      *
      * @param data The data to record as byte array
@@ -184,16 +184,16 @@ class AmplifyFirehoseClient(
     suspend fun flush(): FirehoseFlushResult = logOp(
         operation = { recordClient.flush().wrapError() },
         logSuccess = { data, timeMs ->
-            logger.debug { 
-                "Flush completed in ${timeMs}ms - ${data.recordsFlushed} records flushed" 
+            logger.debug {
+                "Flush completed in ${timeMs}ms - ${data.recordsFlushed} records flushed"
             }
         },
         logFailure = { error, timeMs ->
-             logger.warn { "Flush failed in ${timeMs}ms: ${error?.message}" } 
+            logger.warn { "Flush failed in ${timeMs}ms: ${error?.message}" }
         }
     )
 
-   /**
+    /**
      * Clears all cached records from local storage.
      *
      * @return Result.Success(ClearCacheData) on success, or Result.Failure with:
@@ -204,8 +204,8 @@ class AmplifyFirehoseClient(
         logSuccess = { data, timeMs ->
             logger.debug { "Clear cache completed in ${timeMs}ms - ${data.recordsCleared} records cleared" }
         },
-        logFailure = { error, timeMs -> 
-            logger.warn { "Clear cache failed in ${timeMs}ms: ${error?.message}" } 
+        logFailure = { error, timeMs ->
+            logger.warn { "Clear cache failed in ${timeMs}ms: ${error?.message}" }
         }
     )
 
