@@ -29,6 +29,7 @@ import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.usecases.SignInUseCase
 import com.amplifyframework.auth.cognito.usecases.SignOutUseCase
 import com.amplifyframework.auth.cognito.usecases.WebUiSignInResponseUseCase
+import com.amplifyframework.auth.cognito.usecases.WebUiSignInUseCase
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.core.Consumer
@@ -146,6 +147,11 @@ class AuthValidationTest {
 
     private val signOutUseCase = SignOutUseCase(
         stateMachine = stateMachine
+    )
+
+    private val webUiSignInUseCase = WebUiSignInUseCase(
+        stateMachine = stateMachine,
+        configuration = environment.configuration
     )
 
     private val webUiSignInResponseUseCase = WebUiSignInResponseUseCase(
@@ -480,8 +486,8 @@ class AuthValidationTest {
                 webUiSignInResponseUseCase.execute(mockk(relaxed = true))
             }
         }
-        return blockForResult { success, error ->
-            plugin.signInWithWebUI(activity, success, error)
+        return runBlocking {
+            webUiSignInUseCase.execute(activity)
         }
     }
 

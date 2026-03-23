@@ -15,59 +15,13 @@
 
 package com.amplifyframework.auth.cognito
 
-import android.app.Activity
-import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
-import com.amplifyframework.auth.options.AuthWebUISignInOptions
-import com.amplifyframework.auth.result.AuthSignInResult
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuthPlugin) {
-
-    suspend fun signInWithSocialWebUI(provider: AuthProvider, callingActivity: Activity): AuthSignInResult =
-        suspendCoroutine { continuation ->
-            delegate.signInWithSocialWebUI(
-                provider,
-                callingActivity,
-                { continuation.resume(it) },
-                { continuation.resumeWithException(it) }
-            )
-        }
-
-    suspend fun signInWithSocialWebUI(
-        provider: AuthProvider,
-        callingActivity: Activity,
-        options: AuthWebUISignInOptions
-    ): AuthSignInResult = suspendCoroutine { continuation ->
-        delegate.signInWithSocialWebUI(
-            provider,
-            callingActivity,
-            options,
-            { continuation.resume(it) },
-            { continuation.resumeWithException(it) }
-        )
-    }
-
-    suspend fun signInWithWebUI(callingActivity: Activity): AuthSignInResult = suspendCoroutine { continuation ->
-        delegate.signInWithWebUI(
-            callingActivity,
-            { continuation.resume(it) },
-            { continuation.resumeWithException(it) }
-        )
-    }
-
-    suspend fun signInWithWebUI(callingActivity: Activity, options: AuthWebUISignInOptions): AuthSignInResult =
-        suspendCoroutine { continuation ->
-            delegate.signInWithWebUI(
-                callingActivity,
-                options,
-                { continuation.resume(it) },
-                { continuation.resumeWithException(it) }
-            )
-        }
 
     suspend fun fetchAuthSession(): AuthSession = suspendCoroutine { continuation ->
         delegate.fetchAuthSession(
