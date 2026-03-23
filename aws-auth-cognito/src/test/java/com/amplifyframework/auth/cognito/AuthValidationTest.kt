@@ -28,6 +28,7 @@ import com.amplifyframework.auth.cognito.featuretest.generators.authstategenerat
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.usecases.SignInUseCase
 import com.amplifyframework.auth.cognito.usecases.SignOutUseCase
+import com.amplifyframework.auth.cognito.usecases.WebUiSignInResponseUseCase
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.core.Consumer
@@ -145,6 +146,11 @@ class AuthValidationTest {
 
     private val signOutUseCase = SignOutUseCase(
         stateMachine = stateMachine
+    )
+
+    private val webUiSignInResponseUseCase = WebUiSignInResponseUseCase(
+        stateMachine = stateMachine,
+        authEnvironment = environment
     )
 
     private val mainThreadSurrogate = newSingleThreadContext("Main thread")
@@ -471,9 +477,7 @@ class AuthValidationTest {
     private fun signInHostedUi(): AuthSignInResult {
         every { hostedUIClient.launchCustomTabsSignIn(any()) } answers {
             GlobalScope.launch(mainThreadSurrogate) {
-                plugin.handleWebUISignInResponse(
-                    mockk { every { data } returns mockk() }
-                )
+                webUiSignInResponseUseCase.execute(mockk(relaxed = true))
             }
         }
         return blockForResult { success, error ->

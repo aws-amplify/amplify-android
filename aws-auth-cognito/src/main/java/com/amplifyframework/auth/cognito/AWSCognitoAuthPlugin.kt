@@ -284,7 +284,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     ) = enqueue(onSuccess, onError) { queueFacade.signInWithWebUI(callingActivity, options) }
 
     override fun handleWebUISignInResponse(intent: Intent?) {
-        queueFacade.handleWebUISignInResponse(intent)
+        pluginScope.launch {
+            useCaseFactory.webUISignInResponse().execute(intent)
+        }
     }
 
     override fun fetchAuthSession(

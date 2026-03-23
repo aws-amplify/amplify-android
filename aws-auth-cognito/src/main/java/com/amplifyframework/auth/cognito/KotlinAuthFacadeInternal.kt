@@ -16,7 +16,6 @@
 package com.amplifyframework.auth.cognito
 
 import android.app.Activity
-import android.content.Intent
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
@@ -69,10 +68,6 @@ internal class KotlinAuthFacadeInternal(private val delegate: RealAWSCognitoAuth
                 { continuation.resumeWithException(it) }
             )
         }
-
-    fun handleWebUISignInResponse(intent: Intent?) {
-        delegate.handleWebUISignInResponse(intent)
-    }
 
     suspend fun fetchAuthSession(): AuthSession = suspendCoroutine { continuation ->
         delegate.fetchAuthSession(
