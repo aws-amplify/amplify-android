@@ -26,7 +26,7 @@ import com.amplifyframework.recordcache.RecordSender
 import com.amplifyframework.recordcache.resultCatchingSkippable
 import com.amplifyframework.recordcache.splitResults
 
-typealias FirehoseRecord = aws.sdk.kotlin.services.firehose.model.Record
+typealias FirehoseSdkRecord = aws.sdk.kotlin.services.firehose.model.Record
 
 @OptIn(InternalAmplifyApi::class)
 internal class FirehoseRecordSender(
@@ -49,7 +49,7 @@ internal class FirehoseRecordSender(
     internal fun createRequest(streamName: String, records: List<Record>) = PutRecordBatchRequest {
         this.deliveryStreamName = streamName
         this.records = records.map { record ->
-            FirehoseRecord { this.data = record.data }
+            FirehoseSdkRecord { this.data = record.data }
         }
     }
 }
