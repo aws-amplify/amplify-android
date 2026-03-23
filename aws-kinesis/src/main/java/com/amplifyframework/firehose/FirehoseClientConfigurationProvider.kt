@@ -15,14 +15,10 @@
 package com.amplifyframework.firehose
 
 import aws.sdk.kotlin.services.firehose.FirehoseClient
+import com.amplifyframework.recordcache.SdkClientConfigurationProvider
 
 /**
  * Provides custom configuration for the underlying [FirehoseClient].
- *
- * Implement this interface to customize the [FirehoseClient.Config.Builder] used
- * by [AmplifyFirehoseClient]. The builder passed to [applyConfiguration] will already
- * have the default configurations (region, credentials) applied — your overrides
- * are applied on top.
  *
  * This is a SAM interface, so it can be used as a lambda in Kotlin:
  * ```kotlin
@@ -40,14 +36,4 @@ import aws.sdk.kotlin.services.firehose.FirehoseClient
  * )
  * ```
  */
-fun interface FirehoseClientConfigurationProvider {
-    /**
-     * Applies custom configuration to the FirehoseClient builder.
-     *
-     * The [builder] will already have default configurations (region, credentials) applied.
-     * Any values set here will override the defaults.
-     *
-     * @param builder A [FirehoseClient.Config.Builder] instance with defaults pre-applied
-     */
-    fun applyConfiguration(builder: FirehoseClient.Config.Builder)
-}
+typealias FirehoseClientConfigurationProvider = SdkClientConfigurationProvider<FirehoseClient.Config.Builder>
