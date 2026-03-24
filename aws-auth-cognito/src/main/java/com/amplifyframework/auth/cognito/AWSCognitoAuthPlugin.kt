@@ -489,11 +489,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         onSuccess: Consumer<FederateToIdentityPoolResult>,
         onError: Consumer<AuthException>
     ) = enqueue(onSuccess, onError) {
-        queueFacade.federateToIdentityPool(
-            providerToken,
-            authProvider,
-            FederateToIdentityPoolOptions.builder().build()
-        )
+        useCaseFactory.federateToIdentityPool().execute(providerToken, authProvider)
     }
 
     /**
@@ -510,11 +506,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         onSuccess: Consumer<FederateToIdentityPoolResult>,
         onError: Consumer<AuthException>
     ) = enqueue(onSuccess, onError) {
-        queueFacade.federateToIdentityPool(
-            providerToken,
-            authProvider,
-            options
-        )
+        useCaseFactory.federateToIdentityPool().execute(providerToken, authProvider, options)
     }
 
     /**

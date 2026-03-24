@@ -30,8 +30,6 @@ import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
-import com.amplifyframework.testutils.await
-import io.kotest.matchers.booleans.shouldBeTrue
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.invoke
@@ -41,10 +39,6 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.verify
 import java.util.Date
-import java.util.concurrent.CountDownLatch
-import kotlin.test.assertTrue
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.After
 import org.junit.Before
@@ -163,20 +157,5 @@ class RealAWSCognitoAuthPluginTest {
         every { authStateMachine.getCurrentState(captureLambda()) } answers {
             lambda<(AuthState) -> Unit>().invoke(currentAuthState)
         }
-    }
-
-    private class ConsumerWithLatch<T : Any>(private val expect: T? = null, count: Int = 1) : Consumer<T> {
-        val latch = CountDownLatch(count)
-        lateinit var captured: T
-            private set
-        override fun accept(value: T) {
-            if (expect == null || value == expect) {
-                assertTrue(latch.count > 0)
-                captured = value
-                latch.countDown()
-            }
-        }
-
-        fun shouldBeCalled(timeout: Duration = 5.seconds) = latch.await(timeout).shouldBeTrue()
     }
 }
