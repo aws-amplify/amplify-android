@@ -1,3 +1,17 @@
+/*
+ * Copyright 2026 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 package com.amplifyframework.kinesis
 
 import android.content.Context
@@ -11,6 +25,7 @@ import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.foundation.logging.Logger
 import com.amplifyframework.foundation.result.Result
 import com.amplifyframework.foundation.result.mapFailure
+import com.amplifyframework.foundation.useragent.AmplifyUserAgentInterceptor
 import com.amplifyframework.recordcache.AutoFlushScheduler
 import com.amplifyframework.recordcache.ClearCacheResult
 import com.amplifyframework.recordcache.FlushResult
@@ -20,7 +35,7 @@ import com.amplifyframework.recordcache.RecordData
 import com.amplifyframework.recordcache.RecordInput
 import com.amplifyframework.recordcache.RecordResult
 import com.amplifyframework.recordcache.SQLiteRecordStorage
-import kotlin.system.measureTimeMillis
+import com.amplifyframework.recordcache.logOp
 
 /**
  * Kinesis supports up to 500 records per PutRecords request.
@@ -94,7 +109,7 @@ class AmplifyKinesisClient(
         this.region = this@AmplifyKinesisClient.region
         this.credentialsProvider = this@AmplifyKinesisClient.credentialsProvider.toSmithyProvider()
         options.configureClient?.applyConfiguration(this)
-        interceptors += KinesisUserAgentInterceptor()
+        interceptors += AmplifyUserAgentInterceptor("amplify-kinesis", BuildConfig.VERSION_NAME)
     }
 
     private val recordClient: RecordClient = RecordClient(
@@ -104,6 +119,7 @@ class AmplifyKinesisClient(
         ),
         storage = SQLiteRecordStorage(
             context = context.applicationContext,
+            dbPrefix = "kinesis_records",
             identifier = region,
             maxRecordsByStream = MAX_RECORDS_PER_STREAM,
             cacheMaxBytes = options.cacheMaxBytes,
@@ -158,16 +174,15 @@ class AmplifyKinesisClient(
     }
 
     /**
-     * Flushes cached records to their respective Kinesis streams.
+     * Flushes all locally stored records to their respective Kinesis streams.
      *
-     * Each invocation sends at most one batch per stream, limited by the Kinesis
-     * `PutRecords` constraints (up to 500 records or 10 MB per stream). If the cache
-     * contains more records than a single batch can hold, the remaining records are
-     * sent on subsequent flush invocations — either manually or via the auto-flush
-     * scheduler.
+     * Each flush drains all pending records in batches per stream, limited by the
+     * Kinesis `PutRecords` constraints (up to 500 records or 10 MB per batch).
+     * Progress is tracked per stream so that records already attempted in the
+     * current flush cycle are not sent again. Failed records have their retry
+     * count incremented and are picked up in the next flush cycle.
      *
-     * Records that fail within a batch are marked for retry on the next flush. Records
-     * that exceed [AmplifyKinesisClientOptions.maxRetries] are removed from the cache.
+     * Records that exceed [AmplifyKinesisClientOptions.maxRetries] are removed from the cache.
      *
      * SDK Kinesis errors (throttling, invalid stream, etc.) are logged and skipped so
      * other streams can still flush. Non-SDK errors (e.g. network, storage) abort the
@@ -237,21 +252,5 @@ class AmplifyKinesisClient(
 
     private fun <T> Result<T, Throwable>.wrapError(): Result<T, AmplifyKinesisException> = mapFailure {
         AmplifyKinesisException.from(it)
-    }
-
-    private suspend inline fun <T> logOp(
-        operation: suspend () -> Result<T, AmplifyKinesisException>,
-        logSuccess: (T, Long) -> Unit,
-        logFailure: (Throwable?, Long) -> Unit
-    ): Result<T, AmplifyKinesisException> {
-        val result: Result<T, AmplifyKinesisException>
-        val timeMs = measureTimeMillis {
-            result = operation()
-        }
-        when (result) {
-            is Result.Failure -> logFailure(result.error, timeMs)
-            is Result.Success -> logSuccess(result.data, timeMs)
-        }
-        return result
     }
 }

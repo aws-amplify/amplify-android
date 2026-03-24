@@ -19,6 +19,7 @@ import aws.smithy.kotlin.runtime.auth.awscredentials.Credentials
 import aws.smithy.kotlin.runtime.collections.Attributes
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.annotations.InternalAmplifyApi
+import com.amplifyframework.auth.result.AuthSessionResult
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import kotlin.coroutines.resume
@@ -63,15 +64,22 @@ open class CognitoCredentialsProvider @InternalAmplifyApi constructor(
     override suspend fun getIdentityId(): String = suspendCoroutine { continuation ->
         authCategory.fetchAuthSession(
             { authSession ->
-                authSession.toAWSAuthSession()?.identityIdResult?.value?.let {
-                    continuation.resume(it)
-                } ?: continuation.resumeWithException(
-                    AuthException(
-                        "Failed to get identity ID. " +
-                            "Check if you are signed in and configured identity pools correctly.",
-                        AmplifyException.TODO_RECOVERY_SUGGESTION
+                val awsSession = authSession.toAWSAuthSession()
+
+                if (awsSession == null) {
+                    continuation.resumeWithException(
+                        AuthException(
+                            "Auth Session is not an AWS session",
+                            AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
+                        )
                     )
-                )
+                } else {
+                    val result = awsSession.identityIdResult
+                    when (result.type) {
+                        AuthSessionResult.Type.SUCCESS -> continuation.resume(result.value!!)
+                        AuthSessionResult.Type.FAILURE -> continuation.resumeWithException(result.error!!)
+                    }
+                }
             },
             {
                 continuation.resumeWithException(it)

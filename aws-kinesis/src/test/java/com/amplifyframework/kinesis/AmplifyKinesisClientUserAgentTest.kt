@@ -22,6 +22,7 @@ import com.amplifyframework.foundation.useragent.AmplifyUserAgentInterceptor
 import aws.smithy.kotlin.runtime.collections.Attributes
 import aws.smithy.kotlin.runtime.http.interceptors.HttpInterceptor
 import aws.smithy.kotlin.runtime.http.request.HttpRequest
+import com.amplifyframework.foundation.useragent.AmplifyUserAgentInterceptor
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.test.runTest

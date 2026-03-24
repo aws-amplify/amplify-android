@@ -1,3 +1,17 @@
+/*
+ * Copyright 2026 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 package com.amplifyframework.recordcache
 
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
@@ -193,10 +207,11 @@ class RecordClientFlushTest {
         storage.addRecord(RecordInput(streamName, "key1", byteArrayOf(1))).getOrThrow()
         storage.addRecord(RecordInput(streamName, "key2", byteArrayOf(2))).getOrThrow()
 
-        // Configure mock sender to fail with SDK Kinesis exception
-        val sdkException = aws.sdk.kotlin.services.kinesis.model.ResourceNotFoundException.invoke {
-            message = "Stream not found"
-        }
+        // Configure mock sender to fail with a SkippableSdkException (simulates SDK error wrapped by RecordSender)
+        val sdkException = SkippableSdkException(
+            "Stream not found",
+            RuntimeException("Stream not found")
+        )
         coEvery { mockSender.putRecords(streamName, any()) } returns Result.Failure(sdkException)
 
         // When
@@ -227,9 +242,10 @@ class RecordClientFlushTest {
         val stream2RecordId = initialRecords.find { it.streamName == stream2 }!!.id
 
         // Configure mock sender
-        val sdkException = aws.sdk.kotlin.services.kinesis.model.ResourceNotFoundException.invoke {
-            message = "Stream not found"
-        }
+        val sdkException = SkippableSdkException(
+            "Stream not found",
+            RuntimeException("Stream not found")
+        )
         coEvery { mockSender.putRecords(stream1, any()) } returns Result.Failure(sdkException)
         coEvery { mockSender.putRecords(stream2, any()) } returns
             Result.Success(

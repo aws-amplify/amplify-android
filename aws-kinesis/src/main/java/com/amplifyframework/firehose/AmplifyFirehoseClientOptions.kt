@@ -15,8 +15,12 @@
 package com.amplifyframework.firehose
 
 import aws.sdk.kotlin.services.firehose.FirehoseClient
+import com.amplifyframework.foundation.config.SdkClientConfigurationProvider
 import com.amplifyframework.recordcache.FlushStrategy
 import kotlin.time.Duration.Companion.seconds
+
+/** Provides custom configuration for the underlying [FirehoseClient]. */
+typealias FirehoseClientConfigurationProvider = SdkClientConfigurationProvider<FirehoseClient.Config.Builder>
 
 private const val DEFAULT_CACHE_SIZE_LIMIT_IN_BYTES = 5L * 1024 * 1024
 

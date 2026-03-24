@@ -41,8 +41,22 @@ typealias FirehoseRecordResult = Result<RecordData, AmplifyFirehoseException>
 typealias FirehoseFlushResult = Result<FlushData, AmplifyFirehoseException>
 typealias FirehoseClearCacheResult = Result<ClearCacheData, AmplifyFirehoseException>
 
+/**
+ * Firehose supports up to 500 records per PutRecordBatch request.
+ * See [the docs](https://docs.aws.amazon.com/firehose/latest/APIReference/API_PutRecordBatch.html)
+ */
 private const val MAX_RECORDS_PER_BATCH = 500
+
+/**
+ * Maximum size of a single record in bytes (1,000 KiB).
+ * See [PutRecordBatch](https://docs.aws.amazon.com/firehose/latest/APIReference/API_PutRecordBatch.html)
+ */
 private const val MAX_RECORD_SIZE_BYTES = 1_000L * 1_024
+
+/**
+ * Maximum total payload size per PutRecordBatch request in bytes (4 MiB).
+ * See [PutRecordBatch](https://docs.aws.amazon.com/firehose/latest/APIReference/API_PutRecordBatch.html)
+ */
 private const val MAX_PUT_RECORD_BATCH_SIZE_BYTES = 4L * 1_024 * 1_024
 
 /**
@@ -68,6 +82,12 @@ private const val MAX_PUT_RECORD_BATCH_SIZE_BYTES = 4L * 1_024 * 1_024
  *
  * val result = firehose.flush()
  * ```
+ *
+ * @param context Android application context for database access
+ * @param region AWS region where the Firehose delivery stream is located
+ * @param credentialsProvider AWS credentials for authentication. Use
+ *   `CognitoCredentialsProvider().toAwsCredentialsProvider()` to bridge from V2 Auth.
+ * @param options Configuration options with sensible defaults
  */
 @OptIn(InternalAmplifyApi::class)
 class AmplifyFirehoseClient(
@@ -100,17 +120,30 @@ class AmplifyFirehoseClient(
         maxRetries = options.maxRetries
     )
 
-    private val scheduler: AutoFlushScheduler? = when (options.flushStrategy) {
-        is FlushStrategy.Interval -> AutoFlushScheduler(options.flushStrategy, recordClient)
-        is FlushStrategy.None -> null
-    }
+    private val scheduler: AutoFlushScheduler?
 
     @Volatile private var isEnabled = true
 
     init {
+        scheduler = when (options.flushStrategy) {
+            is FlushStrategy.Interval -> AutoFlushScheduler(
+                options.flushStrategy,
+                client = recordClient
+            )
+            is FlushStrategy.None -> null
+        }
         scheduler?.start()
     }
 
+    /**
+     * Records data to the specified Firehose delivery stream.
+     *
+     * @param data The data to record as byte array
+     * @param streamName The name of the Firehose delivery stream
+     * @return Result.Success(RecordData) on success, or Result.Failure with:
+     *   - [AmplifyFirehoseLimitExceededException] (cache full)
+     *   - [AmplifyFirehoseStorageException] (database errors)
+     */
     suspend fun record(data: ByteArray, streamName: String): FirehoseRecordResult {
         if (!isEnabled) {
             logger.debug { "Record collection is disabled, dropping record" }
@@ -123,6 +156,28 @@ class AmplifyFirehoseClient(
         )
     }
 
+    /**
+     * Flushes all locally stored records to their respective Firehose delivery streams.
+     *
+     * Each flush drains all pending records in batches per stream, limited by the
+     * Firehose `PutRecordBatch` constraints (up to 500 records or 4 MB per batch).
+     * Progress is tracked per stream so that records already attempted in the
+     * current flush cycle are not sent again. Failed records have their retry
+     * count incremented and are picked up in the next flush cycle.
+     *
+     * Records that exceed [AmplifyFirehoseClientOptions.maxRetries] are removed from the cache.
+     *
+     * SDK Firehose errors (throttling, invalid stream, etc.) are logged and skipped so
+     * other streams can still flush. Non-SDK errors (e.g. network, storage) abort the
+     * flush and are returned as a failure.
+     *
+     * If a flush is already in progress, the call returns immediately with
+     * `FlushData(recordsFlushed = 0, flushInProgress = true)`.
+     *
+     * @return Result.Success(FlushData) on success, or Result.Failure with:
+     *   - [AmplifyFirehoseStorageException] (database errors)
+     *   - [AmplifyFirehoseUnknownException] (unexpected failures)
+     */
     suspend fun flush(): FirehoseFlushResult = logOp(
         operation = { recordClient.flush().wrapError() },
         logSuccess = { data, timeMs ->
@@ -131,6 +186,12 @@ class AmplifyFirehoseClient(
         logFailure = { error, timeMs -> logger.warn { "Flush failed in ${timeMs}ms: ${error?.message}" } }
     )
 
+    /**
+     * Clears all cached records from local storage.
+     *
+     * @return Result.Success(ClearCacheData) on success, or Result.Failure with:
+     *   - [AmplifyFirehoseStorageException] (database errors)
+     */
     suspend fun clearCache(): FirehoseClearCacheResult = logOp(
         operation = { recordClient.clearCache().wrapError() },
         logSuccess = { data, timeMs ->
@@ -139,12 +200,14 @@ class AmplifyFirehoseClient(
         logFailure = { error, timeMs -> logger.warn { "Clear cache failed in ${timeMs}ms: ${error?.message}" } }
     )
 
+    /** Enables record collection and automatic flushing. */
     fun enable() {
         logger.info { "Enabling record collection and automatic flushing" }
         isEnabled = true
         scheduler?.start()
     }
 
+    /** Disables record collection and automatic flushing. */
     fun disable() {
         logger.info { "Disabling record collection and automatic flushing" }
         isEnabled = false
