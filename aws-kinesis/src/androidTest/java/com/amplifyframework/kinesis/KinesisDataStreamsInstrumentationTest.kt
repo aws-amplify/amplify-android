@@ -20,9 +20,7 @@ import com.amplifyframework.foundation.credentials.AwsCredentials
 import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
 import com.amplifyframework.foundation.result.Result
 import com.amplifyframework.recordcache.FlushStrategy
-import com.amplifyframework.testutils.assertions.shouldBeFailure
 import com.amplifyframework.testutils.assertions.shouldBeSuccess
-import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -48,19 +46,14 @@ class KinesisDataStreamsInstrumentationTest : BaseStreamClientInstrumentationTes
     // 10 MiB per-record limit + 1 byte to exceed it
     override val oversizedRecordSize = 10 * 1_024 * 1_024 + 1
 
-    override fun createDefaultClient(context: Context): TestableStreamClient =
-        AmplifyKinesisClient(
-            context = context,
-            region = REGION,
-            credentialsProvider = credentialsProvider,
-            options = AmplifyKinesisClientOptions {
-                flushStrategy = FlushStrategy.None // Don't auto-flush as it may impact other tests
-            }
-        )
-        // Clear any leftover records from previous test runs
-        runBlocking { kinesis.clearCache() }
-        kinesis.enable()
-    }
+    override fun createDefaultClient(context: Context): TestableStreamClient = AmplifyKinesisClient(
+        context = context,
+        region = REGION,
+        credentialsProvider = credentialsProvider,
+        options = AmplifyKinesisClientOptions {
+            flushStrategy = FlushStrategy.None // Don't auto-flush as it may impact other tests
+        }
+    ).asTestable()
 
     override fun createClientWithSmallCache(context: Context, cacheMaxBytes: Long): TestableStreamClient =
         AmplifyKinesisClient(
@@ -91,17 +84,16 @@ class KinesisDataStreamsInstrumentationTest : BaseStreamClientInstrumentationTes
             }
         ).asTestable()
 
-    override fun createClientWithBadCredentials(context: Context): TestableStreamClient =
-        AmplifyKinesisClient(
-            context = context,
-            region = REGION,
-            credentialsProvider = AwsCredentialsProvider {
-                AwsCredentials.Static(
-                    accessKeyId = "AKIAIOSFODNN7EXAMPLE",
-                    secretAccessKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-                )
-            }
-        ).asTestable()
+    override fun createClientWithBadCredentials(context: Context): TestableStreamClient = AmplifyKinesisClient(
+        context = context,
+        region = REGION,
+        credentialsProvider = AwsCredentialsProvider {
+            AwsCredentials.Static(
+                accessKeyId = "AKIAIOSFODNN7EXAMPLE",
+                secretAccessKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+            )
+        }
+    ).asTestable()
 
     override fun assertLimitExceededError(result: Result<*, *>) {
         (result as Result.Failure).error.shouldBeInstanceOf<AmplifyKinesisLimitExceededException>()
@@ -122,23 +114,22 @@ class KinesisDataStreamsInstrumentationTest : BaseStreamClientInstrumentationTes
      */
     @Test
     fun testSingleFlushDrainsMultipleBatches(): Unit = runBlocking {
-        val recordCount = 1100 // Exceeds MAX_RECORDS_PER_STREAM (500) — requires 3 batches
+        val recordCount = 1100
 
         repeat(recordCount) { i ->
-            val result = kinesis.record(
-                data = "batch-record-$i".toByteArray(),
-                partitionKey = "partition-${i % 10}",
-                streamName = STREAM_NAME
+            val result = client.record(
+                "batch-record-$i".toByteArray(),
+                streamName
             )
             result.shouldBeSuccess()
         }
 
         // Single flush should drain all 1100 records across three batches (500 + 500 + 100)
-        val flushResult = kinesis.flush()
+        val flushResult = client.flush()
         flushResult.shouldBeSuccess().data.recordsFlushed shouldBe recordCount
 
         // Nothing left
-        val secondFlush = kinesis.flush()
+        val secondFlush = client.flush()
         secondFlush.shouldBeSuccess().data.recordsFlushed shouldBe 0
     }
 

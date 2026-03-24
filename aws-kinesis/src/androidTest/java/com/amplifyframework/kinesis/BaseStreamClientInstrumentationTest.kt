@@ -27,16 +27,13 @@ import com.amplifyframework.foundation.credentials.toAwsCredentialsProvider
 import com.amplifyframework.foundation.result.Result
 import com.amplifyframework.kinesis.test.R
 import com.amplifyframework.recordcache.FlushData
-import com.amplifyframework.recordcache.FlushStrategy
 import com.amplifyframework.testutils.Resources
-import com.amplifyframework.testutils.assertions.shouldBeFailure
 import com.amplifyframework.testutils.assertions.shouldBeSuccess
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay

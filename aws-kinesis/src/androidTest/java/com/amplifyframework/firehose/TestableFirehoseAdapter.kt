@@ -17,12 +17,10 @@ package com.amplifyframework.firehose
 import com.amplifyframework.kinesis.TestableStreamClient
 
 /** Wraps [AmplifyFirehoseClient] as a [TestableStreamClient]. Direct mapping — no partition key needed. */
-fun AmplifyFirehoseClient.asTestable(): TestableStreamClient =
-    object : TestableStreamClient {
-        override suspend fun record(data: ByteArray, streamName: String) =
-            this@asTestable.record(data, streamName)
-        override suspend fun flush() = this@asTestable.flush()
-        override suspend fun clearCache() = this@asTestable.clearCache()
-        override fun enable() = this@asTestable.enable()
-        override fun disable() = this@asTestable.disable()
-    }
+fun AmplifyFirehoseClient.asTestable(): TestableStreamClient = object : TestableStreamClient {
+    override suspend fun record(data: ByteArray, streamName: String) = this@asTestable.record(data, streamName)
+    override suspend fun flush() = this@asTestable.flush()
+    override suspend fun clearCache() = this@asTestable.clearCache()
+    override fun enable() = this@asTestable.enable()
+    override fun disable() = this@asTestable.disable()
+}

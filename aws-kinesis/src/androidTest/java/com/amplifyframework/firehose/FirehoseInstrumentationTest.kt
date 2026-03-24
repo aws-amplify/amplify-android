@@ -45,12 +45,11 @@ class FirehoseInstrumentationTest : BaseStreamClientInstrumentationTest() {
     // 1,000 KiB per-record limit + 1 byte to exceed it
     override val oversizedRecordSize = 1_000 * 1_024 + 1
 
-    override fun createDefaultClient(context: Context): TestableStreamClient =
-        AmplifyFirehoseClient(
-            context = context,
-            region = REGION,
-            credentialsProvider = credentialsProvider
-        ).asTestable()
+    override fun createDefaultClient(context: Context): TestableStreamClient = AmplifyFirehoseClient(
+        context = context,
+        region = REGION,
+        credentialsProvider = credentialsProvider
+    ).asTestable()
 
     override fun createClientWithSmallCache(context: Context, cacheMaxBytes: Long): TestableStreamClient =
         AmplifyFirehoseClient(
@@ -81,17 +80,16 @@ class FirehoseInstrumentationTest : BaseStreamClientInstrumentationTest() {
             }
         ).asTestable()
 
-    override fun createClientWithBadCredentials(context: Context): TestableStreamClient =
-        AmplifyFirehoseClient(
-            context = context,
-            region = REGION,
-            credentialsProvider = AwsCredentialsProvider {
-                AwsCredentials.Static(
-                    accessKeyId = "AKIAIOSFODNN7EXAMPLE",
-                    secretAccessKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-                )
-            }
-        ).asTestable()
+    override fun createClientWithBadCredentials(context: Context): TestableStreamClient = AmplifyFirehoseClient(
+        context = context,
+        region = REGION,
+        credentialsProvider = AwsCredentialsProvider {
+            AwsCredentials.Static(
+                accessKeyId = "AKIAIOSFODNN7EXAMPLE",
+                secretAccessKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+            )
+        }
+    ).asTestable()
 
     override fun assertLimitExceededError(result: Result<*, *>) {
         (result as Result.Failure).error.shouldBeInstanceOf<AmplifyFirehoseLimitExceededException>()
