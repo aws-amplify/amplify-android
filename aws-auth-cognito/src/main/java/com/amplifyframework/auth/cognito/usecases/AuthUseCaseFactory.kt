@@ -178,4 +178,9 @@ internal class AuthUseCaseFactory(
         stateMachine = stateMachine,
         signOut = signOut()
     )
+
+    fun webUISignInResponse() = WebUiSignInResponseUseCase(
+        stateMachine = stateMachine,
+        authEnvironment = authEnvironment
+    )
 }

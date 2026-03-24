@@ -16,7 +16,6 @@
 package com.amplifyframework.auth.cognito
 
 import android.app.Activity
-import android.content.Intent
 import androidx.annotation.WorkerThread
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.annotations.InternalAmplifyApi
@@ -28,9 +27,7 @@ import com.amplifyframework.auth.AuthSession
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
-import com.amplifyframework.auth.cognito.exceptions.service.HostedUISignOutException
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidAccountTypeException
-import com.amplifyframework.auth.cognito.exceptions.service.UserCancelledException
 import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions
 import com.amplifyframework.auth.exceptions.ConfigurationException
@@ -52,20 +49,15 @@ import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.data.HostedUIErrorData
 import com.amplifyframework.statemachine.codegen.data.SignInData
-import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.errors.SessionError
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
-import com.amplifyframework.statemachine.codegen.events.HostedUIEvent
-import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
-import com.amplifyframework.statemachine.codegen.states.SignOutState
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.flow.collect
@@ -283,80 +275,6 @@ internal class RealAWSCognitoAuthPlugin(
                 )
             }
         )
-    }
-
-    fun handleWebUISignInResponse(intent: Intent?) {
-        authStateMachine.getCurrentState {
-            val callbackUri = intent?.data
-            when (val authNState = it.authNState) {
-                is AuthenticationState.SigningOut -> {
-                    (authNState.signOutState as? SignOutState.SigningOutHostedUI)?.let { signOutState ->
-                        if (callbackUri == null &&
-                            !signOutState.bypassCancel &&
-                            signOutState.signedInData.signInMethod !=
-                            SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.UNKNOWN)
-                        ) {
-                            authStateMachine.send(
-                                SignOutEvent(SignOutEvent.EventType.UserCancelled(signOutState.signedInData))
-                            )
-                        } else {
-                            val hostedUIErrorData = if (callbackUri == null) {
-                                // This error will be appended if sign out redirect failed with an UNKNOWN sign in
-                                // method. We will provide a URL to allow the developer to manually retry.
-                                HostedUIErrorData(
-                                    url = authEnvironment.hostedUIClient?.createSignOutUri()?.toString(),
-                                    error = HostedUISignOutException(authEnvironment.hostedUIClient != null)
-                                )
-                            } else {
-                                null
-                            }
-                            if (signOutState.globalSignOut) {
-                                authStateMachine.send(
-                                    SignOutEvent(
-                                        SignOutEvent.EventType.SignOutGlobally(
-                                            signOutState.signedInData,
-                                            hostedUIErrorData
-                                        )
-                                    )
-                                )
-                            } else {
-                                authStateMachine.send(
-                                    SignOutEvent(
-                                        SignOutEvent.EventType.RevokeToken(
-                                            signOutState.signedInData,
-                                            hostedUIErrorData
-                                        )
-                                    )
-                                )
-                            }
-                        }
-                    }
-                }
-                is AuthenticationState.SigningIn -> {
-                    if (callbackUri == null) {
-                        authStateMachine.send(
-                            HostedUIEvent(
-                                HostedUIEvent.EventType.ThrowError(
-                                    UserCancelledException(
-                                        "The user cancelled the sign-in attempt, so it did not complete.",
-                                        "To recover: catch this error, and show the sign-in screen again."
-                                    )
-                                )
-                            )
-                        )
-                    } else {
-                        authStateMachine.send(HostedUIEvent(HostedUIEvent.EventType.FetchToken(callbackUri)))
-                    }
-                }
-                else -> {
-                    logger.warn(
-                        "Received handleWebUIResponse but ignoring because the user is not currently signing in " +
-                            "or signing out"
-                    )
-                    Unit
-                }
-            }
-        }
     }
 
     fun fetchAuthSession(onSuccess: Consumer<AuthSession>, onError: Consumer<AuthException>) {

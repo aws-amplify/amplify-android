@@ -299,10 +299,9 @@ class AWSCognitoAuthPluginTest {
     @Test
     fun verifyHandleWebUISignInResponse() {
         val expectedIntent: Intent = mockk()
-
+        val useCase = authPlugin.useCaseFactory.webUISignInResponse()
         authPlugin.handleWebUISignInResponse(expectedIntent)
-
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.handleWebUISignInResponse(expectedIntent) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute(expectedIntent) }
     }
 
     @Test
