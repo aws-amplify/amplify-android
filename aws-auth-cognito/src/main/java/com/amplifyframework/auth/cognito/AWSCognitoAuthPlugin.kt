@@ -92,9 +92,6 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     internal lateinit var useCaseFactory: AuthUseCaseFactory
 
     private val pluginScope = CoroutineScope(Job() + Dispatchers.Default)
-    private val queueFacade: KotlinAuthFacadeInternal by lazy {
-        KotlinAuthFacadeInternal(realPlugin)
-    }
 
     private val queueChannel = Channel<Job>(capacity = Channel.UNLIMITED).apply {
         pluginScope.launch {
@@ -301,10 +298,10 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         options: AuthFetchSessionOptions,
         onSuccess: Consumer<AuthSession>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.fetchAuthSession(options) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.fetchAuthSession().execute(options) }
 
     override fun fetchAuthSession(onSuccess: Consumer<AuthSession>, onError: Consumer<AuthException>) =
-        enqueue(onSuccess, onError) { queueFacade.fetchAuthSession() }
+        enqueue(onSuccess, onError) { useCaseFactory.fetchAuthSession().execute() }
 
     override fun rememberDevice(onSuccess: Action, onError: Consumer<AuthException>) =
         enqueue(onSuccess, onError) { useCaseFactory.rememberDevice().execute() }

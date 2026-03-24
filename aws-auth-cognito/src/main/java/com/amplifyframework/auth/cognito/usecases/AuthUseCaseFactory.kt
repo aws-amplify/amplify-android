@@ -27,7 +27,7 @@ internal class AuthUseCaseFactory(
     private val stateMachine: AuthStateMachine
 ) {
 
-    fun fetchAuthSession() = FetchAuthSessionUseCase(plugin)
+    fun fetchAuthSession() = FetchAuthSessionUseCase(stateMachine)
 
     fun associateWebAuthnCredential() = AssociateWebAuthnCredentialUseCase(
         client = authEnvironment.requireIdentityProviderClient(),
