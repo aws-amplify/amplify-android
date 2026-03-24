@@ -67,6 +67,7 @@ private const val MAX_PUT_RECORD_BATCH_SIZE_BYTES = 4L * 1_024 * 1_024
  *
  * Example usage:
  * ```kotlin
+ * * // Bridge V2 AuthPlugin credentials to foundation credentials via Smithy types
  * val credentialsProvider = CognitoCredentialsProvider().toAwsCredentialsProvider()
  *
  * val firehose = AmplifyFirehoseClient(
@@ -132,6 +133,8 @@ class AmplifyFirehoseClient(
             )
             is FlushStrategy.None -> null
         }
+
+        // Auto-start the scheduler if present
         scheduler?.start()
     }
 
@@ -181,9 +184,13 @@ class AmplifyFirehoseClient(
     suspend fun flush(): FirehoseFlushResult = logOp(
         operation = { recordClient.flush().wrapError() },
         logSuccess = { data, timeMs ->
-            logger.debug { "Flush completed in ${timeMs}ms - ${data.recordsFlushed} records flushed" }
+            logger.debug {
+                "Flush completed in ${timeMs}ms - ${data.recordsFlushed} records flushed"
+            }
         },
-        logFailure = { error, timeMs -> logger.warn { "Flush failed in ${timeMs}ms: ${error?.message}" } }
+        logFailure = { error, timeMs ->
+            logger.warn { "Flush failed in ${timeMs}ms: ${error?.message}" }
+        }
     )
 
     /**
@@ -197,17 +204,24 @@ class AmplifyFirehoseClient(
         logSuccess = { data, timeMs ->
             logger.debug { "Clear cache completed in ${timeMs}ms - ${data.recordsCleared} records cleared" }
         },
-        logFailure = { error, timeMs -> logger.warn { "Clear cache failed in ${timeMs}ms: ${error?.message}" } }
+        logFailure = { error, timeMs ->
+            logger.warn { "Clear cache failed in ${timeMs}ms: ${error?.message}" }
+        }
     )
 
-    /** Enables record collection and automatic flushing. */
+    /**
+     * Enables record collection and automatic flushing of cached records.
+     */
     fun enable() {
         logger.info { "Enabling record collection and automatic flushing" }
         isEnabled = true
         scheduler?.start()
     }
 
-    /** Disables record collection and automatic flushing. */
+    /**
+     * Disables record collection and automatic flushing. Records submitted while
+     * disabled are silently dropped. Already-cached records remain in storage.
+     */
     fun disable() {
         logger.info { "Disabling record collection and automatic flushing" }
         isEnabled = false
