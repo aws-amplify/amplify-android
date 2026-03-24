@@ -256,7 +256,6 @@ internal class SQLiteRecordStorage internal constructor(
                     )
                 }
             }
-
             recordsByStream.values.toList()
         }
     }.recoverAsRecordCacheException("Could not retrieve records from storage")

@@ -12,34 +12,34 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.kinesis
+package com.amplifyframework.firehose
 
-import aws.sdk.kotlin.services.kinesis.KinesisClient
+import aws.sdk.kotlin.services.firehose.FirehoseClient
 import com.amplifyframework.foundation.config.SdkClientConfigurationProvider
 import com.amplifyframework.recordcache.FlushStrategy
 import kotlin.time.Duration.Companion.seconds
 
-/** Provides custom configuration for the underlying [KinesisClient]. */
-typealias KinesisClientConfigurationProvider = SdkClientConfigurationProvider<KinesisClient.Config.Builder>
+/** Provides custom configuration for the underlying [FirehoseClient]. */
+typealias FirehoseClientConfigurationProvider = SdkClientConfigurationProvider<FirehoseClient.Config.Builder>
 
 private const val DEFAULT_CACHE_SIZE_LIMIT_IN_BYTES = 5L * 1024 * 1024
 
 /**
- * Configuration options for [AmplifyKinesisClient].
+ * Configuration options for [AmplifyFirehoseClient].
  *
  * @param cacheMaxBytes Maximum size of the local cache in bytes (default: 5MB)
  * @param maxRetries Maximum number of retry attempts for failed records (default: 5)
  * @param flushStrategy Strategy for automatic flushing of cached records
  */
-data class AmplifyKinesisClientOptions internal constructor(
+data class AmplifyFirehoseClientOptions internal constructor(
     val cacheMaxBytes: Long,
     val maxRetries: Int,
     val flushStrategy: FlushStrategy,
-    val configureClient: KinesisClientConfigurationProvider? = null
+    val configureClient: FirehoseClientConfigurationProvider? = null
 ) {
     companion object {
         /**
-         * Creates a new builder for configuring [AmplifyKinesisClientOptions].
+         * Creates a new builder for configuring [AmplifyFirehoseClientOptions].
          *
          * @return A new builder instance with default values
          */
@@ -50,7 +50,7 @@ data class AmplifyKinesisClientOptions internal constructor(
         operator fun invoke(func: Builder.() -> Unit) = Builder().apply(func).build()
 
         /**
-         * Creates [AmplifyKinesisClientOptions] with default values.
+         * Creates [AmplifyFirehoseClientOptions] with default values.
          *
          * @return Options with default values
          */
@@ -59,7 +59,7 @@ data class AmplifyKinesisClientOptions internal constructor(
     }
 
     /**
-     * Builder for [AmplifyKinesisClientOptions].
+     * Builder for [AmplifyFirehoseClientOptions].
      */
     class Builder internal constructor() {
         var cacheMaxBytes: Long = DEFAULT_CACHE_SIZE_LIMIT_IN_BYTES
@@ -71,7 +71,7 @@ data class AmplifyKinesisClientOptions internal constructor(
         var flushStrategy: FlushStrategy = FlushStrategy.Interval(30.seconds)
             @JvmSynthetic set
 
-        var configureClient: KinesisClientConfigurationProvider? = null
+        var configureClient: FirehoseClientConfigurationProvider? = null
             @JvmSynthetic private set
 
         /**
@@ -99,19 +99,19 @@ data class AmplifyKinesisClientOptions internal constructor(
         fun flushStrategy(value: FlushStrategy) = apply { flushStrategy = value }
 
         /**
-         * Sets a custom configuration provider for the underlying [KinesisClient].
+         * Sets a custom configuration provider for the underlying [FirehoseClient].
          *
          * @param value Configuration provider, or null to use defaults
          * @return This builder instance
          */
-        fun configureClient(value: KinesisClientConfigurationProvider?) = apply { configureClient = value }
+        fun configureClient(value: FirehoseClientConfigurationProvider?) = apply { configureClient = value }
 
         /**
-         * Configures the underlying [KinesisClient] using a DSL-style lambda.
+         * Configures the underlying [FirehoseClient] using a DSL-style lambda.
          *
          * Example (Kotlin):
          * ```kotlin
-         * val options = AmplifyKinesisClientOptions {
+         * val options = AmplifyFirehoseClientOptions {
          *     maxRetries = 5
          *     configureClient {
          *         retryStrategy {
@@ -121,20 +121,20 @@ data class AmplifyKinesisClientOptions internal constructor(
          * }
          * ```
          *
-         * @param value Lambda with receiver on [KinesisClient.Config.Builder]
+         * @param value Lambda with receiver on [FirehoseClient.Config.Builder]
          * @return This builder instance
          */
         @JvmSynthetic
-        fun configureClient(value: KinesisClient.Config.Builder.() -> Unit) = apply {
-            configureClient = KinesisClientConfigurationProvider { it.value() }
+        fun configureClient(value: FirehoseClient.Config.Builder.() -> Unit) = apply {
+            configureClient = FirehoseClientConfigurationProvider { it.value() }
         }
 
         /**
-         * Builds the [AmplifyKinesisClientOptions] with configured values.
+         * Builds the [AmplifyFirehoseClientOptions] with configured values.
          *
          * @return Configured options instance
          */
-        fun build() = AmplifyKinesisClientOptions(
+        fun build() = AmplifyFirehoseClientOptions(
             cacheMaxBytes,
             maxRetries,
             flushStrategy,
