@@ -82,7 +82,7 @@ subprojects {
             allow("BSD-2-Clause")
             allow("CC0-1.0")
             allowUrl("https://developer.android.com/studio/terms.html")
-            allowDependency("net.zetetic", "android-database-sqlcipher", "4.5.4") {
+            allowDependency("net.zetetic", "android-database-sqlcipher", "4.6.1") {
                 because("BSD style License")
             }
             allowDependency("org.jetbrains", "annotations", "16.0.1") {

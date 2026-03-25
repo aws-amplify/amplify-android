@@ -23,7 +23,7 @@ import android.util.AttributeSet
 import androidx.annotation.StyleableRes
 import com.amplifyframework.geo.maplibre.Coordinate2D
 import com.amplifyframework.geo.maplibre.R
-import com.mapbox.mapboxsdk.camera.CameraPosition
+import org.maplibre.android.camera.CameraPosition
 import kotlinx.parcelize.Parcelize
 
 const val MAX_ZOOM_BOUNDARY = 22.0

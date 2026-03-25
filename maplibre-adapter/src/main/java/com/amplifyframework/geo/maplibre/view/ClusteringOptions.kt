@@ -16,10 +16,10 @@
 package com.amplifyframework.geo.maplibre.view
 
 import android.graphics.Color
-import com.mapbox.geojson.Feature
-import com.mapbox.geojson.Point
-import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
-import com.mapbox.mapboxsdk.geometry.LatLng
+import org.maplibre.geojson.Feature
+import org.maplibre.geojson.Point
+import org.maplibre.android.camera.CameraUpdateFactory
+import org.maplibre.android.geometry.LatLng
 import kotlin.math.min
 
 /**
