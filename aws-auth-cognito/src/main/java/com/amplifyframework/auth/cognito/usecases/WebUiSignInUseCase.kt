@@ -17,17 +17,16 @@ package com.amplifyframework.auth.cognito.usecases
 
 import android.app.Activity
 import com.amplifyframework.auth.AuthChannelEventName
-import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.cognito.AuthConfiguration
 import com.amplifyframework.auth.cognito.AuthStateMachine
+import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter.Companion.toAuthException
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
 import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions
 import com.amplifyframework.auth.exceptions.InvalidStateException
-import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.auth.options.AuthWebUISignInOptions
 import com.amplifyframework.auth.plugins.core.AuthHubEventEmitter
 import com.amplifyframework.auth.result.AuthSignInResult
@@ -76,15 +75,10 @@ internal class WebUiSignInUseCase(
                     authNState is AuthenticationState.SigningIn -> {
                         val hostedUISignInState = authNState.signInState.hostedUISignInState
                         if (hostedUISignInState is HostedUISignInState.Error) {
-                            val exception = hostedUISignInState.exception
                             stateMachine.send(
                                 AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn())
                             )
-                            throw if (exception is AuthException) {
-                                exception
-                            } else {
-                                UnknownException("Sign in failed", exception)
-                            }
+                            throw hostedUISignInState.exception.toAuthException("Sign in failed")
                         }
                         null
                     }
