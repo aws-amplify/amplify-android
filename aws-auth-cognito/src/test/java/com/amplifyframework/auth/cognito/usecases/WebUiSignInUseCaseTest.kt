@@ -51,7 +51,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -76,7 +75,6 @@ class WebUiSignInUseCaseTest {
 
     private val stateMachine: AuthStateMachine = mockk {
         every { state } returns stateFlow
-        every { stateTransitions } answers { stateFlow.drop(1) }
         coEvery { getCurrentState() } answers { stateFlow.value }
         justRun { send(any()) }
     }
