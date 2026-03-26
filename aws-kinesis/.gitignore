@@ -1,1 +1,6 @@
 /build
+
+# Infra project
+# See infra/README.md for setup instructions.
+/infra/*
+!/infra/README.md
