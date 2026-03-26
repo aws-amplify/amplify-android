@@ -15,21 +15,14 @@
 
 package com.amplifyframework.auth.cognito
 
-import android.app.Activity
 import androidx.annotation.WorkerThread
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.AWSCognitoAuthMetadataType
 import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.AuthException
-import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.AuthSession
-import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthConfigurationException
-import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
-import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidAccountTypeException
-import com.amplifyframework.auth.cognito.helpers.HostedUIHelper
-import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions
 import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.exceptions.NotAuthorizedException
@@ -38,10 +31,6 @@ import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
-import com.amplifyframework.auth.options.AuthWebUISignInOptions
-import com.amplifyframework.auth.result.AuthSignInResult
-import com.amplifyframework.auth.result.step.AuthNextSignInStep
-import com.amplifyframework.auth.result.step.AuthSignInStep
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.hub.HubChannel
@@ -49,15 +38,11 @@ import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
-import com.amplifyframework.statemachine.codegen.data.SignInData
 import com.amplifyframework.statemachine.codegen.errors.SessionError
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
-import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
 import com.amplifyframework.statemachine.codegen.states.AuthState
-import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
-import com.amplifyframework.statemachine.codegen.states.HostedUISignInState
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.flow.collect
@@ -109,172 +94,6 @@ internal class RealAWSCognitoAuthPlugin(
 
     internal suspend fun suspendWhileConfiguring() {
         authStateMachine.state.takeWhile { it !is AuthState.Configured && it !is AuthState.Error }.collect()
-    }
-
-    fun signInWithSocialWebUI(
-        provider: AuthProvider,
-        callingActivity: Activity,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
-    ) {
-        signInWithSocialWebUI(
-            provider,
-            callingActivity,
-            AWSCognitoAuthWebUISignInOptions.builder().build(),
-            onSuccess,
-            onError
-        )
-    }
-
-    fun signInWithSocialWebUI(
-        provider: AuthProvider,
-        callingActivity: Activity,
-        options: AuthWebUISignInOptions,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
-    ) {
-        signInWithHostedUI(
-            provider = provider,
-            callingActivity = callingActivity,
-            options = options,
-            onSuccess = onSuccess,
-            onError = onError
-        )
-    }
-
-    fun signInWithWebUI(
-        callingActivity: Activity,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
-    ) {
-        signInWithWebUI(callingActivity, AuthWebUISignInOptions.builder().build(), onSuccess, onError)
-    }
-
-    fun signInWithWebUI(
-        callingActivity: Activity,
-        options: AuthWebUISignInOptions,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
-    ) {
-        signInWithHostedUI(
-            callingActivity = callingActivity,
-            options = options,
-            onSuccess = onSuccess,
-            onError = onError
-        )
-    }
-
-    private fun signInWithHostedUI(
-        provider: AuthProvider? = null,
-        callingActivity: Activity,
-        options: AuthWebUISignInOptions,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>
-    ) {
-        authStateMachine.getCurrentState { authState ->
-            when (authState.authNState) {
-                is AuthenticationState.NotConfigured -> onError.accept(
-                    InvalidUserPoolConfigurationException()
-                )
-                // Continue sign in
-                is AuthenticationState.SignedOut -> {
-                    if (configuration.oauth == null) {
-                        onError.accept(InvalidOauthConfigurationException())
-                        return@getCurrentState
-                    }
-
-                    _signInWithHostedUI(
-                        callingActivity = callingActivity,
-                        options = options,
-                        onSuccess = onSuccess,
-                        onError = onError,
-                        provider = provider
-                    )
-                }
-                is AuthenticationState.SignedIn -> onError.accept(SignedInException())
-                is AuthenticationState.SigningIn -> {
-                    val token = StateChangeListenerToken()
-                    authStateMachine.listen(
-                        token,
-                        { authState ->
-                            when (authState.authNState) {
-                                is AuthenticationState.SignedOut -> {
-                                    authStateMachine.cancel(token)
-                                    _signInWithHostedUI(
-                                        callingActivity = callingActivity,
-                                        options = options,
-                                        onSuccess = onSuccess,
-                                        onError = onError,
-                                        provider = provider
-                                    )
-                                }
-                                else -> Unit
-                            }
-                        },
-                        {
-                            authStateMachine.send(AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn()))
-                        }
-                    )
-                }
-                else -> onError.accept(InvalidStateException())
-            }
-        }
-    }
-
-    private fun _signInWithHostedUI(
-        callingActivity: Activity,
-        options: AuthWebUISignInOptions,
-        onSuccess: Consumer<AuthSignInResult>,
-        onError: Consumer<AuthException>,
-        provider: AuthProvider? = null
-    ) {
-        val token = StateChangeListenerToken()
-        authStateMachine.listen(
-            token,
-            { authState ->
-                val authNState = authState.authNState
-                val authZState = authState.authZState
-                when {
-                    authNState is AuthenticationState.SigningIn -> {
-                        val hostedUISignInState = authNState.signInState.hostedUISignInState
-                        if (hostedUISignInState is HostedUISignInState.Error) {
-                            authStateMachine.cancel(token)
-                            val exception = hostedUISignInState.exception
-                            onError.accept(
-                                if (exception is AuthException) {
-                                    exception
-                                } else {
-                                    UnknownException("Sign in failed", exception)
-                                }
-                            )
-                            authStateMachine.send(AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn()))
-                        }
-                    }
-                    authNState is AuthenticationState.SignedIn &&
-                        authZState is AuthorizationState.SessionEstablished -> {
-                        authStateMachine.cancel(token)
-                        val authSignInResult =
-                            AuthSignInResult(
-                                true,
-                                AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null, null, null, null)
-                            )
-                        onSuccess.accept(authSignInResult)
-                        sendHubEvent(AuthChannelEventName.SIGNED_IN.toString())
-                    }
-                    else -> Unit
-                }
-            },
-            {
-                val hostedUIOptions = HostedUIHelper.createHostedUIOptions(callingActivity, provider, options)
-                authStateMachine.send(
-                    AuthenticationEvent(
-                        AuthenticationEvent.EventType.SignInRequested(
-                            SignInData.HostedUISignInData(hostedUIOptions)
-                        )
-                    )
-                )
-            }
-        )
     }
 
     fun fetchAuthSession(onSuccess: Consumer<AuthSession>, onError: Consumer<AuthException>) {
