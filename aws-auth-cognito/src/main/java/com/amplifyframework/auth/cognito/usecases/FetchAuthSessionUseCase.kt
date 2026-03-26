@@ -111,7 +111,7 @@ internal class FetchAuthSessionUseCase(
                                     error.amplifyCredential.getCognitoSession(innerException)
                                 }
                                 else -> {
-                                    val errorResult = innerException.toAuthException("Fetch auth session failed")
+                                    val errorResult = innerException.toAuthException("Fetch auth session failed.")
                                     error.amplifyCredential.getCognitoSession(errorResult)
                                 }
                             }
@@ -121,7 +121,7 @@ internal class FetchAuthSessionUseCase(
                             AmplifyCredential.Empty.getCognitoSession(errorResult)
                         }
                         else -> {
-                            val errorResult = error.toAuthException("Fetch auth session failed")
+                            val errorResult = error.toAuthException("Fetch auth session failed.")
                             AmplifyCredential.Empty.getCognitoSession(errorResult)
                         }
                     }
