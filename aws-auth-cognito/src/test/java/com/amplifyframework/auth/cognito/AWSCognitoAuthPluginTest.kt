@@ -232,15 +232,12 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthSignInResult> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.webUiSignIn()
+
         authPlugin.signInWithSocialWebUI(expectedProvider, expectedActivity, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.signInWithSocialWebUI(
-                expectedProvider,
-                expectedActivity,
-                any(),
-                any()
-            )
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute(expectedActivity, expectedProvider)
         }
     }
 
@@ -252,6 +249,8 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthSignInResult> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.webUiSignIn()
+
         authPlugin.signInWithSocialWebUI(
             expectedProvider,
             expectedActivity,
@@ -260,14 +259,8 @@ class AWSCognitoAuthPluginTest {
             expectedOnError
         )
 
-        verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.signInWithSocialWebUI(
-                expectedProvider,
-                expectedActivity,
-                expectedOptions,
-                any(),
-                any()
-            )
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute(expectedActivity, expectedProvider, expectedOptions)
         }
     }
 
@@ -277,9 +270,11 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthSignInResult> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.webUiSignIn()
+
         authPlugin.signInWithWebUI(expectedActivity, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.signInWithWebUI(expectedActivity, any(), any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute(expectedActivity) }
     }
 
     @Test
@@ -289,10 +284,12 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthSignInResult> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.webUiSignIn()
+
         authPlugin.signInWithWebUI(expectedActivity, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.signInWithWebUI(expectedActivity, expectedOptions, any(), any())
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute(callingActivity = expectedActivity, options = expectedOptions)
         }
     }
 

@@ -260,7 +260,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         callingActivity: Activity,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.signInWithSocialWebUI(provider, callingActivity) }
+    ) = enqueue(onSuccess, onError) {
+        useCaseFactory.webUiSignIn().execute(callingActivity, provider)
+    }
 
     override fun signInWithSocialWebUI(
         provider: AuthProvider,
@@ -268,20 +270,26 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         options: AuthWebUISignInOptions,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.signInWithSocialWebUI(provider, callingActivity, options) }
+    ) = enqueue(onSuccess, onError) {
+        useCaseFactory.webUiSignIn().execute(callingActivity, provider, options)
+    }
 
     override fun signInWithWebUI(
         callingActivity: Activity,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.signInWithWebUI(callingActivity) }
+    ) = enqueue(onSuccess, onError) {
+        useCaseFactory.webUiSignIn().execute(callingActivity = callingActivity)
+    }
 
     override fun signInWithWebUI(
         callingActivity: Activity,
         options: AuthWebUISignInOptions,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.signInWithWebUI(callingActivity, options) }
+    ) = enqueue(onSuccess, onError) {
+        useCaseFactory.webUiSignIn().execute(callingActivity = callingActivity, options = options)
+    }
 
     override fun handleWebUISignInResponse(intent: Intent?) {
         pluginScope.launch {
