@@ -23,6 +23,7 @@ import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.test.R;
 import com.amplifyframework.predictions.models.LanguageType;
 import com.amplifyframework.predictions.result.TranslateTextResult;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousPredictions;
 
@@ -38,7 +39,7 @@ import static org.junit.Assert.assertTrue;
  * Tests that Predictions translate delivers a non-null result
  * for valid input.
  */
-public final class AWSPredictionsTranslateTest {
+public final class AWSPredictionsTranslateTest extends DeviceFarmTestBase {
 
     private SynchronousPredictions predictions;
 

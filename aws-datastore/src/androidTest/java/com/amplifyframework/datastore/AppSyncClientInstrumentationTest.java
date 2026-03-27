@@ -43,6 +43,7 @@ import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
 import com.amplifyframework.testutils.Await;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.testutils.ModelAssert;
 import com.amplifyframework.testutils.Resources;
 
@@ -65,7 +66,7 @@ import static org.junit.Assert.assertTrue;
  * Tests the DataStore API Interface.
  */
 @SuppressWarnings("SameParameterValue")
-public final class AppSyncClientInstrumentationTest {
+public final class AppSyncClientInstrumentationTest extends DeviceFarmTestBase {
     private static AppSync api;
 
     /**

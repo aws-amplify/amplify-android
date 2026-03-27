@@ -24,6 +24,7 @@ import com.amplifyframework.geo.models.Coordinates
 import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions
 import com.amplifyframework.geo.options.GeoSearchByTextOptions
 import com.amplifyframework.geo.result.GeoSearchResult
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousGeo
 import com.amplifyframework.testutils.sync.TestCategory
@@ -39,7 +40,7 @@ import org.junit.Test
 /**
  * Tests various functionalities related to Search API in [AWSLocationGeoPlugin].
  */
-class SearchApiTest {
+class SearchApiTest : DeviceFarmTestBase() {
     lateinit var geo: SynchronousGeo
 
     @Before

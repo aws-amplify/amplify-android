@@ -20,6 +20,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter
 import com.amplifyframework.datastore.syncengine.MigrationFlagsTable
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import io.kotest.assertions.withClue
 import io.kotest.matchers.ints.shouldBePositive
 import org.junit.After
@@ -29,7 +30,7 @@ import org.junit.Test
 /**
  * Test the creation functionality of [SQLiteStorageAdapter] operations.
  */
-class SQLiteStorageAdapterCreateTest {
+class SQLiteStorageAdapterCreateTest : DeviceFarmTestBase() {
     private lateinit var adapter: SynchronousStorageAdapter
 
     /**

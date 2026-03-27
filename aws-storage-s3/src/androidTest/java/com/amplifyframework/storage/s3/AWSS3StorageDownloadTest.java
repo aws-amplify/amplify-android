@@ -35,6 +35,7 @@ import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.s3.options.AWSS3StorageDownloadFileOptions;
 import com.amplifyframework.storage.s3.test.R;
 import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.testutils.FileAssert;
 import com.amplifyframework.testutils.random.RandomTempFile;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
@@ -61,7 +62,7 @@ import static org.junit.Assert.assertTrue;
  * Instrumentation test for operational work on download.
  */
 @SuppressWarnings("deprecation")
-public final class AWSS3StorageDownloadTest {
+public final class AWSS3StorageDownloadTest extends DeviceFarmTestBase {
     private static final long EXTENDED_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(60);
 
     private static final StorageAccessLevel TESTING_ACCESS_LEVEL = StorageAccessLevel.PUBLIC;

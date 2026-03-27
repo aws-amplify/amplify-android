@@ -32,6 +32,7 @@ import com.amplifyframework.predictions.models.SpeechType;
 import com.amplifyframework.predictions.models.Syntax;
 import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.testutils.Assets;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.testutils.FeatureAssert;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousPredictions;
@@ -49,7 +50,7 @@ import static org.junit.Assert.assertNotNull;
  * Tests that Predictions interpret delivers a non-null result
  * for valid input.
  */
-public final class AWSPredictionsInterpretTest {
+public final class AWSPredictionsInterpretTest extends DeviceFarmTestBase {
 
     private SynchronousPredictions predictions;
 

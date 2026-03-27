@@ -33,6 +33,7 @@ import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Comment;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 
 import org.junit.After;
 import org.junit.Before;
@@ -57,7 +58,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test the query functionality of {@link SQLiteStorageAdapter} operations.
  */
-public final class SQLiteStorageAdapterObserveQueryTest {
+public final class SQLiteStorageAdapterObserveQueryTest extends DeviceFarmTestBase {
     private SynchronousStorageAdapter adapter;
 
     /**

@@ -44,6 +44,7 @@ import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Comment;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.ModelAssert;
 import com.amplifyframework.testutils.Resources;
@@ -74,7 +75,7 @@ import static org.junit.Assert.assertThrows;
  * which were defined by the schema in:
  * testmodels/src/main/java/com/amplifyframework/testmodels/commentsblog/schema.graphql.
  */
-public final class BasicCloudSyncInstrumentationTest {
+public final class BasicCloudSyncInstrumentationTest extends DeviceFarmTestBase {
     private static final int TIMEOUT_SECONDS = 60;
 
     private static SynchronousApi api;
