@@ -24,6 +24,7 @@ import com.amplifyframework.storage.StorageAccessLevel
 import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.s3.configuration.AWSS3PluginPrefixResolver
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import java.io.File
 import java.io.FileInputStream
 import java.io.RandomAccessFile
@@ -35,7 +36,7 @@ import org.junit.Assert.fail
 import org.junit.BeforeClass
 import org.junit.Test
 
-class AWSS3StoragePrefixResolverTest {
+class AWSS3StoragePrefixResolverTest : DeviceFarmTestBase() {
     companion object {
         private const val TIMEOUT_S = 20L
         private val TAG = AWSS3StoragePrefixResolverTest::class.simpleName

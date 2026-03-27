@@ -33,6 +33,7 @@ import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.HubAccumulator
 import com.amplifyframework.testutils.Resources
 import com.amplifyframework.testutils.Sleep
@@ -46,7 +47,7 @@ import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
 
-class PinpointAnalyticsStressTest {
+class PinpointAnalyticsStressTest : DeviceFarmTestBase() {
 
     companion object {
         private const val CREDENTIALS_RESOURCE_NAME = "credentials"

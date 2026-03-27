@@ -27,6 +27,7 @@ import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 
 import org.junit.After;
 import org.junit.Before;
@@ -46,7 +47,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test the delete functionality of {@link SQLiteStorageAdapter} operations.
  */
-public final class SQLiteStorageAdapterDeleteTest {
+public final class SQLiteStorageAdapterDeleteTest extends DeviceFarmTestBase {
     private SynchronousStorageAdapter adapter;
 
     /**

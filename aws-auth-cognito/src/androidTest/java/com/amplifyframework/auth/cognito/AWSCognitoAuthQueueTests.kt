@@ -22,6 +22,7 @@ import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.core.AmplifyConfiguration
 import com.amplifyframework.core.category.CategoryConfiguration
 import com.amplifyframework.core.category.CategoryType
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.assertAwait
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -30,7 +31,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class AWSCognitoAuthQueueTests {
+class AWSCognitoAuthQueueTests : DeviceFarmTestBase() {
 
     /**
      * This test was written to verify that any call made directly after a configure call will wait until the

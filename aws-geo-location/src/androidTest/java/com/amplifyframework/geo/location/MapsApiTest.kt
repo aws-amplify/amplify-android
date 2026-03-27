@@ -22,6 +22,7 @@ import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.geo.GeoCategory
 import com.amplifyframework.geo.GeoException
 import com.amplifyframework.geo.options.GetMapStyleDescriptorOptions
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousGeo
 import com.amplifyframework.testutils.sync.TestCategory
@@ -35,7 +36,7 @@ import org.junit.Test
 /**
  * Tests various functionalities related to Maps API in [AWSLocationGeoPlugin].
  */
-class MapsApiTest {
+class MapsApiTest : DeviceFarmTestBase() {
     private lateinit var geo: SynchronousGeo
     private lateinit var auth: SynchronousAuth
 

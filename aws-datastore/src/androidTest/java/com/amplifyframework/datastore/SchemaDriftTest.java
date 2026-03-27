@@ -37,6 +37,7 @@ import com.amplifyframework.testmodels.transformerV2.schemadrift.EnumDrift;
 import com.amplifyframework.testmodels.transformerV2.schemadrift.SchemaDrift;
 import com.amplifyframework.testmodels.transformerV2.schemadrift.SchemaDriftModelProvider;
 import com.amplifyframework.testutils.Assets;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.sync.SynchronousApi;
@@ -56,7 +57,7 @@ import static com.amplifyframework.datastore.DataStoreHubEventFilters.receiptOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-public final class SchemaDriftTest {
+public final class SchemaDriftTest extends DeviceFarmTestBase {
     private static final int TIMEOUT_SECONDS = 60;
 
     private static SynchronousApi api;

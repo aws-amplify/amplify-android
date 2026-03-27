@@ -24,6 +24,7 @@ import com.amplifyframework.auth.cognito.testutils.Credentials
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.InitializationStatus
 import com.amplifyframework.hub.HubChannel
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.HubAccumulator
 import com.amplifyframework.testutils.assertAwait
 import com.amplifyframework.testutils.await
@@ -41,7 +42,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class AWSCognitoAuthPluginInstrumentationTests {
+class AWSCognitoAuthPluginInstrumentationTests : DeviceFarmTestBase() {
 
     companion object {
         val auth = AWSCognitoAuthPlugin()

@@ -29,6 +29,7 @@ import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.StrictMode;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.util.Immutable;
 
 import org.junit.After;
@@ -50,7 +51,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test that reserved SQLite words can be safely used in Model names and fields.
  */
-public final class SQLiteStorageReservedWordTest {
+public final class SQLiteStorageReservedWordTest extends DeviceFarmTestBase {
     private SynchronousStorageAdapter adapter;
 
     /**

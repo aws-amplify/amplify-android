@@ -23,6 +23,7 @@ import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.test.R;
 import com.amplifyframework.predictions.result.TextToSpeechResult;
 import com.amplifyframework.testutils.Assets;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousPredictions;
 
@@ -38,7 +39,7 @@ import static org.junit.Assert.assertNotNull;
  * Tests that Predictions text-to-speech conversion
  * delivers a non-null result for valid input.
  */
-public final class AWSPredictionsTextToSpeechTest {
+public final class AWSPredictionsTextToSpeechTest extends DeviceFarmTestBase {
 
     private SynchronousPredictions predictions;
 

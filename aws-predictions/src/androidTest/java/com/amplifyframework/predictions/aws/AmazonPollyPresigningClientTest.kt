@@ -25,6 +25,7 @@ import aws.smithy.kotlin.runtime.collections.Attributes
 import aws.smithy.kotlin.runtime.collections.emptyAttributes
 import com.amplifyframework.predictions.aws.service.AmazonPollyPresigningClient
 import com.amplifyframework.predictions.aws.service.PresignedSynthesizeSpeechUrlOptions
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import io.mockk.coVerify
 import io.mockk.spyk
 import java.net.URL
@@ -38,7 +39,7 @@ import org.junit.Test
  * Tests creating a presigned SynthesizeSpeech
  * URL from Amazon Polly.
  */
-class AmazonPollyPresigningClientTest {
+class AmazonPollyPresigningClientTest : DeviceFarmTestBase() {
     private lateinit var pollyPresigningClient: AmazonPollyPresigningClient
     private val defaultCredentialsProvider = spyk(TestCredentialsProvider())
     private val otherCredentialsProvider = spyk(TestCredentialsProvider())

@@ -24,6 +24,7 @@ import com.amplifyframework.geo.GeoCategory
 import com.amplifyframework.geo.location.AWSLocationGeoPlugin
 import com.amplifyframework.geo.maplibre.view.ClusteringOptions
 import com.amplifyframework.geo.maplibre.view.MapLibreView
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousGeo
 import com.amplifyframework.testutils.sync.TestCategory
@@ -39,7 +40,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-class MapViewTestActivityTest {
+class MapViewTestActivityTest : DeviceFarmTestBase() {
 
     @get:Rule
     var rule = ActivityScenarioRule(MapViewTestActivity::class.java)
