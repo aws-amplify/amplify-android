@@ -30,18 +30,18 @@
             "response": {
                 "accessToken": null,
                 "awsCredentialsResult": {
-                    "errorType": "UnknownException",
-                    "errorMessage": "Fetch auth session failed.",
-                    "recoverySuggestion": "See the attached exception for more details",
+                    "errorType": "ResourceNotFoundException",
+                    "errorMessage": "Could not find the requested online resource.",
+                    "recoverySuggestion": "Retry with exponential back-off or check your config file to be sure the endpoint is valid.",
                     "cause": {
                         "errorType": "ResourceNotFoundException",
                         "errorMessage": "Error type: Client, Protocol response: (empty response)"
                     }
                 },
                 "identityIdResult": {
-                    "errorType": "UnknownException",
-                    "errorMessage": "Fetch auth session failed.",
-                    "recoverySuggestion": "See the attached exception for more details",
+                    "errorType": "ResourceNotFoundException",
+                    "errorMessage": "Could not find the requested online resource.",
+                    "recoverySuggestion": "Retry with exponential back-off or check your config file to be sure the endpoint is valid.",
                     "cause": {
                         "errorType": "ResourceNotFoundException",
                         "errorMessage": "Error type: Client, Protocol response: (empty response)"
@@ -49,18 +49,18 @@
                 },
                 "isSignedIn": true,
                 "userPoolTokensResult": {
-                    "errorType": "UnknownException",
-                    "errorMessage": "Fetch auth session failed.",
-                    "recoverySuggestion": "See the attached exception for more details",
+                    "errorType": "ResourceNotFoundException",
+                    "errorMessage": "Could not find the requested online resource.",
+                    "recoverySuggestion": "Retry with exponential back-off or check your config file to be sure the endpoint is valid.",
                     "cause": {
                         "errorType": "ResourceNotFoundException",
                         "errorMessage": "Error type: Client, Protocol response: (empty response)"
                     }
                 },
                 "userSubResult": {
-                    "errorType": "UnknownException",
-                    "errorMessage": "Fetch auth session failed.",
-                    "recoverySuggestion": "See the attached exception for more details",
+                    "errorType": "ResourceNotFoundException",
+                    "errorMessage": "Could not find the requested online resource.",
+                    "recoverySuggestion": "Retry with exponential back-off or check your config file to be sure the endpoint is valid.",
                     "cause": {
                         "errorType": "ResourceNotFoundException",
                         "errorMessage": "Error type: Client, Protocol response: (empty response)"
