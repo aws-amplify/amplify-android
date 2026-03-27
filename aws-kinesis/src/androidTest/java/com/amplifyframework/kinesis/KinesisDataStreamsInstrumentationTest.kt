@@ -27,6 +27,7 @@ import com.amplifyframework.foundation.credentials.toAwsCredentialsProvider
 import com.amplifyframework.foundation.result.get
 import com.amplifyframework.kinesis.test.R
 import com.amplifyframework.recordcache.FlushStrategy
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.Resources
 import com.amplifyframework.testutils.assertions.shouldBeFailure
 import com.amplifyframework.testutils.sync.SynchronousAuth
@@ -55,7 +56,7 @@ import org.junit.Test
  * - An `amplifyconfiguration` raw resource with auth config
  * - A `credentials` raw resource with test user credentials
  */
-class KinesisDataStreamsInstrumentationTest {
+class KinesisDataStreamsInstrumentationTest : DeviceFarmTestBase() {
 
     companion object {
         private const val STREAM_NAME = "amplify-kinesis-test-stream"

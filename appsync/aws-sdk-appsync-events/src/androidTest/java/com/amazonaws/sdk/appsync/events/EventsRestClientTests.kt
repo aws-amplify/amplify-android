@@ -26,6 +26,7 @@ import com.amazonaws.sdk.appsync.events.testmodels.TestMessage
 import com.amazonaws.sdk.appsync.events.utils.EventsLibraryLogCapture
 import com.amazonaws.sdk.appsync.events.utils.JsonUtils
 import com.amazonaws.sdk.appsync.events.utils.getEventsConfig
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.coroutines.runBlockingWithTimeout
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
@@ -44,7 +45,7 @@ import kotlinx.serialization.json.encodeToJsonElement
 import org.junit.After
 import org.junit.Test
 
-internal class EventsRestClientTests {
+internal class EventsRestClientTests : DeviceFarmTestBase() {
     private val eventsConfig = getEventsConfig(InstrumentationRegistry.getInstrumentation().targetContext)
     private val apiKeyAuthorizer = ApiKeyAuthorizer(eventsConfig.apiKey)
     private val webSocketLogCapture = EventsLibraryLogCapture()

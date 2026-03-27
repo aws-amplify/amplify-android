@@ -24,6 +24,7 @@ import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.testutils.sync.SynchronousApi;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 
@@ -41,7 +42,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Validates the functionality of the {@link AWSApiPlugin} for REST operations.
  */
-public final class RestApiInstrumentationTest {
+public final class RestApiInstrumentationTest extends DeviceFarmTestBase {
     private static SynchronousApi api;
 
     /**

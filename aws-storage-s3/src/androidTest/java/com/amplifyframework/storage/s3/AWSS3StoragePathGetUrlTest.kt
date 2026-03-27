@@ -27,6 +27,7 @@ import com.amplifyframework.storage.options.StorageUploadFileOptions
 import com.amplifyframework.storage.s3.options.AWSS3StorageGetPresignedUrlOptions
 import com.amplifyframework.storage.s3.test.R
 import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils.initializeWorkmanagerTestUtil
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.random.RandomTempFile
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousStorage
@@ -41,7 +42,7 @@ import org.junit.Test
 /**
  * Instrumentation test for operational work on download.
  */
-class AWSS3StoragePathGetUrlTest {
+class AWSS3StoragePathGetUrlTest : DeviceFarmTestBase() {
     // Create a file to download to
     private val downloadFile: File = RandomTempFile()
 

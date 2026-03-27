@@ -33,6 +33,7 @@ import com.amplifyframework.storage.s3.UserCredentials.IdentityIdSource;
 import com.amplifyframework.storage.s3.options.AWSS3StoragePagedListOptions;
 import com.amplifyframework.storage.s3.test.R;
 import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.testutils.random.RandomTempFile;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousStorage;
@@ -57,7 +58,7 @@ import static org.junit.Assert.assertNotNull;
  * correctly with regards to the provided storage access level.
  */
 @SuppressWarnings("deprecation")
-public final class AWSS3StorageListAccessLevelTest {
+public final class AWSS3StorageListAccessLevelTest extends DeviceFarmTestBase {
     private static final String TEST_DIR_NAME = Long.toString(System.currentTimeMillis());
     private static final long UPLOAD_SIZE = 100L;
 

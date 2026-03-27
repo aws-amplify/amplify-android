@@ -24,6 +24,7 @@ import com.amplifyframework.predictions.aws.test.R;
 import com.amplifyframework.predictions.models.IdentifyActionType;
 import com.amplifyframework.predictions.result.IdentifyCelebritiesResult;
 import com.amplifyframework.testutils.Assets;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousPredictions;
 import com.amplifyframework.util.Empty;
@@ -42,7 +43,7 @@ import static org.junit.Assert.assertTrue;
  * Tests that Predictions identify delivers a non-null
  * celebrity detection result for valid input.
  */
-public final class AWSPredictionsIdentifyCelebritiesTest {
+public final class AWSPredictionsIdentifyCelebritiesTest extends DeviceFarmTestBase {
 
     private static final IdentifyActionType TYPE = IdentifyActionType.DETECT_CELEBRITIES;
 
