@@ -15,23 +15,118 @@
 
 package com.amplifyframework.auth.cognito.usecases
 
+import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
-import com.amplifyframework.auth.cognito.RealAWSCognitoAuthPlugin
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
+import com.amplifyframework.auth.cognito.AuthStateMachine
+import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter.Companion.toAuthException
+import com.amplifyframework.auth.cognito.exceptions.service.InvalidAccountTypeException
+import com.amplifyframework.auth.cognito.getCognitoSession
+import com.amplifyframework.auth.cognito.isValid
+import com.amplifyframework.auth.exceptions.ConfigurationException
+import com.amplifyframework.auth.exceptions.InvalidStateException
+import com.amplifyframework.auth.exceptions.NotAuthorizedException
+import com.amplifyframework.auth.exceptions.ServiceException
+import com.amplifyframework.auth.exceptions.SessionExpiredException
+import com.amplifyframework.auth.exceptions.SignedOutException
+import com.amplifyframework.auth.options.AuthFetchSessionOptions
+import com.amplifyframework.auth.plugins.core.AuthHubEventEmitter
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.errors.SessionError
+import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
+import com.amplifyframework.statemachine.codegen.states.AuthorizationState
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.onSubscription
 
 internal class FetchAuthSessionUseCase(
-    private val plugin: RealAWSCognitoAuthPlugin
+    private val stateMachine: AuthStateMachine,
+    private val emitter: AuthHubEventEmitter = AuthHubEventEmitter()
 ) {
-    suspend fun execute(): AWSCognitoAuthSession {
-        // TODO - we should migrate the fetch auth session business logic to this class
-        val session = suspendCoroutine { continuation ->
-            plugin.fetchAuthSession(
-                onSuccess = { continuation.resume(it) },
-                onError = { continuation.resumeWithException(it) }
-            )
+    suspend fun execute(options: AuthFetchSessionOptions = AuthFetchSessionOptions.defaults()): AWSCognitoAuthSession {
+        val forceRefresh = options.forceRefresh
+        val currentState = stateMachine.getCurrentState()
+
+        return when (val authZState = currentState.authZState) {
+            is AuthorizationState.Configured -> {
+                waitForSession(AuthorizationEvent(AuthorizationEvent.EventType.FetchUnAuthSession))
+            }
+            is AuthorizationState.SessionEstablished -> {
+                val credential = authZState.amplifyCredential
+                if (credential.isValid() && !forceRefresh) {
+                    // Return existing credential
+                    credential.getCognitoSession()
+                } else {
+                    // Refresh session
+                    val event = getRefreshSessionEvent(credential)
+                    waitForSession(event)
+                }
+            }
+            is AuthorizationState.Error -> {
+                when (val error = authZState.exception) {
+                    is SessionError -> waitForSession(getRefreshSessionEvent(error.amplifyCredential))
+                    else -> throw InvalidStateException()
+                }
+            }
+            else -> throw InvalidStateException()
         }
-        return session as AWSCognitoAuthSession
     }
+
+    private fun getRefreshSessionEvent(credential: AmplifyCredential): AuthorizationEvent =
+        if (credential is AmplifyCredential.IdentityPoolFederated) {
+            AuthorizationEvent(
+                AuthorizationEvent.EventType.StartFederationToIdentityPool(
+                    credential.federatedToken,
+                    credential.identityId,
+                    credential
+                )
+            )
+        } else {
+            AuthorizationEvent(AuthorizationEvent.EventType.RefreshSession(credential))
+        }
+
+    private suspend fun waitForSession(event: AuthorizationEvent): AWSCognitoAuthSession = stateMachine.state
+        .onSubscription { stateMachine.send(event) }
+        .drop(1)
+        .mapNotNull { authState ->
+            when (val authZState = authState.authZState) {
+                is AuthorizationState.SessionEstablished -> {
+                    authZState.amplifyCredential.getCognitoSession()
+                }
+                is AuthorizationState.Error -> {
+                    when (val error = authZState.exception) {
+                        is SessionError -> {
+                            when (val innerException = error.exception) {
+                                is SignedOutException -> {
+                                    error.amplifyCredential.getCognitoSession(innerException)
+                                }
+                                is SessionExpiredException -> {
+                                    emitter.sendHubEvent(AuthChannelEventName.SESSION_EXPIRED.toString())
+                                    error.amplifyCredential.getCognitoSession(innerException)
+                                }
+                                is ServiceException -> {
+                                    error.amplifyCredential.getCognitoSession(innerException)
+                                }
+                                is NotAuthorizedException -> {
+                                    error.amplifyCredential.getCognitoSession(innerException)
+                                }
+                                else -> {
+                                    val errorResult = innerException.toAuthException("Fetch auth session failed.")
+                                    error.amplifyCredential.getCognitoSession(errorResult)
+                                }
+                            }
+                        }
+                        is ConfigurationException -> {
+                            val errorResult = InvalidAccountTypeException(error)
+                            AmplifyCredential.Empty.getCognitoSession(errorResult)
+                        }
+                        else -> {
+                            val errorResult = error.toAuthException("Fetch auth session failed.")
+                            AmplifyCredential.Empty.getCognitoSession(errorResult)
+                        }
+                    }
+                }
+                else -> null
+            }
+        }.first()
 }

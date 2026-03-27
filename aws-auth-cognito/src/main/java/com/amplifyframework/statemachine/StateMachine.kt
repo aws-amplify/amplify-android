@@ -23,10 +23,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
@@ -73,10 +71,6 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
         tryEmit(initialState ?: resolver.defaultState)
     }
     val state = _state.asSharedFlow()
-
-    // A flow of states that omits the current states - emitting only states that occur after the flow starts.
-    val stateTransitions: Flow<StateType>
-        get() = state.drop(1)
 
     // Manage consistency of internal state machine state and limits invocation of listeners to a minimum of one at a time.
     @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)

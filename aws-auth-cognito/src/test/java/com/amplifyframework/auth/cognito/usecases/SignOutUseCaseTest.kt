@@ -40,7 +40,6 @@ import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -56,7 +55,6 @@ class SignOutUseCaseTest {
 
     private val stateMachine: AuthStateMachine = mockk {
         every { state } returns stateFlow
-        every { stateTransitions } answers { stateFlow.drop(1) }
         coEvery { getCurrentState() } answers { stateFlow.value }
         justRun { send(any()) }
     }
