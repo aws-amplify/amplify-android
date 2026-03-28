@@ -22,7 +22,7 @@ internal abstract class RecordStorage(
     val identifier: String,
     val maxRecordSizeBytes: Long,
     val maxBytesPerStream: Long,
-    val maxPartitionKeyLength: Int
+    val maxPartitionKeyLength: Int?
 ) {
     abstract suspend fun addRecord(record: RecordInput): Result<Unit, RecordCacheException>
     abstract suspend fun getRecordsByStream(
