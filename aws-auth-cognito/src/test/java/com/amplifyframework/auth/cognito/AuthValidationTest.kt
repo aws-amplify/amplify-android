@@ -133,13 +133,6 @@ class AuthValidationTest {
         )
     )
 
-    private val plugin = RealAWSCognitoAuthPlugin(
-        configuration = configuration,
-        authEnvironment = environment,
-        authStateMachine = stateMachine,
-        logger = logger
-    )
-
     private val signInUseCase = SignInUseCase(
         stateMachine = stateMachine,
         configuration = configuration

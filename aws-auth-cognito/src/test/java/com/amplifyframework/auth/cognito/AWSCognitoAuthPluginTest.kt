@@ -67,12 +67,13 @@ class AWSCognitoAuthPluginTest {
     }
 
     private lateinit var authPlugin: AWSCognitoAuthPlugin
-    private val realPlugin: RealAWSCognitoAuthPlugin = mockk(relaxed = true)
 
     @Before
     fun setup() {
         authPlugin = AWSCognitoAuthPlugin()
-        authPlugin.realPlugin = realPlugin
+        authPlugin.authEnvironment = mockk(relaxed = true)
+        authPlugin.authStateMachine = mockk(relaxed = true)
+        authPlugin.authConfiguration = mockk(relaxed = true)
         authPlugin.useCaseFactory = mockk(relaxed = true)
     }
 
@@ -545,7 +546,7 @@ class AWSCognitoAuthPluginTest {
     @Test
     fun verifyEscapeHatch() {
         val expectedEscapeHatch = mockk<AWSCognitoAuthService>()
-        every { realPlugin.escapeHatch() } returns expectedEscapeHatch
+        every { authPlugin.authEnvironment.cognitoAuthService } returns expectedEscapeHatch
 
         assertEquals(expectedEscapeHatch, authPlugin.escapeHatch)
     }
