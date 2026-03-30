@@ -23,7 +23,6 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.InitiateAuthRespons
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.InvalidPasswordException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UserNotFoundException
-import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.featuretest.generators.authstategenerators.AuthStateJsonGenerator.DUMMY_TOKEN
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.usecases.SignInUseCase
@@ -52,7 +51,6 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import java.io.File
 import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertTrue
@@ -496,16 +494,6 @@ class AuthValidationTest {
         val state = result.authNState
         assertTrue(state is AuthenticationState.SignedIn)
         assertEquals(username, state.signedInData.username)
-    }
-
-    private fun <T> blockForResult(
-        timeoutMillis: Long = 100000,
-        function: (success: Consumer<T>, error: Consumer<AuthException>) -> Unit
-    ): T = runBlockingWithTimeout(timeoutMillis) { continuation ->
-        function(
-            { continuation.resume(it) },
-            { continuation.resumeWithException(it) }
-        )
     }
 
     private fun <T> blockForResult(timeoutMillis: Long = 100000, function: (complete: Consumer<T>) -> Unit): T =
