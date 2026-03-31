@@ -18,10 +18,10 @@ package com.amplifyframework.auth.cognito.usecases
 import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
 import com.amplifyframework.auth.cognito.AuthStateMachine
-import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter.Companion.toAuthException
 import com.amplifyframework.auth.cognito.exceptions.service.InvalidAccountTypeException
 import com.amplifyframework.auth.cognito.getCognitoSession
 import com.amplifyframework.auth.cognito.isValid
+import com.amplifyframework.auth.cognito.toAuthException
 import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.exceptions.NotAuthorizedException

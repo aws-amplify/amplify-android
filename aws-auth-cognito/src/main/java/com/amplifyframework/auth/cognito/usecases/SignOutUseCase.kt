@@ -17,13 +17,13 @@ package com.amplifyframework.auth.cognito.usecases
 
 import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.cognito.AuthStateMachine
-import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter
 import com.amplifyframework.auth.cognito.exceptions.service.UserCancelledException
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignOutOptions
 import com.amplifyframework.auth.cognito.result.AWSCognitoAuthSignOutResult
 import com.amplifyframework.auth.cognito.result.GlobalSignOutError
 import com.amplifyframework.auth.cognito.result.HostedUIError
 import com.amplifyframework.auth.cognito.result.RevokeTokenError
+import com.amplifyframework.auth.cognito.toAuthException
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.plugins.core.AuthHubEventEmitter
@@ -99,11 +99,9 @@ internal class SignOutUseCase(
                             AWSCognitoAuthSignOutResult.CompleteSignOut
                         }
                     }
-                    authNState is AuthenticationState.Error -> {
-                        AWSCognitoAuthSignOutResult.FailedSignOut(
-                            CognitoAuthExceptionConverter.lookup(authNState.exception, "Sign out failed.")
-                        )
-                    }
+                    authNState is AuthenticationState.Error -> AWSCognitoAuthSignOutResult.FailedSignOut(
+                        authNState.exception.toAuthException("Sign out failed.")
+                    )
                     authNState is AuthenticationState.SigningOut -> {
                         val state = authNState.signOutState
                         if (state is SignOutState.Error && state.exception is UserCancelledException) {
@@ -111,9 +109,8 @@ internal class SignOutUseCase(
                         }
                         null
                     }
-                    authNState is AuthenticationState.SignedIn && cancellationException != null -> {
-                        AWSCognitoAuthSignOutResult.FailedSignOut(cancellationException!!)
-                    }
+                    authNState is AuthenticationState.SignedIn && cancellationException != null ->
+                        AWSCognitoAuthSignOutResult.FailedSignOut(cancellationException)
                     else -> null // no-op
                 }
             }.first()

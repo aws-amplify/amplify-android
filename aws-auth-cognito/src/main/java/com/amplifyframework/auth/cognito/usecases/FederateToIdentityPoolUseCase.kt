@@ -20,10 +20,10 @@ import com.amplifyframework.auth.AWSTemporaryCredentials
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.cognito.AWSCognitoAuthChannelEventName
 import com.amplifyframework.auth.cognito.AuthStateMachine
-import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter
 import com.amplifyframework.auth.cognito.helpers.identityProviderName
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
+import com.amplifyframework.auth.cognito.toAuthException
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.auth.plugins.core.AuthHubEventEmitter
@@ -89,10 +89,7 @@ internal class FederateToIdentityPoolUseCase(
                     }
                     newAuthNState is AuthenticationState.Error &&
                         newAuthZState is AuthorizationState.Error -> {
-                        throw CognitoAuthExceptionConverter.lookup(
-                            newAuthZState.exception,
-                            "Federation could not be completed."
-                        )
+                        throw newAuthZState.exception.toAuthException("Federation could not be completed.")
                     }
                     else -> null
                 }

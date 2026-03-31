@@ -17,8 +17,8 @@ package com.amplifyframework.auth.cognito.usecases
 
 import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.cognito.AuthStateMachine
-import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
+import com.amplifyframework.auth.cognito.toAuthException
 import com.amplifyframework.auth.cognito.util.sendEventAndGetSignInResult
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.plugins.core.AuthHubEventEmitter
@@ -71,9 +71,7 @@ internal class AutoSignInUseCase(
                     stateMachine.send(AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn()))
                     true
                 }
-                is AuthenticationState.Error -> {
-                    throw CognitoAuthExceptionConverter.lookup(authNState.exception, "Sign in failed.")
-                }
+                is AuthenticationState.Error -> throw authNState.exception.toAuthException("Sign in failed.")
                 else -> throw InvalidStateException()
             }
         }.first()

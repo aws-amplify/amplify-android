@@ -32,7 +32,6 @@ import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.AuthUserAttribute
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.TOTPSetupDetails
-import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter.Companion.toAuthException
 import com.amplifyframework.auth.cognito.asf.UserContextDataProvider
 import com.amplifyframework.auth.cognito.helpers.authLogger
 import com.amplifyframework.auth.cognito.helpers.collectWhile

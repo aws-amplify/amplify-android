@@ -16,9 +16,9 @@
 package com.amplifyframework.auth.cognito.usecases
 
 import com.amplifyframework.auth.cognito.AuthStateMachine
-import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignUpOptions
 import com.amplifyframework.auth.cognito.throwIfNotConfigured
+import com.amplifyframework.auth.cognito.toAuthException
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.statemachine.codegen.data.SignUpData
@@ -63,7 +63,7 @@ internal class ConfirmSignUpUseCase(private val stateMachine: AuthStateMachine) 
             .transformWhile { authState ->
                 when (val signUpState = authState.authSignUpState) {
                     is SignUpState.Error -> {
-                        throw CognitoAuthExceptionConverter.lookup(signUpState.exception, "Sign up failed.")
+                        throw signUpState.exception.toAuthException("Sign up failed.")
                     }
                     is SignUpState.SignedUp -> {
                         emit(signUpState.signUpResult)
