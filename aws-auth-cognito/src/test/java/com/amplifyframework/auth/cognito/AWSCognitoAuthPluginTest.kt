@@ -17,6 +17,7 @@ package com.amplifyframework.auth.cognito
 
 import android.app.Activity
 import android.content.Intent
+import com.amplifyframework.auth.AWSCognitoAuthMetadataType
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.AuthException
@@ -53,13 +54,12 @@ import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
-import com.amplifyframework.auth.AWSCognitoAuthMetadataType
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldNotBeBlank
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldNotBeBlank
 import org.json.JSONObject
 import org.junit.Before
 import org.junit.Test
