@@ -53,10 +53,14 @@ import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
+import com.amplifyframework.auth.AWSCognitoAuthMetadataType
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import kotlin.test.assertEquals
+import io.mockk.verify
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldNotBeBlank
+import org.json.JSONObject
 import org.junit.Before
 import org.junit.Test
 
@@ -548,7 +552,7 @@ class AWSCognitoAuthPluginTest {
         val expectedEscapeHatch = mockk<AWSCognitoAuthService>()
         every { authPlugin.authEnvironment.cognitoAuthService } returns expectedEscapeHatch
 
-        assertEquals(expectedEscapeHatch, authPlugin.escapeHatch)
+        authPlugin.escapeHatch shouldBe expectedEscapeHatch
     }
 
     @Test
@@ -845,6 +849,54 @@ class AWSCognitoAuthPluginTest {
 
     @Test
     fun verifyPluginKey() {
-        assertEquals("awsCognitoAuthPlugin", authPlugin.pluginKey)
+        authPlugin.pluginKey shouldBe "awsCognitoAuthPlugin"
+    }
+
+    @Test
+    fun verifyGetVersion() {
+        authPlugin.version.shouldNotBeBlank()
+    }
+
+    @Test
+    fun verifyGetAuthConfiguration() {
+        val expectedConfig = mockk<AuthConfiguration>()
+        authPlugin.authConfiguration = expectedConfig
+
+        authPlugin.getAuthConfiguration() shouldBe expectedConfig
+    }
+
+    @Test
+    fun verifyAddToUserAgent() {
+        val mockPairs = mutableMapOf<String, String>()
+        val mockService = mockk<AWSCognitoAuthService>(relaxed = true) {
+            every { customUserAgentPairs } returns mockPairs
+        }
+        every { authPlugin.authEnvironment.cognitoAuthService } returns mockService
+
+        authPlugin.addToUserAgent(AWSCognitoAuthMetadataType.Authenticator, "1.0.0")
+
+        mockPairs[AWSCognitoAuthMetadataType.Authenticator.key] shouldBe "1.0.0"
+    }
+
+    @Test
+    fun verifyGetPluginConfiguration() {
+        val expectedJson = JSONObject()
+        val mockConfig = mockk<AuthConfiguration> {
+            every { toGen1Json(any()) } returns expectedJson
+        }
+        authPlugin.authConfiguration = mockConfig
+
+        @Suppress("DEPRECATION")
+        val result = authPlugin.getPluginConfiguration()
+
+        result shouldBe expectedJson
+        verify { mockConfig.toGen1Json() }
+    }
+
+    @Test
+    fun verifyHandleWebUISignInResponseWithNullIntent() {
+        val useCase = authPlugin.useCaseFactory.webUISignInResponse()
+        authPlugin.handleWebUISignInResponse(null)
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute(null) }
     }
 }
