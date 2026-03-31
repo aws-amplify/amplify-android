@@ -197,7 +197,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         authStateMachine.send(AuthEvent(AuthEvent.EventType.ConfigureAuth(authConfiguration)))
     }
 
-    internal suspend fun suspendWhileConfiguring() {
+    private suspend fun suspendWhileConfiguring() {
         authStateMachine.state.collectWhile { it !is AuthState.Configured && it !is AuthState.Error }
     }
 
