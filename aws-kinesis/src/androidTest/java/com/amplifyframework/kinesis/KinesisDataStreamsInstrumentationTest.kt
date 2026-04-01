@@ -112,7 +112,7 @@ class KinesisDataStreamsInstrumentationTest : BaseStreamClientInstrumentationTes
     }
 
     // ---------------------------------------------------------------
-    // Auto-flush
+    // Kinesis-specific: partition key validation
     // ---------------------------------------------------------------
 
     /**
@@ -191,14 +191,10 @@ class KinesisDataStreamsInstrumentationTest : BaseStreamClientInstrumentationTes
             }
 
             // Flush sends all records across multiple batches (up to 10 MiB per batch)
-            val flush1 = largeKinesis.flush()
-            flush1.shouldBeSuccess()
-            val flushed1 = flush1.data.recordsFlushed
-            flushed1 shouldBe recordCount
+            largeKinesis.flush().shouldBeSuccess().data.recordsFlushed shouldBe recordCount
 
             // Second flush: nothing left
-            val flush2 = largeKinesis.flush()
-            flush2.shouldBeSuccess().data.recordsFlushed shouldBe 0
+            largeKinesis.flush().shouldBeSuccess().data.recordsFlushed shouldBe 0
         } finally {
             largeKinesis.disable()
             largeKinesis.clearCache()

@@ -37,7 +37,7 @@ internal sealed class AmplifyCredential {
 
     @Serializable
     @SerialName("empty")
-    object Empty : AmplifyCredential()
+    data object Empty : AmplifyCredential()
 
     @Serializable
     @SerialName("userPool")

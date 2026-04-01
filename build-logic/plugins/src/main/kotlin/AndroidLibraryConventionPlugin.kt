@@ -108,6 +108,7 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                     because("Fixes a lint bug with RequiresOptIn")
                 }
             }
+            "androidTestUtil"(libs.findLibrary("test-androidx-orchestrator").get())
         }
     }
 }

@@ -18,6 +18,8 @@
 package com.amplifyframework.testutils.assertions
 
 import com.amplifyframework.foundation.result.Result
+import com.amplifyframework.foundation.result.errorOrNull
+import com.amplifyframework.foundation.result.getOrNull
 import io.kotest.matchers.Matcher
 import io.kotest.matchers.MatcherResult
 import io.kotest.matchers.should
@@ -28,16 +30,16 @@ import kotlin.contracts.contract
 private fun <T, E> beFailure() = Matcher<Result<T, E>> { value ->
     MatcherResult(
         value is Result.Failure,
-        { "result expected to be failure but was success" },
-        { "result expected to not be failure but was failure" }
+        { "result expected to be failure but was success with data: ${value.getOrNull()}" },
+        { "result expected to not be failure but was failure with error: ${value.errorOrNull()}" }
     )
 }
 
 private fun <T, E> beSuccess() = Matcher<Result<T, E>> { value ->
     MatcherResult(
         value is Result.Success,
-        { "result expected to be success but was failure" },
-        { "result expected to not be success but was success" }
+        { "result expected to be success but was failure with error: ${value.errorOrNull()}" },
+        { "result expected to not be success but was success with data: ${value.getOrNull()}" }
     )
 }
 

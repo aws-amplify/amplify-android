@@ -126,7 +126,9 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
         Dispatchers.setMain(mainThreadSurrogate)
         feature = testCase
         readConfiguration(feature.preConditions.`amplify-configuration`).let {
-            sut.realPlugin = it.first
+            sut.authEnvironment = it.first
+            sut.authStateMachine = authStateMachine
+            sut.authConfiguration = mockk(relaxed = true)
             sut.useCaseFactory = it.second
         }
     }
@@ -153,7 +155,7 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
         coEvery { AuthHelper.getSecretHash(any(), any(), any()) } returns "a hash"
     }
 
-    private fun readConfiguration(configuration: String): Pair<RealAWSCognitoAuthPlugin, AuthUseCaseFactory> {
+    private fun readConfiguration(configuration: String): Pair<AuthEnvironment, AuthUseCaseFactory> {
         val configFileUrl = this::class.java.getResource("$CONFIGURATION_FILES_BASE_PATH/$configuration")
         val configJSONObject =
             JSONObject(File(configFileUrl!!.file).readText())
@@ -193,10 +195,9 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
 
         authStateMachine = AuthStateMachine(authEnvironment, getState(feature.preConditions.state))
 
-        val realPlugin = RealAWSCognitoAuthPlugin(authConfiguration, authEnvironment, authStateMachine, logger)
         return Pair(
-            RealAWSCognitoAuthPlugin(authConfiguration, authEnvironment, authStateMachine, logger),
-            AuthUseCaseFactory(realPlugin, authEnvironment, authStateMachine)
+            authEnvironment,
+            AuthUseCaseFactory(authEnvironment, authStateMachine)
         )
     }
 

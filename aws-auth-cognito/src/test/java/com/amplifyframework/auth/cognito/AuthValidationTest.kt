@@ -23,11 +23,12 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.InitiateAuthRespons
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.InvalidPasswordException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.RespondToAuthChallengeResponse
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.UserNotFoundException
-import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.featuretest.generators.authstategenerators.AuthStateJsonGenerator.DUMMY_TOKEN
 import com.amplifyframework.auth.cognito.helpers.AuthHelper
 import com.amplifyframework.auth.cognito.usecases.SignInUseCase
 import com.amplifyframework.auth.cognito.usecases.SignOutUseCase
+import com.amplifyframework.auth.cognito.usecases.WebUiSignInResponseUseCase
+import com.amplifyframework.auth.cognito.usecases.WebUiSignInUseCase
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.core.Consumer
@@ -50,7 +51,6 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import java.io.File
 import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertTrue
@@ -131,13 +131,6 @@ class AuthValidationTest {
         )
     )
 
-    private val plugin = RealAWSCognitoAuthPlugin(
-        configuration = configuration,
-        authEnvironment = environment,
-        authStateMachine = stateMachine,
-        logger = logger
-    )
-
     private val signInUseCase = SignInUseCase(
         stateMachine = stateMachine,
         configuration = configuration
@@ -145,6 +138,16 @@ class AuthValidationTest {
 
     private val signOutUseCase = SignOutUseCase(
         stateMachine = stateMachine
+    )
+
+    private val webUiSignInUseCase = WebUiSignInUseCase(
+        stateMachine = stateMachine,
+        configuration = environment.configuration
+    )
+
+    private val webUiSignInResponseUseCase = WebUiSignInResponseUseCase(
+        stateMachine = stateMachine,
+        authEnvironment = environment
     )
 
     private val mainThreadSurrogate = newSingleThreadContext("Main thread")
@@ -471,13 +474,11 @@ class AuthValidationTest {
     private fun signInHostedUi(): AuthSignInResult {
         every { hostedUIClient.launchCustomTabsSignIn(any()) } answers {
             GlobalScope.launch(mainThreadSurrogate) {
-                plugin.handleWebUISignInResponse(
-                    mockk { every { data } returns mockk() }
-                )
+                webUiSignInResponseUseCase.execute(mockk(relaxed = true))
             }
         }
-        return blockForResult { success, error ->
-            plugin.signInWithWebUI(activity, success, error)
+        return runBlocking {
+            webUiSignInUseCase.execute(activity)
         }
     }
 
@@ -493,16 +494,6 @@ class AuthValidationTest {
         val state = result.authNState
         assertTrue(state is AuthenticationState.SignedIn)
         assertEquals(username, state.signedInData.username)
-    }
-
-    private fun <T> blockForResult(
-        timeoutMillis: Long = 100000,
-        function: (success: Consumer<T>, error: Consumer<AuthException>) -> Unit
-    ): T = runBlockingWithTimeout(timeoutMillis) { continuation ->
-        function(
-            { continuation.resume(it) },
-            { continuation.resumeWithException(it) }
-        )
     }
 
     private fun <T> blockForResult(timeoutMillis: Long = 100000, function: (complete: Consumer<T>) -> Unit): T =

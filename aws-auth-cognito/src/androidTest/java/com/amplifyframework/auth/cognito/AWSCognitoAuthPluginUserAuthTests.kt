@@ -41,6 +41,7 @@ import com.amplifyframework.core.AmplifyConfiguration
 import com.amplifyframework.core.category.CategoryConfiguration
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.datastore.generated.model.MfaInfo
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.api.SubscriptionHolder
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import java.util.UUID
@@ -51,7 +52,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-class AWSCognitoAuthPluginUserAuthTests {
+class AWSCognitoAuthPluginUserAuthTests : DeviceFarmTestBase() {
 
     private val password = "${UUID.randomUUID()}BleepBloop1234!"
     private val username = "test${Random.nextInt()}"

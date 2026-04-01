@@ -27,6 +27,7 @@ import com.amplifyframework.predictions.models.GenderBinaryType;
 import com.amplifyframework.predictions.models.IdentifyActionType;
 import com.amplifyframework.predictions.result.IdentifyEntitiesResult;
 import com.amplifyframework.testutils.Assets;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.testutils.FeatureAssert;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousPredictions;
@@ -46,7 +47,7 @@ import static org.junit.Assert.assertTrue;
  * Tests that Predictions identify delivers a non-null
  * entity detection result for valid input.
  */
-public final class AWSPredictionsIdentifyEntitiesTest {
+public final class AWSPredictionsIdentifyEntitiesTest extends DeviceFarmTestBase {
 
     private static final IdentifyActionType TYPE = IdentifyActionType.DETECT_ENTITIES;
 

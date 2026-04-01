@@ -42,6 +42,7 @@ import com.amplifyframework.logging.LogLevel;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.testmodels.commentsblog.Author;
 import com.amplifyframework.testmodels.multiauth.MultiAuthTestModelProvider;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.random.RandomString;
@@ -76,7 +77,7 @@ import static org.junit.Assert.fail;
  * Tests a set of possible combinations of models, auth modes and login status to
  * verify behavior when in multi-auth mode.
  */
-public final class MultiAuthSyncEngineNoAuthInstrumentationTest {
+public final class MultiAuthSyncEngineNoAuthInstrumentationTest extends DeviceFarmTestBase {
     private static final Logger LOG = Amplify.Logging.logger(
         CategoryType.DATASTORE,
         "MultiAuthSyncEngineInstrumentationTest"

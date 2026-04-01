@@ -32,6 +32,7 @@ import com.amplifyframework.auth.cognito.testutils.deferredResult
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.result.AuthSignInResult
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -49,7 +50,7 @@ import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
 
-class AuthStressTests {
+class AuthStressTests : DeviceFarmTestBase() {
     companion object {
         private const val TIMEOUT_S = 20L
         val attributes = listOf(

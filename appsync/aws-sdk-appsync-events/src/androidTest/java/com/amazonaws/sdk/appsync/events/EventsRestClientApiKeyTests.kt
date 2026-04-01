@@ -23,6 +23,7 @@ import com.amazonaws.sdk.appsync.events.utils.getEventsConfig
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.configuration.AmplifyOutputs
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.coroutines.runBlockingWithTimeout
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
@@ -33,7 +34,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import org.junit.BeforeClass
 import org.junit.Test
 
-internal class EventsRestClientApiKeyTests {
+internal class EventsRestClientApiKeyTests : DeviceFarmTestBase() {
     private val eventsConfig = getEventsConfig(InstrumentationRegistry.getInstrumentation().targetContext)
     private val apiKeyAuthorizer = ApiKeyAuthorizer(eventsConfig.apiKey)
     private val defaultChannel = "default/${UUID.randomUUID()}"
