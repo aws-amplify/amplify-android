@@ -23,7 +23,6 @@ import com.amplifyframework.foundation.result.get
 import com.amplifyframework.recordcache.BaseStreamClientInstrumentationTest
 import com.amplifyframework.recordcache.FlushStrategy
 import com.amplifyframework.recordcache.TestableStreamClient
-import com.amplifyframework.testutils.assertions.shouldBeFailure
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
