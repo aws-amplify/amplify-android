@@ -42,20 +42,20 @@ typealias FirehoseFlushResult = Result<FlushData, AmplifyFirehoseException>
 typealias FirehoseClearCacheResult = Result<ClearCacheData, AmplifyFirehoseException>
 
 /**
- * Firehose supports up to 500 records per PutRecords request.
+ * Firehose supports up to 500 records per PutRecordBatch request.
  * See [the docs](https://docs.aws.amazon.com/firehose/latest/APIReference/API_PutRecordBatch.html)
  */
 private const val MAX_RECORDS_PER_BATCH = 500
 
 /**
- * Maximum size of a single record (partition key + data blob) in bytes (10 MiB).
- * See [PutRecordsRequestEntry](https://docs.aws.amazon.com/firehose/latest/APIReference/API_PutRecordBatch.html)
+ * Maximum size of a single record in bytes (1,000 KiB).
+ * See [PutRecordBatch](https://docs.aws.amazon.com/firehose/latest/APIReference/API_PutRecordBatch.html)
  */
 private const val MAX_RECORD_SIZE_BYTES = 1_000L * 1_024
 
 /**
- * Maximum total payload size per PutRecords request in bytes (10 MiB).
- * See [PutRecords](https://docs.aws.amazon.com/firehose/latest/APIReference/API_PutRecordBatch.html)
+ * Maximum total payload size per PutRecordBatch request in bytes (4 MiB).
+ * See [PutRecordBatch](https://docs.aws.amazon.com/firehose/latest/APIReference/API_PutRecordBatch.html)
  */
 private const val MAX_PUT_RECORD_BATCH_SIZE_BYTES = 4L * 1_024 * 1_024
 
@@ -83,8 +83,9 @@ private const val MAX_PUT_RECORD_BATCH_SIZE_BYTES = 4L * 1_024 * 1_024
  *
  * val result = firehose.flush()
  * ```
+ *
  * @param context Android application context for database access
- * @param region AWS region where the Kinesis stream is located
+ * @param region AWS region where the Firehose delivery stream is located
  * @param credentialsProvider AWS credentials for authentication. Use
  *   `CognitoCredentialsProvider().toAwsCredentialsProvider()` to bridge from V2 Auth.
  * @param options Configuration options with sensible defaults
@@ -138,14 +139,13 @@ class AmplifyFirehoseClient(
     }
 
     /**
-     * Records data to the specified Firehose stream.
+     * Records data to the specified Firehose delivery stream.
      *
      * @param data The data to record as byte array
-     * @param partitionKey The partition key for the record
-     * @param streamName The name of the Kinesis stream
+     * @param streamName The name of the Firehose delivery stream
      * @return Result.Success(RecordData) on success, or Result.Failure with:
-     *   - [AmplifyKinesisLimitExceededException] (cache full)
-     *   - [AmplifyKinesisStorageException] (database errors)
+     *   - [AmplifyFirehoseLimitExceededException] (cache full)
+     *   - [AmplifyFirehoseStorageException] (database errors)
      */
     suspend fun record(data: ByteArray, streamName: String): FirehoseRecordResult {
         if (!isEnabled) {
@@ -160,10 +160,10 @@ class AmplifyFirehoseClient(
     }
 
     /**
-     * Flushes all locally stored records to their respective Firehose streams.
+     * Flushes all locally stored records to their respective Firehose delivery streams.
      *
      * Each flush drains all pending records in batches per stream, limited by the
-     * respecite constraints (up to 500 records or 4 MB per batch).
+     * Firehose `PutRecordBatch` constraints (up to 500 records or 4 MB per batch).
      * Progress is tracked per stream so that records already attempted in the
      * current flush cycle are not sent again. Failed records have their retry
      * count incremented and are picked up in the next flush cycle.

@@ -132,6 +132,7 @@ Options options = Options.builder().foo("something").build();
 - Prefer unit tests wherever reasonable, Robolectric over connected Android tests
 - Coroutine tests use `runTest` from `kotlinx-coroutines-test`
 - Custom test assertions in `testutils` module (e.g., `shouldBeSuccess`, `shouldBeFailure`)
+- Connected Android tests MUST extend `DeviceFarmTestBase` to get automatic retries on network errors
 
 ### 10. Gradle Build System
 - New Gradle files MUST use Kotlin DSL (`.gradle.kts`)
