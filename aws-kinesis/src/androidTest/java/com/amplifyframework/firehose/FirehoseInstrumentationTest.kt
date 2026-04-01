@@ -19,9 +19,9 @@ import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.foundation.credentials.AwsCredentials
 import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
 import com.amplifyframework.foundation.result.Result
-import com.amplifyframework.kinesis.BaseStreamClientInstrumentationTest
-import com.amplifyframework.kinesis.TestableStreamClient
+import com.amplifyframework.recordcache.BaseStreamClientInstrumentationTest
 import com.amplifyframework.recordcache.FlushStrategy
+import com.amplifyframework.recordcache.TestableStreamClient
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlin.time.Duration.Companion.seconds
@@ -48,7 +48,10 @@ class FirehoseInstrumentationTest : BaseStreamClientInstrumentationTest() {
     override fun createDefaultClient(context: Context): TestableStreamClient = AmplifyFirehoseClient(
         context = context,
         region = REGION,
-        credentialsProvider = credentialsProvider
+        credentialsProvider = credentialsProvider,
+        options = AmplifyFirehoseClientOptions {
+            flushStrategy = FlushStrategy.None
+        }
     ).asTestable()
 
     override fun createClientWithSmallCache(context: Context, cacheMaxBytes: Long): TestableStreamClient =
@@ -56,7 +59,10 @@ class FirehoseInstrumentationTest : BaseStreamClientInstrumentationTest() {
             context = context,
             region = REGION,
             credentialsProvider = credentialsProvider,
-            options = AmplifyFirehoseClientOptions { this.cacheMaxBytes = cacheMaxBytes }
+            options = AmplifyFirehoseClientOptions {
+                this.cacheMaxBytes = cacheMaxBytes
+                flushStrategy = FlushStrategy.None
+            }
         ).asTestable()
 
     override fun createClientWithMaxRetries(context: Context, maxRetries: Int): TestableStreamClient =
@@ -88,6 +94,9 @@ class FirehoseInstrumentationTest : BaseStreamClientInstrumentationTest() {
                 accessKeyId = "AKIAIOSFODNN7EXAMPLE",
                 secretAccessKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
             )
+        },
+        options = AmplifyFirehoseClientOptions {
+            flushStrategy = FlushStrategy.None
         }
     ).asTestable()
 
@@ -113,4 +122,13 @@ class FirehoseInstrumentationTest : BaseStreamClientInstrumentationTest() {
         )
         firehose.firehoseClient.shouldNotBeNull()
     }
+}
+
+/** Wraps [AmplifyFirehoseClient] as a [TestableStreamClient]. Direct mapping — no partition key needed. */
+private fun AmplifyFirehoseClient.asTestable(): TestableStreamClient = object : TestableStreamClient {
+    override suspend fun record(data: ByteArray, streamName: String) = this@asTestable.record(data, streamName)
+    override suspend fun flush() = this@asTestable.flush()
+    override suspend fun clearCache() = this@asTestable.clearCache()
+    override fun enable() = this@asTestable.enable()
+    override fun disable() = this@asTestable.disable()
 }

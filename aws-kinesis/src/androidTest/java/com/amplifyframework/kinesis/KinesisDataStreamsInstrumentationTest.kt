@@ -19,7 +19,9 @@ import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.foundation.credentials.AwsCredentials
 import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
 import com.amplifyframework.foundation.result.Result
+import com.amplifyframework.recordcache.BaseStreamClientInstrumentationTest
 import com.amplifyframework.recordcache.FlushStrategy
+import com.amplifyframework.recordcache.TestableStreamClient
 import com.amplifyframework.testutils.assertions.shouldBeSuccess
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -60,7 +62,10 @@ class KinesisDataStreamsInstrumentationTest : BaseStreamClientInstrumentationTes
             context = context,
             region = REGION,
             credentialsProvider = credentialsProvider,
-            options = AmplifyKinesisClientOptions { this.cacheMaxBytes = cacheMaxBytes }
+            options = AmplifyKinesisClientOptions {
+                this.cacheMaxBytes = cacheMaxBytes
+                flushStrategy = FlushStrategy.None
+            }
         ).asTestable()
 
     override fun createClientWithMaxRetries(context: Context, maxRetries: Int): TestableStreamClient =
@@ -92,6 +97,9 @@ class KinesisDataStreamsInstrumentationTest : BaseStreamClientInstrumentationTes
                 accessKeyId = "AKIAIOSFODNN7EXAMPLE",
                 secretAccessKey = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
             )
+        },
+        options = AmplifyKinesisClientOptions {
+            flushStrategy = FlushStrategy.None
         }
     ).asTestable()
 
@@ -101,36 +109,6 @@ class KinesisDataStreamsInstrumentationTest : BaseStreamClientInstrumentationTes
 
     override fun assertValidationError(result: Result<*, *>) {
         (result as Result.Failure).error.shouldBeInstanceOf<AmplifyKinesisValidationException>()
-    }
-
-    // ---------------------------------------------------------------
-    // Multi-batch flush
-    // ---------------------------------------------------------------
-
-    /**
-     * Records more than 500 entries (the PutRecords per-request limit) to a single
-     * stream, then calls flush() once. Verifies that a single flush drains all
-     * records across multiple batches.
-     */
-    @Test
-    fun testSingleFlushDrainsMultipleBatches(): Unit = runBlocking {
-        val recordCount = 1100
-
-        repeat(recordCount) { i ->
-            val result = client.record(
-                "batch-record-$i".toByteArray(),
-                streamName
-            )
-            result.shouldBeSuccess()
-        }
-
-        // Single flush should drain all 1100 records across three batches (500 + 500 + 100)
-        val flushResult = client.flush()
-        flushResult.shouldBeSuccess().data.recordsFlushed shouldBe recordCount
-
-        // Nothing left
-        val secondFlush = client.flush()
-        secondFlush.shouldBeSuccess().data.recordsFlushed shouldBe 0
     }
 
     // ---------------------------------------------------------------
@@ -242,3 +220,14 @@ class KinesisDataStreamsInstrumentationTest : BaseStreamClientInstrumentationTes
         kinesis.kinesisClient.shouldNotBeNull()
     }
 }
+
+/** Wraps [AmplifyKinesisClient] as a [TestableStreamClient] with a default partition key. */
+private fun AmplifyKinesisClient.asTestable(defaultPartitionKey: String = "test-partition"): TestableStreamClient =
+    object : TestableStreamClient {
+        override suspend fun record(data: ByteArray, streamName: String) =
+            this@asTestable.record(data, defaultPartitionKey, streamName)
+        override suspend fun flush() = this@asTestable.flush()
+        override suspend fun clearCache() = this@asTestable.clearCache()
+        override fun enable() = this@asTestable.enable()
+        override fun disable() = this@asTestable.disable()
+    }

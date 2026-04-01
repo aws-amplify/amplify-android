@@ -12,15 +12,12 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.kinesis
+package com.amplifyframework.recordcache
 
 import com.amplifyframework.foundation.result.Result
-import com.amplifyframework.recordcache.ClearCacheData
-import com.amplifyframework.recordcache.FlushData
-import com.amplifyframework.recordcache.RecordData
 
 /**
- * Thin test-only abstraction over [AmplifyKinesisClient] and
+ * Thin test-only abstraction over [com.amplifyframework.kinesis.AmplifyKinesisClient] and
  * [com.amplifyframework.firehose.AmplifyFirehoseClient] so shared
  * instrumentation tests can be written once.
  *
@@ -36,14 +33,3 @@ interface TestableStreamClient {
     fun enable()
     fun disable()
 }
-
-/** Wraps [AmplifyKinesisClient] with a default partition key. */
-fun AmplifyKinesisClient.asTestable(defaultPartitionKey: String = "test-partition"): TestableStreamClient =
-    object : TestableStreamClient {
-        override suspend fun record(data: ByteArray, streamName: String) =
-            this@asTestable.record(data, defaultPartitionKey, streamName)
-        override suspend fun flush() = this@asTestable.flush()
-        override suspend fun clearCache() = this@asTestable.clearCache()
-        override fun enable() = this@asTestable.enable()
-        override fun disable() = this@asTestable.disable()
-    }

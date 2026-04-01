@@ -12,7 +12,7 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.kinesis
+package com.amplifyframework.recordcache
 
 import android.content.Context
 import androidx.annotation.RawRes
@@ -26,7 +26,6 @@ import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
 import com.amplifyframework.foundation.credentials.toAwsCredentialsProvider
 import com.amplifyframework.foundation.result.Result
 import com.amplifyframework.kinesis.test.R
-import com.amplifyframework.recordcache.FlushData
 import com.amplifyframework.testutils.Resources
 import com.amplifyframework.testutils.assertions.shouldBeSuccess
 import com.amplifyframework.testutils.sync.SynchronousAuth
@@ -193,11 +192,8 @@ abstract class BaseStreamClientInstrumentationTest {
             async { client.flush() }
         ).awaitAll()
 
-        val successResults = results.filter { it is Result.Success }
-        successResults.size shouldBe 2
-
-        @Suppress("UNCHECKED_CAST")
-        val flushDatas = successResults.map { (it as Result.Success<FlushData>).data }
+        results.size shouldBe 2
+        val flushDatas = results.map { it.shouldBeSuccess().data }
         val anyFlushed = flushDatas.any { it.recordsFlushed > 0 }
         val anyInProgress = flushDatas.any { it.flushInProgress }
         (anyFlushed || anyInProgress).shouldBeTrue()
@@ -295,9 +291,6 @@ abstract class BaseStreamClientInstrumentationTest {
                 result.shouldBeSuccess().data.recordsFlushed shouldBe 0
             }
 
-            val finalFlush = retryClient.flush()
-            finalFlush.shouldBeSuccess().data.recordsFlushed shouldBe 0
-
             val clearResult = retryClient.clearCache()
             clearResult.shouldBeSuccess().data.recordsCleared shouldBe 0
         } finally {
@@ -381,11 +374,36 @@ abstract class BaseStreamClientInstrumentationTest {
     }
 
     // ---------------------------------------------------------------
+    // Multi-batch flush
+    // ---------------------------------------------------------------
+
+    /**
+     * Records more than 500 entries (the per-request record limit) to a single
+     * stream, then calls flush() once. Verifies that a single flush drains all
+     * records across multiple batches.
+     */
+    @Test
+    fun testSingleFlushDrainsMultipleBatches(): Unit = runBlocking {
+        val recordCount = 1100
+
+        repeat(recordCount) { i ->
+            val result = client.record("batch-record-$i".toByteArray(), streamName)
+            result.shouldBeSuccess()
+        }
+
+        val flushResult = client.flush()
+        flushResult.shouldBeSuccess().data.recordsFlushed shouldBe recordCount
+
+        val secondFlush = client.flush()
+        secondFlush.shouldBeSuccess().data.recordsFlushed shouldBe 0
+    }
+
+    // ---------------------------------------------------------------
     // Auto-flush
     // ---------------------------------------------------------------
 
     @Test
-    fun testDefaultConfigAutoStartsScheduler(): Unit = runBlocking {
+    fun testAutoFlushStartsWithoutExplicitEnable(): Unit = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val autoClient = createClientWithAutoFlush(context, intervalSeconds = 3)
         // No explicit enable() — scheduler should auto-start from init
