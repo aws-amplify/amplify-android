@@ -19,10 +19,11 @@ import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.foundation.credentials.AwsCredentials
 import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
 import com.amplifyframework.foundation.result.Result
+import com.amplifyframework.foundation.result.get
 import com.amplifyframework.recordcache.BaseStreamClientInstrumentationTest
 import com.amplifyframework.recordcache.FlushStrategy
 import com.amplifyframework.recordcache.TestableStreamClient
-import com.amplifyframework.testutils.assertions.shouldBeSuccess
+import com.amplifyframework.testutils.assertions.shouldBeFailure
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -130,26 +131,26 @@ class KinesisDataStreamsInstrumentationTest : BaseStreamClientInstrumentationTes
         utf8ByteCount shouldBe 1024
 
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val kinesis = AmplifyKinesisClient(
+        val emojiKinesis = AmplifyKinesisClient(
             context = context,
             region = REGION,
             credentialsProvider = credentialsProvider
         )
-        kinesis.enable()
+        emojiKinesis.enable()
 
         try {
-            val result = kinesis.record(
+            // Record with the emoji partition key
+            emojiKinesis.record(
                 data = "test-data-with-emoji-partition-key".toByteArray(),
                 partitionKey = emojiPartitionKey,
                 streamName = streamName
-            )
-            result.shouldBeSuccess()
+            ).get()
 
-            val flushResult = kinesis.flush()
-            flushResult.shouldBeSuccess().data.recordsFlushed shouldBe 1
+            // Flush and verify the record was sent successfully
+            emojiKinesis.flush().get().recordsFlushed shouldBe 1
         } finally {
-            kinesis.disable()
-            kinesis.clearCache()
+            emojiKinesis.disable()
+            emojiKinesis.clearCache()
         }
     }
 
@@ -182,19 +183,18 @@ class KinesisDataStreamsInstrumentationTest : BaseStreamClientInstrumentationTes
             repeat(recordCount) { i ->
                 val partitionKey = "k".repeat(200) + "-$i"
                 val data = ByteArray(recordDataSize) { (i % 256).toByte() }
-                val result = largeKinesis.record(
+                largeKinesis.record(
                     data = data,
                     partitionKey = partitionKey,
                     streamName = streamName
-                )
-                result.shouldBeSuccess()
+                ).get()
             }
 
             // Flush sends all records across multiple batches (up to 10 MiB per batch)
-            largeKinesis.flush().shouldBeSuccess().data.recordsFlushed shouldBe recordCount
+            largeKinesis.flush().get().recordsFlushed shouldBe recordCount
 
             // Second flush: nothing left
-            largeKinesis.flush().shouldBeSuccess().data.recordsFlushed shouldBe 0
+            largeKinesis.flush().get().recordsFlushed shouldBe 0
         } finally {
             largeKinesis.disable()
             largeKinesis.clearCache()

@@ -25,10 +25,10 @@ import com.amplifyframework.foundation.credentials.AwsCredentials
 import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
 import com.amplifyframework.foundation.credentials.toAwsCredentialsProvider
 import com.amplifyframework.foundation.result.Result
+import com.amplifyframework.foundation.result.get
 import com.amplifyframework.kinesis.test.R
 import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.Resources
-import com.amplifyframework.testutils.assertions.shouldBeSuccess
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -144,17 +144,15 @@ abstract class BaseStreamClientInstrumentationTest : DeviceFarmTestBase() {
 
     @Test
     fun testRecordAndFlush(): Unit = runBlocking {
-        val result = client.record("test-record".toByteArray(), streamName)
-        result.shouldBeSuccess()
+        client.record("test-record".toByteArray(), streamName).get()
 
         val flushResult = client.flush()
-        flushResult.shouldBeSuccess().data.recordsFlushed shouldBeGreaterThan 0
+        flushResult.get().recordsFlushed shouldBeGreaterThan 0
     }
 
     @Test
     fun testFlushWhenEmpty(): Unit = runBlocking {
-        val flushResult = client.flush()
-        val data = flushResult.shouldBeSuccess().data
+        val data = client.flush().get()
         data.recordsFlushed shouldBe 0
         data.flushInProgress.shouldBeFalse()
     }
@@ -163,40 +161,39 @@ abstract class BaseStreamClientInstrumentationTest : DeviceFarmTestBase() {
     fun testRecordWhileDisabledDropsRecords(): Unit = runBlocking {
         client.disable()
 
-        val result = client.record("dropped-record".toByteArray(), streamName)
-        result.shouldBeSuccess()
+        // record() returns success even when disabled (silently dropped)
+        client.record("dropped-record".toByteArray(), streamName).get()
 
         client.enable()
-        val flushResult = client.flush()
-        flushResult.shouldBeSuccess().data.recordsFlushed shouldBe 0
+        client.flush().get().recordsFlushed shouldBe 0
     }
 
     @Test
     fun testEnableDisableLifecycle(): Unit = runBlocking {
-        client.record("before-disable".toByteArray(), streamName)
+        client.record("before-disable".toByteArray(), streamName).get()
         client.disable()
-        client.record("while-disabled".toByteArray(), streamName)
+        client.record("while-disabled".toByteArray(), streamName).get()
         client.enable()
 
-        val flushResult = client.flush()
-        flushResult.shouldBeSuccess().data.recordsFlushed shouldBe 1
+        // Only the pre-disable record should be flushed
+        client.flush().get().recordsFlushed shouldBe 1
     }
 
     @Test
     fun testConcurrentFlushReturnsInProgress(): Unit = runBlocking {
         repeat(10) { i ->
-            client.record("record-$i".toByteArray(), streamName)
+            client.record("record-$i".toByteArray(), streamName).get()
         }
 
         val results = listOf(
-            async { client.flush() },
-            async { client.flush() }
+            async { client.flush().get() },
+            async { client.flush().get() }
         ).awaitAll()
 
-        results.size shouldBe 2
-        val flushDatas = results.map { it.shouldBeSuccess().data }
-        val anyFlushed = flushDatas.any { it.recordsFlushed > 0 }
-        val anyInProgress = flushDatas.any { it.flushInProgress }
+        // At least one should have done actual work, and one may report flushInProgress
+        val anyFlushed = results.any { it.recordsFlushed > 0 }
+        val anyInProgress = results.any { it.flushInProgress }
+        // Either both flushed (if first completed before second started) or one was skipped
         (anyFlushed || anyInProgress).shouldBeTrue()
     }
 
@@ -212,7 +209,7 @@ abstract class BaseStreamClientInstrumentationTest : DeviceFarmTestBase() {
 
         try {
             val bigData = ByteArray(60) { 0x41 }
-            smallClient.record(bigData, streamName)
+            smallClient.record(bigData, streamName).get()
 
             val result = smallClient.record(bigData, streamName)
             assertLimitExceededError(result)
@@ -224,13 +221,11 @@ abstract class BaseStreamClientInstrumentationTest : DeviceFarmTestBase() {
 
     @Test
     fun testClearCache(): Unit = runBlocking {
-        client.record("to-be-cleared".toByteArray(), streamName)
+        client.record("to-be-cleared".toByteArray(), streamName).get()
 
-        val clearResult = client.clearCache()
-        clearResult.shouldBeSuccess().data.recordsCleared shouldBeGreaterThan 0
+        client.clearCache().get().recordsCleared shouldBeGreaterThan 0
 
-        val flushResult = client.flush()
-        flushResult.shouldBeSuccess().data.recordsFlushed shouldBe 0
+        client.flush().get().recordsFlushed shouldBe 0
     }
 
     // ---------------------------------------------------------------
@@ -242,10 +237,7 @@ abstract class BaseStreamClientInstrumentationTest : DeviceFarmTestBase() {
         client.record("wrong-stream-record".toByteArray(), "nonexistent-stream-name")
         client.record("valid-stream-record".toByteArray(), streamName)
 
-        val flushResult = client.flush()
-        flushResult.shouldBeSuccess()
-        flushResult.data.recordsFlushed shouldBe 1
-
+        client.flush().get().recordsFlushed shouldBe 1
         client.clearCache()
     }
 
@@ -256,11 +248,10 @@ abstract class BaseStreamClientInstrumentationTest : DeviceFarmTestBase() {
         badClient.enable()
 
         try {
-            badClient.record("bad-creds-record".toByteArray(), streamName)
+            badClient.record("bad-creds-record".toByteArray(), streamName).get()
 
-            val flushResult = badClient.flush()
-            flushResult.shouldBeSuccess()
-            flushResult.data.recordsFlushed shouldBe 0
+            // SDK exceptions are handled silently - flush returns Success
+            badClient.flush().get().recordsFlushed shouldBe 0
         } finally {
             badClient.disable()
             badClient.clearCache()
@@ -279,21 +270,24 @@ abstract class BaseStreamClientInstrumentationTest : DeviceFarmTestBase() {
         retryClient.enable()
 
         try {
-            retryClient.clearCache()
+            retryClient.clearCache().get()
 
-            retryClient.record("invalid-stream-record".toByteArray(), "nonexistent-stream-name")
-            retryClient.record("valid-stream-record".toByteArray(), streamName)
+            retryClient.record("invalid-stream-record".toByteArray(), "nonexistent-stream-name").get()
+            retryClient.record("valid-stream-record".toByteArray(), streamName).get()
 
-            val firstFlush = retryClient.flush()
-            firstFlush.shouldBeSuccess().data.recordsFlushed shouldBe 1
+            // First flush: valid record should be flushed, invalid stays
+            retryClient.flush().get().recordsFlushed shouldBe 1
 
+            // Flush maxRetries more times to exhaust retries on the invalid record
             repeat(maxRetries) {
-                val result = retryClient.flush()
-                result.shouldBeSuccess().data.recordsFlushed shouldBe 0
+                retryClient.flush().get().recordsFlushed shouldBe 0
             }
 
-            val clearResult = retryClient.clearCache()
-            clearResult.shouldBeSuccess().data.recordsCleared shouldBe 0
+            // Final flush: invalid record should have been evicted, nothing left
+            retryClient.flush().get().recordsFlushed shouldBe 0
+
+            // Confirm cache is truly empty
+            retryClient.clearCache().get().recordsCleared shouldBe 0
         } finally {
             retryClient.disable()
             retryClient.clearCache()
@@ -308,12 +302,10 @@ abstract class BaseStreamClientInstrumentationTest : DeviceFarmTestBase() {
     fun testHighVolumeRecordAndFlush(): Unit = runBlocking {
         val count = 50
         repeat(count) { i ->
-            val result = client.record("stress-record-$i".toByteArray(), streamName)
-            result.shouldBeSuccess()
+            client.record("stress-record-$i".toByteArray(), streamName).get()
         }
 
-        val flushResult = client.flush()
-        flushResult.shouldBeSuccess().data.recordsFlushed shouldBe count
+        client.flush().get().recordsFlushed shouldBe count
     }
 
     @Test
@@ -324,11 +316,9 @@ abstract class BaseStreamClientInstrumentationTest : DeviceFarmTestBase() {
 
         repeat(cycles) { cycle ->
             repeat(recordsPerCycle) { i ->
-                client.record("cycle-$cycle-record-$i".toByteArray(), streamName)
+                client.record("cycle-$cycle-record-$i".toByteArray(), streamName).get()
             }
-            val flushResult = client.flush()
-            flushResult.shouldBeSuccess()
-            totalFlushed += flushResult.data.recordsFlushed
+            totalFlushed += client.flush().get().recordsFlushed
         }
 
         totalFlushed shouldBe (cycles * recordsPerCycle)
@@ -344,10 +334,8 @@ abstract class BaseStreamClientInstrumentationTest : DeviceFarmTestBase() {
 
         val flusher = async {
             while (!producersDone.get()) {
-                val result = client.flush()
-                if (result is Result.Success) {
-                    totalFlushed.addAndGet(result.data.recordsFlushed)
-                }
+                val result = client.flush().get()
+                totalFlushed.addAndGet(result.recordsFlushed)
                 delay(500)
             }
         }
@@ -355,7 +343,7 @@ abstract class BaseStreamClientInstrumentationTest : DeviceFarmTestBase() {
         val producerJobs = (0 until producers).map { p ->
             async {
                 repeat(recordsPerProducer) { i ->
-                    client.record("stress-p$p-r$i".toByteArray(), streamName)
+                    client.record("stress-p$p-r$i".toByteArray(), streamName).get()
                 }
             }
         }
@@ -364,12 +352,11 @@ abstract class BaseStreamClientInstrumentationTest : DeviceFarmTestBase() {
         producersDone.set(true)
         flusher.await()
 
-        val drainResult = client.flush()
-        drainResult.shouldBeSuccess()
-        totalFlushed.addAndGet(drainResult.data.recordsFlushed)
+        // Final drain flush to pick up anything the periodic flusher missed
+        totalFlushed.addAndGet(client.flush().get().recordsFlushed)
 
-        val finalResult = client.flush()
-        finalResult.shouldBeSuccess().data.recordsFlushed shouldBe 0
+        // Second drain to confirm nothing is left
+        client.flush().get().recordsFlushed shouldBe 0
 
         totalFlushed.get() shouldBe totalExpected
     }
@@ -388,15 +375,13 @@ abstract class BaseStreamClientInstrumentationTest : DeviceFarmTestBase() {
         val recordCount = 1100
 
         repeat(recordCount) { i ->
-            val result = client.record("batch-record-$i".toByteArray(), streamName)
-            result.shouldBeSuccess()
+            client.record("batch-record-$i".toByteArray(), streamName).get()
         }
 
-        val flushResult = client.flush()
-        flushResult.shouldBeSuccess().data.recordsFlushed shouldBe recordCount
+        client.flush().get().recordsFlushed shouldBe recordCount
 
-        val secondFlush = client.flush()
-        secondFlush.shouldBeSuccess().data.recordsFlushed shouldBe 0
+        // Nothing left
+        client.flush().get().recordsFlushed shouldBe 0
     }
 
     // ---------------------------------------------------------------
@@ -410,11 +395,13 @@ abstract class BaseStreamClientInstrumentationTest : DeviceFarmTestBase() {
         // No explicit enable() — scheduler should auto-start from init
 
         try {
-            autoClient.record("auto-start-record".toByteArray(), streamName)
+            autoClient.record("auto-start-record".toByteArray(), streamName).get()
+
+            // Wait for auto-flush to trigger (3s interval + buffer)
             delay(6_000)
 
-            val flushResult = autoClient.flush()
-            flushResult.shouldBeSuccess().data.recordsFlushed shouldBe 0
+            // After auto-flush, a manual flush should find nothing left
+            autoClient.flush().get().recordsFlushed shouldBe 0
         } finally {
             autoClient.disable()
             autoClient.clearCache()
@@ -428,11 +415,13 @@ abstract class BaseStreamClientInstrumentationTest : DeviceFarmTestBase() {
         autoClient.enable()
 
         try {
-            autoClient.record("auto-flush-record".toByteArray(), streamName)
+            autoClient.record("auto-flush-record".toByteArray(), streamName).get()
+
+            // Wait for auto-flush to trigger (5s interval + buffer)
             delay(8_000)
 
-            val flushResult = autoClient.flush()
-            flushResult.shouldBeSuccess().data.recordsFlushed shouldBe 0
+            // After auto-flush, a manual flush should find nothing left
+            autoClient.flush().get().recordsFlushed shouldBe 0
         } finally {
             autoClient.disable()
             autoClient.clearCache()
@@ -450,10 +439,9 @@ abstract class BaseStreamClientInstrumentationTest : DeviceFarmTestBase() {
         val oversizedResult = client.record(oversizedData, streamName)
         assertValidationError(oversizedResult)
 
-        val validResult = client.record("still-works".toByteArray(), streamName)
-        validResult.shouldBeSuccess()
+        // Now record a valid small record and flush — client should still work
+        client.record("still-works".toByteArray(), streamName).get()
 
-        val flushResult = client.flush()
-        flushResult.shouldBeSuccess().data.recordsFlushed shouldBe 1
+        client.flush().get().recordsFlushed shouldBe 1
     }
 }
