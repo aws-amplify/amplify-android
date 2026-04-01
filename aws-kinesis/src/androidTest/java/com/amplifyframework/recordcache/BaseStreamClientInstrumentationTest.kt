@@ -26,6 +26,7 @@ import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
 import com.amplifyframework.foundation.credentials.toAwsCredentialsProvider
 import com.amplifyframework.foundation.result.Result
 import com.amplifyframework.kinesis.test.R
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.Resources
 import com.amplifyframework.testutils.assertions.shouldBeSuccess
 import com.amplifyframework.testutils.sync.SynchronousAuth
@@ -61,7 +62,7 @@ import org.junit.Test
  * - [assertValidationError]: asserts the service-specific validation exception
  * - [oversizedRecordSize]: byte count that exceeds the per-record size limit
  */
-abstract class BaseStreamClientInstrumentationTest {
+abstract class BaseStreamClientInstrumentationTest : DeviceFarmTestBase() {
 
     companion object {
         const val REGION = "us-east-1"
