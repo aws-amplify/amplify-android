@@ -56,6 +56,4 @@ dependencies {
     androidTestImplementation(libs.test.kotlin.coroutines)
     androidTestImplementation(libs.test.kotest.assertions)
     androidTestImplementation(libs.test.turbine)
-
-    androidTestUtil(libs.test.androidx.orchestrator)
 }

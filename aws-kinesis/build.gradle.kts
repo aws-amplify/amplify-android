@@ -61,6 +61,4 @@ dependencies {
     androidTestImplementation(libs.test.kotest.assertions)
     androidTestImplementation(project(":aws-kinesis"))
     androidTestImplementation(libs.androidx.sqlite)
-
-    androidTestUtil(libs.test.androidx.orchestrator)
 }

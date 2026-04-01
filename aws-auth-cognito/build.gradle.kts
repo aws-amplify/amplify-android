@@ -78,6 +78,4 @@ dependencies {
     androidTestImplementation(project(":aws-api"))
     androidTestImplementation(project(":aws-api-appsync"))
     androidTestImplementation(project(":testutils"))
-
-    androidTestUtil(libs.test.androidx.orchestrator)
 }
