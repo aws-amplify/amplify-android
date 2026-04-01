@@ -19,11 +19,11 @@ import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.AuthFactorType
 import com.amplifyframework.auth.cognito.AuthConfiguration
 import com.amplifyframework.auth.cognito.AuthStateMachine
-import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter.Companion.toAuthException
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
+import com.amplifyframework.auth.cognito.toAuthException
 import com.amplifyframework.auth.cognito.util.sendEventAndGetSignInResult
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.options.AuthSignInOptions

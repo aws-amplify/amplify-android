@@ -17,12 +17,10 @@ package com.amplifyframework.auth.cognito.usecases
 
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.AuthStateMachine
-import com.amplifyframework.auth.cognito.RealAWSCognitoAuthPlugin
 import com.amplifyframework.auth.cognito.helpers.WebAuthnHelper
 import com.amplifyframework.auth.cognito.requireIdentityProviderClient
 
 internal class AuthUseCaseFactory(
-    private val plugin: RealAWSCognitoAuthPlugin,
     private val authEnvironment: AuthEnvironment,
     private val stateMachine: AuthStateMachine
 ) {
