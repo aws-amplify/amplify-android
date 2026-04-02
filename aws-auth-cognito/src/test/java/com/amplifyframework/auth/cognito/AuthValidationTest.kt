@@ -31,7 +31,6 @@ import com.amplifyframework.auth.cognito.usecases.WebUiSignInResponseUseCase
 import com.amplifyframework.auth.cognito.usecases.WebUiSignInUseCase
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.result.AuthSignInResult
-import com.amplifyframework.core.Consumer
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
@@ -50,11 +49,9 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import java.io.File
-import kotlin.coroutines.resume
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertTrue
-import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -62,7 +59,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withTimeout
@@ -485,27 +481,15 @@ class AuthValidationTest {
     private fun signOutHostedUi() = signOut()
 
     private fun assertSignedOut() {
-        val result = blockForResult { continuation -> stateMachine.getCurrentState { continuation.accept(it) } }
+        val result = runBlocking { stateMachine.getCurrentState() }
         assertTrue(result.authNState is AuthenticationState.SignedOut)
     }
 
     private fun assertSignedInAs(username: String) {
-        val result = blockForResult { continuation -> stateMachine.getCurrentState { continuation.accept(it) } }
+        val result = runBlocking { stateMachine.getCurrentState() }
         val state = result.authNState
         assertTrue(state is AuthenticationState.SignedIn)
         assertEquals(username, state.signedInData.username)
-    }
-
-    private fun <T> blockForResult(timeoutMillis: Long = 100000, function: (complete: Consumer<T>) -> Unit): T =
-        runBlockingWithTimeout(timeoutMillis) { continuation -> function { continuation.resume(it) } }
-
-    // Helper that runs the supplied function in a coroutine, blocking the thread until the continuation is invoked or
-    // the timeout is reached
-    private fun <T> runBlockingWithTimeout(
-        timeoutMillis: Long,
-        function: (continuation: CancellableContinuation<T>) -> Unit
-    ): T = runBlocking {
-        withTimeout(timeoutMillis) { suspendCancellableCoroutine(function) }
     }
 
     private fun setupMockResponseForInvalidUser() {
