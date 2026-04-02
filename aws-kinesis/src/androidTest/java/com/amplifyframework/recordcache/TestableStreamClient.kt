@@ -27,9 +27,9 @@ import com.amplifyframework.foundation.result.Result
  * Kinesis adapter supplies a sensible default internally.
  */
 interface TestableStreamClient {
-    suspend fun record(data: ByteArray, streamName: String): Result<RecordData, *>
-    suspend fun flush(): Result<FlushData, *>
-    suspend fun clearCache(): Result<ClearCacheData, *>
+    suspend fun record(data: ByteArray, streamName: String): Result<RecordData, Throwable>
+    suspend fun flush(): Result<FlushData, Throwable>
+    suspend fun clearCache(): Result<ClearCacheData, Throwable>
     fun enable()
     fun disable()
 }
