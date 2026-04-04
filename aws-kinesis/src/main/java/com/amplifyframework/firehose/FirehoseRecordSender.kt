@@ -12,13 +12,12 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.kinesis
+package com.amplifyframework.firehose
 
 import androidx.annotation.VisibleForTesting
-import aws.sdk.kotlin.services.kinesis.KinesisClient
-import aws.sdk.kotlin.services.kinesis.model.KinesisException as SdkKinesisException
-import aws.sdk.kotlin.services.kinesis.model.PutRecordsRequest
-import aws.sdk.kotlin.services.kinesis.model.PutRecordsRequestEntry
+import aws.sdk.kotlin.services.firehose.FirehoseClient
+import aws.sdk.kotlin.services.firehose.model.FirehoseException as SdkFirehoseException
+import aws.sdk.kotlin.services.firehose.model.PutRecordBatchRequest
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.foundation.result.Result
 import com.amplifyframework.recordcache.PutRecordsResponse
@@ -27,31 +26,30 @@ import com.amplifyframework.recordcache.RecordSender
 import com.amplifyframework.recordcache.resultCatchingSkippable
 import com.amplifyframework.recordcache.splitResults
 
+typealias FirehoseSdkRecord = aws.sdk.kotlin.services.firehose.model.Record
+
 @OptIn(InternalAmplifyApi::class)
-internal class KinesisRecordSender(
-    private val kinesisClient: KinesisClient,
+internal class FirehoseRecordSender(
+    private val firehoseClient: FirehoseClient,
     private val maxRetries: Int
 ) : RecordSender {
 
     override suspend fun putRecords(streamName: String, records: List<Record>): Result<PutRecordsResponse, Throwable> =
-        resultCatchingSkippable<SdkKinesisException> {
+        resultCatchingSkippable<SdkFirehoseException> {
             val request = createRequest(streamName, records)
-            val sdkResponse = kinesisClient.putRecords(request)
+            val sdkResponse = firehoseClient.putRecordBatch(request)
             splitResults(
-                errorCodes = sdkResponse.records.map { it.errorCode },
+                errorCodes = sdkResponse.requestResponses.map { it.errorCode },
                 records = records,
                 maxRetries = maxRetries
             )
         }
 
     @VisibleForTesting
-    internal fun createRequest(streamName: String, records: List<Record>) = PutRecordsRequest {
-        this.streamName = streamName
+    internal fun createRequest(streamName: String, records: List<Record>) = PutRecordBatchRequest {
+        this.deliveryStreamName = streamName
         this.records = records.map { record ->
-            PutRecordsRequestEntry {
-                this.data = record.data
-                this.partitionKey = record.partitionKey
-            }
+            FirehoseSdkRecord { this.data = record.data }
         }
     }
 }

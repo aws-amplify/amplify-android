@@ -21,6 +21,7 @@ import aws.smithy.kotlin.runtime.client.ProtocolRequestInterceptorContext
 import aws.smithy.kotlin.runtime.collections.Attributes
 import aws.smithy.kotlin.runtime.http.interceptors.HttpInterceptor
 import aws.smithy.kotlin.runtime.http.request.HttpRequest
+import com.amplifyframework.foundation.useragent.AmplifyUserAgentInterceptor
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.test.runTest
@@ -40,7 +41,7 @@ class AmplifyKinesisClientUserAgentTest {
             credentialsProvider = object : CredentialsProvider {
                 override suspend fun resolve(attributes: Attributes) = Credentials("fake-access-key", "fake-secret-key")
             }
-            interceptors += KinesisUserAgentInterceptor()
+            interceptors += AmplifyUserAgentInterceptor("amplify-kinesis", BuildConfig.VERSION_NAME)
             interceptors += object : HttpInterceptor {
                 override suspend fun modifyBeforeTransmit(
                     context: ProtocolRequestInterceptorContext<Any, HttpRequest>
