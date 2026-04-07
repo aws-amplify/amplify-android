@@ -42,6 +42,7 @@ data class FlushData(val recordsFlushed: Int = 0, val flushInProgress: Boolean =
  */
 data class ClearCacheData(val recordsCleared: Int = 0)
 
+// Types for AmplifyKinesisClient results
 typealias RecordResult = Result<RecordData, AmplifyKinesisException>
 typealias FlushResult = Result<FlushData, AmplifyKinesisException>
 typealias ClearCacheResult = Result<ClearCacheData, AmplifyKinesisException>
