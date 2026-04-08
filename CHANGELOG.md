@@ -1,3 +1,17 @@
+## [Release 2.35.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.35.0)
+
+### Features
+- **kinesis:** Add firehose client ([#3235](https://github.com/aws-amplify/amplify-android/issues/3235))
+
+### Bug Fixes
+- **kinesis:** enable full flush for cache ([#3225](https://github.com/aws-amplify/amplify-android/issues/3225))
+
+### Miscellaneous
+- Add agents.md ([#3229](https://github.com/aws-amplify/amplify-android/issues/3229))
+- Chore: Canary Test Stability ([#3234](https://github.com/aws-amplify/amplify-android/issues/3234))
+
+[See all changes between 2.34.0 and 2.35.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.34.0...release_v2.35.0)
+
 ## [Release 2.34.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.34.0)
 
 ### Features
