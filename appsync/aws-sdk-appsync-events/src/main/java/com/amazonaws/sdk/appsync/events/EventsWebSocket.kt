@@ -26,6 +26,7 @@ import com.amazonaws.sdk.appsync.events.utils.ConnectionTimeoutTimer
 import com.amazonaws.sdk.appsync.events.utils.HeaderKeys
 import com.amazonaws.sdk.appsync.events.utils.HeaderValues
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -54,7 +55,8 @@ internal class EventsWebSocket(
     private val authorizer: AppSyncAuthorizer,
     private val okHttpClient: OkHttpClient,
     private val json: Json,
-    loggerProvider: LoggerProvider?
+    loggerProvider: LoggerProvider?,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : WebSocketListener() {
 
     private val _events = MutableSharedFlow<WebSocketMessage>(extraBufferCapacity = Int.MAX_VALUE)
@@ -65,7 +67,7 @@ internal class EventsWebSocket(
     @Volatile internal var isClosed = false
     internal var disconnectReason: WebSocketDisconnectReason? = null
     private val connectionTimeoutTimer = ConnectionTimeoutTimer(
-        scope = CoroutineScope(Dispatchers.IO),
+        scope = CoroutineScope(ioDispatcher),
         onTimeout = ::onTimeout
     )
     val preAuthPublishHeaders: Map<String, String> by lazy { mapOf(HeaderKeys.HOST to eventsEndpoints.host) }
@@ -111,7 +113,7 @@ internal class EventsWebSocket(
         logger?.debug("Websocket Connection Open")
     }
 
-    suspend fun disconnect(flushEvents: Boolean) = withContext(Dispatchers.IO) {
+    suspend fun disconnect(flushEvents: Boolean) = withContext(ioDispatcher) {
         if (isClosed) return@withContext
         disconnectReason = WebSocketDisconnectReason.UserInitiated
 
