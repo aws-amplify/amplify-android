@@ -22,8 +22,10 @@ import aws.sdk.kotlin.services.s3.listObjectsV2
 import aws.sdk.kotlin.services.s3.model.GetObjectRequest
 import aws.sdk.kotlin.services.s3.model.HeadObjectRequest
 import aws.sdk.kotlin.services.s3.model.NotFound
+import aws.sdk.kotlin.services.s3.model.PutObjectRequest
 import aws.sdk.kotlin.services.s3.paginators.listObjectsV2Paginated
 import aws.sdk.kotlin.services.s3.presigners.presignGetObject
+import aws.sdk.kotlin.services.s3.presigners.presignPutObject
 import aws.sdk.kotlin.services.s3.withConfig
 import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.storage.ObjectMetadata
@@ -32,6 +34,7 @@ import com.amplifyframework.storage.StorageItem
 import com.amplifyframework.storage.options.SubpathStrategy
 import com.amplifyframework.storage.options.SubpathStrategy.Exclude
 import com.amplifyframework.storage.result.StorageListResult
+import com.amplifyframework.storage.s3.StorageAccessMethod
 import com.amplifyframework.storage.s3.transfer.S3StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.TransferManager
@@ -74,18 +77,32 @@ internal class AWSS3StorageService(
      * @return A pre-signed URL
      */
     @OptIn(ExperimentalTime::class)
-    override fun getPresignedUrl(serviceKey: String, expires: Int, useAccelerateEndpoint: Boolean): URL {
+    override fun getPresignedUrl(
+        serviceKey: String,
+        method: StorageAccessMethod,
+        expires: Int,
+        useAccelerateEndpoint: Boolean
+    ): URL {
         val presignUrlRequest = s3Client.withConfig {
             enableAccelerate = useAccelerateEndpoint
-        }.use {
+        }.use { client ->
             runBlocking {
-                it.presignGetObject(
-                    GetObjectRequest {
-                        bucket = s3BucketName
-                        key = serviceKey
-                    },
-                    expires.seconds
-                )
+                when (method) {
+                    StorageAccessMethod.PUT -> client.presignPutObject(
+                        PutObjectRequest {
+                            bucket = s3BucketName
+                            key = serviceKey
+                        },
+                        expires.seconds
+                    )
+                    StorageAccessMethod.GET -> client.presignGetObject(
+                        GetObjectRequest {
+                            bucket = s3BucketName
+                            key = serviceKey
+                        },
+                        expires.seconds
+                    )
+                }
             }
         }
         return URL(presignUrlRequest.url.toString())
