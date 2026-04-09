@@ -1,5 +1,5 @@
 [versions]
-agp = "8.11.1"
+agp = "9.1.0"
 androidx-activity = "1.2.0"
 androidx-annotation = "1.9.1"
 androidx-annotation-experimental = "1.4.1"
