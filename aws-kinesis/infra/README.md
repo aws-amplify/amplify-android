@@ -1,6 +1,6 @@
-# Kinesis Data Streams E2E Test Infrastructure
+# Kinesis & Firehose E2E Test Infrastructure
 
-Instructions for deploying the backend used by `aws-kinesis` integration tests.
+Instructions for deploying the backend used by `aws-kinesis` integration tests (both Kinesis Data Streams and Firehose).
 
 The infrastructure is not committed to the repo — deploy it from a scratch folder using the snippets below.
 
@@ -48,12 +48,18 @@ export const auth = defineAuth({
 import { defineBackend } from '@aws-amplify/backend';
 import { auth } from './auth/resource';
 import * as kinesis from 'aws-cdk-lib/aws-kinesis';
-import { Duration } from 'aws-cdk-lib';
-import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import * as firehose from 'aws-cdk-lib/aws-kinesisfirehose';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import { Duration, RemovalPolicy } from 'aws-cdk-lib';
+import { PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 
 const backend = defineBackend({
   auth,
 });
+
+// ---------------------------------------------------------------
+// Kinesis Data Stream
+// ---------------------------------------------------------------
 
 const kinesisStack = backend.createStack('KinesisStack');
 
@@ -74,6 +80,51 @@ backend.auth.resources.authenticatedUserIamRole.addToPrincipalPolicy(
     resources: [stream.streamArn],
   })
 );
+
+// ---------------------------------------------------------------
+// Firehose Delivery Stream
+// ---------------------------------------------------------------
+
+const firehoseStack = backend.createStack('FirehoseStack');
+
+// S3 bucket as the Firehose destination (required)
+const firehoseBucket = new s3.Bucket(firehoseStack, 'FirehoseDestinationBucket', {
+  removalPolicy: RemovalPolicy.DESTROY,
+  autoDeleteObjects: true,
+  lifecycleRules: [
+    { expiration: Duration.days(1) }, // auto-clean test data
+  ],
+});
+
+// IAM role for Firehose to write to S3
+const firehoseRole = new Role(firehoseStack, 'FirehoseDeliveryRole', {
+  assumedBy: new ServicePrincipal('firehose.amazonaws.com'),
+});
+firehoseBucket.grantReadWrite(firehoseRole);
+
+const deliveryStream = new firehose.CfnDeliveryStream(firehoseStack, 'TestDeliveryStream', {
+  deliveryStreamName: 'amplify-firehose-test-stream',
+  s3DestinationConfiguration: {
+    bucketArn: firehoseBucket.bucketArn,
+    roleArn: firehoseRole.roleArn,
+    bufferingHints: {
+      intervalInSeconds: 60,
+      sizeInMBs: 1,
+    },
+  },
+});
+
+// Grant authenticated users permission to put records to Firehose
+backend.auth.resources.authenticatedUserIamRole.addToPrincipalPolicy(
+  new PolicyStatement({
+    actions: [
+      'firehose:PutRecord',
+      'firehose:PutRecordBatch',
+      'firehose:DescribeDeliveryStream',
+    ],
+    resources: [deliveryStream.attrArn],
+  })
+);
 ```
 
 Deploy with Amplify sandbox:
@@ -85,7 +136,8 @@ npx ampx sandbox --profile [YOUR_AWS_PROFILE]
 This creates:
 - Cognito User Pool + Identity Pool
 - Kinesis Data Stream (`amplify-kinesis-test-stream`, 1 shard, 24h retention)
-- IAM policy granting `kinesis:PutRecord`, `kinesis:PutRecords`, `kinesis:DescribeStream` to the authenticated role
+- Firehose Delivery Stream (`amplify-firehose-test-stream`) with an S3 destination bucket (1-day lifecycle)
+- IAM policies granting the authenticated role access to both Kinesis and Firehose
 
 ## Part 2: Create a Test User
 

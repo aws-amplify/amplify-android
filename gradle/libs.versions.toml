@@ -84,9 +84,11 @@ aws-cloudwatchlogs = { module = "aws.sdk.kotlin:cloudwatchlogs", version.ref = "
 aws-cognitoidentity = { module = "aws.sdk.kotlin:cognitoidentity", version.ref = "aws-kotlin" }
 aws-cognitoidentityprovider = { module = "aws.sdk.kotlin:cognitoidentityprovider", version.ref= "aws-kotlin" }
 aws-comprehend = { module = "aws.sdk.kotlin:comprehend", version.ref = "aws-kotlin" }
+aws-config = { module = "aws.sdk.kotlin:aws-config", version.ref = "aws-kotlin" }
 aws-credentials = { module = "aws.smithy.kotlin:aws-credentials", version.ref = "aws-smithy" }
 aws-http = { module = "aws.sdk.kotlin:aws-http", version.ref = "aws-kotlin" }
 aws-kinesis = { module = "aws.sdk.kotlin:kinesis", version.ref = "aws-kotlin" }
+aws-firehose = { module = "aws.sdk.kotlin:firehose", version.ref = "aws-kotlin" }
 aws-location = { module = "aws.sdk.kotlin:location", version.ref = "aws-kotlin" }
 aws-pinpoint = { module = "aws.sdk.kotlin:pinpoint", version.ref = "aws-kotlin" }
 aws-polly = { module = "aws.sdk.kotlin:polly", version.ref = "aws-kotlin" }
@@ -94,6 +96,7 @@ aws-rekognition = { module = "aws.sdk.kotlin:rekognition", version.ref = "aws-ko
 aws-s3 = { module = "aws.sdk.kotlin:s3", version.ref = "aws-kotlin" }
 aws-signing = { module = "aws.smithy.kotlin:aws-signing-default", version.ref = "aws-smithy" }
 aws-smithy-http = { module = "aws.smithy.kotlin:http-client-jvm", version.ref = "aws-smithy" }
+aws-smithy-http-kmp = { module = "aws.smithy.kotlin:http-client", version.ref = "aws-smithy" }
 aws-smithy-okhttp4 = { module = "aws.smithy.kotlin:http-client-engine-okhttp4", version.ref = "aws-smithy" }
 aws-textract = { module = "aws.sdk.kotlin:textract", version.ref = "aws-kotlin" }
 aws-translate = { module = "aws.sdk.kotlin:translate", version.ref = "aws-kotlin" }
