@@ -36,7 +36,7 @@ jobs:
         ref: ${{ env.BASE_BRANCH }}
         fetch-depth: 0
     - name: Set up Ruby
-      uses: ruby/setup-ruby@32110d4e311bd8996b2a82bf2a43b714ccc91777 # v1.221.0
+      uses: ruby/setup-ruby@e65c17d16e57e481586a6a5a0282698790062f92 # v1.300.0
       with:
         ruby-version: "3.0"
     - name: Install dependencies
