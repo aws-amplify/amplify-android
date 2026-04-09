@@ -65,6 +65,14 @@ public final class com/amplifyframework/storage/s3/ServerSideEncryption : java/l
 	public static fun values ()[Lcom/amplifyframework/storage/s3/ServerSideEncryption;
 }
 
+public final class com/amplifyframework/storage/s3/StorageAccessMethod : java/lang/Enum {
+	public static final field GET Lcom/amplifyframework/storage/s3/StorageAccessMethod;
+	public static final field PUT Lcom/amplifyframework/storage/s3/StorageAccessMethod;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/storage/s3/StorageAccessMethod;
+	public static fun values ()[Lcom/amplifyframework/storage/s3/StorageAccessMethod;
+}
+
 public abstract interface class com/amplifyframework/storage/s3/configuration/AWSS3PluginPrefixResolver {
 	public abstract fun resolvePrefix (Lcom/amplifyframework/storage/StorageAccessLevel;Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 }
@@ -176,6 +184,7 @@ public final class com/amplifyframework/storage/s3/options/AWSS3StorageGetPresig
 	public static fun defaultInstance ()Lcom/amplifyframework/storage/s3/options/AWSS3StorageGetPresignedUrlOptions;
 	public fun equals (Ljava/lang/Object;)Z
 	public static fun from (Lcom/amplifyframework/storage/s3/options/AWSS3StorageGetPresignedUrlOptions;)Lcom/amplifyframework/storage/s3/options/AWSS3StorageGetPresignedUrlOptions$Builder;
+	public fun getMethod ()Lcom/amplifyframework/storage/s3/StorageAccessMethod;
 	public fun getValidateObjectExistence ()Z
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -187,6 +196,7 @@ public final class com/amplifyframework/storage/s3/options/AWSS3StorageGetPresig
 	public synthetic fun build ()Lcom/amplifyframework/storage/options/StorageGetUrlOptions;
 	public synthetic fun build ()Lcom/amplifyframework/storage/options/StorageOptions;
 	public fun build ()Lcom/amplifyframework/storage/s3/options/AWSS3StorageGetPresignedUrlOptions;
+	public fun method (Lcom/amplifyframework/storage/s3/StorageAccessMethod;)Lcom/amplifyframework/storage/s3/options/AWSS3StorageGetPresignedUrlOptions$Builder;
 	public fun setUseAccelerateEndpoint (Z)Lcom/amplifyframework/storage/s3/options/AWSS3StorageGetPresignedUrlOptions$Builder;
 	public fun setValidateObjectExistence (Z)Lcom/amplifyframework/storage/s3/options/AWSS3StorageGetPresignedUrlOptions$Builder;
 }
@@ -286,9 +296,11 @@ public final class com/amplifyframework/storage/s3/request/AWSS3StorageDownloadF
 public final class com/amplifyframework/storage/s3/request/AWSS3StorageGetPresignedUrlRequest {
 	public fun <init> (Ljava/lang/String;Lcom/amplifyframework/storage/StorageAccessLevel;Ljava/lang/String;IZ)V
 	public fun <init> (Ljava/lang/String;Lcom/amplifyframework/storage/StorageAccessLevel;Ljava/lang/String;IZZ)V
+	public fun <init> (Ljava/lang/String;Lcom/amplifyframework/storage/StorageAccessLevel;Ljava/lang/String;IZZLcom/amplifyframework/storage/s3/StorageAccessMethod;)V
 	public fun getAccessLevel ()Lcom/amplifyframework/storage/StorageAccessLevel;
 	public fun getExpires ()I
 	public fun getKey ()Ljava/lang/String;
+	public fun getMethod ()Lcom/amplifyframework/storage/s3/StorageAccessMethod;
 	public fun getTargetIdentityId ()Ljava/lang/String;
 	public fun useAccelerateEndpoint ()Z
 	public fun validateObjectExistence ()Z
@@ -329,6 +341,7 @@ public abstract interface class com/amplifyframework/storage/s3/service/StorageS
 	public abstract fun cancelTransfer (Lcom/amplifyframework/storage/s3/transfer/TransferObserver;)V
 	public abstract fun deleteObject (Ljava/lang/String;)V
 	public abstract fun downloadToFile (Ljava/lang/String;Ljava/lang/String;Ljava/io/File;Z)Lcom/amplifyframework/storage/s3/transfer/TransferObserver;
+	public abstract fun getPresignedUploadUrl (Ljava/lang/String;IZ)Ljava/net/URL;
 	public abstract fun getPresignedUrl (Ljava/lang/String;IZ)Ljava/net/URL;
 	public abstract fun getTransfer (Ljava/lang/String;)Lcom/amplifyframework/storage/s3/transfer/TransferRecord;
 	public abstract fun listFiles (Ljava/lang/String;Ljava/lang/String;)Ljava/util/List;

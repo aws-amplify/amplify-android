@@ -22,8 +22,10 @@ import aws.sdk.kotlin.services.s3.listObjectsV2
 import aws.sdk.kotlin.services.s3.model.GetObjectRequest
 import aws.sdk.kotlin.services.s3.model.HeadObjectRequest
 import aws.sdk.kotlin.services.s3.model.NotFound
+import aws.sdk.kotlin.services.s3.model.PutObjectRequest
 import aws.sdk.kotlin.services.s3.paginators.listObjectsV2Paginated
 import aws.sdk.kotlin.services.s3.presigners.presignGetObject
+import aws.sdk.kotlin.services.s3.presigners.presignPutObject
 import aws.sdk.kotlin.services.s3.withConfig
 import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.storage.ObjectMetadata
@@ -81,6 +83,31 @@ internal class AWSS3StorageService(
             runBlocking {
                 it.presignGetObject(
                     GetObjectRequest {
+                        bucket = s3BucketName
+                        key = serviceKey
+                    },
+                    expires.seconds
+                )
+            }
+        }
+        return URL(presignUrlRequest.url.toString())
+    }
+
+    /**
+     * Generate pre-signed upload URL for an object.
+     * @param serviceKey S3 service key
+     * @param expires Number of seconds before URL expires
+     * @param useAccelerateEndpoint Flag to use accelerate endpoint
+     * @return A pre-signed URL for uploading via HTTP PUT
+     */
+    @OptIn(ExperimentalTime::class)
+    override fun getPresignedUploadUrl(serviceKey: String, expires: Int, useAccelerateEndpoint: Boolean): URL {
+        val presignUrlRequest = s3Client.withConfig {
+            enableAccelerate = useAccelerateEndpoint
+        }.use {
+            runBlocking {
+                it.presignPutObject(
+                    PutObjectRequest {
                         bucket = s3BucketName
                         key = serviceKey
                     },

@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.storage.StorageAccessLevel;
+import com.amplifyframework.storage.s3.StorageAccessMethod;
 
 /**
  * Parameters to provide to S3 that describe a request to retrieve
@@ -34,6 +35,7 @@ public final class AWSS3StorageGetPresignedUrlRequest {
     private final int expires;
     private final boolean useAccelerateEndpoint;
     private final boolean validateObjectExistence;
+    private final StorageAccessMethod method;
 
     /**
      * Constructs a new AWSS3StorageGetUrlRequest.
@@ -60,6 +62,7 @@ public final class AWSS3StorageGetPresignedUrlRequest {
         this.expires = expires;
         this.useAccelerateEndpoint = useAccelerateEndpoint;
         this.validateObjectExistence = false;
+        this.method = StorageAccessMethod.GET;
     }
 
     /**
@@ -90,6 +93,40 @@ public final class AWSS3StorageGetPresignedUrlRequest {
         this.expires = expires;
         this.useAccelerateEndpoint = useAccelerateEndpoint;
         this.validateObjectExistence = validateObjectExistence;
+        this.method = StorageAccessMethod.GET;
+    }
+
+    /**
+     * Constructs a new AWSS3StorageGetUrlRequest.
+     * Although this has public access, it is intended for internal use and should not be used directly by host
+     * applications. The behavior of this may change without warning.
+     *
+     * @param key key for item to obtain URL for
+     * @param accessLevel Storage access level
+     * @param targetIdentityId If set, this should override the current user's identity ID.
+     *                         If null, the operation will fetch the current identity ID.
+     * @param expires The number of seconds before the URL expires
+     * @param useAccelerateEndpoint Flag to enable acceleration mode
+     * @param validateObjectExistence Flag to validate if object exists in storage
+     * @param method The HTTP method for pre-signed URL generation (GET or PUT)
+     */
+    @SuppressWarnings("deprecation")
+    public AWSS3StorageGetPresignedUrlRequest(
+            @NonNull String key,
+            @NonNull StorageAccessLevel accessLevel,
+            @Nullable String targetIdentityId,
+            int expires,
+            boolean useAccelerateEndpoint,
+            boolean validateObjectExistence,
+            @NonNull StorageAccessMethod method
+    ) {
+        this.key = key;
+        this.accessLevel = accessLevel;
+        this.targetIdentityId = targetIdentityId;
+        this.expires = expires;
+        this.useAccelerateEndpoint = useAccelerateEndpoint;
+        this.validateObjectExistence = validateObjectExistence;
+        this.method = method;
     }
 
     /**
@@ -144,6 +181,16 @@ public final class AWSS3StorageGetPresignedUrlRequest {
      */
     public boolean validateObjectExistence() {
         return validateObjectExistence;
+    }
+
+    /**
+     * Gets the HTTP method for pre-signed URL generation.
+     *
+     * @return the storage access method
+     */
+    @NonNull
+    public StorageAccessMethod getMethod() {
+        return method;
     }
 }
 

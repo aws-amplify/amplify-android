@@ -58,6 +58,16 @@ public interface StorageService {
     URL getPresignedUrl(@NonNull String serviceKey, int expires, boolean useAccelerateEndpoint);
 
     /**
+     * Generate pre-signed upload URL for an object.
+     *
+     * @param serviceKey key to uniquely specify item to generate URL for
+     * @param expires    Number of seconds before URL expires
+     * @param useAccelerateEndpoint Flag to enable acceleration endpoint
+     * @return A pre-signed URL for uploading via HTTP PUT
+     */
+    URL getPresignedUploadUrl(@NonNull String serviceKey, int expires, boolean useAccelerateEndpoint);
+
+    /**
      * Begin downloading a specific item to a file and return an observer
      * to monitor download progress.
      *
