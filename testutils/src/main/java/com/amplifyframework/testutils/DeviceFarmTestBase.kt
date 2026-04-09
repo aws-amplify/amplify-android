@@ -15,9 +15,9 @@
 
 package com.amplifyframework.testutils
 
+import com.amplifyframework.core.Amplify
 import com.amplifyframework.logging.AndroidLoggingPlugin
 import com.amplifyframework.logging.LogLevel
-import com.amplifyframework.core.Amplify
 import com.amplifyframework.testutils.rules.RepeatKnownFailuresRule
 import org.junit.BeforeClass
 import org.junit.Rule
