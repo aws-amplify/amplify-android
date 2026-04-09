@@ -150,7 +150,7 @@ public final class StorageComponentTest {
 
         // Allow mock StorageService instance to return a non-null
         // URL instance.
-        when(storageService.getPresignedUrl(anyString(), anyInt(), anyBoolean()))
+        when(storageService.getPresignedUrl(anyString(), any(), anyInt(), anyBoolean()))
                 .thenReturn(urlFromRemoteKey);
 
         // Let Storage category invoke getUrl on mock Storage Service.

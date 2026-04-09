@@ -19,11 +19,13 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.annotations.InternalApiWarning;
 import com.amplifyframework.storage.ObjectMetadata;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StorageItem;
 import com.amplifyframework.storage.options.SubpathStrategy;
 import com.amplifyframework.storage.result.StorageListResult;
+import com.amplifyframework.storage.s3.StorageAccessMethod;
 import com.amplifyframework.storage.s3.transfer.TransferObserver;
 import com.amplifyframework.storage.s3.transfer.TransferRecord;
 
@@ -36,6 +38,7 @@ import java.util.List;
 /**
  * Interface to manage file transfer to and from a registered S3 bucket.
  */
+@InternalApiWarning
 public interface StorageService {
 
     /**
@@ -48,14 +51,20 @@ public interface StorageService {
     void validateObjectExists(@NonNull String serviceKey) throws StorageException;
 
     /**
-     * Generate pre-signed download URL for an object.
+     * Generate pre-signed URL for an object.
      *
      * @param serviceKey key to uniquely specify item to generate URL for
+     * @param method The method - GET for download, PUT for upload
      * @param expires    Number of seconds before URL expires
      * @param useAccelerateEndpoint Flag to enable acceleration endpoint
      * @return A pre-signed URL
      */
-    URL getPresignedUrl(@NonNull String serviceKey, int expires, boolean useAccelerateEndpoint);
+    URL getPresignedUrl(
+        @NonNull String serviceKey,
+        @NonNull StorageAccessMethod method,
+        int expires,
+        boolean useAccelerateEndpoint
+    );
 
     /**
      * Begin downloading a specific item to a file and return an observer

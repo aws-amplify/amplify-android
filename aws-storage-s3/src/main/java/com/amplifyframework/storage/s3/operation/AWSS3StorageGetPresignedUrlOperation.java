@@ -17,7 +17,6 @@ package com.amplifyframework.storage.s3.operation;
 
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
-import androidx.annotation.OptIn;
 
 import com.amplifyframework.annotations.InternalApiWarning;
 import com.amplifyframework.auth.AuthCredentialsProvider;
@@ -25,6 +24,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageGetUrlOperation;
 import com.amplifyframework.storage.result.StorageGetUrlResult;
+import com.amplifyframework.storage.s3.StorageAccessMethod;
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration;
 import com.amplifyframework.storage.s3.request.AWSS3StorageGetPresignedUrlRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
@@ -39,7 +39,7 @@ import java.util.concurrent.ExecutorService;
  * Internal usages are moving to AWSS3StoragePathGetPresignedUrlOperation
  */
 @Deprecated
-@OptIn(markerClass = InternalApiWarning.class)
+@InternalApiWarning
 public final class AWSS3StorageGetPresignedUrlOperation
         extends StorageGetUrlOperation<AWSS3StorageGetPresignedUrlRequest> {
     private final StorageService storageService;
@@ -90,7 +90,8 @@ public final class AWSS3StorageGetPresignedUrlOperation
                             try {
                                 String serviceKey = prefix.concat(getRequest().getKey());
 
-                                if (getRequest().validateObjectExistence()) {
+                                if (getRequest().validateObjectExistence()
+                                        && getRequest().getMethod() != StorageAccessMethod.PUT) {
                                     try {
                                         storageService.validateObjectExists(serviceKey);
                                     } catch (StorageException exception) {
@@ -100,9 +101,10 @@ public final class AWSS3StorageGetPresignedUrlOperation
                                 }
 
                                 URL url = storageService.getPresignedUrl(
-                                        serviceKey,
-                                        getRequest().getExpires(),
-                                        getRequest().useAccelerateEndpoint());
+                                            serviceKey,
+                                            getRequest().getMethod(),
+                                            getRequest().getExpires(),
+                                            getRequest().useAccelerateEndpoint());
                                 onSuccess.accept(StorageGetUrlResult.fromUrl(url));
                             } catch (Exception exception) {
                                 onError.accept(new StorageException(

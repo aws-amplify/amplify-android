@@ -19,11 +19,9 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.OptIn;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.annotations.InternalAmplifyApi;
-import com.amplifyframework.annotations.InternalApiWarning;
 import com.amplifyframework.auth.AuthCredentialsProvider;
 import com.amplifyframework.auth.CognitoCredentialsProvider;
 import com.amplifyframework.core.Consumer;
@@ -161,7 +159,6 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
      * Constructs the AWS S3 Storage Plugin initializing the executor service.
      */
     @SuppressWarnings("unused") // This is a public API.
-    @OptIn(markerClass = InternalApiWarning.class)
     public AWSS3StoragePlugin() {
         this(new CognitoCredentialsProvider());
     }
@@ -172,7 +169,6 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
      * @param awsS3StoragePluginConfiguration storage plugin configuration
      */
     @SuppressWarnings("unused") // This is a public API.
-    @OptIn(markerClass = InternalApiWarning.class)
     public AWSS3StoragePlugin(AWSS3StoragePluginConfiguration awsS3StoragePluginConfiguration) {
         this(new CognitoCredentialsProvider(), awsS3StoragePluginConfiguration);
     }
@@ -376,6 +372,9 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             ((AWSS3StorageGetPresignedUrlOptions) options).useAccelerateEndpoint();
         boolean validateObjectExistence = options instanceof AWSS3StorageGetPresignedUrlOptions &&
                 ((AWSS3StorageGetPresignedUrlOptions) options).getValidateObjectExistence();
+        StorageAccessMethod method = options instanceof AWSS3StorageGetPresignedUrlOptions
+                ? ((AWSS3StorageGetPresignedUrlOptions) options).getMethod()
+                : StorageAccessMethod.GET;
         AWSS3StorageGetPresignedUrlRequest request = new AWSS3StorageGetPresignedUrlRequest(
             key,
             options.getAccessLevel() != null
@@ -386,7 +385,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                 ? options.getExpires()
                 : defaultUrlExpiration,
             useAccelerateEndpoint,
-            validateObjectExistence
+            validateObjectExistence,
+            method
         );
 
         GetStorageServiceResult result = getStorageServiceResult(options.getBucket());
@@ -420,11 +420,16 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         boolean validateObjectExistence = options instanceof AWSS3StorageGetPresignedUrlOptions &&
                 ((AWSS3StorageGetPresignedUrlOptions) options).getValidateObjectExistence();
 
+        StorageAccessMethod method = options instanceof AWSS3StorageGetPresignedUrlOptions
+                ? ((AWSS3StorageGetPresignedUrlOptions) options).getMethod()
+                : StorageAccessMethod.GET;
+
         AWSS3StoragePathGetPresignedUrlRequest request = new AWSS3StoragePathGetPresignedUrlRequest(
                 path,
                 options.getExpires() != 0 ? options.getExpires() : defaultUrlExpiration,
                 useAccelerateEndpoint,
-                validateObjectExistence
+                validateObjectExistence,
+                method
         );
 
         GetStorageServiceResult result = getStorageServiceResult(options.getBucket());

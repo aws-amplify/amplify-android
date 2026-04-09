@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2026 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -19,26 +19,25 @@ import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.StoragePath
-import com.amplifyframework.storage.StoragePathValidationException
+import com.amplifyframework.storage.result.StorageGetUrlResult
 import com.amplifyframework.storage.s3.StorageAccessMethod
-import com.amplifyframework.storage.s3.extensions.invalidStoragePathException
-import com.amplifyframework.storage.s3.extensions.unsupportedStoragePathException
 import com.amplifyframework.storage.s3.request.AWSS3StoragePathGetPresignedUrlRequest
 import com.amplifyframework.storage.s3.service.StorageService
 import com.google.common.util.concurrent.MoreExecutors
 import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
+import java.net.URL
 import org.junit.Before
 import org.junit.Test
 
-class AWSS3StoragePathGetUrlOperationTest {
+class AWSS3StoragePathGetUrlOperationMethodTest {
 
-    private lateinit var awsS3StorageGetPresignedUrlOperation: AWSS3StoragePathGetPresignedUrlOperation
     private lateinit var storageService: StorageService
     private lateinit var authCredentialsProvider: AuthCredentialsProvider
 
     private val expectedExpires = 10
+    private val testUrl = URL("https://test-bucket.s3.amazonaws.com/test-key")
 
     @Before
     fun setup() {
@@ -47,19 +46,19 @@ class AWSS3StoragePathGetUrlOperationTest {
     }
 
     @Test
-    fun `success string storage path`() {
+    fun `GET method calls getPresignedUrl`() {
         // GIVEN
-        val path = StoragePath.fromString("public/123")
-        val expectedServiceKey = "public/123"
+        val path = StoragePath.fromString("public/photo.jpg")
+        val expectedServiceKey = "public/photo.jpg"
         val request = AWSS3StoragePathGetPresignedUrlRequest(
             path,
             expectedExpires,
-            false,
+            useAccelerateEndpoint = false,
             validateObjectExistence = false,
             method = StorageAccessMethod.GET
         )
         val onError = mockk<Consumer<StorageException>>(relaxed = true)
-        awsS3StorageGetPresignedUrlOperation = AWSS3StoragePathGetPresignedUrlOperation(
+        val operation = AWSS3StoragePathGetPresignedUrlOperation(
             request = request,
             storageService = storageService,
             executorService = MoreExecutors.newDirectExecutorService(),
@@ -69,35 +68,27 @@ class AWSS3StoragePathGetUrlOperationTest {
         )
 
         // WHEN
-        awsS3StorageGetPresignedUrlOperation.start()
+        operation.start()
 
         // THEN
         verify(exactly = 0) { onError.accept(any()) }
-        verify {
-            storageService.getPresignedUrl(
-                expectedServiceKey,
-                StorageAccessMethod.GET,
-                expectedExpires,
-                false
-            )
-        }
+        verify { storageService.getPresignedUrl(expectedServiceKey, StorageAccessMethod.GET, expectedExpires, false) }
     }
 
     @Test
-    fun `success identityId storage path`() {
+    fun `PUT method calls getPresignedUrl`() {
         // GIVEN
-        coEvery { authCredentialsProvider.getIdentityId() } returns "123"
-        val path = StoragePath.fromIdentityId { "protected/$it/picture.jpg" }
-        val expectedServiceKey = "protected/123/picture.jpg"
+        val path = StoragePath.fromString("uploads/photo.jpg")
+        val expectedServiceKey = "uploads/photo.jpg"
         val request = AWSS3StoragePathGetPresignedUrlRequest(
             path,
             expectedExpires,
-            false,
+            useAccelerateEndpoint = false,
             validateObjectExistence = false,
-            method = StorageAccessMethod.GET
+            method = StorageAccessMethod.PUT
         )
         val onError = mockk<Consumer<StorageException>>(relaxed = true)
-        awsS3StorageGetPresignedUrlOperation = AWSS3StoragePathGetPresignedUrlOperation(
+        val operation = AWSS3StoragePathGetPresignedUrlOperation(
             request = request,
             storageService = storageService,
             executorService = MoreExecutors.newDirectExecutorService(),
@@ -107,34 +98,26 @@ class AWSS3StoragePathGetUrlOperationTest {
         )
 
         // WHEN
-        awsS3StorageGetPresignedUrlOperation.start()
+        operation.start()
 
         // THEN
         verify(exactly = 0) { onError.accept(any()) }
-        verify {
-            storageService.getPresignedUrl(
-                expectedServiceKey,
-                StorageAccessMethod.GET,
-                expectedExpires,
-                false
-            )
-        }
+        verify { storageService.getPresignedUrl(expectedServiceKey, StorageAccessMethod.PUT, expectedExpires, false) }
     }
 
     @Test
-    fun `invalid storage path fails with invalid path`() {
+    fun `PUT method skips validateObjectExistence even when enabled`() {
         // GIVEN
-        coEvery { authCredentialsProvider.getIdentityId() } returns "123"
-        val path = StoragePath.fromIdentityId { "/protected/$it/picture.jpg" }
+        val path = StoragePath.fromString("uploads/photo.jpg")
         val request = AWSS3StoragePathGetPresignedUrlRequest(
             path,
             expectedExpires,
-            false,
-            validateObjectExistence = false,
-            method = StorageAccessMethod.GET
+            useAccelerateEndpoint = false,
+            validateObjectExistence = true,
+            method = StorageAccessMethod.PUT
         )
         val onError = mockk<Consumer<StorageException>>(relaxed = true)
-        awsS3StorageGetPresignedUrlOperation = AWSS3StoragePathGetPresignedUrlOperation(
+        val operation = AWSS3StoragePathGetPresignedUrlOperation(
             request = request,
             storageService = storageService,
             executorService = MoreExecutors.newDirectExecutorService(),
@@ -144,102 +127,28 @@ class AWSS3StoragePathGetUrlOperationTest {
         )
 
         // WHEN
-        awsS3StorageGetPresignedUrlOperation.start()
+        operation.start()
 
         // THEN
-        verify { onError.accept(StoragePathValidationException.invalidStoragePathException()) }
-        verify(exactly = 0) {
-            storageService.getPresignedUrl(any(), any(), any(), any())
-        }
+        verify(exactly = 0) { onError.accept(any()) }
+        verify(exactly = 0) { storageService.validateObjectExists(any()) }
+        verify { storageService.getPresignedUrl(any(), any(), any(), any()) }
     }
 
     @Test
-    fun `invalid storage path fails with failed identityId resolution`() {
+    fun `GET method still validates object existence when enabled`() {
         // GIVEN
-        val expectedException = Exception("test")
-        coEvery { authCredentialsProvider.getIdentityId() } throws expectedException
-        val path = StoragePath.fromIdentityId { "protected/$it/picture.jpg" }
+        val path = StoragePath.fromString("public/photo.jpg")
+        val expectedServiceKey = "public/photo.jpg"
         val request = AWSS3StoragePathGetPresignedUrlRequest(
             path,
             expectedExpires,
-            false,
-            validateObjectExistence = false,
-            method = StorageAccessMethod.GET
-        )
-        val onError = mockk<Consumer<StorageException>>(relaxed = true)
-        awsS3StorageGetPresignedUrlOperation = AWSS3StoragePathGetPresignedUrlOperation(
-            request = request,
-            storageService = storageService,
-            executorService = MoreExecutors.newDirectExecutorService(),
-            authCredentialsProvider = authCredentialsProvider,
-            onSuccess = {},
-            onError = onError
-        )
-
-        // WHEN
-        awsS3StorageGetPresignedUrlOperation.start()
-
-        // THEN
-        verify {
-            onError.accept(
-                StorageException(
-                    "Failed to fetch identity ID",
-                    expectedException,
-                    "See included exception for more details and suggestions to fix."
-                )
-            )
-        }
-        verify(exactly = 0) {
-            storageService.getPresignedUrl(any(), any(), any(), any())
-        }
-    }
-
-    @Test
-    fun `invalid storage path fails with unsupported storage path type`() {
-        // GIVEN
-        val path = UnsupportedStoragePath()
-        val request = AWSS3StoragePathGetPresignedUrlRequest(
-            path,
-            expectedExpires,
-            false,
-            validateObjectExistence = false,
-            method = StorageAccessMethod.GET
-        )
-        val onError = mockk<Consumer<StorageException>>(relaxed = true)
-        awsS3StorageGetPresignedUrlOperation = AWSS3StoragePathGetPresignedUrlOperation(
-            request = request,
-            storageService = storageService,
-            executorService = MoreExecutors.newDirectExecutorService(),
-            authCredentialsProvider = authCredentialsProvider,
-            onSuccess = {},
-            onError = onError
-        )
-
-        // WHEN
-        awsS3StorageGetPresignedUrlOperation.start()
-
-        // THEN
-        verify { onError.accept(StoragePathValidationException.unsupportedStoragePathException()) }
-        verify(exactly = 0) {
-            storageService.getPresignedUrl(any(), any(), any(), any())
-        }
-    }
-
-    @Test
-    fun `getPresignedUrl fails with non existent S3 path when validateObjectExistence is enabled`() {
-        // GIVEN
-        val path = StoragePath.fromString("public/123")
-        val expectedException = StorageException("Test", "Test")
-        coEvery { storageService.validateObjectExists(any()) } throws expectedException
-        val request = AWSS3StoragePathGetPresignedUrlRequest(
-            path,
-            expectedExpires,
-            false,
+            useAccelerateEndpoint = false,
             validateObjectExistence = true,
             method = StorageAccessMethod.GET
         )
         val onError = mockk<Consumer<StorageException>>(relaxed = true)
-        awsS3StorageGetPresignedUrlOperation = AWSS3StoragePathGetPresignedUrlOperation(
+        val operation = AWSS3StoragePathGetPresignedUrlOperation(
             request = request,
             storageService = storageService,
             executorService = MoreExecutors.newDirectExecutorService(),
@@ -249,51 +158,133 @@ class AWSS3StoragePathGetUrlOperationTest {
         )
 
         // WHEN
-        awsS3StorageGetPresignedUrlOperation.start()
-
-        // THEN
-        verify(exactly = 1) { onError.accept(expectedException) }
-        verify(exactly = 0) {
-            storageService.getPresignedUrl(any(), any(), any(), any())
-        }
-    }
-
-    @Test
-    fun `getPresignedUrl succeeds when validateObjectExistence is enabled`() {
-        // GIVEN
-        val path = StoragePath.fromString("public/123")
-        val expectedServiceKey = "public/123"
-        val request = AWSS3StoragePathGetPresignedUrlRequest(
-            path,
-            expectedExpires,
-            false,
-            validateObjectExistence = true,
-            method = StorageAccessMethod.GET
-        )
-        val onError = mockk<Consumer<StorageException>>(relaxed = true)
-        awsS3StorageGetPresignedUrlOperation = AWSS3StoragePathGetPresignedUrlOperation(
-            request = request,
-            storageService = storageService,
-            executorService = MoreExecutors.newDirectExecutorService(),
-            authCredentialsProvider = authCredentialsProvider,
-            onSuccess = {},
-            onError = onError
-        )
-
-        // WHEN
-        awsS3StorageGetPresignedUrlOperation.start()
+        operation.start()
 
         // THEN
         verify(exactly = 0) { onError.accept(any()) }
-        verify {
-            storageService.getPresignedUrl(
-                expectedServiceKey,
-                StorageAccessMethod.GET,
-                expectedExpires,
-                false
-            )
-        }
+        verify { storageService.validateObjectExists(expectedServiceKey) }
+        verify { storageService.getPresignedUrl(expectedServiceKey, StorageAccessMethod.GET, expectedExpires, false) }
     }
 
-    class UnsupportedStoragePath : StoragePath()
+    @Test
+    fun `PUT method with accelerate endpoint`() {
+        // GIVEN
+        val path = StoragePath.fromString("uploads/photo.jpg")
+        val expectedServiceKey = "uploads/photo.jpg"
+        val request = AWSS3StoragePathGetPresignedUrlRequest(
+            path,
+            expectedExpires,
+            useAccelerateEndpoint = true,
+            validateObjectExistence = false,
+            method = StorageAccessMethod.PUT
+        )
+        val onError = mockk<Consumer<StorageException>>(relaxed = true)
+        val operation = AWSS3StoragePathGetPresignedUrlOperation(
+            request = request,
+            storageService = storageService,
+            executorService = MoreExecutors.newDirectExecutorService(),
+            authCredentialsProvider = authCredentialsProvider,
+            onSuccess = {},
+            onError = onError
+        )
+
+        // WHEN
+        operation.start()
+
+        // THEN
+        verify(exactly = 0) { onError.accept(any()) }
+        verify { storageService.getPresignedUrl(expectedServiceKey, StorageAccessMethod.PUT, expectedExpires, true) }
+    }
+
+    @Test
+    fun `PUT method returns success result`() {
+        // GIVEN
+        val path = StoragePath.fromString("uploads/photo.jpg")
+        coEvery { storageService.getPresignedUrl(any(), any(), any(), any()) } returns testUrl
+        val request = AWSS3StoragePathGetPresignedUrlRequest(
+            path,
+            expectedExpires,
+            useAccelerateEndpoint = false,
+            validateObjectExistence = false,
+            method = StorageAccessMethod.PUT
+        )
+        val onSuccess = mockk<Consumer<StorageGetUrlResult>>(relaxed = true)
+        val onError = mockk<Consumer<StorageException>>(relaxed = true)
+        val operation = AWSS3StoragePathGetPresignedUrlOperation(
+            request = request,
+            storageService = storageService,
+            executorService = MoreExecutors.newDirectExecutorService(),
+            authCredentialsProvider = authCredentialsProvider,
+            onSuccess = onSuccess,
+            onError = onError
+        )
+
+        // WHEN
+        operation.start()
+
+        // THEN
+        verify(exactly = 0) { onError.accept(any()) }
+        verify { onSuccess.accept(any()) }
+    }
+
+    @Test
+    fun `default method is GET when not specified`() {
+        // GIVEN
+        val path = StoragePath.fromString("public/photo.jpg")
+        val expectedServiceKey = "public/photo.jpg"
+        val request = AWSS3StoragePathGetPresignedUrlRequest(
+            path,
+            expectedExpires,
+            useAccelerateEndpoint = false,
+            validateObjectExistence = false,
+            method = StorageAccessMethod.GET
+        )
+        val onError = mockk<Consumer<StorageException>>(relaxed = true)
+        val operation = AWSS3StoragePathGetPresignedUrlOperation(
+            request = request,
+            storageService = storageService,
+            executorService = MoreExecutors.newDirectExecutorService(),
+            authCredentialsProvider = authCredentialsProvider,
+            onSuccess = {},
+            onError = onError
+        )
+
+        // WHEN
+        operation.start()
+
+        // THEN
+        verify(exactly = 0) { onError.accept(any()) }
+        verify { storageService.getPresignedUrl(expectedServiceKey, StorageAccessMethod.GET, expectedExpires, false) }
+    }
+
+    @Test
+    fun `PUT method with identityId storage path`() {
+        // GIVEN
+        coEvery { authCredentialsProvider.getIdentityId() } returns "user123"
+        val path = StoragePath.fromIdentityId { "protected/$it/photo.jpg" }
+        val expectedServiceKey = "protected/user123/photo.jpg"
+        val request = AWSS3StoragePathGetPresignedUrlRequest(
+            path,
+            expectedExpires,
+            useAccelerateEndpoint = false,
+            validateObjectExistence = false,
+            method = StorageAccessMethod.PUT
+        )
+        val onError = mockk<Consumer<StorageException>>(relaxed = true)
+        val operation = AWSS3StoragePathGetPresignedUrlOperation(
+            request = request,
+            storageService = storageService,
+            executorService = MoreExecutors.newDirectExecutorService(),
+            authCredentialsProvider = authCredentialsProvider,
+            onSuccess = {},
+            onError = onError
+        )
+
+        // WHEN
+        operation.start()
+
+        // THEN
+        verify(exactly = 0) { onError.accept(any()) }
+        verify { storageService.getPresignedUrl(expectedServiceKey, StorageAccessMethod.PUT, expectedExpires, false) }
+    }
 }

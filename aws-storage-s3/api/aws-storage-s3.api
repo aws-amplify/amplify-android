@@ -65,6 +65,14 @@ public final class com/amplifyframework/storage/s3/ServerSideEncryption : java/l
 	public static fun values ()[Lcom/amplifyframework/storage/s3/ServerSideEncryption;
 }
 
+public final class com/amplifyframework/storage/s3/StorageAccessMethod : java/lang/Enum {
+	public static final field GET Lcom/amplifyframework/storage/s3/StorageAccessMethod;
+	public static final field PUT Lcom/amplifyframework/storage/s3/StorageAccessMethod;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/storage/s3/StorageAccessMethod;
+	public static fun values ()[Lcom/amplifyframework/storage/s3/StorageAccessMethod;
+}
+
 public abstract interface class com/amplifyframework/storage/s3/configuration/AWSS3PluginPrefixResolver {
 	public abstract fun resolvePrefix (Lcom/amplifyframework/storage/StorageAccessLevel;Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 }
@@ -106,11 +114,6 @@ public final class com/amplifyframework/storage/s3/operation/AWSS3StorageDownloa
 	public fun onError (ILjava/lang/Exception;)V
 	public fun onProgressChanged (IJJ)V
 	public fun onStateChanged (ILcom/amplifyframework/storage/TransferState;Ljava/lang/String;)V
-}
-
-public final class com/amplifyframework/storage/s3/operation/AWSS3StorageGetPresignedUrlOperation : com/amplifyframework/storage/operation/StorageGetUrlOperation {
-	public fun <init> (Lcom/amplifyframework/storage/s3/service/StorageService;Ljava/util/concurrent/ExecutorService;Lcom/amplifyframework/auth/AuthCredentialsProvider;Lcom/amplifyframework/storage/s3/request/AWSS3StorageGetPresignedUrlRequest;Lcom/amplifyframework/storage/s3/configuration/AWSS3StoragePluginConfiguration;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
-	public fun start ()V
 }
 
 public final class com/amplifyframework/storage/s3/operation/AWSS3StorageListOperation : com/amplifyframework/storage/operation/StorageListOperation {
@@ -176,6 +179,7 @@ public final class com/amplifyframework/storage/s3/options/AWSS3StorageGetPresig
 	public static fun defaultInstance ()Lcom/amplifyframework/storage/s3/options/AWSS3StorageGetPresignedUrlOptions;
 	public fun equals (Ljava/lang/Object;)Z
 	public static fun from (Lcom/amplifyframework/storage/s3/options/AWSS3StorageGetPresignedUrlOptions;)Lcom/amplifyframework/storage/s3/options/AWSS3StorageGetPresignedUrlOptions$Builder;
+	public fun getMethod ()Lcom/amplifyframework/storage/s3/StorageAccessMethod;
 	public fun getValidateObjectExistence ()Z
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -187,6 +191,7 @@ public final class com/amplifyframework/storage/s3/options/AWSS3StorageGetPresig
 	public synthetic fun build ()Lcom/amplifyframework/storage/options/StorageGetUrlOptions;
 	public synthetic fun build ()Lcom/amplifyframework/storage/options/StorageOptions;
 	public fun build ()Lcom/amplifyframework/storage/s3/options/AWSS3StorageGetPresignedUrlOptions;
+	public fun method (Lcom/amplifyframework/storage/s3/StorageAccessMethod;)Lcom/amplifyframework/storage/s3/options/AWSS3StorageGetPresignedUrlOptions$Builder;
 	public fun setUseAccelerateEndpoint (Z)Lcom/amplifyframework/storage/s3/options/AWSS3StorageGetPresignedUrlOptions$Builder;
 	public fun setValidateObjectExistence (Z)Lcom/amplifyframework/storage/s3/options/AWSS3StorageGetPresignedUrlOptions$Builder;
 }
@@ -283,17 +288,6 @@ public final class com/amplifyframework/storage/s3/request/AWSS3StorageDownloadF
 	public fun useAccelerateEndpoint ()Z
 }
 
-public final class com/amplifyframework/storage/s3/request/AWSS3StorageGetPresignedUrlRequest {
-	public fun <init> (Ljava/lang/String;Lcom/amplifyframework/storage/StorageAccessLevel;Ljava/lang/String;IZ)V
-	public fun <init> (Ljava/lang/String;Lcom/amplifyframework/storage/StorageAccessLevel;Ljava/lang/String;IZZ)V
-	public fun getAccessLevel ()Lcom/amplifyframework/storage/StorageAccessLevel;
-	public fun getExpires ()I
-	public fun getKey ()Ljava/lang/String;
-	public fun getTargetIdentityId ()Ljava/lang/String;
-	public fun useAccelerateEndpoint ()Z
-	public fun validateObjectExistence ()Z
-}
-
 public final class com/amplifyframework/storage/s3/request/AWSS3StorageListRequest {
 	public fun <init> (Ljava/lang/String;Lcom/amplifyframework/storage/StorageAccessLevel;Ljava/lang/String;)V
 	public fun <init> (Ljava/lang/String;Lcom/amplifyframework/storage/StorageAccessLevel;Ljava/lang/String;ILjava/lang/String;)V
@@ -323,23 +317,6 @@ public final class com/amplifyframework/storage/s3/request/AWSS3StorageUploadReq
 	public fun getServerSideEncryption ()Lcom/amplifyframework/storage/s3/ServerSideEncryption;
 	public fun getTargetIdentityId ()Ljava/lang/String;
 	public fun useAccelerateEndpoint ()Z
-}
-
-public abstract interface class com/amplifyframework/storage/s3/service/StorageService {
-	public abstract fun cancelTransfer (Lcom/amplifyframework/storage/s3/transfer/TransferObserver;)V
-	public abstract fun deleteObject (Ljava/lang/String;)V
-	public abstract fun downloadToFile (Ljava/lang/String;Ljava/lang/String;Ljava/io/File;Z)Lcom/amplifyframework/storage/s3/transfer/TransferObserver;
-	public abstract fun getPresignedUrl (Ljava/lang/String;IZ)Ljava/net/URL;
-	public abstract fun getTransfer (Ljava/lang/String;)Lcom/amplifyframework/storage/s3/transfer/TransferRecord;
-	public abstract fun listFiles (Ljava/lang/String;Ljava/lang/String;)Ljava/util/List;
-	public abstract fun listFiles (Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;)Lcom/amplifyframework/storage/result/StorageListResult;
-	public abstract fun listFiles (Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Lcom/amplifyframework/storage/options/SubpathStrategy;)Lcom/amplifyframework/storage/result/StorageListResult;
-	public abstract fun listFiles (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/storage/options/SubpathStrategy;)Lcom/amplifyframework/storage/result/StorageListResult;
-	public abstract fun pauseTransfer (Lcom/amplifyframework/storage/s3/transfer/TransferObserver;)V
-	public abstract fun resumeTransfer (Lcom/amplifyframework/storage/s3/transfer/TransferObserver;)V
-	public abstract fun uploadFile (Ljava/lang/String;Ljava/lang/String;Ljava/io/File;Lcom/amplifyframework/storage/ObjectMetadata;Z)Lcom/amplifyframework/storage/s3/transfer/TransferObserver;
-	public abstract fun uploadInputStream (Ljava/lang/String;Ljava/lang/String;Ljava/io/InputStream;Lcom/amplifyframework/storage/ObjectMetadata;Z)Lcom/amplifyframework/storage/s3/transfer/TransferObserver;
-	public abstract fun validateObjectExists (Ljava/lang/String;)V
 }
 
 public abstract interface class com/amplifyframework/storage/s3/service/StorageService$Factory {
