@@ -18,7 +18,9 @@ package com.amazonaws.sdk.appsync.events
 import com.amazonaws.sdk.appsync.core.AppSyncAuthorizer
 import com.amazonaws.sdk.appsync.core.LoggerProvider
 import java.util.concurrent.atomic.AtomicReference
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
@@ -31,7 +33,8 @@ internal class EventsWebSocketProvider(
     private val authorizer: AppSyncAuthorizer,
     private val okHttpClient: OkHttpClient,
     private val json: Json,
-    private val loggerProvider: LoggerProvider?
+    private val loggerProvider: LoggerProvider?,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private val mutex = Mutex()
     private val connectionResultReference = AtomicReference<Result<EventsWebSocket>?>(null)
@@ -92,7 +95,8 @@ internal class EventsWebSocketProvider(
             authorizer,
             okHttpClient,
             json,
-            loggerProvider
+            loggerProvider,
+            ioDispatcher
         )
         eventsWebSocket.connect()
         Result.success(eventsWebSocket)

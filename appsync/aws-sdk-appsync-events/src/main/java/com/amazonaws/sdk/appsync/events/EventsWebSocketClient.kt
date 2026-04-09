@@ -66,7 +66,8 @@ class EventsWebSocketClient internal constructor(
         connectAuthorizer,
         okHttpClient,
         json,
-        options.loggerProvider
+        options.loggerProvider,
+        ioDispatcher
     )
 
     private val logger = options.loggerProvider?.getLogger(TAG)
