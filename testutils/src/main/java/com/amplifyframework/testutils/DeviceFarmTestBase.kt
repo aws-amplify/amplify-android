@@ -15,7 +15,11 @@
 
 package com.amplifyframework.testutils
 
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.logging.AndroidLoggingPlugin
+import com.amplifyframework.logging.LogLevel
 import com.amplifyframework.testutils.rules.RepeatKnownFailuresRule
+import org.junit.BeforeClass
 import org.junit.Rule
 
 /**
@@ -24,4 +28,16 @@ import org.junit.Rule
 abstract class DeviceFarmTestBase {
     @get:Rule
     val testRule = RepeatKnownFailuresRule()
+
+    companion object {
+        @BeforeClass
+        @JvmStatic
+        fun setupDebugLogging() {
+            try {
+                Amplify.addPlugin(AndroidLoggingPlugin(LogLevel.DEBUG))
+            } catch (_: Exception) {
+                // Already configured or plugin already added — safe to ignore
+            }
+        }
+    }
 }
