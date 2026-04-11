@@ -15,7 +15,6 @@
 
 package com.amplifyframework.statemachine
 
-import java.util.UUID
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -30,14 +29,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.withContext
 
-internal typealias OnSubscribedCallback = () -> Unit
-
-internal class StateChangeListenerToken private constructor(val uuid: UUID) {
-    constructor() : this(UUID.randomUUID())
-    override fun equals(other: Any?) = other is StateChangeListenerToken && other.uuid == uuid
-    override fun hashCode() = uuid.hashCode()
-}
-
 /**
  * Model, mutate and process effects of a system as a finite state automaton. It consists of:
  * State - which represents the current state of the system
@@ -49,7 +40,6 @@ internal class StateChangeListenerToken private constructor(val uuid: UUID) {
  * @param resolver responsible for mutating state based on incoming events
  * @param environment holds system specific environment info accessible to Effects/Actions
  * @param executor responsible for invoking effects
- * @param concurrentQueue event queue or thread pool for effect executor and subscription callback
  * @param initialState starting state of the system (resolver default state will be used if omitted)
  */
 internal open class StateMachine<StateType : State, EnvironmentType : Environment>(
@@ -77,50 +67,6 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
     private val stateMachineContext = SupervisorJob() + newSingleThreadContext("StateMachineContext")
     private val stateMachineScope = CoroutineScope(stateMachineContext)
 
-    // weak wrapper ??
-    private val subscribers: MutableMap<StateChangeListenerToken, (StateType) -> Unit> = mutableMapOf()
-
-    // atomic value ??
-    private val pendingCancellations: MutableSet<StateChangeListenerToken> = mutableSetOf()
-
-    /**
-     * Start listening to state changes updates. Asynchronously invoke listener on a background queue with the current state.
-     * Both `listener` and `onSubscribe` will be invoked on a background queue.
-     * @param listener listener to be invoked on state changes
-     * @param onSubscribe callback to invoke when subscription is complete
-     * @return token that can be used to unsubscribe the listener
-     */
-    @Deprecated("Collect from state flow instead")
-    fun listen(token: StateChangeListenerToken, listener: (StateType) -> Unit, onSubscribe: OnSubscribedCallback?) {
-        stateMachineScope.launch {
-            addSubscription(token, listener, onSubscribe)
-        }
-    }
-
-    /**
-     * Stop listening to state changes updates. Register a pending cancellation if a new event comes in between the time
-     * `cancel` is called and the time the pending cancellation is processed, the event will not be dispatched to the listener.
-     * @param token identifies the listener to be removed
-     */
-    @Deprecated("Collect from state flow instead")
-    fun cancel(token: StateChangeListenerToken) {
-        pendingCancellations.add(token)
-        stateMachineScope.launch {
-            removeSubscription(token)
-        }
-    }
-
-    /**
-     * Invoke `completion` with the current state
-     * @param completion callback to invoke with the current state
-     */
-    @Deprecated("Use suspending version instead")
-    fun getCurrentState(completion: (StateType) -> Unit) {
-        stateMachineScope.launch {
-            completion(getCurrentState())
-        }
-    }
-
     /**
      * Get the current state, dispatching to the state machine context for the read.
      */
@@ -131,35 +77,6 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
     }
 
     /**
-     * Register a listener.
-     * @param token token, which will be retained in the subscribers map
-     * @param listener listener to invoke when the state has changed
-     * @param onSubscribe callback to invoke when subscription is complete
-     */
-    private suspend fun addSubscription(
-        token: StateChangeListenerToken,
-        listener: (StateType) -> Unit,
-        onSubscribe: OnSubscribedCallback?
-    ) {
-        if (pendingCancellations.contains(token)) return
-        val currentState = getCurrentState()
-        subscribers[token] = listener
-        onSubscribe?.invoke()
-        stateMachineScope.launch(dispatcherQueue) {
-            listener.invoke(currentState)
-        }
-    }
-
-    /**
-     * Unregister a listener.
-     * @param token token of the listener to remove
-     */
-    private fun removeSubscription(token: StateChangeListenerToken) {
-        pendingCancellations.remove(token)
-        subscribers.remove(token)
-    }
-
-    /**
      * Send `event` to the StateMachine for resolution, and applies any effects and new states returned from the resolution.
      * @param event event to send to the system
      */
@@ -167,22 +84,6 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
         stateMachineScope.launch {
             process(event)
         }
-    }
-
-    /**
-     * Notify all the listeners with the new state.
-     * @param subscriber pair containing the subscriber token and listener
-     * @param newState new state to be sent
-     * @return true if the subscriber was notified, false if the token was null or a cancellation was pending
-     */
-    private fun notifySubscribers(
-        subscriber: Map.Entry<StateChangeListenerToken, (StateType) -> Unit>,
-        newState: StateType
-    ): Boolean {
-        val token = subscriber.key
-        if (pendingCancellations.contains(token)) return false
-        subscriber.value(newState)
-        return true
     }
 
     /**
@@ -197,8 +98,6 @@ internal open class StateMachine<StateType : State, EnvironmentType : Environmen
         val resolution = resolver.resolve(currentState, event)
         if (currentState != resolution.newState) {
             setCurrentState(resolution.newState)
-            val subscribersToRemove = subscribers.filter { !notifySubscribers(it, resolution.newState) }
-            subscribersToRemove.forEach { subscribers.remove(it.key) }
         }
         execute(resolution.actions)
     }
