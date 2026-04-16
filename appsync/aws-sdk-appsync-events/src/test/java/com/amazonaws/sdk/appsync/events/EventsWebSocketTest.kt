@@ -30,6 +30,8 @@ import io.mockk.verify
 import java.net.UnknownHostException
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
@@ -46,14 +48,16 @@ internal class EventsWebSocketTest {
     )
     private val connectAuthorizer = TestAuthorizer()
     private val okHttpClient = mockk<OkHttpClient>(relaxed = true)
-    val websocket = mockk<WebSocket>(relaxed = true)
+    private val websocket = mockk<WebSocket>(relaxed = true)
     private val json = JsonUtils.createJsonForLibrary()
-    val eventsWebSocket = EventsWebSocket(
+
+    private fun TestScope.createEventsWebSocket() = EventsWebSocket(
         eventsEndpoints,
         connectAuthorizer,
         okHttpClient,
         json,
-        null
+        null,
+        StandardTestDispatcher(testScheduler)
     )
 
     @Test
@@ -74,6 +78,7 @@ internal class EventsWebSocketTest {
 
     @Test
     fun `test Websocket request values`() = runTest {
+        val eventsWebSocket = createEventsWebSocket()
         val requestSlot = slot<Request>()
         val ack = """ { "type": "connection_ack", "connectionTimeoutMs": 10000 } """
         every { okHttpClient.newWebSocket(capture(requestSlot), any()) } answers {
@@ -100,8 +105,9 @@ internal class EventsWebSocketTest {
 
     @Test
     fun `on open send connection init`() = runTest {
+        val eventsWebSocket = createEventsWebSocket()
         val expectedInit = """{"type":"connection_init"}"""
-        getConnectedWebSocket()
+        getConnectedWebSocket(eventsWebSocket)
 
         eventsWebSocket.onOpen(websocket, mockk())
 
@@ -111,8 +117,9 @@ internal class EventsWebSocketTest {
 
     @Test
     fun `connect fails if websocket reports closed`() = runTest {
+        val eventsWebSocket = createEventsWebSocket()
         shouldThrow<ConnectException> {
-            getFailedWebSocket()
+            getFailedWebSocket(eventsWebSocket)
         }
 
         verify { websocket.cancel() }
@@ -120,6 +127,7 @@ internal class EventsWebSocketTest {
 
     @Test
     fun `test disconnect with flush`() = runTest {
+        val eventsWebSocket = createEventsWebSocket()
         val expectedTimeout = 10000L
         val expectedInit = """{"type":"connection_init"}"""
 
@@ -130,7 +138,7 @@ internal class EventsWebSocketTest {
             true
         }
 
-        getConnectedWebSocket(expectedTimeout)
+        getConnectedWebSocket(eventsWebSocket, expectedTimeout)
         eventsWebSocket.onOpen(websocket, mockk())
         verify { websocket.send(expectedInit) }
         eventsWebSocket.isClosed shouldBe false
@@ -146,6 +154,7 @@ internal class EventsWebSocketTest {
 
     @Test
     fun `test disconnect without flush`() = runTest {
+        val eventsWebSocket = createEventsWebSocket()
         val expectedTimeout = 10000L
         val expectedInit = """{"type":"connection_init"}"""
 
@@ -155,7 +164,7 @@ internal class EventsWebSocketTest {
             }
         }
 
-        getConnectedWebSocket(expectedTimeout)
+        getConnectedWebSocket(eventsWebSocket, expectedTimeout)
         eventsWebSocket.onOpen(websocket, mockk())
         verify { websocket.send(expectedInit) }
         eventsWebSocket.isClosed shouldBe false
@@ -171,9 +180,10 @@ internal class EventsWebSocketTest {
 
     @Test
     fun `on unexpected failure send close with service reason`() = runTest {
+        val eventsWebSocket = createEventsWebSocket()
         val expectedTimeout = 10000L
         val expectedInit = """{"type":"connection_init"}"""
-        getConnectedWebSocket(expectedTimeout)
+        getConnectedWebSocket(eventsWebSocket, expectedTimeout)
         eventsWebSocket.onOpen(websocket, mockk())
         verify { websocket.send(expectedInit) }
 
@@ -188,12 +198,17 @@ internal class EventsWebSocketTest {
 
     @Test
     fun `on timeout failure send close with timeout reason`() = runTest {
+        val eventsWebSocket = createEventsWebSocket()
         val expectedTimeout = 1L
         val expectedInit = """{"type":"connection_init"}"""
 
-        getConnectedWebSocket(expectedTimeout)
+        getConnectedWebSocket(eventsWebSocket, expectedTimeout)
         eventsWebSocket.onOpen(websocket, mockk())
         verify { websocket.send(expectedInit) }
+
+        // Advance virtual time so the ConnectionTimeoutTimer fires and sets disconnectReason = Timeout
+        testScheduler.advanceTimeBy(expectedTimeout)
+        testScheduler.runCurrent()
 
         eventsWebSocket.events.test {
             eventsWebSocket.onFailure(websocket, mockk(), mockk())
@@ -206,9 +221,10 @@ internal class EventsWebSocketTest {
 
     @Test
     fun `send without authorizers`() = runTest {
+        val eventsWebSocket = createEventsWebSocket()
         val expectedTimeout = 1000L
         val expectedInit = """{"type":"connection_init"}"""
-        getConnectedWebSocket(expectedTimeout)
+        getConnectedWebSocket(eventsWebSocket, expectedTimeout)
         eventsWebSocket.onOpen(websocket, mockk())
         verify { websocket.send(expectedInit) }
         val unsubscribeMessage = WebSocketMessage.Send.Subscription.Unsubscribe("abc-123")
@@ -225,9 +241,10 @@ internal class EventsWebSocketTest {
 
     @Test
     fun `send with authorizers appends auth values`() = runTest {
+        val eventsWebSocket = createEventsWebSocket()
         val expectedTimeout = 1L
         val expectedInit = """{"type":"connection_init"}"""
-        getConnectedWebSocket(expectedTimeout)
+        getConnectedWebSocket(eventsWebSocket, expectedTimeout)
         eventsWebSocket.onOpen(websocket, mockk())
         verify { websocket.send(expectedInit) }
 
@@ -254,20 +271,24 @@ internal class EventsWebSocketTest {
         verify { websocket.send(expectedPublish) }
     }
 
-    private suspend fun getConnectedWebSocket(timeout: Long = 10000) = coroutineScope {
-        val ack = """ { "type": "connection_ack", "connectionTimeoutMs": $timeout } """
-        every { okHttpClient.newWebSocket(any(), any()) } answers {
-            val listener = arg<WebSocketListener>(1)
-            launch {
-                listener.onMessage(websocket, ack)
+    private suspend fun getConnectedWebSocket(eventsWebSocket: EventsWebSocket, timeout: Long = 10000) =
+        coroutineScope {
+            val ack = """ { "type": "connection_ack", "connectionTimeoutMs": $timeout } """
+            every { okHttpClient.newWebSocket(any(), any()) } answers {
+                val listener = arg<WebSocketListener>(1)
+                launch {
+                    listener.onMessage(websocket, ack)
+                }
+                websocket
             }
-            websocket
+
+            eventsWebSocket.connect()
         }
 
-        eventsWebSocket.connect()
-    }
-
-    private suspend fun getFailedWebSocket(cause: Throwable = UnknownHostException()) = coroutineScope {
+    private suspend fun getFailedWebSocket(
+        eventsWebSocket: EventsWebSocket,
+        cause: Throwable = UnknownHostException()
+    ) = coroutineScope {
         every { okHttpClient.newWebSocket(any(), any()) } answers {
             val listener = arg<WebSocketListener>(1)
             launch {
