@@ -423,6 +423,7 @@ Copy-paste this, and complete the workflow in the UI. It will invite you to
       - core
       - datastore
       - geo
+      - kinesis
       - predictions
       - storage
     - Eg. `fix(auth): throw correct auth exception for code mismatch`. Refer https://github.com/aws-amplify/amplify-android/pull/1370

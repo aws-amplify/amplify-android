@@ -28,7 +28,7 @@ jobs:
           #   test: description
           #   docs: description
           #   release: description
-          CATEGORIES="all|analytics|api|auth|core|datastore|geo|kinesis|predictions|storage|notifications|apollo"
+          CATEGORIES="all|analytics|api|auth|core|datastore|geo|predictions|storage|notifications|apollo|kinesis"
           PATTERN="^((fix|feat)\(($CATEGORIES)\): .+|(chore|refactor|perf|test|docs|release): .+)$"
 
           if echo "$PR_TITLE" | grep -Eq "$PATTERN"; then
