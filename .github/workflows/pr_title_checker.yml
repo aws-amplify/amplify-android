@@ -7,8 +7,6 @@ on:
       - opened
       - edited
       - synchronize
-      - labeled
-      - unlabeled
 
 permissions:
   contents: read
@@ -17,8 +15,39 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: thehanimo/pr-title-checker@v1.4.3
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          pass_on_octokit_error: false
-          configuration_path: ".github/pr-title-checker-config.json"
+      - name: Check PR title format
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          # Allowed formats from CONTRIBUTING.md:
+          #   fix(category): description
+          #   feat(category): description
+          #   chore: description
+          #   refactor: description
+          #   perf: description
+          #   test: description
+          #   docs: description
+          #   release: description
+          CATEGORIES="all|analytics|api|auth|core|datastore|geo|kinesis|predictions|storage|notifications|apollo"
+          PATTERN="^((fix|feat)\(($CATEGORIES)\): .+|(chore|refactor|perf|test|docs|release): .+)$"
+
+          if echo "$PR_TITLE" | grep -Eq "$PATTERN"; then
+            echo "✅ PR title is valid: $PR_TITLE"
+          else
+            echo "❌ PR title does not match the required format: $PR_TITLE"
+            echo ""
+            echo "Expected one of:"
+            echo "  fix(category): description"
+            echo "  feat(category): description"
+            echo "  chore: description"
+            echo "  refactor: description"
+            echo "  perf: description"
+            echo "  test: description"
+            echo "  docs: description"
+            echo "  release: description"
+            echo ""
+            echo "Valid categories: $CATEGORIES"
+            echo ""
+            echo "See: https://github.com/aws-amplify/amplify-android/blob/main/CONTRIBUTING.md#pull-request-guidelines"
+            exit 1
+          fi
