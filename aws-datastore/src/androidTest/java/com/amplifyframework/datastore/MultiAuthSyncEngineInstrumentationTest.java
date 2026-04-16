@@ -67,6 +67,7 @@ import com.amplifyframework.testmodels.multiauth.PrivateUPPost;
 import com.amplifyframework.testmodels.multiauth.PublicAPIPost;
 import com.amplifyframework.testmodels.multiauth.PublicIAMPost;
 import com.amplifyframework.testmodels.multiauth.PublicPublicIAMAPIPost;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.random.RandomString;
@@ -110,7 +111,7 @@ import static org.junit.Assert.fail;
  * Tests a set of possible combinations of models, auth modes and login status to
  * verify behavior when in multi-auth mode.
  */
-public final class MultiAuthSyncEngineInstrumentationTest {
+public final class MultiAuthSyncEngineInstrumentationTest extends DeviceFarmTestBase {
     private static final Logger LOG = Amplify.Logging.logger(
         CategoryType.DATASTORE,
         "MultiAuthSyncEngineInstrumentationTest"

@@ -54,6 +54,4 @@ dependencies {
     androidTestImplementation(libs.test.androidx.workmanager)
     androidTestImplementation(libs.test.kotest.assertions)
     androidTestImplementation(project(":aws-storage-s3"))
-
-    androidTestUtil(libs.test.androidx.orchestrator)
 }

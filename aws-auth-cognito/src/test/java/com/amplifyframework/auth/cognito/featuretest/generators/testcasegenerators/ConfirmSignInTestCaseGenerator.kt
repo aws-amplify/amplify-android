@@ -19,7 +19,6 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.CodeMismatchException
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException
 import com.amplifyframework.auth.AuthFactorType
-import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter
 import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
 import com.amplifyframework.auth.cognito.featuretest.CognitoType
@@ -31,6 +30,7 @@ import com.amplifyframework.auth.cognito.featuretest.ResponseType
 import com.amplifyframework.auth.cognito.featuretest.generators.SerializableProvider
 import com.amplifyframework.auth.cognito.featuretest.generators.authstategenerators.AuthStateJsonGenerator
 import com.amplifyframework.auth.cognito.featuretest.generators.toJsonElement
+import com.amplifyframework.auth.cognito.toAuthException
 import kotlinx.serialization.json.JsonObject
 
 object ConfirmSignInTestCaseGenerator : SerializableProvider {
@@ -190,12 +190,9 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
     private val codeMismatchExceptionExpectation = ExpectationShapes.Amplify(
         AuthAPI.confirmSignIn,
         ResponseType.Failure,
-        CognitoAuthExceptionConverter.lookup(
-            CodeMismatchException.invoke {
-                message = "Confirmation code entered is not correct."
-            },
-            "Confirm Sign in failed."
-        ).toJsonElement()
+        CodeMismatchException {
+            message = "Confirmation code entered is not correct."
+        }.toAuthException("Confirm Sign in failed.").toJsonElement()
     )
 
     private fun mockedConfirmSignInWithOtpExpectation(challengeNameType: ChallengeNameType): ExpectationShapes.Amplify {
@@ -268,10 +265,7 @@ object ConfirmSignInTestCaseGenerator : SerializableProvider {
                     ExpectationShapes.Amplify(
                         AuthAPI.confirmSignIn,
                         ResponseType.Failure,
-                        CognitoAuthExceptionConverter.lookup(
-                            exception,
-                            "Confirm Sign in failed."
-                        ).toJsonElement()
+                        exception.toAuthException("Confirm Sign in failed.").toJsonElement()
                     )
                 )
             )

@@ -28,6 +28,7 @@ import com.amplifyframework.auth.result.step.AuthSignInStep
 import com.amplifyframework.core.AmplifyConfiguration
 import com.amplifyframework.core.category.CategoryConfiguration
 import com.amplifyframework.core.category.CategoryType
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import dev.robinohs.totpkt.otp.totp.TotpGenerator
 import dev.robinohs.totpkt.otp.totp.timesupport.generateCode
@@ -41,7 +42,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class AWSCognitoAuthPluginTOTPTests {
+class AWSCognitoAuthPluginTOTPTests : DeviceFarmTestBase() {
 
     private lateinit var authPlugin: AWSCognitoAuthPlugin
     private lateinit var synchronousAuth: SynchronousAuth

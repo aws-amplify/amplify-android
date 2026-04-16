@@ -38,6 +38,7 @@ import com.amplifyframework.datastore.generated.model.ProjectPath
 import com.amplifyframework.datastore.generated.model.Team
 import com.amplifyframework.datastore.generated.model.TeamPath
 import com.amplifyframework.kotlin.core.Amplify
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -48,7 +49,7 @@ import org.junit.Assert.fail
 import org.junit.BeforeClass
 import org.junit.Test
 
-class GraphQLLazyQueryInstrumentationTest {
+class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
 
     companion object {
         val LONG_TIMEOUT = 20.seconds // Some test we pull and process 1000k records. Increase timeout for slow tests

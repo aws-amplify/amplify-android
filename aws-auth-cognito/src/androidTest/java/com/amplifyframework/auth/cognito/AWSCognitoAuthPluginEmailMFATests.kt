@@ -32,6 +32,7 @@ import com.amplifyframework.auth.result.step.AuthSignInStep
 import com.amplifyframework.core.configuration.AmplifyOutputs
 import com.amplifyframework.core.configuration.AmplifyOutputsData
 import com.amplifyframework.datastore.generated.model.MfaInfo
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.api.SubscriptionHolder
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import java.util.Random
@@ -42,7 +43,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-class AWSCognitoAuthPluginEmailMFATests {
+class AWSCognitoAuthPluginEmailMFATests : DeviceFarmTestBase() {
 
     private val password = "${UUID.randomUUID()}BleepBloop1234!"
     private val username = "test${Random().nextInt()}"

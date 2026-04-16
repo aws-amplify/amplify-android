@@ -39,6 +39,7 @@ import com.amplifyframework.storage.s3.UserCredentials.Credential
 import com.amplifyframework.storage.s3.options.AWSS3StorageUploadFileOptions
 import com.amplifyframework.storage.s3.test.R
 import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils.initializeWorkmanagerTestUtil
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.random.RandomTempFile
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousStorage
@@ -56,7 +57,7 @@ import org.junit.Test
 /**
  * Instrumentation test for operational work on upload.
  */
-class AWSS3StoragePathUploadTest {
+class AWSS3StoragePathUploadTest : DeviceFarmTestBase() {
     private val defaultFileOptions = StorageUploadFileOptions.defaultInstance()
     private val defaultInputStreamOptions = StorageUploadInputStreamOptions.defaultInstance()
 

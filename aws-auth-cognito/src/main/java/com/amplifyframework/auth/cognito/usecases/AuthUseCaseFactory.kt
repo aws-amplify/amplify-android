@@ -17,17 +17,15 @@ package com.amplifyframework.auth.cognito.usecases
 
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.AuthStateMachine
-import com.amplifyframework.auth.cognito.RealAWSCognitoAuthPlugin
 import com.amplifyframework.auth.cognito.helpers.WebAuthnHelper
 import com.amplifyframework.auth.cognito.requireIdentityProviderClient
 
 internal class AuthUseCaseFactory(
-    private val plugin: RealAWSCognitoAuthPlugin,
     private val authEnvironment: AuthEnvironment,
     private val stateMachine: AuthStateMachine
 ) {
 
-    fun fetchAuthSession() = FetchAuthSessionUseCase(plugin)
+    fun fetchAuthSession() = FetchAuthSessionUseCase(stateMachine)
 
     fun associateWebAuthnCredential() = AssociateWebAuthnCredentialUseCase(
         client = authEnvironment.requireIdentityProviderClient(),
@@ -172,8 +170,20 @@ internal class AuthUseCaseFactory(
         stateMachine = stateMachine
     )
 
+    fun federateToIdentityPool() = FederateToIdentityPoolUseCase(stateMachine)
+
     fun clearFederationToIdentityPool() = ClearFederationToIdentityPoolUseCase(
         stateMachine = stateMachine,
         signOut = signOut()
+    )
+
+    fun webUiSignIn() = WebUiSignInUseCase(
+        stateMachine = stateMachine,
+        configuration = authEnvironment.configuration
+    )
+
+    fun webUISignInResponse() = WebUiSignInResponseUseCase(
+        stateMachine = stateMachine,
+        authEnvironment = authEnvironment
     )
 }

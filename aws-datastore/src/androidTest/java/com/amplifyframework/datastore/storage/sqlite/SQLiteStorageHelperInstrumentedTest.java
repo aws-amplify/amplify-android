@@ -24,6 +24,7 @@ import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.datastore.StrictMode;
 import com.amplifyframework.datastore.syncengine.MigrationFlagsTable;
 import com.amplifyframework.logging.Logger;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 
 import org.junit.After;
 import org.junit.Before;
@@ -43,7 +44,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test the functions of {@link SQLiteStorageHelper}.
  */
-public class SQLiteStorageHelperInstrumentedTest {
+public class SQLiteStorageHelperInstrumentedTest extends DeviceFarmTestBase {
     private static final Logger LOG = Amplify.Logging.logger(CategoryType.DATASTORE, "amplify:aws-datastore:test");
 
     private SQLiteStorageHelper sqLiteStorageHelper;

@@ -1,6 +1,19 @@
+/*
+ * Copyright 2026 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 package com.amplifyframework.recordcache
 
-import aws.sdk.kotlin.services.kinesis.model.KinesisException as SdkKinesisException
 import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.foundation.logging.Logger
 import com.amplifyframework.foundation.result.Result
@@ -26,49 +39,61 @@ internal class RecordClient(
             return Result.Success(FlushData(recordsFlushed = 0, flushInProgress = true))
         }
         return try {
-            val recordsByStream = storage.getRecordsByStream().getOrThrow()
-            logger.debug { "Retrieved ${recordsByStream.size} stream(s) with records to flush" }
+            var totalFlushed = 0
+            val lastIdByStream = mutableMapOf<String, Long>()
 
-            val totalFlushed = recordsByStream
-                .mapNotNull { records ->
-                    val streamName = records.first().streamName
-                    val recordCount = records.size
-                    logger.verbose { "Flushing $recordCount records to stream: $streamName" }
+            var recordsByStream = storage.getRecordsByStream(lastIdByStream).getOrThrow()
+            while (recordsByStream.isNotEmpty()) {
+                logger.debug { "Retrieved ${recordsByStream.size} stream(s) with records to flush" }
 
-                    try {
-                        val result = sender.putRecords(streamName, records).getOrThrow()
+                val batchFlushed = recordsByStream
+                    .mapNotNull { records ->
+                        val streamName = records.first().streamName
+                        val recordCount = records.size
+                        logger.verbose { "Flushing $recordCount records to stream: $streamName" }
 
-                        val deleteSuccessful = storage.deleteRecords(result.successfulIds)
-                        val deleteFailed = storage.deleteRecords(result.failedIds)
-                        val incrementRetry = storage.incrementRetryCount(result.retryableIds)
+                        // Track the last record ID per stream so subsequent batches start after it
+                        val maxId = records.maxOf { it.id }
+                        lastIdByStream[streamName] = maxId
 
-                        // Ensure all updates are triggered before checking for exceptions
-                        deleteSuccessful.getOrThrow()
-                        deleteFailed.getOrThrow()
-                        incrementRetry.getOrThrow()
+                        try {
+                            val result = sender.putRecords(streamName, records).getOrThrow()
 
-                        logger.debug {
-                            "Stream $streamName: ${result.successfulIds.size} succeeded, " +
-                                "${result.retryableIds.size} retryable, ${result.failedIds.size} failed"
-                        }
+                            val deleteSuccessful = storage.deleteRecords(result.successfulIds)
+                            val deleteFailed = storage.deleteRecords(result.failedIds)
+                            val incrementRetry = storage.incrementRetryCount(result.retryableIds)
 
-                        result.successfulIds
-                    } catch (e: Throwable) {
-                        // Increment retry count for all records in the failed request and delete the ones at the limit
-                        handleFailedRequest(records)
+                            // Ensure all updates are triggered before checking for exceptions
+                            deleteSuccessful.getOrThrow()
+                            deleteFailed.getOrThrow()
+                            incrementRetry.getOrThrow()
 
-                        // SDK Kinesis exceptions are logged but not thrown
-                        if (e is SdkKinesisException) {
-                            logger.warn { "Kinesis SDK error flushing stream $streamName: ${e.message}. Skipping" }
-                            null
-                        } else {
-                            // Network errors, storage errors, and unexpected errors — throw to caller
-                            logger.warn { "Error flushing stream $streamName: ${e.message}. Aborting flush" }
-                            throw e
+                            logger.debug {
+                                "Stream $streamName: ${result.successfulIds.size} succeeded, " +
+                                    "${result.retryableIds.size} retryable, ${result.failedIds.size} failed"
+                            }
+
+                            result.successfulIds
+                        } catch (e: Throwable) {
+                            // Increment retry count for all records in the failed request and delete the ones at the limit
+                            handleFailedRequest(records)
+
+                            // SDK exceptions (wrapped as SkippableSdkException) are logged but not thrown
+                            if (e is SkippableSdkException) {
+                                logger.warn { "SDK error flushing stream $streamName: ${e.message}. Skipping" }
+                                null
+                            } else {
+                                // Network errors, storage errors, and unexpected errors — throw to caller
+                                logger.warn { "Error flushing stream $streamName: ${e.message}. Aborting flush" }
+                                throw e
+                            }
                         }
                     }
-                }
-                .sumOf { it.size }
+                    .sumOf { it.size }
+
+                totalFlushed += batchFlushed
+                recordsByStream = storage.getRecordsByStream(lastIdByStream).getOrThrow()
+            }
 
             Result.Success(FlushData(totalFlushed))
         } catch (e: Throwable) {

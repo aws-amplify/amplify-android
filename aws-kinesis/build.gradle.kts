@@ -31,6 +31,7 @@ dependencies {
 
     implementation(libs.androidx.appcompat)
     implementation(libs.aws.kinesis)
+    implementation(libs.aws.firehose)
     implementation(libs.aws.http)
     implementation(libs.kotlin.serializationJson)
     implementation(libs.androidx.sqlite)
@@ -61,6 +62,4 @@ dependencies {
     androidTestImplementation(libs.test.kotest.assertions)
     androidTestImplementation(project(":aws-kinesis"))
     androidTestImplementation(libs.androidx.sqlite)
-
-    androidTestUtil(libs.test.androidx.orchestrator)
 }

@@ -27,6 +27,7 @@ import com.amplifyframework.auth.cognito.exceptions.service.InvalidParameterExce
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
 import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.result.AWSCognitoAuthSignOutResult
+import com.amplifyframework.auth.cognito.test.R
 import com.amplifyframework.auth.cognito.testutils.Credentials
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.exceptions.SignedOutException
@@ -34,7 +35,9 @@ import com.amplifyframework.auth.options.AuthFetchSessionOptions
 import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.core.Amplify
-import com.amplifyframework.testutils.rules.CanaryTestRule
+import com.amplifyframework.core.AmplifyConfiguration
+import com.amplifyframework.core.configuration.AmplifyOutputs
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.sync.SynchronousApi
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import io.kotest.assertions.throwables.shouldThrow
@@ -48,10 +51,9 @@ import org.junit.After
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.BeforeClass
-import org.junit.Rule
 import org.junit.Test
 
-class AuthCanaryTest {
+class AuthCanaryTest : DeviceFarmTestBase() {
     companion object {
         private const val TIMEOUT_MS = 20L * 1000
         private val TAG = AuthCanaryTest::class.simpleName
@@ -64,27 +66,29 @@ class AuthCanaryTest {
             (AuthUserAttribute(AuthUserAttributeKey.phoneNumber(), "+16268319333")), // Elmo's phone #
             (AuthUserAttribute(AuthUserAttributeKey.updatedAt(), "${System.currentTimeMillis()}"))
         )
-        private val auth = AWSCognitoAuthPlugin()
-        private val syncAuth = SynchronousAuth.delegatingToAmplify(TIMEOUT_MS)
 
         private val api = AWSApiPlugin()
-        private val syncApi = SynchronousApi.delegatingToAmplify(TIMEOUT_MS)
+        private val auth = AWSCognitoAuthPlugin()
+        private val syncAuth = SynchronousAuth.delegatingToAmplify(TIMEOUT_MS)
+        private val syncApi = SynchronousApi.delegatingTo(api, TIMEOUT_MS)
 
         @BeforeClass
         @JvmStatic
         fun setup() {
+            // Gen2 doesn't support REST API as of v1 schema, so for now we will initialize an API plugin with the
+            // Gen1 config json. We can then use this plugin directly instead of calling Amplify.API
+            val amplifyConfiguration = AmplifyConfiguration.fromConfigFile(ApplicationProvider.getApplicationContext())
+            val apiJson = amplifyConfiguration.forCategoryType(api.categoryType).getPluginConfig(api.pluginKey)
+            api.configure(apiJson, ApplicationProvider.getApplicationContext())
+
             try {
-                Amplify.addPlugin(api)
                 Amplify.addPlugin(auth)
-                Amplify.configure(ApplicationProvider.getApplicationContext())
+                Amplify.configure(AmplifyOutputs(R.raw.amplify_outputs), ApplicationProvider.getApplicationContext())
             } catch (error: AmplifyException) {
                 Log.e(TAG, "Could not initialize Amplify", error)
             }
         }
     }
-
-    @get:Rule
-    val testRule = CanaryTestRule()
 
     private lateinit var username: String
     private lateinit var password: String
@@ -122,7 +126,6 @@ class AuthCanaryTest {
             .userAttribute(AuthUserAttributeKey.email(), "my@email.com")
             .build()
         syncAuth.signUp(tempUsername, tempPassword, options)
-        signedUpNewUser = true
     }
 
     // Test requires confirmation code, testing onError call.

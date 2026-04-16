@@ -20,37 +20,35 @@ import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.configuration.AmplifyOutputs
+import com.amplifyframework.geo.location.test.R
 import com.amplifyframework.geo.models.Coordinates
-import com.amplifyframework.testutils.rules.CanaryTestRule
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousGeo
+import java.util.concurrent.TimeUnit
 import org.junit.After
 import org.junit.BeforeClass
-import org.junit.Rule
 import org.junit.Test
 
-class GeoCanaryTest {
+class GeoCanaryTest : DeviceFarmTestBase() {
     companion object {
-        private const val TIMEOUT_S = 20L
         private val TAG = GeoCanaryTest::class.simpleName
 
         @BeforeClass
         @JvmStatic
-        fun setup() {
+        fun setupClass() {
             try {
                 Amplify.addPlugin(AWSCognitoAuthPlugin())
                 Amplify.addPlugin(AWSLocationGeoPlugin())
-                Amplify.configure(ApplicationProvider.getApplicationContext())
+                Amplify.configure(AmplifyOutputs(R.raw.amplify_outputs), ApplicationProvider.getApplicationContext())
             } catch (error: AmplifyException) {
                 Log.e(TAG, "Could not initialize Amplify", error)
             }
         }
     }
 
-    @get:Rule
-    val testRule = CanaryTestRule()
-
-    private val syncAuth = SynchronousAuth.delegatingToAmplify()
+    private val syncAuth = SynchronousAuth.delegatingToAmplify(TimeUnit.SECONDS.toMillis(20))
     private val syncGeo = SynchronousGeo.delegatingToAmplify()
 
     @After

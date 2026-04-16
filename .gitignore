@@ -117,3 +117,6 @@ build-artifacts.tar.gz
 sample*
 .graphqlconfig.yml
 aws-datastore/src/androidTest/res/raw/amplifyconfigurationupdated.json
+
+# Agent files
+.kiro

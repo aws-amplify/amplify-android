@@ -27,6 +27,7 @@ import com.amplifyframework.storage.options.StorageRemoveOptions
 import com.amplifyframework.storage.options.StorageUploadFileOptions
 import com.amplifyframework.storage.s3.test.R
 import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils.initializeWorkmanagerTestUtil
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.random.RandomTempFile
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousStorage
@@ -41,7 +42,7 @@ import org.junit.Test
 /**
  * Instrumentation test for operational work on download.
  */
-class AWSS3StorageMultiBucketListTest {
+class AWSS3StorageMultiBucketListTest : DeviceFarmTestBase() {
     companion object {
         private val EXTENDED_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(60)
         private const val LARGE_FILE_SIZE = 10 * 1024 * 1024L // 10 MB

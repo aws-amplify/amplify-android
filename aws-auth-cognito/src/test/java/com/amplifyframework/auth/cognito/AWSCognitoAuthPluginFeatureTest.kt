@@ -47,13 +47,12 @@ import io.mockk.mockkStatic
 import io.mockk.slot
 import java.io.File
 import java.util.TimeZone
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import kotlin.reflect.full.callSuspend
 import kotlin.reflect.full.declaredFunctions
 import kotlin.test.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.newSingleThreadContext
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import kotlinx.serialization.json.Json
@@ -126,7 +125,9 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
         Dispatchers.setMain(mainThreadSurrogate)
         feature = testCase
         readConfiguration(feature.preConditions.`amplify-configuration`).let {
-            sut.realPlugin = it.first
+            sut.authEnvironment = it.first
+            sut.authStateMachine = authStateMachine
+            sut.authConfiguration = mockk(relaxed = true)
             sut.useCaseFactory = it.second
         }
     }
@@ -153,7 +154,7 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
         coEvery { AuthHelper.getSecretHash(any(), any(), any()) } returns "a hash"
     }
 
-    private fun readConfiguration(configuration: String): Pair<RealAWSCognitoAuthPlugin, AuthUseCaseFactory> {
+    private fun readConfiguration(configuration: String): Pair<AuthEnvironment, AuthUseCaseFactory> {
         val configFileUrl = this::class.java.getResource("$CONFIGURATION_FILES_BASE_PATH/$configuration")
         val configJSONObject =
             JSONObject(File(configFileUrl!!.file).readText())
@@ -193,10 +194,9 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
 
         authStateMachine = AuthStateMachine(authEnvironment, getState(feature.preConditions.state))
 
-        val realPlugin = RealAWSCognitoAuthPlugin(authConfiguration, authEnvironment, authStateMachine, logger)
         return Pair(
-            RealAWSCognitoAuthPlugin(authConfiguration, authEnvironment, authStateMachine, logger),
-            AuthUseCaseFactory(realPlugin, authEnvironment, authStateMachine)
+            authEnvironment,
+            AuthUseCaseFactory(authEnvironment, authStateMachine)
         )
     }
 
@@ -210,13 +210,7 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
                 actual shouldEqualJson expected
             }
             is ExpectationShapes.State -> {
-                val getStateLatch = CountDownLatch(1)
-                var authState: AuthState? = null
-                authStateMachine.getCurrentState {
-                    authState = it
-                    getStateLatch.countDown()
-                }
-                getStateLatch.await(10, TimeUnit.SECONDS)
+                val authState = runBlocking { authStateMachine.getCurrentState() }
                 assertEquals(getState(validation.expectedState), authState)
             }
         }

@@ -17,10 +17,10 @@ package com.amplifyframework.auth.cognito.usecases
 
 import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.cognito.AuthStateMachine
-import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter
 import com.amplifyframework.auth.cognito.helpers.collectWhile
 import com.amplifyframework.auth.cognito.requireAccessToken
 import com.amplifyframework.auth.cognito.requireSignedInState
+import com.amplifyframework.auth.cognito.toAuthException
 import com.amplifyframework.auth.plugins.core.AuthHubEventEmitter
 import com.amplifyframework.statemachine.codegen.events.DeleteUserEvent
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
@@ -60,8 +60,7 @@ internal class DeleteUserUseCase(
                         false // done
                     }
                     authZState is AuthorizationState.SessionEstablished && deleteUserException != null -> {
-                        throw CognitoAuthExceptionConverter.lookup(
-                            deleteUserException!!,
+                        throw deleteUserException.toAuthException(
                             "Request to delete user may have failed. Please check exception stack"
                         )
                     }

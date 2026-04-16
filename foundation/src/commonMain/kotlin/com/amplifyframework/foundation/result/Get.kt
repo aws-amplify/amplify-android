@@ -33,6 +33,12 @@ fun <T, E : Throwable> Result<T, E>.getOrThrow(): T {
 }
 
 /**
+ * Returns the Success data or throws the Failure error. This is an alias of getOrThrow
+ */
+@InternalAmplifyApi
+fun <T, E : Throwable> Result<T, E>.get() = getOrThrow()
+
+/**
  * Returns the Success data or null in the case of Failure
  */
 @InternalAmplifyApi
@@ -42,4 +48,16 @@ fun <T> Result<T, *>.getOrNull(): T? {
         returns(null) implies (this@getOrNull is Result.Failure)
     }
     return if (this is Result.Success) data else null
+}
+
+/**
+ * Returns the Failure data or null in the case of Success
+ */
+@InternalAmplifyApi
+fun <E> Result<*, E>.errorOrNull(): E? {
+    contract {
+        returnsNotNull() implies (this@errorOrNull is Result.Failure)
+        returns(null) implies (this@errorOrNull is Result.Success)
+    }
+    return if (this is Result.Failure) error else null
 }

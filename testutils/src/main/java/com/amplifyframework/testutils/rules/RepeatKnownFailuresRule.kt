@@ -23,10 +23,12 @@ import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
 /**
- * TestRule that repeats tests if they fail with an UnknownHostException. This exception occurs randomly on Device Farm
- * devices, and repeating the test may allow it to pass on a subsequent attempt.
+ * TestRule that repeats tests if they fail with an expected/known exception.
+ *
+ * UnknownHostException: This exception occurs randomly on Device Farm devices, and repeating the test may allow it
+ * to pass on a subsequent attempt.
  */
-class CanaryTestRule : TestRule {
+class RepeatKnownFailuresRule : TestRule {
     override fun apply(statement: Statement, description: Description): Statement {
         return object : Statement() {
             override fun evaluate() {
@@ -58,6 +60,6 @@ class CanaryTestRule : TestRule {
     companion object {
         // One initial attempt and up to 2 retries, for 3 total attempts.
         private const val MAX_ATTEMPTS = 3
-        private val INITIAL_DELAY_MS = 2.seconds // Doubles on each attempt
+        private val INITIAL_DELAY_MS = 20.seconds // Doubles on each attempt
     }
 }

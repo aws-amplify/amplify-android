@@ -21,6 +21,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.BuildConfig;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.util.UserAgent;
 
 import org.junit.BeforeClass;
@@ -31,7 +32,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Tests that configuring {@link UserAgent} via Amplify behaves as intended.
  */
-public final class UserAgentConfigurationTest {
+public final class UserAgentConfigurationTest extends DeviceFarmTestBase {
     /**
      * Since Amplify can only be configured once at the time of writing this test,
      * call {@link Amplify#configure(AmplifyConfiguration, Context)} once during

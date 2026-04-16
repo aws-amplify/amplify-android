@@ -34,6 +34,7 @@ import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.TOTPSetupDetails
 import com.amplifyframework.auth.cognito.asf.UserContextDataProvider
 import com.amplifyframework.auth.cognito.helpers.authLogger
+import com.amplifyframework.auth.cognito.helpers.collectWhile
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.cognito.options.FederateToIdentityPoolOptions
 import com.amplifyframework.auth.cognito.result.FederateToIdentityPoolResult
@@ -65,6 +66,9 @@ import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.configuration.AmplifyOutputsData
+import com.amplifyframework.statemachine.codegen.events.AuthEvent
+import com.amplifyframework.statemachine.codegen.states.AuthState
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -72,6 +76,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.json.JSONObject
 
 /**
@@ -86,15 +92,18 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     private val logger = authLogger()
 
     @VisibleForTesting
-    internal lateinit var realPlugin: RealAWSCognitoAuthPlugin
+    internal lateinit var authEnvironment: AuthEnvironment
+
+    @VisibleForTesting
+    internal lateinit var authStateMachine: AuthStateMachine
+
+    @VisibleForTesting
+    internal lateinit var authConfiguration: AuthConfiguration
 
     @VisibleForTesting
     internal lateinit var useCaseFactory: AuthUseCaseFactory
 
     private val pluginScope = CoroutineScope(Job() + Dispatchers.Default)
-    private val queueFacade: KotlinAuthFacadeInternal by lazy {
-        KotlinAuthFacadeInternal(realPlugin)
-    }
 
     private val queueChannel = Channel<Job>(capacity = Channel.UNLIMITED).apply {
         pluginScope.launch {
@@ -110,24 +119,20 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     fun getPluginConfiguration(): JSONObject = getAuthConfiguration().toGen1Json()
 
     @InternalAmplifyApi
-    fun getAuthConfiguration() = realPlugin.configuration
+    fun getAuthConfiguration() = authConfiguration
 
     @InternalAmplifyApi
     fun addToUserAgent(type: AWSCognitoAuthMetadataType, value: String) {
-        realPlugin.addToUserAgent(type, value)
-    }
-
-    private fun Exception.toAuthException(): AuthException = if (this is AuthException) {
-        this
-    } else {
-        CognitoAuthExceptionConverter.lookup(
-            error = this,
-            fallbackMessage = "An unclassified error prevented this operation."
-        )
+        authEnvironment.cognitoAuthService.customUserAgentPairs[type.key] = value
     }
 
     override fun initialize(context: Context) {
-        realPlugin.initialize()
+        // Block until the state machine is in the configured state.
+        runBlocking {
+            withTimeout(10.seconds) {
+                suspendWhileConfiguring()
+            }
+        }
     }
 
     @Throws(AmplifyException::class)
@@ -169,16 +174,30 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         )
 
         val authStateMachine = AuthStateMachine(authEnvironment)
-        realPlugin = RealAWSCognitoAuthPlugin(
-            configuration,
-            authEnvironment,
-            authStateMachine,
-            logger
-        )
 
-        useCaseFactory = AuthUseCaseFactory(realPlugin, authEnvironment, authStateMachine)
+        this.authConfiguration = configuration
+        this.authEnvironment = authEnvironment
+        this.authStateMachine = authStateMachine
 
+        useCaseFactory = AuthUseCaseFactory(authEnvironment, authStateMachine)
+
+        logAuthStateChanges()
+        configureAuthStates()
         blockQueueChannelWhileConfiguring()
+    }
+
+    private fun logAuthStateChanges() {
+        pluginScope.launch {
+            authStateMachine.state.collect { authState -> logger.verbose("Auth State Change: $authState") }
+        }
+    }
+
+    private fun configureAuthStates() {
+        authStateMachine.send(AuthEvent(AuthEvent.EventType.ConfigureAuth(authConfiguration)))
+    }
+
+    private suspend fun suspendWhileConfiguring() {
+        authStateMachine.state.collectWhile { it !is AuthState.Configured && it !is AuthState.Error }
     }
 
     // Auth configuration is an async process. Wait until the state machine is in a settled state before attempting
@@ -186,7 +205,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     private fun blockQueueChannelWhileConfiguring() {
         queueChannel.trySend(
             pluginScope.launch(start = CoroutineStart.LAZY) {
-                realPlugin.suspendWhileConfiguring()
+                suspendWhileConfiguring()
             }
         )
     }
@@ -260,7 +279,9 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         callingActivity: Activity,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.signInWithSocialWebUI(provider, callingActivity) }
+    ) = enqueue(onSuccess, onError) {
+        useCaseFactory.webUiSignIn().execute(callingActivity, provider)
+    }
 
     override fun signInWithSocialWebUI(
         provider: AuthProvider,
@@ -268,33 +289,41 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         options: AuthWebUISignInOptions,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.signInWithSocialWebUI(provider, callingActivity, options) }
+    ) = enqueue(onSuccess, onError) {
+        useCaseFactory.webUiSignIn().execute(callingActivity, provider, options)
+    }
 
     override fun signInWithWebUI(
         callingActivity: Activity,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.signInWithWebUI(callingActivity) }
+    ) = enqueue(onSuccess, onError) {
+        useCaseFactory.webUiSignIn().execute(callingActivity = callingActivity)
+    }
 
     override fun signInWithWebUI(
         callingActivity: Activity,
         options: AuthWebUISignInOptions,
         onSuccess: Consumer<AuthSignInResult>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.signInWithWebUI(callingActivity, options) }
+    ) = enqueue(onSuccess, onError) {
+        useCaseFactory.webUiSignIn().execute(callingActivity = callingActivity, options = options)
+    }
 
     override fun handleWebUISignInResponse(intent: Intent?) {
-        queueFacade.handleWebUISignInResponse(intent)
+        pluginScope.launch {
+            useCaseFactory.webUISignInResponse().execute(intent)
+        }
     }
 
     override fun fetchAuthSession(
         options: AuthFetchSessionOptions,
         onSuccess: Consumer<AuthSession>,
         onError: Consumer<AuthException>
-    ) = enqueue(onSuccess, onError) { queueFacade.fetchAuthSession(options) }
+    ) = enqueue(onSuccess, onError) { useCaseFactory.fetchAuthSession().execute(options) }
 
     override fun fetchAuthSession(onSuccess: Consumer<AuthSession>, onError: Consumer<AuthException>) =
-        enqueue(onSuccess, onError) { queueFacade.fetchAuthSession() }
+        enqueue(onSuccess, onError) { useCaseFactory.fetchAuthSession().execute() }
 
     override fun rememberDevice(onSuccess: Action, onError: Consumer<AuthException>) =
         enqueue(onSuccess, onError) { useCaseFactory.rememberDevice().execute() }
@@ -471,7 +500,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         onError: Consumer<AuthException>
     ) = enqueue(onSuccess, onError) { useCaseFactory.deleteWebAuthnCredential().execute(credentialId, options) }
 
-    override fun getEscapeHatch() = realPlugin.escapeHatch()
+    override fun getEscapeHatch() = authEnvironment.cognitoAuthService
 
     override fun getPluginKey() = AWS_COGNITO_AUTH_PLUGIN_KEY
 
@@ -489,11 +518,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         onSuccess: Consumer<FederateToIdentityPoolResult>,
         onError: Consumer<AuthException>
     ) = enqueue(onSuccess, onError) {
-        queueFacade.federateToIdentityPool(
-            providerToken,
-            authProvider,
-            FederateToIdentityPoolOptions.builder().build()
-        )
+        useCaseFactory.federateToIdentityPool().execute(providerToken, authProvider)
     }
 
     /**
@@ -510,11 +535,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         onSuccess: Consumer<FederateToIdentityPoolResult>,
         onError: Consumer<AuthException>
     ) = enqueue(onSuccess, onError) {
-        queueFacade.federateToIdentityPool(
-            providerToken,
-            authProvider,
-            options
-        )
+        useCaseFactory.federateToIdentityPool().execute(providerToken, authProvider, options)
     }
 
     /**
@@ -573,7 +594,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
                     val result = block()
                     pluginScope.launch { onSuccess(result) }
                 } catch (e: Exception) {
-                    pluginScope.launch { onError(e.toAuthException()) }
+                    pluginScope.launch { onError(e.toAuthException("An unclassified error prevented this operation.")) }
                 }
             }
         )

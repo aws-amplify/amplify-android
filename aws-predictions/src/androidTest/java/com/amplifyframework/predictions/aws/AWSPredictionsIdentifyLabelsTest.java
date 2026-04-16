@@ -27,6 +27,7 @@ import com.amplifyframework.predictions.models.Label;
 import com.amplifyframework.predictions.models.LabelType;
 import com.amplifyframework.predictions.result.IdentifyLabelsResult;
 import com.amplifyframework.testutils.Assets;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousPredictions;
 import com.amplifyframework.util.Empty;
@@ -45,7 +46,7 @@ import static org.junit.Assert.assertTrue;
  * Tests that Predictions identify delivers a non-null
  * label detection result for valid input.
  */
-public final class AWSPredictionsIdentifyLabelsTest {
+public final class AWSPredictionsIdentifyLabelsTest extends DeviceFarmTestBase {
 
     private SynchronousPredictions predictions;
 

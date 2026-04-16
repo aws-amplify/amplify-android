@@ -20,6 +20,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
 import com.amplifyframework.auth.cognito.testutils.AuthConfigurationProvider
 import com.amplifyframework.auth.cognito.testutils.CredentialStoreUtil
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import kotlin.test.assertEquals
 import org.junit.After
 import org.junit.Before
@@ -27,7 +28,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class AWSCognitoLegacyCredentialStoreInstrumentationTest {
+class AWSCognitoLegacyCredentialStoreInstrumentationTest : DeviceFarmTestBase() {
     private val context = InstrumentationRegistry.getInstrumentation().context
 
     private val configuration: AuthConfiguration = AuthConfigurationProvider.getAuthConfiguration()
