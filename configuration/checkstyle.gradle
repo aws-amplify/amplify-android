@@ -62,4 +62,3 @@ def javaSources() {
 def kotlinSources() {
     return fileTree(projectDir) { include "src/**/*.kt" }
 }
-

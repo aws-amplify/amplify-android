@@ -25,6 +25,6 @@
     <property name="fileExtensions" value="kt" />
 
     <module name="RegexpHeader">
-        <property name="headerFile" value="${config_loc}/java.header" />
+        <property name="headerFile" value="${config_loc}/kotlin.header" />
     </module>
 </module>
