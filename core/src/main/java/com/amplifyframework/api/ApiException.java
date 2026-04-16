@@ -57,7 +57,7 @@ public class ApiException extends AmplifyException {
     /**
      * This type of exception should not be retried.
      */
-    public static final class NonRetryableException extends ApiException {
+    public static class NonRetryableException extends ApiException {
         private static final long serialVersionUID = 1L;
 
         /**
@@ -86,7 +86,7 @@ public class ApiException extends AmplifyException {
     /**
      * Represents authn/authz errors as it relates to interacting with the API backend.
      */
-    public static final class ApiAuthException extends ApiException {
+    public static class ApiAuthException extends ApiException {
         private static final long serialVersionUID = 1L;
 
         /**

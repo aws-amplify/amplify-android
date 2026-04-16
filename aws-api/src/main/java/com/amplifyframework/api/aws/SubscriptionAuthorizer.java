@@ -101,11 +101,8 @@ final class SubscriptionAuthorizer {
                 OidcAuthProvider oidcProvider = authProviders.getOidcAuthProvider();
                 if (oidcProvider == null) {
                     oidcProvider = () -> {
-                        throw new ApiAuthException(
-                                "OidcAuthProvider interface is not implemented.",
-                                "Please implement OidcAuthProvider interface to return " +
-                                        "appropriate token from the appropriate service."
-                        );
+                        throw new AppSyncAuthException.ProviderNotConfiguredException(
+                                "OidcAuthProvider interface is not implemented.");
                     };
                 }
                 return forOidc(oidcProvider);
@@ -113,11 +110,8 @@ final class SubscriptionAuthorizer {
                 FunctionAuthProvider functionAuthProvider = authProviders.getFunctionAuthProvider();
                 if (functionAuthProvider == null) {
                     functionAuthProvider = () -> {
-                        throw new ApiAuthException(
-                                "FunctionAuthProvider interface is not implemented.",
-                                "Please implement FunctionAuthProvider interface to return " +
-                                        "appropriate token from the appropriate service."
-                        );
+                        throw new AppSyncAuthException.ProviderNotConfiguredException(
+                                "FunctionAuthProvider interface is not implemented.");
                     };
                 }
                 return forAwsLambda(functionAuthProvider);

@@ -243,9 +243,8 @@ final class SubscriptionEndpoint {
 
     private void notifyError(Throwable error) {
         for (Subscription<?> dispatcher : new HashSet<>(subscriptions.values())) {
-            dispatcher.dispatchError(new ApiException(
-                "Subscription failed.", error,
-                "Check your Internet connection. Is your device online?"
+            dispatcher.dispatchError(new AppSyncException.SubscriptionException.ConnectionException(
+                "Subscription failed.", error
             ));
         }
     }
@@ -325,9 +324,8 @@ final class SubscriptionEndpoint {
             // throwing in a second ...
         }
         if (appSyncEndpoint == null) {
-            throw new ApiException(
-                    "Malformed API Url: " + apiConfiguration.getEndpoint(),
-                    "Verify that GraphQL endpoint is properly formatted."
+            throw new AppSyncException.ConfigurationException.EndpointResolutionException(
+                    "Malformed API Url: " + apiConfiguration.getEndpoint(), null
             );
         }
 

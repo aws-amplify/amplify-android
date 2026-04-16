@@ -138,10 +138,7 @@ public final class AppSyncGraphQLOperation<R> extends AWSGraphQLOperation<R> {
                     jsonResponse = responseBody.string();
                 } catch (IOException exception) {
                     LOG.warn("Error retrieving JSON from response.", exception);
-                    onFailure.accept(new ApiException(
-                        "Could not retrieve the response body from the returned JSON",
-                        exception, AmplifyException.TODO_RECOVERY_SUGGESTION
-                    ));
+                    onFailure.accept(new AppSyncException.ResponseException.DeserializationException(exception));
                     return;
                 }
             }
@@ -172,9 +169,7 @@ public final class AppSyncGraphQLOperation<R> extends AWSGraphQLOperation<R> {
         @Override
         public void onFailure(@NonNull Call call, @NonNull IOException exception) {
             if (!call.isCanceled()) {
-                onFailure.accept(new ApiException(
-                        "OkHttp client request failed.", exception, "See attached exception for more details."
-                ));
+                onFailure.accept(new AppSyncException.NetworkException(exception));
             }
         }
     }
