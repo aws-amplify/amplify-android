@@ -60,6 +60,6 @@ class RepeatKnownFailuresRule : TestRule {
     companion object {
         // One initial attempt and up to 2 retries, for 3 total attempts.
         private const val MAX_ATTEMPTS = 3
-        private val INITIAL_DELAY_MS = 2.seconds // Doubles on each attempt
+        private val INITIAL_DELAY_MS = 20.seconds // Doubles on each attempt
     }
 }
