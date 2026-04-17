@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# Retry on Device Farm API throttling
+export AWS_MAX_ATTEMPTS=6
+
 project_arn=$DEVICEFARM_PROJECT_ARN
 max_devices=$NUMBER_OF_DEVICES_TO_TEST
 test_spec_arn=$DEVICEFARM_TEST_SPEC_ARN
