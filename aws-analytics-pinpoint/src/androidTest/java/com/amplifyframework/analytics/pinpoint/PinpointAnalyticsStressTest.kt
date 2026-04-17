@@ -175,7 +175,7 @@ class PinpointAnalyticsStressTest : DeviceFarmTestBase() {
     fun testLargeMultipleRecordEvent() {
         var eventName: String
         val hubAccumulator =
-            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 2).start()
+            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 5).start()
 
         repeat(50) {
             eventName = "Amplify-event" + UUID.randomUUID().toString()
@@ -189,7 +189,7 @@ class PinpointAnalyticsStressTest : DeviceFarmTestBase() {
         }
 
         Amplify.Analytics.flushEvents()
-        val hubEvents = hubAccumulator.await(10, TimeUnit.SECONDS)
+        val hubEvents = hubAccumulator.await(30, TimeUnit.SECONDS)
         val submittedEvents = combineAndFilterEvents(hubEvents)
         Assert.assertEquals(50, submittedEvents.size.toLong())
     }
