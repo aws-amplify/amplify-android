@@ -48,10 +48,8 @@ final class AWSApiPluginConfigurationReader {
             throws ApiException {
 
         if (configurationJson == null) {
-            throw new ApiException(
-                "Null configuration JSON provided to AWS API plugin.",
-                "Check that the content of the AWS API Plugin section of the amplifyconfiguration.json file hasn't " +
-                "been accidentally deleted."
+            throw new AppSyncException.ConfigurationException.InvalidConfigException(
+                "Null configuration JSON provided to AWS API plugin.", null
             );
         }
 
@@ -62,9 +60,9 @@ final class AWSApiPluginConfigurationReader {
         final AmplifyOutputsData.Data data = outputs.getData();
 
         if (data == null) {
-            throw new ApiException(
-                "Missing data configuration in Amplify Outputs",
-                "Check that your amplify_outputs.json file contains a \"data\" section"
+            throw new AppSyncException.ConfigurationException.InvalidConfigException(
+                "Missing data configuration in Amplify Outputs. " +
+                "Check that your amplify_outputs.json file contains a \"data\" section", null
             );
         }
 

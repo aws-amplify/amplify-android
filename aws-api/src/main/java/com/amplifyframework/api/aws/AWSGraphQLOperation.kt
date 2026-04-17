@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.api.ApiException
+import com.amplifyframework.api.aws.AppSyncException
 import com.amplifyframework.api.graphql.GraphQLOperation
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
@@ -44,15 +45,8 @@ abstract class AWSGraphQLOperation<R>(
     @Throws(ApiException::class)
     private fun buildResponse(jsonResponse: String): GraphQLResponse<R> = try {
         (responseFactory as? GsonGraphQLResponseFactory)?.buildResponse(request, jsonResponse, apiName)
-            ?: throw ApiException(
-                "Amplify encountered an error while deserializing an object. " +
-                    "GraphQLResponse.Factory was not of type GsonGraphQLResponseFactory",
-                AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
-            )
+            ?: throw AppSyncException.ResponseException.DeserializationException()
     } catch (cce: ClassCastException) {
-        throw ApiException(
-            "Amplify encountered an error while deserializing an object",
-            AmplifyException.TODO_RECOVERY_SUGGESTION
-        )
+        throw AppSyncException.ResponseException.DeserializationException(cce)
     }
 }
