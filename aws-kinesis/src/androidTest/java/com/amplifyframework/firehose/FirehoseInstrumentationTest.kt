@@ -136,7 +136,7 @@ class FirehoseInstrumentationTest : BaseStreamClientInstrumentationTest() {
 
         try {
             val recordDataSize = 51 * 1_024 // ~51 KB per record
-            val recordCount = 210           // ~10.5 MB total
+            val recordCount = 210 // ~10.5 MB total
 
             repeat(recordCount) { i ->
                 val data = ByteArray(recordDataSize) { (i % 256).toByte() }
