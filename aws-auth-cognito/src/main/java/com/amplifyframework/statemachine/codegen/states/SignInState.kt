@@ -216,6 +216,10 @@ internal sealed class SignInState : State {
                         SigningInWithSRP(oldState.srpSignInState),
                         listOf(signInActions.startSRPAuthAction(signInEvent))
                     )
+                    is SignInEvent.EventType.InitiateSignInWithDeviceSRP -> StateResolution(
+                        ResolvingDeviceSRP(DeviceSRPSignInState.NotStarted()),
+                        listOf(signInActions.startDeviceSRPAuthAction(signInEvent))
+                    )
 
                     is SignInEvent.EventType.ThrowError -> StateResolution(Error(signInEvent.exception))
                     else -> defaultResolution
