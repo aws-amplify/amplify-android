@@ -45,8 +45,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-class
-SignInChallengeCognitoActionsTest {
+class SignInChallengeCognitoActionsTest {
 
     private val pool = mockk<UserPoolConfiguration> {
         every { appClient } returns "client"
