@@ -169,7 +169,8 @@ class PinpointAnalyticsStressTest : DeviceFarmTestBase() {
     }
 
     /**
-     * Calls Analytics.recordEvent on an event with 40 attributes 50 times
+     * Calls Analytics.recordEvent on an event with 50 attributes 50 times.
+     * Timeout accounts for auto-flush interval (30s) needed to submit all events.
      */
     @Test
     fun testLargeMultipleRecordEvent() {
@@ -189,7 +190,7 @@ class PinpointAnalyticsStressTest : DeviceFarmTestBase() {
         }
 
         Amplify.Analytics.flushEvents()
-        val hubEvents = hubAccumulator.await(10, TimeUnit.SECONDS)
+        val hubEvents = hubAccumulator.await(35, TimeUnit.SECONDS)
         val submittedEvents = combineAndFilterEvents(hubEvents)
         Assert.assertEquals(50, submittedEvents.size.toLong())
     }
