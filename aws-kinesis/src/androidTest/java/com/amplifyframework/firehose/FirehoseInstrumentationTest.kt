@@ -19,12 +19,15 @@ import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.foundation.credentials.AwsCredentials
 import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
 import com.amplifyframework.foundation.result.Result
+import com.amplifyframework.foundation.result.get
 import com.amplifyframework.recordcache.BaseStreamClientInstrumentationTest
 import com.amplifyframework.recordcache.FlushStrategy
 import com.amplifyframework.recordcache.TestableStreamClient
 import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.runBlocking
 import org.junit.Test
 
 /**
@@ -106,6 +109,49 @@ class FirehoseInstrumentationTest : BaseStreamClientInstrumentationTest() {
 
     override fun assertValidationError(result: Result<*, *>) {
         (result as Result.Failure).error.shouldBeInstanceOf<AmplifyFirehoseValidationException>()
+    }
+
+    // ---------------------------------------------------------------
+    // Firehose-specific: PutRecordBatch size limits with large records
+    // ---------------------------------------------------------------
+
+    /**
+     * Records 210 × ~51 KB records (~10.5 MB total), then flushes.
+     * Exercises the PutRecordBatch API limit of 4 MiB per request,
+     * requiring multiple batches (~80 records each) to drain all records.
+     */
+    @Test
+    fun testFlushLargePayloadAcrossMultipleBatches(): Unit = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val largeFirehose = AmplifyFirehoseClient(
+            context = context,
+            region = REGION,
+            credentialsProvider = credentialsProvider,
+            options = AmplifyFirehoseClientOptions {
+                cacheMaxBytes = 12L * 1_024 * 1_024
+                flushStrategy = FlushStrategy.None
+            }
+        )
+        largeFirehose.enable()
+
+        try {
+            val recordDataSize = 51 * 1_024 // ~51 KB per record
+            val recordCount = 210 // ~10.5 MB total
+
+            repeat(recordCount) { i ->
+                val data = ByteArray(recordDataSize) { (i % 256).toByte() }
+                largeFirehose.record(data = data, streamName = streamName).get()
+            }
+
+            // Flush sends all records across multiple batches (up to 4 MiB per batch)
+            largeFirehose.flush().get().recordsFlushed shouldBe recordCount
+
+            // Second flush: nothing left
+            largeFirehose.flush().get().recordsFlushed shouldBe 0
+        } finally {
+            largeFirehose.disable()
+            largeFirehose.clearCache()
+        }
     }
 
     // ---------------------------------------------------------------
