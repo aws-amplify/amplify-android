@@ -169,13 +169,14 @@ class PinpointAnalyticsStressTest : DeviceFarmTestBase() {
     }
 
     /**
-     * Calls Analytics.recordEvent on an event with 40 attributes 50 times
+     * Calls Analytics.recordEvent on an event with 50 attributes 50 times.
+     * Timeout accounts for auto-flush interval (30s) needed to submit all events.
      */
     @Test
     fun testLargeMultipleRecordEvent() {
         var eventName: String
         val hubAccumulator =
-            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 5).start()
+            HubAccumulator.create(HubChannel.ANALYTICS, AnalyticsChannelEventName.FLUSH_EVENTS, 2).start()
 
         repeat(50) {
             eventName = "Amplify-event" + UUID.randomUUID().toString()
@@ -189,7 +190,7 @@ class PinpointAnalyticsStressTest : DeviceFarmTestBase() {
         }
 
         Amplify.Analytics.flushEvents()
-        val hubEvents = hubAccumulator.await(30, TimeUnit.SECONDS)
+        val hubEvents = hubAccumulator.await(35, TimeUnit.SECONDS)
         val submittedEvents = combineAndFilterEvents(hubEvents)
         Assert.assertEquals(50, submittedEvents.size.toLong())
     }
