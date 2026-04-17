@@ -242,9 +242,9 @@ internal class EventsWebSocketClientTests : DeviceFarmTestBase() {
         val expectedCustomMessage = JsonPrimitive(false)
         val expectedDefaultMessage = JsonPrimitive(true)
 
-        turbineScope {
-            webSocketClient.subscribe(defaultChannel).test {
-                webSocketClient.subscribe(customChannel).test {
+        turbineScope(timeout = TEST_TIMEOUT) {
+            webSocketClient.subscribe(defaultChannel).test(timeout = TEST_TIMEOUT) {
+                webSocketClient.subscribe(customChannel).test(timeout = TEST_TIMEOUT) {
                     // Wait for subscription to return success
                     webSocketLogCapture.messages.filter {
                         it == "Successfully subscribed to: $defaultChannel" ||
