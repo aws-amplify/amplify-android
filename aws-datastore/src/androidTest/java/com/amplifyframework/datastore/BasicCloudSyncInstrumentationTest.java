@@ -138,6 +138,11 @@ public final class BasicCloudSyncInstrumentationTest extends DeviceFarmTestBase 
     public static void teardown() throws DataStoreException {
         if (dataStore != null) {
             try {
+                dataStore.stop();
+            } catch (Exception error) {
+                // ok to ignore since problem encountered during tear down of the test.
+            }
+            try {
                 dataStore.clear();
             } catch (Exception error) {
                 // ok to ignore since problem encountered during tear down of the test.
