@@ -52,7 +52,8 @@ internal object SignInChallengeHelper {
         availableChallenges: List<String>? = null,
         authenticationResult: AuthenticationResultType?,
         callingActivity: WeakReference<Activity> = WeakReference(null),
-        signInMethod: SignInMethod
+        signInMethod: SignInMethod,
+        inputUsername: String? = null
     ): StateMachineEvent = when {
         authenticationResult != null -> {
             authenticationResult.let {
@@ -64,7 +65,8 @@ internal object SignInChallengeHelper {
                     username,
                     Date(),
                     signInMethod,
-                    tokens
+                    tokens,
+                    inputUsername = inputUsername ?: username
                 )
                 it.newDeviceMetadata?.let { metadata ->
                     SignInEvent(
@@ -91,13 +93,18 @@ internal object SignInChallengeHelper {
             challengeNameType is ChallengeNameType.SelectMfaType ||
             challengeNameType is ChallengeNameType.SmsOtp ||
             challengeNameType is ChallengeNameType.EmailOtp -> {
-            val challenge =
-                AuthChallenge(challengeNameType.value, username, session, challengeParameters)
+            val challenge = AuthChallenge(
+                challengeNameType.value, username, session, challengeParameters,
+                inputUsername = inputUsername
+            )
             SignInEvent(SignInEvent.EventType.ReceivedChallenge(challenge, signInMethod))
         }
         challengeNameType is ChallengeNameType.MfaSetup -> {
             val allowedMFASetupTypes = getAllowedMFASetupTypesFromChallengeParameters(challengeParameters)
-            val challenge = AuthChallenge(challengeNameType.value, username, session, challengeParameters)
+            val challenge = AuthChallenge(
+                challengeNameType.value, username, session, challengeParameters,
+                inputUsername = inputUsername
+            )
 
             if (allowedMFASetupTypes.contains(MFAType.EMAIL)) {
                 SignInEvent(SignInEvent.EventType.ReceivedChallenge(challenge, signInMethod))
@@ -123,7 +130,8 @@ internal object SignInChallengeHelper {
                         username = username,
                         session = session,
                         parameters = null,
-                        availableChallenges = availableChallenges
+                        availableChallenges = availableChallenges,
+                        inputUsername = inputUsername
                     ),
                     signInMethod
                 )

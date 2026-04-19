@@ -76,7 +76,8 @@ internal object MigrateAuthCognitoActions : MigrateAuthActions {
                         session = response.session,
                         challengeParameters = response.challengeParameters,
                         authenticationResult = response.authenticationResult,
-                        signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_AUTH)
+                        signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_AUTH),
+                        inputUsername = event.username
                     )
                 } else {
                     if (event.authFlowType == AuthFlowType.USER_AUTH) {
@@ -103,7 +104,8 @@ internal object MigrateAuthCognitoActions : MigrateAuthActions {
                         session = response.session,
                         challengeParameters = response.challengeParameters,
                         authenticationResult = response.authenticationResult,
-                        signInMethod = signInMethod
+                        signInMethod = signInMethod,
+                        inputUsername = event.username
                     )
                 }
             } catch (e: Exception) {
