@@ -47,13 +47,12 @@ import io.mockk.mockkStatic
 import io.mockk.slot
 import java.io.File
 import java.util.TimeZone
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import kotlin.reflect.full.callSuspend
 import kotlin.reflect.full.declaredFunctions
 import kotlin.test.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.newSingleThreadContext
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import kotlinx.serialization.json.Json
@@ -211,13 +210,7 @@ class AWSCognitoAuthPluginFeatureTest(private val testCase: FeatureTestCase) {
                 actual shouldEqualJson expected
             }
             is ExpectationShapes.State -> {
-                val getStateLatch = CountDownLatch(1)
-                var authState: AuthState? = null
-                authStateMachine.getCurrentState {
-                    authState = it
-                    getStateLatch.countDown()
-                }
-                getStateLatch.await(10, TimeUnit.SECONDS)
+                val authState = runBlocking { authStateMachine.getCurrentState() }
                 assertEquals(getState(validation.expectedState), authState)
             }
         }

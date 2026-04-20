@@ -51,38 +51,14 @@ class StateMachineTests {
     }
 
     @Test
-    fun testDefaultState() {
-        val testLatch = CountDownLatch(1)
-        val testMachine = CounterStateMachine.logging()
-        testMachine.getCurrentState { state ->
-            state.value shouldBe 0
-            testLatch.countDown()
-        }
-        testLatch.await(timeout) shouldBe true
-    }
-
-    @Test
-    fun `test default state suspending`() = runTest {
+    fun `test default state`() = runTest {
         val testMachine = CounterStateMachine.logging()
         val currentState = testMachine.getCurrentState()
         currentState.value shouldBe 0
     }
 
     @Test
-    fun testBasicReceive() = runTest {
-        val testLatch = CountDownLatch(1)
-        val testMachine = CounterStateMachine.logging()
-        val increment = Counter.Event("1", Counter.Event.EventType.Increment)
-        testMachine.send(increment)
-        testMachine.getCurrentState { state ->
-            state.value shouldBe 1
-            testLatch.countDown()
-        }
-        testLatch.await(timeout) shouldBe true
-    }
-
-    @Test
-    fun `test basic receive suspending`() = runTest {
+    fun `test basic receive`() = runTest {
         val testMachine = CounterStateMachine.logging()
         val increment = Counter.Event("1", Counter.Event.EventType.Increment)
         testMachine.send(increment)
@@ -91,22 +67,7 @@ class StateMachineTests {
     }
 
     @Test
-    fun testConcurrentReceiveAndRead() {
-        val testLatch = CountDownLatch(10)
-        val testMachine = CounterStateMachine()
-        val increment = Counter.Event("1", Counter.Event.EventType.Increment)
-        for (i in 1..10) {
-            testMachine.send(increment)
-            testMachine.getCurrentState { state ->
-                state.value shouldBe i
-                testLatch.countDown()
-            }
-        }
-        testLatch.await(timeout) shouldBe true
-    }
-
-    @Test
-    fun `test concurrent receive and read suspending`() = runTest {
+    fun `test concurrent receive and read`() = runTest {
         val testMachine = CounterStateMachine()
         val increment = Counter.Event("1", Counter.Event.EventType.Increment)
         for (i in 1..10) {
