@@ -94,6 +94,20 @@ class AWSS3StoragePathGetUrlTest : DeviceFarmTestBase() {
     }
 
     @Test
+    fun testGetUploadUrl() {
+        val result = synchronousStorage.getUrl(
+            SMALL_FILE_PATH,
+            AWSS3StorageGetPresignedUrlOptions.builder()
+                .expires(30)
+                .method(StorageAccessMethod.PUT)
+                .build()
+        )
+
+        assertEquals("/public/$SMALL_FILE_NAME", result.url.path)
+        assertTrue(result.url.query.contains("X-Amz-Expires=30"))
+    }
+
+    @Test
     fun testGetUrlWithObjectExistenceValidationEnabled() {
         val result = synchronousStorage.getUrl(
             SMALL_FILE_PATH,
@@ -114,6 +128,20 @@ class AWSS3StoragePathGetUrlTest : DeviceFarmTestBase() {
         }
 
         assertTrue(exception.cause is NotFound)
+    }
+
+    @Test
+    fun testGetUploadUrlForUnknownFileDoesNotThrowIfValidateObjectExistenceIsTrue() {
+        val result = synchronousStorage.getUrl(
+            StoragePath.fromString("public/SOME_UNKNOWN_FILE"),
+            AWSS3StorageGetPresignedUrlOptions.builder()
+                .setValidateObjectExistence(true)
+                .method(StorageAccessMethod.PUT)
+                .expires(30)
+                .build()
+        )
+
+        assertEquals("/public/SOME_UNKNOWN_FILE", result.url.path)
     }
 
     @Test
