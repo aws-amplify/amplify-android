@@ -78,9 +78,11 @@ internal object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                     RefreshSessionEvent(RefreshSessionEvent.EventType.Refreshed(updatedSignedInData))
                 }
             } catch (notAuthorized: aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException) {
+                logger.error("$id Failed to refresh user pool tokens: NotAuthorizedException", notAuthorized)
                 val error = SessionExpiredException(cause = notAuthorized)
                 AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(error))
             } catch (e: Exception) {
+                logger.error("$id Failed to refresh user pool tokens", e)
                 AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
             }
             logger.verbose("$id Sending event ${evt.type}")
@@ -110,12 +112,14 @@ internal object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                     FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchAwsCredentials(it, loginsMap))
                 } ?: throw Exception("Fetching identity id failed.")
             } catch (notAuthorized: aws.sdk.kotlin.services.cognitoidentity.model.NotAuthorizedException) {
+                logger.error("$id Failed to fetch identity: NotAuthorizedException", notAuthorized)
                 val exception = NotAuthorizedException(
                     recoverySuggestion = SignedOutException.RECOVERY_SUGGESTION_GUEST_ACCESS_DISABLED,
                     cause = notAuthorized
                 )
                 AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(exception))
             } catch (e: Exception) {
+                logger.error("$id Failed to fetch identity", e)
                 AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
             }
             logger.verbose("$id Sending event ${evt.type}")
@@ -143,12 +147,14 @@ internal object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                     FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.Fetched(identityId, credentials))
                 } ?: throw Exception("Fetching AWS credentials failed.")
             } catch (notAuthorized: aws.sdk.kotlin.services.cognitoidentity.model.NotAuthorizedException) {
+                logger.error("$id Failed to fetch AWS credentials: NotAuthorizedException", notAuthorized)
                 val exception = NotAuthorizedException(
                     recoverySuggestion = SignedOutException.RECOVERY_SUGGESTION_GUEST_ACCESS_DISABLED,
                     cause = notAuthorized
                 )
                 AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(exception))
             } catch (e: Exception) {
+                logger.error("$id Failed to fetch AWS credentials", e)
                 AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
             }
             logger.verbose("$id Sending event ${evt.type}")
