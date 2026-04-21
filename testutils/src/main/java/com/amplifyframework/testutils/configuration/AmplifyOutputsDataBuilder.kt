@@ -24,7 +24,6 @@ fun amplifyOutputsData(func: AmplifyOutputsDataBuilder.() -> Unit): AmplifyOutpu
     AmplifyOutputsDataBuilder().apply(func).build()
 
 class AmplifyOutputsDataBuilder {
-    var version = "1"
     var analytics: AmplifyOutputsData.Analytics? = null
     var auth: AmplifyOutputsData.Auth? = null
     var data: AmplifyOutputsData.Data? = null
@@ -58,7 +57,6 @@ class AmplifyOutputsDataBuilder {
     }
 
     fun build() = AmplifyOutputsData(
-        version = version,
         analytics = analytics,
         auth = auth,
         data = data,

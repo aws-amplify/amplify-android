@@ -33,7 +33,6 @@ import kotlinx.serialization.json.JsonObject
  */
 @Serializable
 data class AmplifyOutputsData(
-    val version: String,
     val analytics: Analytics? = null,
     val auth: Auth? = null,
     val data: Data? = null,
@@ -42,6 +41,9 @@ data class AmplifyOutputsData(
     val storage: Storage? = null,
     val custom: JsonObject? = null
 ) {
+    // The schema version we are supporting
+    val version = "1"
+
     @Serializable
     data class Analytics(
         val amazonPinpoint: AmazonPinpoint? = null
