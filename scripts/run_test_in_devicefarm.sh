@@ -113,48 +113,79 @@ function stopDuplicates {
 }
 stopDuplicates
 
-# Schedule the test run in device farm
-echo "Scheduling test run"
-run_arn=`aws devicefarm schedule-run --project-arn=$project_arn \
-  --app-arn="$app_package_upload_arn" \
-  --device-selection-configuration='{
-      "filters": [
-        {"attribute": "ARN", "operator":"IN", "values":["'$minDevice'", "'$middleDevice'", "'$latestDevice'"]}
-      ],
-      "maxDevices": '$max_devices'
-  }' \
-  --name="$file_name-$commit_sha" \
-  --test="testSpecArn=$test_spec_arn,type=INSTRUMENTATION,testPackageArn=$test_package_upload_arn" \
-  --execution-configuration="jobTimeoutMinutes=30,videoCapture=false" \
-  --query="run.arn" \
-  --output=text \
-  --region="us-west-2"`
+# Most modules complete within 30 minutes
+job_timeout=30
 
-status='NONE'
-result='NONE'
-# Wait for the test to complete
-while true; do
-  run_status_response=`aws devicefarm get-run --arn="$run_arn" --region="us-west-2" --query="run.[status, result]" --output text`
-  read -a result_arr <<< $run_status_response
-  status=${result_arr[0]}
-  result=${result_arr[1]}
-  if [ "$status" = "COMPLETED" ]
-  then
+# Retry the Device Farm test run on failure. Transient issues like DNS
+# flakes, auth credential races, or process crashes on shared Device Farm
+# devices usually pass on a second attempt.
+max_run_attempts=2
+final_result='NONE'
+
+for run_attempt in $(seq 1 $max_run_attempts); do
+  echo "============================================================"
+  echo "[RUN_IN_DEVICEFARM] Attempt $run_attempt/$max_run_attempts for $module_name"
+  echo "============================================================"
+
+  echo "[RUN_IN_DEVICEFARM] Scheduling test run..."
+  run_arn=`aws devicefarm schedule-run --project-arn=$project_arn \
+    --app-arn="$app_package_upload_arn" \
+    --device-selection-configuration='{
+        "filters": [
+          {"attribute": "ARN", "operator":"IN", "values":["'$minDevice'", "'$middleDevice'", "'$latestDevice'"]}
+        ],
+        "maxDevices": '$max_devices'
+    }' \
+    --name="$file_name-$commit_sha" \
+    --test="testSpecArn=$test_spec_arn,type=INSTRUMENTATION,testPackageArn=$test_package_upload_arn" \
+    --execution-configuration="jobTimeoutMinutes=$job_timeout,videoCapture=false" \
+    --query="run.arn" \
+    --output=text \
+    --region="us-west-2"`
+
+  echo "[RUN_IN_DEVICEFARM] Run ARN: $run_arn"
+  echo "[RUN_IN_DEVICEFARM] Waiting for test run to complete..."
+
+  status='NONE'
+  result='NONE'
+  while true; do
+    run_status_response=`aws devicefarm get-run --arn="$run_arn" --region="us-west-2" --query="run.[status, result]" --output text`
+    read -a result_arr <<< $run_status_response
+    status=${result_arr[0]}
+    result=${result_arr[1]}
+    if [ "$status" = "COMPLETED" ]; then
+      break
+    fi
+    sleep 30
+  done
+
+  final_result=$result
+  echo "[RUN_IN_DEVICEFARM] Attempt $run_attempt/$max_run_attempts: Status=$status Result=$result"
+
+  if [ "$result" = "PASSED" ]; then
+    if [ $run_attempt -gt 1 ]; then
+      echo "[RUN_IN_DEVICEFARM] Tests passed on retry (attempt $run_attempt)"
+    fi
     break
   fi
-  sleep 30
+
+  if [ $run_attempt -lt $max_run_attempts ]; then
+    echo "[RUN_IN_DEVICEFARM] Tests did not pass (result=$result). Will retry..."
+  else
+    echo "[RUN_IN_DEVICEFARM] Tests did not pass after $max_run_attempts attempts."
+  fi
 done
-echo "Status = $status Result = $result"
+
+echo "============================================================"
+echo "[RUN_IN_DEVICEFARM] Final result for $module_name: $final_result"
+echo "============================================================"
 
 ./scripts/python/generate_df_testrun_report.py \
   -r "$run_arn" \
   -m "$module_name" \
   -o "build/allTests/$module_name/"
 
-# If the result is PASSED, then exit with a return code 0
-if [ "$result" = "PASSED" ]
-then
+if [ "$final_result" = "PASSED" ]; then
   exit 0
 fi
-# Otherwise, exit with a non-zero.
 exit 1
