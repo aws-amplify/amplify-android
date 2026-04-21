@@ -42,7 +42,7 @@ data class AmplifyOutputsData(
     val custom: JsonObject? = null
 ) {
     // The schema version we are supporting
-    val version = "1"
+    val version = "1.1"
 
     @Serializable
     data class Analytics(
