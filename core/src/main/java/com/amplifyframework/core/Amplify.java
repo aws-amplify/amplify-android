@@ -205,8 +205,7 @@ public final class Amplify {
     }
 
     /**
-     * Configure Amplify using the outputs from the Amplify Gen2 CLI. This is the configure method to use if you are
-     * using the Amplify Gen2 experience.
+     * Configure Amplify using the AmplifyOutputsData class, for programmatic configuration.
      * You must call one of the configure() methods before using any Amplify category.
      * You must add plugins to the framework before calling configure().
      * configure() may only be called once per application process, and there is
