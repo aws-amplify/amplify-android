@@ -37,6 +37,7 @@ import com.amplifyframework.statemachine.codegen.events.SignInChallengeEvent
 internal object SignInChallengeCognitoActions : SignInChallengeActions {
     private const val KEY_SECRET_HASH = "SECRET_HASH"
     private const val KEY_USERNAME = "USERNAME"
+    private const val KEY_DEVICE = "DEVICE_KEY"
     private const val KEY_PREFIX_USER_ATTRIBUTE = "userAttributes."
     override fun verifyChallengeAuthAction(
         answer: String,
@@ -69,6 +70,10 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
 
             if (!username.isNullOrEmpty()) {
                 challengeResponses[KEY_USERNAME] = username
+
+                getDeviceMetadata(username)?.let {
+                    challengeResponses[KEY_DEVICE] = it.deviceKey
+                }
             }
 
             getChallengeResponseKey(challenge)?.also { responseKey ->
