@@ -127,11 +127,11 @@ class AuthBuilder {
 }
 
 class PasswordPolicyBuilder {
-    var minLength: Int = 8
-    var requireNumbers: Boolean = true
-    var requireLowercase: Boolean = true
-    var requireUppercase: Boolean = true
-    var requireSymbols: Boolean = true
+    var minLength: Int = 6
+    var requireNumbers: Boolean = false
+    var requireLowercase: Boolean = false
+    var requireUppercase: Boolean = false
+    var requireSymbols: Boolean = false
 
     fun build() = AmplifyOutputsData.Auth.PasswordPolicy(
         minLength = minLength,
