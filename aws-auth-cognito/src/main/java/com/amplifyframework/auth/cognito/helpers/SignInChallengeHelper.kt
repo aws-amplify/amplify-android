@@ -94,7 +94,10 @@ internal object SignInChallengeHelper {
             challengeNameType is ChallengeNameType.SmsOtp ||
             challengeNameType is ChallengeNameType.EmailOtp -> {
             val challenge = AuthChallenge(
-                challengeNameType.value, username, session, challengeParameters,
+                challengeNameType.value,
+                username,
+                session,
+                challengeParameters,
                 inputUsername = inputUsername
             )
             SignInEvent(SignInEvent.EventType.ReceivedChallenge(challenge, signInMethod))
@@ -102,7 +105,10 @@ internal object SignInChallengeHelper {
         challengeNameType is ChallengeNameType.MfaSetup -> {
             val allowedMFASetupTypes = getAllowedMFASetupTypesFromChallengeParameters(challengeParameters)
             val challenge = AuthChallenge(
-                challengeNameType.value, username, session, challengeParameters,
+                challengeNameType.value,
+                username,
+                session,
+                challengeParameters,
                 inputUsername = inputUsername
             )
 

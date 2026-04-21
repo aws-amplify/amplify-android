@@ -72,7 +72,12 @@ class InputUsernameDeviceKeyTest {
             username = "cognito-sub-uuid",
             signedInDate = Date(1700000000000),
             signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
-            cognitoUserPoolTokens = CognitoUserPoolTokens(null as String?, null as String?, null as String?, 1700003600L),
+            cognitoUserPoolTokens = CognitoUserPoolTokens(
+                null as String?,
+                null as String?,
+                null as String?,
+                1700003600L
+            ),
             inputUsername = "user@example.com"
         )
 
@@ -91,7 +96,12 @@ class InputUsernameDeviceKeyTest {
             username = "cognito-sub-uuid",
             signedInDate = Date(1700000000000),
             signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
-            cognitoUserPoolTokens = CognitoUserPoolTokens(null as String?, null as String?, null as String?, 1700003600L)
+            cognitoUserPoolTokens = CognitoUserPoolTokens(
+                null as String?,
+                null as String?,
+                null as String?,
+                1700003600L
+            )
         )
 
         val serialized = json.encodeToString(original)
@@ -346,7 +356,12 @@ class InputUsernameDeviceKeyTest {
 
     @Test
     fun `SignedInData equality includes inputUsername`() {
-        val tokens = CognitoUserPoolTokens(null as String?, null as String?, null as String?, 1700003600L)
+        val tokens = CognitoUserPoolTokens(
+            null as String?,
+            null as String?,
+            null as String?,
+            1700003600L
+        )
         val data1 = SignedInData(
             userId = "user-123",
             username = "cognito-sub",
