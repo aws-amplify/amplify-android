@@ -62,7 +62,7 @@ jobs:
           role-to-assume: ${{ secrets.AMPLIFY_ANDROID_RELEASE_PUBLISHER_ROLE }}
           aws-region: ${{ env.AWS_REGION }}
       - name: Start Maven Release Build
-        uses: aws-actions/aws-codebuild-run-build@2a49e1faf172677d80ce658678e9ff8bd2737d74 #1.0.15
+        uses: aws-actions/aws-codebuild-run-build@7e46c3fa1c1f217e26a73712796b1f78938b534b #1.0.19
         with:
           project-name: AmplifyAndroid-ReleasePublisher-V2
           source-version-override: ${{ env.NEW_TAG }}

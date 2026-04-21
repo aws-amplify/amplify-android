@@ -16,7 +16,7 @@ jobs:
           role-to-assume: ${{ secrets.AMPLIFY_ANDROID_RELEASE_PUBLISHER_ROLE }}
           aws-region: us-east-1
       - name: Start Integration Test
-        uses: aws-actions/aws-codebuild-run-build@f202c327329cbbebd13f986f74af162a8539b5fd # v1
+        uses: aws-actions/aws-codebuild-run-build@7e46c3fa1c1f217e26a73712796b1f78938b534b # v1
         with:
           project-name: AmplifyAndroid-IntegrationTest
           env-vars-for-codebuild: |
@@ -31,6 +31,6 @@ jobs:
           role-to-assume: ${{ secrets.AMPLIFY_ANDROID_RELEASE_PUBLISHER_ROLE }}
           aws-region: us-east-1
       - name: Start Maven Release Build
-        uses: aws-actions/aws-codebuild-run-build@f202c327329cbbebd13f986f74af162a8539b5fd # v1
+        uses: aws-actions/aws-codebuild-run-build@7e46c3fa1c1f217e26a73712796b1f78938b534b # v1
         with:
           project-name: AmplifyAndroid-ReleasePublisher
