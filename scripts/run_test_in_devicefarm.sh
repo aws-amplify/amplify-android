@@ -70,8 +70,19 @@ if [[ -z "$app_package_upload_arn" ]]; then
 fi
 curl -H "Content-Type:application/octet-stream" -T $file_name $app_package_url
 
-echo "Waiting for uploads to complete"
-sleep 10
+# Wait for uploads to complete
+for arn in "$test_package_upload_arn" "$app_package_upload_arn"; do
+  while true; do
+    upload_status=$(aws devicefarm get-upload --arn "$arn" --region="us-west-2" --query="upload.status" --output text)
+    if [ "$upload_status" = "SUCCEEDED" ]; then
+      break
+    elif [ "$upload_status" = "FAILED" ]; then
+      echo "Upload failed for $arn"
+      exit 1
+    fi
+    sleep 5
+  done
+done
 
 # Get oldest device we can test against.
 minDevice=$(aws devicefarm list-devices \
