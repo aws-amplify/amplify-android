@@ -1293,6 +1293,7 @@ public final class com/amplifyframework/core/Amplify {
 	public static fun configure (Landroid/content/Context;)V
 	public static fun configure (Lcom/amplifyframework/core/AmplifyConfiguration;Landroid/content/Context;)V
 	public static fun configure (Lcom/amplifyframework/core/configuration/AmplifyOutputs;Landroid/content/Context;)V
+	public static fun configure (Lcom/amplifyframework/core/configuration/AmplifyOutputsData;Landroid/content/Context;)V
 	public static fun getCategoriesMap ()Ljava/util/Map;
 	public static fun removePlugin (Lcom/amplifyframework/core/plugin/Plugin;)V
 }
@@ -1476,15 +1477,594 @@ public final class com/amplifyframework/core/configuration/AmplifyOutputs$Compan
 	public final fun fromString (Ljava/lang/String;)Lcom/amplifyframework/core/configuration/AmplifyOutputs;
 }
 
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData {
+	public static final field Companion Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Companion;
+	public fun <init> ()V
+	public fun <init> (Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Data;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Storage;Lkotlinx/serialization/json/JsonObject;)V
+	public synthetic fun <init> (Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Data;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Storage;Lkotlinx/serialization/json/JsonObject;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics;
+	public final fun component2 ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth;
+	public final fun component3 ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Data;
+	public final fun component4 ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo;
+	public final fun component5 ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications;
+	public final fun component6 ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Storage;
+	public final fun component7 ()Lkotlinx/serialization/json/JsonObject;
+	public final fun copy (Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Data;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Storage;Lkotlinx/serialization/json/JsonObject;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData;
+	public static synthetic fun copy$default (Lcom/amplifyframework/core/configuration/AmplifyOutputsData;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Data;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Storage;Lkotlinx/serialization/json/JsonObject;ILjava/lang/Object;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData;
+	public static final fun deserialize (Landroid/content/Context;Lcom/amplifyframework/core/configuration/AmplifyOutputs;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnalytics ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics;
+	public final fun getAuth ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth;
+	public final fun getCustom ()Lkotlinx/serialization/json/JsonObject;
+	public final fun getData ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Data;
+	public final fun getGeo ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo;
+	public final fun getNotifications ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications;
+	public final fun getStorage ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Storage;
+	public final fun getVersion ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/amplifyframework/core/configuration/AmplifyOutputsData$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/core/configuration/AmplifyOutputsData$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/core/configuration/AmplifyOutputsData;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$AmazonLocationServiceConfig {
+	public static final field Companion Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AmazonLocationServiceConfig$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AmazonLocationServiceConfig;
+	public static synthetic fun copy$default (Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AmazonLocationServiceConfig;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AmazonLocationServiceConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getStyle ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/amplifyframework/core/configuration/AmplifyOutputsData$AmazonLocationServiceConfig$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AmazonLocationServiceConfig$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AmazonLocationServiceConfig;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AmazonLocationServiceConfig;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$AmazonLocationServiceConfig$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$AmazonPinpointChannels : java/lang/Enum {
+	public static final field APNS Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AmazonPinpointChannels;
+	public static final field EMAIL Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AmazonPinpointChannels;
+	public static final field FCM Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AmazonPinpointChannels;
+	public static final field IN_APP_MESSAGING Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AmazonPinpointChannels;
+	public static final field SMS Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AmazonPinpointChannels;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AmazonPinpointChannels;
+	public static fun values ()[Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AmazonPinpointChannels;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Analytics {
+	public static final field Companion Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics$Companion;
+	public fun <init> ()V
+	public fun <init> (Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics$AmazonPinpoint;)V
+	public synthetic fun <init> (Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics$AmazonPinpoint;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics$AmazonPinpoint;
+	public final fun copy (Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics$AmazonPinpoint;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics;
+	public static synthetic fun copy$default (Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics$AmazonPinpoint;ILjava/lang/Object;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAmazonPinpoint ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics$AmazonPinpoint;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/amplifyframework/core/configuration/AmplifyOutputsData$Analytics$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Analytics$AmazonPinpoint {
+	public static final field Companion Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics$AmazonPinpoint$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics$AmazonPinpoint;
+	public static synthetic fun copy$default (Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics$AmazonPinpoint;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics$AmazonPinpoint;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAppId ()Ljava/lang/String;
+	public final fun getAwsRegion ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/amplifyframework/core/configuration/AmplifyOutputsData$Analytics$AmazonPinpoint$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics$AmazonPinpoint$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics$AmazonPinpoint;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Analytics$AmazonPinpoint;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Analytics$AmazonPinpoint$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Analytics$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Auth {
+	public static final field Companion Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$PasswordPolicy;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth;Ljava/util/List;Ljava/util/List;Ljava/util/List;ZLcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$MfaConfiguration;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$PasswordPolicy;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth;Ljava/util/List;Ljava/util/List;Ljava/util/List;ZLcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$MfaConfiguration;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component10 ()Z
+	public final fun component11 ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$MfaConfiguration;
+	public final fun component12 ()Ljava/util/List;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$PasswordPolicy;
+	public final fun component6 ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth;
+	public final fun component7 ()Ljava/util/List;
+	public final fun component8 ()Ljava/util/List;
+	public final fun component9 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$PasswordPolicy;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth;Ljava/util/List;Ljava/util/List;Ljava/util/List;ZLcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$MfaConfiguration;Ljava/util/List;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth;
+	public static synthetic fun copy$default (Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$PasswordPolicy;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth;Ljava/util/List;Ljava/util/List;Ljava/util/List;ZLcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$MfaConfiguration;Ljava/util/List;ILjava/lang/Object;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAwsRegion ()Ljava/lang/String;
+	public final fun getIdentityPoolId ()Ljava/lang/String;
+	public final fun getMfaConfiguration ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$MfaConfiguration;
+	public final fun getMfaMethods ()Ljava/util/List;
+	public final fun getOauth ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth;
+	public final fun getPasswordPolicy ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$PasswordPolicy;
+	public final fun getStandardRequiredAttributes ()Ljava/util/List;
+	public final fun getUnauthenticatedIdentitiesEnabled ()Z
+	public final fun getUserPoolClientId ()Ljava/lang/String;
+	public final fun getUserPoolId ()Ljava/lang/String;
+	public final fun getUserVerificationTypes ()Ljava/util/List;
+	public final fun getUsernameAttributes ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/amplifyframework/core/configuration/AmplifyOutputsData$Auth$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Auth$MfaConfiguration : java/lang/Enum {
+	public static final field NONE Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$MfaConfiguration;
+	public static final field OPTIONAL Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$MfaConfiguration;
+	public static final field REQUIRED Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$MfaConfiguration;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$MfaConfiguration;
+	public static fun values ()[Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$MfaConfiguration;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Auth$MfaMethods : java/lang/Enum {
+	public static final field SMS Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$MfaMethods;
+	public static final field TOTP Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$MfaMethods;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$MfaMethods;
+	public static fun values ()[Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$MfaMethods;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth {
+	public static final field Companion Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth$Companion;
+	public fun <init> (Ljava/util/List;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth$ResponseType;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/util/List;
+	public final fun component5 ()Ljava/util/List;
+	public final fun component6 ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth$ResponseType;
+	public final fun copy (Ljava/util/List;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth$ResponseType;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth;
+	public static synthetic fun copy$default (Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth;Ljava/util/List;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth$ResponseType;ILjava/lang/Object;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDomain ()Ljava/lang/String;
+	public final fun getIdentityProviders ()Ljava/util/List;
+	public final fun getRedirectSignInUri ()Ljava/util/List;
+	public final fun getRedirectSignOutUri ()Ljava/util/List;
+	public final fun getResponseType ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth$ResponseType;
+	public final fun getScopes ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth$IdentityProviders : java/lang/Enum {
+	public static final field FACEBOOK Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth$IdentityProviders;
+	public static final field GOOGLE Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth$IdentityProviders;
+	public static final field LOGIN_WITH_AMAZON Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth$IdentityProviders;
+	public static final field SIGN_IN_WITH_APPLE Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth$IdentityProviders;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth$IdentityProviders;
+	public static fun values ()[Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth$IdentityProviders;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth$ResponseType : java/lang/Enum {
+	public static final field Code Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth$ResponseType;
+	public static final field Companion Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth$ResponseType$Companion;
+	public static final field Token Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth$ResponseType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth$ResponseType;
+	public static fun values ()[Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth$ResponseType;
+}
+
 public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Auth$Oauth$ResponseType$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Auth$PasswordPolicy {
+	public static final field Companion Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$PasswordPolicy$Companion;
+	public fun <init> (IZZZZ)V
+	public final fun component1 ()I
+	public final fun component2 ()Z
+	public final fun component3 ()Z
+	public final fun component4 ()Z
+	public final fun component5 ()Z
+	public final fun copy (IZZZZ)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$PasswordPolicy;
+	public static synthetic fun copy$default (Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$PasswordPolicy;IZZZZILjava/lang/Object;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$PasswordPolicy;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMinLength ()I
+	public final fun getRequireLowercase ()Z
+	public final fun getRequireNumbers ()Z
+	public final fun getRequireSymbols ()Z
+	public final fun getRequireUppercase ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/amplifyframework/core/configuration/AmplifyOutputsData$Auth$PasswordPolicy$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$PasswordPolicy$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$PasswordPolicy;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$PasswordPolicy;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Auth$PasswordPolicy$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Auth$UserVerificationTypes : java/lang/Enum {
+	public static final field Companion Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$UserVerificationTypes$Companion;
+	public static final field Email Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$UserVerificationTypes;
+	public static final field PhoneNumber Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$UserVerificationTypes;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$UserVerificationTypes;
+	public static fun values ()[Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$UserVerificationTypes;
 }
 
 public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Auth$UserVerificationTypes$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Auth$UsernameAttributes : java/lang/Enum {
+	public static final field Companion Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$UsernameAttributes$Companion;
+	public static final field Email Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$UsernameAttributes;
+	public static final field PhoneNumber Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$UsernameAttributes;
+	public static final field Username Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$UsernameAttributes;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$UsernameAttributes;
+	public static fun values ()[Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Auth$UsernameAttributes;
+}
+
 public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Auth$UsernameAttributes$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$AwsAppsyncAuthorizationType : java/lang/Enum {
+	public static final field AMAZON_COGNITO_USER_POOLS Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AwsAppsyncAuthorizationType;
+	public static final field API_KEY Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AwsAppsyncAuthorizationType;
+	public static final field AWS_IAM Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AwsAppsyncAuthorizationType;
+	public static final field AWS_LAMBDA Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AwsAppsyncAuthorizationType;
+	public static final field OPENID_CONNECT Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AwsAppsyncAuthorizationType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AwsAppsyncAuthorizationType;
+	public static fun values ()[Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AwsAppsyncAuthorizationType;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Companion {
+	public final fun deserialize (Landroid/content/Context;Lcom/amplifyframework/core/configuration/AmplifyOutputs;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Data {
+	public static final field Companion Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Data$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AwsAppsyncAuthorizationType;Ljava/util/List;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AwsAppsyncAuthorizationType;Ljava/util/List;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AwsAppsyncAuthorizationType;
+	public final fun component4 ()Ljava/util/List;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AwsAppsyncAuthorizationType;Ljava/util/List;Ljava/lang/String;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Data;
+	public static synthetic fun copy$default (Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Data;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AwsAppsyncAuthorizationType;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Data;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getApiKey ()Ljava/lang/String;
+	public final fun getAuthorizationTypes ()Ljava/util/List;
+	public final fun getAwsRegion ()Ljava/lang/String;
+	public final fun getDefaultAuthorizationType ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$AwsAppsyncAuthorizationType;
+	public final fun getUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/amplifyframework/core/configuration/AmplifyOutputsData$Data$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Data$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Data;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Data;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Data$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Geo {
+	public static final field Companion Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$Companion;
+	public fun <init> (Ljava/lang/String;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$Maps;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$SearchIndices;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$GeofenceCollections;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$Maps;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$SearchIndices;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$GeofenceCollections;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$Maps;
+	public final fun component3 ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$SearchIndices;
+	public final fun component4 ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$GeofenceCollections;
+	public final fun copy (Ljava/lang/String;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$Maps;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$SearchIndices;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$GeofenceCollections;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo;
+	public static synthetic fun copy$default (Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo;Ljava/lang/String;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$Maps;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$SearchIndices;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$GeofenceCollections;ILjava/lang/Object;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAwsRegion ()Ljava/lang/String;
+	public final fun getGeofenceCollections ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$GeofenceCollections;
+	public final fun getMaps ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$Maps;
+	public final fun getSearchIndices ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$SearchIndices;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/amplifyframework/core/configuration/AmplifyOutputsData$Geo$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Geo$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Geo$GeofenceCollections {
+	public static final field Companion Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$GeofenceCollections$Companion;
+	public fun <init> (Ljava/util/Set;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/util/Set;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/util/Set;Ljava/lang/String;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$GeofenceCollections;
+	public static synthetic fun copy$default (Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$GeofenceCollections;Ljava/util/Set;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$GeofenceCollections;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDefault ()Ljava/lang/String;
+	public final fun getItems ()Ljava/util/Set;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/amplifyframework/core/configuration/AmplifyOutputsData$Geo$GeofenceCollections$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$GeofenceCollections$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$GeofenceCollections;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$GeofenceCollections;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Geo$GeofenceCollections$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Geo$Maps {
+	public static final field Companion Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$Maps$Companion;
+	public fun <init> (Ljava/util/Map;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/util/Map;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/util/Map;Ljava/lang/String;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$Maps;
+	public static synthetic fun copy$default (Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$Maps;Ljava/util/Map;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$Maps;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDefault ()Ljava/lang/String;
+	public final fun getItems ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/amplifyframework/core/configuration/AmplifyOutputsData$Geo$Maps$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$Maps$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$Maps;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$Maps;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Geo$Maps$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Geo$SearchIndices {
+	public static final field Companion Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$SearchIndices$Companion;
+	public fun <init> (Ljava/util/Set;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/util/Set;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/util/Set;Ljava/lang/String;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$SearchIndices;
+	public static synthetic fun copy$default (Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$SearchIndices;Ljava/util/Set;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$SearchIndices;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDefault ()Ljava/lang/String;
+	public final fun getItems ()Ljava/util/Set;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/amplifyframework/core/configuration/AmplifyOutputsData$Geo$SearchIndices$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$SearchIndices$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$SearchIndices;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Geo$SearchIndices;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Geo$SearchIndices$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Notifications {
+	public static final field Companion Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications;
+	public static synthetic fun copy$default (Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAmazonPinpointAppId ()Ljava/lang/String;
+	public final fun getAwsRegion ()Ljava/lang/String;
+	public final fun getChannels ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/amplifyframework/core/configuration/AmplifyOutputsData$Notifications$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Notifications$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Storage {
+	public static final field Companion Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Storage$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Storage;
+	public static synthetic fun copy$default (Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Storage;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Storage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAwsRegion ()Ljava/lang/String;
+	public final fun getBucketName ()Ljava/lang/String;
+	public final fun getBuckets ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/amplifyframework/core/configuration/AmplifyOutputsData$Storage$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Storage$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Storage;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Storage;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Storage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$StorageBucket {
+	public static final field Companion Lcom/amplifyframework/core/configuration/AmplifyOutputsData$StorageBucket$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$StorageBucket;
+	public static synthetic fun copy$default (Lcom/amplifyframework/core/configuration/AmplifyOutputsData$StorageBucket;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$StorageBucket;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAwsRegion ()Ljava/lang/String;
+	public final fun getBucketName ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/amplifyframework/core/configuration/AmplifyOutputsData$StorageBucket$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/core/configuration/AmplifyOutputsData$StorageBucket$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$StorageBucket;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$StorageBucket;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$StorageBucket$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
