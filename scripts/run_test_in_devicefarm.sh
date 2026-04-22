@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Retry on Device Farm API throttling
-export AWS_MAX_ATTEMPTS=6
+# Retry on Device Farm API throttling (~60s total backoff)
+export AWS_MAX_ATTEMPTS=8
 
 project_arn=$DEVICEFARM_PROJECT_ARN
 max_devices=$NUMBER_OF_DEVICES_TO_TEST
@@ -20,36 +20,56 @@ if [[ -z "${max_devices}" ]]; then
   max_devices=1
 fi
 
-# Function to setup the app uploads in device farm
-function createUpload {
+# Function to setup the app uploads in device farm.
+# Retries with random jitter on throttling failures.
+function createUploadWithRetry {
   test_type=$1
-  upload_response=`aws devicefarm create-upload --type $test_type \
-                             --content-type="application/octet-stream" \
-                             --project-arn="$project_arn" \
-                             --name="$file_name" \
-                             --query="upload.[url, arn]" \
-                             --region="us-west-2" \
-                             --output=text`
-  echo $upload_response
+  max_upload_attempts=3
+  for upload_attempt in $(seq 1 $max_upload_attempts); do
+    upload_response=`aws devicefarm create-upload --type $test_type \
+                               --content-type="application/octet-stream" \
+                               --project-arn="$project_arn" \
+                               --name="$file_name" \
+                               --query="upload.[url, arn]" \
+                               --region="us-west-2" \
+                               --output=text 2>&1`
+    # Check if we got a valid response (URL + ARN)
+    read -a parts <<< "$upload_response"
+    if [[ -n "${parts[1]}" && "${parts[1]}" == arn:* ]]; then
+      echo "$upload_response"
+      return 0
+    fi
+    if [ $upload_attempt -lt $max_upload_attempts ]; then
+      jitter=$((30 + RANDOM % 60))
+      echo "[RUN_IN_DEVICEFARM] CreateUpload throttled (attempt $upload_attempt/$max_upload_attempts). Retrying in ${jitter}s..." >&2
+      sleep $jitter
+    fi
+  done
+  echo "[RUN_IN_DEVICEFARM] CreateUpload failed after $max_upload_attempts attempts" >&2
+  echo ""
+  return 1
 }
 
 echo 'Uploading test package'
-# Create an upload for the instrumentation test package
-read -a result <<< $(createUpload "INSTRUMENTATION_TEST_PACKAGE")
+read -a result <<< $(createUploadWithRetry "INSTRUMENTATION_TEST_PACKAGE")
 test_package_url=${result[0]}
 test_package_upload_arn=${result[1]}
-# Upload the apk
+if [[ -z "$test_package_upload_arn" ]]; then
+  echo "Failed to create test package upload (see logs above). Exiting."
+  exit 1
+fi
 curl -H "Content-Type:application/octet-stream" -T $file_name $test_package_url
 
-# Create an upload for the app package (They're the same, but they have to be setup in device farm)
 echo 'Uploading app package'
-read -a result <<< $(createUpload "ANDROID_APP")
+read -a result <<< $(createUploadWithRetry "ANDROID_APP")
 app_package_url=${result[0]}
 app_package_upload_arn=${result[1]}
-# Upload the apk
+if [[ -z "$app_package_upload_arn" ]]; then
+  echo "Failed to create app package upload (see logs above). Exiting."
+  exit 1
+fi
 curl -H "Content-Type:application/octet-stream" -T $file_name $app_package_url
 
-# Wait to make sure the upload completes. This should actually make a get-upload call and check the status.
 echo "Waiting for uploads to complete"
 sleep 10
 
