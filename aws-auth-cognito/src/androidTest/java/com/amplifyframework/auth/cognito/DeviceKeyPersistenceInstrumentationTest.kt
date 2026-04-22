@@ -19,7 +19,10 @@ import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions
+import com.amplifyframework.auth.cognito.options.AuthFlowType
 import com.amplifyframework.auth.cognito.testutils.Credentials
+import com.amplifyframework.auth.options.AuthSignInOptions
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.InitializationStatus
 import com.amplifyframework.hub.HubChannel
@@ -28,24 +31,23 @@ import com.amplifyframework.testutils.assertAwait
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Integration tests for device key persistence across auth flows.
+ * Integration tests for device key persistence across different auth flows.
  *
- * Validates that device metadata is stored using a consistent key (the original
- * user input username) regardless of whether the Cognito-canonical username
- * differs across auth flow types (e.g., USER_SRP_AUTH returns the sub UUID
- * while USER_PASSWORD_AUTH returns the user alias).
+ * Validates that once a device is remembered, the same device key is reused
+ * across sign-out/sign-in cycles regardless of which auth flow is used
+ * (USER_PASSWORD_AUTH, USER_SRP_AUTH). The device count should always remain 1.
  *
- * These tests require a Cognito user pool with device tracking enabled and
- * valid test credentials. They will be skipped if the required configuration
- * is not available.
+ * Prerequisites:
+ * - Cognito User Pool with Device Tracking set to "Always Remember"
+ * - USER_PASSWORD_AUTH and USER_SRP_AUTH both enabled on the app client
+ * - Valid test credentials in credentials.json
  */
 @RunWith(AndroidJUnit4::class)
 class DeviceKeyPersistenceInstrumentationTest : DeviceFarmTestBase() {
@@ -81,67 +83,91 @@ class DeviceKeyPersistenceInstrumentationTest : DeviceFarmTestBase() {
     }
 
     /**
-     * Verifies that after a successful sign-in, the SignedInData contains
-     * the inputUsername field matching the original user input.
+     * Sign in with USER_PASSWORD_AUTH, remember device (1 device).
+     * Sign out, sign in with USER_SRP_AUTH — device count should stay 1, same device key.
+     * Sign out, sign in with USER_PASSWORD_AUTH again — still 1, same key.
+     * Sign out, sign in with USER_SRP_AUTH again — still 1, same key.
      */
     @Test
-    fun signedInData_contains_inputUsername_after_signIn() {
-        signInWithCognito()
+    fun deviceKey_stays_consistent_across_alternating_auth_flows() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val (username, password) = Credentials.load(context)
 
-        val session = syncAuth.fetchAuthSession()
-        assertTrue(session.isSignedIn)
-
-        // The inputUsername should be set on the stored SignedInData.
-        // We verify this by checking the auth session is valid, which means
-        // the credential store was written with the correct key.
-        with(session as AWSCognitoAuthSession) {
-            assertNotNull(userPoolTokensResult.value)
-            assertNotNull(userSubResult.value)
-        }
-    }
-
-    /**
-     * Verifies that device metadata persists across sign-in/sign-out cycles
-     * when using the same username, proving that the storage key is consistent.
-     */
-    @Test
-    fun deviceMetadata_persists_across_signIn_signOut_cycles() {
-        // First sign-in: device gets registered
-        signInWithCognito()
+        // Step 1: Sign in with USER_PASSWORD_AUTH and remember device
+        signIn(username, password, AuthFlowType.USER_PASSWORD_AUTH)
         syncAuth.rememberDevice()
 
-        // Get device list after first sign-in
-        val devicesAfterFirstSignIn = syncAuth.fetchDevices()
-        assertTrue("Should have at least one device", devicesAfterFirstSignIn.isNotEmpty())
-        val firstDeviceId = devicesAfterFirstSignIn[0].id
+        val initialDevices = syncAuth.fetchDevices()
+        assertEquals("Should have exactly 1 device after initial sign-in", 1, initialDevices.size)
+        val originalDeviceId = initialDevices[0].id
 
-        // Sign out and sign back in
+        // Step 2: Sign out, sign in with USER_SRP_AUTH — same device
         signOut()
-        signInWithCognito()
+        signIn(username, password, AuthFlowType.USER_SRP_AUTH)
 
-        // Verify we can still access devices and the device persists
-        val devicesAfterSecondSignIn = syncAuth.fetchDevices()
-        assertTrue("Should still have devices after re-sign-in", devicesAfterSecondSignIn.isNotEmpty())
+        var devices = syncAuth.fetchDevices()
+        assertEquals("Should still have 1 device after SRP sign-in", 1, devices.size)
+        assertEquals("Device ID should match after SRP sign-in", originalDeviceId, devices[0].id)
 
-        // The same device should be present (no duplicate created)
-        val matchingDevice = devicesAfterSecondSignIn.find { it.id == firstDeviceId }
-        assertNotNull("Original device should persist across sign-in cycles", matchingDevice)
+        // Step 3: Sign out, sign in with USER_PASSWORD_AUTH — same device
+        signOut()
+        signIn(username, password, AuthFlowType.USER_PASSWORD_AUTH)
+
+        devices = syncAuth.fetchDevices()
+        assertEquals("Should still have 1 device after second PASSWORD sign-in", 1, devices.size)
+        assertEquals("Device ID should match after second PASSWORD sign-in", originalDeviceId, devices[0].id)
+
+        // Step 4: Sign out, sign in with USER_SRP_AUTH — same device
+        signOut()
+        signIn(username, password, AuthFlowType.USER_SRP_AUTH)
+
+        devices = syncAuth.fetchDevices()
+        assertEquals("Should still have 1 device after second SRP sign-in", 1, devices.size)
+        assertEquals("Device ID should match after second SRP sign-in", originalDeviceId, devices[0].id)
 
         // Clean up
         syncAuth.forgetDevice()
     }
 
-    private fun signInWithCognito() {
+    /**
+     * Same-flow baseline: sign in with USER_SRP_AUTH, remember device,
+     * sign out, sign in with USER_SRP_AUTH — device count stays 1.
+     */
+    @Test
+    fun deviceKey_persists_across_same_flow_signIn_signOut() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val (username, password) = Credentials.load(context)
-        syncAuth.signIn(username, password)
+
+        signIn(username, password, AuthFlowType.USER_SRP_AUTH)
+        syncAuth.rememberDevice()
+
+        val initialDevices = syncAuth.fetchDevices()
+        assertEquals("Should have exactly 1 device", 1, initialDevices.size)
+        val originalDeviceId = initialDevices[0].id
+
+        signOut()
+        signIn(username, password, AuthFlowType.USER_SRP_AUTH)
+
+        val devices = syncAuth.fetchDevices()
+        assertEquals("Should still have 1 device after re-sign-in", 1, devices.size)
+        assertEquals("Device ID should be the same", originalDeviceId, devices[0].id)
+
+        // Clean up
+        syncAuth.forgetDevice()
+    }
+
+    private fun signIn(username: String, password: String, flowType: AuthFlowType) {
+        val options: AuthSignInOptions = AWSCognitoAuthSignInOptions.builder()
+            .authFlowType(flowType)
+            .build()
+        syncAuth.signIn(username, password, options)
     }
 
     private fun signOut() {
         try {
             syncAuth.signOut()
         } catch (e: Exception) {
-            // Ignore errors during sign-out in setup
+            // Ignore errors during sign-out
         }
     }
 }

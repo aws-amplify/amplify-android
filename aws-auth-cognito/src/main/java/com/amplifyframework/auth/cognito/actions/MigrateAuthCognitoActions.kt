@@ -35,6 +35,7 @@ internal object MigrateAuthCognitoActions : MigrateAuthActions {
     private const val KEY_PASSWORD = "PASSWORD"
     private const val KEY_SECRET_HASH = "SECRET_HASH"
     private const val KEY_USERID_FOR_SRP = "USER_ID_FOR_SRP"
+    private const val KEY_DEVICE_KEY = "DEVICE_KEY"
     private const val KEY_ANSWER = "ANSWER"
     private const val KEY_PREFERRED_CHALLENGE = "PREFERRED_CHALLENGE"
 
@@ -54,8 +55,9 @@ internal object MigrateAuthCognitoActions : MigrateAuthActions {
                 secretHash?.let { authParams[KEY_SECRET_HASH] = it }
 
                 val encodedContextData = getUserContextData(event.username)
+                val deviceMetadata = getDeviceMetadata(event.username)
+                deviceMetadata?.let { authParams[KEY_DEVICE_KEY] = it.deviceKey }
                 val pinpointEndpointId = getPinpointEndpointId()
-
                 if (event.respondToAuthChallenge?.session != null) {
                     authParams[KEY_ANSWER] = ChallengeNameType.Password.value
 
