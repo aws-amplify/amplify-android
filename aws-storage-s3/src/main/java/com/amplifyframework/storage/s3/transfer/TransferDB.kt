@@ -20,6 +20,7 @@ import android.content.Context
 import android.database.Cursor
 import android.net.Uri
 import androidx.annotation.VisibleForTesting
+import androidx.core.net.toUri
 import aws.sdk.kotlin.services.s3.model.CompletedPart
 import aws.sdk.kotlin.services.s3.model.ObjectCannedAcl
 import com.amplifyframework.core.Amplify
@@ -468,9 +469,8 @@ internal class TransferDB private constructor(context: Context) {
      * @return The Uri of the part upload records that have the given
      * mainUploadId value.
      */
-    private fun getTransferRecordIdUri(transferId: String): Uri = Uri.parse(
-        transferDBHelper.contentUri.toString() + "/transferId/" + transferId
-    )
+    private fun getTransferRecordIdUri(transferId: String): Uri =
+        "${transferDBHelper.contentUri}/transferId/$transferId".toUri()
 
     /**
      * Gets the Uri of part records of a multipart upload.
@@ -479,9 +479,8 @@ internal class TransferDB private constructor(context: Context) {
      * @return The Uri of the part upload records that have the given
      * mainUploadId value.
      */
-    private fun getPartUri(mainUploadId: Int): Uri = Uri.parse(
-        transferDBHelper.contentUri.toString() + "/part/" + mainUploadId
-    )
+    private fun getPartUri(mainUploadId: Int): Uri =
+        "${transferDBHelper.contentUri}/part/$mainUploadId".toUri()
 
     /**
      * Gets the Uri of the records that have the given state.
@@ -490,9 +489,8 @@ internal class TransferDB private constructor(context: Context) {
      * @return The Uri that is used to query transfer records with the given
      * state.
      */
-    fun getStateUri(state: TransferState): Uri? = Uri.parse(
-        "${transferDBHelper.contentUri}/state/$state"
-    )
+    fun getStateUri(state: TransferState): Uri? =
+        "${transferDBHelper.contentUri}/state/$state".toUri()
 
     /**
      * Create a string with the required number of placeholders
@@ -521,7 +519,7 @@ internal class TransferDB private constructor(context: Context) {
      * @param id The id of the transfer.
      * @return The Uri of the record specified by the id.
      */
-    private fun getRecordUri(id: Int): Uri = Uri.parse(transferDBHelper.contentUri.toString() + "/" + id)
+    private fun getRecordUri(id: Int): Uri = "${transferDBHelper.contentUri}/$id".toUri()
 
     /**
      * Inserts a transfer record into database with the given values.
