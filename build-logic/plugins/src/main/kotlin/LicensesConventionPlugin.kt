@@ -32,6 +32,9 @@ class LicensesConventionPlugin : Plugin<Project> {
                 allow("BSD-2-Clause")
                 allow("CC0-1.0")
                 allowUrl("https://developer.android.com/studio/terms.html")
+                allowUrl("https://opensource.org/license/mit") {
+                    because("MIT license - alternate URL used by slf4j 2.0.17+")
+                }
                 allowDependency("net.zetetic", "sqlcipher-android", "4.6.1") {
                     because("BSD style License")
                 }
