@@ -1,3 +1,17 @@
+## [Release 2.36.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.36.0)
+
+### Features
+- **storage:** add support for upload presigned url ([#3290](https://github.com/aws-amplify/amplify-android/issues/3290))
+- **core:** Make AmplifyOutputsData public ([#3292](https://github.com/aws-amplify/amplify-android/issues/3292))
+
+### Bug Fixes
+- **auth:** Update SignInChallengeCognitoActions to send DEVICE_KEY for MFA challenges ([#3289](https://github.com/aws-amplify/amplify-android/issues/3289))
+
+### Miscellaneous
+- Increase initial delay for e2e test retry ([#3277](https://github.com/aws-amplify/amplify-android/issues/3277))
+
+[See all changes between 2.35.0 and 2.36.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.35.0...release_v2.36.0)
+
 ## [Release 2.35.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.35.0)
 
 ### Features
