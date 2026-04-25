@@ -33,6 +33,7 @@ dependencies {
     implementation(libs.rxjava)
 
     implementation(libs.kotlin.serializationJson)
+    implementation(platform(libs.aws.bom))
     implementation(libs.aws.cognitoidentity)
     implementation(libs.aws.cognitoidentityprovider)
 
