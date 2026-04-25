@@ -479,8 +479,7 @@ internal class TransferDB private constructor(context: Context) {
      * @return The Uri of the part upload records that have the given
      * mainUploadId value.
      */
-    private fun getPartUri(mainUploadId: Int): Uri =
-        "${transferDBHelper.contentUri}/part/$mainUploadId".toUri()
+    private fun getPartUri(mainUploadId: Int): Uri = "${transferDBHelper.contentUri}/part/$mainUploadId".toUri()
 
     /**
      * Gets the Uri of the records that have the given state.
@@ -489,8 +488,7 @@ internal class TransferDB private constructor(context: Context) {
      * @return The Uri that is used to query transfer records with the given
      * state.
      */
-    fun getStateUri(state: TransferState): Uri? =
-        "${transferDBHelper.contentUri}/state/$state".toUri()
+    fun getStateUri(state: TransferState): Uri? = "${transferDBHelper.contentUri}/state/$state".toUri()
 
     /**
      * Create a string with the required number of placeholders
