@@ -36,6 +36,8 @@ class KotlinMultiplatformConventionPlugin : Plugin<Project> {
             extensions.configure<KotlinMultiplatformExtension> {
                 configureKotlinMultiplatform(this)
             }
+
+            registerLicenseHeaderCheck()
         }
     }
 

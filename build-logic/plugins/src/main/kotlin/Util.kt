@@ -30,3 +30,62 @@ internal val optInAnnotations = amplifyInternalMarkers + listOf(
 
 internal val Project.libs
     get(): VersionCatalog = extensions.getByType<VersionCatalogsExtension>().named("libs")
+
+private val licenseHeaderPatterns = listOf(
+    """^/\*$""",
+    """^ \* Copyright \d{4}(-\d{4})? Amazon\.com, Inc\. or its affiliates\. All Rights Reserved\.$""",
+    """^ \*$""",
+    """^ \* Licensed under the Apache License, Version 2\.0 \(the "License"\)\.$""",
+    """^ \* You may not use this file except in compliance with the License\.$""",
+    """^ \* A copy of the License is located at$""",
+    """^ \*$""",
+    """^ \*  http://aws\.amazon\.com/apache2\.0$""",
+    """^ \*$""",
+    """^ \* or in the "license" file accompanying this file\. This file is distributed$""",
+    """^ \* on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either$""",
+    """^ \* express or implied\. See the License for the specific language governing$""",
+    """^ \* permissions and limitations under the License\.$""",
+    """^ \*/$""",
+).map { Regex(it) }
+
+internal fun Project.registerLicenseHeaderCheck() {
+    tasks.register("licenseHeaderCheck") {
+        group = "verification"
+        description = "Verify source files have the required Apache 2.0 license header"
+
+        val sourceTree = fileTree("src") { include("**/*.kt", "**/*.java") }
+        inputs.files(sourceTree)
+        val reportFile = layout.buildDirectory.file("reports/licenseHeaderCheck.txt")
+        outputs.file(reportFile)
+
+        doLast {
+            val failures = mutableListOf<String>()
+            sourceTree.forEach { file ->
+                val lines = file.readLines()
+                if (lines.size < licenseHeaderPatterns.size) {
+                    failures += file.relativeTo(projectDir).path
+                    return@forEach
+                }
+                for (i in licenseHeaderPatterns.indices) {
+                    if (!licenseHeaderPatterns[i].matches(lines[i])) {
+                        failures += file.relativeTo(projectDir).path
+                        break
+                    }
+                }
+            }
+
+            val report = reportFile.get().asFile
+            report.parentFile.mkdirs()
+            if (failures.isEmpty()) {
+                report.writeText("All source files have valid license headers.\n")
+            } else {
+                val msg = "Missing or invalid license header in ${failures.size} file(s):\n" +
+                    failures.joinToString("\n") { "  - $it" }
+                report.writeText(msg + "\n")
+                throw org.gradle.api.GradleException(msg)
+            }
+        }
+    }
+
+    tasks.named("check") { dependsOn("licenseHeaderCheck") }
+}

@@ -30,19 +30,8 @@ checkstyle {
     toolVersion = '8.29'
 }
 
-task checkstyleKotlinHeader(type: Checkstyle) {
-    description = "Check Kotlin source files have the required license header"
-    configFile = rootProject.file("configuration/checkstyle-kotlin-header.xml")
-    configDirectory = rootProject.file("configuration")
-    source = kotlinSources()
-    classpath = files()
-    ignoreFailures = false
-    showViolations = true
-}
-
 afterEvaluate {
     check.dependsOn 'checkstyle'
-    check.dependsOn 'checkstyleKotlinHeader'
 }
 
 def javaSources() {
@@ -57,8 +46,4 @@ def javaSources() {
         }
     }
     return files
-}
-
-def kotlinSources() {
-    return fileTree(projectDir) { include "src/**/*.kt" }
 }
