@@ -19,6 +19,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.ApiAuthProviders;
 import com.amplifyframework.api.aws.ApiGraphQLRequestOptions;
+import com.amplifyframework.api.aws.AppSyncAuthException;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
 import com.amplifyframework.api.aws.AuthorizationType;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
@@ -44,6 +45,8 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests that auth rule decorator can correctly decorate a request given an auth rule.
@@ -86,9 +89,11 @@ public final class AuthRuleRequestDecoratorTest {
      * the authorization mode is not OIDC compliant.
      * @throws ApiException if request contains unsupported auth rule
      */
-    @Test(expected = ApiException.class)
+    @Test
     public void ownerArgumentNotAddedWithApiKey() throws ApiException {
-        decorator.decorate(ModelSubscription.onCreate(Owner.class), AuthorizationType.API_KEY);
+        ApiException thrown = assertThrows(ApiException.class, () ->
+            decorator.decorate(ModelSubscription.onCreate(Owner.class), AuthorizationType.API_KEY));
+        assertTrue(thrown instanceof AppSyncAuthException.ProviderNotConfiguredException);
     }
 
     /**
@@ -96,9 +101,11 @@ public final class AuthRuleRequestDecoratorTest {
      * the authorization mode is not OIDC compliant.
      * @throws ApiException if request contains unsupported auth rule
      */
-    @Test(expected = ApiException.class)
+    @Test
     public void ownerArgumentNotAddedWithAwsIam() throws ApiException {
-        decorator.decorate(ModelSubscription.onCreate(Owner.class), AuthorizationType.AWS_IAM);
+        ApiException thrown = assertThrows(ApiException.class, () ->
+            decorator.decorate(ModelSubscription.onCreate(Owner.class), AuthorizationType.AWS_IAM));
+        assertTrue(thrown instanceof AppSyncAuthException.ProviderNotConfiguredException);
     }
 
     /**

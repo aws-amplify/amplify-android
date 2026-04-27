@@ -80,9 +80,9 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends AWSGraphQLOperati
         this.executorService = builder.executorService;
 
         if (!(getRequest() instanceof AppSyncGraphQLRequest)) {
-            onFailure.accept(new ApiException(
+            onFailure.accept(new AppSyncException.RequestException.ValidationException(
                 "Multiauth only supported with AppSyncGraphQLRequest<T>.",
-                AmplifyException.TODO_RECOVERY_SUGGESTION
+                null, AmplifyException.TODO_RECOVERY_SUGGESTION
             ));
             return;
         }
@@ -129,7 +129,9 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends AWSGraphQLOperati
             ongoingCall.enqueue(new OkHttpCallback());
         } else {
             onFailure.accept(new AppSyncAuthException.ProviderNotConfiguredException(
-                "Unable to successfully complete request with any of the compatible auth types."
+                "Unable to successfully complete request with any of the compatible auth types.",
+                null,
+                "Check your application logs for detail."
             ));
         }
     }
@@ -165,7 +167,8 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends AWSGraphQLOperati
                 try {
                     jsonResponse = responseBody.string();
                 } catch (IOException exception) {
-                    onFailure.accept(new AppSyncException.ResponseException.DeserializationException(exception));
+                    onFailure.accept(new AppSyncException.ResponseException.DeserializationException(exception,
+                        AmplifyException.TODO_RECOVERY_SUGGESTION));
                     return;
                 }
             }
@@ -177,7 +180,9 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends AWSGraphQLOperati
                         executorService.submit(MultiAuthAppSyncGraphQLOperation.this::dispatchRequest);
                     } else {
                         onFailure.accept(new AppSyncAuthException.ProviderNotConfiguredException(
-                                "Unable to successfully complete request with any of the compatible auth types."
+                                "Unable to successfully complete request with any of the compatible auth types.",
+                                null,
+                                "Check your application logs for detail."
                         ));
                     }
                 } else {
@@ -191,7 +196,8 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends AWSGraphQLOperati
 
         @Override
         public void onFailure(@NonNull Call call, @NonNull IOException exception) {
-            onFailure.accept(new AppSyncException.NetworkException(exception));
+            onFailure.accept(new AppSyncException.NetworkException(exception,
+                "See attached exception for more details."));
         }
     }
 

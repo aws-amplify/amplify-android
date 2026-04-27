@@ -32,6 +32,7 @@ import com.amplifyframework.util.MockExecutorService
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -62,7 +63,10 @@ class MultiAuthSubscriptionOperationTest {
         operation.isCanceled = true
         operation.start()
         verify {
-            onError(any())
+            onError(withArg {
+                it.shouldBeInstanceOf<AppSyncException.RequestException.ValidationException>()
+                it.shouldBeInstanceOf<ApiException>()
+            })
         }
     }
 

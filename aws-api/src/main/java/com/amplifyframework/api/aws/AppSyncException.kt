@@ -27,44 +27,43 @@ import com.amplifyframework.api.graphql.GraphQLResponse
  */
 sealed class AppSyncAuthException(
     message: String,
-    cause: Throwable? = null,
-    recoverySuggestion: String = "See the underlying exception for more details."
+    cause: Throwable?,
+    recoverySuggestion: String
 ) : ApiAuthException(message, cause, recoverySuggestion) {
 
-    class TokenFetchException @JvmOverloads constructor(cause: Throwable? = null) : AppSyncAuthException(
-        "Failed to fetch auth token.", cause,
-        "Check your auth provider configuration and network connectivity."
-    )
+    class TokenFetchException(
+        message: String,
+        cause: Throwable?,
+        recoverySuggestion: String
+    ) : AppSyncAuthException(message, cause, recoverySuggestion)
 
-    class TokenExpiredException @JvmOverloads constructor(cause: Throwable? = null) : AppSyncAuthException(
-        "Auth token has expired.", cause,
-        "Ensure your token refresh mechanism is working correctly."
-    )
+    class TokenExpiredException(
+        message: String,
+        cause: Throwable?,
+        recoverySuggestion: String
+    ) : AppSyncAuthException(message, cause, recoverySuggestion)
 
-    class ProviderNotConfiguredException @JvmOverloads constructor(
-        message: String = "Auth provider is not configured."
-    ) : AppSyncAuthException(
-        message, null,
-        "Ensure the required authorizer is provided when constructing the client."
-    )
+    class ProviderNotConfiguredException(
+        message: String,
+        cause: Throwable?,
+        recoverySuggestion: String
+    ) : AppSyncAuthException(message, cause, recoverySuggestion)
 
-    class SigningException @JvmOverloads constructor(cause: Throwable? = null) : AppSyncAuthException(
-        "Failed to sign the request.", cause,
-        "Check your IAM credentials and signing configuration."
-    )
+    class SigningException(
+        cause: Throwable?,
+        recoverySuggestion: String
+    ) : AppSyncAuthException("Failed to sign the request.", cause, recoverySuggestion)
 
-    class TokenParsingException @JvmOverloads constructor(cause: Throwable? = null) : AppSyncAuthException(
-        "Failed to parse auth token.", cause,
-        "Ensure the token is a valid JWT."
-    )
+    class TokenParsingException(
+        cause: Throwable?,
+        recoverySuggestion: String
+    ) : AppSyncAuthException("Failed to parse auth token.", cause, recoverySuggestion)
 
     class AuthorizationClaimException(
         message: String,
-        cause: Throwable? = null
-    ) : AppSyncAuthException(
-        message, cause,
-        "Check the owner/group claims in your auth token."
-    )
+        cause: Throwable?,
+        recoverySuggestion: String
+    ) : AppSyncAuthException(message, cause, recoverySuggestion)
 }
 
 // ─── Non-auth exceptions ─── extend ApiException directly ─────────────────────
@@ -75,75 +74,86 @@ sealed class AppSyncAuthException(
  */
 sealed class AppSyncException(
     message: String,
-    cause: Throwable? = null,
-    recoverySuggestion: String = "See the underlying exception for more details."
+    cause: Throwable?,
+    recoverySuggestion: String
 ) : ApiException(message, cause, recoverySuggestion) {
 
     sealed class ConfigurationException(message: String, cause: Throwable?, recoverySuggestion: String) :
         AppSyncException(message, cause, recoverySuggestion) {
 
-        class InvalidConfigException @JvmOverloads constructor(
-            message: String, cause: Throwable? = null
-        ) : ConfigurationException(message, cause, "Check your AppSync client configuration parameters.")
+        class InvalidConfigException(
+            message: String,
+            cause: Throwable?,
+            recoverySuggestion: String
+        ) : ConfigurationException(message, cause, recoverySuggestion)
 
-        class EndpointResolutionException @JvmOverloads constructor(
-            message: String, cause: Throwable? = null
-        ) : ConfigurationException(message, cause, "Verify the endpoint URL is a valid AppSync GraphQL endpoint.")
+        class EndpointResolutionException(
+            message: String,
+            cause: Throwable?,
+            recoverySuggestion: String
+        ) : ConfigurationException(message, cause, recoverySuggestion)
     }
 
     sealed class ResponseException(message: String, cause: Throwable?, recoverySuggestion: String) :
         AppSyncException(message, cause, recoverySuggestion) {
 
-        class DeserializationException @JvmOverloads constructor(cause: Throwable? = null) : ResponseException(
-            "Failed to deserialize the GraphQL response.", cause,
-            "Check that the response type matches the expected schema."
-        )
+        class DeserializationException(
+            cause: Throwable?,
+            recoverySuggestion: String
+        ) : ResponseException("Failed to deserialize the GraphQL response.", cause, recoverySuggestion)
 
-        class GraphQLErrorException(val errors: List<GraphQLResponse.Error>) : ResponseException(
-            "GraphQL response contained errors: ${errors.joinToString { it.message }}", null,
-            "Check the GraphQL errors for details."
+        class GraphQLErrorException(
+            val errors: List<GraphQLResponse.Error>,
+            recoverySuggestion: String
+        ) : ResponseException(
+            "GraphQL response contained errors: ${errors.joinToString { it.message }}", null, recoverySuggestion
         )
     }
 
     sealed class SubscriptionException(message: String, cause: Throwable?, recoverySuggestion: String) :
         AppSyncException(message, cause, recoverySuggestion) {
 
-        class ConnectionException @JvmOverloads constructor(
-            message: String = "Failed to establish subscription connection.",
-            cause: Throwable? = null
-        ) : SubscriptionException(message, cause, "Check your network connection and endpoint configuration.")
+        class ConnectionException(
+            message: String,
+            cause: Throwable?,
+            recoverySuggestion: String
+        ) : SubscriptionException(message, cause, recoverySuggestion)
 
-        class TimeoutException @JvmOverloads constructor(cause: Throwable? = null) : SubscriptionException(
-            "Subscription connection timed out.", cause,
-            "Check your network connection. Consider increasing the connection timeout."
-        )
+        class TimeoutException(
+            cause: Throwable?,
+            recoverySuggestion: String
+        ) : SubscriptionException("Subscription connection timed out.", cause, recoverySuggestion)
 
-        class LimitExceededException @JvmOverloads constructor(
-            message: String = "Maximum number of subscriptions reached."
-        ) : SubscriptionException(message, null, "Close existing subscriptions before creating new ones.")
+        class LimitExceededException(
+            message: String,
+            recoverySuggestion: String
+        ) : SubscriptionException(message, null, recoverySuggestion)
     }
 
     sealed class RequestException(message: String, cause: Throwable?, recoverySuggestion: String) :
         AppSyncException(message, cause, recoverySuggestion) {
 
-        class SchemaException @JvmOverloads constructor(
-            message: String, cause: Throwable? = null
-        ) : RequestException(message, cause, "Check the model schema and codegen output.")
+        class SchemaException(
+            message: String,
+            cause: Throwable?,
+            recoverySuggestion: String
+        ) : RequestException(message, cause, recoverySuggestion)
 
-        class ValidationException @JvmOverloads constructor(
-            message: String, cause: Throwable? = null
-        ) : RequestException(message, cause, "Check the request parameters.")
+        class ValidationException(
+            message: String,
+            cause: Throwable?,
+            recoverySuggestion: String
+        ) : RequestException(message, cause, recoverySuggestion)
     }
 
-    class NetworkException(cause: Throwable) : AppSyncException(
-        "A network error occurred.", cause,
-        "Check your internet connection and try again."
-    )
+    class NetworkException(
+        cause: Throwable,
+        recoverySuggestion: String
+    ) : AppSyncException("A network error occurred.", cause, recoverySuggestion)
 
-    class UnknownException @JvmOverloads constructor(
-        message: String? = null, cause: Throwable? = null
-    ) : AppSyncException(
-        message ?: "An unknown error occurred.", cause,
-        "This is not expected to occur. Please report this issue."
-    )
+    class UnknownException(
+        message: String,
+        cause: Throwable?,
+        recoverySuggestion: String
+    ) : AppSyncException(message, cause, recoverySuggestion)
 }

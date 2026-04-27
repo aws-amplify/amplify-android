@@ -102,7 +102,9 @@ public final class AuthRuleRequestDecorator {
                 } else {
                     throw new AppSyncAuthException.AuthorizationClaimException(
                         "Detected multiple owner type auth rules with a READ operation. " +
-                        "We currently do not support this use case.", null);
+                        "We currently do not support this use case.", null,
+                        "We currently do not support this use case. Please limit your type to just one owner " +
+                            "auth rule with a READ operation restriction.");
                 }
             } else if (isReadRestrictingStaticGroup(authRule)) {
                 // Group read-restricting groups by the claim name
@@ -134,7 +136,8 @@ public final class AuthRuleRequestDecorator {
             } catch (AmplifyException error) {
                 // This should not happen normally
                 throw new AppSyncAuthException.AuthorizationClaimException(
-                    "Failed to set owner field on AppSyncGraphQLRequest.", error);
+                    "Failed to set owner field on AppSyncGraphQLRequest.", error,
+                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION);
             }
         }
 
@@ -170,10 +173,13 @@ public final class AuthRuleRequestDecorator {
         } catch (JSONException error) {
             throw new AppSyncAuthException.AuthorizationClaimException(
                 "Attempted to subscribe to a model with owner-based authorization without " + identityClaim +
-                    " which was specified (or defaulted to) as the identity claim.", error
+                    " which was specified (or defaulted to) as the identity claim.", error,
+                "If you did not specify a custom identityClaim in your schema, make sure you are logged in. If " +
+                    "you did, check that the value you specified in your schema is present in the access key."
             );
         } catch (CognitoParameterInvalidException error) {
-            throw new AppSyncAuthException.TokenParsingException(error);
+            throw new AppSyncAuthException.TokenParsingException(error,
+                "Please verify the validity of token vended by the registered auth provider.");
         }
     }
 
@@ -189,9 +195,11 @@ public final class AuthRuleRequestDecorator {
                 }
             }
         } catch (JSONException error) {
-            throw new AppSyncAuthException.TokenParsingException(error);
+            throw new AppSyncAuthException.TokenParsingException(error,
+                AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION);
         } catch (CognitoParameterInvalidException error) {
-            throw new AppSyncAuthException.TokenParsingException(error);
+            throw new AppSyncAuthException.TokenParsingException(error,
+                "Please verify the validity of token vended by the registered auth provider.");
         }
 
         return groups;
@@ -232,7 +240,9 @@ public final class AuthRuleRequestDecorator {
                 OidcAuthProvider oidcProvider = authProvider.getOidcAuthProvider();
                 if (oidcProvider == null) {
                     throw new AppSyncAuthException.ProviderNotConfiguredException(
-                        "OidcAuthProvider interface is not implemented.");
+                        "OidcAuthProvider interface is not implemented.", null,
+                        "Configure AWSApiPlugin with ApiAuthProviders containing an implementation of " +
+                            "OidcAuthProvider interface that can vend a valid JWT token.");
                 }
                 return oidcProvider.getLatestAuthToken();
             case API_KEY:
@@ -240,7 +250,10 @@ public final class AuthRuleRequestDecorator {
             case NONE:
             default:
                 throw new AppSyncAuthException.ProviderNotConfiguredException(
-                    "Tried to use owner/group-based authorization on an API not configured with Cognito User Pools or OIDC.");
+                    "Tried to use owner/group-based authorization on an API not configured with Cognito User Pools or OIDC.",
+                    null,
+                    "Verify that the API is configured with either Cognito User Pools or OpenID Connect. @auth " +
+                        "with owner/group-based authorization is not supported for other modes.");
         }
     }
 }

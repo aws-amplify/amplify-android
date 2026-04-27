@@ -18,6 +18,8 @@ package com.amplifyframework.api.aws.sigv4;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiException.ApiAuthException;
+import com.amplifyframework.api.aws.AppSyncAuthException;
+import com.amplifyframework.api.aws.AppSyncException;
 import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.CognitoCredentialsProvider;
 import com.amplifyframework.core.Amplify;
@@ -47,7 +49,7 @@ public final class DefaultCognitoUserPoolsAuthProvider implements CognitoUserPoo
         try {
             this.credentialsProvider = new CognitoCredentialsProvider();
         } catch (IllegalStateException exception) {
-            throw new ApiAuthException(
+            throw new AppSyncAuthException.ProviderNotConfiguredException(
                     "AWSApiPlugin depends on AWSCognitoAuthPlugin but it is currently missing",
                     exception,
                     "Before configuring Amplify, be sure to add AWSCognitoAuthPlugin same as you added AWSApiPlugin."
@@ -70,7 +72,7 @@ public final class DefaultCognitoUserPoolsAuthProvider implements CognitoUserPoo
         try {
             semaphore.acquire();
         } catch (InterruptedException exception) {
-            throw new ApiException(
+            throw new AppSyncAuthException.TokenFetchException(
                     "Interrupted waiting for Cognito Userpools token.",
                     exception,
                     AmplifyException.TODO_RECOVERY_SUGGESTION
@@ -78,7 +80,8 @@ public final class DefaultCognitoUserPoolsAuthProvider implements CognitoUserPoo
         }
 
         if (lastTokenRetrievalFailureMessage != null) {
-            throw new ApiAuthException(lastTokenRetrievalFailureMessage, AmplifyException.TODO_RECOVERY_SUGGESTION);
+            throw new AppSyncAuthException.TokenFetchException(
+                    lastTokenRetrievalFailureMessage, null, AmplifyException.TODO_RECOVERY_SUGGESTION);
         }
     }
 
@@ -108,15 +111,15 @@ public final class DefaultCognitoUserPoolsAuthProvider implements CognitoUserPoo
         try {
             semaphore.acquire();
         } catch (InterruptedException exception) {
-            throw new ApiException(
+            throw new AppSyncAuthException.TokenFetchException(
                     "Interrupted waiting for Cognito Username.",
                     exception,
                     AmplifyException.TODO_RECOVERY_SUGGESTION
             );
         }
         if (currentUserRetrievalFailureMessage != null) {
-            throw new ApiException(
-                    currentUserRetrievalFailureMessage,
+            throw new AppSyncAuthException.TokenFetchException(
+                    currentUserRetrievalFailureMessage, null,
                     AmplifyException.TODO_RECOVERY_SUGGESTION
             );
         }

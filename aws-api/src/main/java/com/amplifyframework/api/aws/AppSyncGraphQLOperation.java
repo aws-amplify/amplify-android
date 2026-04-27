@@ -109,7 +109,7 @@ public final class AppSyncGraphQLOperation<R> extends AWSGraphQLOperation<R> {
                 ongoingCall.cancel();
             }
 
-            onFailure.accept(new ApiException(
+            onFailure.accept(new AppSyncException.UnknownException(
                 "OkHttp client failed to make a successful request.",
                 error, AmplifyException.TODO_RECOVERY_SUGGESTION
             ));
@@ -138,7 +138,8 @@ public final class AppSyncGraphQLOperation<R> extends AWSGraphQLOperation<R> {
                     jsonResponse = responseBody.string();
                 } catch (IOException exception) {
                     LOG.warn("Error retrieving JSON from response.", exception);
-                    onFailure.accept(new AppSyncException.ResponseException.DeserializationException(exception));
+                    onFailure.accept(new AppSyncException.ResponseException.DeserializationException(exception,
+                        AmplifyException.TODO_RECOVERY_SUGGESTION));
                     return;
                 }
             }
@@ -169,7 +170,8 @@ public final class AppSyncGraphQLOperation<R> extends AWSGraphQLOperation<R> {
         @Override
         public void onFailure(@NonNull Call call, @NonNull IOException exception) {
             if (!call.isCanceled()) {
-                onFailure.accept(new AppSyncException.NetworkException(exception));
+                onFailure.accept(new AppSyncException.NetworkException(exception,
+                    "Check your Internet connection. Is your device online?"));
             }
         }
     }

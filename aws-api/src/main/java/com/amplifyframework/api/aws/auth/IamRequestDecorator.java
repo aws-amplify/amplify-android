@@ -144,7 +144,8 @@ public class IamRequestDecorator implements RequestDecorator {
             }
             return output.toByteArray();
         } catch (IOException exception) {
-            throw new AppSyncAuthException.SigningException(exception);
+            throw new AppSyncAuthException.SigningException(exception,
+                "Check your application logs for details.");
         }
     }
 }

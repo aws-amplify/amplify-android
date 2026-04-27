@@ -28,6 +28,7 @@ import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelOperation
 import com.amplifyframework.core.model.annotations.AuthRule
 import com.amplifyframework.core.model.annotations.ModelConfig
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -101,7 +102,10 @@ class MultiAuthAppSyncGraphQLOperationTest {
             executorService.submit(any())
         }
         verify {
-            onFailure.accept(exception)
+            onFailure.accept(withArg {
+                it.shouldBeInstanceOf<AppSyncAuthException.ProviderNotConfiguredException>()
+                it.shouldBeInstanceOf<ApiAuthException>()
+            })
         }
     }
 
@@ -147,7 +151,12 @@ class MultiAuthAppSyncGraphQLOperationTest {
 
         verify(exactly = 1) {
             executorService.submit(any())
-            onFailure.accept(exception)
+        }
+        verify {
+            onFailure.accept(withArg {
+                it.shouldBeInstanceOf<AppSyncAuthException.ProviderNotConfiguredException>()
+                it.shouldBeInstanceOf<ApiAuthException>()
+            })
         }
     }
 

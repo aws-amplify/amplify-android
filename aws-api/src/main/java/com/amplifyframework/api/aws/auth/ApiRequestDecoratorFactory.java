@@ -125,31 +125,44 @@ public final class ApiRequestDecoratorFactory {
                 try {
                     token = cognitoUserPoolsAuthProvider.getLatestAuthToken();
                 } catch (ApiException exception) {
-                    throw new AppSyncAuthException.TokenFetchException(exception);
+                    throw new AppSyncAuthException.TokenFetchException(
+                        "Failed to retrieve auth token from Cognito provider.",
+                        exception,
+                        "Check the application logs for details.");
                 }
                 return new TokenRequestDecorator(() -> token);
             case OPENID_CONNECT:
                 if (apiAuthProviders.getOidcAuthProvider() == null) {
                     throw new AppSyncAuthException.ProviderNotConfiguredException(
-                        "Attempting to use OPENID_CONNECT authorization without an OIDC provider.");
+                        "Attempting to use OPENID_CONNECT authorization without an OIDC provider.",
+                        null,
+                        "Configure an OidcAuthProvider when initializing the API plugin.");
                 }
                 final String oidcToken;
                 try {
                     oidcToken = apiAuthProviders.getOidcAuthProvider().getLatestAuthToken();
                 } catch (ApiException exception) {
-                    throw new AppSyncAuthException.TokenFetchException(exception);
+                    throw new AppSyncAuthException.TokenFetchException(
+                        "Failed to retrieve auth token from OIDC provider.",
+                        exception,
+                        "Check the application logs for details.");
                 }
                 return new TokenRequestDecorator(() -> oidcToken);
             case AWS_LAMBDA:
                 if (apiAuthProviders.getFunctionAuthProvider() == null) {
                     throw new AppSyncAuthException.ProviderNotConfiguredException(
-                        "Attempting to use AWS_LAMBDA authorization without a provider implemented.");
+                        "Attempting to use AWS_LAMBDA authorization without a provider implemented.",
+                        null,
+                        "Configure a FunctionAuthProvider when initializing the API plugin.");
                 }
                 final String functionToken;
                 try {
                     functionToken = apiAuthProviders.getFunctionAuthProvider().getLatestAuthToken();
                 } catch (ApiException exception) {
-                    throw new AppSyncAuthException.TokenFetchException(exception);
+                    throw new AppSyncAuthException.TokenFetchException(
+                        "Failed to retrieve auth token from function auth provider.",
+                        exception,
+                        "Check the application logs for details.");
                 }
                 return new TokenRequestDecorator(() -> functionToken);
             case API_KEY:
@@ -159,7 +172,10 @@ public final class ApiRequestDecoratorFactory {
                     return new ApiKeyRequestDecorator(() -> apiKey);
                 } else {
                     throw new AppSyncAuthException.ProviderNotConfiguredException(
-                        "Attempting to use API_KEY authorization without an API key provider or an API key in the config file.");
+                        "Attempting to use API_KEY authorization without an API key provider or an API key in the config file.",
+                        null,
+                        "Verify that an API key is in the config file or an " +
+                            "ApiKeyAuthProvider is setup during the API plugin initialization.");
                 }
             case AWS_IAM:
                 CredentialsProvider credentialsProvider = apiAuthProviders.getAWSCredentialsProvider() != null
