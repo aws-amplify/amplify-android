@@ -63,10 +63,12 @@ class MultiAuthSubscriptionOperationTest {
         operation.isCanceled = true
         operation.start()
         verify {
-            onError(withArg {
-                it.shouldBeInstanceOf<AppSyncException.RequestException.ValidationException>()
-                it.shouldBeInstanceOf<ApiException>()
-            })
+            onError(
+                withArg {
+                    it.shouldBeInstanceOf<AppSyncException.RequestException.ValidationException>()
+                    it.shouldBeInstanceOf<ApiException>()
+                }
+            )
         }
     }
 

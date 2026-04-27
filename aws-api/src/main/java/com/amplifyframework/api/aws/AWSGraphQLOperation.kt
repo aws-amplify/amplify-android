@@ -45,10 +45,14 @@ abstract class AWSGraphQLOperation<R>(
     @Throws(ApiException::class)
     private fun buildResponse(jsonResponse: String): GraphQLResponse<R> = try {
         (responseFactory as? GsonGraphQLResponseFactory)?.buildResponse(request, jsonResponse, apiName)
-            ?: throw AppSyncException.ResponseException.DeserializationException(null,
-                AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION)
+            ?: throw AppSyncException.ResponseException.DeserializationException(
+                null,
+                AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
+            )
     } catch (cce: ClassCastException) {
-        throw AppSyncException.ResponseException.DeserializationException(cce,
-            AmplifyException.TODO_RECOVERY_SUGGESTION)
+        throw AppSyncException.ResponseException.DeserializationException(
+            cce,
+            AmplifyException.TODO_RECOVERY_SUGGESTION
+        )
     }
 }

@@ -36,7 +36,7 @@ class AppSyncExceptionHierarchyTest {
             AppSyncAuthException.ProviderNotConfiguredException("msg", null, "recovery"),
             AppSyncAuthException.SigningException(RuntimeException(), "recovery"),
             AppSyncAuthException.TokenParsingException(RuntimeException(), "recovery"),
-            AppSyncAuthException.AuthorizationClaimException("msg", null, "recovery"),
+            AppSyncAuthException.AuthorizationClaimException("msg", null, "recovery")
         )
         exceptions.forEach { ex ->
             ex.shouldBeInstanceOf<ApiAuthException>()
@@ -58,7 +58,7 @@ class AppSyncExceptionHierarchyTest {
             AppSyncException.RequestException.SchemaException("msg", cause, "recovery"),
             AppSyncException.RequestException.ValidationException("msg", cause, "recovery"),
             AppSyncException.NetworkException(cause, "recovery"),
-            AppSyncException.UnknownException("msg", cause, "recovery"),
+            AppSyncException.UnknownException("msg", cause, "recovery")
         )
         exceptions.forEach { ex ->
             ex.shouldBeInstanceOf<ApiException>()
@@ -87,7 +87,7 @@ class AppSyncExceptionHierarchyTest {
             AppSyncAuthException.ProviderNotConfiguredException("msg", null, "r"),
             AppSyncAuthException.SigningException(null, "r"),
             AppSyncAuthException.TokenParsingException(null, "r"),
-            AppSyncAuthException.AuthorizationClaimException("msg", null, "r"),
+            AppSyncAuthException.AuthorizationClaimException("msg", null, "r")
         )
         exceptions.forEach { ex ->
             val label = when (ex) {
@@ -111,7 +111,7 @@ class AppSyncExceptionHierarchyTest {
             AppSyncException.SubscriptionException.ConnectionException("msg", null, "r"),
             AppSyncException.RequestException.ValidationException("msg", null, "r"),
             AppSyncException.NetworkException(cause, "r"),
-            AppSyncException.UnknownException("msg", null, "r"),
+            AppSyncException.UnknownException("msg", null, "r")
         )
         exceptions.forEach { ex ->
             val label = when (ex) {
@@ -132,7 +132,9 @@ class AppSyncExceptionHierarchyTest {
     fun `exception preserves message, cause, and recoverySuggestion`() {
         val cause = IllegalStateException("root cause")
         val ex = AppSyncException.ConfigurationException.InvalidConfigException(
-            "bad config", cause, "fix your config"
+            "bad config",
+            cause,
+            "fix your config"
         )
         ex.message shouldBe "bad config"
         ex.cause shouldBe cause
@@ -143,7 +145,7 @@ class AppSyncExceptionHierarchyTest {
     fun `GraphQLErrorException preserves errors list`() {
         val errors = listOf(
             GraphQLResponse.Error("error1", null, null, null),
-            GraphQLResponse.Error("error2", null, null, null),
+            GraphQLResponse.Error("error2", null, null, null)
         )
         val ex = AppSyncException.ResponseException.GraphQLErrorException(errors, "check errors")
         ex.errors shouldBe errors

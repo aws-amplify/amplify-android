@@ -106,7 +106,9 @@ sealed class AppSyncException(
             val errors: List<GraphQLResponse.Error>,
             recoverySuggestion: String
         ) : ResponseException(
-            "GraphQL response contained errors: ${errors.joinToString { it.message }}", null, recoverySuggestion
+            "GraphQL response contained errors: ${errors.joinToString { it.message }}",
+            null,
+            recoverySuggestion
         )
     }
 

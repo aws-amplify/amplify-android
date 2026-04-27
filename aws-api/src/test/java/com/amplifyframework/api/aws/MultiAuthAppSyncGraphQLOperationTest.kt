@@ -102,10 +102,12 @@ class MultiAuthAppSyncGraphQLOperationTest {
             executorService.submit(any())
         }
         verify {
-            onFailure.accept(withArg {
-                it.shouldBeInstanceOf<AppSyncAuthException.ProviderNotConfiguredException>()
-                it.shouldBeInstanceOf<ApiAuthException>()
-            })
+            onFailure.accept(
+                withArg {
+                    it.shouldBeInstanceOf<AppSyncAuthException.ProviderNotConfiguredException>()
+                    it.shouldBeInstanceOf<ApiAuthException>()
+                }
+            )
         }
     }
 
@@ -153,10 +155,12 @@ class MultiAuthAppSyncGraphQLOperationTest {
             executorService.submit(any())
         }
         verify {
-            onFailure.accept(withArg {
-                it.shouldBeInstanceOf<AppSyncAuthException.ProviderNotConfiguredException>()
-                it.shouldBeInstanceOf<ApiAuthException>()
-            })
+            onFailure.accept(
+                withArg {
+                    it.shouldBeInstanceOf<AppSyncAuthException.ProviderNotConfiguredException>()
+                    it.shouldBeInstanceOf<ApiAuthException>()
+                }
+            )
         }
     }
 
