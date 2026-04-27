@@ -20,8 +20,8 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiException.ApiAuthException;
-import com.amplifyframework.api.aws.AppSyncAuthException;
 import com.amplifyframework.api.aws.ApiAuthProviders;
+import com.amplifyframework.api.aws.AppSyncAuthException;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
 import com.amplifyframework.api.aws.AuthorizationType;
 import com.amplifyframework.api.aws.EndpointType;
@@ -106,6 +106,8 @@ public final class ApiRequestDecoratorFactory {
      * @param authorizationType the authorization type to be used for the request.
      * @return the appropriate request decorator for the given authorization type.
      * @throws ApiAuthException if unable to get a request decorator.
+     * @throws AppSyncAuthException.TokenFetchException if unable to fetch auth token.
+     * @throws AppSyncAuthException.ProviderNotConfiguredException if auth provider is missing.
      */
     public RequestDecorator forAuthType(@NonNull AuthorizationType authorizationType) throws ApiAuthException {
         switch (authorizationType) {
@@ -172,7 +174,8 @@ public final class ApiRequestDecoratorFactory {
                     return new ApiKeyRequestDecorator(() -> apiKey);
                 } else {
                     throw new AppSyncAuthException.ProviderNotConfiguredException(
-                        "Attempting to use API_KEY authorization without an API key provider or an API key in the config file.",
+                        "Attempting to use API_KEY authorization without " +
+                            "an API key provider or an API key in the config file.",
                         null,
                         "Verify that an API key is in the config file or an " +
                             "ApiKeyAuthProvider is setup during the API plugin initialization.");

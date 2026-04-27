@@ -19,7 +19,6 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.aws.AppSyncAuthException;
-import com.amplifyframework.api.aws.AppSyncException;
 import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.CognitoCredentialsProvider;
 import com.amplifyframework.core.Amplify;
@@ -44,6 +43,7 @@ public final class DefaultCognitoUserPoolsAuthProvider implements CognitoUserPoo
      * used to provide implementation to fetch auth token.
      *
      * @throws ApiAuthException Thrown if the AWSCognitoAuth plugin is not added.
+     * @throws AppSyncAuthException.ProviderNotConfiguredException if auth plugin is missing.
      */
     public DefaultCognitoUserPoolsAuthProvider() throws ApiAuthException {
         try {

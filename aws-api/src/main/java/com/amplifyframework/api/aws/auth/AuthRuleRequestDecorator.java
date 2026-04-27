@@ -19,9 +19,8 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.ApiException.ApiAuthException;
-import com.amplifyframework.api.aws.AppSyncAuthException;
 import com.amplifyframework.api.aws.ApiAuthProviders;
+import com.amplifyframework.api.aws.AppSyncAuthException;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
 import com.amplifyframework.api.aws.AuthorizationType;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
@@ -250,7 +249,8 @@ public final class AuthRuleRequestDecorator {
             case NONE:
             default:
                 throw new AppSyncAuthException.ProviderNotConfiguredException(
-                    "Tried to use owner/group-based authorization on an API not configured with Cognito User Pools or OIDC.",
+                    "Tried to use owner/group-based authorization on an API " +
+                        "not configured with Cognito User Pools or OIDC.",
                     null,
                     "Verify that the API is configured with either Cognito User Pools or OpenID Connect. @auth " +
                         "with owner/group-based authorization is not supported for other modes.");

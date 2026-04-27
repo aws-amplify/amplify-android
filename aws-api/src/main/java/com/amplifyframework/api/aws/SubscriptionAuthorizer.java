@@ -19,7 +19,6 @@ import android.net.Uri;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.aws.auth.IamRequestDecorator;
 import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 import com.amplifyframework.api.aws.sigv4.AppSyncV4Signer;
