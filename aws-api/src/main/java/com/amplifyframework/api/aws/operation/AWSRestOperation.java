@@ -149,6 +149,7 @@ public final class AWSRestOperation extends RestOperation {
             }
 
             onFailure.accept(new AppSyncException.NetworkException(
+                "Received an IO exception while making the request.",
                 ioe, "Retry the request."
             ));
         }

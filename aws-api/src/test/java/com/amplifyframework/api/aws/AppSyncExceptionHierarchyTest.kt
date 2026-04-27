@@ -34,8 +34,8 @@ class AppSyncExceptionHierarchyTest {
             AppSyncAuthException.TokenFetchException("msg", RuntimeException(), "recovery"),
             AppSyncAuthException.TokenExpiredException("msg", null, "recovery"),
             AppSyncAuthException.ProviderNotConfiguredException("msg", null, "recovery"),
-            AppSyncAuthException.SigningException(RuntimeException(), "recovery"),
-            AppSyncAuthException.TokenParsingException(RuntimeException(), "recovery"),
+            AppSyncAuthException.SigningException("msg", RuntimeException(), "recovery"),
+            AppSyncAuthException.TokenParsingException("msg", RuntimeException(), "recovery"),
             AppSyncAuthException.AuthorizationClaimException("msg", null, "recovery")
         )
         exceptions.forEach { ex ->
@@ -50,14 +50,14 @@ class AppSyncExceptionHierarchyTest {
         val exceptions: List<AppSyncException> = listOf(
             AppSyncException.ConfigurationException.InvalidConfigException("msg", null, "recovery"),
             AppSyncException.ConfigurationException.EndpointResolutionException("msg", cause, "recovery"),
-            AppSyncException.ResponseException.DeserializationException(cause, "recovery"),
+            AppSyncException.ResponseException.DeserializationException("msg", cause, "recovery"),
             AppSyncException.ResponseException.GraphQLErrorException(emptyList(), "recovery"),
             AppSyncException.SubscriptionException.ConnectionException("msg", cause, "recovery"),
             AppSyncException.SubscriptionException.TimeoutException(cause, "recovery"),
             AppSyncException.SubscriptionException.LimitExceededException("msg", "recovery"),
             AppSyncException.RequestException.SchemaException("msg", cause, "recovery"),
             AppSyncException.RequestException.ValidationException("msg", cause, "recovery"),
-            AppSyncException.NetworkException(cause, "recovery"),
+            AppSyncException.NetworkException("msg", cause, "recovery"),
             AppSyncException.UnknownException("msg", cause, "recovery")
         )
         exceptions.forEach { ex ->
@@ -73,7 +73,7 @@ class AppSyncExceptionHierarchyTest {
 
     @Test
     fun `AppSyncException is not ApiAuthException`() {
-        val ex = AppSyncException.NetworkException(RuntimeException(), "recovery")
+        val ex = AppSyncException.NetworkException("msg", RuntimeException(), "recovery")
         (ex is ApiAuthException) shouldBe false
     }
 
@@ -85,8 +85,8 @@ class AppSyncExceptionHierarchyTest {
             AppSyncAuthException.TokenFetchException("msg", null, "r"),
             AppSyncAuthException.TokenExpiredException("msg", null, "r"),
             AppSyncAuthException.ProviderNotConfiguredException("msg", null, "r"),
-            AppSyncAuthException.SigningException(null, "r"),
-            AppSyncAuthException.TokenParsingException(null, "r"),
+            AppSyncAuthException.SigningException("msg", null, "r"),
+            AppSyncAuthException.TokenParsingException("msg", null, "r"),
             AppSyncAuthException.AuthorizationClaimException("msg", null, "r")
         )
         exceptions.forEach { ex ->
@@ -107,10 +107,10 @@ class AppSyncExceptionHierarchyTest {
         val cause = RuntimeException()
         val exceptions: List<AppSyncException> = listOf(
             AppSyncException.ConfigurationException.InvalidConfigException("msg", null, "r"),
-            AppSyncException.ResponseException.DeserializationException(null, "r"),
+            AppSyncException.ResponseException.DeserializationException("msg", null, "r"),
             AppSyncException.SubscriptionException.ConnectionException("msg", null, "r"),
             AppSyncException.RequestException.ValidationException("msg", null, "r"),
-            AppSyncException.NetworkException(cause, "r"),
+            AppSyncException.NetworkException("msg", cause, "r"),
             AppSyncException.UnknownException("msg", null, "r")
         )
         exceptions.forEach { ex ->

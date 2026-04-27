@@ -21,6 +21,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.ApiAuthProviders;
 import com.amplifyframework.api.aws.AppSyncAuthException;
+import com.amplifyframework.api.aws.AppSyncException;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
 import com.amplifyframework.api.aws.AuthorizationType;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
@@ -100,8 +101,8 @@ public final class AuthRuleRequestDecorator {
                     ownerRuleWithReadRestriction = authRule;
                 } else {
                     throw new AppSyncAuthException.AuthorizationClaimException(
-                        "Detected multiple owner type auth rules with a READ operation. " +
-                        "We currently do not support this use case.", null,
+                        "Detected multiple owner type auth rules with a READ operation",
+                        null,
                         "We currently do not support this use case. Please limit your type to just one owner " +
                             "auth rule with a READ operation restriction.");
                 }
@@ -134,7 +135,7 @@ public final class AuthRuleRequestDecorator {
                     .build();
             } catch (AmplifyException error) {
                 // This should not happen normally
-                throw new AppSyncAuthException.AuthorizationClaimException(
+                throw new AppSyncException.UnknownException(
                     "Failed to set owner field on AppSyncGraphQLRequest.", error,
                     AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION);
             }
@@ -177,7 +178,9 @@ public final class AuthRuleRequestDecorator {
                     "you did, check that the value you specified in your schema is present in the access key."
             );
         } catch (CognitoParameterInvalidException error) {
-            throw new AppSyncAuthException.TokenParsingException(error,
+            throw new AppSyncAuthException.TokenParsingException(
+                "Failed to parse the ID token for identity claim: " + error.getMessage(),
+                error,
                 "Please verify the validity of token vended by the registered auth provider.");
         }
     }
@@ -194,10 +197,14 @@ public final class AuthRuleRequestDecorator {
                 }
             }
         } catch (JSONException error) {
-            throw new AppSyncAuthException.TokenParsingException(error,
+            throw new AppSyncAuthException.TokenParsingException(
+                "Failed obtain group claim from the parsed JWT token.",
+                error,
                 AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION);
         } catch (CognitoParameterInvalidException error) {
-            throw new AppSyncAuthException.TokenParsingException(error,
+            throw new AppSyncAuthException.TokenParsingException(
+                "Failed to parse the ID token for group claim: " + error.getMessage(),
+                error,
                 "Please verify the validity of token vended by the registered auth provider.");
         }
 
@@ -250,7 +257,8 @@ public final class AuthRuleRequestDecorator {
             default:
                 throw new AppSyncAuthException.ProviderNotConfiguredException(
                     "Tried to use owner/group-based authorization on an API " +
-                        "not configured with Cognito User Pools or OIDC.",
+                        "that is not configured with either Cognito User Pools " +
+                        "or OpenID Connect.",
                     null,
                     "Verify that the API is configured with either Cognito User Pools or OpenID Connect. @auth " +
                         "with owner/group-based authorization is not supported for other modes.");

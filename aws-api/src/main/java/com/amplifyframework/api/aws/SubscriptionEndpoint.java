@@ -435,7 +435,10 @@ final class SubscriptionEndpoint {
         // We need to use this method to pass apiName for LazyModel
         private GraphQLResponse<T> buildResponse(String jsonResponse) throws ApiException {
             if (!(responseFactory instanceof GsonGraphQLResponseFactory)) {
-                throw new AppSyncException.ResponseException.DeserializationException(null,
+                throw new AppSyncException.ResponseException.DeserializationException(
+                        "Amplify encountered an error while deserializing an object. " +
+                        "GraphQLResponse.Factory was not of type GsonGraphQLResponseFactory",
+                        null,
                         AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION);
             }
 
@@ -443,7 +446,9 @@ final class SubscriptionEndpoint {
                 return ((GsonGraphQLResponseFactory) responseFactory)
                         .buildResponse(request, jsonResponse, apiName);
             } catch (ClassCastException cce) {
-                throw new AppSyncException.ResponseException.DeserializationException(cce,
+                throw new AppSyncException.ResponseException.DeserializationException(
+                        "Amplify encountered an error while deserializing an object",
+                        cce,
                         AmplifyException.TODO_RECOVERY_SUGGESTION);
             }
         }
@@ -659,7 +664,9 @@ final class SubscriptionEndpoint {
                             AmplifyException.TODO_RECOVERY_SUGGESTION));
                 }
             } catch (JSONException exception) {
-                throw new AppSyncException.ResponseException.DeserializationException(exception,
+                throw new AppSyncException.ResponseException.DeserializationException(
+                    "Error processing Json message in subscription endpoint.",
+                    exception,
                     AmplifyException.TODO_RECOVERY_SUGGESTION);
             }
         }

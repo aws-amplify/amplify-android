@@ -78,7 +78,7 @@ public final class com/amplifyframework/api/aws/AppSyncAuthException$ProviderNot
 }
 
 public final class com/amplifyframework/api/aws/AppSyncAuthException$SigningException : com/amplifyframework/api/aws/AppSyncAuthException {
-	public fun <init> (Ljava/lang/Throwable;Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
 }
 
 public final class com/amplifyframework/api/aws/AppSyncAuthException$TokenExpiredException : com/amplifyframework/api/aws/AppSyncAuthException {
@@ -90,7 +90,7 @@ public final class com/amplifyframework/api/aws/AppSyncAuthException$TokenFetchE
 }
 
 public final class com/amplifyframework/api/aws/AppSyncAuthException$TokenParsingException : com/amplifyframework/api/aws/AppSyncAuthException {
-	public fun <init> (Ljava/lang/Throwable;Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
 }
 
 public abstract class com/amplifyframework/api/aws/AppSyncException : com/amplifyframework/api/ApiException {
@@ -110,7 +110,7 @@ public final class com/amplifyframework/api/aws/AppSyncException$ConfigurationEx
 }
 
 public final class com/amplifyframework/api/aws/AppSyncException$NetworkException : com/amplifyframework/api/aws/AppSyncException {
-	public fun <init> (Ljava/lang/Throwable;Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
 }
 
 public abstract class com/amplifyframework/api/aws/AppSyncException$RequestException : com/amplifyframework/api/aws/AppSyncException {
@@ -130,7 +130,7 @@ public abstract class com/amplifyframework/api/aws/AppSyncException$ResponseExce
 }
 
 public final class com/amplifyframework/api/aws/AppSyncException$ResponseException$DeserializationException : com/amplifyframework/api/aws/AppSyncException$ResponseException {
-	public fun <init> (Ljava/lang/Throwable;Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
 }
 
 public final class com/amplifyframework/api/aws/AppSyncException$ResponseException$GraphQLErrorException : com/amplifyframework/api/aws/AppSyncException$ResponseException {

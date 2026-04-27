@@ -167,7 +167,9 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends AWSGraphQLOperati
                 try {
                     jsonResponse = responseBody.string();
                 } catch (IOException exception) {
-                    onFailure.accept(new AppSyncException.ResponseException.DeserializationException(exception,
+                    onFailure.accept(new AppSyncException.ResponseException.DeserializationException(
+                        "Could not retrieve the response body from the returned JSON",
+                        exception,
                         AmplifyException.TODO_RECOVERY_SUGGESTION));
                     return;
                 }
@@ -196,7 +198,9 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends AWSGraphQLOperati
 
         @Override
         public void onFailure(@NonNull Call call, @NonNull IOException exception) {
-            onFailure.accept(new AppSyncException.NetworkException(exception,
+            onFailure.accept(new AppSyncException.NetworkException(
+                "OkHttp client request failed.",
+                exception,
                 "See attached exception for more details."));
         }
     }

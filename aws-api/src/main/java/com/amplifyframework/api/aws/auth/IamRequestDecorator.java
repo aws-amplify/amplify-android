@@ -144,7 +144,9 @@ public class IamRequestDecorator implements RequestDecorator {
             }
             return output.toByteArray();
         } catch (IOException exception) {
-            throw new AppSyncAuthException.SigningException(exception,
+            throw new AppSyncAuthException.SigningException(
+                "Unable to calculate SigV4 signature for the request",
+                exception,
                 "Check your application logs for details.");
         }
     }

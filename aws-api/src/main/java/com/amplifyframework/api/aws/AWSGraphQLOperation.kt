@@ -46,11 +46,14 @@ abstract class AWSGraphQLOperation<R>(
     private fun buildResponse(jsonResponse: String): GraphQLResponse<R> = try {
         (responseFactory as? GsonGraphQLResponseFactory)?.buildResponse(request, jsonResponse, apiName)
             ?: throw AppSyncException.ResponseException.DeserializationException(
+                "Amplify encountered an error while deserializing an object. " +
+                    "GraphQLResponse.Factory was not of type GsonGraphQLResponseFactory",
                 null,
                 AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
             )
     } catch (cce: ClassCastException) {
         throw AppSyncException.ResponseException.DeserializationException(
+            "Amplify encountered an error while deserializing an object",
             cce,
             AmplifyException.TODO_RECOVERY_SUGGESTION
         )

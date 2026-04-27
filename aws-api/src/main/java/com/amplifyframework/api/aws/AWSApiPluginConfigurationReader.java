@@ -63,8 +63,7 @@ final class AWSApiPluginConfigurationReader {
 
         if (data == null) {
             throw new AppSyncException.ConfigurationException.InvalidConfigException(
-                "Missing data configuration in Amplify Outputs. " +
-                "Check that your amplify_outputs.json file contains a \"data\" section", null,
+                "Missing data configuration in Amplify Outputs.", null,
                 "Check that your amplify_outputs.json file contains a \"data\" section."
             );
         }

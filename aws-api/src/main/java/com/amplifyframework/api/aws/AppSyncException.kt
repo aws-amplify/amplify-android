@@ -50,14 +50,16 @@ sealed class AppSyncAuthException(
     ) : AppSyncAuthException(message, cause, recoverySuggestion)
 
     class SigningException(
+        message: String,
         cause: Throwable?,
         recoverySuggestion: String
-    ) : AppSyncAuthException("Failed to sign the request.", cause, recoverySuggestion)
+    ) : AppSyncAuthException(message, cause, recoverySuggestion)
 
     class TokenParsingException(
+        message: String,
         cause: Throwable?,
         recoverySuggestion: String
-    ) : AppSyncAuthException("Failed to parse auth token.", cause, recoverySuggestion)
+    ) : AppSyncAuthException(message, cause, recoverySuggestion)
 
     class AuthorizationClaimException(
         message: String,
@@ -98,9 +100,10 @@ sealed class AppSyncException(
         AppSyncException(message, cause, recoverySuggestion) {
 
         class DeserializationException(
+            message: String,
             cause: Throwable?,
             recoverySuggestion: String
-        ) : ResponseException("Failed to deserialize the GraphQL response.", cause, recoverySuggestion)
+        ) : ResponseException(message, cause, recoverySuggestion)
 
         class GraphQLErrorException(
             val errors: List<GraphQLResponse.Error>,
@@ -149,9 +152,10 @@ sealed class AppSyncException(
     }
 
     class NetworkException(
+        message: String,
         cause: Throwable,
         recoverySuggestion: String
-    ) : AppSyncException("A network error occurred.", cause, recoverySuggestion)
+    ) : AppSyncException(message, cause, recoverySuggestion)
 
     class UnknownException(
         message: String,

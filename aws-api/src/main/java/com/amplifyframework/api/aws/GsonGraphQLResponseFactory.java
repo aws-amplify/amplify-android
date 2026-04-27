@@ -69,6 +69,7 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
         // https://github.com/google/gson/issues/1697
         if (Empty.check(responseJson)) {
             throw new AppSyncException.ResponseException.DeserializationException(
+                    "Amplify encountered an error while deserializing an object.",
                     new JsonParseException("Empty response."),
                     AmplifyException.TODO_RECOVERY_SUGGESTION
             );
@@ -96,7 +97,9 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
                     .create();
             return responseGson.fromJson(responseJson, responseType);
         } catch (JsonParseException jsonParseException) {
-            throw new AppSyncException.ResponseException.DeserializationException(jsonParseException,
+            throw new AppSyncException.ResponseException.DeserializationException(
+                    "Amplify encountered an error while deserializing an object.",
+                    jsonParseException,
                     AmplifyException.TODO_RECOVERY_SUGGESTION);
         }
     }
