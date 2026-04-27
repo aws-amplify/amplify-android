@@ -53,7 +53,10 @@ internal fun Project.registerLicenseHeaderCheck() {
         group = "verification"
         description = "Verify source files have the required Apache 2.0 license header"
 
-        val sourceTree = fileTree("src") { include("**/*.kt", "**/*.java") }
+        val sourceTree = fileTree("src") {
+            include("**/*.kt", "**/*.java")
+            exclude("**/generated/**")
+        }
         inputs.files(sourceTree)
         val reportFile = layout.buildDirectory.file("reports/licenseHeaderCheck.txt")
         outputs.file(reportFile)
