@@ -57,12 +57,12 @@ jobs:
       id-token: write
     steps:
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@5fd3084fc36e372ff1fff382a39b10d03659f355 #2.2.0
+        uses: aws-actions/configure-aws-credentials@ec61189d14ec14c8efccab744f656cffd0e33f37 #6.1.0
         with:
           role-to-assume: ${{ secrets.AMPLIFY_ANDROID_RELEASE_PUBLISHER_ROLE }}
           aws-region: ${{ env.AWS_REGION }}
       - name: Start Maven Release Build
-        uses: aws-actions/aws-codebuild-run-build@2a49e1faf172677d80ce658678e9ff8bd2737d74 #1.0.15
+        uses: aws-actions/aws-codebuild-run-build@7e46c3fa1c1f217e26a73712796b1f78938b534b #1.0.19
         with:
           project-name: AmplifyAndroid-ReleasePublisher-V2
           source-version-override: ${{ env.NEW_TAG }}

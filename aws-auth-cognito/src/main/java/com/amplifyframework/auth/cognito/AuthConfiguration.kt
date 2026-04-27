@@ -243,11 +243,11 @@ data class AuthConfiguration internal constructor(
         }
 
         private fun AmplifyOutputsData.Auth.PasswordPolicy.toConfigType() = PasswordProtectionSettings(
-            length = minLength ?: 6,
-            requiresNumber = requireNumbers ?: false,
-            requiresSpecial = requireSymbols ?: false,
-            requiresUpper = requireUppercase ?: false,
-            requiresLower = requireLowercase ?: false
+            length = minLength,
+            requiresNumber = requireNumbers,
+            requiresSpecial = requireSymbols,
+            requiresUpper = requireUppercase,
+            requiresLower = requireLowercase
         )
     }
 }
