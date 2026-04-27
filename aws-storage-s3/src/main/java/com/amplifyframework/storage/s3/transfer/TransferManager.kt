@@ -100,7 +100,8 @@ internal class TransferManager(
         metadata: ObjectMetadata,
         cannedAcl: ObjectCannedAcl? = null,
         listener: TransferListener? = null,
-        useAccelerateEndpoint: Boolean = false
+        useAccelerateEndpoint: Boolean = false,
+        progressStallTimeoutSeconds: Long = 0L
     ): TransferObserver {
         val transferRecordId = if (shouldUploadInMultipart(file)) {
             createMultipartUploadRecords(
@@ -137,7 +138,8 @@ internal class TransferManager(
             workManager,
             transferWorkerObserver,
             transferDB,
-            listener
+            listener,
+            progressStallTimeoutSeconds
         )
         mainHandler.post {
             workManager
@@ -148,12 +150,14 @@ internal class TransferManager(
     }
 
     @Throws(IOException::class)
+    @JvmOverloads
     fun upload(
         transferId: String,
         key: String,
         inputStream: InputStream,
         options: UploadOptions,
-        useAccelerateEndpoint: Boolean
+        useAccelerateEndpoint: Boolean,
+        progressStallTimeoutSeconds: Long = 0L
     ): TransferObserver {
         val file = writeInputStreamToFile(inputStream)
         return upload(
@@ -165,7 +169,8 @@ internal class TransferManager(
             options.objectMetadata,
             options.cannedAcl,
             options.transferListener,
-            useAccelerateEndpoint
+            useAccelerateEndpoint,
+            progressStallTimeoutSeconds
         )
     }
 

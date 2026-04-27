@@ -28,6 +28,7 @@ import com.amplifyframework.storage.result.StorageTransferProgress
 import com.amplifyframework.storage.result.StorageUploadFileResult
 import com.amplifyframework.storage.s3.ServerSideEncryption
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration
+import com.amplifyframework.storage.s3.extensions.toStorageUploadException
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadRequest
 import com.amplifyframework.storage.s3.service.StorageService
 import com.amplifyframework.storage.s3.transfer.TransferListener
@@ -53,7 +54,8 @@ class AWSS3StorageUploadFileOperation @JvmOverloads internal constructor(
     private var transferObserver: TransferObserver? = null,
     onProgress: Consumer<StorageTransferProgress>? = null,
     onSuccess: Consumer<StorageUploadFileResult>? = null,
-    onError: Consumer<StorageException>? = null
+    onError: Consumer<StorageException>? = null,
+    private val progressStallTimeoutSeconds: Long = 0L
 ) : StorageUploadFileOperation<AWSS3StorageUploadRequest<File>>(request, transferId, onProgress, onSuccess, onError) {
 
     constructor(
@@ -75,7 +77,41 @@ class AWSS3StorageUploadFileOperation @JvmOverloads internal constructor(
         null,
         onProgress,
         onSuccess,
-        onError
+        onError,
+        0L
+    )
+
+    /**
+     * Java-friendly secondary constructor that accepts a resolved progress-stall timeout.
+     *
+     * The plugin resolves the effective seconds from the plugin configuration and any per-upload
+     * override before instantiating this operation, so downstream workers can arm a stall timer
+     * without re-reading the plugin configuration.
+     *
+     * @param progressStallTimeoutSeconds resolved stall interval in seconds; `0` disables detection.
+     */
+    constructor(
+        storageService: StorageService,
+        executorService: ExecutorService,
+        authCredentialsProvider: AuthCredentialsProvider,
+        request: AWSS3StorageUploadRequest<File>,
+        awsS3StoragePluginConfiguration: AWSS3StoragePluginConfiguration,
+        onProgress: Consumer<StorageTransferProgress>,
+        onSuccess: Consumer<StorageUploadFileResult>,
+        onError: Consumer<StorageException>,
+        progressStallTimeoutSeconds: Long
+    ) : this(
+        UUID.randomUUID().toString(),
+        storageService,
+        executorService,
+        authCredentialsProvider,
+        awsS3StoragePluginConfiguration,
+        request,
+        null,
+        onProgress,
+        onSuccess,
+        onError,
+        progressStallTimeoutSeconds
     )
 
     init {
@@ -114,7 +150,8 @@ class AWSS3StorageUploadFileOperation @JvmOverloads internal constructor(
                                 serviceKey,
                                 file,
                                 objectMetadata,
-                                uploadRequest.useAccelerateEndpoint()
+                                uploadRequest.useAccelerateEndpoint(),
+                                progressStallTimeoutSeconds
                             )
                             transferObserver?.setTransferListener(UploadTransferListener())
                         } catch (exception: Exception) {
@@ -226,10 +263,8 @@ class AWSS3StorageUploadFileOperation @JvmOverloads internal constructor(
                 HubEvent.create(StorageChannelEventName.UPLOAD_ERROR, exception)
             )
             onError?.accept(
-                StorageException(
-                    "Something went wrong with your AWS S3 Storage upload file operation",
-                    exception,
-                    "See attached exception for more information and suggestions"
+                exception.toStorageUploadException(
+                    "Something went wrong with your AWS S3 Storage upload file operation"
                 )
             )
         }

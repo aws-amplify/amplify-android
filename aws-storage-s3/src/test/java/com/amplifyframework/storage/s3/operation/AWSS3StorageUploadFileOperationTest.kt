@@ -78,7 +78,8 @@ class AWSS3StorageUploadFileOperationTest {
             eq(expectedKey),
             eq(tempFile),
             any(ObjectMetadata::class.java),
-            eq(false)
+            eq(false),
+            eq(0L)
         )
     }
 
@@ -124,7 +125,8 @@ class AWSS3StorageUploadFileOperationTest {
             eq(expectedKey),
             eq(tempFile),
             any(ObjectMetadata::class.java),
-            eq(false)
+            eq(false),
+            eq(0L)
         )
     }
 
@@ -170,7 +172,8 @@ class AWSS3StorageUploadFileOperationTest {
             eq(expectedKey),
             eq(tempFile),
             any(ObjectMetadata::class.java),
-            eq(false)
+            eq(false),
+            eq(0L)
         )
     }
 }

@@ -35,6 +35,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.mockito.Mockito.any
+import org.mockito.Mockito.anyLong
 import org.mockito.Mockito.eq
 import org.robolectric.RobolectricTestRunner
 
@@ -63,7 +64,8 @@ class AWSS3StorageUploadInputStreamOperationTest {
                 any(),
                 any(),
                 any(),
-                eq(false)
+                eq(false),
+                anyLong()
             )
         ).thenReturn(Mockito.mock(TransferObserver::class.java))
         val request = AWSS3StorageUploadRequest<InputStream>(
@@ -92,7 +94,8 @@ class AWSS3StorageUploadInputStreamOperationTest {
             eq(expectedKey),
             eq(tempInputStream),
             any(ObjectMetadata::class.java),
-            eq(false)
+            eq(false),
+            eq(0L)
         )
     }
 
@@ -108,7 +111,8 @@ class AWSS3StorageUploadInputStreamOperationTest {
                 any(),
                 any(),
                 any(),
-                eq(false)
+                eq(false),
+                anyLong()
             )
         )
             .thenReturn(Mockito.mock(TransferObserver::class.java))
@@ -149,7 +153,8 @@ class AWSS3StorageUploadInputStreamOperationTest {
             eq(expectedKey),
             eq(tempInputStream),
             any(ObjectMetadata::class.java),
-            eq(false)
+            eq(false),
+            eq(0L)
         )
     }
 
@@ -165,7 +170,8 @@ class AWSS3StorageUploadInputStreamOperationTest {
                 any(),
                 any(),
                 any(),
-                eq(false)
+                eq(false),
+                anyLong()
             )
         ).thenReturn(Mockito.mock(TransferObserver::class.java))
         val request = AWSS3StorageUploadRequest<InputStream>(
@@ -205,7 +211,8 @@ class AWSS3StorageUploadInputStreamOperationTest {
             eq(expectedKey),
             eq(tempInputStream),
             any(ObjectMetadata::class.java),
-            eq(false)
+            eq(false),
+            eq(0L)
         )
     }
 }

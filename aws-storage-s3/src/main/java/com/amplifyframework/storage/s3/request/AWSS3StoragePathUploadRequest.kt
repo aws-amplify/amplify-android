@@ -20,6 +20,11 @@ import com.amplifyframework.storage.s3.ServerSideEncryption
 /**
  * Parameters to provide to S3 that describe a request to upload a
  * file or input stream.
+ *
+ * @property progressStallTimeoutSeconds Resolved progress-stall interval in seconds. `0` disables
+ *   stall detection. The value is the result of merging the plugin default with any per-upload
+ *   override supplied on the upload options, so downstream code does not need the plugin
+ *   configuration to decide whether to arm the stall timer.
  */
 internal data class AWSS3StoragePathUploadRequest<L>(
     val path: StoragePath,
@@ -27,5 +32,6 @@ internal data class AWSS3StoragePathUploadRequest<L>(
     val contentType: String?,
     val serverSideEncryption: ServerSideEncryption,
     val metadata: Map<String, String>,
-    val useAccelerateEndpoint: Boolean
+    val useAccelerateEndpoint: Boolean,
+    val progressStallTimeoutSeconds: Long = 0L
 )

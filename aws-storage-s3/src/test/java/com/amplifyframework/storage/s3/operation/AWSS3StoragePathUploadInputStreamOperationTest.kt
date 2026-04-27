@@ -82,7 +82,8 @@ class AWSS3StoragePathUploadInputStreamOperationTest {
                 expectedServiceKey,
                 inputStream,
                 any(),
-                false
+                false,
+                0L
             )
         }
     }
@@ -124,7 +125,8 @@ class AWSS3StoragePathUploadInputStreamOperationTest {
                 expectedServiceKey,
                 inputStream,
                 any(),
-                false
+                false,
+                0L
             )
         }
     }
@@ -160,7 +162,7 @@ class AWSS3StoragePathUploadInputStreamOperationTest {
         // THEN
         verify { onError.accept(StoragePathValidationException.invalidStoragePathException()) }
         verify(exactly = 0) {
-            storageService.uploadInputStream(any(), any(), any(), any(), any())
+            storageService.uploadInputStream(any(), any(), any(), any(), any(), any())
         }
     }
 
@@ -204,7 +206,7 @@ class AWSS3StoragePathUploadInputStreamOperationTest {
             )
         }
         verify(exactly = 0) {
-            storageService.uploadInputStream(any(), any(), any(), any(), any())
+            storageService.uploadInputStream(any(), any(), any(), any(), any(), any())
         }
     }
 
@@ -238,7 +240,7 @@ class AWSS3StoragePathUploadInputStreamOperationTest {
         // THEN
         verify { onError.accept(StoragePathValidationException.unsupportedStoragePathException()) }
         verify(exactly = 0) {
-            storageService.uploadInputStream(any(), any(), any(), any(), any())
+            storageService.uploadInputStream(any(), any(), any(), any(), any(), any())
         }
     }
 

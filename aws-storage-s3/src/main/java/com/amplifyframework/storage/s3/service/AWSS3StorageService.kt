@@ -165,7 +165,8 @@ internal class AWSS3StorageService(
         serviceKey: String,
         file: File,
         metadata: ObjectMetadata,
-        useAccelerateEndpoint: Boolean
+        useAccelerateEndpoint: Boolean,
+        progressStallTimeoutSeconds: Long
     ): TransferObserver = transferManager.upload(
         transferId,
         s3BucketName,
@@ -173,7 +174,8 @@ internal class AWSS3StorageService(
         serviceKey,
         file,
         metadata,
-        useAccelerateEndpoint = useAccelerateEndpoint
+        useAccelerateEndpoint = useAccelerateEndpoint,
+        progressStallTimeoutSeconds = progressStallTimeoutSeconds
     )
 
     /**
@@ -189,10 +191,18 @@ internal class AWSS3StorageService(
         serviceKey: String,
         inputStream: InputStream,
         metadata: ObjectMetadata,
-        useAccelerateEndpoint: Boolean
+        useAccelerateEndpoint: Boolean,
+        progressStallTimeoutSeconds: Long
     ): TransferObserver {
         val uploadOptions = UploadOptions(s3BucketName, awsRegion, metadata)
-        return transferManager.upload(transferId, serviceKey, inputStream, uploadOptions, useAccelerateEndpoint)
+        return transferManager.upload(
+            transferId,
+            serviceKey,
+            inputStream,
+            uploadOptions,
+            useAccelerateEndpoint,
+            progressStallTimeoutSeconds
+        )
     }
 
     /**
