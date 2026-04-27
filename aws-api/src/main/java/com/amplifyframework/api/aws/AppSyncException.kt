@@ -66,6 +66,12 @@ sealed class AppSyncAuthException(
         cause: Throwable?,
         recoverySuggestion: String
     ) : AppSyncAuthException(message, cause, recoverySuggestion)
+
+    class AuthExhaustedException(
+        message: String,
+        cause: Throwable?,
+        recoverySuggestion: String
+    ) : AppSyncAuthException(message, cause, recoverySuggestion)
 }
 
 // ─── Non-auth exceptions ─── extend ApiException directly ─────────────────────
@@ -125,9 +131,10 @@ sealed class AppSyncException(
         ) : SubscriptionException(message, cause, recoverySuggestion)
 
         class TimeoutException(
+            message: String,
             cause: Throwable?,
             recoverySuggestion: String
-        ) : SubscriptionException("Subscription connection timed out.", cause, recoverySuggestion)
+        ) : SubscriptionException(message, cause, recoverySuggestion)
 
         class LimitExceededException(
             message: String,
@@ -145,6 +152,12 @@ sealed class AppSyncException(
         ) : RequestException(message, cause, recoverySuggestion)
 
         class ValidationException(
+            message: String,
+            cause: Throwable?,
+            recoverySuggestion: String
+        ) : RequestException(message, cause, recoverySuggestion)
+
+        class InvalidStateException(
             message: String,
             cause: Throwable?,
             recoverySuggestion: String

@@ -104,7 +104,7 @@ class MultiAuthAppSyncGraphQLOperationTest {
         verify {
             onFailure.accept(
                 withArg {
-                    it.shouldBeInstanceOf<AppSyncAuthException.ProviderNotConfiguredException>()
+                    it.shouldBeInstanceOf<AppSyncAuthException.AuthExhaustedException>()
                     it.shouldBeInstanceOf<ApiAuthException>()
                 }
             )
@@ -157,7 +157,7 @@ class MultiAuthAppSyncGraphQLOperationTest {
         verify {
             onFailure.accept(
                 withArg {
-                    it.shouldBeInstanceOf<AppSyncAuthException.ProviderNotConfiguredException>()
+                    it.shouldBeInstanceOf<AppSyncAuthException.AuthExhaustedException>()
                     it.shouldBeInstanceOf<ApiAuthException>()
                 }
             )

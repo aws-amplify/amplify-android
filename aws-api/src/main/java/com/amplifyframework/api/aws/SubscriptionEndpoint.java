@@ -178,7 +178,7 @@ final class SubscriptionEndpoint {
                     // Don't wrap it if it's an ApiAuthException.
                     onSubscriptionError.accept((ApiAuthException) exception);
                 } else {
-                    onSubscriptionError.accept(new AppSyncException.RequestException.ValidationException(
+                    onSubscriptionError.accept(new AppSyncException.UnknownException(
                         "Failed to construct subscription registration message.",
                         exception,
                         AmplifyException.TODO_RECOVERY_SUGGESTION
@@ -283,7 +283,7 @@ final class SubscriptionEndpoint {
 
                 webSocket.send(jsonMessage);
             } catch (JSONException jsonException) {
-                throw new AppSyncException.RequestException.ValidationException(
+                throw new AppSyncException.UnknownException(
                     "Failed to construct subscription release message.",
                     jsonException,
                     AmplifyException.TODO_RECOVERY_SUGGESTION
@@ -395,7 +395,9 @@ final class SubscriptionEndpoint {
         boolean awaitSubscriptionReady() {
             try {
                 if (!subscriptionReadyAcknowledgment.await(ACKNOWLEDGEMENT_TIMEOUT, TimeUnit.SECONDS)) {
-                    dispatchError(new AppSyncException.SubscriptionException.TimeoutException(null,
+                    dispatchError(new AppSyncException.SubscriptionException.TimeoutException(
+                        "Timed out waiting for subscription start_ack.",
+                        null,
                         "Check your Internet connection. Is your device online?"));
                     return false;
                 } else if (failed) {
@@ -420,7 +422,9 @@ final class SubscriptionEndpoint {
         void awaitSubscriptionCompleted() {
             try {
                 if (!subscriptionCompletionAcknowledgement.await(ACKNOWLEDGEMENT_TIMEOUT, TimeUnit.SECONDS)) {
-                    dispatchError(new AppSyncException.SubscriptionException.TimeoutException(null,
+                    dispatchError(new AppSyncException.SubscriptionException.TimeoutException(
+                        "Subscription completion not acknowledged.",
+                        null,
                         AmplifyException.TODO_RECOVERY_SUGGESTION));
                 }
             } catch (InterruptedException interruptedException) {

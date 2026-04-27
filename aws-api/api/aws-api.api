@@ -69,6 +69,10 @@ public abstract class com/amplifyframework/api/aws/AppSyncAuthException : com/am
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
+public final class com/amplifyframework/api/aws/AppSyncAuthException$AuthExhaustedException : com/amplifyframework/api/aws/AppSyncAuthException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
+}
+
 public final class com/amplifyframework/api/aws/AppSyncAuthException$AuthorizationClaimException : com/amplifyframework/api/aws/AppSyncAuthException {
 	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
 }
@@ -117,6 +121,10 @@ public abstract class com/amplifyframework/api/aws/AppSyncException$RequestExcep
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
+public final class com/amplifyframework/api/aws/AppSyncException$RequestException$InvalidStateException : com/amplifyframework/api/aws/AppSyncException$RequestException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
+}
+
 public final class com/amplifyframework/api/aws/AppSyncException$RequestException$SchemaException : com/amplifyframework/api/aws/AppSyncException$RequestException {
 	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
 }
@@ -151,7 +159,7 @@ public final class com/amplifyframework/api/aws/AppSyncException$SubscriptionExc
 }
 
 public final class com/amplifyframework/api/aws/AppSyncException$SubscriptionException$TimeoutException : com/amplifyframework/api/aws/AppSyncException$SubscriptionException {
-	public fun <init> (Ljava/lang/Throwable;Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
 }
 
 public final class com/amplifyframework/api/aws/AppSyncException$UnknownException : com/amplifyframework/api/aws/AppSyncException {

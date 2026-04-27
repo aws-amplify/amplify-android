@@ -128,7 +128,7 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends AWSGraphQLOperati
             ongoingCall = client.newCall(decoratedOkHttpRequest);
             ongoingCall.enqueue(new OkHttpCallback());
         } else {
-            onFailure.accept(new AppSyncAuthException.ProviderNotConfiguredException(
+            onFailure.accept(new AppSyncAuthException.AuthExhaustedException(
                 "Unable to successfully complete request with any of the compatible auth types.",
                 null,
                 "Check your application logs for detail."
@@ -181,7 +181,7 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends AWSGraphQLOperati
                     if (authTypes.hasNext()) {
                         executorService.submit(MultiAuthAppSyncGraphQLOperation.this::dispatchRequest);
                     } else {
-                        onFailure.accept(new AppSyncAuthException.ProviderNotConfiguredException(
+                        onFailure.accept(new AppSyncAuthException.AuthExhaustedException(
                                 "Unable to successfully complete request with any of the compatible auth types.",
                                 null,
                                 "Check your application logs for detail."

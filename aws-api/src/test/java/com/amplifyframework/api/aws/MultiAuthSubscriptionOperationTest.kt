@@ -65,7 +65,7 @@ class MultiAuthSubscriptionOperationTest {
         verify {
             onError(
                 withArg {
-                    it.shouldBeInstanceOf<AppSyncException.RequestException.ValidationException>()
+                    it.shouldBeInstanceOf<AppSyncException.RequestException.InvalidStateException>()
                     it.shouldBeInstanceOf<ApiException>()
                 }
             )

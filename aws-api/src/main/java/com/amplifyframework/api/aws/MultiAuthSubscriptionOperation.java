@@ -75,7 +75,7 @@ final class MultiAuthSubscriptionOperation<T> extends AWSGraphQLOperation<T> {
     @Override
     public synchronized void start() {
         if (canceled.get()) {
-            onSubscriptionError.accept(new AppSyncException.RequestException.ValidationException(
+            onSubscriptionError.accept(new AppSyncException.RequestException.InvalidStateException(
                 "Operation already canceled.", null, "Don't cancel the subscription before starting it!"
             ));
             return;
@@ -137,7 +137,7 @@ final class MultiAuthSubscriptionOperation<T> extends AWSGraphQLOperation<T> {
                 onSubscriptionComplete
             );
         } else {
-            emitErrorAndCancelSubscription(new AppSyncAuthException.ProviderNotConfiguredException(
+            emitErrorAndCancelSubscription(new AppSyncAuthException.AuthExhaustedException(
                 "Unable to establish subscription connection with any of the compatible auth types.",
                 null,
                 "Check your application logs for detail."

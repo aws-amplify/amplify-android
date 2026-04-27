@@ -36,7 +36,8 @@ class AppSyncExceptionHierarchyTest {
             AppSyncAuthException.ProviderNotConfiguredException("msg", null, "recovery"),
             AppSyncAuthException.SigningException("msg", RuntimeException(), "recovery"),
             AppSyncAuthException.TokenParsingException("msg", RuntimeException(), "recovery"),
-            AppSyncAuthException.AuthorizationClaimException("msg", null, "recovery")
+            AppSyncAuthException.AuthorizationClaimException("msg", null, "recovery"),
+            AppSyncAuthException.AuthExhaustedException("msg", null, "recovery")
         )
         exceptions.forEach { ex ->
             ex.shouldBeInstanceOf<ApiAuthException>()
@@ -53,7 +54,7 @@ class AppSyncExceptionHierarchyTest {
             AppSyncException.ResponseException.DeserializationException("msg", cause, "recovery"),
             AppSyncException.ResponseException.GraphQLErrorException(emptyList(), "recovery"),
             AppSyncException.SubscriptionException.ConnectionException("msg", cause, "recovery"),
-            AppSyncException.SubscriptionException.TimeoutException(cause, "recovery"),
+            AppSyncException.SubscriptionException.TimeoutException("msg", cause, "recovery"),
             AppSyncException.SubscriptionException.LimitExceededException("msg", "recovery"),
             AppSyncException.RequestException.SchemaException("msg", cause, "recovery"),
             AppSyncException.RequestException.ValidationException("msg", cause, "recovery"),
@@ -87,7 +88,8 @@ class AppSyncExceptionHierarchyTest {
             AppSyncAuthException.ProviderNotConfiguredException("msg", null, "r"),
             AppSyncAuthException.SigningException("msg", null, "r"),
             AppSyncAuthException.TokenParsingException("msg", null, "r"),
-            AppSyncAuthException.AuthorizationClaimException("msg", null, "r")
+            AppSyncAuthException.AuthorizationClaimException("msg", null, "r"),
+            AppSyncAuthException.AuthExhaustedException("msg", null, "r")
         )
         exceptions.forEach { ex ->
             val label = when (ex) {
@@ -97,6 +99,7 @@ class AppSyncExceptionHierarchyTest {
                 is AppSyncAuthException.SigningException -> "signing"
                 is AppSyncAuthException.TokenParsingException -> "tokenParsing"
                 is AppSyncAuthException.AuthorizationClaimException -> "authClaim"
+                is AppSyncAuthException.AuthExhaustedException -> "authExhausted"
             }
             label.isNotEmpty() shouldBe true
         }
