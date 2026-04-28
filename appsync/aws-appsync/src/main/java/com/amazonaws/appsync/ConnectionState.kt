@@ -18,7 +18,7 @@ import com.amplifyframework.annotations.ExperimentalAmplifyApi
 import com.amplifyframework.api.ApiException
 
 /**
- * The connection state of the client's shared WebSocket. Replaces Hub events from V2.
+ * The connection state of the client's shared WebSocket.
  * Exposed via [AmplifyAppSyncClient.events].
  */
 @ExperimentalAmplifyApi

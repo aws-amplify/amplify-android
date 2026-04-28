@@ -14,11 +14,14 @@
  */
 package com.amazonaws.appsync
 
+import com.amazonaws.appsync.internal.GraphQLHttpClient
+import com.amazonaws.appsync.internal.GraphQLWebSocketClient
 import com.amplifyframework.annotations.ExperimentalAmplifyApi
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.foundation.result.Result
+import com.amplifyframework.foundation.result.resultCatching
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 import okhttp3.OkHttpClient
@@ -48,12 +51,15 @@ import okhttp3.OkHttpClient
 @ExperimentalAmplifyApi
 class AmplifyAppSyncClient(val configuration: Configuration) {
 
+    private val httpClient = GraphQLHttpClient(configuration)
+    private val webSocketClient = GraphQLWebSocketClient(configuration)
+
     /**
      * Per-client connection state flow.
      * Emits [ConnectionState] changes for the shared WebSocket connection.
      */
     val events: SharedFlow<ConnectionState>
-        get() = TODO("Connection state will be implemented with subscriptions")
+        get() = webSocketClient.connectionState
 
     /**
      * Execute a GraphQL query.
@@ -61,8 +67,8 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
      * @param request The GraphQL request. Use model helpers or construct manually.
      * @return [Result.Success] with the typed GraphQL response, or [Result.Failure] with an [ApiException].
      */
-    suspend fun <T> query(request: GraphQLRequest<T>): Result<GraphQLResponse<T>, ApiException> =
-        TODO("Query implementation will be added in a follow-up PR")
+    suspend fun <T> query(request: GraphQLRequest<T>): Result<GraphQLResponse<T>, Throwable> =
+        resultCatching { httpClient.execute(request) }
 
     /**
      * Execute a GraphQL mutation.
@@ -70,8 +76,8 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
      * @param request The GraphQL request. Use model helpers or construct manually.
      * @return [Result.Success] with the typed GraphQL response, or [Result.Failure] with an [ApiException].
      */
-    suspend fun <T> mutate(request: GraphQLRequest<T>): Result<GraphQLResponse<T>, ApiException> =
-        TODO("Mutation implementation will be added in a follow-up PR")
+    suspend fun <T> mutate(request: GraphQLRequest<T>): Result<GraphQLResponse<T>, Throwable> =
+        resultCatching { httpClient.execute(request) }
 
     /**
      * Subscribe to a GraphQL subscription. Returns a [Flow] of [SubscriptionEvent].
@@ -84,14 +90,15 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
      * @return A cold [Flow] of [SubscriptionEvent].
      */
     fun <T> subscribe(request: GraphQLRequest<T>): Flow<SubscriptionEvent<T>> =
-        TODO("Subscription implementation will be added in a follow-up PR")
+        webSocketClient.subscribe(request)
 
     /**
      * Close the client. Terminates all active subscriptions and releases resources.
      * The client cannot be reused after closing.
      */
     fun close() {
-        TODO("Close implementation will be added in a follow-up PR")
+        webSocketClient.close()
+        httpClient.close()
     }
 
     // ── Configuration ───────────────────────────────────────────────────
