@@ -175,7 +175,7 @@ public final class AppSyncGraphQLOperation<R> extends AWSGraphQLOperation<R> {
                 onFailure.accept(new AppSyncException.NetworkException(
                     "OkHttp client request failed.",
                     exception,
-                    "Check your Internet connection. Is your device online?"));
+                    "See attached exception for more details."));
             }
         }
     }
