@@ -14,6 +14,7 @@
  */
 package com.amazonaws.appsync
 
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
 import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
 
 /**
@@ -24,6 +25,7 @@ import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
  * These are configuration objects — the actual header generation and request signing
  * is handled internally by the plugin infrastructure via [AuthProviderBridge].
  */
+@ExperimentalAmplifyApi
 sealed class AppSyncClientAuthorizer(
     /** The auth mode this authorizer provides. */
     val authMode: AppSyncAuthMode
