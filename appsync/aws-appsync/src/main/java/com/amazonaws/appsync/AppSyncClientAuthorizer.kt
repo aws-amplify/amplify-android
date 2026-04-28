@@ -22,7 +22,7 @@ import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
  * produce authorization credentials for that mode.
  *
  * These are configuration objects — the actual header generation and request signing
- * is handled internally by the V2 plugin infrastructure via [AuthProviderBridge].
+ * is handled internally by the plugin infrastructure via [AuthProviderBridge].
  */
 sealed class AppSyncClientAuthorizer(
     /** The auth mode this authorizer provides. */

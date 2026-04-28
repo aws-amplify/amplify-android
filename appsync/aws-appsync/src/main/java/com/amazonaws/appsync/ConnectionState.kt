@@ -17,7 +17,7 @@ package com.amazonaws.appsync
 import com.amplifyframework.api.ApiException
 
 /**
- * The connection state of the client's shared WebSocket. Replaces Hub events from V2.
+ * The connection state of the client's shared WebSocket.
  * Exposed via [AmplifyAppSyncClient.events].
  */
 sealed class ConnectionState {

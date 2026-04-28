@@ -14,6 +14,8 @@
  */
 package com.amazonaws.appsync
 
+import com.amazonaws.appsync.internal.GraphQLHttpClient
+import com.amazonaws.appsync.internal.GraphQLWebSocketClient
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
 import kotlinx.coroutines.flow.Flow
@@ -41,12 +43,15 @@ import okhttp3.OkHttpClient
  */
 class AmplifyAppSyncClient(val configuration: Configuration) {
 
+    private val httpClient = GraphQLHttpClient(configuration)
+    private val webSocketClient = GraphQLWebSocketClient(configuration)
+
     /**
-     * Per-client connection state flow. Replaces V2 Hub events.
+     * Per-client connection state flow.
      * Emits [ConnectionState] changes for the shared WebSocket connection.
      */
     val events: SharedFlow<ConnectionState>
-        get() = TODO("Connection state will be implemented with subscriptions")
+        get() = webSocketClient.connectionState
 
     /**
      * Execute a GraphQL query.
@@ -56,7 +61,7 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
      * @throws ApiException on failure.
      */
     suspend fun <T> query(request: GraphQLRequest<T>): GraphQLResponse<T> =
-        TODO("Query implementation will be added in a follow-up PR")
+        httpClient.execute(request)
 
     /**
      * Execute a GraphQL mutation.
@@ -66,7 +71,7 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
      * @throws ApiException on failure.
      */
     suspend fun <T> mutate(request: GraphQLRequest<T>): GraphQLResponse<T> =
-        TODO("Mutation implementation will be added in a follow-up PR")
+        httpClient.execute(request)
 
     /**
      * Subscribe to a GraphQL subscription. Returns a [Flow] of [SubscriptionEvent] that
@@ -81,14 +86,15 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
      * @return A cold [Flow] of [SubscriptionEvent].
      */
     fun <T> subscribe(request: GraphQLRequest<T>): Flow<SubscriptionEvent<T>> =
-        TODO("Subscription implementation will be added in a follow-up PR")
+        webSocketClient.subscribe(request)
 
     /**
      * Close the client. Terminates all active subscriptions and releases resources.
      * The client cannot be reused after closing.
      */
     fun close() {
-        TODO("Close implementation will be added in a follow-up PR")
+        webSocketClient.close()
+        httpClient.close()
     }
 
     // ── Configuration ───────────────────────────────────────────────────
