@@ -37,12 +37,6 @@ sealed class AppSyncAuthException(
         recoverySuggestion: String
     ) : AppSyncAuthException(message, cause, recoverySuggestion)
 
-    class TokenExpiredException(
-        message: String,
-        cause: Throwable?,
-        recoverySuggestion: String
-    ) : AppSyncAuthException(message, cause, recoverySuggestion)
-
     class ProviderNotConfiguredException(
         message: String,
         cause: Throwable?,
@@ -115,7 +109,11 @@ sealed class AppSyncException(
             val errors: List<GraphQLResponse.Error>,
             recoverySuggestion: String
         ) : ResponseException(
-            "GraphQL response contained errors: ${errors.joinToString { it.message }}",
+            if (errors.isEmpty()) {
+                "GraphQL response contained errors"
+            } else {
+                "GraphQL response contained errors: ${errors.joinToString { it.message }}"
+            },
             null,
             recoverySuggestion
         )
@@ -166,7 +164,7 @@ sealed class AppSyncException(
 
     class NetworkException(
         message: String,
-        cause: Throwable,
+        cause: Throwable?,
         recoverySuggestion: String
     ) : AppSyncException(message, cause, recoverySuggestion)
 

@@ -32,7 +32,6 @@ class AppSyncExceptionHierarchyTest {
     fun `AppSyncAuthException subtypes are ApiAuthException`() {
         val exceptions: List<AppSyncAuthException> = listOf(
             AppSyncAuthException.TokenFetchException("msg", RuntimeException(), "recovery"),
-            AppSyncAuthException.TokenExpiredException("msg", null, "recovery"),
             AppSyncAuthException.ProviderNotConfiguredException("msg", null, "recovery"),
             AppSyncAuthException.SigningException("msg", RuntimeException(), "recovery"),
             AppSyncAuthException.TokenParsingException("msg", RuntimeException(), "recovery"),
@@ -58,6 +57,7 @@ class AppSyncExceptionHierarchyTest {
             AppSyncException.SubscriptionException.LimitExceededException("msg", "recovery"),
             AppSyncException.RequestException.SchemaException("msg", cause, "recovery"),
             AppSyncException.RequestException.ValidationException("msg", cause, "recovery"),
+            AppSyncException.RequestException.InvalidStateException("msg", cause, "recovery"),
             AppSyncException.NetworkException("msg", cause, "recovery"),
             AppSyncException.UnknownException("msg", cause, "recovery")
         )
@@ -84,7 +84,6 @@ class AppSyncExceptionHierarchyTest {
     fun `when expression over AppSyncAuthException is exhaustive`() {
         val exceptions: List<AppSyncAuthException> = listOf(
             AppSyncAuthException.TokenFetchException("msg", null, "r"),
-            AppSyncAuthException.TokenExpiredException("msg", null, "r"),
             AppSyncAuthException.ProviderNotConfiguredException("msg", null, "r"),
             AppSyncAuthException.SigningException("msg", null, "r"),
             AppSyncAuthException.TokenParsingException("msg", null, "r"),
@@ -94,7 +93,6 @@ class AppSyncExceptionHierarchyTest {
         exceptions.forEach { ex ->
             val label = when (ex) {
                 is AppSyncAuthException.TokenFetchException -> "tokenFetch"
-                is AppSyncAuthException.TokenExpiredException -> "tokenExpired"
                 is AppSyncAuthException.ProviderNotConfiguredException -> "providerNotConfigured"
                 is AppSyncAuthException.SigningException -> "signing"
                 is AppSyncAuthException.TokenParsingException -> "tokenParsing"
@@ -153,5 +151,12 @@ class AppSyncExceptionHierarchyTest {
         val ex = AppSyncException.ResponseException.GraphQLErrorException(errors, "check errors")
         ex.errors shouldBe errors
         ex.message shouldBe "GraphQL response contained errors: error1, error2"
+    }
+
+    @Test
+    fun `GraphQLErrorException with empty errors list has correct message`() {
+        val ex = AppSyncException.ResponseException.GraphQLErrorException(emptyList(), "check errors")
+        ex.errors shouldBe emptyList()
+        ex.message shouldBe "GraphQL response contained errors"
     }
 }
