@@ -15,8 +15,10 @@
 package com.amazonaws.appsync
 
 import com.amplifyframework.annotations.ExperimentalAmplifyApi
+import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
+import com.amplifyframework.foundation.result.Result
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 import okhttp3.OkHttpClient
@@ -37,14 +39,17 @@ import okhttp3.OkHttpClient
  *     }
  * )
  *
- * val response = client.query(ModelQuery.get(Todo::class.java, "id-123"))
+ * when (val result = client.query(ModelQuery.get(Todo::class.java, "id-123"))) {
+ *     is Result.Success -> use(result.data)
+ *     is Result.Failure -> handleError(result.error)
+ * }
  * ```
  */
 @ExperimentalAmplifyApi
 class AmplifyAppSyncClient(val configuration: Configuration) {
 
     /**
-     * Per-client connection state flow. Replaces V2 Hub events.
+     * Per-client connection state flow.
      * Emits [ConnectionState] changes for the shared WebSocket connection.
      */
     val events: SharedFlow<ConnectionState>
@@ -54,26 +59,22 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
      * Execute a GraphQL query.
      *
      * @param request The GraphQL request. Use model helpers or construct manually.
-     * @return The typed GraphQL response.
-     * @throws ApiException on failure.
+     * @return [Result.Success] with the typed GraphQL response, or [Result.Failure] with an [ApiException].
      */
-    suspend fun <T> query(request: GraphQLRequest<T>): GraphQLResponse<T> =
+    suspend fun <T> query(request: GraphQLRequest<T>): Result<GraphQLResponse<T>, ApiException> =
         TODO("Query implementation will be added in a follow-up PR")
 
     /**
      * Execute a GraphQL mutation.
      *
      * @param request The GraphQL request. Use model helpers or construct manually.
-     * @return The typed GraphQL response.
-     * @throws ApiException on failure.
+     * @return [Result.Success] with the typed GraphQL response, or [Result.Failure] with an [ApiException].
      */
-    suspend fun <T> mutate(request: GraphQLRequest<T>): GraphQLResponse<T> =
+    suspend fun <T> mutate(request: GraphQLRequest<T>): Result<GraphQLResponse<T>, ApiException> =
         TODO("Mutation implementation will be added in a follow-up PR")
 
     /**
-     * Subscribe to a GraphQL subscription. Returns a [Flow] of [SubscriptionEvent] that
-     * carries both data and lifecycle state. All errors are terminal — they are thrown
-     * as [ApiException] subtypes.
+     * Subscribe to a GraphQL subscription. Returns a [Flow] of [SubscriptionEvent].
      *
      * The WebSocket connection is lazy (established on first subscribe) and shared across
      * all subscriptions on this client. Cancelling the collecting coroutine sends an
