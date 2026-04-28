@@ -57,7 +57,7 @@ public class ApiException extends AmplifyException {
     /**
      * This type of exception should not be retried.
      */
-    public static class NonRetryableException extends ApiException {
+    public static final class NonRetryableException extends ApiException {
         private static final long serialVersionUID = 1L;
 
         /**
