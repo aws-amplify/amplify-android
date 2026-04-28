@@ -93,6 +93,10 @@ public final class com/amplifyframework/api/aws/AppSyncAuthException$TokenParsin
 	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
 }
 
+public final class com/amplifyframework/api/aws/AppSyncAuthException$UnknownException : com/amplifyframework/api/aws/AppSyncAuthException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
+}
+
 public abstract class com/amplifyframework/api/aws/AppSyncException : com/amplifyframework/api/ApiException {
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 }

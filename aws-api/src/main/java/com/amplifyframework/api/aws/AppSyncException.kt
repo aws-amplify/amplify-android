@@ -67,6 +67,12 @@ sealed class AppSyncAuthException(
         cause: Throwable?,
         recoverySuggestion: String
     ) : AppSyncAuthException(message, cause, recoverySuggestion)
+
+    class UnknownException(
+        message: String,
+        cause: Throwable?,
+        recoverySuggestion: String
+    ) : AppSyncAuthException(message, cause, recoverySuggestion)
 }
 
 // ─── Non-auth exceptions ─── extend ApiException directly ─────────────────────

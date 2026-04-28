@@ -21,7 +21,6 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.aws.AppSyncException;
 import com.amplifyframework.api.aws.utils.RestRequestFactory;
 import com.amplifyframework.api.rest.RestOperation;
 import com.amplifyframework.api.rest.RestOperationRequest;
@@ -98,7 +97,7 @@ public final class AWSRestOperation extends RestOperation {
                 ongoingCall.cancel();
             }
 
-            onFailure.accept(new AppSyncException.UnknownException(
+            onFailure.accept(new ApiException(
                 "OkHttp client failed to make a successful request.",
                 error, AmplifyException.TODO_RECOVERY_SUGGESTION
             ));
@@ -148,7 +147,7 @@ public final class AWSRestOperation extends RestOperation {
                 return;
             }
 
-            onFailure.accept(new AppSyncException.NetworkException(
+            onFailure.accept(new ApiException(
                 "Received an IO exception while making the request.",
                 ioe, "Retry the request."
             ));

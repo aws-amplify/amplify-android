@@ -35,7 +35,8 @@ class AppSyncExceptionHierarchyTest {
             AppSyncAuthException.SigningException("msg", RuntimeException(), "recovery"),
             AppSyncAuthException.TokenParsingException("msg", RuntimeException(), "recovery"),
             AppSyncAuthException.AuthorizationClaimException("msg", null, "recovery"),
-            AppSyncAuthException.AuthExhaustedException("msg", null, "recovery")
+            AppSyncAuthException.AuthExhaustedException("msg", null, "recovery"),
+            AppSyncAuthException.UnknownException("msg", null, "recovery")
         )
         exceptions.forEach { ex ->
             ex.shouldBeInstanceOf<ApiAuthException>()
@@ -74,6 +75,19 @@ class AppSyncExceptionHierarchyTest {
         (ex is ApiAuthException) shouldBe false
     }
 
+    @Test
+    fun `AppSyncAuthException subtypes are not caught by catch AppSyncException`() {
+        val auth = AppSyncAuthException.TokenFetchException("msg", null, "recovery")
+        val caughtAsAppSync = try {
+            throw auth
+        } catch (_: AppSyncException) {
+            true
+        } catch (_: ApiException) {
+            false
+        }
+        caughtAsAppSync shouldBe false
+    }
+
     // ─── 2. Sealed exhaustiveness ───
 
     @Test
@@ -84,7 +98,8 @@ class AppSyncExceptionHierarchyTest {
             AppSyncAuthException.SigningException("msg", null, "r"),
             AppSyncAuthException.TokenParsingException("msg", null, "r"),
             AppSyncAuthException.AuthorizationClaimException("msg", null, "r"),
-            AppSyncAuthException.AuthExhaustedException("msg", null, "r")
+            AppSyncAuthException.AuthExhaustedException("msg", null, "r"),
+            AppSyncAuthException.UnknownException("msg", null, "r")
         )
         exceptions.forEach { ex ->
             val label = when (ex) {
@@ -94,6 +109,7 @@ class AppSyncExceptionHierarchyTest {
                 is AppSyncAuthException.TokenParsingException -> "tokenParsing"
                 is AppSyncAuthException.AuthorizationClaimException -> "authClaim"
                 is AppSyncAuthException.AuthExhaustedException -> "authExhausted"
+                is AppSyncAuthException.UnknownException -> "unknown"
             }
             label.isNotEmpty() shouldBe true
         }
