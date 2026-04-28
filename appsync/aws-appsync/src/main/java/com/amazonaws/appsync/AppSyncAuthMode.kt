@@ -14,9 +14,12 @@
  */
 package com.amazonaws.appsync
 
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
+
 /**
  * The authorization modes supported by AWS AppSync.
  */
+@ExperimentalAmplifyApi
 enum class AppSyncAuthMode {
     /** API Key authorization. */
     API_KEY,

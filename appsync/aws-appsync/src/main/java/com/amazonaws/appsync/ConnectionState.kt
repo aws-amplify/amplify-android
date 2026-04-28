@@ -14,12 +14,14 @@
  */
 package com.amazonaws.appsync
 
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
 import com.amplifyframework.api.ApiException
 
 /**
  * The connection state of the client's shared WebSocket. Replaces Hub events from V2.
  * Exposed via [AmplifyAppSyncClient.events].
  */
+@ExperimentalAmplifyApi
 sealed class ConnectionState {
     /** A WebSocket connection is being established. */
     data object Connecting : ConnectionState()

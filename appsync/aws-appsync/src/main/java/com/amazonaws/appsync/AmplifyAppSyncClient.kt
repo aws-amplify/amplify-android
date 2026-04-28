@@ -14,6 +14,7 @@
  */
 package com.amazonaws.appsync
 
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
 import kotlinx.coroutines.flow.Flow
@@ -39,6 +40,7 @@ import okhttp3.OkHttpClient
  * val response = client.query(ModelQuery.get(Todo::class.java, "id-123"))
  * ```
  */
+@ExperimentalAmplifyApi
 class AmplifyAppSyncClient(val configuration: Configuration) {
 
     /**

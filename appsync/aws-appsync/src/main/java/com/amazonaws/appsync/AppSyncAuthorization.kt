@@ -14,11 +14,14 @@
  */
 package com.amazonaws.appsync
 
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
+
 /**
  * Wraps the authorizer(s) that the client uses. Supports both single-auth (one authorizer for
  * all requests) and multi-auth (multiple authorizers, selected based on model `@auth` rules
  * or per-request overrides).
  */
+@ExperimentalAmplifyApi
 sealed class AppSyncAuthorization {
 
     /**

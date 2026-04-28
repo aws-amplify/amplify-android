@@ -14,6 +14,7 @@
  */
 package com.amazonaws.appsync
 
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
 import com.amplifyframework.api.graphql.GraphQLResponse
 
 /**
@@ -25,6 +26,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse
  *
  * For client-wide WebSocket connection state, observe [AmplifyAppSyncClient.events].
  */
+@ExperimentalAmplifyApi
 sealed class SubscriptionEvent<out T> {
 
     /**
