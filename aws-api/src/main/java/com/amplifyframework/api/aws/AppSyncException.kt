@@ -14,9 +14,9 @@
  */
 package com.amplifyframework.api.aws
 
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.ApiException.ApiAuthException
-import com.amplifyframework.api.graphql.GraphQLResponse
 
 // ─── Auth exceptions ─── extend ApiAuthException for backward compatibility ───
 
@@ -25,6 +25,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse
  * Extends [ApiAuthException] so existing `catch (ApiAuthException)` and
  * `throws ApiAuthException` declarations work without changes.
  */
+@ExperimentalAmplifyApi
 sealed class AppSyncAuthException(
     message: String,
     cause: Throwable?,
@@ -74,6 +75,7 @@ sealed class AppSyncAuthException(
  * Sealed non-auth exception hierarchy for the AppSync client.
  * Extends [ApiException] for backward compatibility.
  */
+@ExperimentalAmplifyApi
 sealed class AppSyncException(
     message: String,
     cause: Throwable?,
@@ -104,19 +106,6 @@ sealed class AppSyncException(
             cause: Throwable?,
             recoverySuggestion: String
         ) : ResponseException(message, cause, recoverySuggestion)
-
-        class GraphQLErrorException(
-            val errors: List<GraphQLResponse.Error>,
-            recoverySuggestion: String
-        ) : ResponseException(
-            if (errors.isEmpty()) {
-                "GraphQL response contained errors"
-            } else {
-                "GraphQL response contained errors: ${errors.joinToString { it.message }}"
-            },
-            null,
-            recoverySuggestion
-        )
     }
 
     sealed class SubscriptionException(message: String, cause: Throwable?, recoverySuggestion: String) :
@@ -133,21 +122,10 @@ sealed class AppSyncException(
             cause: Throwable?,
             recoverySuggestion: String
         ) : SubscriptionException(message, cause, recoverySuggestion)
-
-        class LimitExceededException(
-            message: String,
-            recoverySuggestion: String
-        ) : SubscriptionException(message, null, recoverySuggestion)
     }
 
     sealed class RequestException(message: String, cause: Throwable?, recoverySuggestion: String) :
         AppSyncException(message, cause, recoverySuggestion) {
-
-        class SchemaException(
-            message: String,
-            cause: Throwable?,
-            recoverySuggestion: String
-        ) : RequestException(message, cause, recoverySuggestion)
 
         class ValidationException(
             message: String,

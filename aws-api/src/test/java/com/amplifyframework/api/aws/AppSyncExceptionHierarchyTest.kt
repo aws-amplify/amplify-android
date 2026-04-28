@@ -16,7 +16,6 @@ package com.amplifyframework.api.aws
 
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.ApiException.ApiAuthException
-import com.amplifyframework.api.graphql.GraphQLResponse
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.Test
@@ -51,11 +50,8 @@ class AppSyncExceptionHierarchyTest {
             AppSyncException.ConfigurationException.InvalidConfigException("msg", null, "recovery"),
             AppSyncException.ConfigurationException.EndpointResolutionException("msg", cause, "recovery"),
             AppSyncException.ResponseException.DeserializationException("msg", cause, "recovery"),
-            AppSyncException.ResponseException.GraphQLErrorException(emptyList(), "recovery"),
             AppSyncException.SubscriptionException.ConnectionException("msg", cause, "recovery"),
             AppSyncException.SubscriptionException.TimeoutException("msg", cause, "recovery"),
-            AppSyncException.SubscriptionException.LimitExceededException("msg", "recovery"),
-            AppSyncException.RequestException.SchemaException("msg", cause, "recovery"),
             AppSyncException.RequestException.ValidationException("msg", cause, "recovery"),
             AppSyncException.RequestException.InvalidStateException("msg", cause, "recovery"),
             AppSyncException.NetworkException("msg", cause, "recovery"),
@@ -140,23 +136,5 @@ class AppSyncExceptionHierarchyTest {
         ex.message shouldBe "bad config"
         ex.cause shouldBe cause
         ex.recoverySuggestion shouldBe "fix your config"
-    }
-
-    @Test
-    fun `GraphQLErrorException preserves errors list`() {
-        val errors = listOf(
-            GraphQLResponse.Error("error1", null, null, null),
-            GraphQLResponse.Error("error2", null, null, null)
-        )
-        val ex = AppSyncException.ResponseException.GraphQLErrorException(errors, "check errors")
-        ex.errors shouldBe errors
-        ex.message shouldBe "GraphQL response contained errors: error1, error2"
-    }
-
-    @Test
-    fun `GraphQLErrorException with empty errors list has correct message`() {
-        val ex = AppSyncException.ResponseException.GraphQLErrorException(emptyList(), "check errors")
-        ex.errors shouldBe emptyList()
-        ex.message shouldBe "GraphQL response contained errors"
     }
 }

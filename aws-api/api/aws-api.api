@@ -121,10 +121,6 @@ public final class com/amplifyframework/api/aws/AppSyncException$RequestExceptio
 	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
 }
 
-public final class com/amplifyframework/api/aws/AppSyncException$RequestException$SchemaException : com/amplifyframework/api/aws/AppSyncException$RequestException {
-	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
-}
-
 public final class com/amplifyframework/api/aws/AppSyncException$RequestException$ValidationException : com/amplifyframework/api/aws/AppSyncException$RequestException {
 	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
 }
@@ -137,21 +133,12 @@ public final class com/amplifyframework/api/aws/AppSyncException$ResponseExcepti
 	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
 }
 
-public final class com/amplifyframework/api/aws/AppSyncException$ResponseException$GraphQLErrorException : com/amplifyframework/api/aws/AppSyncException$ResponseException {
-	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
-	public final fun getErrors ()Ljava/util/List;
-}
-
 public abstract class com/amplifyframework/api/aws/AppSyncException$SubscriptionException : com/amplifyframework/api/aws/AppSyncException {
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
 public final class com/amplifyframework/api/aws/AppSyncException$SubscriptionException$ConnectionException : com/amplifyframework/api/aws/AppSyncException$SubscriptionException {
 	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
-}
-
-public final class com/amplifyframework/api/aws/AppSyncException$SubscriptionException$LimitExceededException : com/amplifyframework/api/aws/AppSyncException$SubscriptionException {
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
 }
 
 public final class com/amplifyframework/api/aws/AppSyncException$SubscriptionException$TimeoutException : com/amplifyframework/api/aws/AppSyncException$SubscriptionException {
