@@ -60,6 +60,8 @@ class KotlinConventionPlugin : Plugin<Project> {
                     freeCompilerArgs.add("-Xconsistent-data-class-copy-visibility")
                 }
             }
+
+            registerLicenseHeaderCheck()
         }
     }
 }
