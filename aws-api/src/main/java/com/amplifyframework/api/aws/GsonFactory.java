@@ -26,10 +26,13 @@ import com.amplifyframework.datastore.appsync.SerializedModelAdapter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import com.amplifyframework.annotations.InternalAmplifyApi;
+
 /**
  * Creates a {@link Gson} instance which may be used around the API plugin.
  */
-final class GsonFactory {
+@InternalAmplifyApi
+public final class GsonFactory {
     private static Gson gson = null;
 
     private GsonFactory() {}

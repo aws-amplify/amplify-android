@@ -42,20 +42,25 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.amplifyframework.annotations.InternalAmplifyApi;
+
 /**
  * Converts JSON strings into models of a given type, using Gson.
  */
-final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
+@InternalAmplifyApi
+public final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
     private final Gson gson;
 
     private final AWSApiSchemaRegistry schemaRegistry = new AWSApiSchemaRegistry();
 
-    GsonGraphQLResponseFactory() {
+    @InternalAmplifyApi
+    public GsonGraphQLResponseFactory() {
         this(GsonFactory.instance());
     }
 
     @VisibleForTesting
-    GsonGraphQLResponseFactory(Gson gson) {
+    @InternalAmplifyApi
+    public GsonGraphQLResponseFactory(Gson gson) {
         this.gson = gson;
     }
 
