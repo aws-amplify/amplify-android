@@ -19,6 +19,7 @@ import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.annotations.InternalAmplifyApi;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.aws.auth.ApiRequestDecoratorFactory;
@@ -152,7 +153,8 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends AWSGraphQLOperati
         return false;
     }
 
-    static <R> Builder<R> builder() {
+    @InternalAmplifyApi
+    public static <R> Builder<R> builder() {
         return new Builder<>();
     }
 
@@ -202,7 +204,8 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends AWSGraphQLOperati
         }
     }
 
-    static final class Builder<R> {
+    @InternalAmplifyApi
+    public static final class Builder<R> {
         private String endpoint;
         private OkHttpClient client;
         private GraphQLRequest<R> request;
@@ -213,53 +216,63 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends AWSGraphQLOperati
         private ExecutorService executorService;
         private String apiName;
 
-        Builder<R> endpoint(@NonNull String endpoint) {
+        @InternalAmplifyApi
+        public Builder<R> endpoint(@NonNull String endpoint) {
             this.endpoint = Objects.requireNonNull(endpoint);
             return this;
         }
 
-        Builder<R> client(@NonNull OkHttpClient client) {
+        @InternalAmplifyApi
+        public Builder<R> client(@NonNull OkHttpClient client) {
             this.client = Objects.requireNonNull(client);
             return this;
         }
 
-        Builder<R> request(@NonNull GraphQLRequest<R> request) {
+        @InternalAmplifyApi
+        public Builder<R> request(@NonNull GraphQLRequest<R> request) {
             this.request = Objects.requireNonNull(request);
             return this;
         }
 
-        Builder<R> responseFactory(@NonNull GraphQLResponse.Factory responseFactory) {
+        @InternalAmplifyApi
+        public Builder<R> responseFactory(@NonNull GraphQLResponse.Factory responseFactory) {
             this.responseFactory = Objects.requireNonNull(responseFactory);
             return this;
         }
 
-        Builder<R> onResponse(@NonNull Consumer<GraphQLResponse<R>> onResponse) {
+        @InternalAmplifyApi
+        public Builder<R> onResponse(@NonNull Consumer<GraphQLResponse<R>> onResponse) {
             this.onResponse = Objects.requireNonNull(onResponse);
             return this;
         }
 
-        Builder<R> onFailure(@NonNull Consumer<ApiException> onFailure) {
+        @InternalAmplifyApi
+        public Builder<R> onFailure(@NonNull Consumer<ApiException> onFailure) {
             this.onFailure = Objects.requireNonNull(onFailure);
             return this;
         }
 
-        Builder<R> apiRequestDecoratorFactory(ApiRequestDecoratorFactory apiRequestDecoratorFactory) {
+        @InternalAmplifyApi
+        public Builder<R> apiRequestDecoratorFactory(ApiRequestDecoratorFactory apiRequestDecoratorFactory) {
             this.apiRequestDecoratorFactory = apiRequestDecoratorFactory;
             return this;
         }
 
-        Builder<R> executorService(ExecutorService executorService) {
+        @InternalAmplifyApi
+        public Builder<R> executorService(ExecutorService executorService) {
             this.executorService = executorService;
             return this;
         }
 
-        Builder<R> apiName(String apiName) {
+        @InternalAmplifyApi
+        public Builder<R> apiName(String apiName) {
             this.apiName = apiName;
             return this;
         }
 
+        @InternalAmplifyApi
         @SuppressLint("SyntheticAccessor")
-        MultiAuthAppSyncGraphQLOperation<R> build() {
+        public MultiAuthAppSyncGraphQLOperation<R> build() {
             return new MultiAuthAppSyncGraphQLOperation<>(this);
         }
 
