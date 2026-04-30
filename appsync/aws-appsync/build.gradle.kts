@@ -48,4 +48,12 @@ dependencies {
     testImplementation(libs.test.kotest.assertions)
     testImplementation(libs.test.mockwebserver)
     testImplementation(libs.test.turbine)
+
+    androidTestImplementation(project(":testutils"))
+    androidTestImplementation(project(":testmodels"))
+    androidTestImplementation(libs.test.junit)
+    androidTestImplementation(libs.test.androidx.core)
+    androidTestImplementation(libs.test.androidx.runner)
+    androidTestImplementation(libs.test.androidx.junit)
+    androidTestImplementation(libs.test.kotlin.coroutines)
 }
