@@ -102,10 +102,15 @@ internal class GraphQLWebSocketClient(
         scope.launch { _connectionState.emit(ConnectionState.Connecting) }
 
         val appSyncRequest = request as? AppSyncGraphQLRequest<T>
-        if (appSyncRequest != null) {
+        val useMultiAuth = appSyncRequest != null &&
+            appSyncRequest.authorizationType == null &&
+            appSyncRequest.authModeStrategyType != null &&
+            appSyncRequest.modelSchema.hasModelLevelRules()
+
+        if (useMultiAuth) {
             val operation = MultiAuthSubscriptionOperation.builder<T>()
                 .subscriptionEndpoint(subscriptionEndpoint)
-                .graphQlRequest(appSyncRequest)
+                .graphQlRequest(appSyncRequest!!)
                 .responseFactory(GsonGraphQLResponseFactory())
                 .executorService(executorService)
                 .requestDecorator(requestDecorator)
