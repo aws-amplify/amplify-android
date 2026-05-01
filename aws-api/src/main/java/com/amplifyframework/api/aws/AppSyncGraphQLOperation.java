@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.annotations.InternalAmplifyApi;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.auth.ApiRequestDecoratorFactory;
 import com.amplifyframework.api.aws.auth.RequestDecorator;
@@ -72,7 +73,7 @@ public final class AppSyncGraphQLOperation<R> extends AWSGraphQLOperation<R> {
      * @param builder operation builder instance
      */
     private AppSyncGraphQLOperation(@NonNull Builder<R> builder) {
-        super(builder.request, builder.responseFactory, builder.apiName);
+        super(builder.request, builder.responseFactory, builder.apiName, builder.queryExecutor);
         this.endpoint = Objects.requireNonNull(builder.endpoint);
         this.client = Objects.requireNonNull(builder.client);
         this.apiRequestDecoratorFactory = Objects.requireNonNull(builder.apiRequestDecoratorFactory);
@@ -123,7 +124,8 @@ public final class AppSyncGraphQLOperation<R> extends AWSGraphQLOperation<R> {
         }
     }
 
-    static <R> Builder<R> builder() {
+    @InternalAmplifyApi
+    public static <R> Builder<R> builder() {
         return new Builder<>();
     }
 
@@ -179,7 +181,8 @@ public final class AppSyncGraphQLOperation<R> extends AWSGraphQLOperation<R> {
         }
     }
 
-    static final class Builder<R> {
+    @InternalAmplifyApi
+    public static final class Builder<R> {
         private String endpoint;
         private OkHttpClient client;
         private GraphQLRequest<R> request;
@@ -189,54 +192,60 @@ public final class AppSyncGraphQLOperation<R> extends AWSGraphQLOperation<R> {
         private Consumer<ApiException> onFailure;
         private ExecutorService executorService;
         private String apiName;
+        private LazyQueryExecutor queryExecutor;
 
-        Builder<R> endpoint(@NonNull String endpoint) {
+        public Builder<R> endpoint(@NonNull String endpoint) {
             this.endpoint = Objects.requireNonNull(endpoint);
             return this;
         }
 
-        Builder<R> client(@NonNull OkHttpClient client) {
+        public Builder<R> client(@NonNull OkHttpClient client) {
             this.client = Objects.requireNonNull(client);
             return this;
         }
 
-        Builder<R> request(@NonNull GraphQLRequest<R> request) {
+        public Builder<R> request(@NonNull GraphQLRequest<R> request) {
             this.request = Objects.requireNonNull(request);
             return this;
         }
 
-        Builder<R> responseFactory(@NonNull GraphQLResponse.Factory responseFactory) {
+        public Builder<R> responseFactory(@NonNull GraphQLResponse.Factory responseFactory) {
             this.responseFactory = Objects.requireNonNull(responseFactory);
             return this;
         }
 
-        Builder<R> onResponse(@NonNull Consumer<GraphQLResponse<R>> onResponse) {
+        public Builder<R> onResponse(@NonNull Consumer<GraphQLResponse<R>> onResponse) {
             this.onResponse = Objects.requireNonNull(onResponse);
             return this;
         }
 
-        Builder<R> onFailure(@NonNull Consumer<ApiException> onFailure) {
+        public Builder<R> onFailure(@NonNull Consumer<ApiException> onFailure) {
             this.onFailure = Objects.requireNonNull(onFailure);
             return this;
         }
 
-        Builder<R> apiRequestDecoratorFactory(@NonNull ApiRequestDecoratorFactory apiRequestDecoratorFactory) {
+        public Builder<R> apiRequestDecoratorFactory(@NonNull ApiRequestDecoratorFactory apiRequestDecoratorFactory) {
             this.apiRequestDecoratorFactory = Objects.requireNonNull(apiRequestDecoratorFactory);
             return this;
         }
 
-        Builder<R> executorService(@NonNull ExecutorService executorService) {
+        public Builder<R> executorService(@NonNull ExecutorService executorService) {
             this.executorService = executorService;
             return this;
         }
 
-        Builder<R> apiName(String apiName) {
+        public Builder<R> apiName(String apiName) {
             this.apiName = apiName;
             return this;
         }
 
+        public Builder<R> queryExecutor(LazyQueryExecutor queryExecutor) {
+            this.queryExecutor = queryExecutor;
+            return this;
+        }
+
         @SuppressLint("SyntheticAccessor")
-        AppSyncGraphQLOperation<R> build() {
+        public AppSyncGraphQLOperation<R> build() {
             return new AppSyncGraphQLOperation<>(this);
         }
     }

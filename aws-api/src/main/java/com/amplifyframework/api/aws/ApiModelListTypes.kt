@@ -16,9 +16,7 @@
 package com.amplifyframework.api.aws
 
 import com.amplifyframework.AmplifyException
-import com.amplifyframework.api.ApiCategory
 import com.amplifyframework.api.graphql.GraphQLRequest
-import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.model.LazyModelList
 import com.amplifyframework.core.model.LoadedModelList
@@ -42,10 +40,7 @@ internal class ApiPaginationToken(val nextToken: String) : PaginationToken
 internal class ApiLazyModelList<out M : Model> constructor(
     private val clazz: Class<M>,
     keyMap: Map<String, Any>,
-    // API name is important to provide to future query calls. If a custom API name was used for the original call,
-    // the apiName must be provided to the following lazy calls to fetch the lazy list
-    private val apiName: String?,
-    private val apiCategory: ApiCategory = Amplify.API
+    private val queryExecutor: LazyQueryExecutor
 ) : LazyModelList<M> {
 
     private val callbackScope = CoroutineScope(Dispatchers.IO)
@@ -53,7 +48,7 @@ internal class ApiLazyModelList<out M : Model> constructor(
 
     override suspend fun fetchPage(paginationToken: PaginationToken?): ModelPage<M> {
         try {
-            val response = query(apiCategory, createRequest(paginationToken), apiName)
+            val response = queryExecutor.execute(createRequest(paginationToken))
             return response.data
         } catch (error: AmplifyException) {
             throw createLazyException(error)

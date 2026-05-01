@@ -16,10 +16,8 @@
 package com.amplifyframework.api.aws
 
 import com.amplifyframework.AmplifyException
-import com.amplifyframework.api.ApiCategory
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLRequest
-import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.NullableConsumer
 import com.amplifyframework.core.model.LazyModelReference
@@ -35,10 +33,7 @@ import kotlinx.coroutines.sync.withLock
 internal class ApiLazyModelReference<M : Model> internal constructor(
     private val clazz: Class<M>,
     private val keyMap: Map<String, Any>,
-    // API name is important to provide to future query calls. If a custom API name was used for the original call,
-    // the apiName must be provided to the following lazy call to fetch the value.
-    private val apiName: String? = null,
-    private val apiCategory: ApiCategory = Amplify.API
+    private val queryExecutor: LazyQueryExecutor
 ) : LazyModelReference<M> {
     private val cachedValue = AtomicReference<LoadedValue<M>?>(null)
     private val mutex = Mutex() // prevents multiple fetches
@@ -107,11 +102,7 @@ internal class ApiLazyModelReference<M : Model> internal constructor(
                     *variables.toTypedArray()
                 )
 
-                val value = query(
-                    apiCategory,
-                    request,
-                    apiName
-                ).data
+                val value = queryExecutor.execute(request).data
                 cachedValue.set(LoadedValue(value))
                 value
             } catch (error: ApiException) {

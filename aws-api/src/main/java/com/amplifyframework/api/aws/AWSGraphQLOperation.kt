@@ -29,10 +29,11 @@ import com.amplifyframework.api.graphql.GraphQLResponse
  * @param apiName to use
  */
 @InternalAmplifyApi
-abstract class AWSGraphQLOperation<R>(
+abstract class AWSGraphQLOperation<R> @JvmOverloads constructor(
     graphQLRequest: GraphQLRequest<R>,
     responseFactory: GraphQLResponse.Factory,
-    private val apiName: String?
+    private val apiName: String?,
+    private val queryExecutor: LazyQueryExecutor? = null
 ) : GraphQLOperation<R>(graphQLRequest, responseFactory) {
 
     @Throws(ApiException::class)
@@ -43,12 +44,14 @@ abstract class AWSGraphQLOperation<R>(
     // as there was no place to inject api name for adding to LazyModel
     @Throws(ApiException::class)
     private fun buildResponse(jsonResponse: String): GraphQLResponse<R> = try {
-        (responseFactory as? GsonGraphQLResponseFactory)?.buildResponse(request, jsonResponse, apiName)
+        val factory = responseFactory as? GsonGraphQLResponseFactory
             ?: throw ApiException(
                 "Amplify encountered an error while deserializing an object. " +
                     "GraphQLResponse.Factory was not of type GsonGraphQLResponseFactory",
                 AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
             )
+        val executor = queryExecutor ?: AmplifyApiQueryExecutor(apiName)
+        factory.buildResponseWithExecutor(request, jsonResponse, executor)
     } catch (cce: ClassCastException) {
         throw ApiException(
             "Amplify encountered an error while deserializing an object",

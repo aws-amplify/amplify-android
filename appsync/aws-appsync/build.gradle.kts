@@ -51,6 +51,7 @@ dependencies {
 
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(project(":testmodels"))
+    androidTestImplementation(libs.androidx.core)
     androidTestImplementation(libs.test.junit)
     androidTestImplementation(libs.test.androidx.core)
     androidTestImplementation(libs.test.androidx.runner)

@@ -41,6 +41,15 @@ class ApiLazyModelReferenceTest {
 
     private val apiCategory = mockk<ApiCategory>()
 
+    private fun executorFor(apiName: String? = null): LazyQueryExecutor =
+        AmplifyApiQueryExecutor(apiName).let { delegate ->
+            // Wrap to use our mocked apiCategory
+            object : LazyQueryExecutor {
+                override suspend fun <R> execute(request: GraphQLRequest<R>): GraphQLResponse<R> =
+                    query(apiCategory, request, apiName)
+            }
+        }
+
     private val expectedQuery = "query GetPost(\$id: ID!) {\n" +
         "  getPost(id: \$id) {\n" +
         "    blog {\n" +
@@ -70,7 +79,7 @@ class ApiLazyModelReferenceTest {
             thirdArg<Consumer<GraphQLResponse<Post>>>().accept(GraphQLResponse(expectedPost, null))
             mockk()
         }
-        val postReference = ApiLazyModelReference(Post::class.java, expectedVariables, expectedApi, apiCategory)
+        val postReference = ApiLazyModelReference(Post::class.java, expectedVariables, executorFor(expectedApi))
 
         // WHEN
         val fetchedPost1 = postReference.fetchModel()
@@ -94,7 +103,7 @@ class ApiLazyModelReferenceTest {
             secondArg<Consumer<GraphQLResponse<Post>>>().accept(GraphQLResponse(expectedPost, null))
             mockk()
         }
-        val postReference = ApiLazyModelReference(Post::class.java, mapOf(Pair("id", "p1")), apiCategory = apiCategory)
+        val postReference = ApiLazyModelReference(Post::class.java, mapOf(Pair("id", "p1")), executorFor())
 
         // WHEN
         val fetchedPost1 = postReference.fetchModel()
@@ -115,7 +124,7 @@ class ApiLazyModelReferenceTest {
         val expectedApi = "myApi"
         val apiException = ApiException("fail", "fail")
         val expectedException = AmplifyException("Error lazy loading the model.", apiException, "fail")
-        val postReference = ApiLazyModelReference(Post::class.java, mapOf(Pair("id", "p1")), expectedApi, apiCategory)
+        val postReference = ApiLazyModelReference(Post::class.java, mapOf(Pair("id", "p1")), executorFor(expectedApi))
 
         // fail first time
         every { apiCategory.query(any(), any(), any<Consumer<GraphQLResponse<Post>>>(), any()) } answers {
@@ -150,7 +159,7 @@ class ApiLazyModelReferenceTest {
     @Test
     fun empty_map_returns_null_model() = runTest {
         // GIVEN
-        val postReference = ApiLazyModelReference(Post::class.java, emptyMap(), apiCategory = apiCategory)
+        val postReference = ApiLazyModelReference(Post::class.java, emptyMap(), executorFor())
 
         // WHEN
         val fetchedPost1 = postReference.fetchModel()
@@ -172,7 +181,7 @@ class ApiLazyModelReferenceTest {
             thirdArg<Consumer<GraphQLResponse<Post>>>().accept(GraphQLResponse(expectedPost, null))
             mockk()
         }
-        val postReference = ApiLazyModelReference(Post::class.java, expectedVariables, expectedApi, apiCategory)
+        val postReference = ApiLazyModelReference(Post::class.java, expectedVariables, executorFor(expectedApi))
         var fetchedPost1: Post? = null
         var fetchedPost2: Post? = null
 
@@ -205,7 +214,7 @@ class ApiLazyModelReferenceTest {
         val expectedApi = "myApi"
         val apiException = ApiException("fail", "fail")
         val expectedException = AmplifyException("Error lazy loading the model.", apiException, "fail")
-        val postReference = ApiLazyModelReference(Post::class.java, mapOf(Pair("id", "p1")), expectedApi, apiCategory)
+        val postReference = ApiLazyModelReference(Post::class.java, mapOf(Pair("id", "p1")), executorFor(expectedApi))
         var latch = CountDownLatch(1)
         var fetchedPost1: Post? = null
         var fetchedPost2: Post? = null

@@ -24,9 +24,9 @@ import com.amplifyframework.core.AmplifyConfiguration
 import com.amplifyframework.core.model.LazyModelReference
 import com.amplifyframework.core.model.LoadedModelReference
 import com.amplifyframework.core.model.includes
-import com.amplifyframework.datastore.generated.model.HasOneChild
-import com.amplifyframework.datastore.generated.model.Parent
-import com.amplifyframework.datastore.generated.model.ParentPath
+import com.amplifyframework.testmodels.lazycpk.HasOneChild
+import com.amplifyframework.testmodels.lazycpk.Parent
+import com.amplifyframework.testmodels.lazycpk.ParentPath
 import com.amplifyframework.kotlin.core.Amplify
 import com.amplifyframework.testutils.DeviceFarmTestBase
 import java.util.UUID

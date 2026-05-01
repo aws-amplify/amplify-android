@@ -32,7 +32,7 @@ const val ITEMS_KEY = "items"
 const val NEXT_TOKEN_KEY = "nextToken"
 
 internal class ModelReferenceDeserializer<M : Model>(
-    val apiName: String?,
+    private val queryExecutor: LazyQueryExecutor,
     private val schemaRegistry: AWSApiSchemaRegistry
 ) : JsonDeserializer<ModelReference<M>> {
     @Throws(JsonParseException::class)
@@ -56,7 +56,7 @@ internal class ModelReferenceDeserializer<M : Model>(
                 // fallback to create lazy
             }
         }
-        return ApiLazyModelReference(type, predicateKeyMap, apiName)
+        return ApiLazyModelReference(type, predicateKeyMap, queryExecutor)
     }
 }
 
