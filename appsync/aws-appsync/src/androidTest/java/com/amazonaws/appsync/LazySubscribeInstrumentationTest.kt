@@ -104,14 +104,16 @@ class LazySubscribeInstrumentationTest : DeviceFarmTestBase() {
             .build()
 
         val latch = CountDownLatch(1)
-        val collectRunningLatch = CountDownLatch(1)
+        val connectedLatch = CountDownLatch(1)
 
         var capturedParent: Parent? = null
         var capturedChild: HasOneChild? = null
         val subscription = client.subscribe(ModelSubscription.onCreate(Parent::class.java))
         CoroutineScope(Dispatchers.IO).launch {
             subscription.collect { event ->
-                if (event is SubscriptionEvent.Data) {
+                if (event is SubscriptionEvent.Connection.Connected) {
+                    connectedLatch.countDown()
+                } else if (event is SubscriptionEvent.Data) {
                     val returnedParent = event.response.data
                     if (modelCreatedByDevice(returnedParent.id)) {
                         assertEquals(parent.id, returnedParent.id)
@@ -121,9 +123,8 @@ class LazySubscribeInstrumentationTest : DeviceFarmTestBase() {
                     }
                 }
             }
-            collectRunningLatch.countDown()
         }
-        collectRunningLatch.await(1, TimeUnit.SECONDS)
+        connectedLatch.await(10, TimeUnit.SECONDS)
 
         client.mutate(ModelMutation.create(hasOneChild)).getOrThrow()
         client.mutate(ModelMutation.create(parent)).getOrThrow()
@@ -152,7 +153,7 @@ class LazySubscribeInstrumentationTest : DeviceFarmTestBase() {
             .build()
 
         val latch = CountDownLatch(1)
-        val collectRunningLatch = CountDownLatch(1)
+        val connectedLatch = CountDownLatch(1)
 
         val request = ModelSubscription.onCreate<Parent, ParentPath>(Parent::class.java) {
             includes(it.child)
@@ -163,7 +164,9 @@ class LazySubscribeInstrumentationTest : DeviceFarmTestBase() {
         var capturedChild: HasOneChild? = null
         CoroutineScope(Dispatchers.IO).launch {
             subscription.collect { event ->
-                if (event is SubscriptionEvent.Data) {
+                if (event is SubscriptionEvent.Connection.Connected) {
+                    connectedLatch.countDown()
+                } else if (event is SubscriptionEvent.Data) {
                     val returnedParent = event.response.data
                     if (modelCreatedByDevice(returnedParent.id)) {
                         assertEquals(parent.id, returnedParent.id)
@@ -173,9 +176,8 @@ class LazySubscribeInstrumentationTest : DeviceFarmTestBase() {
                     }
                 }
             }
-            collectRunningLatch.countDown()
         }
-        collectRunningLatch.await(1, TimeUnit.SECONDS)
+        connectedLatch.await(10, TimeUnit.SECONDS)
 
         client.mutate(ModelMutation.create(hasOneChild)).getOrThrow()
         val createRequest = ModelMutation.create<Parent, ParentPath>(parent) {
@@ -212,11 +214,14 @@ class LazySubscribeInstrumentationTest : DeviceFarmTestBase() {
         val subscription = client.subscribe(ModelSubscription.onUpdate(Parent::class.java))
 
         val latch = CountDownLatch(1)
+        val connectedLatch = CountDownLatch(1)
         var capturedParent: Parent? = null
         var capturedChild: HasOneChild? = null
         CoroutineScope(Dispatchers.IO).launch {
             subscription.collect { event ->
-                if (event is SubscriptionEvent.Data) {
+                if (event is SubscriptionEvent.Connection.Connected) {
+                    connectedLatch.countDown()
+                } else if (event is SubscriptionEvent.Data) {
                     val returnedParent = event.response.data
                     if (modelCreatedByDevice(returnedParent.id)) {
                         assertEquals(parent.id, returnedParent.id)
@@ -227,6 +232,7 @@ class LazySubscribeInstrumentationTest : DeviceFarmTestBase() {
                 }
             }
         }
+        connectedLatch.await(10, TimeUnit.SECONDS)
 
         client.mutate(ModelMutation.create(hasOneChild)).getOrThrow()
         client.mutate(ModelMutation.create(hasOneChild2)).getOrThrow()
@@ -270,11 +276,14 @@ class LazySubscribeInstrumentationTest : DeviceFarmTestBase() {
         val subscription = client.subscribe(request)
 
         val latch = CountDownLatch(1)
+        val connectedLatch = CountDownLatch(1)
         var capturedParent: Parent? = null
         var capturedChild: HasOneChild? = null
         CoroutineScope(Dispatchers.IO).launch {
             subscription.collect { event ->
-                if (event is SubscriptionEvent.Data) {
+                if (event is SubscriptionEvent.Connection.Connected) {
+                    connectedLatch.countDown()
+                } else if (event is SubscriptionEvent.Data) {
                     val returnedParent = event.response.data
                     if (modelCreatedByDevice(returnedParent.id)) {
                         assertEquals(parent.id, returnedParent.id)
@@ -285,6 +294,7 @@ class LazySubscribeInstrumentationTest : DeviceFarmTestBase() {
                 }
             }
         }
+        connectedLatch.await(10, TimeUnit.SECONDS)
 
         client.mutate(ModelMutation.create(hasOneChild)).getOrThrow()
         client.mutate(ModelMutation.create(hasOneChild2)).getOrThrow()
@@ -324,11 +334,14 @@ class LazySubscribeInstrumentationTest : DeviceFarmTestBase() {
         val subscription = client.subscribe(ModelSubscription.onDelete(Parent::class.java))
 
         val latch = CountDownLatch(1)
+        val connectedLatch = CountDownLatch(1)
         var capturedParent: Parent? = null
         var capturedChild: HasOneChild? = null
         CoroutineScope(Dispatchers.IO).launch {
             subscription.collect { event ->
-                if (event is SubscriptionEvent.Data) {
+                if (event is SubscriptionEvent.Connection.Connected) {
+                    connectedLatch.countDown()
+                } else if (event is SubscriptionEvent.Data) {
                     val returnedParent = event.response.data
                     if (modelCreatedByDevice(returnedParent.id)) {
                         assertEquals(parent.id, returnedParent.id)
@@ -339,6 +352,7 @@ class LazySubscribeInstrumentationTest : DeviceFarmTestBase() {
                 }
             }
         }
+        connectedLatch.await(10, TimeUnit.SECONDS)
 
         client.mutate(ModelMutation.create(hasOneChild)).getOrThrow()
         val parentFromResponse = client.mutate(ModelMutation.create(parent)).getOrThrow().data
@@ -374,11 +388,14 @@ class LazySubscribeInstrumentationTest : DeviceFarmTestBase() {
         val subscription = client.subscribe(request)
 
         val latch = CountDownLatch(1)
+        val connectedLatch = CountDownLatch(1)
         var capturedParent: Parent? = null
         var capturedChild: HasOneChild? = null
         CoroutineScope(Dispatchers.IO).launch {
             subscription.collect { event ->
-                if (event is SubscriptionEvent.Data) {
+                if (event is SubscriptionEvent.Connection.Connected) {
+                    connectedLatch.countDown()
+                } else if (event is SubscriptionEvent.Data) {
                     val returnedParent = event.response.data
                     if (modelCreatedByDevice(returnedParent.id)) {
                         assertEquals(parent.id, returnedParent.id)
@@ -389,6 +406,7 @@ class LazySubscribeInstrumentationTest : DeviceFarmTestBase() {
                 }
             }
         }
+        connectedLatch.await(10, TimeUnit.SECONDS)
 
         client.mutate(ModelMutation.create(hasOneChild)).getOrThrow()
         client.mutate(ModelMutation.create(parent)).getOrThrow()

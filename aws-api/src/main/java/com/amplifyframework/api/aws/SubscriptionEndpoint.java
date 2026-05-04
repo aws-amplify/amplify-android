@@ -81,6 +81,7 @@ public final class SubscriptionEndpoint {
     private WebSocket webSocket;
     private AmplifyWebSocketListener webSocketListener;
     private String apiName;
+    private LazyQueryExecutor lazyQueryExecutor;
 
     SubscriptionEndpoint(
             @NonNull ApiConfiguration apiConfiguration,
@@ -151,6 +152,47 @@ public final class SubscriptionEndpoint {
             ),
             null
         );
+    }
+
+    /**
+     * Convenience constructor for standalone use with a custom {@link LazyQueryExecutor}.
+     * When provided, subscription responses will use this executor for lazy-loading
+     * follow-up queries instead of the global {@code Amplify.API} singleton.
+     */
+    @InternalAmplifyApi
+    public SubscriptionEndpoint(
+            @NonNull String endpoint,
+            @NonNull String region,
+            @NonNull AuthorizationType authorizationType,
+            @Nullable String apiKey,
+            @Nullable OkHttpConfigurator configurator,
+            @NonNull GraphQLResponse.Factory responseFactory,
+            @Nullable ApiAuthProviders authProviders,
+            @Nullable LazyQueryExecutor lazyQueryExecutor
+    ) {
+        this(
+            ApiConfiguration.builder()
+                .endpoint(endpoint)
+                .region(region)
+                .endpointType(EndpointType.GRAPHQL)
+                .authorizationType(authorizationType)
+                .apiKey(apiKey)
+                .build(),
+            configurator,
+            responseFactory,
+            new SubscriptionAuthorizer(
+                ApiConfiguration.builder()
+                    .endpoint(endpoint)
+                    .region(region)
+                    .endpointType(EndpointType.GRAPHQL)
+                    .authorizationType(authorizationType)
+                    .apiKey(apiKey)
+                    .build(),
+                authProviders != null ? authProviders : ApiAuthProviders.noProviderOverrides()
+            ),
+            null
+        );
+        this.lazyQueryExecutor = lazyQueryExecutor;
     }
 
     @InternalAmplifyApi
@@ -240,7 +282,7 @@ public final class SubscriptionEndpoint {
 
         Subscription<T> subscription = new Subscription<>(
             onNextItem, onSubscriptionError, onSubscriptionComplete,
-            responseFactory, request.getResponseType(), request, apiName
+            responseFactory, request.getResponseType(), request, apiName, lazyQueryExecutor
         );
         subscriptions.put(subscriptionId, subscription);
         if (subscription.awaitSubscriptionReady()) {
@@ -415,6 +457,7 @@ public final class SubscriptionEndpoint {
         private final CountDownLatch subscriptionCompletionAcknowledgement;
         private boolean failed;
         private String apiName;
+        private LazyQueryExecutor lazyQueryExecutor;
 
         Subscription(
                 Consumer<GraphQLResponse<T>> onNextItem,
@@ -423,7 +466,8 @@ public final class SubscriptionEndpoint {
                 GraphQLResponse.Factory responseFactory,
                 Type responseType,
                 GraphQLRequest<T> request,
-                String apiName
+                String apiName,
+                LazyQueryExecutor lazyQueryExecutor
         ) {
             this.onNextItem = onNextItem;
             this.onSubscriptionError = onSubscriptionError;
@@ -432,6 +476,7 @@ public final class SubscriptionEndpoint {
             this.responseType = responseType;
             this.request = request;
             this.apiName = apiName;
+            this.lazyQueryExecutor = lazyQueryExecutor;
             this.subscriptionReadyAcknowledgment = new CountDownLatch(1);
             this.subscriptionCompletionAcknowledgement = new CountDownLatch(1);
             this.failed = false;
@@ -501,8 +546,11 @@ public final class SubscriptionEndpoint {
             }
 
             try {
-                return ((GsonGraphQLResponseFactory) responseFactory)
-                        .buildResponse(request, jsonResponse, apiName);
+                GsonGraphQLResponseFactory gsonFactory = (GsonGraphQLResponseFactory) responseFactory;
+                if (lazyQueryExecutor != null) {
+                    return gsonFactory.buildResponseWithExecutor(request, jsonResponse, lazyQueryExecutor);
+                }
+                return gsonFactory.buildResponse(request, jsonResponse, apiName);
             } catch (ClassCastException cce) {
                 throw new ApiException("Amplify encountered an error while deserializing an object",
                         AmplifyException.TODO_RECOVERY_SUGGESTION);
