@@ -52,7 +52,7 @@ import okhttp3.OkHttpClient
 class AmplifyAppSyncClient(val configuration: Configuration) {
 
     private val httpClient = GraphQLHttpClient(configuration)
-    private val webSocketClient = GraphQLWebSocketClient(configuration)
+    private val webSocketClient = GraphQLWebSocketClient(configuration, httpClient)
 
     /**
      * Per-client connection state flow.

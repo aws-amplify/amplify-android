@@ -44,6 +44,12 @@ class ApiLazyModelListTest {
 
     private val apiCategory = mockk<ApiCategory>()
     private val expectedApiName = "myApi"
+
+    private fun executorFor(apiName: String? = null): LazyQueryExecutor =
+        object : LazyQueryExecutor {
+            override suspend fun <R> execute(request: GraphQLRequest<R>): GraphQLResponse<R> =
+                query(apiCategory, request, apiName)
+        }
     private val expectedQuery = "query ListPosts(\$filter: ModelPostFilterInput, \$limit: Int) {\n" +
         "  listPosts(filter: \$filter, limit: \$limit) {\n" +
         "    items {\n" +
@@ -98,8 +104,7 @@ class ApiLazyModelListTest {
         val lazyPostList = ApiLazyModelList(
             Post::class.java,
             mapOf(Pair("blogPostsId", "b1")),
-            expectedApiName,
-            apiCategory
+            executorFor(expectedApiName)
         )
         val requestSlot = slot<GraphQLRequest<Post>>()
 
@@ -127,8 +132,7 @@ class ApiLazyModelListTest {
         val lazyPostList = ApiLazyModelList(
             Post::class.java,
             mapOf(Pair("blogPostsId", "b1")),
-            null,
-            apiCategory
+            executorFor()
         )
         val requestSlot = slot<GraphQLRequest<Post>>()
 
@@ -156,8 +160,7 @@ class ApiLazyModelListTest {
         val lazyPostList = ApiLazyModelList(
             Post::class.java,
             mapOf(Pair("blogPostsId", "b1")),
-            expectedApiName,
-            apiCategory
+            executorFor(expectedApiName)
         )
         val expectedToken = ApiPaginationToken("456")
         val requestSlot = slot<GraphQLRequest<Post>>()
@@ -186,8 +189,7 @@ class ApiLazyModelListTest {
         val lazyPostList = ApiLazyModelList(
             Post::class.java,
             mapOf(Pair("blogPostsId", "b1")),
-            expectedApiName,
-            apiCategory
+            executorFor(expectedApiName)
         )
         val requestSlot = slot<GraphQLRequest<Post>>()
         val apiException = ApiException("fail", "fail")
@@ -217,8 +219,7 @@ class ApiLazyModelListTest {
         val lazyPostList = ApiLazyModelList(
             Post::class.java,
             mapOf(Pair("blogPostsId", "b1")),
-            expectedApiName,
-            apiCategory
+            executorFor(expectedApiName)
         )
         val requestSlot = slot<GraphQLRequest<Post>>()
         val latch = CountDownLatch(1)
@@ -262,8 +263,7 @@ class ApiLazyModelListTest {
         val lazyPostList = ApiLazyModelList(
             Post::class.java,
             mapOf(Pair("blogPostsId", "b1")),
-            expectedApiName,
-            apiCategory
+            executorFor(expectedApiName)
         )
 
         val requestSlot = slot<GraphQLRequest<Post>>()
@@ -309,8 +309,7 @@ class ApiLazyModelListTest {
         val lazyPostList = ApiLazyModelList(
             Post::class.java,
             mapOf(Pair("blogPostsId", "b1")),
-            expectedApiName,
-            apiCategory
+            executorFor(expectedApiName)
         )
         val requestSlot = slot<GraphQLRequest<Post>>()
         val apiException = ApiException("fail", "fail")
@@ -347,8 +346,7 @@ class ApiLazyModelListTest {
         val lazyPostList = ApiLazyModelList(
             Post::class.java,
             mapOf(Pair("blogPostsId", "b1")),
-            null,
-            apiCategory
+            executorFor()
         )
         val requestSlot = slot<GraphQLRequest<Post>>()
         val apiException = ApiException("fail", "fail")

@@ -1,4 +1,4 @@
-package com.amplifyframework.datastore.generated.model;
+package com.amplifyframework.testmodels.lazycpk;
 
 import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 

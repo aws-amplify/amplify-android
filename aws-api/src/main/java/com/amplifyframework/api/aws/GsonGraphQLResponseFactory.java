@@ -69,6 +69,18 @@ public final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory
             @Nullable String responseJson,
             @Nullable String apiName
     ) throws ApiException {
+        return buildResponseWithExecutor(request, responseJson, new AmplifyApiQueryExecutor(apiName));
+    }
+
+    /**
+     * Build a GraphQL response using a custom query executor for lazy loading.
+     */
+    @InternalAmplifyApi
+    public <T> GraphQLResponse<T> buildResponseWithExecutor(
+            @NonNull GraphQLRequest<T> request,
+            @Nullable String responseJson,
+            @NonNull LazyQueryExecutor queryExecutor
+    ) throws ApiException {
         // On empty strings, Gson returns null instead of throwing JsonSyntaxException. See:
         // https://github.com/google/gson/issues/457
         // https://github.com/google/gson/issues/1697
@@ -92,12 +104,12 @@ public final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory
                     )
                     .registerTypeAdapter(
                             ModelReference.class,
-                            new ModelReferenceDeserializer<Model>(apiName, schemaRegistry)
+                            new ModelReferenceDeserializer<Model>(queryExecutor, schemaRegistry)
                     )
                     .registerTypeAdapterFactory(
                             // register Model post processing to inject lazy types for fields that
                             // were missing from json response
-                            new ModelPostProcessingTypeAdapter(apiName, schemaRegistry)
+                            new ModelPostProcessingTypeAdapter(queryExecutor, schemaRegistry)
                     )
                     .create();
             return responseGson.fromJson(responseJson, responseType);

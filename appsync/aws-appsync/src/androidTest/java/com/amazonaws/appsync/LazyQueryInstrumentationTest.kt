@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2025 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -13,19 +13,12 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api.aws
+package com.amazonaws.appsync
 
-import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.amplifyframework.api.aws.extensions.fetchAllPages
-import com.amplifyframework.api.aws.test.R
-import com.amplifyframework.api.graphql.model.ModelQuery
-import com.amplifyframework.core.AmplifyConfiguration
-import com.amplifyframework.core.model.LazyModelList
-import com.amplifyframework.core.model.LazyModelReference
-import com.amplifyframework.core.model.LoadedModelList
-import com.amplifyframework.core.model.LoadedModelReference
-import com.amplifyframework.core.model.includes
+import com.amazonaws.appsync.extensions.fetchAllPages
+import com.amplifyframework.testmodels.lazycpk.Blog
+import com.amplifyframework.testmodels.lazycpk.Comment
 import com.amplifyframework.testmodels.lazycpk.HasManyChild
 import com.amplifyframework.testmodels.lazycpk.HasManyChild.HasManyChildIdentifier
 import com.amplifyframework.testmodels.lazycpk.HasManyChildPath
@@ -37,10 +30,21 @@ import com.amplifyframework.testmodels.lazycpk.Project
 import com.amplifyframework.testmodels.lazycpk.ProjectPath
 import com.amplifyframework.testmodels.lazycpk.Team
 import com.amplifyframework.testmodels.lazycpk.TeamPath
-import com.amplifyframework.kotlin.core.Amplify
+import com.amazonaws.appsync.test.R
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
+import com.amplifyframework.annotations.InternalAmplifyApi
+import com.amplifyframework.api.graphql.model.ModelQuery
+import com.amplifyframework.core.model.LazyModelList
+import com.amplifyframework.core.model.LazyModelReference
+import com.amplifyframework.core.model.LoadedModelList
+import com.amplifyframework.core.model.LoadedModelReference
+import com.amplifyframework.core.model.includes
+import com.amplifyframework.foundation.result.getOrThrow
 import com.amplifyframework.testutils.DeviceFarmTestBase
+import com.amplifyframework.testutils.Resources
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.test.runTest
+import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -49,113 +53,55 @@ import org.junit.Assert.fail
 import org.junit.BeforeClass
 import org.junit.Test
 
-class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
+/**
+ * Integration test that verifies [AmplifyAppSyncClient] can perform lazy-loading query
+ * operations using codegen models with relationships. Mirrors the test scenarios from
+ * [com.amplifyframework.api.aws.GraphQLLazyQueryInstrumentationTest] in the :aws-api module.
+ *
+ * Uses pre-populated data in the "lazy" AppSync backend. The data was seeded by the
+ * populate() method in the original test (commented out there, run once manually).
+ */
+@OptIn(ExperimentalAmplifyApi::class, InternalAmplifyApi::class)
+class LazyQueryInstrumentationTest : DeviceFarmTestBase() {
 
     companion object {
-        val LONG_TIMEOUT = 20.seconds // Some test we pull and process 1000k records. Increase timeout for slow tests
+        val LONG_TIMEOUT = 20.seconds
 
         const val PARENT1_ID = "GraphQLLazyQueryInstrumentationTest-Parent"
         const val PARENT2_ID = "GraphQLLazyQueryInstrumentationTest-Parent2"
         const val HAS_ONE_CHILD1_ID = "GraphQLLazyQueryInstrumentationTest-HasOneChild1"
         const val HAS_ONE_CHILD2_ID = "GraphQLLazyQueryInstrumentationTest-HasOneChild2"
 
+        private lateinit var client: AmplifyAppSyncClient
+
         @JvmStatic
         @BeforeClass
         fun setUp() {
-            val context = ApplicationProvider.getApplicationContext<Context>()
-            val config = AmplifyConfiguration.fromConfigFile(context, R.raw.amplifyconfigurationlazy)
-            Amplify.addPlugin(AWSApiPlugin())
-            Amplify.configure(config, context)
+            val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+            val config = Resources.readAsJson(context, R.raw.appsync_client_config)
+            client = AmplifyAppSyncClient(
+                AmplifyAppSyncClient.Configuration {
+                    endpoint = config.getString("lazyEndpoint")
+                    authorization = AppSyncAuthorization.Single(
+                        AppSyncClientAuthorizer.ApiKey(config.getString("lazyApiKey"))
+                    )
+                }
+            )
+        }
+
+        @JvmStatic
+        @AfterClass
+        fun tearDown() {
+            client.close()
         }
     }
 
-    // run this method once to populate all the data necessary to run the tests
-//    private suspend fun populate() {
-//        val hasOneChild = HasOneChild.builder()
-//            .content("Child1")
-//            .id("GraphQLLazyQueryInstrumentationTest-HasOneChild1")
-//            .build()
-//        Amplify.API.mutate(ModelMutation.create(hasOneChild))
-//
-//        val parent = Parent.builder().parentChildId(hasOneChild.id).id("GraphQLLazyQueryInstrumentationTest-Parent").build()
-//        Amplify.API.mutate(ModelMutation.create(parent))
-//
-//        val hasOneChild2 = HasOneChild.builder()
-//            .content("Child2")
-//            .id("GraphQLLazyQueryInstrumentationTest-HasOneChild2")
-//            .build()
-//        Amplify.API.mutate(ModelMutation.create(hasOneChild2))
-//
-//        val parent2 = Parent.builder().parentChildId(hasOneChild2.id).id("GraphQLLazyQueryInstrumentationTest-Parent2").build()
-//        Amplify.API.mutate(ModelMutation.create(parent2))
-//
-//        for(i in 0 until 1001) {
-//            val hasManyChild = HasManyChild.builder()
-//                .content("Child$i")
-//                .id("GraphQLLazyQueryInstrumentationTest-HasManyChild$i")
-//                .parent(parent)
-//                .build()
-//            Amplify.API.mutate(ModelMutation.create(hasManyChild))
-//        }
-//
-//        val parentNoChildren = Parent.builder().id("GraphQLLazyQueryInstrumentationTest.ParentWithNoChildren").build()
-//        Amplify.API.mutate(ModelMutation.create(parentNoChildren))
-//
-//        val hasManyChild = HasManyChild.builder()
-//        .content("ChildNoParent")
-//        .id("GraphQLLazyQueryInstrumentationTest.HasManyChildNoParent")
-//        .build()
-//
-//        Amplify.API.mutate(ModelMutation.create(hasManyChild))
-//
-//        val project = Project.builder()
-//            .projectId("GraphQLLazyQueryInstrumentationTest-Parent1")
-//            .name("Project 1")
-//            .build()
-//        val projectFromResponse = Amplify.API.mutate(ModelMutation.create(project)).data
-//
-//        val team = Team.builder()
-//            .teamId("GraphQLLazyQueryInstrumentationTest-Team1")
-//            .name("Team 1")
-//            .project(project)
-//            .build()
-//        Amplify.API.mutate(ModelMutation.create(team))
-//
-//
-//        val updateProject = projectFromResponse.copyOfBuilder()
-//            .projectTeamName("Team 1")
-//            .projectTeamTeamId("GraphQLLazyQueryInstrumentationTest-Team1")
-//            .build()
-//        Amplify.API.mutate(ModelMutation.update(updateProject))
-//
-//        val blog = Blog.builder()
-//            .blogId("GraphQLLazyQueryInstrumentationTest-Blog1")
-//            .name("Blog 1")
-//            .build()
-//        val post = Post.builder()
-//            .postId("GraphQLLazyQueryInstrumentationTest-Post1")
-//            .title("Post 1")
-//            .blog(blog)
-//            .build()
-//        val comment = Comment.builder()
-//            .commentId("GraphQLLazyQueryInstrumentationTest-Comment1")
-//            .content("Comment 1")
-//            .post(post)
-//            .build()
-//        Amplify.API.mutate(ModelMutation.create(blog))
-//        Amplify.API.mutate(ModelMutation.create(post))
-//        Amplify.API.mutate(ModelMutation.create(comment))
-//    }
-
     @Test
     fun query_parent_no_includes() = runTest(timeout = LONG_TIMEOUT) {
-        // GIVEN
         val request = ModelQuery[Parent::class.java, Parent.ParentIdentifier(PARENT1_ID)]
 
-        // WHEN
-        val responseParent = Amplify.API.query(request).data
+        val responseParent = client.query(request).getOrThrow().data
 
-        // THEN
         assertEquals(HAS_ONE_CHILD1_ID, responseParent.parentChildId)
         (responseParent.child as? LazyModelReference)?.fetchModel()?.let { child ->
             assertEquals(HAS_ONE_CHILD1_ID, child.id)
@@ -169,7 +115,6 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
 
     @Test
     fun query_parent_with_includes() = runTest {
-        // GIVEN
         val request = ModelQuery.get<Parent, ParentPath>(
             Parent::class.java,
             Parent.ParentIdentifier(PARENT1_ID)
@@ -177,10 +122,8 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
             includes(it.child, it.children)
         }
 
-        // WHEN
-        val responseParent = Amplify.API.query(request).data
+        val responseParent = client.query(request).getOrThrow().data
 
-        // THEN
         assertEquals(HAS_ONE_CHILD1_ID, responseParent.parentChildId)
         (responseParent.child as? LoadedModelReference)?.let { childRef ->
             val child = childRef.value!!
@@ -199,12 +142,10 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
             Parent.ID.beginsWith("GraphQLLazyQueryInstrumentationTest-Parent")
         )
 
-        // WHEN
-        val paginatedResult = Amplify.API.query(request).data
+        val paginatedResult = client.query(request).getOrThrow().data
 
         assertFalse(paginatedResult.hasNextResult())
 
-        // THEN
         val parents = paginatedResult.items.toList()
         assertEquals(2, parents.size)
 
@@ -243,10 +184,8 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
             includes(it.child, it.children)
         }
 
-        // WHEN
-        val paginatedResult = Amplify.API.query(request).data
+        val paginatedResult = client.query(request).getOrThrow().data
 
-        // THEN
         assertFalse(paginatedResult.hasNextResult())
 
         val parents = paginatedResult.items.toList()
@@ -277,7 +216,6 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
 
     @Test
     fun query_parent_with_no_child_with_includes() = runTest {
-        // GIVEN
         val request = ModelQuery.get<Parent, ParentPath>(
             Parent::class.java,
             Parent.ParentIdentifier("GraphQLLazyQueryInstrumentationTest.ParentWithNoChildren")
@@ -285,10 +223,8 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
             includes(it.child, it.children)
         }
 
-        // WHEN
-        val responseParent = Amplify.API.query(request).data
+        val responseParent = client.query(request).getOrThrow().data
 
-        // THEN
         assertNull(responseParent.parentChildId)
         (responseParent.child as? LoadedModelReference)?.let { childRef ->
             assertNull(childRef.value)
@@ -300,16 +236,13 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
 
     @Test
     fun query_parent_with_no_child_no_includes() = runTest {
-        // GIVEN
         val request = ModelQuery[
             Parent::class.java,
             Parent.ParentIdentifier("GraphQLLazyQueryInstrumentationTest.ParentWithNoChildren")
         ]
 
-        // WHEN
-        val responseParent = Amplify.API.query(request).data
+        val responseParent = client.query(request).getOrThrow().data
 
-        // THEN
         assertNull(responseParent.parentChildId)
         (responseParent.child as? LoadedModelReference)?.let { childRef ->
             assertNull(childRef.value)
@@ -321,16 +254,13 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
 
     @Test
     fun query_child_belongsTo_parent_with_no_includes() = runTest {
-        // GIVEN
         val request = ModelQuery[
             HasManyChild::class.java,
             HasManyChildIdentifier("GraphQLLazyQueryInstrumentationTest-HasManyChild1")
         ]
 
-        // WHEN
-        val hasManyChild = Amplify.API.query(request).data
+        val hasManyChild = client.query(request).getOrThrow().data
 
-        // THEN
         (hasManyChild.parent as? LazyModelReference)?.let { parentRef ->
             assertEquals(PARENT1_ID, parentRef.fetchModel()!!.id)
         } ?: fail("Response child was null or not a LazyModelReference")
@@ -338,7 +268,6 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
 
     @Test
     fun query_child_belongsTo_parent_with_includes() = runTest {
-        // GIVEN
         val request = ModelQuery.get<HasManyChild, HasManyChildPath>(
             HasManyChild::class.java,
             HasManyChildIdentifier("GraphQLLazyQueryInstrumentationTest-HasManyChild1")
@@ -346,10 +275,8 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
             includes(it.parent)
         }
 
-        // WHEN
-        val hasManyChild = Amplify.API.query(request).data
+        val hasManyChild = client.query(request).getOrThrow().data
 
-        // THEN
         (hasManyChild.parent as? LoadedModelReference)?.let { parentRef ->
             assertEquals(PARENT1_ID, parentRef.value!!.id)
         } ?: fail("Response child was null or not a LoadedModelReference")
@@ -357,16 +284,13 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
 
     @Test
     fun query_child_belongsTo_null_parent_with_no_includes() = runTest {
-        // GIVEN
         val request = ModelQuery[
             HasManyChild::class.java,
             HasManyChildIdentifier("GraphQLLazyQueryInstrumentationTest.HasManyChildNoParent")
         ]
 
-        // WHEN
-        val hasManyChild = Amplify.API.query(request).data
+        val hasManyChild = client.query(request).getOrThrow().data
 
-        // THEN
         (hasManyChild.parent as? LoadedModelReference)?.let { parentRef ->
             assertEquals(null, parentRef.value)
         } ?: fail("Response child was null or not a LoadedModelReference")
@@ -374,16 +298,13 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
 
     @Test
     fun query_list_child_belongsTo_null_parent_with_no_includes() = runTest {
-        // GIVEN
         val request = ModelQuery.list(
             HasManyChild::class.java,
             HasManyChild.ID.beginsWith("GraphQLLazyQueryInstrumentationTest.HasManyChildNoParent")
         )
 
-        // WHEN
-        val hasManyChildren = Amplify.API.query(request).data.toList()
+        val hasManyChildren = client.query(request).getOrThrow().data.toList()
 
-        // THEN
         assertEquals(1, hasManyChildren.size)
         (hasManyChildren[0].parent as? LoadedModelReference)?.let { parentRef ->
             assertEquals(null, parentRef.value)
@@ -392,7 +313,6 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
 
     @Test
     fun query_child_belongsTo_null_parent_with_includes() = runTest {
-        // GIVEN
         val request = ModelQuery.list<HasManyChild, HasManyChildPath>(
             HasManyChild::class.java,
             HasManyChild.ID.beginsWith("GraphQLLazyQueryInstrumentationTest.HasManyChildNoParent")
@@ -400,10 +320,8 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
             includes(it.parent)
         }
 
-        // WHEN
-        val hasManyChildren = Amplify.API.query(request).data.toList()
+        val hasManyChildren = client.query(request).getOrThrow().data.toList()
 
-        // THEN
         assertEquals(1, hasManyChildren.size)
         (hasManyChildren[0].parent as? LoadedModelReference)?.let { parentRef ->
             assertEquals(null, parentRef.value)
@@ -412,7 +330,6 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
 
     @Test
     fun query_project_and_pull_hasOne_team_no_includes() = runTest {
-        // GIVEN
         val expectedProjectId = "GraphQLLazyQueryInstrumentationTest-Parent1"
         val expectedProjectName = "Project 1"
         val expectedTeamId = "GraphQLLazyQueryInstrumentationTest-Team1"
@@ -422,10 +339,8 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
             Project.ProjectIdentifier(expectedProjectId, expectedProjectName)
         ]
 
-        // WHEN
-        val projectFromResponse = Amplify.API.query(projectRequest).data
+        val projectFromResponse = client.query(projectRequest).getOrThrow().data
 
-        // THEN
         assertEquals(expectedProjectId, projectFromResponse.projectId)
         assertEquals(expectedProjectName, projectFromResponse.name)
 
@@ -438,7 +353,6 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
 
     @Test
     fun query_project_and_pull_hasOne_team_includes() = runTest {
-        // GIVEN
         val expectedProjectId = "GraphQLLazyQueryInstrumentationTest-Parent1"
         val expectedProjectName = "Project 1"
         val expectedTeamId = "GraphQLLazyQueryInstrumentationTest-Team1"
@@ -450,10 +364,8 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
             includes(it.team)
         }
 
-        // WHEN
-        val projectFromResponse = Amplify.API.query(projectRequest).data
+        val projectFromResponse = client.query(projectRequest).getOrThrow().data
 
-        // THEN
         assertEquals(expectedProjectId, projectFromResponse.projectId)
         assertEquals(expectedProjectName, projectFromResponse.name)
 
@@ -466,7 +378,6 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
 
     @Test
     fun query_team_and_pull_belongsTo_project_no_includes() = runTest {
-        // GIVEN
         val expectedProjectId = "GraphQLLazyQueryInstrumentationTest-Parent1"
         val expectedProjectName = "Project 1"
         val expectedTeamId = "GraphQLLazyQueryInstrumentationTest-Team1"
@@ -476,10 +387,8 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
             Team.TeamIdentifier(expectedTeamId, expectedTeamName)
         ]
 
-        // WHEN
-        val teamFromResponse = Amplify.API.query(teamRequest).data
+        val teamFromResponse = client.query(teamRequest).getOrThrow().data
 
-        // THEN
         assertEquals(expectedTeamId, teamFromResponse.teamId)
         assertEquals(expectedTeamName, teamFromResponse.name)
 
@@ -492,7 +401,6 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
 
     @Test
     fun query_team_and_pull_belongsTo_project_includes() = runTest {
-        // GIVEN
         val expectedProjectId = "GraphQLLazyQueryInstrumentationTest-Parent1"
         val expectedProjectName = "Project 1"
         val expectedTeamId = "GraphQLLazyQueryInstrumentationTest-Team1"
@@ -504,10 +412,8 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
             includes(it.project)
         }
 
-        // WHEN
-        val teamFromResponse = Amplify.API.query(projectRequest).data
+        val teamFromResponse = client.query(projectRequest).getOrThrow().data
 
-        // THEN
         assertEquals(expectedTeamId, teamFromResponse.teamId)
         assertEquals(expectedTeamName, teamFromResponse.name)
 
@@ -520,22 +426,18 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
 
     @Test
     fun query_with_complex_includes() = runTest {
-        // GIVEN
         val expectedBlogName = "Blog 1"
         val expectedPostId = "GraphQLLazyQueryInstrumentationTest-Post1"
         val expectedPostTitle = "Post 1"
-        val expectedCommentConent = "Comment 1"
+        val expectedCommentContent = "Comment 1"
 
-        // WHEN
         val request = ModelQuery.get<Post, PostPath>(
             Post::class.java,
             Post.PostIdentifier(expectedPostId, expectedPostTitle)
         ) {
             includes(it.blog.posts.blog.posts.comments, it.comments.post.blog.posts.comments)
         }
-        val post = Amplify.API.query(request).data
-
-        // THEN
+        val post = client.query(request).getOrThrow().data
 
         // Scenario 1: it.blog.posts.blog.posts.comments
         val l1Blog = (post.blog as LoadedModelReference).value!!
@@ -550,12 +452,12 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
         assertEquals(expectedPostTitle, l4Posts[0].title)
         val l5Comments = (l4Posts[0].comments as LoadedModelList).items
         assertEquals(1, l5Comments.size)
-        assertEquals(expectedCommentConent, l5Comments[0].content)
+        assertEquals(expectedCommentContent, l5Comments[0].content)
 
         // Scenario 2: it.comments.post.blog.posts.comments
         val s2l1Comments = (post.comments as LoadedModelList).items
         assertEquals(1, s2l1Comments.size)
-        assertEquals(expectedCommentConent, s2l1Comments[0].content)
+        assertEquals(expectedCommentContent, s2l1Comments[0].content)
         val l2Post = (s2l1Comments[0].post as LoadedModelReference).value!!
         assertEquals(expectedPostTitle, l2Post.title)
         val s2l3Blog = (l2Posts[0].blog as LoadedModelReference).value!!
@@ -565,25 +467,21 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
         assertEquals(expectedPostTitle, s2l4Posts[0].title)
         val s2l5Comments = (s2l4Posts[0].comments as LoadedModelList).items
         assertEquals(1, s2l5Comments.size)
-        assertEquals(expectedCommentConent, s2l5Comments[0].content)
+        assertEquals(expectedCommentContent, s2l5Comments[0].content)
     }
 
     @Test
     fun query_multiple_lazy_loads_no_includes() = runTest {
-        // GIVEN
         val expectedBlogName = "Blog 1"
         val expectedPostId = "GraphQLLazyQueryInstrumentationTest-Post1"
         val expectedPostTitle = "Post 1"
-        val expectedCommentConent = "Comment 1"
+        val expectedCommentContent = "Comment 1"
 
-        // WHEN
         val request = ModelQuery[
             Post::class.java,
             Post.PostIdentifier(expectedPostId, expectedPostTitle)
         ]
-        val post = Amplify.API.query(request).data
-
-        // THEN
+        val post = client.query(request).getOrThrow().data
 
         // Scenario 1: Start loads from lazy reference of blog
         val s1l1Blog = (post.blog as LazyModelReference).fetchModel()!!
@@ -595,18 +493,18 @@ class GraphQLLazyQueryInstrumentationTest : DeviceFarmTestBase() {
         assertEquals(expectedBlogName, s1l3Blog.name)
         val s1l3Comments = (s1l2Posts[0].comments as LazyModelList).fetchAllPages()
         assertEquals(1, s1l3Comments.size)
-        assertEquals(expectedCommentConent, s1l3Comments[0].content)
+        assertEquals(expectedCommentContent, s1l3Comments[0].content)
 
-        // Scenario 1: Start loads from model list of comments
+        // Scenario 2: Start loads from model list of comments
         val s2l1Comments = (post.comments as LazyModelList).fetchAllPages()
         assertEquals(1, s2l1Comments.size)
-        assertEquals(expectedCommentConent, s2l1Comments[0].content)
+        assertEquals(expectedCommentContent, s2l1Comments[0].content)
         val s2l2Post = (s1l3Comments[0].post as LazyModelReference).fetchModel()!!
         assertEquals(expectedPostTitle, s2l2Post.title)
         val s2l3Blog = (s2l2Post.blog as LazyModelReference).fetchModel()!!
         assertEquals(expectedBlogName, s2l3Blog.name)
         val s2l3Comments = (s2l2Post.comments as LazyModelList).fetchAllPages()
         assertEquals(1, s2l3Comments.size)
-        assertEquals(expectedCommentConent, s2l3Comments[0].content)
+        assertEquals(expectedCommentContent, s2l3Comments[0].content)
     }
 }

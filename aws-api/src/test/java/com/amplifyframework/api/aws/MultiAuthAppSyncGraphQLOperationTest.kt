@@ -79,7 +79,7 @@ class MultiAuthAppSyncGraphQLOperationTest {
         val gqlErrors = buildGQLErrors()
         val gqlResponse = GraphQLResponse<ModelWithTwoAuthModes>(null, mutableListOf(gqlErrors))
         gqlResponse.errors.replaceAll { gqlErrors }
-        every { responseFactoryMock.buildResponse<ModelWithTwoAuthModes>(any(), any(), any()) } returns gqlResponse
+        every { responseFactoryMock.buildResponseWithExecutor<ModelWithTwoAuthModes>(any(), any(), any()) } returns gqlResponse
 
         every { apiRequestDecoratorFactory.forAuthType(any()) } returns requestDecorator
 
@@ -126,7 +126,7 @@ class MultiAuthAppSyncGraphQLOperationTest {
         val gqlResponse = GraphQLResponse<ModelWithTwoAuthModes>(null, mutableListOf(gqlErrors))
         gqlResponse.errors.replaceAll { gqlErrors }
 
-        every { responseFactoryMock.buildResponse<ModelWithTwoAuthModes>(any(), any(), any()) } returns gqlResponse
+        every { responseFactoryMock.buildResponseWithExecutor<ModelWithTwoAuthModes>(any(), any(), any()) } returns gqlResponse
 
         every { apiRequestDecoratorFactory.forAuthType(any()) } returns requestDecorator
 

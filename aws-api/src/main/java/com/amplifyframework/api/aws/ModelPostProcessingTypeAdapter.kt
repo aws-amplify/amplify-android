@@ -37,7 +37,7 @@ import java.io.Serializable
  * We must create the ModelList type, injecting required values such as query keys, api name.
  */
 internal class ModelPostProcessingTypeAdapter(
-    private val apiName: String?,
+    private val queryExecutor: LazyQueryExecutor,
     private val schemaRegistry: AWSApiSchemaRegistry
 ) : TypeAdapterFactory {
     override fun <M> create(gson: Gson, type: TypeToken<M>): TypeAdapter<M> {
@@ -87,7 +87,7 @@ internal class ModelPostProcessingTypeAdapter(
                                     name to parentIdentifiers[idx]
                                 }.toMap()
 
-                                val modelList = ApiLazyModelList(lazyFieldModelSchema.modelClass, queryKeys, apiName)
+                                val modelList = ApiLazyModelList(lazyFieldModelSchema.modelClass, queryKeys, queryExecutor)
 
                                 fieldToUpdate.set(parent, modelList)
                             }

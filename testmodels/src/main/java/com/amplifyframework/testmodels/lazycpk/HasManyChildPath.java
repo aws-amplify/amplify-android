@@ -1,4 +1,4 @@
-package com.amplifyframework.datastore.generated.model;
+package com.amplifyframework.testmodels.lazycpk;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;

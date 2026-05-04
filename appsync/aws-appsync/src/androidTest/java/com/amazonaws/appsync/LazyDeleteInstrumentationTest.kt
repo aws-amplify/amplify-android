@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2025 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -13,61 +13,80 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api.aws
+package com.amazonaws.appsync
 
-import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.amplifyframework.api.aws.extensions.fetchAllPages
-import com.amplifyframework.api.aws.test.R
+import com.amazonaws.appsync.extensions.fetchAllPages
+import com.amazonaws.appsync.test.R
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.api.graphql.model.ModelMutation
-import com.amplifyframework.core.AmplifyConfiguration
 import com.amplifyframework.core.model.LazyModelList
 import com.amplifyframework.core.model.LazyModelReference
 import com.amplifyframework.core.model.LoadedModelList
 import com.amplifyframework.core.model.LoadedModelReference
 import com.amplifyframework.core.model.includes
+import com.amplifyframework.foundation.result.getOrThrow
 import com.amplifyframework.testmodels.lazycpk.HasManyChild
 import com.amplifyframework.testmodels.lazycpk.HasOneChild
 import com.amplifyframework.testmodels.lazycpk.Parent
 import com.amplifyframework.testmodels.lazycpk.ParentPath
-import com.amplifyframework.kotlin.core.Amplify
 import com.amplifyframework.testutils.DeviceFarmTestBase
+import com.amplifyframework.testutils.Resources
 import kotlinx.coroutines.test.runTest
+import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.BeforeClass
 import org.junit.Test
 
-class GraphQLLazyDeleteInstrumentationTest : DeviceFarmTestBase() {
+/**
+ * Integration test that verifies [AmplifyAppSyncClient] can perform lazy-loading delete
+ * mutation operations using codegen models with relationships. Mirrors the test scenarios from
+ * [com.amplifyframework.api.aws.GraphQLLazyDeleteInstrumentationTest] in the :aws-api module.
+ */
+@OptIn(ExperimentalAmplifyApi::class, InternalAmplifyApi::class)
+class LazyDeleteInstrumentationTest : DeviceFarmTestBase() {
 
     companion object {
+        private lateinit var client: AmplifyAppSyncClient
+
         @JvmStatic
         @BeforeClass
         fun setUp() {
-            val context = ApplicationProvider.getApplicationContext<Context>()
-            val config = AmplifyConfiguration.fromConfigFile(context, R.raw.amplifyconfigurationlazy)
-            Amplify.addPlugin(AWSApiPlugin())
-            Amplify.configure(config, context)
+            val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+            val config = Resources.readAsJson(context, R.raw.appsync_client_config)
+            client = AmplifyAppSyncClient(
+                AmplifyAppSyncClient.Configuration {
+                    endpoint = config.getString("lazyEndpoint")
+                    authorization = AppSyncAuthorization.Single(
+                        AppSyncClientAuthorizer.ApiKey(config.getString("lazyApiKey"))
+                    )
+                }
+            )
+        }
+
+        @JvmStatic
+        @AfterClass
+        fun tearDown() {
+            client.close()
         }
     }
 
     @Test
     fun delete_with_no_includes() = runTest {
-        // GIVEN
         val hasOneChild = HasOneChild.builder().content("Child1").build()
-        Amplify.API.mutate(ModelMutation.create(hasOneChild))
+        client.mutate(ModelMutation.create(hasOneChild)).getOrThrow()
 
         val parent = Parent.builder().parentChildId(hasOneChild.id).build()
-        Amplify.API.mutate(ModelMutation.create(parent)).data
+        client.mutate(ModelMutation.create(parent)).getOrThrow()
 
         val hasManyChild = HasManyChild.builder().content("Child2").parent(parent).build()
-        Amplify.API.mutate(ModelMutation.create(hasManyChild))
+        client.mutate(ModelMutation.create(hasManyChild)).getOrThrow()
 
-        // WHEN
         val request = ModelMutation.delete(parent)
-        val updatedParent = Amplify.API.mutate(request).data
+        val updatedParent = client.mutate(request).getOrThrow().data
 
-        // THEN
         assertEquals(parent.id, updatedParent.id)
         assertEquals(hasOneChild.id, updatedParent.parentChildId)
         (updatedParent.child as? LazyModelReference)?.fetchModel()?.let {
@@ -79,29 +98,26 @@ class GraphQLLazyDeleteInstrumentationTest : DeviceFarmTestBase() {
         } ?: fail("Response child was null or not a LazyModelList")
 
         // CLEANUP
-        Amplify.API.mutate(ModelMutation.delete(hasOneChild))
-        Amplify.API.mutate(ModelMutation.delete(hasManyChild))
+        client.mutate(ModelMutation.delete(hasOneChild)).getOrThrow()
+        client.mutate(ModelMutation.delete(hasManyChild)).getOrThrow()
     }
 
     @Test
     fun delete_with_includes() = runTest {
-        // GIVEN
         val hasOneChild = HasOneChild.builder().content("Child1").build()
-        Amplify.API.mutate(ModelMutation.create(hasOneChild))
+        client.mutate(ModelMutation.create(hasOneChild)).getOrThrow()
 
         val parent = Parent.builder().parentChildId(hasOneChild.id).build()
-        Amplify.API.mutate(ModelMutation.create(parent)).data
+        client.mutate(ModelMutation.create(parent)).getOrThrow()
 
         val hasManyChild = HasManyChild.builder().content("Child2").parent(parent).build()
-        Amplify.API.mutate(ModelMutation.create(hasManyChild))
+        client.mutate(ModelMutation.create(hasManyChild)).getOrThrow()
 
-        // WHEN
         val request = ModelMutation.delete<Parent, ParentPath>(parent) {
             includes(it.child, it.children)
         }
-        val updatedParent = Amplify.API.mutate(request).data
+        val updatedParent = client.mutate(request).getOrThrow().data
 
-        // THEN
         assertEquals(parent.id, updatedParent.id)
         assertEquals(hasOneChild.id, updatedParent.parentChildId)
         (updatedParent.child as? LoadedModelReference)?.value?.let {
@@ -113,7 +129,7 @@ class GraphQLLazyDeleteInstrumentationTest : DeviceFarmTestBase() {
         } ?: fail("Response child was null or not a LoadedModelList")
 
         // CLEANUP
-        Amplify.API.mutate(ModelMutation.delete(hasOneChild))
-        Amplify.API.mutate(ModelMutation.delete(hasManyChild))
+        client.mutate(ModelMutation.delete(hasOneChild)).getOrThrow()
+        client.mutate(ModelMutation.delete(hasManyChild)).getOrThrow()
     }
 }

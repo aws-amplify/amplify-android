@@ -20,6 +20,7 @@ import com.amazonaws.appsync.SubscriptionEvent
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest
 import com.amplifyframework.api.aws.GsonGraphQLResponseFactory
+import com.amplifyframework.api.aws.LazyQueryExecutor
 import com.amplifyframework.api.aws.MultiAuthSubscriptionOperation
 import com.amplifyframework.api.aws.SubscriptionEndpoint
 import com.amplifyframework.api.aws.auth.AuthRuleRequestDecorator
@@ -46,7 +47,8 @@ import kotlinx.coroutines.launch
  * WebSocket lifecycle, protocol handling, keep-alive, and message dispatching.
  */
 internal class GraphQLWebSocketClient(
-    private val configuration: AmplifyAppSyncClient.Configuration
+    private val configuration: AmplifyAppSyncClient.Configuration,
+    private val lazyQueryExecutor: LazyQueryExecutor
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val closed = AtomicBoolean(false)
@@ -72,7 +74,8 @@ internal class GraphQLWebSocketClient(
                 }
             },
             GsonGraphQLResponseFactory(),
-            authProviders
+            authProviders,
+            lazyQueryExecutor
         )
     }
 

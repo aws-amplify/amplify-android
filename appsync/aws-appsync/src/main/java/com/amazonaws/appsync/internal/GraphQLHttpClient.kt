@@ -21,6 +21,7 @@ import com.amplifyframework.api.aws.AppSyncGraphQLOperation
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest
 import com.amplifyframework.api.aws.EndpointType
 import com.amplifyframework.api.aws.GsonGraphQLResponseFactory
+import com.amplifyframework.api.aws.LazyQueryExecutor
 import com.amplifyframework.api.aws.MultiAuthAppSyncGraphQLOperation
 import com.amplifyframework.api.aws.auth.ApiRequestDecoratorFactory
 import com.amplifyframework.api.graphql.GraphQLRequest
@@ -37,10 +38,13 @@ import kotlin.coroutines.resumeWithException
  * [MultiAuthAppSyncGraphQLOperation] from `:aws-api` which handles the full multi-auth
  * retry loop — trying each auth mode from the model's `@auth` rules in priority order
  * until one succeeds or all fail.
+ *
+ * Implements [LazyQueryExecutor] so that lazy model references and lists created during
+ * response deserialization can make follow-up queries through this same client.
  */
 internal class GraphQLHttpClient(
     private val configuration: AmplifyAppSyncClient.Configuration
-) {
+) : LazyQueryExecutor {
     private val closed = AtomicBoolean(false)
     private val executorService = Executors.newCachedThreadPool()
     private val responseFactory = GsonGraphQLResponseFactory()
@@ -72,7 +76,7 @@ internal class GraphQLHttpClient(
      * only when the model has `@auth` rules; otherwise falls back to [AppSyncGraphQLOperation]
      * which uses the client's default auth mode.
      */
-    suspend fun <T> execute(request: GraphQLRequest<T>): GraphQLResponse<T> =
+    override suspend fun <T> execute(request: GraphQLRequest<T>): GraphQLResponse<T> =
         suspendCancellableCoroutine { continuation ->
             val useMultiAuth = (request as? AppSyncGraphQLRequest<*>)?.let {
                 it.authorizationType == null &&
@@ -88,6 +92,7 @@ internal class GraphQLHttpClient(
                     .responseFactory(responseFactory)
                     .apiRequestDecoratorFactory(apiRequestDecoratorFactory)
                     .executorService(executorService)
+                    .queryExecutor(this)
                     .onResponse { response -> continuation.resume(response) }
                     .onFailure { error -> continuation.resumeWithException(error) }
                     .build()
@@ -99,6 +104,7 @@ internal class GraphQLHttpClient(
                     .responseFactory(responseFactory)
                     .apiRequestDecoratorFactory(apiRequestDecoratorFactory)
                     .executorService(executorService)
+                    .queryExecutor(this)
                     .onResponse { response -> continuation.resume(response) }
                     .onFailure { error -> continuation.resumeWithException(error) }
                     .build()

@@ -72,7 +72,7 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends AWSGraphQLOperati
      * @param builder An instance of the {@link Builder} object.
      */
     private MultiAuthAppSyncGraphQLOperation(Builder<R> builder) {
-        super(builder.request, builder.responseFactory, builder.apiName);
+        super(builder.request, builder.responseFactory, builder.apiName, builder.queryExecutor);
         this.apiRequestDecoratorFactory = builder.apiRequestDecoratorFactory;
         this.endpoint = builder.endpoint;
         this.client = builder.client;
@@ -215,6 +215,7 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends AWSGraphQLOperati
         private Consumer<ApiException> onFailure;
         private ExecutorService executorService;
         private String apiName;
+        private LazyQueryExecutor queryExecutor;
 
         @InternalAmplifyApi
         public Builder<R> endpoint(@NonNull String endpoint) {
@@ -267,6 +268,12 @@ public final class MultiAuthAppSyncGraphQLOperation<R> extends AWSGraphQLOperati
         @InternalAmplifyApi
         public Builder<R> apiName(String apiName) {
             this.apiName = apiName;
+            return this;
+        }
+
+        @InternalAmplifyApi
+        public Builder<R> queryExecutor(LazyQueryExecutor queryExecutor) {
+            this.queryExecutor = queryExecutor;
             return this;
         }
 

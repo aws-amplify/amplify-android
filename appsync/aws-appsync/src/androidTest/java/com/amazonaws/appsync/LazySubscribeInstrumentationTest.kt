@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2025 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -13,51 +13,70 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api.aws
+package com.amazonaws.appsync
 
-import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.amplifyframework.api.aws.test.R
+import com.amazonaws.appsync.test.R
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.api.graphql.model.ModelMutation
 import com.amplifyframework.api.graphql.model.ModelSubscription
-import com.amplifyframework.core.AmplifyConfiguration
 import com.amplifyframework.core.model.LazyModelReference
 import com.amplifyframework.core.model.LoadedModelReference
 import com.amplifyframework.core.model.includes
+import com.amplifyframework.foundation.result.getOrThrow
 import com.amplifyframework.testmodels.lazycpk.HasOneChild
 import com.amplifyframework.testmodels.lazycpk.Parent
 import com.amplifyframework.testmodels.lazycpk.ParentPath
-import com.amplifyframework.kotlin.core.Amplify
 import com.amplifyframework.testutils.DeviceFarmTestBase
+import com.amplifyframework.testutils.Resources
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
+import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.BeforeClass
 import org.junit.Test
 
-class GraphQLLazySubscribeInstrumentationTest : DeviceFarmTestBase() {
+/**
+ * Integration test that verifies [AmplifyAppSyncClient] can perform lazy-loading subscription
+ * operations using codegen models with relationships. Mirrors the test scenarios from
+ * [com.amplifyframework.api.aws.GraphQLLazySubscribeInstrumentationTest] in the :aws-api module.
+ */
+@OptIn(ExperimentalAmplifyApi::class, InternalAmplifyApi::class)
+class LazySubscribeInstrumentationTest : DeviceFarmTestBase() {
 
     companion object {
-
         val instrumentationRunId by lazy {
             UUID.randomUUID().toString()
         }
 
+        private lateinit var client: AmplifyAppSyncClient
+
         @JvmStatic
         @BeforeClass
         fun setUp() {
-            val context = ApplicationProvider.getApplicationContext<Context>()
-            val config = AmplifyConfiguration.fromConfigFile(context, R.raw.amplifyconfigurationlazy)
-            Amplify.addPlugin(AWSApiPlugin())
-            Amplify.configure(config, context)
+            val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+            val config = Resources.readAsJson(context, R.raw.appsync_client_config)
+            client = AmplifyAppSyncClient(
+                AmplifyAppSyncClient.Configuration {
+                    endpoint = config.getString("lazyEndpoint")
+                    authorization = AppSyncAuthorization.Single(
+                        AppSyncClientAuthorizer.ApiKey(config.getString("lazyApiKey"))
+                    )
+                }
+            )
+        }
+
+        @JvmStatic
+        @AfterClass
+        fun tearDown() {
+            client.close()
         }
     }
 
@@ -74,10 +93,8 @@ class GraphQLLazySubscribeInstrumentationTest : DeviceFarmTestBase() {
      */
     private fun createRandomIdWithRunIdPrefix() = "$instrumentationRunId-${UUID.randomUUID()}"
 
-    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
     @Test
     fun subscribe_with_no_includes_create() = runTest {
-        // GIVEN
         val hasOneChild = HasOneChild.builder()
             .content("Child1")
             .build()
@@ -87,30 +104,31 @@ class GraphQLLazySubscribeInstrumentationTest : DeviceFarmTestBase() {
             .build()
 
         val latch = CountDownLatch(1)
-        val collectRunningLatch = CountDownLatch(1)
+        val connectedLatch = CountDownLatch(1)
 
         var capturedParent: Parent? = null
         var capturedChild: HasOneChild? = null
-        val subscription = Amplify.API.subscribe(ModelSubscription.onCreate(Parent::class.java))
+        val subscription = client.subscribe(ModelSubscription.onCreate(Parent::class.java))
         CoroutineScope(Dispatchers.IO).launch {
-            subscription.collect {
-                val returnedParent = it.data
-                if (modelCreatedByDevice(returnedParent.id)) {
-                    assertEquals(parent.id, returnedParent.id)
-                    capturedParent = returnedParent
-                    capturedChild = (returnedParent.child as LazyModelReference).fetchModel()!!
-                    latch.countDown()
+            subscription.collect { event ->
+                if (event is SubscriptionEvent.Connection.Connected) {
+                    connectedLatch.countDown()
+                } else if (event is SubscriptionEvent.Data) {
+                    val returnedParent = event.response.data
+                    if (modelCreatedByDevice(returnedParent.id)) {
+                        assertEquals(parent.id, returnedParent.id)
+                        capturedParent = returnedParent
+                        capturedChild = (returnedParent.child as LazyModelReference).fetchModel()!!
+                        latch.countDown()
+                    }
                 }
             }
-            collectRunningLatch.countDown()
         }
-        collectRunningLatch.await(1, TimeUnit.SECONDS)
+        connectedLatch.await(10, TimeUnit.SECONDS)
 
-        // WHEN
-        Amplify.API.mutate(ModelMutation.create(hasOneChild))
-        Amplify.API.mutate(ModelMutation.create(parent))
+        client.mutate(ModelMutation.create(hasOneChild)).getOrThrow()
+        client.mutate(ModelMutation.create(parent)).getOrThrow()
 
-        // THEN
         withContext(this.coroutineContext) {
             latch.await(10, TimeUnit.SECONDS)
         }
@@ -120,14 +138,12 @@ class GraphQLLazySubscribeInstrumentationTest : DeviceFarmTestBase() {
         assertEquals(hasOneChild.id, capturedChild!!.id)
 
         // CLEANUP
-        Amplify.API.mutate(ModelMutation.delete(hasOneChild))
-        Amplify.API.mutate(ModelMutation.delete(parent))
+        client.mutate(ModelMutation.delete(hasOneChild)).getOrThrow()
+        client.mutate(ModelMutation.delete(parent)).getOrThrow()
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
     @Test
     fun subscribe_with_includes_create() = runTest {
-        // GIVEN
         val hasOneChild = HasOneChild.builder()
             .content("Child1")
             .build()
@@ -137,37 +153,38 @@ class GraphQLLazySubscribeInstrumentationTest : DeviceFarmTestBase() {
             .build()
 
         val latch = CountDownLatch(1)
-        val collectRunningLatch = CountDownLatch(1)
+        val connectedLatch = CountDownLatch(1)
 
         val request = ModelSubscription.onCreate<Parent, ParentPath>(Parent::class.java) {
             includes(it.child)
         }
-        val subscription = Amplify.API.subscribe(request)
+        val subscription = client.subscribe(request)
 
         var capturedParent: Parent? = null
         var capturedChild: HasOneChild? = null
         CoroutineScope(Dispatchers.IO).launch {
-            subscription.collect {
-                val returnedParent = it.data
-                if (modelCreatedByDevice(returnedParent.id)) {
-                    assertEquals(parent.id, returnedParent.id)
-                    capturedParent = returnedParent
-                    capturedChild = (returnedParent.child as LoadedModelReference).value
-                    latch.countDown()
+            subscription.collect { event ->
+                if (event is SubscriptionEvent.Connection.Connected) {
+                    connectedLatch.countDown()
+                } else if (event is SubscriptionEvent.Data) {
+                    val returnedParent = event.response.data
+                    if (modelCreatedByDevice(returnedParent.id)) {
+                        assertEquals(parent.id, returnedParent.id)
+                        capturedParent = returnedParent
+                        capturedChild = (returnedParent.child as LoadedModelReference).value
+                        latch.countDown()
+                    }
                 }
             }
-            collectRunningLatch.countDown()
         }
-        collectRunningLatch.await(1, TimeUnit.SECONDS)
+        connectedLatch.await(10, TimeUnit.SECONDS)
 
-        // WHEN
-        Amplify.API.mutate(ModelMutation.create(hasOneChild))
+        client.mutate(ModelMutation.create(hasOneChild)).getOrThrow()
         val createRequest = ModelMutation.create<Parent, ParentPath>(parent) {
             includes(it.child)
         }
-        Amplify.API.mutate(createRequest)
+        client.mutate(createRequest).getOrThrow()
 
-        // THEN
         withContext(this.coroutineContext) {
             latch.await(10, TimeUnit.SECONDS)
         }
@@ -177,14 +194,12 @@ class GraphQLLazySubscribeInstrumentationTest : DeviceFarmTestBase() {
         assertEquals(hasOneChild.id, capturedChild!!.id)
 
         // CLEANUP
-        Amplify.API.mutate(ModelMutation.delete(hasOneChild))
-        Amplify.API.mutate(ModelMutation.delete(parent))
+        client.mutate(ModelMutation.delete(hasOneChild)).getOrThrow()
+        client.mutate(ModelMutation.delete(parent)).getOrThrow()
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
     @Test
     fun subscribe_with_no_includes_update() = runTest {
-        // GIVEN
         val hasOneChild = HasOneChild.builder()
             .content("Child1")
             .build()
@@ -196,33 +211,37 @@ class GraphQLLazySubscribeInstrumentationTest : DeviceFarmTestBase() {
             .parentChildId(hasOneChild.id)
             .build()
 
-        val subscription = Amplify.API.subscribe(ModelSubscription.onUpdate(Parent::class.java))
+        val subscription = client.subscribe(ModelSubscription.onUpdate(Parent::class.java))
 
         val latch = CountDownLatch(1)
+        val connectedLatch = CountDownLatch(1)
         var capturedParent: Parent? = null
         var capturedChild: HasOneChild? = null
         CoroutineScope(Dispatchers.IO).launch {
-            subscription.collect {
-                val returnedParent = it.data
-                if (modelCreatedByDevice(returnedParent.id)) {
-                    assertEquals(parent.id, returnedParent.id)
-                    capturedParent = returnedParent
-                    capturedChild = (returnedParent.child as LazyModelReference).fetchModel()!!
-                    latch.countDown()
+            subscription.collect { event ->
+                if (event is SubscriptionEvent.Connection.Connected) {
+                    connectedLatch.countDown()
+                } else if (event is SubscriptionEvent.Data) {
+                    val returnedParent = event.response.data
+                    if (modelCreatedByDevice(returnedParent.id)) {
+                        assertEquals(parent.id, returnedParent.id)
+                        capturedParent = returnedParent
+                        capturedChild = (returnedParent.child as LazyModelReference).fetchModel()!!
+                        latch.countDown()
+                    }
                 }
             }
         }
+        connectedLatch.await(10, TimeUnit.SECONDS)
 
-        Amplify.API.mutate(ModelMutation.create(hasOneChild))
-        Amplify.API.mutate(ModelMutation.create(hasOneChild2))
-        val parentFromResponse = Amplify.API.mutate(ModelMutation.create(parent)).data
+        client.mutate(ModelMutation.create(hasOneChild)).getOrThrow()
+        client.mutate(ModelMutation.create(hasOneChild2)).getOrThrow()
+        val parentFromResponse = client.mutate(ModelMutation.create(parent)).getOrThrow().data
         assertEquals(hasOneChild.id, parentFromResponse.parentChildId)
 
-        // WHEN
         val updateParent = parent.copyOfBuilder().parentChildId(hasOneChild2.id).build()
-        Amplify.API.mutate(ModelMutation.update(updateParent))
+        client.mutate(ModelMutation.update(updateParent)).getOrThrow()
 
-        // THEN
         withContext(this.coroutineContext) {
             latch.await(10, TimeUnit.SECONDS)
         }
@@ -233,15 +252,13 @@ class GraphQLLazySubscribeInstrumentationTest : DeviceFarmTestBase() {
         assertEquals(hasOneChild2.id, capturedChild!!.id)
 
         // CLEANUP
-        Amplify.API.mutate(ModelMutation.delete(hasOneChild))
-        Amplify.API.mutate(ModelMutation.delete(hasOneChild2))
-        Amplify.API.mutate(ModelMutation.delete(parent))
+        client.mutate(ModelMutation.delete(hasOneChild)).getOrThrow()
+        client.mutate(ModelMutation.delete(hasOneChild2)).getOrThrow()
+        client.mutate(ModelMutation.delete(parent)).getOrThrow()
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
     @Test
     fun subscribe_with_includes_update() = runTest {
-        // GIVEN
         val hasOneChild = HasOneChild.builder()
             .content("Child1")
             .build()
@@ -256,35 +273,39 @@ class GraphQLLazySubscribeInstrumentationTest : DeviceFarmTestBase() {
         val request = ModelSubscription.onUpdate<Parent, ParentPath>(Parent::class.java) {
             includes(it.child)
         }
-        val subscription = Amplify.API.subscribe(request)
+        val subscription = client.subscribe(request)
 
         val latch = CountDownLatch(1)
+        val connectedLatch = CountDownLatch(1)
         var capturedParent: Parent? = null
         var capturedChild: HasOneChild? = null
         CoroutineScope(Dispatchers.IO).launch {
-            subscription.collect {
-                val returnedParent = it.data
-                if (modelCreatedByDevice(returnedParent.id)) {
-                    assertEquals(parent.id, returnedParent.id)
-                    capturedParent = returnedParent
-                    capturedChild = (returnedParent.child as LoadedModelReference).value
-                    latch.countDown()
+            subscription.collect { event ->
+                if (event is SubscriptionEvent.Connection.Connected) {
+                    connectedLatch.countDown()
+                } else if (event is SubscriptionEvent.Data) {
+                    val returnedParent = event.response.data
+                    if (modelCreatedByDevice(returnedParent.id)) {
+                        assertEquals(parent.id, returnedParent.id)
+                        capturedParent = returnedParent
+                        capturedChild = (returnedParent.child as LoadedModelReference).value
+                        latch.countDown()
+                    }
                 }
             }
         }
+        connectedLatch.await(10, TimeUnit.SECONDS)
 
-        Amplify.API.mutate(ModelMutation.create(hasOneChild))
-        Amplify.API.mutate(ModelMutation.create(hasOneChild2))
-        Amplify.API.mutate(ModelMutation.create(parent))
+        client.mutate(ModelMutation.create(hasOneChild)).getOrThrow()
+        client.mutate(ModelMutation.create(hasOneChild2)).getOrThrow()
+        client.mutate(ModelMutation.create(parent)).getOrThrow()
 
-        // WHEN
         val updateParent = parent.copyOfBuilder().parentChildId(hasOneChild2.id).build()
         val updateRequest = ModelMutation.update<Parent, ParentPath>(updateParent) {
             includes(it.child)
         }
-        Amplify.API.mutate(updateRequest)
+        client.mutate(updateRequest).getOrThrow()
 
-        // THEN
         withContext(this.coroutineContext) {
             latch.await(10, TimeUnit.SECONDS)
         }
@@ -295,15 +316,13 @@ class GraphQLLazySubscribeInstrumentationTest : DeviceFarmTestBase() {
         assertEquals(hasOneChild2.id, capturedChild!!.id)
 
         // CLEANUP
-        Amplify.API.mutate(ModelMutation.delete(hasOneChild))
-        Amplify.API.mutate(ModelMutation.delete(hasOneChild2))
-        Amplify.API.mutate(ModelMutation.delete(parent))
+        client.mutate(ModelMutation.delete(hasOneChild)).getOrThrow()
+        client.mutate(ModelMutation.delete(hasOneChild2)).getOrThrow()
+        client.mutate(ModelMutation.delete(parent)).getOrThrow()
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
     @Test
     fun subscribe_with_no_includes_delete() = runTest {
-        // GIVEN
         val hasOneChild = HasOneChild.builder()
             .content("Child1")
             .build()
@@ -312,31 +331,35 @@ class GraphQLLazySubscribeInstrumentationTest : DeviceFarmTestBase() {
             .parentChildId(hasOneChild.id)
             .build()
 
-        val subscription = Amplify.API.subscribe(ModelSubscription.onDelete(Parent::class.java))
+        val subscription = client.subscribe(ModelSubscription.onDelete(Parent::class.java))
 
         val latch = CountDownLatch(1)
+        val connectedLatch = CountDownLatch(1)
         var capturedParent: Parent? = null
         var capturedChild: HasOneChild? = null
         CoroutineScope(Dispatchers.IO).launch {
-            subscription.collect {
-                val returnedParent = it.data
-                if (modelCreatedByDevice(returnedParent.id)) {
-                    assertEquals(parent.id, returnedParent.id)
-                    capturedParent = returnedParent
-                    capturedChild = (returnedParent.child as LazyModelReference).fetchModel()!!
-                    latch.countDown()
+            subscription.collect { event ->
+                if (event is SubscriptionEvent.Connection.Connected) {
+                    connectedLatch.countDown()
+                } else if (event is SubscriptionEvent.Data) {
+                    val returnedParent = event.response.data
+                    if (modelCreatedByDevice(returnedParent.id)) {
+                        assertEquals(parent.id, returnedParent.id)
+                        capturedParent = returnedParent
+                        capturedChild = (returnedParent.child as LazyModelReference).fetchModel()!!
+                        latch.countDown()
+                    }
                 }
             }
         }
+        connectedLatch.await(10, TimeUnit.SECONDS)
 
-        Amplify.API.mutate(ModelMutation.create(hasOneChild))
-        val parentFromResponse = Amplify.API.mutate(ModelMutation.create(parent)).data
+        client.mutate(ModelMutation.create(hasOneChild)).getOrThrow()
+        val parentFromResponse = client.mutate(ModelMutation.create(parent)).getOrThrow().data
         assertEquals(hasOneChild.id, parentFromResponse.parentChildId)
 
-        // WHEN
-        Amplify.API.mutate(ModelMutation.delete(parent))
+        client.mutate(ModelMutation.delete(parent)).getOrThrow()
 
-        // THEN
         withContext(this.coroutineContext) {
             latch.await(10, TimeUnit.SECONDS)
         }
@@ -346,13 +369,11 @@ class GraphQLLazySubscribeInstrumentationTest : DeviceFarmTestBase() {
         assertEquals(hasOneChild.id, capturedChild!!.id)
 
         // CLEANUP
-        Amplify.API.mutate(ModelMutation.delete(hasOneChild))
+        client.mutate(ModelMutation.delete(hasOneChild)).getOrThrow()
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
     @Test
     fun subscribe_with_includes_delete() = runTest {
-        // GIVEN
         val hasOneChild = HasOneChild.builder()
             .content("Child1")
             .build()
@@ -364,33 +385,37 @@ class GraphQLLazySubscribeInstrumentationTest : DeviceFarmTestBase() {
         val request = ModelSubscription.onDelete<Parent, ParentPath>(Parent::class.java) {
             includes(it.child)
         }
-        val subscription = Amplify.API.subscribe(request)
+        val subscription = client.subscribe(request)
 
         val latch = CountDownLatch(1)
+        val connectedLatch = CountDownLatch(1)
         var capturedParent: Parent? = null
         var capturedChild: HasOneChild? = null
         CoroutineScope(Dispatchers.IO).launch {
-            subscription.collect {
-                val returnedParent = it.data
-                if (modelCreatedByDevice(returnedParent.id)) {
-                    assertEquals(parent.id, returnedParent.id)
-                    capturedParent = returnedParent
-                    capturedChild = (returnedParent.child as LoadedModelReference).value
-                    latch.countDown()
+            subscription.collect { event ->
+                if (event is SubscriptionEvent.Connection.Connected) {
+                    connectedLatch.countDown()
+                } else if (event is SubscriptionEvent.Data) {
+                    val returnedParent = event.response.data
+                    if (modelCreatedByDevice(returnedParent.id)) {
+                        assertEquals(parent.id, returnedParent.id)
+                        capturedParent = returnedParent
+                        capturedChild = (returnedParent.child as LoadedModelReference).value
+                        latch.countDown()
+                    }
                 }
             }
         }
+        connectedLatch.await(10, TimeUnit.SECONDS)
 
-        Amplify.API.mutate(ModelMutation.create(hasOneChild))
-        Amplify.API.mutate(ModelMutation.create(parent))
+        client.mutate(ModelMutation.create(hasOneChild)).getOrThrow()
+        client.mutate(ModelMutation.create(parent)).getOrThrow()
 
-        // WHEN
         val deleteRequest = ModelMutation.delete<Parent, ParentPath>(parent) {
             includes(it.child)
         }
-        Amplify.API.mutate(deleteRequest)
+        client.mutate(deleteRequest).getOrThrow()
 
-        // THEN
         withContext(this.coroutineContext) {
             latch.await(10, TimeUnit.SECONDS)
         }
@@ -400,6 +425,6 @@ class GraphQLLazySubscribeInstrumentationTest : DeviceFarmTestBase() {
         assertEquals(hasOneChild.id, capturedChild!!.id)
 
         // CLEANUP
-        Amplify.API.mutate(ModelMutation.delete(hasOneChild))
+        client.mutate(ModelMutation.delete(hasOneChild)).getOrThrow()
     }
 }
