@@ -30,6 +30,7 @@ dependencies {
     implementation(project(":foundation-bridge"))
 
     implementation(libs.androidx.appcompat)
+    implementation(platform(libs.aws.bom))
     implementation(libs.aws.kinesis)
     implementation(libs.aws.firehose)
     implementation(libs.aws.http)

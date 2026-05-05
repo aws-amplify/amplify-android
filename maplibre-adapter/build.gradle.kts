@@ -31,6 +31,7 @@ dependencies {
     implementation(project(":aws-auth-cognito"))
     implementation(project(":aws-geo-location"))
     implementation(project(":core"))
+    implementation(platform(libs.aws.bom))
     implementation(libs.aws.signing)
     implementation(libs.maplibre.sdk)
     implementation(libs.gson) // forces maplibre to pull at least the same gson version as other amplify libs

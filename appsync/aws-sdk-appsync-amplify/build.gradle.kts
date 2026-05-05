@@ -38,6 +38,7 @@ dependencies {
 
     implementation(project(":aws-auth-cognito"))
     implementation(project(":aws-core"))
+    implementation(platform(libs.aws.bom))
     implementation(libs.aws.signing)
 
     testImplementation(libs.test.junit)
