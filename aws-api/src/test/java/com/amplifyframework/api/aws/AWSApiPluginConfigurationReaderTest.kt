@@ -23,6 +23,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.maps.shouldContainKey
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -112,8 +113,9 @@ class AWSApiPluginConfigurationReaderTest {
             // do not add data
         }
 
-        shouldThrow<ApiException> {
+        val thrown = shouldThrow<ApiException> {
             AWSApiPluginConfigurationReader.from(outputs)
         }
+        thrown.shouldBeInstanceOf<AppSyncInvalidConfigException>()
     }
 }

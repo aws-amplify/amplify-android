@@ -24,6 +24,8 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests the {@link AWSApiPlugin#getSelectedApiName(EndpointType)} selector method.
@@ -52,14 +54,16 @@ public final class ApiSelectorTest {
      * contains more than one API of invoked endpoint type.
      * @throws ApiException From plugin configuration failure
      */
-    @Test(expected = ApiException.class)
+    @Test
     public void testApiSelectorForMultiApi() throws ApiException {
         // Arrange an input JSONObject
         final JSONObject json = Resources.readAsJson("multi-gql-zero-rest-api.config");
 
         AWSApiPlugin plugin = new AWSApiPlugin();
         plugin.configure(json, null);
-        plugin.getSelectedApiName(EndpointType.GRAPHQL);
+        ApiException thrown = assertThrows(ApiException.class, () ->
+            plugin.getSelectedApiName(EndpointType.GRAPHQL));
+        assertTrue(thrown instanceof AppSyncInvalidConfigException);
     }
 
     /**
@@ -67,13 +71,15 @@ public final class ApiSelectorTest {
      * contains no API of invoked endpoint type.
      * @throws ApiException From plugin configuration failure
      */
-    @Test(expected = ApiException.class)
+    @Test
     public void testApiSelectorForZeroApi() throws ApiException {
         // Arrange an input JSONObject
         final JSONObject json = Resources.readAsJson("multi-gql-zero-rest-api.config");
 
         AWSApiPlugin plugin = new AWSApiPlugin();
         plugin.configure(json, null);
-        plugin.getSelectedApiName(EndpointType.REST);
+        ApiException thrown = assertThrows(ApiException.class, () ->
+            plugin.getSelectedApiName(EndpointType.REST));
+        assertTrue(thrown instanceof AppSyncInvalidConfigException);
     }
 }

@@ -589,21 +589,21 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             case GRAPHQL:
                 return selectApiName(gqlApis);
             default:
-                throw new ApiException(endpointType.name() + " is not a " +
-                        "supported endpoint type.",
+                throw new AppSyncInvalidConfigException(endpointType.name() + " is not a " +
+                        "supported endpoint type.", null,
                         "Please use REST or GraphQL as endpoint type.");
         }
     }
 
     private String selectApiName(Set<String> apiClients) throws ApiException {
         if (apiClients.isEmpty()) {
-            throw new ApiException("There is no API configured for this " +
-                    "plugin with matching endpoint type.",
+            throw new AppSyncInvalidConfigException("There is no API configured for this " +
+                    "plugin with matching endpoint type.", null,
                     "Please add at least one API in amplifyconfiguration.json.");
         }
         if (apiClients.size() > 1) {
-            throw new ApiException("There is more than one API configured " +
-                    "for this plugin with matching endpoint type.",
+            throw new AppSyncInvalidConfigException("There is more than one API configured " +
+                    "for this plugin with matching endpoint type.", null,
                     "Please specify the name of API to invoke in the API method.");
         }
         return apiClients.iterator().next();
@@ -619,8 +619,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
-            throw new ApiException(
-                "No client information for API named " + apiName,
+            throw new AppSyncInvalidConfigException(
+                "No client information for API named " + apiName, null,
                 "Check your amplify configuration to make sure there " +
                     "is a correctly configured section for " + apiName
             );
@@ -676,8 +676,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             throws ApiException {
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
-            throw new ApiException(
-                    "No client information for API named " + apiName,
+            throw new AppSyncInvalidConfigException(
+                    "No client information for API named " + apiName, null,
                     "Check your amplify configuration to make sure there " +
                             "is a correctly configured section for " + apiName
             );
@@ -727,8 +727,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             Consumer<ApiException> onFailure) throws ApiException {
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
-            throw new ApiException(
-                    "No client information for API named " + apiName,
+            throw new AppSyncInvalidConfigException(
+                    "No client information for API named " + apiName, null,
                     "Check your amplify configuration to make sure there " +
                             "is a correctly configured section for " + apiName
             );
@@ -739,8 +739,9 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             case HEAD:
             case GET:
                 if (options.hasData()) {
-                    throw new ApiException("HTTP method does not support data object! " + type,
-                            "Try sending the request without any data in the options.");
+                    throw new AppSyncRequestValidationException(
+                            "HTTP method does not support data object! " + type,
+                            null, "Try sending the request without any data in the options.");
                 }
                 operationRequest = new RestOperationRequest(
                         type,
@@ -775,8 +776,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                         options.getQueryParameters());
                 break;
             default:
-                throw new ApiException("Unknown REST operation type: " + type,
-                        "Send support type for the request.");
+                throw new AppSyncRequestValidationException("Unknown REST operation type: " + type,
+                        null, "Send support type for the request.");
         }
         AWSRestOperation operation = new AWSRestOperation(operationRequest,
                 clientDetails.apiConfiguration.getEndpoint(),

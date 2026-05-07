@@ -109,7 +109,7 @@ public final class AppSyncGraphQLOperation<R> extends AWSGraphQLOperation<R> {
                 ongoingCall.cancel();
             }
 
-            onFailure.accept(new ApiException(
+            onFailure.accept(new AppSyncUnknownException(
                 "OkHttp client failed to make a successful request.",
                 error, AmplifyException.TODO_RECOVERY_SUGGESTION
             ));
@@ -138,10 +138,10 @@ public final class AppSyncGraphQLOperation<R> extends AWSGraphQLOperation<R> {
                     jsonResponse = responseBody.string();
                 } catch (IOException exception) {
                     LOG.warn("Error retrieving JSON from response.", exception);
-                    onFailure.accept(new ApiException(
+                    onFailure.accept(new AppSyncDeserializationException(
                         "Could not retrieve the response body from the returned JSON",
-                        exception, AmplifyException.TODO_RECOVERY_SUGGESTION
-                    ));
+                        exception,
+                        AmplifyException.TODO_RECOVERY_SUGGESTION));
                     return;
                 }
             }
@@ -172,9 +172,10 @@ public final class AppSyncGraphQLOperation<R> extends AWSGraphQLOperation<R> {
         @Override
         public void onFailure(@NonNull Call call, @NonNull IOException exception) {
             if (!call.isCanceled()) {
-                onFailure.accept(new ApiException(
-                        "OkHttp client request failed.", exception, "See attached exception for more details."
-                ));
+                onFailure.accept(new AppSyncNetworkException(
+                    "OkHttp client request failed.",
+                    exception,
+                    "See attached exception for more details."));
             }
         }
     }

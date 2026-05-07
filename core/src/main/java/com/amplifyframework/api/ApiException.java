@@ -86,7 +86,7 @@ public class ApiException extends AmplifyException {
     /**
      * Represents authn/authz errors as it relates to interacting with the API backend.
      */
-    public static final class ApiAuthException extends ApiException {
+    public static class ApiAuthException extends ApiException {
         private static final long serialVersionUID = 1L;
 
         /**

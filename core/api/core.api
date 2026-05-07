@@ -224,7 +224,7 @@ public class com/amplifyframework/api/ApiException : com/amplifyframework/Amplif
 	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
 }
 
-public final class com/amplifyframework/api/ApiException$ApiAuthException : com/amplifyframework/api/ApiException {
+public class com/amplifyframework/api/ApiException$ApiAuthException : com/amplifyframework/api/ApiException {
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
 	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
 }
