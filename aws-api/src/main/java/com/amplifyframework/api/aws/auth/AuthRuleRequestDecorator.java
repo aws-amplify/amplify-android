@@ -199,6 +199,7 @@ public final class AuthRuleRequestDecorator {
                 }
             }
         } catch (JSONException error) {
+            // This should not happen normally
             throw new AppSyncTokenParsingException(
                 "Failed obtain group claim from the parsed JWT token.",
                 error,
