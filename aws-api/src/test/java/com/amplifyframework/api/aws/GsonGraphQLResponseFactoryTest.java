@@ -113,7 +113,7 @@ public final class GsonGraphQLResponseFactoryTest {
         ApiException thrown = assertThrows(ApiException.class, () -> {
             responseFactory.buildResponse(request, nonJsonResponse);
         });
-        assertTrue(thrown instanceof AppSyncException.ResponseException.DeserializationException);
+        assertTrue(thrown instanceof AppSyncDeserializationException);
     }
 
     /**
@@ -134,7 +134,7 @@ public final class GsonGraphQLResponseFactoryTest {
         ApiException thrown = assertThrows(ApiException.class, () -> {
             responseFactory.buildResponse(request, emptyResponse);
         });
-        assertTrue(thrown instanceof AppSyncException.ResponseException.DeserializationException);
+        assertTrue(thrown instanceof AppSyncDeserializationException);
     }
 
     /**

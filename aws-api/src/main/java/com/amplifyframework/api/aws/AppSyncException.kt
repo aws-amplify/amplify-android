@@ -18,8 +18,6 @@ import com.amplifyframework.annotations.ExperimentalAmplifyApi
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.ApiException.ApiAuthException
 
-// ─── Auth exceptions ─── extend ApiAuthException for backward compatibility ───
-
 /**
  * Sealed auth exception hierarchy for the AppSync client.
  * Extends [ApiAuthException] so existing `catch (ApiAuthException)` and
@@ -30,52 +28,56 @@ sealed class AppSyncAuthException(
     message: String,
     cause: Throwable?,
     recoverySuggestion: String
-) : ApiAuthException(message, cause, recoverySuggestion) {
+) : ApiAuthException(message, cause, recoverySuggestion)
 
-    class TokenFetchException(
-        message: String,
-        cause: Throwable?,
-        recoverySuggestion: String
-    ) : AppSyncAuthException(message, cause, recoverySuggestion)
+@ExperimentalAmplifyApi
+class AppSyncTokenFetchException(
+    message: String,
+    cause: Throwable?,
+    recoverySuggestion: String
+) : AppSyncAuthException(message, cause, recoverySuggestion)
 
-    class ProviderNotConfiguredException(
-        message: String,
-        cause: Throwable?,
-        recoverySuggestion: String
-    ) : AppSyncAuthException(message, cause, recoverySuggestion)
+@ExperimentalAmplifyApi
+class AppSyncProviderNotConfiguredException(
+    message: String,
+    cause: Throwable?,
+    recoverySuggestion: String
+) : AppSyncAuthException(message, cause, recoverySuggestion)
 
-    class SigningException(
-        message: String,
-        cause: Throwable?,
-        recoverySuggestion: String
-    ) : AppSyncAuthException(message, cause, recoverySuggestion)
+@ExperimentalAmplifyApi
+class AppSyncSigningException(
+    message: String,
+    cause: Throwable?,
+    recoverySuggestion: String
+) : AppSyncAuthException(message, cause, recoverySuggestion)
 
-    class TokenParsingException(
-        message: String,
-        cause: Throwable?,
-        recoverySuggestion: String
-    ) : AppSyncAuthException(message, cause, recoverySuggestion)
+@ExperimentalAmplifyApi
+class AppSyncTokenParsingException(
+    message: String,
+    cause: Throwable?,
+    recoverySuggestion: String
+) : AppSyncAuthException(message, cause, recoverySuggestion)
 
-    class AuthorizationClaimException(
-        message: String,
-        cause: Throwable?,
-        recoverySuggestion: String
-    ) : AppSyncAuthException(message, cause, recoverySuggestion)
+@ExperimentalAmplifyApi
+class AppSyncAuthorizationClaimException(
+    message: String,
+    cause: Throwable?,
+    recoverySuggestion: String
+) : AppSyncAuthException(message, cause, recoverySuggestion)
 
-    class AuthExhaustedException(
-        message: String,
-        cause: Throwable?,
-        recoverySuggestion: String
-    ) : AppSyncAuthException(message, cause, recoverySuggestion)
+@ExperimentalAmplifyApi
+class AppSyncAuthExhaustedException(
+    message: String,
+    cause: Throwable?,
+    recoverySuggestion: String
+) : AppSyncAuthException(message, cause, recoverySuggestion)
 
-    class UnknownException(
-        message: String,
-        cause: Throwable?,
-        recoverySuggestion: String
-    ) : AppSyncAuthException(message, cause, recoverySuggestion)
-}
-
-// ─── Non-auth exceptions ─── extend ApiException directly ─────────────────────
+@ExperimentalAmplifyApi
+class AppSyncAuthUnknownException(
+    message: String,
+    cause: Throwable?,
+    recoverySuggestion: String
+) : AppSyncAuthException(message, cause, recoverySuggestion)
 
 /**
  * Sealed non-auth exception hierarchy for the AppSync client.
@@ -86,75 +88,67 @@ sealed class AppSyncException(
     message: String,
     cause: Throwable?,
     recoverySuggestion: String
-) : ApiException(message, cause, recoverySuggestion) {
+) : ApiException(message, cause, recoverySuggestion)
 
-    sealed class ConfigurationException(message: String, cause: Throwable?, recoverySuggestion: String) :
-        AppSyncException(message, cause, recoverySuggestion) {
+@ExperimentalAmplifyApi
+class AppSyncInvalidConfigException(
+    message: String,
+    cause: Throwable?,
+    recoverySuggestion: String
+) : AppSyncException(message, cause, recoverySuggestion)
 
-        class InvalidConfigException(
-            message: String,
-            cause: Throwable?,
-            recoverySuggestion: String
-        ) : ConfigurationException(message, cause, recoverySuggestion)
+@ExperimentalAmplifyApi
+class AppSyncEndpointResolutionException(
+    message: String,
+    cause: Throwable?,
+    recoverySuggestion: String
+) : AppSyncException(message, cause, recoverySuggestion)
 
-        class EndpointResolutionException(
-            message: String,
-            cause: Throwable?,
-            recoverySuggestion: String
-        ) : ConfigurationException(message, cause, recoverySuggestion)
-    }
+@ExperimentalAmplifyApi
+class AppSyncDeserializationException(
+    message: String,
+    cause: Throwable?,
+    recoverySuggestion: String
+) : AppSyncException(message, cause, recoverySuggestion)
 
-    sealed class ResponseException(message: String, cause: Throwable?, recoverySuggestion: String) :
-        AppSyncException(message, cause, recoverySuggestion) {
+@ExperimentalAmplifyApi
+class AppSyncSubscriptionConnectionException(
+    message: String,
+    cause: Throwable?,
+    recoverySuggestion: String
+) : AppSyncException(message, cause, recoverySuggestion)
 
-        class DeserializationException(
-            message: String,
-            cause: Throwable?,
-            recoverySuggestion: String
-        ) : ResponseException(message, cause, recoverySuggestion)
-    }
+@ExperimentalAmplifyApi
+class AppSyncSubscriptionTimeoutException(
+    message: String,
+    cause: Throwable?,
+    recoverySuggestion: String
+) : AppSyncException(message, cause, recoverySuggestion)
 
-    sealed class SubscriptionException(message: String, cause: Throwable?, recoverySuggestion: String) :
-        AppSyncException(message, cause, recoverySuggestion) {
+@ExperimentalAmplifyApi
+class AppSyncRequestValidationException(
+    message: String,
+    cause: Throwable?,
+    recoverySuggestion: String
+) : AppSyncException(message, cause, recoverySuggestion)
 
-        class ConnectionException(
-            message: String,
-            cause: Throwable?,
-            recoverySuggestion: String
-        ) : SubscriptionException(message, cause, recoverySuggestion)
+@ExperimentalAmplifyApi
+class AppSyncInvalidStateException(
+    message: String,
+    cause: Throwable?,
+    recoverySuggestion: String
+) : AppSyncException(message, cause, recoverySuggestion)
 
-        class TimeoutException(
-            message: String,
-            cause: Throwable?,
-            recoverySuggestion: String
-        ) : SubscriptionException(message, cause, recoverySuggestion)
-    }
+@ExperimentalAmplifyApi
+class AppSyncNetworkException(
+    message: String,
+    cause: Throwable?,
+    recoverySuggestion: String
+) : AppSyncException(message, cause, recoverySuggestion)
 
-    sealed class RequestException(message: String, cause: Throwable?, recoverySuggestion: String) :
-        AppSyncException(message, cause, recoverySuggestion) {
-
-        class ValidationException(
-            message: String,
-            cause: Throwable?,
-            recoverySuggestion: String
-        ) : RequestException(message, cause, recoverySuggestion)
-
-        class InvalidStateException(
-            message: String,
-            cause: Throwable?,
-            recoverySuggestion: String
-        ) : RequestException(message, cause, recoverySuggestion)
-    }
-
-    class NetworkException(
-        message: String,
-        cause: Throwable?,
-        recoverySuggestion: String
-    ) : AppSyncException(message, cause, recoverySuggestion)
-
-    class UnknownException(
-        message: String,
-        cause: Throwable?,
-        recoverySuggestion: String
-    ) : AppSyncException(message, cause, recoverySuggestion)
-}
+@ExperimentalAmplifyApi
+class AppSyncUnknownException(
+    message: String,
+    cause: Throwable?,
+    recoverySuggestion: String
+) : AppSyncException(message, cause, recoverySuggestion)

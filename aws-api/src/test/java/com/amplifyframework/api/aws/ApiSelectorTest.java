@@ -63,7 +63,7 @@ public final class ApiSelectorTest {
         plugin.configure(json, null);
         ApiException thrown = assertThrows(ApiException.class, () ->
             plugin.getSelectedApiName(EndpointType.GRAPHQL));
-        assertTrue(thrown instanceof AppSyncException.ConfigurationException.InvalidConfigException);
+        assertTrue(thrown instanceof AppSyncInvalidConfigException);
     }
 
     /**
@@ -80,6 +80,6 @@ public final class ApiSelectorTest {
         plugin.configure(json, null);
         ApiException thrown = assertThrows(ApiException.class, () ->
             plugin.getSelectedApiName(EndpointType.REST));
-        assertTrue(thrown instanceof AppSyncException.ConfigurationException.InvalidConfigException);
+        assertTrue(thrown instanceof AppSyncInvalidConfigException);
     }
 }

@@ -48,7 +48,7 @@ final class AWSApiPluginConfigurationReader {
             throws ApiException {
 
         if (configurationJson == null) {
-            throw new AppSyncException.ConfigurationException.InvalidConfigException(
+            throw new AppSyncInvalidConfigException(
                 "Null configuration JSON provided to AWS API plugin.", null,
                 "Check that the content of the AWS API Plugin section of the amplifyconfiguration.json file hasn't " +
                 "been accidentally deleted."
@@ -62,7 +62,7 @@ final class AWSApiPluginConfigurationReader {
         final AmplifyOutputsData.Data data = outputs.getData();
 
         if (data == null) {
-            throw new AppSyncException.ConfigurationException.InvalidConfigException(
+            throw new AppSyncInvalidConfigException(
                 "Missing data configuration in Amplify Outputs", null,
                 "Check that your amplify_outputs.json file contains a \"data\" section"
             );
@@ -117,7 +117,7 @@ final class AWSApiPluginConfigurationReader {
 
                 for (final String requiredKey : ConfigKey.requiredKeys()) {
                     if (!apiSpec.has(requiredKey)) {
-                        throw new AppSyncException.ConfigurationException.InvalidConfigException(
+                        throw new AppSyncInvalidConfigException(
                                 "Failed to parse configuration, missing required key: " + requiredKey,
                                 null, AmplifyException.TODO_RECOVERY_SUGGESTION
                         );
@@ -140,7 +140,7 @@ final class AWSApiPluginConfigurationReader {
                 configBuilder.addApi(apiName, apiConfigBuilder.build());
             }
         } catch (JSONException | ApiException exception) {
-            throw new AppSyncException.ConfigurationException.InvalidConfigException(
+            throw new AppSyncInvalidConfigException(
                    "Failed to parse configuration JSON for AWS API Plugin",
                    exception,
                    "Check amplifyconfiguration.json to make sure the AWS API configuration section hasn't been " +

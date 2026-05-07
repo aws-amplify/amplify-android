@@ -46,12 +46,12 @@ final class TimeoutWatchdog {
      */
     synchronized void start(final Runnable timeoutAction, long timeoutMs) throws ApiException {
         if (timeoutAction == null) {
-            throw new AppSyncException.RequestException.ValidationException(
+            throw new AppSyncRequestValidationException(
                 "Passed null action to watchdog.",
                 null, AmplifyException.TODO_RECOVERY_SUGGESTION
             );
         } else if (timeoutMs <= 0) {
-            throw new AppSyncException.RequestException.ValidationException(
+            throw new AppSyncRequestValidationException(
                 "timeoutMs must be > 0.", null,
                 "Make sure you didn't set a negative timeout"
             );

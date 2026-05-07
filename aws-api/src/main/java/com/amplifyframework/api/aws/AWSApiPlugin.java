@@ -589,8 +589,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             case GRAPHQL:
                 return selectApiName(gqlApis);
             default:
-                throw new AppSyncException.ConfigurationException
-                    .InvalidConfigException(endpointType.name() + " is not a " +
+                throw new AppSyncInvalidConfigException(endpointType.name() + " is not a " +
                         "supported endpoint type.", null,
                         "Please use REST or GraphQL as endpoint type.");
         }
@@ -598,14 +597,12 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     private String selectApiName(Set<String> apiClients) throws ApiException {
         if (apiClients.isEmpty()) {
-            throw new AppSyncException.ConfigurationException
-                .InvalidConfigException("There is no API configured for this " +
+            throw new AppSyncInvalidConfigException("There is no API configured for this " +
                     "plugin with matching endpoint type.", null,
                     "Please add at least one API in amplifyconfiguration.json.");
         }
         if (apiClients.size() > 1) {
-            throw new AppSyncException.ConfigurationException
-                .InvalidConfigException("There is more than one API configured " +
+            throw new AppSyncInvalidConfigException("There is more than one API configured " +
                     "for this plugin with matching endpoint type.", null,
                     "Please specify the name of API to invoke in the API method.");
         }
@@ -622,7 +619,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
-            throw new AppSyncException.ConfigurationException.InvalidConfigException(
+            throw new AppSyncInvalidConfigException(
                 "No client information for API named " + apiName, null,
                 "Check your amplify configuration to make sure there " +
                     "is a correctly configured section for " + apiName
@@ -679,7 +676,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             throws ApiException {
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
-            throw new AppSyncException.ConfigurationException.InvalidConfigException(
+            throw new AppSyncInvalidConfigException(
                     "No client information for API named " + apiName, null,
                     "Check your amplify configuration to make sure there " +
                             "is a correctly configured section for " + apiName
@@ -730,7 +727,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             Consumer<ApiException> onFailure) throws ApiException {
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
-            throw new AppSyncException.ConfigurationException.InvalidConfigException(
+            throw new AppSyncInvalidConfigException(
                     "No client information for API named " + apiName, null,
                     "Check your amplify configuration to make sure there " +
                             "is a correctly configured section for " + apiName
@@ -742,8 +739,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             case HEAD:
             case GET:
                 if (options.hasData()) {
-                    throw new AppSyncException.RequestException
-                        .ValidationException(
+                    throw new AppSyncRequestValidationException(
                             "HTTP method does not support data object! " + type,
                             null, "Try sending the request without any data in the options.");
                 }
@@ -780,7 +776,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                         options.getQueryParameters());
                 break;
             default:
-                throw new AppSyncException.RequestException.ValidationException("Unknown REST operation type: " + type,
+                throw new AppSyncRequestValidationException("Unknown REST operation type: " + type,
                         null, "Send support type for the request.");
         }
         AWSRestOperation operation = new AWSRestOperation(operationRequest,

@@ -21,7 +21,8 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.aws.ApiAuthProviders;
-import com.amplifyframework.api.aws.AppSyncAuthException;
+import com.amplifyframework.api.aws.AppSyncProviderNotConfiguredException;
+import com.amplifyframework.api.aws.AppSyncTokenFetchException;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
 import com.amplifyframework.api.aws.AuthorizationType;
 import com.amplifyframework.api.aws.EndpointType;
@@ -106,8 +107,8 @@ public final class ApiRequestDecoratorFactory {
      * @param authorizationType the authorization type to be used for the request.
      * @return the appropriate request decorator for the given authorization type.
      * @throws ApiAuthException if unable to get a request decorator.
-     * @throws AppSyncAuthException.TokenFetchException if unable to fetch auth token.
-     * @throws AppSyncAuthException.ProviderNotConfiguredException if auth provider is missing.
+     * @throws AppSyncTokenFetchException if unable to fetch auth token.
+     * @throws AppSyncProviderNotConfiguredException if auth provider is missing.
      */
     public RequestDecorator forAuthType(@NonNull AuthorizationType authorizationType) throws ApiAuthException {
         switch (authorizationType) {
@@ -127,7 +128,7 @@ public final class ApiRequestDecoratorFactory {
                 try {
                     token = cognitoUserPoolsAuthProvider.getLatestAuthToken();
                 } catch (ApiException exception) {
-                    throw new AppSyncAuthException.TokenFetchException(
+                    throw new AppSyncTokenFetchException(
                         "Failed to retrieve auth token from Cognito provider.",
                         exception,
                         "Check the application logs for details.");
@@ -135,7 +136,7 @@ public final class ApiRequestDecoratorFactory {
                 return new TokenRequestDecorator(() -> token);
             case OPENID_CONNECT:
                 if (apiAuthProviders.getOidcAuthProvider() == null) {
-                    throw new AppSyncAuthException.ProviderNotConfiguredException(
+                    throw new AppSyncProviderNotConfiguredException(
                         "Attempting to use OPENID_CONNECT authorization without an OIDC provider.",
                         null,
                         "Configure an OidcAuthProvider when initializing the API plugin.");
@@ -144,7 +145,7 @@ public final class ApiRequestDecoratorFactory {
                 try {
                     oidcToken = apiAuthProviders.getOidcAuthProvider().getLatestAuthToken();
                 } catch (ApiException exception) {
-                    throw new AppSyncAuthException.TokenFetchException(
+                    throw new AppSyncTokenFetchException(
                         "Failed to retrieve auth token from OIDC provider.",
                         exception,
                         "Check the application logs for details.");
@@ -152,7 +153,7 @@ public final class ApiRequestDecoratorFactory {
                 return new TokenRequestDecorator(() -> oidcToken);
             case AWS_LAMBDA:
                 if (apiAuthProviders.getFunctionAuthProvider() == null) {
-                    throw new AppSyncAuthException.ProviderNotConfiguredException(
+                    throw new AppSyncProviderNotConfiguredException(
                         "Attempting to use AWS_LAMBDA authorization without a provider implemented.",
                         null,
                         "Configure a FunctionAuthProvider when initializing the API plugin.");
@@ -161,7 +162,7 @@ public final class ApiRequestDecoratorFactory {
                 try {
                     functionToken = apiAuthProviders.getFunctionAuthProvider().getLatestAuthToken();
                 } catch (ApiException exception) {
-                    throw new AppSyncAuthException.TokenFetchException(
+                    throw new AppSyncTokenFetchException(
                         "Failed to retrieve auth token from function auth provider.",
                         exception,
                         "Check the application logs for details.");
@@ -173,7 +174,7 @@ public final class ApiRequestDecoratorFactory {
                 } else if (apiKey != null) {
                     return new ApiKeyRequestDecorator(() -> apiKey);
                 } else {
-                    throw new AppSyncAuthException.ProviderNotConfiguredException(
+                    throw new AppSyncProviderNotConfiguredException(
                         "Attempting to use API_KEY authorization without " +
                             "an API key provider or an API key in the config file.",
                         null,

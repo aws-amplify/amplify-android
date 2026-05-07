@@ -20,7 +20,7 @@ import aws.smithy.kotlin.runtime.collections.Attributes
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.ApiException.ApiAuthException
 import com.amplifyframework.api.aws.ApiAuthProviders
-import com.amplifyframework.api.aws.AppSyncAuthException
+import com.amplifyframework.api.aws.AppSyncProviderNotConfiguredException
 import com.amplifyframework.api.aws.AuthorizationType
 import com.amplifyframework.api.aws.EndpointType
 import com.amplifyframework.api.aws.sigv4.FunctionAuthProvider
@@ -79,7 +79,7 @@ class ApiRequestDecoratorFactoryTest {
         val thrown = Assert.assertThrows(
             ApiAuthException::class.java
         ) { factory.forAuthType(AuthorizationType.API_KEY).decorate(request) }
-        thrown.shouldBeInstanceOf<AppSyncAuthException.ProviderNotConfiguredException>()
+        thrown.shouldBeInstanceOf<AppSyncProviderNotConfiguredException>()
     }
 
     /**
@@ -151,7 +151,7 @@ class ApiRequestDecoratorFactoryTest {
         val thrown = Assert.assertThrows(
             ApiAuthException::class.java
         ) { factory.forAuthType(AuthorizationType.OPENID_CONNECT).decorate(request) }
-        thrown.shouldBeInstanceOf<AppSyncAuthException.ProviderNotConfiguredException>()
+        thrown.shouldBeInstanceOf<AppSyncProviderNotConfiguredException>()
     }
 
     /**
@@ -200,7 +200,7 @@ class ApiRequestDecoratorFactoryTest {
         val thrown = Assert.assertThrows(
             ApiAuthException::class.java
         ) { factory.forAuthType(AuthorizationType.AWS_LAMBDA).decorate(request) }
-        thrown.shouldBeInstanceOf<AppSyncAuthException.ProviderNotConfiguredException>()
+        thrown.shouldBeInstanceOf<AppSyncProviderNotConfiguredException>()
     }
 
     /**

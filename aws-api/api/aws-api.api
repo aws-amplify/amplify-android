@@ -69,88 +69,28 @@ public abstract class com/amplifyframework/api/aws/AppSyncAuthException : com/am
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
-public final class com/amplifyframework/api/aws/AppSyncAuthException$AuthExhaustedException : com/amplifyframework/api/aws/AppSyncAuthException {
+public final class com/amplifyframework/api/aws/AppSyncAuthExhaustedException : com/amplifyframework/api/aws/AppSyncAuthException {
 	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
 }
 
-public final class com/amplifyframework/api/aws/AppSyncAuthException$AuthorizationClaimException : com/amplifyframework/api/aws/AppSyncAuthException {
+public final class com/amplifyframework/api/aws/AppSyncAuthUnknownException : com/amplifyframework/api/aws/AppSyncAuthException {
 	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
 }
 
-public final class com/amplifyframework/api/aws/AppSyncAuthException$ProviderNotConfiguredException : com/amplifyframework/api/aws/AppSyncAuthException {
+public final class com/amplifyframework/api/aws/AppSyncAuthorizationClaimException : com/amplifyframework/api/aws/AppSyncAuthException {
 	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
 }
 
-public final class com/amplifyframework/api/aws/AppSyncAuthException$SigningException : com/amplifyframework/api/aws/AppSyncAuthException {
+public final class com/amplifyframework/api/aws/AppSyncDeserializationException : com/amplifyframework/api/aws/AppSyncException {
 	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
 }
 
-public final class com/amplifyframework/api/aws/AppSyncAuthException$TokenFetchException : com/amplifyframework/api/aws/AppSyncAuthException {
-	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
-}
-
-public final class com/amplifyframework/api/aws/AppSyncAuthException$TokenParsingException : com/amplifyframework/api/aws/AppSyncAuthException {
-	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
-}
-
-public final class com/amplifyframework/api/aws/AppSyncAuthException$UnknownException : com/amplifyframework/api/aws/AppSyncAuthException {
+public final class com/amplifyframework/api/aws/AppSyncEndpointResolutionException : com/amplifyframework/api/aws/AppSyncException {
 	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
 }
 
 public abstract class com/amplifyframework/api/aws/AppSyncException : com/amplifyframework/api/ApiException {
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
-}
-
-public abstract class com/amplifyframework/api/aws/AppSyncException$ConfigurationException : com/amplifyframework/api/aws/AppSyncException {
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
-}
-
-public final class com/amplifyframework/api/aws/AppSyncException$ConfigurationException$EndpointResolutionException : com/amplifyframework/api/aws/AppSyncException$ConfigurationException {
-	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
-}
-
-public final class com/amplifyframework/api/aws/AppSyncException$ConfigurationException$InvalidConfigException : com/amplifyframework/api/aws/AppSyncException$ConfigurationException {
-	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
-}
-
-public final class com/amplifyframework/api/aws/AppSyncException$NetworkException : com/amplifyframework/api/aws/AppSyncException {
-	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
-}
-
-public abstract class com/amplifyframework/api/aws/AppSyncException$RequestException : com/amplifyframework/api/aws/AppSyncException {
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
-}
-
-public final class com/amplifyframework/api/aws/AppSyncException$RequestException$InvalidStateException : com/amplifyframework/api/aws/AppSyncException$RequestException {
-	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
-}
-
-public final class com/amplifyframework/api/aws/AppSyncException$RequestException$ValidationException : com/amplifyframework/api/aws/AppSyncException$RequestException {
-	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
-}
-
-public abstract class com/amplifyframework/api/aws/AppSyncException$ResponseException : com/amplifyframework/api/aws/AppSyncException {
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
-}
-
-public final class com/amplifyframework/api/aws/AppSyncException$ResponseException$DeserializationException : com/amplifyframework/api/aws/AppSyncException$ResponseException {
-	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
-}
-
-public abstract class com/amplifyframework/api/aws/AppSyncException$SubscriptionException : com/amplifyframework/api/aws/AppSyncException {
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
-}
-
-public final class com/amplifyframework/api/aws/AppSyncException$SubscriptionException$ConnectionException : com/amplifyframework/api/aws/AppSyncException$SubscriptionException {
-	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
-}
-
-public final class com/amplifyframework/api/aws/AppSyncException$SubscriptionException$TimeoutException : com/amplifyframework/api/aws/AppSyncException$SubscriptionException {
-	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
-}
-
-public final class com/amplifyframework/api/aws/AppSyncException$UnknownException : com/amplifyframework/api/aws/AppSyncException {
-	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
 }
 
 public final class com/amplifyframework/api/aws/AppSyncGraphQLOperation : com/amplifyframework/api/aws/AWSGraphQLOperation {
@@ -172,6 +112,50 @@ public final class com/amplifyframework/api/aws/AppSyncGraphQLRequestFactory {
 	public static final fun buildQuery (Ljava/lang/Class;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
 	public static final fun buildSubscription (Ljava/lang/Class;Lcom/amplifyframework/api/graphql/SubscriptionType;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
 	public static final fun buildSubscription (Ljava/lang/Class;Lcom/amplifyframework/api/graphql/SubscriptionType;Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/api/graphql/GraphQLRequest;
+}
+
+public final class com/amplifyframework/api/aws/AppSyncInvalidConfigException : com/amplifyframework/api/aws/AppSyncException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
+}
+
+public final class com/amplifyframework/api/aws/AppSyncInvalidStateException : com/amplifyframework/api/aws/AppSyncException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
+}
+
+public final class com/amplifyframework/api/aws/AppSyncNetworkException : com/amplifyframework/api/aws/AppSyncException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
+}
+
+public final class com/amplifyframework/api/aws/AppSyncProviderNotConfiguredException : com/amplifyframework/api/aws/AppSyncAuthException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
+}
+
+public final class com/amplifyframework/api/aws/AppSyncRequestValidationException : com/amplifyframework/api/aws/AppSyncException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
+}
+
+public final class com/amplifyframework/api/aws/AppSyncSigningException : com/amplifyframework/api/aws/AppSyncAuthException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
+}
+
+public final class com/amplifyframework/api/aws/AppSyncSubscriptionConnectionException : com/amplifyframework/api/aws/AppSyncException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
+}
+
+public final class com/amplifyframework/api/aws/AppSyncSubscriptionTimeoutException : com/amplifyframework/api/aws/AppSyncException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
+}
+
+public final class com/amplifyframework/api/aws/AppSyncTokenFetchException : com/amplifyframework/api/aws/AppSyncAuthException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
+}
+
+public final class com/amplifyframework/api/aws/AppSyncTokenParsingException : com/amplifyframework/api/aws/AppSyncAuthException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
+}
+
+public final class com/amplifyframework/api/aws/AppSyncUnknownException : com/amplifyframework/api/aws/AppSyncException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
 }
 
 public final class com/amplifyframework/api/aws/BuildConfig {

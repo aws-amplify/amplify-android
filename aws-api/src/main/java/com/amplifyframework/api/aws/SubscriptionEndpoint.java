@@ -152,7 +152,7 @@ final class SubscriptionEndpoint {
                 if (pendingSubscriptionIds.remove(subscriptionId)) {
                     // The subscription was pending, so we need to emit an error.
                     onSubscriptionError.accept(
-                        new AppSyncException.SubscriptionException.ConnectionException(
+                        new AppSyncSubscriptionConnectionException(
                             connection.getFailureReason(), connection.getFailureCause(),
                             AmplifyException.TODO_RECOVERY_SUGGESTION));
                     return;
@@ -178,7 +178,7 @@ final class SubscriptionEndpoint {
                     // Don't wrap it if it's an ApiAuthException.
                     onSubscriptionError.accept((ApiAuthException) exception);
                 } else {
-                    onSubscriptionError.accept(new AppSyncException.UnknownException(
+                    onSubscriptionError.accept(new AppSyncUnknownException(
                         "Failed to construct subscription registration message.",
                         exception,
                         AmplifyException.TODO_RECOVERY_SUGGESTION
@@ -207,7 +207,7 @@ final class SubscriptionEndpoint {
         if (subscription != null && pendingSubscriptionIds.remove(subscriptionId)) {
             subscription.acknowledgeSubscriptionReady();
         } else {
-            throw new AppSyncException.SubscriptionException.ConnectionException(
+            throw new AppSyncSubscriptionConnectionException(
                 "Acknowledgement for unknown subscription: " + subscriptionId, null,
                 AmplifyException.TODO_RECOVERY_SUGGESTION);
         }
@@ -231,7 +231,7 @@ final class SubscriptionEndpoint {
     private void notifySubscriptionCompleted(String subscriptionId) throws ApiException {
         final Subscription<?> dispatcher = subscriptions.get(subscriptionId);
         if (dispatcher == null) {
-            throw new AppSyncException.SubscriptionException.ConnectionException(
+            throw new AppSyncSubscriptionConnectionException(
                 "Got subscription completion for unknown subscription:" + subscriptionId, null,
                 AmplifyException.TODO_RECOVERY_SUGGESTION);
         }
@@ -242,7 +242,7 @@ final class SubscriptionEndpoint {
 
     private void notifyError(Throwable error) {
         for (Subscription<?> dispatcher : new HashSet<>(subscriptions.values())) {
-            dispatcher.dispatchError(new AppSyncException.SubscriptionException.ConnectionException(
+            dispatcher.dispatchError(new AppSyncSubscriptionConnectionException(
                 "Subscription failed.", error,
                 "Check your Internet connection. Is your device online?"
             ));
@@ -252,7 +252,7 @@ final class SubscriptionEndpoint {
     private void notifySubscriptionData(String subscriptionId, String data) throws ApiException {
         final Subscription<?> dispatcher = subscriptions.get(subscriptionId);
         if (dispatcher == null) {
-            throw new AppSyncException.SubscriptionException.ConnectionException(
+            throw new AppSyncSubscriptionConnectionException(
                 "Got subscription data for unknown subscription ID: " + subscriptionId, null,
                 AmplifyException.TODO_RECOVERY_SUGGESTION);
         }
@@ -266,7 +266,7 @@ final class SubscriptionEndpoint {
         boolean wasSubscriptionPending = pendingSubscriptionIds.remove(subscriptionId);
         // If the subscription was not in the either of the subscriptions collections.
         if (subscription == null && !wasSubscriptionPending) {
-            throw new AppSyncException.SubscriptionException.ConnectionException(
+            throw new AppSyncSubscriptionConnectionException(
                 "No existing subscription with the given id.", null,
                 AmplifyException.TODO_RECOVERY_SUGGESTION);
         }
@@ -283,7 +283,7 @@ final class SubscriptionEndpoint {
 
                 webSocket.send(jsonMessage);
             } catch (JSONException jsonException) {
-                throw new AppSyncException.UnknownException(
+                throw new AppSyncUnknownException(
                     "Failed to construct subscription release message.",
                     jsonException,
                     AmplifyException.TODO_RECOVERY_SUGGESTION
@@ -322,7 +322,7 @@ final class SubscriptionEndpoint {
             // throwing in a second ...
         }
         if (appSyncEndpoint == null) {
-            throw new AppSyncException.ConfigurationException.EndpointResolutionException(
+            throw new AppSyncEndpointResolutionException(
                     "Malformed API Url: " + apiConfiguration.getEndpoint(), null,
                     "Verify that GraphQL endpoint is properly formatted."
             );
@@ -395,7 +395,7 @@ final class SubscriptionEndpoint {
         boolean awaitSubscriptionReady() {
             try {
                 if (!subscriptionReadyAcknowledgment.await(ACKNOWLEDGEMENT_TIMEOUT, TimeUnit.SECONDS)) {
-                    dispatchError(new AppSyncException.SubscriptionException.TimeoutException(
+                    dispatchError(new AppSyncSubscriptionTimeoutException(
                         "Timed out waiting for subscription start_ack.",
                         null,
                         "Check your Internet connection. Is your device online?"));
@@ -422,13 +422,13 @@ final class SubscriptionEndpoint {
         void awaitSubscriptionCompleted() {
             try {
                 if (!subscriptionCompletionAcknowledgement.await(ACKNOWLEDGEMENT_TIMEOUT, TimeUnit.SECONDS)) {
-                    dispatchError(new AppSyncException.SubscriptionException.TimeoutException(
+                    dispatchError(new AppSyncSubscriptionTimeoutException(
                         "Subscription completion not acknowledged.",
                         null,
                         AmplifyException.TODO_RECOVERY_SUGGESTION));
                 }
             } catch (InterruptedException interruptedException) {
-                dispatchError(new AppSyncException.SubscriptionException.ConnectionException(
+                dispatchError(new AppSyncSubscriptionConnectionException(
                     "Thread interrupted awaiting subscription completion.", interruptedException,
                     AmplifyException.TODO_RECOVERY_SUGGESTION
                 ));
@@ -439,7 +439,7 @@ final class SubscriptionEndpoint {
         // We need to use this method to pass apiName for LazyModel
         private GraphQLResponse<T> buildResponse(String jsonResponse) throws ApiException {
             if (!(responseFactory instanceof GsonGraphQLResponseFactory)) {
-                throw new AppSyncException.ResponseException.DeserializationException(
+                throw new AppSyncDeserializationException(
                         "Amplify encountered an error while deserializing an object. " +
                         "GraphQLResponse.Factory was not of type GsonGraphQLResponseFactory",
                         null,
@@ -450,7 +450,7 @@ final class SubscriptionEndpoint {
                 return ((GsonGraphQLResponseFactory) responseFactory)
                         .buildResponse(request, jsonResponse, apiName);
             } catch (ClassCastException cce) {
-                throw new AppSyncException.ResponseException.DeserializationException(
+                throw new AppSyncDeserializationException(
                         "Amplify encountered an error while deserializing an object",
                         cce,
                         AmplifyException.TODO_RECOVERY_SUGGESTION);
@@ -663,12 +663,12 @@ final class SubscriptionEndpoint {
                         notifySubscriptionData(jsonMessage.getString("id"), jsonMessage.getString("payload"));
                         break;
                     default:
-                        notifyError(new AppSyncException.UnknownException(
+                        notifyError(new AppSyncUnknownException(
                             "Got unknown message type: " + subscriptionMessageType, null,
                             AmplifyException.TODO_RECOVERY_SUGGESTION));
                 }
             } catch (JSONException exception) {
-                throw new AppSyncException.ResponseException.DeserializationException(
+                throw new AppSyncDeserializationException(
                     "Error processing Json message in subscription endpoint.",
                     exception,
                     AmplifyException.TODO_RECOVERY_SUGGESTION);

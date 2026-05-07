@@ -60,13 +60,13 @@ final class ModelProviderLocator {
             //noinspection unchecked It's very unlikely that someone cooked up a different type at this FQCN.
             modelProviderClass = (Class<? extends ModelProvider>) Class.forName(modelProviderClassName);
         } catch (ClassNotFoundException modelProviderClassNotFoundError) {
-            throw new AppSyncException.ConfigurationException.InvalidConfigException(
+            throw new AppSyncInvalidConfigException(
                     "Failed to find code-generated model provider.", modelProviderClassNotFoundError,
                     "Validate that " + modelProviderClassName + " is built into your project."
             );
         }
         if (!ModelProvider.class.isAssignableFrom(modelProviderClass)) {
-            throw new AppSyncException.ConfigurationException.InvalidConfigException(
+            throw new AppSyncInvalidConfigException(
                     "Located class as " + modelProviderClass.getName() + ", but it does not implement " +
                             ModelProvider.class.getName() + ".", null,
                     "Validate that " + modelProviderClass.getName() + " has not been modified since the time " +
@@ -77,7 +77,7 @@ final class ModelProviderLocator {
         try {
             getInstanceMethod = modelProviderClass.getDeclaredMethod(GET_INSTANCE_ACCESSOR_METHOD_NAME);
         } catch (NoSuchMethodException noGetInstanceMethodError) {
-            throw new AppSyncException.ConfigurationException.InvalidConfigException(
+            throw new AppSyncInvalidConfigException(
                     "Found a code-generated model provider = " + modelProviderClass.getName() + ", however " +
                             "it had no static method named getInstance()!",
                     noGetInstanceMethodError,
@@ -89,14 +89,14 @@ final class ModelProviderLocator {
         try {
             locatedModelProvider = (ModelProvider) getInstanceMethod.invoke(null);
         } catch (IllegalAccessException getInstanceIsNotAccessibleError) {
-            throw new AppSyncException.ConfigurationException.InvalidConfigException(
+            throw new AppSyncInvalidConfigException(
                     "Tried to call " + modelProviderClass.getName() + GET_INSTANCE_ACCESSOR_METHOD_NAME + ", but " +
                             "this method did not have public access.", getInstanceIsNotAccessibleError,
                     "Validate that " + modelProviderClass.getName() + " has not been modified since the time " +
                             "it was code-generated."
             );
         } catch (InvocationTargetException wrappedExceptionFromGetInstance) {
-            throw new AppSyncException.UnknownException(
+            throw new AppSyncUnknownException(
                     "An exception was thrown from " + modelProviderClass.getName() + GET_INSTANCE_ACCESSOR_METHOD_NAME +
                             " while invoking via reflection.", wrappedExceptionFromGetInstance,
                     "This is not expected to occur. Contact AWS."

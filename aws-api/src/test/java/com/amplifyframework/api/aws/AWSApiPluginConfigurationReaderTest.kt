@@ -116,6 +116,6 @@ class AWSApiPluginConfigurationReaderTest {
         val thrown = shouldThrow<ApiException> {
             AWSApiPluginConfigurationReader.from(outputs)
         }
-        thrown.shouldBeInstanceOf<AppSyncException.ConfigurationException.InvalidConfigException>()
+        thrown.shouldBeInstanceOf<AppSyncInvalidConfigException>()
     }
 }

@@ -19,7 +19,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.ApiAuthProviders;
 import com.amplifyframework.api.aws.ApiGraphQLRequestOptions;
-import com.amplifyframework.api.aws.AppSyncAuthException;
+import com.amplifyframework.api.aws.AppSyncProviderNotConfiguredException;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
 import com.amplifyframework.api.aws.AuthorizationType;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
@@ -93,7 +93,7 @@ public final class AuthRuleRequestDecoratorTest {
     public void ownerArgumentNotAddedWithApiKey() throws ApiException {
         ApiException thrown = assertThrows(ApiException.class, () ->
             decorator.decorate(ModelSubscription.onCreate(Owner.class), AuthorizationType.API_KEY));
-        assertTrue(thrown instanceof AppSyncAuthException.ProviderNotConfiguredException);
+        assertTrue(thrown instanceof AppSyncProviderNotConfiguredException);
     }
 
     /**
@@ -105,7 +105,7 @@ public final class AuthRuleRequestDecoratorTest {
     public void ownerArgumentNotAddedWithAwsIam() throws ApiException {
         ApiException thrown = assertThrows(ApiException.class, () ->
             decorator.decorate(ModelSubscription.onCreate(Owner.class), AuthorizationType.AWS_IAM));
-        assertTrue(thrown instanceof AppSyncAuthException.ProviderNotConfiguredException);
+        assertTrue(thrown instanceof AppSyncProviderNotConfiguredException);
     }
 
     /**
