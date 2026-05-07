@@ -120,9 +120,12 @@ class AppSyncExceptionHierarchyTest {
         val cause = RuntimeException()
         val exceptions: List<AppSyncException> = listOf(
             AppSyncInvalidConfigException("msg", null, "r"),
+            AppSyncEndpointResolutionException("msg", null, "r"),
             AppSyncDeserializationException("msg", null, "r"),
             AppSyncSubscriptionConnectionException("msg", null, "r"),
+            AppSyncSubscriptionTimeoutException("msg", null, "r"),
             AppSyncRequestValidationException("msg", null, "r"),
+            AppSyncInvalidStateException("msg", null, "r"),
             AppSyncNetworkException("msg", cause, "r"),
             AppSyncUnknownException("msg", null, "r")
         )
