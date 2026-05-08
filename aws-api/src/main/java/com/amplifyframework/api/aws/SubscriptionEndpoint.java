@@ -57,11 +57,14 @@ import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 
+import com.amplifyframework.annotations.InternalAmplifyApi;
+
 /**
  * Manages the lifecycle of a single WebSocket connection,
  * and multiple GraphQL subscriptions that work on top of it.
  */
-final class SubscriptionEndpoint {
+@InternalAmplifyApi
+public final class SubscriptionEndpoint {
     private static final Logger LOG = Amplify.Logging.logger(CategoryType.API, "amplify:aws-api");
     private static final int CONNECTION_ACKNOWLEDGEMENT_TIMEOUT = 30 /* seconds */;
     private static final int NORMAL_CLOSURE_STATUS = 1000;
@@ -104,7 +107,54 @@ final class SubscriptionEndpoint {
         this.okHttpClient = okHttpClientBuilder.build();
     }
 
-    <T> void requestSubscription(
+    /**
+     * Convenience constructor for standalone use outside the plugin. Builds the internal
+     * configuration and authorizer from raw parameters.
+     *
+     * @param endpoint The AppSync GraphQL endpoint URL.
+     * @param region The AWS region.
+     * @param authorizationType The default authorization type.
+     * @param apiKey The API key (required when authorizationType is API_KEY, null otherwise).
+     * @param configurator Optional OkHttp client configurator.
+     * @param responseFactory Factory for deserializing GraphQL responses.
+     * @param authProviders Optional auth providers for token/credential resolution.
+     */
+    @InternalAmplifyApi
+    public SubscriptionEndpoint(
+            @NonNull String endpoint,
+            @NonNull String region,
+            @NonNull AuthorizationType authorizationType,
+            @Nullable String apiKey,
+            @Nullable OkHttpConfigurator configurator,
+            @NonNull GraphQLResponse.Factory responseFactory,
+            @Nullable ApiAuthProviders authProviders
+    ) {
+        this(
+            ApiConfiguration.builder()
+                .endpoint(endpoint)
+                .region(region)
+                .endpointType(EndpointType.GRAPHQL)
+                .authorizationType(authorizationType)
+                .apiKey(apiKey)
+                .build(),
+            configurator,
+            responseFactory,
+            new SubscriptionAuthorizer(
+                ApiConfiguration.builder()
+                    .endpoint(endpoint)
+                    .region(region)
+                    .endpointType(EndpointType.GRAPHQL)
+                    .authorizationType(authorizationType)
+                    .apiKey(apiKey)
+                    .build(),
+                authProviders != null ? authProviders : ApiAuthProviders.noProviderOverrides()
+            ),
+            null
+        );
+    }
+
+    @InternalAmplifyApi
+    public <T> void requestSubscription(
             @NonNull GraphQLRequest<T> request,
             @NonNull AuthorizationType authType,
             @NonNull Consumer<String> onSubscriptionStarted,
@@ -259,7 +309,8 @@ final class SubscriptionEndpoint {
         dispatcher.dispatchNextMessage(data);
     }
 
-    void releaseSubscription(String subscriptionId) throws ApiException {
+    @InternalAmplifyApi
+    public void releaseSubscription(String subscriptionId) throws ApiException {
         // First thing we should do is remove it from the pending subscription collection so
         // the other methods can't grab a hold of the subscription.
         final Subscription<?> subscription = subscriptions.get(subscriptionId);
