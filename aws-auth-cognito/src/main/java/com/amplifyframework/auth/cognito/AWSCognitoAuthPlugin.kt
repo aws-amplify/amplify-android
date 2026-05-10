@@ -325,6 +325,25 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     override fun fetchAuthSession(onSuccess: Consumer<AuthSession>, onError: Consumer<AuthException>) =
         enqueue(onSuccess, onError) { useCaseFactory.fetchAuthSession().execute() }
 
+    /**
+     * Multi-user fetch: returns the cached/refreshed session for [userId].
+     *
+     * Reads the user's persisted state from `AuthStateRepo` and refreshes per-user when needed.
+     * When [userId] is empty, behaves like the no-userId overload (active / single-user path).
+     */
+    fun fetchAuthSession(userId: String, onSuccess: Consumer<AuthSession>, onError: Consumer<AuthException>) =
+        enqueue(onSuccess, onError) { useCaseFactory.fetchAuthSession().execute(userId) }
+
+    /**
+     * Multi-user fetch with options.
+     */
+    fun fetchAuthSession(
+        userId: String,
+        options: AuthFetchSessionOptions,
+        onSuccess: Consumer<AuthSession>,
+        onError: Consumer<AuthException>
+    ) = enqueue(onSuccess, onError) { useCaseFactory.fetchAuthSession().execute(userId, options) }
+
     override fun rememberDevice(onSuccess: Action, onError: Consumer<AuthException>) =
         enqueue(onSuccess, onError) { useCaseFactory.rememberDevice().execute() }
 
@@ -440,6 +459,26 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         onError = ::throwIt
     ) { useCaseFactory.signOut().execute(options) }
 
+    /**
+     * Multi-user sign-out: signs out the user identified by [userId] only.
+     *
+     * Reads the user's persisted state from `AuthStateRepo`, dispatches the sign-out event scoped
+     * to [userId], and removes only that user's persisted credentials. Other signed-in users are
+     * unaffected.
+     */
+    fun signOut(userId: String, onComplete: Consumer<AuthSignOutResult>) = enqueue(
+        onComplete,
+        onError = ::throwIt
+    ) { useCaseFactory.signOut().execute(userId, AuthSignOutOptions.builder().build()) }
+
+    /**
+     * Multi-user sign-out with options.
+     */
+    fun signOut(userId: String, options: AuthSignOutOptions, onComplete: Consumer<AuthSignOutResult>) = enqueue(
+        onComplete,
+        onError = ::throwIt
+    ) { useCaseFactory.signOut().execute(userId, options) }
+
     override fun deleteUser(onSuccess: Action, onError: Consumer<AuthException>) = enqueue(onSuccess, onError) {
         useCaseFactory.deleteUser().execute()
     }
@@ -545,6 +584,12 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
      */
     fun clearFederationToIdentityPool(onSuccess: Action, onError: Consumer<AuthException>) =
         enqueue(onSuccess, onError) { useCaseFactory.clearFederationToIdentityPool().execute() }
+
+    /**
+     * Multi-user clear federation: clears the federated-identity-pool entry for [userId] only.
+     */
+    fun clearFederationToIdentityPool(userId: String, onSuccess: Action, onError: Consumer<AuthException>) =
+        enqueue(onSuccess, onError) { useCaseFactory.clearFederationToIdentityPool().execute(userId) }
 
     fun fetchMFAPreference(onSuccess: Consumer<UserMFAPreference>, onError: Consumer<AuthException>) =
         enqueue(onSuccess, onError) { useCaseFactory.fetchMfaPreference().execute() }

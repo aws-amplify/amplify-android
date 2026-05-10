@@ -14,6 +14,7 @@ public final class com/amplifyframework/auth/cognito/AWSCognitoAuthPlugin : com/
 	public fun associateWebAuthnCredential (Landroid/app/Activity;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public fun autoSignIn (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public final fun clearFederationToIdentityPool (Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
+	public final fun clearFederationToIdentityPool (Ljava/lang/String;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public fun configure (Lorg/json/JSONObject;Landroid/content/Context;)V
 	public fun confirmResetPassword (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthConfirmResetPasswordOptions;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public fun confirmResetPassword (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
@@ -29,6 +30,8 @@ public final class com/amplifyframework/auth/cognito/AWSCognitoAuthPlugin : com/
 	public final fun federateToIdentityPool (Ljava/lang/String;Lcom/amplifyframework/auth/AuthProvider;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun fetchAuthSession (Lcom/amplifyframework/auth/options/AuthFetchSessionOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun fetchAuthSession (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public final fun fetchAuthSession (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthFetchSessionOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public final fun fetchAuthSession (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun fetchDevices (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public final fun fetchMFAPreference (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun fetchUserAttributes (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
@@ -59,6 +62,8 @@ public final class com/amplifyframework/auth/cognito/AWSCognitoAuthPlugin : com/
 	public fun signInWithWebUI (Landroid/app/Activity;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun signOut (Lcom/amplifyframework/auth/options/AuthSignOutOptions;Lcom/amplifyframework/core/Consumer;)V
 	public fun signOut (Lcom/amplifyframework/core/Consumer;)V
+	public final fun signOut (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthSignOutOptions;Lcom/amplifyframework/core/Consumer;)V
+	public final fun signOut (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;)V
 	public fun signUp (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthSignUpOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public final fun updateMFAPreference (Lcom/amplifyframework/auth/cognito/MFAPreference;Lcom/amplifyframework/auth/cognito/MFAPreference;Lcom/amplifyframework/auth/cognito/MFAPreference;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public final fun updateMFAPreference (Lcom/amplifyframework/auth/cognito/MFAPreference;Lcom/amplifyframework/auth/cognito/MFAPreference;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
