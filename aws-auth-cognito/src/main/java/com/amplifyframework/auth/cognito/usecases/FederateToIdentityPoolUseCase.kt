@@ -47,8 +47,27 @@ internal class FederateToIdentityPoolUseCase(
         providerToken: String,
         authProvider: AuthProvider,
         options: FederateToIdentityPoolOptions? = null
+    ): FederateToIdentityPoolResult = execute(providerToken, authProvider, userId = null, options = options)
+
+    /**
+     * Multi-user fork extension. Federates [authProvider]'s [providerToken] for the user
+     * identified by [userId]. The state-machine event carries [userId] so the resulting
+     * federated credential is keyed under that user; downstream calls scoped to [userId]
+     * (clearFederationToIdentityPool, fetchAuthSession) operate on the correct credential bucket.
+     *
+     * When [userId] is null, behaviour matches the no-userId overload.
+     */
+    suspend fun execute(
+        providerToken: String,
+        authProvider: AuthProvider,
+        userId: String?,
+        options: FederateToIdentityPoolOptions? = null
     ): FederateToIdentityPoolResult {
-        val authState = stateMachine.getCurrentState()
+        val authState = if (userId.isNullOrEmpty()) {
+            stateMachine.getCurrentState()
+        } else {
+            stateMachine.getStateForUser(userId)
+        }
 
         val authNState = authState.authNState
         val authZState = authState.authZState
@@ -72,12 +91,19 @@ internal class FederateToIdentityPoolUseCase(
             AuthorizationEvent.EventType.StartFederationToIdentityPool(
                 token = FederatedToken(providerToken, authProvider.identityProviderName),
                 identityId = options?.developerProvidedIdentityId,
-                existingCredential
+                existingCredential,
+                userId = userId
             )
         )
 
         return stateMachine.state
-            .onSubscription { stateMachine.send(event) }
+            .onSubscription {
+                if (userId.isNullOrEmpty()) {
+                    stateMachine.send(event)
+                } else {
+                    stateMachine.send(event, userId)
+                }
+            }
             .drop(1) // Ignore current state
             .mapNotNull { state ->
                 val newAuthNState = state.authNState

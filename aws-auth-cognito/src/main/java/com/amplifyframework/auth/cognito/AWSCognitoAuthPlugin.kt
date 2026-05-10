@@ -590,6 +590,38 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     }
 
     /**
+     * Multi-user federate to identity pool. Routes the federated session under [userId].
+     * @param providerToken Provider token to start the federation for
+     * @param authProvider The auth provider you want to federate for (e.g. Facebook, Google, etc.)
+     * @param userId The userId the federated session belongs to
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    fun federateToIdentityPool(
+        providerToken: String,
+        authProvider: AuthProvider,
+        userId: String,
+        onSuccess: Consumer<FederateToIdentityPoolResult>,
+        onError: Consumer<AuthException>
+    ) = enqueue(onSuccess, onError) {
+        useCaseFactory.federateToIdentityPool().execute(providerToken, authProvider, userId)
+    }
+
+    /**
+     * Multi-user federate to identity pool with options.
+     */
+    fun federateToIdentityPool(
+        providerToken: String,
+        authProvider: AuthProvider,
+        userId: String,
+        options: FederateToIdentityPoolOptions,
+        onSuccess: Consumer<FederateToIdentityPoolResult>,
+        onError: Consumer<AuthException>
+    ) = enqueue(onSuccess, onError) {
+        useCaseFactory.federateToIdentityPool().execute(providerToken, authProvider, userId, options)
+    }
+
+    /**
      * Clear Federation to Identity Pool
      * @param onSuccess Success callback
      * @param onError Error callback

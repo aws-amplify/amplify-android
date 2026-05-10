@@ -29,6 +29,8 @@ public final class com/amplifyframework/auth/cognito/AWSCognitoAuthPlugin : com/
 	public fun deleteWebAuthnCredential (Ljava/lang/String;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public final fun federateToIdentityPool (Ljava/lang/String;Lcom/amplifyframework/auth/AuthProvider;Lcom/amplifyframework/auth/cognito/options/FederateToIdentityPoolOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public final fun federateToIdentityPool (Ljava/lang/String;Lcom/amplifyframework/auth/AuthProvider;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public final fun federateToIdentityPool (Ljava/lang/String;Lcom/amplifyframework/auth/AuthProvider;Ljava/lang/String;Lcom/amplifyframework/auth/cognito/options/FederateToIdentityPoolOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public final fun federateToIdentityPool (Ljava/lang/String;Lcom/amplifyframework/auth/AuthProvider;Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun fetchAuthSession (Lcom/amplifyframework/auth/options/AuthFetchSessionOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun fetchAuthSession (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun fetchAuthSession (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthFetchSessionOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
