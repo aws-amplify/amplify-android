@@ -98,18 +98,25 @@ internal open class StateMachineForAuth(
         }
 
     /**
-     * Persists the new state into the per-user repo and emits to [_state]. When the new state is
-     * `SessionEstablished`, the established state is emitted first (so subscribers observe the
-     * terminal transition), then the flow is reset to a default configured state so subsequent
-     * use cases can drive a fresh sign-in for another user.
+     * Persists the new state into the per-user repo and emits to [_state].
+     *
+     * When [userId] is non-empty (multi-user context), the new state is written to [AuthStateRepo].
+     * Additionally, when the state is `SessionEstablished`, the established state is emitted first
+     * (so subscribers observe the terminal transition via `state.first()`), then the flow is reset
+     * to a default configured state so a *second* user can sign in on top of the first.
+     *
+     * When [userId] is empty (single-user context — matches upstream behaviour), the state is
+     * emitted to [_state] without per-user persistence and without the reset. This preserves
+     * upstream `AuthStateMachine` semantics for callers that haven't opted into multi-user, and
+     * keeps existing single-user tests (e.g. `AuthValidationTest`) passing unchanged.
      */
     private fun setAuthState(userId: String, value: AuthState) {
+        _state.tryEmit(value)
         if (userId.isNotEmpty()) {
             authStateRepo.put(userId, value)
-        }
-        _state.tryEmit(value)
-        if (value.isSessionEstablished) {
-            _state.tryEmit(authStateRepo.getDefaultConfiguredState())
+            if (value.isSessionEstablished) {
+                _state.tryEmit(authStateRepo.getDefaultConfiguredState())
+            }
         }
     }
 
