@@ -23,6 +23,7 @@ import com.amplifyframework.auth.cognito.AuthStateMachine
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidOauthConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.auth.cognito.exceptions.invalidstate.SignedInException
+import com.amplifyframework.auth.cognito.mockSignedInData
 import com.amplifyframework.auth.cognito.testUtil.authState
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.exceptions.UnknownException
@@ -102,7 +103,7 @@ class WebUiSignInUseCaseTest {
     @Test
     fun `throws SignedInException when already signed in`() = runTest {
         stateFlow.value = authState(
-            authNState = AuthenticationState.SignedIn(mockk(), mockk()),
+            authNState = AuthenticationState.SignedIn(mockSignedInData(), mockk()),
             authZState = AuthorizationState.Configured()
         )
 
@@ -175,7 +176,7 @@ class WebUiSignInUseCaseTest {
 
         // Now transition to signed in to complete the flow
         stateFlow.value = authState(
-            authNState = AuthenticationState.SignedIn(mockk(), mockk()),
+            authNState = AuthenticationState.SignedIn(mockSignedInData(), mockk()),
             authZState = AuthorizationState.SessionEstablished(mockk())
         )
 
@@ -191,7 +192,7 @@ class WebUiSignInUseCaseTest {
         runCurrent()
 
         stateFlow.value = authState(
-            authNState = AuthenticationState.SignedIn(mockk(), mockk()),
+            authNState = AuthenticationState.SignedIn(mockSignedInData(), mockk()),
             authZState = AuthorizationState.SessionEstablished(mockk())
         )
 
@@ -208,7 +209,7 @@ class WebUiSignInUseCaseTest {
         runCurrent()
 
         stateFlow.value = authState(
-            authNState = AuthenticationState.SignedIn(mockk(), mockk()),
+            authNState = AuthenticationState.SignedIn(mockSignedInData(), mockk()),
             authZState = AuthorizationState.SessionEstablished(mockk())
         )
 

@@ -94,7 +94,7 @@ internal fun mockSignedOutState(signedOutData: SignedOutData = mockk()) = mockAu
 )
 
 internal fun mockSignedInState(
-    signedInData: SignedInData = mockk(),
+    signedInData: SignedInData = mockSignedInData(),
     deviceMetadata: DeviceMetadata = mockk(),
     amplifyCredential: AmplifyCredential = mockk()
 ) = mockAuthState(

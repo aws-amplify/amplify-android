@@ -78,9 +78,13 @@ internal object UserPoolSignInHelper {
         codeDeliveryDetails: AuthCodeDeliveryDetails? = null,
         totpSetupDetails: TOTPSetupDetails? = null,
         allowedMFATypes: Set<MFAType>? = null,
-        availableFactors: Set<AuthFactorType>? = null
+        availableFactors: Set<AuthFactorType>? = null,
+        userId: String? = null,
+        username: String? = null
     ) = AuthSignInResult(
         signInStep.isSignedIn,
+        username,
+        userId,
         AuthNextSignInStep(
             signInStep,
             additionalInfo,
@@ -91,7 +95,8 @@ internal object UserPoolSignInHelper {
         )
     )
 
-    fun signedInResult() = signInResult(signInStep = AuthSignInStep.DONE)
+    fun signedInResult(userId: String? = null, username: String? = null) =
+        signInResult(signInStep = AuthSignInStep.DONE, userId = userId, username = username)
 
     private fun SignInTOTPSetupData.toTotpSetupDetails() = TOTPSetupDetails(
         sharedSecret = secretCode,

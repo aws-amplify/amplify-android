@@ -86,6 +86,8 @@ internal class WebUiSignInUseCase(
                         authZState is AuthorizationState.SessionEstablished -> {
                         AuthSignInResult(
                             true,
+                            authNState.signedInData.username,
+                            authNState.signedInData.userId,
                             AuthNextSignInStep(AuthSignInStep.DONE, mapOf(), null, null, null, null)
                         )
                     }

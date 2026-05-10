@@ -75,7 +75,9 @@
                     "signInStep": "DONE",
                     "additionalInfo": {
                     }
-                }
+                },
+                "userId": "userId",
+                "username": "username"
             }
         },
         {

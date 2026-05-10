@@ -37,7 +37,10 @@ internal suspend fun AuthStateMachine.sendEventAndGetSignInResult(event: StateMa
                 signInState = authNState.signInState
             )
             authNState is AuthenticationState.SignedIn &&
-                authZState is AuthorizationState.SessionEstablished -> UserPoolSignInHelper.signedInResult()
+                authZState is AuthorizationState.SessionEstablished -> UserPoolSignInHelper.signedInResult(
+                userId = authNState.signedInData.userId,
+                username = authNState.signedInData.username
+            )
             else -> null
         }
     }.first()
