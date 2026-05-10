@@ -434,6 +434,29 @@ public final class SynchronousAuth {
     }
 
     /**
+     * Multi-user fetch auth session synchronously.
+     * @param userId The userId whose session to fetch
+     * @return result object
+     * @throws AuthException exception
+     */
+    @NonNull
+    public AuthSession fetchAuthSession(@NonNull String userId) throws AuthException {
+        return Await.<AuthSession, AuthException>result(timeoutMs, (onResult, onError) ->
+                asyncDelegate.fetchAuthSession(userId, onResult, onError)
+        );
+    }
+
+    /**
+     * Multi-user fetch auth session with options synchronously.
+     */
+    @NonNull
+    public AuthSession fetchAuthSession(@NonNull String userId, AuthFetchSessionOptions options) throws AuthException {
+        return Await.<AuthSession, AuthException>result(timeoutMs, (onResult, onError) ->
+                asyncDelegate.fetchAuthSession(userId, options, onResult, onError)
+        );
+    }
+
+    /**
      * Remember current device synchronously.
      * @throws AuthException exception
      */
@@ -621,6 +644,26 @@ public final class SynchronousAuth {
     public AuthSignOutResult signOut(AuthSignOutOptions options) throws AuthException {
         return Await.<AuthSignOutResult, AuthException>result(timeoutMs, (onResult, onError) ->
                 asyncDelegate.signOut(options, onResult)
+        );
+    }
+
+    /**
+     * Multi-user sign out synchronously.
+     * @param userId The userId to sign out
+     * @throws AuthException exception
+     */
+    public AuthSignOutResult signOut(@NonNull String userId) throws AuthException {
+        return Await.<AuthSignOutResult, AuthException>result(timeoutMs, (onResult, onError) ->
+                asyncDelegate.signOut(userId, onResult)
+        );
+    }
+
+    /**
+     * Multi-user sign out with options synchronously.
+     */
+    public AuthSignOutResult signOut(@NonNull String userId, AuthSignOutOptions options) throws AuthException {
+        return Await.<AuthSignOutResult, AuthException>result(timeoutMs, (onResult, onError) ->
+                asyncDelegate.signOut(userId, options, onResult)
         );
     }
 
