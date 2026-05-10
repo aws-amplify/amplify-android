@@ -1,8 +1,10 @@
 # amplify-android — Harri fork
 
-Fork of [aws-amplify/amplify-android](https://github.com/aws-amplify/amplify-android) (`upstream` remote) maintained by HarriLLC. Tracks upstream releases; current target is **2.34.0+** with Harri's multi-user auth additions on `feature/upgrade-to-2.34.0-with-multi-user`.
+Fork of [aws-amplify/amplify-android](https://github.com/aws-amplify/amplify-android) (`upstream` remote) maintained by HarriLLC. Tracks upstream releases; current target is **2.36.0+** with Harri's multi-user auth additions on `feature/multi-user-on-2.36.0`.
 
-The fork's primary divergence is **multi-user auth**: a `userId` parameter is threaded through `SignOutUseCase`, `FetchAuthSessionUseCase`, `ClearFederationToIdentityPoolUseCase`, etc., and a `ThreadSafeLifoMap` manages per-user credential stores. When touching auth code, assume multi-user is in scope unless told otherwise.
+The fork's primary divergence is **multi-user auth**: a `userId` parameter is threaded through `SignOutUseCase`, `FetchAuthSessionUseCase`, `ClearFederationToIdentityPoolUseCase`, `DeleteUserUseCase`, `FederateToIdentityPoolUseCase`; `AuthCategoryBehavior` exposes userId overloads of `fetchAuthSession`/`signOut`; `AuthSignInResult` carries `userId`/`username`; `AuthStateRepo` (`ThreadSafeLifoMap` + persisted index in encrypted store) tracks per-user state; `StateMachineForAuth` extends the upstream engine to route `send(event, userId)` per user. When touching auth code, assume multi-user is in scope unless told otherwise.
+
+The 2.26.14→2.36.0 port shipped in 32 commits ending around 2026-05-10. Read `.claude/skills/multi-user-contract/SKILL.md` (the canonical contract) and `.claude/plans/multi-user-port-plan-2.36.0.md` (the per-stage plan) before non-trivial auth changes.
 
 ## Module map (what lives where)
 
@@ -32,7 +34,7 @@ Compile SDK 36, min SDK 24, JVM 17, Kotlin 2.2.0, Coroutines 1.10.2.
 
 1. **Categories + Plugins** — Each capability (Auth, Storage, API…) is a `Category<P>` in `core/` exposing a stable Java API. Concrete behaviour lives in a `Plugin<E>` (e.g. `AWSCognitoAuthPlugin`). Lifecycle: `configure(json|AmplifyOutputs, ctx)` → `initialize(ctx)`. Underlying SDK exposed via `getEscapeHatch()`.
 2. **State machine (auth)** — `aws-auth-cognito` models auth as `StateMachine<State, Environment>` with a `StateMachineResolver` that maps `(state, event) → (new state, [actions])`. State emission goes through `MutableSharedFlow` (no conflation); transitions serialised on a single-thread context (`newSingleThreadContext("StateMachineContext")`).
-3. **Use cases** — Every public auth call (`signIn`, `signOut`, `fetchAuthSession`, `deleteUser`, `confirmSignIn`, …) is an `internal class *UseCase` that: validates preconditions by collecting state, dispatches an event, awaits the terminal state via `state.mapNotNull { … }.first()`, emits a Hub event on success, returns a typed result. **This is the dominant pattern in 2.26→2.36 — `RealAWSCognitoAuthPlugin` is being progressively gutted into use cases.** New auth work goes in a use case.
+3. **Use cases** — Every public auth call (`signIn`, `signOut`, `fetchAuthSession`, `deleteUser`, `confirmSignIn`, …) is an `internal class *UseCase` that: validates preconditions by collecting state, dispatches an event, awaits the terminal state via `state.mapNotNull { … }.first()`, emits a Hub event on success, returns a typed result. **In 2.36.0 the migration is complete — `RealAWSCognitoAuthPlugin` and `KotlinAuthFacadeInternal` are gone; the public `AWSCognitoAuthPlugin` is a thin façade over 32 use cases under `aws-auth-cognito/.../usecases/`, dispatched through `AuthUseCaseFactory`.** New auth work goes in a use case.
 4. **Foundation (new code path)** — KMP module. New clients (Kinesis, Firehose, AppSync Events) depend on `foundation` instead of `core`'s callback APIs and return `Result<T, E>` rather than throwing.
 5. **Hub events** — Cross-category pub/sub (`Amplify.Hub.publish(HubChannel.AUTH, HubEvent.create(AuthChannelEventName.SIGNED_IN))`). Emit only on success, always with an enum, never a string literal.
 6. **core-kotlin facades** — Wrap Java `Consumer<T>` / `Action` callbacks in `suspendCoroutine { }`. New public APIs should be `suspend fun` on the Kotlin facade.
@@ -79,4 +81,4 @@ git log release_v2.34.0..release_v2.36.0 --oneline  # what's new upstream
 
 ## When in doubt
 
-If a public Auth API in `RealAWSCognitoAuthPlugin` does anything more than delegate to a use case, that's a refactor opportunity, not a bug. The upstream direction is clear: use cases own behaviour, the plugin is a thin façade. Match that direction unless asked otherwise.
+If a public Auth API in `AWSCognitoAuthPlugin` does anything more than delegate to `useCaseFactory.<x>().execute(...)`, that's a refactor opportunity, not a bug. The plugin is the surface layer; use cases own behaviour. Match that direction unless asked otherwise. For multi-user-aware overloads, follow the existing pattern: keep an `execute()` no-arg/no-userId overload that delegates to `execute(userId = null, options)` so single-user callers stay unchanged, and route `getStateForUser(userId)` + `stateMachine.send(event, userId)` when an explicit userId is supplied.

@@ -214,6 +214,7 @@ These do NOT come from upstream; they are Harri's:
 - Inline a dependency version in a `build.gradle.kts`.
 - Throw a raw `RuntimeException` from a public API.
 - Catch `Throwable` (catch `Exception`, or specific types).
+- Use Kotlin's `runCatching` in production code — it catches `Throwable` internally. Use `try { ... } catch (e: Exception) { ... }` (matches the existing pattern in `AWSCognitoAuthCredentialStore.deserializeCredential`). When a class genuinely depends on environment infrastructure that may be missing (e.g. `EncryptedKeyValueRepository` requires `androidx.security.crypto.MasterKeys`, which JVM unit tests lack), wrap the construction in `try { ... } catch (e: Exception) { ... } catch (e: LinkageError) { ... }` and fall back to a no-op / in-memory implementation so the dependent class degrades gracefully — see `AuthStateRepo`'s `InMemoryFallbackStore`.
 - Log a JWT, refresh token, password, or PII.
 - Re-introduce a callback-based public API in a new module.
 - Edit a generated file (anything under `build/`, `generated/`).
