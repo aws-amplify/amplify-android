@@ -1,6 +1,6 @@
 ---
 name: multi-user-contract
-description: Canonical reference for the Harri multi-user login implementation as shipped at tag 2.26.14 — public API additions, AuthStateRepo + ThreadSafeLifoMap architecture, per-user state machine, credential store key scheme, event payload contracts, and the 12 invariants the upstream merge must preserve. Use when working on any multi-user auth path, auditing the current branch for migration drift, or merging an upstream release that touches auth.
+description: Canonical reference for the Harri multi-user login implementation, shipped at tag 2.26.14 and reapplied on top of upstream release_v2.36.0 — public API additions, AuthStateRepo + ThreadSafeLifoMap architecture, per-user state machine, credential store key scheme, event payload contracts, and the 12 invariants the upstream merge must preserve. Use when working on any multi-user auth path, auditing the current branch for migration drift, or merging an upstream release that touches auth.
 ---
 
 # Harri multi-user login — canonical contract (tag 2.26.14)
@@ -10,6 +10,31 @@ The shipped reference implementation. Built on upstream `release_v2.26.0`. Deliv
 When working on any multi-user auth code path, this is the contract that must hold. When merging an upstream release into the fork, this is the list of invariants to preserve.
 
 To read code at this tag: `git show 2.26.14:<path>` for individual files, `git diff release_v2.26.0..2.26.14 -- <file>` for the upstream→fork delta.
+
+## Status on `feature/multi-user-on-2.36.0`
+
+The contract is fully reapplied on top of upstream `release_v2.36.0` as of 2026-05-10. The port deviates from 2.26.14's literal diff because upstream's 2.26→2.36 use-case extraction moved every attachment point: `RealAWSCognitoAuthPlugin.kt` and `KotlinAuthFacadeInternal.kt` are gone, and the auth behaviour now lives in 32 internal use cases under `aws-auth-cognito/.../usecases/` plus a 604-line `AWSCognitoAuthPlugin` façade and an `AuthUseCaseFactory`.
+
+**Engine layer.** Where 2.26.14 duplicated ~150 lines of state-machine engine code into a parallel `StateMachineForAuth`, the 2.36.0 port extracts a fork-only `StateMachineForAuth` open class that `AuthStateMachine` inherits from. It owns `AuthStateRepo` directly and exposes a non-conflated `MutableSharedFlow<AuthState>` (`replay = 1`, `extraBufferCapacity = 10`, `DROP_OLDEST`) — matching upstream's flow shape — plus `send(event, userId, ignoreUserId)`, `getStateForUser(userId)`, `getCurrentState()`, `activeStateKey()`, and `allUserIds()`. There is no `setCurrentState` override anymore; the routing happens via a private `setAuthState(userId, value)` invoked from `process()`. **Do not look for `setCurrentState` on the engine** — it does not exist on this branch.
+
+**`AuthStateRepo` user index.** A reserved key `__amplify_auth_state_repo_user_index__` inside the encrypted store now holds a JSON-encoded set of every userId with a persisted session. Maintained transactionally on `put` (when persisting `SessionEstablished`) and `remove`. `allUserIds()` returns the union of in-memory keys and this index — read by `SignOutUseCase` to enumerate users for the all-users sign-out path. Without this index a successful sign-in clears the in-memory map (so the second user can stack), so a fresh process can't otherwise discover persisted users.
+
+**Customizability of `signOut()` zero-arg.** `AWSCognitoAuthSignOutOptions.signOutAllUsers: Boolean = true` lets callers opt out of all-users semantics with `signOutAllUsers = false`. Default `true` preserves the 2.26.14 contract: a no-userId sign out iterates every user in `AuthStateRepo`. The flag has no effect on `signOut(userId, ...)` — that path always targets the supplied userId.
+
+**Sign-in result enrichment.** `AuthSignInResult` gained nullable `userId` and `username` fields plus a 4-arg constructor. `UserPoolSignInHelper.signedInResult(userId, username)` and `WebUiSignInUseCase` populate them from `SignedInData` on the `SessionEstablished` branch — callers can chain `fetchAuthSession(userId, ...)` or `signOut(userId, ...)` directly off the result.
+
+**Plugin lifecycle override.** `AWSCognitoAuthPlugin.configure(json, userId, ctx)` overrides the default no-op so the framework userId path actually reaches the plugin (the 2.36.0 base inherits an empty default from `Plugin.configure(JSONObject, String, Context)`). The override delegates to the no-userId configure since per-user routing happens at the use-case layer. **The 2.26.14 dead-code bug** — `Amplify.configure(config, userId, ctx)` calling the no-userId `Category.configure` — is fixed in this port; the userId-aware `Amplify.configure` calls `category.configure(categoryConfiguration, userId, context)`.
+
+**Path-mapped quick reference for 2.36.0:**
+
+| 2.26.14 attachment point | 2.36.0 path |
+|---|---|
+| `RealAWSCognitoAuthPlugin.signOut(userId, ...)` | `AWSCognitoAuthPlugin.signOut(userId, ...)` (delegates to `useCaseFactory.signOut().execute(userId, options)`) |
+| `RealAWSCognitoAuthPlugin._signOut`, `_fetchAuthSession`, etc. | `aws-auth-cognito/.../usecases/SignOutUseCase.kt`, `FetchAuthSessionUseCase.kt`, etc. |
+| `KotlinAuthFacadeInternal.signOut()` | `KotlinAuthFacade.signOut(userId, options)` (suspend, default args) |
+| `RealAWSCognitoAuthPlugin.configure(json, userId, ctx)` | `AWSCognitoAuthPlugin.configure(json, userId, ctx)` (override on the public plugin class) |
+| `StateMachineForAuth` (2.26.14 parallel class) | `aws-auth-cognito/.../statemachine/StateMachineForAuth.kt` (open base class extended by `AuthStateMachine`) |
+| 2.26.14 had no user index | `AuthStateRepo.allUserIds()` + `__amplify_auth_state_repo_user_index__` key |
 
 ## TL;DR — three things that are not obvious
 
