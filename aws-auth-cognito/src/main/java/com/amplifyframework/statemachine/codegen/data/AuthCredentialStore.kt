@@ -16,10 +16,17 @@
 package com.amplifyframework.statemachine.codegen.data
 
 internal interface AuthCredentialStore {
-    // Amplify Credentials
+    // Amplify Credentials.
+    //
+    // Multi-user note: when a non-null [userId] is supplied to [retrieveCredential] or
+    // [deleteCredential], the modern store ([AWSCognitoAuthCredentialStore]) routes to a
+    // userId-prefixed session key; null falls back to the upstream single-user default key.
+    // [saveCredential] extracts the userId from the credential's [SignedInData] (when present) and
+    // dual-writes to both the per-user key and the default key, so single-user reads continue to
+    // work and per-user reads find the right entry.
     fun saveCredential(credential: AmplifyCredential)
-    fun retrieveCredential(): AmplifyCredential
-    fun deleteCredential()
+    fun retrieveCredential(userId: String? = null): AmplifyCredential
+    fun deleteCredential(userId: String? = null)
 
     // Device Metadata
     fun saveDeviceMetadata(username: String, deviceMetadata: DeviceMetadata)

@@ -102,8 +102,14 @@ internal class AWSCognitoLegacyCredentialStore(
         return keys[APP_LAST_AUTH_USER]?.let { tokensKeyValue.get(it) }
     }
 
+    /**
+     * Reads the legacy (pre-multi-user) credential. The [userId] parameter is accepted for
+     * interface compatibility but ignored — the legacy store has only one slot per installation,
+     * so any userId resolves to the same single record. Used by the credential-store action layer
+     * during the one-time migration from pre-multi-user installs.
+     */
     @Synchronized
-    override fun retrieveCredential(): AmplifyCredential {
+    override fun retrieveCredential(userId: String?): AmplifyCredential {
         val signedInData = retrieveSignedInData()
         val awsCredentials = retrieveAWSCredentials()
         val identityId = retrieveIdentityId()
@@ -141,7 +147,11 @@ internal class AWSCognitoLegacyCredentialStore(
         return AmplifyCredential.ASFDevice(deviceId)
     }
 
-    override fun deleteCredential() {
+    /**
+     * Deletes the legacy (pre-multi-user) credential. The [userId] parameter is accepted for
+     * interface compatibility but ignored — the legacy store has only one slot per installation.
+     */
+    override fun deleteCredential(userId: String?) {
         deleteAWSCredentials()
         deleteIdentityId()
         deleteCognitoUserPoolTokens()

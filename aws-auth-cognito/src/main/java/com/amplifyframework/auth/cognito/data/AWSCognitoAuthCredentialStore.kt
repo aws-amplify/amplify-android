@@ -41,10 +41,24 @@ internal class AWSCognitoAuthCredentialStore(
         keyValueRepoFactory.create(context, AWS_KEY_VALUE_STORE_IDENTIFIER)
 
     //region Save Credentials
-    override fun saveCredential(credential: AmplifyCredential) = keyValue.put(
-        generateKey(KEY_SESSION),
-        serializeCredential(credential)
-    )
+
+    /**
+     * Saves [credential] to the default session key (single-user / upstream-compat). When the
+     * credential carries a userId via its [SignedInData] (i.e. [AmplifyCredential.UserPoolTypeCredential]),
+     * the same payload is *additionally* written to a userId-prefixed key so per-user reads via
+     * [retrieveCredential] (with userId) can locate it. Dual-write keeps single-user callers
+     * (no-arg [retrieveCredential]) working unchanged while enabling multi-user routing.
+     */
+    override fun saveCredential(credential: AmplifyCredential) {
+        val serialized = serializeCredential(credential)
+        // Always write to the default key so single-user reads continue to work.
+        keyValue.put(generateKey(KEY_SESSION), serialized)
+        // Additionally write to a per-user key when the credential identifies a user.
+        val userId = (credential as? AmplifyCredential.UserPoolTypeCredential)?.signedInData?.userId
+        if (!userId.isNullOrEmpty()) {
+            keyValue.put(generateUserScopedKey(userId, KEY_SESSION), serialized)
+        }
+    }
 
     override fun saveDeviceMetadata(username: String, deviceMetadata: DeviceMetadata) = keyValue.put(
         generateKey("$username.$KEY_DEVICE_METADATA"),
@@ -58,7 +72,24 @@ internal class AWSCognitoAuthCredentialStore(
     //endregion
 
     //region Retrieve Credentials
-    override fun retrieveCredential(): AmplifyCredential = deserializeCredential(keyValue.get(generateKey(KEY_SESSION)))
+
+    /**
+     * Returns the credential for [userId]. When [userId] is null/empty (single-user / upstream
+     * path) reads the default session key. When [userId] is non-empty, prefers the userId-prefixed
+     * key and falls back to the default key when the per-user entry is missing — which preserves
+     * the upgrade path for installations created before multi-user.
+     */
+    override fun retrieveCredential(userId: String?): AmplifyCredential {
+        if (userId.isNullOrEmpty()) {
+            return deserializeCredential(keyValue.get(generateKey(KEY_SESSION)))
+        }
+        val perUser = deserializeCredential(keyValue.get(generateUserScopedKey(userId, KEY_SESSION)))
+        return if (perUser !is AmplifyCredential.Empty) {
+            perUser
+        } else {
+            deserializeCredential(keyValue.get(generateKey(KEY_SESSION)))
+        }
+    }
 
     override fun retrieveDeviceMetadata(username: String): DeviceMetadata = deserializeMetadata(
         keyValue.get(generateKey("$username.$KEY_DEVICE_METADATA"))
@@ -70,7 +101,20 @@ internal class AWSCognitoAuthCredentialStore(
     //endregion
 
     //region Delete Credentials
-    override fun deleteCredential() = keyValue.remove(generateKey(KEY_SESSION))
+
+    /**
+     * Deletes the credential for [userId]. When [userId] is null/empty (single-user) removes the
+     * default session key. When [userId] is non-empty, removes only the userId-prefixed key — the
+     * default key is left intact since it is shared across users and the next [saveCredential]
+     * will overwrite it.
+     */
+    override fun deleteCredential(userId: String?) {
+        if (userId.isNullOrEmpty()) {
+            keyValue.remove(generateKey(KEY_SESSION))
+        } else {
+            keyValue.remove(generateUserScopedKey(userId, KEY_SESSION))
+        }
+    }
 
     override fun deleteDeviceKeyCredential(username: String) = keyValue.remove(
         generateKey("$username.$KEY_DEVICE_METADATA")
@@ -91,6 +135,8 @@ internal class AWSCognitoAuthCredentialStore(
 
         return prefix.plus(".$keySuffix")
     }
+
+    private fun generateUserScopedKey(userId: String, keySuffix: String): String = "${userId}_${generateKey(keySuffix)}"
 
     //region Deserialization
     private fun deserializeCredential(encodedCredential: String?): AmplifyCredential = try {
