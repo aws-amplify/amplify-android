@@ -29,30 +29,42 @@ internal class SignOutEvent(
     override val time: Date? = null
 ) : StateMachineEvent {
     sealed class EventType {
-        data class InvokeHostedUISignOut(val signOutData: SignOutData, val signedInData: SignedInData) : EventType()
+        // Multi-user fork: every credential-affecting variant carries userId explicitly. Defaults
+        // to null so existing single-user constructions stay valid; the multi-user dispatch sites
+        // populate it from SignOutData.userId or signedInData.userId. Per multi-user-contract
+        // invariant 5: actions read userId from the event payload, not from environment.
+        data class InvokeHostedUISignOut(
+            val signOutData: SignOutData,
+            val signedInData: SignedInData,
+            val userId: String? = null
+        ) : EventType()
 
         data class SignOutLocally(
             val signedInData: SignedInData?,
             val hostedUIErrorData: HostedUIErrorData? = null,
             val globalSignOutErrorData: GlobalSignOutErrorData? = null,
-            val revokeTokenErrorData: RevokeTokenErrorData? = null
+            val revokeTokenErrorData: RevokeTokenErrorData? = null,
+            val userId: String? = null
         ) : EventType()
 
         data class SignOutGlobally(
             val signedInData: SignedInData,
-            val hostedUIErrorData: HostedUIErrorData? = null
+            val hostedUIErrorData: HostedUIErrorData? = null,
+            val userId: String? = null
         ) : EventType()
 
         data class RevokeToken(
             val signedInData: SignedInData,
             val hostedUIErrorData: HostedUIErrorData? = null,
-            val globalSignOutErrorData: GlobalSignOutErrorData? = null
+            val globalSignOutErrorData: GlobalSignOutErrorData? = null,
+            val userId: String? = null
         ) : EventType()
 
         data class SignOutGloballyError(
             val signedInData: SignedInData,
             val hostedUIErrorData: HostedUIErrorData? = null,
-            val globalSignOutErrorData: GlobalSignOutErrorData? = null
+            val globalSignOutErrorData: GlobalSignOutErrorData? = null,
+            val userId: String? = null
         ) : EventType()
 
         data class SignedOutSuccess(val signedOutData: SignedOutData) : EventType()

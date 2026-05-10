@@ -172,9 +172,14 @@ internal object AuthenticationCognitoActions : AuthenticationActions {
     ) = Action<AuthEnvironment>("InitSignOut") { id, dispatcher ->
         logger.verbose("$id Starting execution")
 
+        // Multi-user fork: forward the userId from SignOutData (set by the use case) onto every
+        // downstream SignOutEvent variant. Falls back to signedInData.userId when SignOutData has
+        // no userId (single-user / upstream-compat path) so action-layer code can still read a
+        // canonical userId off the event.
+        val userId = event.signOutData.userId ?: signedInData?.userId
         val evt = when {
             signedInData != null && signedInData.signInMethod is SignInMethod.HostedUI -> {
-                SignOutEvent(SignOutEvent.EventType.InvokeHostedUISignOut(event.signOutData, signedInData))
+                SignOutEvent(SignOutEvent.EventType.InvokeHostedUISignOut(event.signOutData, signedInData, userId))
             }
             signedInData != null &&
                 signedInData.signInMethod == SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.UNKNOWN) &&
@@ -184,15 +189,15 @@ internal object AuthenticationCognitoActions : AuthenticationActions {
                 assume that hosted ui sign in may have been used if hostedUIClient is configured. This only happens if
                 a customers configuration contained a valid Oauth section, complete with signOutRedirectURI.
                  */
-                SignOutEvent(SignOutEvent.EventType.InvokeHostedUISignOut(event.signOutData, signedInData))
+                SignOutEvent(SignOutEvent.EventType.InvokeHostedUISignOut(event.signOutData, signedInData, userId))
             }
             signedInData != null && event.signOutData.globalSignOut -> {
-                SignOutEvent(SignOutEvent.EventType.SignOutGlobally(signedInData))
+                SignOutEvent(SignOutEvent.EventType.SignOutGlobally(signedInData, userId = userId))
             }
             signedInData != null && !event.signOutData.globalSignOut -> {
-                SignOutEvent(SignOutEvent.EventType.RevokeToken(signedInData))
+                SignOutEvent(SignOutEvent.EventType.RevokeToken(signedInData, userId = userId))
             }
-            else -> SignOutEvent(SignOutEvent.EventType.SignOutLocally(signedInData))
+            else -> SignOutEvent(SignOutEvent.EventType.SignOutLocally(signedInData, userId = userId))
         }
         logger.verbose("$id Sending event ${evt.type}")
         dispatcher.send(evt)

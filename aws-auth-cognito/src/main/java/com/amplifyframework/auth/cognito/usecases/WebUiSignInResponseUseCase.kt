@@ -78,14 +78,16 @@ internal class WebUiSignInResponseUseCase(
                 SignOutEvent(
                     SignOutEvent.EventType.SignOutGlobally(
                         signOutState.signedInData,
-                        hostedUIErrorData
+                        hostedUIErrorData,
+                        userId = signOutState.signedInData.userId
                     )
                 )
             } else {
                 SignOutEvent(
                     SignOutEvent.EventType.RevokeToken(
                         signOutState.signedInData,
-                        hostedUIErrorData
+                        hostedUIErrorData,
+                        userId = signOutState.signedInData.userId
                     )
                 )
             }
