@@ -101,31 +101,36 @@ internal open class StateMachineForAuth(
     /**
      * Persists the new state into the per-user repo and emits to [_state].
      *
-     * When [userId] is non-empty (multi-user context), the new state is written to [AuthStateRepo].
-     * Additionally, when the state is `SessionEstablished`, the established state is emitted first
-     * (so subscribers observe the terminal transition via `state.first()`), then the flow is reset
-     * to a default configured state so a *second* user can sign in on top of the first.
+     * Three behaviours, gated on whether the caller opted into multi-user routing by passing an
+     * explicit [userId]:
      *
-     * When [userId] is empty AND the new state is a `SessionEstablished` carrying a [SignedInData],
-     * the userId is recovered from `signedInData.userId`. This handles every code path where the
-     * sign-in was dispatched without an explicit userId — first sign-in (no active key yet), web UI
-     * redirect (OAuth flow doesn't know the userId until tokens arrive), and process-death recovery
-     * (the redirect callback rebuilds `SignedInData` from the ID token). Without this fallback the
-     * established state would emit to `_state` but never reach `AuthStateRepo`, leaving subsequent
-     * `signOut(userId, …)` / `fetchAuthSession(userId, …)` calls with no per-user entry to find.
+     *  1. **Always** emit [value] to [_state] so observers see the transition.
      *
-     * When [userId] is empty AND the state has no `SignedInData` to recover from, behaviour matches
-     * upstream `AuthStateMachine`: emit to `_state`, no `AuthStateRepo` write. This keeps single-user
-     * code paths and existing single-user tests unchanged.
+     *  2. **Persist to [AuthStateRepo]** when [userId] is non-empty, OR when the new state is a
+     *     [SessionEstablished] carrying a [SignedInData] (in which case the userId is recovered
+     *     from `signedInData.userId`). The recovery covers code paths where the sign-in was
+     *     dispatched without an explicit userId: first sign-in (no active key yet), web UI redirect
+     *     (OAuth flow doesn't know the userId until tokens arrive), process-death recovery (the
+     *     redirect callback rebuilds `SignedInData` from the ID token). Without this fallback the
+     *     established state would emit to `_state` but never reach [AuthStateRepo], leaving
+     *     subsequent `signOut(userId, …)` / `fetchAuthSession(userId, …)` calls with no per-user
+     *     entry to find.
+     *
+     *  3. **Reset [_state] to the default configured state** after a [SessionEstablished] emission,
+     *     so a *second* user can sign in on top of the first. **Only fires when the caller passed
+     *     a non-empty [userId]** — that's the explicit opt-in to multi-user routing. Single-user
+     *     callers (empty userId, even with userId-recoverable state) keep the [SessionEstablished]
+     *     emission live in `_state`, matching upstream `AuthStateMachine` semantics so existing
+     *     single-user tests and observers see `SignedIn` via `getCurrentState()`.
      */
     private fun setAuthState(userId: String, value: AuthState) {
         _state.tryEmit(value)
         val effectiveUserId = userId.ifEmpty { value.recoverableUserIdOrEmpty() }
         if (effectiveUserId.isNotEmpty()) {
             authStateRepo.put(effectiveUserId, value)
-            if (value.isSessionEstablished) {
-                _state.tryEmit(authStateRepo.getDefaultConfiguredState())
-            }
+        }
+        if (userId.isNotEmpty() && value.isSessionEstablished) {
+            _state.tryEmit(authStateRepo.getDefaultConfiguredState())
         }
     }
 

@@ -53,9 +53,23 @@ internal class AuthStateRepo private constructor(
     private val authStateMap = LifoMap.empty<String, AuthState>()
 
     // Lazy so that simply constructing the repo doesn't immediately touch the keystore /
-    // encrypted shared preferences. Tests that mock Context can construct AuthStateRepo
-    // without configuring keystore access; only callers that actually persist or load fire it.
-    private val encryptedStore by lazy { encryptedStoreFactory() }
+    // encrypted shared preferences. The factory may fail to construct
+    // [EncryptedKeyValueRepository] in two scenarios: (1) the Android keystore is corrupted
+    // in production (rare) or (2) the test JVM has no keystore at all (unit tests without
+    // Robolectric, which `LinkageError`s on `androidx.security.crypto.MasterKeys` init).
+    // Either way we want to degrade gracefully — the multi-user routing falls back to
+    // in-memory state, persistence is silently lost, and the app stays alive.
+    private val encryptedStore: KeyValueRepository by lazy {
+        try {
+            encryptedStoreFactory()
+        } catch (e: Exception) {
+            // Keystore corruption / configuration failure in production.
+            InMemoryFallbackStore()
+        } catch (e: LinkageError) {
+            // Android keystore class not loadable (JVM unit tests without Robolectric backing).
+            InMemoryFallbackStore()
+        }
+    }
 
     /**
      * Stores the given authentication state for [key] (typically the user id).
@@ -159,15 +173,19 @@ internal class AuthStateRepo private constructor(
 
     private fun serializeAuthNAndZState(authState: AuthNAndAuthZ): String = Json.encodeToString(authState)
 
-    private fun deserializeAuthNAndZState(encodedState: String?): AuthNAndAuthZ? = runCatching {
+    private fun deserializeAuthNAndZState(encodedState: String?): AuthNAndAuthZ? = try {
         encodedState?.let { Json.decodeFromString<AuthNAndAuthZ>(it) }
-    }.getOrNull()
+    } catch (e: Exception) {
+        null
+    }
 
-    private fun loadPersistedIndex(): Set<String> = runCatching {
-        encryptedStore.get(USER_INDEX_KEY)?.let {
-            Json.decodeFromString(ListSerializer(String.serializer()), it).toSet()
-        }
-    }.getOrNull() ?: emptySet()
+    private fun loadPersistedIndex(): Set<String> = try {
+        encryptedStore.get(USER_INDEX_KEY)
+            ?.let { Json.decodeFromString(ListSerializer(String.serializer()), it).toSet() }
+            ?: emptySet()
+    } catch (e: Exception) {
+        emptySet()
+    }
 
     private fun savePersistedIndex(index: Collection<String>) {
         encryptedStore.put(
@@ -242,6 +260,25 @@ private data class AuthNAndAuthZ(
     val deviceMetadata: DeviceMetadata,
     val amplifyCredential: AmplifyCredential
 )
+
+/**
+ * No-op fallback used by [AuthStateRepo] when [EncryptedKeyValueRepository] cannot be constructed
+ * (corrupt keystore in prod / no keystore class in JVM unit tests). Reads/writes go to a process-
+ * local map so multi-user routing keeps working in memory; persistence is silently lost.
+ */
+private class InMemoryFallbackStore : com.amplifyframework.core.store.KeyValueRepository {
+    private val map = java.util.concurrent.ConcurrentHashMap<String, String>()
+    override fun put(dataKey: String, value: String?) {
+        if (value == null) map.remove(dataKey) else map[dataKey] = value
+    }
+    override fun get(dataKey: String): String? = map[dataKey]
+    override fun remove(dataKey: String) {
+        map.remove(dataKey)
+    }
+    override fun removeAll() {
+        map.clear()
+    }
+}
 
 /**
  * True when [AuthState] represents a fully signed-in user with an established session.
