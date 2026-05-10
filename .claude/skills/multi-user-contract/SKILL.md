@@ -182,7 +182,7 @@ Three rules:
 
 `activeState()` / `activeStateKey()` return the most-recently-active user — used by `RealAWSCognitoAuthPlugin` to default to "current user" when the caller omits `userId`.
 
-### B.4 `ThreadSafeLifoMap.kt` (NEW) — `LifoMap<K, V>`
+### B.4 `LifoMap.kt` (NEW) — `LifoMap<K, V>`
 
 ```kotlin
 class LifoMap<K, V>(private val maxSize: Int? = null) {
