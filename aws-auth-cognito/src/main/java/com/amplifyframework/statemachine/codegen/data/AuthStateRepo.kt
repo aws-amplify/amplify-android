@@ -46,7 +46,10 @@ internal class AuthStateRepo private constructor(context: Context) {
 
     private val authStateMap = LifoMap.empty<String, AuthState>()
 
-    private val encryptedStore = EncryptedKeyValueRepository(context, PREF_KEY)
+    // Lazy so that simply constructing the repo doesn't immediately touch the keystore /
+    // encrypted shared preferences. Tests that mock Context can construct AuthStateRepo
+    // without configuring keystore access; only callers that actually persist or load fire it.
+    private val encryptedStore by lazy { EncryptedKeyValueRepository(context, PREF_KEY) }
 
     /**
      * Stores the given authentication state for [key] (typically the user id).
@@ -152,13 +155,15 @@ internal class AuthStateRepo private constructor(context: Context) {
         private var instance: AuthStateRepo? = null
 
         /**
-         * Returns the process-wide singleton, lazily initialized with the application context.
-         * Thread-safe (double-checked locking).
+         * Returns the process-wide singleton, lazily initialized with the supplied context.
+         * Thread-safe (double-checked locking). Matches the 2.26.14 fork's behaviour: the context
+         * passed to first call is held; in production this is always the Amplify-supplied context
+         * (an application context).
          */
         fun getInstance(context: Context): AuthStateRepo {
             instance?.let { return it }
             return synchronized(this) {
-                instance ?: AuthStateRepo(context.applicationContext).also { instance = it }
+                instance ?: AuthStateRepo(context).also { instance = it }
             }
         }
     }
