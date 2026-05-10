@@ -26,6 +26,7 @@ import com.amplifyframework.auth.options.AuthSignOutOptions;
  */
 public final class AWSCognitoAuthSignOutOptions extends AuthSignOutOptions {
     private final String browserPackage;
+    private final boolean signOutAllUsers;
 
     /**
      * Advanced options for signing out.
@@ -33,10 +34,13 @@ public final class AWSCognitoAuthSignOutOptions extends AuthSignOutOptions {
      * @param browserPackage Specify which browser package should be used for signing out of an account which was signed
      *                      into with a web UI experience (example value: "org.mozilla.firefox").
      *                      Defaults to the Chrome package if not specified.
+     * @param signOutAllUsers Multi-user opt-out. When true (default), a no-userId sign out iterates every user in
+     *                       AuthStateRepo. When false, a no-userId sign out targets only the active user.
      */
-    protected AWSCognitoAuthSignOutOptions(boolean globalSignOut, String browserPackage) {
+    protected AWSCognitoAuthSignOutOptions(boolean globalSignOut, String browserPackage, boolean signOutAllUsers) {
         super(globalSignOut);
         this.browserPackage = browserPackage;
+        this.signOutAllUsers = signOutAllUsers;
     }
 
     /**
@@ -46,6 +50,19 @@ public final class AWSCognitoAuthSignOutOptions extends AuthSignOutOptions {
     @Nullable
     public String getBrowserPackage() {
         return browserPackage;
+    }
+
+    /**
+     * Multi-user sign-out toggle. Defaults to {@code true}.
+     * <p>
+     * When {@code true}, calling {@code signOut(options, …)} (no explicit userId) iterates every user in the per-user
+     * state repository and signs each one out. When {@code false}, the same call targets only the currently active
+     * user. Has no effect on {@code signOut(userId, options, …)}, which always targets the supplied userId.
+     *
+     * @return whether sign out should iterate all users when no userId is supplied.
+     */
+    public boolean isSignOutAllUsers() {
+        return signOutAllUsers;
     }
 
     /**
@@ -59,7 +76,7 @@ public final class AWSCognitoAuthSignOutOptions extends AuthSignOutOptions {
 
     @Override
     public int hashCode() {
-        return ObjectsCompat.hash(isGlobalSignOut(), getBrowserPackage());
+        return ObjectsCompat.hash(isGlobalSignOut(), getBrowserPackage(), isSignOutAllUsers());
     }
 
     @Override
@@ -71,7 +88,8 @@ public final class AWSCognitoAuthSignOutOptions extends AuthSignOutOptions {
         } else {
             AWSCognitoAuthSignOutOptions authSignOutOptions = (AWSCognitoAuthSignOutOptions) obj;
             return ObjectsCompat.equals(isGlobalSignOut(), authSignOutOptions.isGlobalSignOut()) &&
-                    ObjectsCompat.equals(getBrowserPackage(), authSignOutOptions.getBrowserPackage());
+                    ObjectsCompat.equals(getBrowserPackage(), authSignOutOptions.getBrowserPackage()) &&
+                    ObjectsCompat.equals(isSignOutAllUsers(), authSignOutOptions.isSignOutAllUsers());
         }
     }
 
@@ -80,6 +98,7 @@ public final class AWSCognitoAuthSignOutOptions extends AuthSignOutOptions {
         return "AWSCognitoAuthSignOutOptions{" +
                 "isGlobalSignOut=" + isGlobalSignOut() +
                 ", browserPackage=" + getBrowserPackage() +
+                ", signOutAllUsers=" + isSignOutAllUsers() +
                 '}';
     }
 
@@ -88,6 +107,7 @@ public final class AWSCognitoAuthSignOutOptions extends AuthSignOutOptions {
      */
     public static final class CognitoBuilder extends Builder<CognitoBuilder> {
         private String browserPackage;
+        private boolean signOutAllUsers = true;
 
         /**
          * Returns the type of builder this is to support proper flow with it being an extended class.
@@ -112,12 +132,23 @@ public final class AWSCognitoAuthSignOutOptions extends AuthSignOutOptions {
         }
 
         /**
+         * Multi-user sign-out toggle. Defaults to {@code true}.
+         *
+         * @param signOutAllUsers when true, a no-userId sign out iterates every user; when false, only the active user.
+         * @return the instance of the builder.
+         */
+        public CognitoBuilder signOutAllUsers(boolean signOutAllUsers) {
+            this.signOutAllUsers = signOutAllUsers;
+            return this;
+        }
+
+        /**
          * Construct and return the object with the values set in the builder.
          * @return a new instance of AWSCognitoAuthSignOutOptions with the values specified in the builder.
          */
         @NonNull
         public AWSCognitoAuthSignOutOptions build() {
-            return new AWSCognitoAuthSignOutOptions(super.isGlobalSignOut(), browserPackage);
+            return new AWSCognitoAuthSignOutOptions(super.isGlobalSignOut(), browserPackage, signOutAllUsers);
         }
     }
 }

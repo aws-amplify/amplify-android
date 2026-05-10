@@ -503,6 +503,7 @@ public final class com/amplifyframework/auth/cognito/options/AWSCognitoAuthSignO
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getBrowserPackage ()Ljava/lang/String;
 	public fun hashCode ()I
+	public fun isSignOutAllUsers ()Z
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -513,6 +514,7 @@ public final class com/amplifyframework/auth/cognito/options/AWSCognitoAuthSignO
 	public synthetic fun build ()Lcom/amplifyframework/auth/options/AuthSignOutOptions;
 	public fun getThis ()Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthSignOutOptions$CognitoBuilder;
 	public synthetic fun getThis ()Lcom/amplifyframework/auth/options/AuthSignOutOptions$Builder;
+	public fun signOutAllUsers (Z)Lcom/amplifyframework/auth/cognito/options/AWSCognitoAuthSignOutOptions$CognitoBuilder;
 }
 
 public final class com/amplifyframework/auth/cognito/options/AWSCognitoAuthSignUpOptions : com/amplifyframework/auth/options/AuthSignUpOptions {
