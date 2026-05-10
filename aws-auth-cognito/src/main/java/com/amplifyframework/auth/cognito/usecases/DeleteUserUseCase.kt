@@ -34,16 +34,41 @@ internal class DeleteUserUseCase(
     private val emitter: AuthHubEventEmitter = AuthHubEventEmitter()
 ) {
 
-    suspend fun execute() {
+    suspend fun execute() = execute(userId = null)
+
+    /**
+     * Multi-user delete: deletes the user identified by [userId].
+     *
+     * When [userId] is null, behaves identically to the no-arg overload (active / single-user
+     * legacy path).
+     *
+     * When [userId] is non-null, fetches the access token via the userId-aware fetchAuthSession
+     * overload, dispatches a userId-bearing DeleteUser event, and routes through the state
+     * machine's per-user send. AuthStateRepo's signOut→remove rule will purge the user's persisted
+     * state once the deletion completes.
+     *
+     * Note: per the contract (skill §A.1), [AuthCategoryBehavior.deleteUser] does not expose a
+     * userId parameter at the public API surface — this overload is only used internally when the
+     * caller already has a userId in hand (e.g. from a multi-user-aware Plugin call site).
+     */
+    suspend fun execute(userId: String?) {
         stateMachine.requireSignedInState()
 
-        val token = fetchAuthSession.execute().requireAccessToken()
+        // Preserve the no-arg call shape when userId is null so existing test mocks of
+        // fetchAuthSession.execute() continue to match.
+        val token = if (userId.isNullOrEmpty()) {
+            fetchAuthSession.execute().requireAccessToken()
+        } else {
+            fetchAuthSession.execute(userId).requireAccessToken()
+        }
 
         var deleteUserException: Exception? = null
         stateMachine.state
             .onSubscription {
-                val event = DeleteUserEvent(DeleteUserEvent.EventType.DeleteUser(accessToken = token))
-                stateMachine.send(event)
+                val event = DeleteUserEvent(
+                    DeleteUserEvent.EventType.DeleteUser(accessToken = token, userId = userId)
+                )
+                if (userId.isNullOrEmpty()) stateMachine.send(event) else stateMachine.send(event, userId)
             }.collectWhile { authState ->
                 val authNState = authState.authNState
                 val authZState = authState.authZState
