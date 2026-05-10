@@ -48,6 +48,11 @@ class AWSCognitoAuthCredentialStoreTest {
         private const val KEY_WITH_IDENTITY_POOL: String = "amplify.$IDENTITY_POOL_ID.session"
         private const val KEY_WITH_USER_POOL: String = "amplify.$USER_POOL_ID.session"
         private const val KEY_WITH_USER_AND_IDENTITY_POOL: String = "amplify.$USER_POOL_ID.$IDENTITY_POOL_ID.session"
+        private const val USER_ID: String = "userId"
+        private const val OTHER_USER_ID: String = "otherUser"
+        private const val USER_SCOPED_KEY: String = "${USER_ID}_amplify.$USER_POOL_ID.$IDENTITY_POOL_ID.session"
+        private const val OTHER_USER_SCOPED_KEY: String =
+            "${OTHER_USER_ID}_amplify.$USER_POOL_ID.$IDENTITY_POOL_ID.session"
     }
 
     private val keyValueRepoID: String = "com.amplify.credentialStore"
@@ -138,6 +143,98 @@ class AWSCognitoAuthCredentialStoreTest {
 
         store.deleteCredential()
         assertEquals(AmplifyCredential.Empty, store.retrieveCredential())
+    }
+
+    @Test
+    fun `saveCredential dual-writes the default key and the userId-prefixed key`() {
+        setupUserPoolConfig()
+        setupIdentityPoolConfig()
+        persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, mockFactory)
+
+        persistentStore.saveCredential(getCredential())
+
+        // Default (single-user / upstream-compat) key.
+        verify(mockKeyValue, times(1))
+            .put(KEY_WITH_USER_AND_IDENTITY_POOL, serialized(getCredential()))
+        // userId-prefixed key derived from credential.signedInData.userId.
+        verify(mockKeyValue, times(1))
+            .put(USER_SCOPED_KEY, serialized(getCredential()))
+    }
+
+    @Test
+    fun `retrieveCredential with userId reads the per-user key`() {
+        setupUserPoolConfig()
+        setupIdentityPoolConfig()
+        // Per-user key holds userId's credential; default key stays empty.
+        Mockito.`when`(mockKeyValue.get(USER_SCOPED_KEY)).thenReturn(serialized(getCredential()))
+        Mockito.`when`(mockKeyValue.get(KEY_WITH_USER_AND_IDENTITY_POOL)).thenReturn(null)
+        persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, mockFactory)
+
+        Assert.assertEquals(getCredential(), persistentStore.retrieveCredential(USER_ID))
+        verify(mockKeyValue, times(1)).get(USER_SCOPED_KEY)
+    }
+
+    @Test
+    fun `retrieveCredential with userId falls back to default key when per-user entry is missing`() {
+        setupUserPoolConfig()
+        setupIdentityPoolConfig()
+        // Per-user key empty (pre-multi-user install). Default key has the credential.
+        Mockito.`when`(mockKeyValue.get(USER_SCOPED_KEY)).thenReturn(null)
+        Mockito.`when`(mockKeyValue.get(KEY_WITH_USER_AND_IDENTITY_POOL)).thenReturn(serialized(getCredential()))
+        persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, mockFactory)
+
+        Assert.assertEquals(getCredential(), persistentStore.retrieveCredential(USER_ID))
+        verify(mockKeyValue, times(1)).get(USER_SCOPED_KEY)
+        verify(mockKeyValue, times(1)).get(KEY_WITH_USER_AND_IDENTITY_POOL)
+    }
+
+    @Test
+    fun `deleteCredential with userId removes only the per-user key`() {
+        setupUserPoolConfig()
+        setupIdentityPoolConfig()
+        persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, mockFactory)
+
+        persistentStore.deleteCredential(USER_ID)
+
+        verify(mockKeyValue, times(1)).remove(USER_SCOPED_KEY)
+        // Default key untouched — it's shared and the next saveCredential overwrites it.
+        verify(mockKeyValue, Mockito.never()).remove(KEY_WITH_USER_AND_IDENTITY_POOL)
+    }
+
+    @Test
+    fun `two users save to distinct per-user keys without collision`() {
+        setupUserPoolConfig()
+        setupIdentityPoolConfig()
+        persistentStore = AWSCognitoAuthCredentialStore(mockContext, mockConfig, mockFactory)
+
+        val userACredential = getCredential() // userId = "userId"
+        val userBCredential = getCredentialFor(OTHER_USER_ID)
+
+        persistentStore.saveCredential(userACredential)
+        persistentStore.saveCredential(userBCredential)
+
+        verify(mockKeyValue, times(1)).put(USER_SCOPED_KEY, serialized(userACredential))
+        verify(mockKeyValue, times(1)).put(OTHER_USER_SCOPED_KEY, serialized(userBCredential))
+    }
+
+    private fun getCredentialFor(userId: String): AmplifyCredential {
+        val expiration = 123123L
+        return AmplifyCredential.UserAndIdentityPool(
+            SignedInData(
+                userId,
+                userId,
+                Date(0),
+                SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH),
+                CognitoUserPoolTokens("idToken", "accessToken", "refreshToken", expiration)
+            ),
+            "identityPool",
+            AWSCredentials(
+                "accessKeyId",
+                "secretAccessKey",
+                "sessionToken",
+                expiration
+            )
+        )
     }
 
     private fun setStoreCredentials(credential: AmplifyCredential) {
