@@ -181,6 +181,18 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
     }
 
     @Override
+    public Single<AuthSession> fetchAuthSession(@NonNull String userId) {
+        return toSingle((onResult, onError) ->
+            delegate.fetchAuthSession(userId, onResult, onError));
+    }
+
+    @Override
+    public Single<AuthSession> fetchAuthSession(@NonNull String userId, @NonNull AuthFetchSessionOptions options) {
+        return toSingle((onResult, onError) ->
+            delegate.fetchAuthSession(userId, options, onResult, onError));
+    }
+
+    @Override
     public Completable rememberDevice() {
         return toCompletable(delegate::rememberDevice);
     }
@@ -318,6 +330,16 @@ final class RxAuthBinding implements RxAuthCategoryBehavior {
     @Override
     public Single<AuthSignOutResult> signOut(@NonNull AuthSignOutOptions options) {
         return toSingle((onComplete, onError) -> delegate.signOut(options, onComplete));
+    }
+
+    @Override
+    public Single<AuthSignOutResult> signOut(@NonNull String userId) {
+        return toSingle((onComplete, onError) -> delegate.signOut(userId, onComplete));
+    }
+
+    @Override
+    public Single<AuthSignOutResult> signOut(@NonNull String userId, @NonNull AuthSignOutOptions options) {
+        return toSingle((onComplete, onError) -> delegate.signOut(userId, options, onComplete));
     }
 
     @Override

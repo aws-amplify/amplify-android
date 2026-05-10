@@ -262,6 +262,25 @@ public interface RxAuthCategoryBehavior {
     Single<AuthSession> fetchAuthSession(@NonNull AuthFetchSessionOptions options);
 
     /**
+     * Multi-user fork extension. Retrieve the session information for the user identified by
+     * {@code userId}.
+     * @param userId The userId whose session to fetch
+     * @return An Rx {@link Single} which emits {@link AuthSession} on success,
+     *         {@link AuthException} on failure
+     */
+    Single<AuthSession> fetchAuthSession(@NonNull String userId);
+
+    /**
+     * Multi-user fork extension. Retrieve the session information for the user identified by
+     * {@code userId} with advanced options.
+     * @param userId The userId whose session to fetch
+     * @param options Advanced options for fetching auth session.
+     * @return An Rx {@link Single} which emits {@link AuthSession} on success,
+     *         {@link AuthException} on failure
+     */
+    Single<AuthSession> fetchAuthSession(@NonNull String userId, @NonNull AuthFetchSessionOptions options);
+
+    /**
      * Remember the user device that is currently being used.
      * @return An Rx {@link Completable} which completes successfully if device is remembered,
      *         emits an {@link AuthException} otherwise
@@ -443,6 +462,21 @@ public interface RxAuthCategoryBehavior {
      * @return An Rx {@link Single} which emits {@link AuthSignOutResult} on completion
      */
     Single<AuthSignOutResult> signOut(@NonNull AuthSignOutOptions options);
+
+    /**
+     * Multi-user fork extension. Sign out the user identified by {@code userId} only.
+     * @param userId The userId to sign out
+     * @return An Rx {@link Single} which emits {@link AuthSignOutResult} on completion
+     */
+    Single<AuthSignOutResult> signOut(@NonNull String userId);
+
+    /**
+     * Multi-user fork extension. Sign out the user identified by {@code userId} with advanced options.
+     * @param userId The userId to sign out
+     * @param options Advanced options for sign out (e.g. whether to sign out of all devices globally)
+     * @return An Rx {@link Single} which emits {@link AuthSignOutResult} on completion
+     */
+    Single<AuthSignOutResult> signOut(@NonNull String userId, @NonNull AuthSignOutOptions options);
 
     /**
      * Delete the account of the currently signed in user.
