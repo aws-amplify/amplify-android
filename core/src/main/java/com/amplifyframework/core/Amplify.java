@@ -185,6 +185,55 @@ public final class Amplify {
     }
 
     /**
+     * Multi-user fork extension. Configure Amplify with an {@link AmplifyConfiguration} object and an
+     * optional {@code userId} for per-user credential routing. The userId reaches plugins via
+     * {@link Category#configure(CategoryConfiguration, String, Context)}; only the auth plugin
+     * ({@code awsCognitoAuthPlugin}) consumes it, every other plugin receives the no-userId variant.
+     * <p>
+     * Per the multi-user contract section A.4. The 2.26.14 implementation of this same overload
+     * shipped with a dead-code bug — its body called the no-userId {@code Category.configure}
+     * variant, so the {@code userId} parameter never reached the auth plugin. This 2.36.0 port
+     * fixes that by delegating to {@code category.configure(categoryConfiguration, userId, context)}.
+     *
+     * @param configuration AmplifyConfiguration object for configuration via code
+     * @param userId Optional userId for per-user credential routing
+     * @param context An Android Context
+     * @throws AmplifyException Indicates one of numerous possible failures to configure the Framework
+     */
+    public static void configure(
+        @NonNull final AmplifyConfiguration configuration,
+        final String userId,
+        @NonNull Context context
+    ) throws AmplifyException {
+        Objects.requireNonNull(configuration);
+        Objects.requireNonNull(context);
+
+        synchronized (CONFIGURATION_LOCK) {
+            if (CONFIGURATION_LOCK.get()) {
+                throw new AlreadyConfiguredException("Remove the duplicate call to `Amplify.configure()`.");
+            }
+
+            // Configure User-Agent utility
+            UserAgent.configure(configuration.getPlatformVersions());
+
+            if (configuration.isDevMenuEnabled()) {
+                DeveloperMenu.singletonInstance(context).enableDeveloperMenu();
+            }
+
+            for (Category<? extends Plugin<?>> category : CATEGORIES.values()) {
+                if (!category.getPlugins().isEmpty()) {
+                    CategoryConfiguration categoryConfiguration =
+                        configuration.forCategoryType(category.getCategoryType());
+                    category.configure(categoryConfiguration, userId, context);
+                    beginInitialization(category, context);
+                }
+            }
+
+            CONFIGURATION_LOCK.set(true);
+        }
+    }
+
+    /**
      * Configure Amplify using the outputs from the Amplify Gen2 CLI. This is the configure method to use if you are
      * using the Amplify Gen2 experience.
      * You must call one of the configure() methods before using any Amplify category.

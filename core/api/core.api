@@ -1292,6 +1292,7 @@ public final class com/amplifyframework/core/Amplify {
 	public static fun addPlugin (Lcom/amplifyframework/core/plugin/Plugin;)V
 	public static fun configure (Landroid/content/Context;)V
 	public static fun configure (Lcom/amplifyframework/core/AmplifyConfiguration;Landroid/content/Context;)V
+	public static fun configure (Lcom/amplifyframework/core/AmplifyConfiguration;Ljava/lang/String;Landroid/content/Context;)V
 	public static fun configure (Lcom/amplifyframework/core/configuration/AmplifyOutputs;Landroid/content/Context;)V
 	public static fun configure (Lcom/amplifyframework/core/configuration/AmplifyOutputsData;Landroid/content/Context;)V
 	public static fun getCategoriesMap ()Ljava/util/Map;
@@ -1404,6 +1405,7 @@ public abstract class com/amplifyframework/core/category/Category : com/amplifyf
 	public fun <init> ()V
 	public final fun addPlugin (Lcom/amplifyframework/core/plugin/Plugin;)V
 	public fun configure (Lcom/amplifyframework/core/category/CategoryConfiguration;Landroid/content/Context;)V
+	public fun configure (Lcom/amplifyframework/core/category/CategoryConfiguration;Ljava/lang/String;Landroid/content/Context;)V
 	protected fun configureFromDefaultConfigFile ()Z
 	public final fun getPlugin (Ljava/lang/String;)Lcom/amplifyframework/core/plugin/Plugin;
 	public final fun getPlugins ()Ljava/util/Set;
@@ -2814,6 +2816,7 @@ public final class com/amplifyframework/core/model/query/predicate/QueryPredicat
 
 public abstract interface class com/amplifyframework/core/plugin/Plugin : com/amplifyframework/core/category/CategoryTypeable {
 	public abstract fun configure (Lorg/json/JSONObject;Landroid/content/Context;)V
+	public fun configure (Lorg/json/JSONObject;Ljava/lang/String;Landroid/content/Context;)V
 	public abstract fun getEscapeHatch ()Ljava/lang/Object;
 	public abstract fun getPluginKey ()Ljava/lang/String;
 	public abstract fun getVersion ()Ljava/lang/String;

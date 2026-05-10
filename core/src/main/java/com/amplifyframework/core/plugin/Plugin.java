@@ -69,6 +69,27 @@ public interface Plugin<E> extends CategoryTypeable {
     void configure(JSONObject pluginConfiguration, @NonNull Context context) throws AmplifyException;
 
     /**
+     * Multi-user fork extension. Configure the plugin with an optional {@code userId} for per-user
+     * credential routing. The default implementation is a no-op so plugins that don't need userId
+     * (every category except auth) can ignore this overload.
+     * <p>
+     * Only the auth plugin ({@code awsCognitoAuthPlugin}) is routed here by
+     * {@code Category.configure(CategoryConfiguration, String, Context)}; other plugins receive the
+     * no-userId {@link #configure(JSONObject, Context)} variant.
+     *
+     * @param pluginConfiguration plugin-specific configuration data
+     * @param userId optional userId for per-user routing; null falls back to active/single-user
+     * @param context An Android Context
+     * @throws AmplifyException an error is encountered during configuration.
+     */
+    default void configure(
+        JSONObject pluginConfiguration,
+        String userId,
+        @NonNull Context context
+    ) throws AmplifyException {
+    }
+
+    /**
      * Configure the plugin with parsed AmplifyOutputs object. A
      * plugin may or may not require plugin configuration, so see
      * the documentation for details.

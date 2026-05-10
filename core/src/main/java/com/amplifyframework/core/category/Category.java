@@ -103,6 +103,52 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
     }
 
     /**
+     * Multi-user fork extension. Configure category with provided {@link CategoryConfiguration} and
+     * an optional {@code userId} for per-user credential routing. Routes the auth plugin
+     * ({@code awsCognitoAuthPlugin}) to {@link Plugin#configure(JSONObject, String, Context)};
+     * every other plugin receives the no-userId variant.
+     * <p>
+     * Per the multi-user contract: only the auth category cares about userId; other categories
+     * ignore it. See {@code multi-user-contract} skill, section A.5.
+     *
+     * @param configuration Configuration for all plugins in the category
+     * @param userId Optional userId for per-user credential routing
+     * @param context An Android Context
+     * @throws AmplifyException if already configured
+     */
+    public synchronized void configure(
+            @NonNull CategoryConfiguration configuration, final String userId, @NonNull Context context)
+            throws AmplifyException {
+        synchronized (state) {
+            if (!State.NOT_CONFIGURED.equals(state.get())) {
+                throw new AmplifyException(
+                    "Category " + getCategoryType() + " has already been configured or is currently configuring.",
+                    "Ensure that you are only attempting configuration once."
+                );
+            }
+            state.set(State.CONFIGURING);
+            try {
+                for (P plugin : getPlugins()) {
+                    if (configureFromDefaultConfigFile()) {
+                        String pluginKey = plugin.getPluginKey();
+                        JSONObject pluginConfig = configuration.getPluginConfig(pluginKey);
+                        JSONObject configToUse = pluginConfig != null ? pluginConfig : new JSONObject();
+                        if ("awsCognitoAuthPlugin".equals(pluginKey)) {
+                            plugin.configure(configToUse, userId, context);
+                        } else {
+                            plugin.configure(configToUse, context);
+                        }
+                    }
+                }
+                state.set(State.CONFIGURED);
+            } catch (Throwable anyError) {
+                state.set(State.CONFIGURATION_FAILED);
+                throw anyError;
+            }
+        }
+    }
+
+    /**
      * Configure category with provided AmplifyOutputs object.
      * @param configuration AmplifyOutputs configuration information
      * @param context An Android Context
