@@ -70,14 +70,20 @@ git log release_v2.34.0..release_v2.36.0 --oneline  # what's new upstream
 
 ## Pointers
 
+- **Multi-user contract:** `.claude/skills/multi-user-contract/SKILL.md` (canonical — the 12 invariants the next merge must preserve, plus the `Status on feature/multi-user-on-2.36.0` section with the port-specific decisions).
+- **Multi-user architecture:** `documents/MultiUserAuth_Architecture.md` (long-form: layer model, sequence diagrams, persistence, decision log).
+- **Multi-user hand-off:** `documents/MultiUserAuth_Handoff.md` (next-iteration onboarding: status, verification, common operations, pitfalls).
+- **Port plan:** `.claude/plans/multi-user-port-plan-2.36.0.md` (historical — the per-stage plan that drove the 2.36.0 port).
 - **Skills** (task-triggered, in `.claude/skills/`):
   - `amplify-auth-usecase` — adding or modifying a Cognito auth use case
   - `amplify-state-machine` — adding states, events, actions, or resolvers
   - `amplify-new-module` — scaffolding a new Gradle module
   - `amplify-merge-upstream` — syncing upstream Amplify into the fork
+  - `multi-user-contract` — already invoked above
 - **Full rules:** `.claude/rules.md` (read this before non-trivial changes)
 - **Upstream guidance:** `git show release_v2.36.0:AGENTS.md` (canonical conventions doc)
 - **SDK migration guide:** `documents/MobileSDK_To_AmplifyAndroid.md`
+- **Tag:** `2.36.0-harri` at `dc9d4973` — multi-user reapplication on top of upstream `release_v2.36.0`.
 
 ## When in doubt
 
