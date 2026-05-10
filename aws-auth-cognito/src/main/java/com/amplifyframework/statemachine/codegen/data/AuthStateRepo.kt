@@ -16,7 +16,9 @@
 package com.amplifyframework.statemachine.codegen.data
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import com.amplifyframework.core.store.EncryptedKeyValueRepository
+import com.amplifyframework.core.store.KeyValueRepository
 import com.amplifyframework.statemachine.codegen.states.AuthState
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import com.amplifyframework.statemachine.codegen.states.AuthorizationState
@@ -44,14 +46,16 @@ import kotlinx.serialization.json.Json
  *
  * @param context Application context used to back the encrypted key-value store.
  */
-internal class AuthStateRepo private constructor(context: Context) {
+internal class AuthStateRepo private constructor(
+    private val encryptedStoreFactory: () -> KeyValueRepository
+) {
 
     private val authStateMap = LifoMap.empty<String, AuthState>()
 
     // Lazy so that simply constructing the repo doesn't immediately touch the keystore /
     // encrypted shared preferences. Tests that mock Context can construct AuthStateRepo
     // without configuring keystore access; only callers that actually persist or load fire it.
-    private val encryptedStore by lazy { EncryptedKeyValueRepository(context, PREF_KEY) }
+    private val encryptedStore by lazy { encryptedStoreFactory() }
 
     /**
      * Stores the given authentication state for [key] (typically the user id).
@@ -203,8 +207,26 @@ internal class AuthStateRepo private constructor(context: Context) {
         fun getInstance(context: Context): AuthStateRepo {
             instance?.let { return it }
             return synchronized(this) {
-                instance ?: AuthStateRepo(context).also { instance = it }
+                instance ?: AuthStateRepo {
+                    EncryptedKeyValueRepository(context, PREF_KEY)
+                }.also { instance = it }
             }
+        }
+
+        /**
+         * Test seam: build an instance backed by an injected [KeyValueRepository] (typically an
+         * in-memory fake) so unit tests can drive [AuthStateRepo] without keystore access.
+         */
+        @VisibleForTesting
+        internal fun createForTest(store: KeyValueRepository): AuthStateRepo = AuthStateRepo { store }
+
+        /**
+         * Test seam: drop the singleton so the next [getInstance] call reinitializes. Lets tests
+         * isolate persistence state without leaking across runs.
+         */
+        @VisibleForTesting
+        internal fun resetInstanceForTest() {
+            synchronized(this) { instance = null }
         }
     }
 }
