@@ -36,6 +36,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
@@ -69,7 +70,9 @@ class FederateToIdentityPoolUseCaseTest {
     private val stateMachine: AuthStateMachine = mockk {
         every { state } returns stateFlow
         coEvery { getCurrentState() } answers { stateFlow.value }
+        coEvery { getStateForUser(any()) } answers { stateFlow.value }
         justRun { send(any()) }
+        justRun { send(any(), any(), any()) }
     }
 
     private val emitter: AuthHubEventEmitter = mockk(relaxed = true)
@@ -193,5 +196,27 @@ class FederateToIdentityPoolUseCaseTest {
         shouldThrow<com.amplifyframework.auth.AuthException> {
             deferred.await()
         }
+    }
+
+    @Test
+    fun `execute with userId reads state via getStateForUser and dispatches the event with userId`() = runTest {
+        backgroundScope.async { useCase.execute("token", AuthProvider.facebook(), "userA") }
+        runCurrent()
+
+        coVerify { stateMachine.getStateForUser("userA") }
+        verify {
+            stateMachine.send(
+                withArg<StateMachineEvent> {
+                    val event = it.shouldBeInstanceOf<AuthorizationEvent>()
+                    val type = event.eventType
+                        .shouldBeInstanceOf<AuthorizationEvent.EventType.StartFederationToIdentityPool>()
+                    type.userId shouldBe "userA"
+                    type.token.token shouldBe "token"
+                },
+                "userA",
+                any()
+            )
+        }
+        verify(exactly = 0) { stateMachine.send(any<StateMachineEvent>()) }
     }
 }

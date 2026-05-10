@@ -51,10 +51,12 @@ class ClearFederationToIdentityPoolUseCaseTest {
     private val stateMachine: AuthStateMachine = mockk {
         every { state } returns stateFlow
         coEvery { getCurrentState() } answers { stateFlow.value }
+        coEvery { getStateForUser(any()) } answers { stateFlow.value }
     }
 
     private val signOut: SignOutUseCase = mockk {
         coEvery { completeSignOut(any(), any()) } returns AWSCognitoAuthSignOutResult.CompleteSignOut
+        coEvery { completeSignOut(any(), any(), any()) } returns AWSCognitoAuthSignOutResult.CompleteSignOut
     }
     private val emitter: AuthHubEventEmitter = mockk(relaxed = true)
 
@@ -102,5 +104,21 @@ class ClearFederationToIdentityPoolUseCaseTest {
         coEvery { signOut.completeSignOut(any(), any()) } returns AWSCognitoAuthSignOutResult.FailedSignOut(exception)
 
         shouldThrowAny { useCase.execute() } shouldBe exception
+    }
+
+    @Test
+    fun `execute with userId reads state via getStateForUser and routes the event with that userId`() = runTest {
+        useCase.execute("userA")
+
+        coVerify { stateMachine.getStateForUser("userA") }
+        coVerify {
+            signOut.completeSignOut(
+                withAuthEvent<AuthenticationEvent.EventType.ClearFederationToIdentityPool> { event ->
+                    event.userId shouldBe "userA"
+                },
+                false,
+                "userA"
+            )
+        }
     }
 }

@@ -31,6 +31,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
@@ -57,11 +58,13 @@ class DeleteUserUseCaseTest {
 
     private val fetchAuthSession: FetchAuthSessionUseCase = mockk {
         coEvery { execute().accessToken } returns "access token"
+        coEvery { execute(any<String>()).accessToken } returns "access token"
     }
     private val stateMachine: AuthStateMachine = mockk {
         every { state } returns stateFlow
         coEvery { getCurrentState() } answers { stateFlow.value }
         justRun { send(any()) }
+        justRun { send(any(), any(), any()) }
     }
     private val emitter: AuthHubEventEmitter = mockk(relaxed = true)
 
@@ -138,5 +141,24 @@ class DeleteUserUseCaseTest {
         )
 
         shouldNotThrowAny { deferred.await() }
+    }
+
+    @Test
+    fun `execute with userId fetches the userId session and routes the DeleteUser event with userId`() = runTest {
+        backgroundScope.launch { useCase.execute("userA") }
+        runCurrent()
+
+        coVerify { fetchAuthSession.execute("userA") }
+        verify {
+            stateMachine.send(
+                withDeleteEvent<DeleteUserEvent.EventType.DeleteUser> { event ->
+                    event.accessToken shouldBe "access token"
+                    event.userId shouldBe "userA"
+                },
+                "userA",
+                any()
+            )
+        }
+        verify(exactly = 0) { stateMachine.send(any<com.amplifyframework.statemachine.StateMachineEvent>()) }
     }
 }

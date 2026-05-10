@@ -43,6 +43,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
@@ -89,7 +90,9 @@ class FetchAuthSessionUseCaseTest {
     private val stateMachine: AuthStateMachine = mockk {
         every { state } returns stateFlow
         coEvery { getCurrentState() } answers { stateFlow.value }
+        coEvery { getStateForUser(any()) } answers { stateFlow.value }
         justRun { send(any()) }
+        justRun { send(any(), any(), any()) }
     }
 
     private val emitter: AuthHubEventEmitter = mockk(relaxed = true)
@@ -408,6 +411,59 @@ class FetchAuthSessionUseCaseTest {
 
         shouldThrow<InvalidStateException> {
             useCase.execute()
+        }
+    }
+
+    @Test
+    fun `execute with userId reads state via getStateForUser and routes events with userId`() = runTest {
+        every { any<AmplifyCredential>().isValid() } returns false
+        stateFlow.value = authState(
+            authNState = AuthenticationState.SignedIn(mockk(), mockk()),
+            authZState = AuthorizationState.SessionEstablished(userPoolCredential)
+        )
+
+        backgroundScope.async { useCase.execute("userA") }
+        runCurrent()
+
+        coVerify { stateMachine.getStateForUser("userA") }
+        verify {
+            stateMachine.send(
+                withArg<StateMachineEvent> {
+                    val event = it.shouldBeInstanceOf<AuthorizationEvent>()
+                    val type = event.eventType
+                        .shouldBeInstanceOf<AuthorizationEvent.EventType.RefreshSession>()
+                    type.userId shouldBe "userA"
+                },
+                "userA",
+                any()
+            )
+        }
+        // Per-user dispatch only — the no-userId path is not used.
+        verify(exactly = 0) { stateMachine.send(any<StateMachineEvent>()) }
+    }
+
+    @Test
+    fun `execute with userId carries userId in StartFederationToIdentityPool event`() = runTest {
+        every { any<AmplifyCredential>().isValid() } returns false
+        stateFlow.value = authState(
+            authNState = AuthenticationState.SignedIn(mockk(), mockk()),
+            authZState = AuthorizationState.SessionEstablished(federatedCredential)
+        )
+
+        backgroundScope.async { useCase.execute("userA") }
+        runCurrent()
+
+        verify {
+            stateMachine.send(
+                withArg<StateMachineEvent> {
+                    val event = it.shouldBeInstanceOf<AuthorizationEvent>()
+                    val type = event.eventType
+                        .shouldBeInstanceOf<AuthorizationEvent.EventType.StartFederationToIdentityPool>()
+                    type.userId shouldBe "userA"
+                },
+                "userA",
+                any()
+            )
         }
     }
 }
