@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.result;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.auth.result.step.AuthNextSignInStep;
@@ -28,6 +29,8 @@ import java.util.Objects;
 public final class AuthSignInResult {
     private final boolean isSignedIn;
     private final AuthNextSignInStep nextStep;
+    private final String userId;
+    private final String username;
 
     /**
      * Wraps the result of a sign up operation.
@@ -37,7 +40,29 @@ public final class AuthSignInResult {
      * @param nextStep Details about the next step in the sign in process (or whether the flow is now done).
      */
     public AuthSignInResult(boolean isSignedIn, @NonNull AuthNextSignInStep nextStep) {
+        this(isSignedIn, null, null, nextStep);
+    }
+
+    /**
+     * Multi-user fork extension. Wraps the result of a sign up operation, and also carries the
+     * {@code userId} and {@code username} of the user that just signed in. These let the caller
+     * route the next {@code fetchAuthSession(userId, ...)} or {@code signOut(userId, ...)} call
+     * without re-reading the credential store.
+     *
+     * @param isSignedIn True if the user is successfully authenticated, False otherwise.
+     * @param username The username (login identifier) of the user; may be null when not yet known.
+     * @param userId The Cognito userId of the user; may be null when not yet known.
+     * @param nextStep Details about the next step in the sign in process (or whether the flow is now done).
+     */
+    public AuthSignInResult(
+            boolean isSignedIn,
+            @Nullable String username,
+            @Nullable String userId,
+            @NonNull AuthNextSignInStep nextStep
+    ) {
         this.isSignedIn = isSignedIn;
+        this.username = username;
+        this.userId = userId;
         this.nextStep = Objects.requireNonNull(nextStep);
     }
 
@@ -61,6 +86,25 @@ public final class AuthSignInResult {
     }
 
     /**
+     * The Cognito userId of the user who just signed in, when known. Use as the {@code userId}
+     * argument for subsequent multi-user calls (fetchAuthSession, signOut).
+     * @return the userId, or null when not populated by the plugin.
+     */
+    @Nullable
+    public String getUserId() {
+        return userId;
+    }
+
+    /**
+     * The username (login identifier) of the user who just signed in, when known.
+     * @return the username, or null when not populated by the plugin.
+     */
+    @Nullable
+    public String getUsername() {
+        return username;
+    }
+
+    /**
      * When overriding, be sure to include isSignedIn and nextStep in the hash.
      * @return Hash code of this object
      */
@@ -68,7 +112,9 @@ public final class AuthSignInResult {
     public int hashCode() {
         return ObjectsCompat.hash(
                 isSignedIn(),
-                getNextStep()
+                getNextStep(),
+                getUserId(),
+                getUsername()
         );
     }
 
@@ -85,7 +131,9 @@ public final class AuthSignInResult {
         } else {
             AuthSignInResult authSignUpResult = (AuthSignInResult) obj;
             return ObjectsCompat.equals(isSignedIn(), authSignUpResult.isSignedIn()) &&
-                    ObjectsCompat.equals(getNextStep(), authSignUpResult.getNextStep());
+                    ObjectsCompat.equals(getNextStep(), authSignUpResult.getNextStep()) &&
+                    ObjectsCompat.equals(getUserId(), authSignUpResult.getUserId()) &&
+                    ObjectsCompat.equals(getUsername(), authSignUpResult.getUsername());
         }
     }
 
@@ -98,6 +146,8 @@ public final class AuthSignInResult {
         return "AuthSignInResult{" +
                 "isSignedIn=" + isSignedIn() +
                 ", nextStep=" + getNextStep() +
+                ", userId=" + getUserId() +
+                ", username=" + getUsername() +
                 '}';
     }
 }

@@ -1165,8 +1165,11 @@ public final class com/amplifyframework/auth/result/AuthSessionResult$Type : jav
 
 public final class com/amplifyframework/auth/result/AuthSignInResult {
 	public fun <init> (ZLcom/amplifyframework/auth/result/step/AuthNextSignInStep;)V
+	public fun <init> (ZLjava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/result/step/AuthNextSignInStep;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getNextStep ()Lcom/amplifyframework/auth/result/step/AuthNextSignInStep;
+	public fun getUserId ()Ljava/lang/String;
+	public fun getUsername ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun isSignedIn ()Z
 	public fun toString ()Ljava/lang/String;
