@@ -19,6 +19,7 @@ import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.statemachine.codegen.data.AuthStateRepo
 import com.amplifyframework.statemachine.codegen.data.isSessionEstablished
 import com.amplifyframework.statemachine.codegen.states.AuthState
+import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -105,19 +106,38 @@ internal open class StateMachineForAuth(
      * (so subscribers observe the terminal transition via `state.first()`), then the flow is reset
      * to a default configured state so a *second* user can sign in on top of the first.
      *
-     * When [userId] is empty (single-user context — matches upstream behaviour), the state is
-     * emitted to [_state] without per-user persistence and without the reset. This preserves
-     * upstream `AuthStateMachine` semantics for callers that haven't opted into multi-user, and
-     * keeps existing single-user tests (e.g. `AuthValidationTest`) passing unchanged.
+     * When [userId] is empty AND the new state is a `SessionEstablished` carrying a [SignedInData],
+     * the userId is recovered from `signedInData.userId`. This handles every code path where the
+     * sign-in was dispatched without an explicit userId — first sign-in (no active key yet), web UI
+     * redirect (OAuth flow doesn't know the userId until tokens arrive), and process-death recovery
+     * (the redirect callback rebuilds `SignedInData` from the ID token). Without this fallback the
+     * established state would emit to `_state` but never reach `AuthStateRepo`, leaving subsequent
+     * `signOut(userId, …)` / `fetchAuthSession(userId, …)` calls with no per-user entry to find.
+     *
+     * When [userId] is empty AND the state has no `SignedInData` to recover from, behaviour matches
+     * upstream `AuthStateMachine`: emit to `_state`, no `AuthStateRepo` write. This keeps single-user
+     * code paths and existing single-user tests unchanged.
      */
     private fun setAuthState(userId: String, value: AuthState) {
         _state.tryEmit(value)
-        if (userId.isNotEmpty()) {
-            authStateRepo.put(userId, value)
+        val effectiveUserId = userId.ifEmpty { value.recoverableUserIdOrEmpty() }
+        if (effectiveUserId.isNotEmpty()) {
+            authStateRepo.put(effectiveUserId, value)
             if (value.isSessionEstablished) {
                 _state.tryEmit(authStateRepo.getDefaultConfiguredState())
             }
         }
+    }
+
+    /**
+     * Returns `signedInData.userId` when [this] is a `SessionEstablished` state, else empty.
+     * Used by [setAuthState] to recover the userId for sign-ins dispatched without one.
+     */
+    private fun AuthState.recoverableUserIdOrEmpty(): String = if (isSessionEstablished) {
+        ((this as? AuthState.Configured)?.authNState as? AuthenticationState.SignedIn)
+            ?.signedInData?.userId.orEmpty()
+    } else {
+        ""
     }
 
     /**
