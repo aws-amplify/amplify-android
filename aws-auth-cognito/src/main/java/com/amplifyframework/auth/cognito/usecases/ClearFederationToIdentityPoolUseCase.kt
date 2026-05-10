@@ -32,13 +32,31 @@ internal class ClearFederationToIdentityPoolUseCase(
     private val signOut: SignOutUseCase,
     private val emitter: AuthHubEventEmitter = AuthHubEventEmitter()
 ) {
-    suspend fun execute() {
-        val authState = stateMachine.getCurrentState()
+    suspend fun execute() = execute(userId = null)
+
+    /**
+     * Multi-user clear federation: clears the federated-identity-pool entry for [userId].
+     *
+     * When [userId] is null, behaves identically to the no-arg overload (active / single-user
+     * legacy path).
+     *
+     * When [userId] is non-null, reads that user's state via getStateForUser, builds a
+     * userId-bearing ClearFederationToIdentityPool event, and routes the sign-out through
+     * SignOutUseCase.completeSignOut(event, sendHubEvent=false, userId).
+     */
+    suspend fun execute(userId: String?) {
+        val authState = if (userId.isNullOrEmpty()) {
+            stateMachine.getCurrentState()
+        } else {
+            stateMachine.getStateForUser(userId)
+        }
 
         when {
             authState.isFederatedToIdentityPool() -> {
-                val event = AuthenticationEvent(AuthenticationEvent.EventType.ClearFederationToIdentityPool())
-                when (val result = signOut.completeSignOut(event = event, sendHubEvent = false)) {
+                val event = AuthenticationEvent(
+                    AuthenticationEvent.EventType.ClearFederationToIdentityPool(userId = userId)
+                )
+                when (val result = signOut.completeSignOut(event = event, sendHubEvent = false, userId = userId)) {
                     is AWSCognitoAuthSignOutResult.FailedSignOut -> throw result.exception
                     else -> emitter.sendHubEvent(
                         AWSCognitoAuthChannelEventName.FEDERATION_TO_IDENTITY_POOL_CLEARED.toString()
