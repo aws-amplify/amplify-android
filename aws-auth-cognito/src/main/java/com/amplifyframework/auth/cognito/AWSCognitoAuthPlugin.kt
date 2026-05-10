@@ -148,6 +148,20 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
         }
     }
 
+    /**
+     * Multi-user fork extension. Closes the framework userId path landed in 66fe4ff9 — without
+     * this override, the userId-aware Amplify.configure(config, userId, context) routes here via
+     * Category.configure and hits the empty default in [com.amplifyframework.core.plugin.Plugin],
+     * skipping the actual configuration. We delegate to the no-userId configure since per-user
+     * routing is done at the use-case layer (fetchAuthSession(userId, ...) etc.) — the userId
+     * argument is not consumed at boot. Future work may load the supplied userId's persisted state
+     * eagerly; for now it is informational and equivalent to a single-user boot.
+     */
+    @Throws(AmplifyException::class)
+    override fun configure(pluginConfiguration: JSONObject, userId: String?, context: Context) {
+        configure(pluginConfiguration, context)
+    }
+
     @InternalAmplifyApi
     override fun configure(amplifyOutputs: AmplifyOutputsData, context: Context) {
         try {
