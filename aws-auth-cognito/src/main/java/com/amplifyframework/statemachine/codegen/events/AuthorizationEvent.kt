@@ -28,7 +28,10 @@ internal class AuthorizationEvent(val eventType: EventType, override val time: D
         object FetchAuthSession : EventType()
         object FetchUnAuthSession : EventType()
         data class Fetched(val identityId: String, val awsCredentials: AWSCredentials) : EventType()
-        data class RefreshSession(val amplifyCredential: AmplifyCredential) : EventType()
+        data class RefreshSession(
+            val amplifyCredential: AmplifyCredential,
+            val userId: String? = null // Multi-user: which user's session to refresh; null = active
+        ) : EventType()
         data class Refreshed(val amplifyCredential: AmplifyCredential) : EventType()
         data class CachedCredentialsAvailable(val amplifyCredential: AmplifyCredential) : EventType()
         data class UserDeleted(val id: String = "") : EventType()
@@ -36,7 +39,8 @@ internal class AuthorizationEvent(val eventType: EventType, override val time: D
         data class StartFederationToIdentityPool(
             val token: FederatedToken,
             val identityId: String?,
-            val existingCredential: AmplifyCredential?
+            val existingCredential: AmplifyCredential?,
+            val userId: String? = null // Multi-user: which user this federation belongs to; null = active
         ) : EventType()
     }
 

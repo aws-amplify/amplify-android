@@ -42,7 +42,10 @@ internal class AuthenticationEvent(val eventType: EventType, override val time: 
         data class SignOutRequested(val signOutData: SignOutData) : EventType()
         data class CancelSignIn(val error: Exception? = null) : EventType()
         data class CancelSignOut(val signedInData: SignedInData, val deviceMetadata: DeviceMetadata) : EventType()
-        data class ClearFederationToIdentityPool(val id: String = "") : EventType()
+        data class ClearFederationToIdentityPool(
+            val id: String = "",
+            val userId: String? = null // Multi-user: which user's federation entry to clear; null = active
+        ) : EventType()
         data class ThrowError(val exception: Exception) : EventType()
     }
 
