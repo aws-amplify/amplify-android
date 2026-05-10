@@ -23,6 +23,7 @@ import com.amplifyframework.auth.cognito.testUtil.authState
 import com.amplifyframework.auth.cognito.testUtil.withAuthEvent
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.plugins.core.AuthHubEventEmitter
+import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.HostedUIErrorData
 import com.amplifyframework.statemachine.codegen.data.SignedOutData
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
@@ -56,7 +57,10 @@ class SignOutUseCaseTest {
     private val stateMachine: AuthStateMachine = mockk {
         every { state } returns stateFlow
         coEvery { getCurrentState() } answers { stateFlow.value }
+        coEvery { getStateForUser(any()) } answers { stateFlow.value }
+        every { allUserIds() } returns emptySet()
         justRun { send(any()) }
+        justRun { send(any(), any(), any()) }
     }
 
     private val emitter: AuthHubEventEmitter = mockk(relaxed = true)
@@ -194,6 +198,144 @@ class SignOutUseCaseTest {
         val partial = result.shouldBeInstanceOf<AWSCognitoAuthSignOutResult.PartialSignOut>()
 
         partial.hostedUIError?.url shouldBe "url"
+        partial.hostedUIError?.exception shouldBe exception
+    }
+
+    @Test
+    fun `iterates each user in repo when no userId is supplied and signOutAllUsers defaults to true`() = runTest {
+        every { stateMachine.allUserIds() } returns linkedSetOf("userA", "userB")
+
+        val deferred = backgroundScope.async { useCase.execute() }
+        runCurrent()
+
+        // Complete userA's iteration.
+        stateFlow.value = authState(
+            authNState = AuthenticationState.SignedOut(SignedOutData()),
+            authZState = AuthorizationState.Configured()
+        )
+        runCurrent()
+
+        // Reset to a non-terminal state so userB's completeSignOut subscription has a transition
+        // to wait for (StateFlow elides equal-value emissions).
+        stateFlow.value = authState(authNState = AuthenticationState.SignedIn(mockk(), mockk()))
+        runCurrent()
+
+        // Complete userB's iteration.
+        stateFlow.value = authState(
+            authNState = AuthenticationState.SignedOut(SignedOutData()),
+            authZState = AuthorizationState.Configured()
+        )
+
+        deferred.await() shouldBe AWSCognitoAuthSignOutResult.CompleteSignOut
+
+        verify {
+            stateMachine.send(
+                withAuthEvent<AuthenticationEvent.EventType.SignOutRequested> { event ->
+                    event.signOutData.userId shouldBe "userA"
+                },
+                "userA",
+                any()
+            )
+            stateMachine.send(
+                withAuthEvent<AuthenticationEvent.EventType.SignOutRequested> { event ->
+                    event.signOutData.userId shouldBe "userB"
+                },
+                "userB",
+                any()
+            )
+        }
+    }
+
+    @Test
+    fun `signs out the active user when signOutAllUsers is false even with users in the repo`() = runTest {
+        every { stateMachine.allUserIds() } returns setOf("userA", "userB")
+        val options = AWSCognitoAuthSignOutOptions.builder()
+            .signOutAllUsers(false)
+            .build()
+
+        val deferred = backgroundScope.async { useCase.execute(options) }
+        runCurrent()
+
+        stateFlow.value = authState(
+            authNState = AuthenticationState.SignedOut(SignedOutData()),
+            authZState = AuthorizationState.Configured()
+        )
+
+        deferred.await() shouldBe AWSCognitoAuthSignOutResult.CompleteSignOut
+
+        verify(exactly = 1) { stateMachine.send(any<StateMachineEvent>()) }
+        verify(exactly = 0) { stateMachine.send(any(), any(), any()) }
+    }
+
+    @Test
+    fun `execute with explicit userId ignores signOutAllUsers in options`() = runTest {
+        every { stateMachine.allUserIds() } returns setOf("other1", "other2")
+        val options = AWSCognitoAuthSignOutOptions.builder()
+            .signOutAllUsers(true)
+            .build()
+
+        val deferred = backgroundScope.async { useCase.execute("userA", options) }
+        runCurrent()
+
+        stateFlow.value = authState(
+            authNState = AuthenticationState.SignedOut(SignedOutData()),
+            authZState = AuthorizationState.Configured()
+        )
+
+        deferred.await() shouldBe AWSCognitoAuthSignOutResult.CompleteSignOut
+
+        verify(exactly = 1) { stateMachine.send(any(), "userA", any()) }
+        verify(exactly = 0) { stateMachine.send(any(), "other1", any()) }
+        verify(exactly = 0) { stateMachine.send(any(), "other2", any()) }
+    }
+
+    @Test
+    fun `falls back to active user when allUserIds is empty and signOutAllUsers is true`() = runTest {
+        every { stateMachine.allUserIds() } returns emptySet()
+
+        val deferred = backgroundScope.async { useCase.execute() }
+        runCurrent()
+
+        stateFlow.value = authState(
+            authNState = AuthenticationState.SignedOut(SignedOutData()),
+            authZState = AuthorizationState.Configured()
+        )
+
+        deferred.await() shouldBe AWSCognitoAuthSignOutResult.CompleteSignOut
+
+        verify(exactly = 1) { stateMachine.send(any<StateMachineEvent>()) }
+        verify(exactly = 0) { stateMachine.send(any(), any(), any()) }
+    }
+
+    @Test
+    fun `aggregated result surfaces a partial when one of several users partially signs out`() = runTest {
+        every { stateMachine.allUserIds() } returns linkedSetOf("userA", "userB")
+
+        val deferred = backgroundScope.async { useCase.execute() }
+        runCurrent()
+
+        // userA completes cleanly.
+        stateFlow.value = authState(
+            authNState = AuthenticationState.SignedOut(SignedOutData()),
+            authZState = AuthorizationState.Configured()
+        )
+        runCurrent()
+
+        // Reset for userB.
+        stateFlow.value = authState(authNState = AuthenticationState.SignedIn(mockk(), mockk()))
+        runCurrent()
+
+        // userB returns Partial.
+        val exception = Exception()
+        stateFlow.value = authState(
+            authNState = AuthenticationState.SignedOut(
+                SignedOutData(hostedUIErrorData = HostedUIErrorData("url", exception))
+            ),
+            authZState = AuthorizationState.Configured()
+        )
+
+        val result = deferred.await()
+        val partial = result.shouldBeInstanceOf<AWSCognitoAuthSignOutResult.PartialSignOut>()
         partial.hostedUIError?.exception shouldBe exception
     }
 }

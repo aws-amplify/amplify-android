@@ -126,6 +126,14 @@ internal open class StateMachineForAuth(
     fun activeStateKey(): String? = authStateRepo.activeStateKey()
 
     /**
+     * Returns every userId currently tracked by [AuthStateRepo] — the union of in-memory keys
+     * (intermediate flows) and persisted keys (users with established sessions). Used by
+     * [com.amplifyframework.auth.cognito.usecases.SignOutUseCase] to iterate every user when the
+     * caller invokes a no-userId sign-out and the options opt into all-users semantics.
+     */
+    fun allUserIds(): Set<String> = authStateRepo.allUserIds()
+
+    /**
      * Returns the auth state for [userId]. If [userId] is null, returns the active user's state
      * (or the global [_state] if no active user).
      */

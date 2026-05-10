@@ -23,6 +23,8 @@ import com.amplifyframework.statemachine.codegen.states.AuthorizationState
 import com.amplifyframework.statemachine.codegen.states.SignUpState
 import com.amplifyframework.statemachine.util.LifoMap
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -77,6 +79,7 @@ internal class AuthStateRepo private constructor(context: Context) {
                     )
                 )
             )
+            addToPersistedIndex(key)
             // Clear the in-memory map so a fresh login can stack on top.
             authStateMap.clear()
             return
@@ -106,6 +109,7 @@ internal class AuthStateRepo private constructor(context: Context) {
     fun remove(key: String) {
         authStateMap.pop(key)
         encryptedStore.remove(key)
+        removeFromPersistedIndex(key)
     }
 
     /**
@@ -123,6 +127,13 @@ internal class AuthStateRepo private constructor(context: Context) {
      * Snapshot of all in-memory user ids (insertion order). Used by the all-users sign-out path.
      */
     fun allInMemoryKeys(): List<String> = authStateMap.keys()
+
+    /**
+     * Returns every userId currently tracked by the repo: the union of in-memory keys
+     * (intermediate flows like signing-in, MFA challenges) and persisted keys (users with an
+     * established session that survived process death). Used by the all-users sign-out path.
+     */
+    fun allUserIds(): Set<String> = (authStateMap.keys() + loadPersistedIndex()).toSet()
 
     /**
      * Removes every entry from the in-memory map. Encrypted persistence is untouched —
@@ -148,8 +159,37 @@ internal class AuthStateRepo private constructor(context: Context) {
         encodedState?.let { Json.decodeFromString<AuthNAndAuthZ>(it) }
     }.getOrNull()
 
+    private fun loadPersistedIndex(): Set<String> = runCatching {
+        encryptedStore.get(USER_INDEX_KEY)?.let {
+            Json.decodeFromString(ListSerializer(String.serializer()), it).toSet()
+        }
+    }.getOrNull() ?: emptySet()
+
+    private fun savePersistedIndex(index: Collection<String>) {
+        encryptedStore.put(
+            USER_INDEX_KEY,
+            Json.encodeToString(ListSerializer(String.serializer()), index.toList())
+        )
+    }
+
+    private fun addToPersistedIndex(userId: String) {
+        val index = loadPersistedIndex()
+        if (userId !in index) savePersistedIndex(index + userId)
+    }
+
+    private fun removeFromPersistedIndex(userId: String) {
+        val index = loadPersistedIndex()
+        if (userId in index) savePersistedIndex(index - userId)
+    }
+
     companion object {
         private val PREF_KEY = AuthStateRepo::class.java.name
+
+        // Reserved key inside the encrypted store: holds the JSON-encoded set of userIds whose
+        // sessions have been persisted. Updated transactionally on put/remove for SessionEstablished
+        // states so the all-users sign-out path can enumerate users that survived process death.
+        // Underscore prefix avoids collision with userId-keyed entries.
+        private const val USER_INDEX_KEY = "__amplify_auth_state_repo_user_index__"
 
         @Volatile
         private var instance: AuthStateRepo? = null
