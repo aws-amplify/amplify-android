@@ -272,6 +272,33 @@ public interface AuthCategoryBehavior {
             @NonNull Consumer<AuthException> onError);
 
     /**
+     * Multi-user fork extension. Retrieve the session information for the user identified by
+     * {@code userId}. Plugins that don't support multi-user routing throw
+     * {@link UnsupportedOperationException}.
+     * @param userId The userId whose session to fetch
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void fetchAuthSession(
+            @NonNull String userId,
+            @NonNull Consumer<AuthSession> onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Multi-user fork extension. Retrieve the session information for the user identified by
+     * {@code userId} with advanced options.
+     * @param userId The userId whose session to fetch
+     * @param options Advanced options for force refresh session.
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void fetchAuthSession(
+            @NonNull String userId,
+            @NonNull AuthFetchSessionOptions options,
+            @NonNull Consumer<AuthSession> onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
      * Remember the user device that is currently being used.
      * @param onSuccess Success callback
      * @param onError Error callback
@@ -505,6 +532,32 @@ public interface AuthCategoryBehavior {
      * @param onComplete Complete callback
      */
     void signOut(
+            @NonNull AuthSignOutOptions options,
+            @NonNull Consumer<AuthSignOutResult> onComplete
+    );
+
+    /**
+     * Multi-user fork extension. Sign out the user identified by {@code userId} only; other users
+     * remain signed in. Plugins that don't support multi-user routing throw
+     * {@link UnsupportedOperationException}.
+     * @param userId The userId to sign out
+     * @param onComplete Complete callback
+     */
+    void signOut(
+            @NonNull String userId,
+            @NonNull Consumer<AuthSignOutResult> onComplete
+    );
+
+    /**
+     * Multi-user fork extension. Sign out the user identified by {@code userId} with advanced
+     * options. Plugins that don't support multi-user routing throw
+     * {@link UnsupportedOperationException}.
+     * @param userId The userId to sign out
+     * @param options Advanced options for sign out (e.g. whether to sign out of all devices globally)
+     * @param onComplete Complete callback
+     */
+    void signOut(
+            @NonNull String userId,
             @NonNull AuthSignOutOptions options,
             @NonNull Consumer<AuthSignOutResult> onComplete
     );

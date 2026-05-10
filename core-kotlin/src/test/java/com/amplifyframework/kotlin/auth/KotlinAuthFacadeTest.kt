@@ -31,6 +31,7 @@ import com.amplifyframework.auth.TOTPSetupDetails
 import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.auth.options.AuthFetchSessionOptions
+import com.amplifyframework.auth.options.AuthSignOutOptions
 import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions
 import com.amplifyframework.auth.result.AuthListWebAuthnCredentialsResult
 import com.amplifyframework.auth.result.AuthResetPasswordResult
@@ -357,7 +358,7 @@ class KotlinAuthFacadeTest {
     fun fetchAuthSessionSucceeds() = runBlocking {
         val session = AuthSession(true)
         every {
-            delegate.fetchAuthSession(any(), any(), any())
+            delegate.fetchAuthSession(any<AuthFetchSessionOptions>(), any(), any())
         } answers {
             val indexOfResultConsumer = 1
             val onResult = it.invocation.args[indexOfResultConsumer] as Consumer<AuthSession>
@@ -374,7 +375,7 @@ class KotlinAuthFacadeTest {
         val options = AuthFetchSessionOptions.builder().forceRefresh(true).build()
         val session = AuthSession(true)
         every {
-            delegate.fetchAuthSession(any(), any(), any())
+            delegate.fetchAuthSession(any<AuthFetchSessionOptions>(), any(), any())
         } answers {
             val indexOfResultConsumer = 1
             val onResult = it.invocation.args[indexOfResultConsumer] as Consumer<AuthSession>
@@ -396,7 +397,7 @@ class KotlinAuthFacadeTest {
     fun fetchAuthSessionThrows(): Unit = runBlocking {
         val error = AuthException("uh", "oh")
         every {
-            delegate.fetchAuthSession(any(), any(), any())
+            delegate.fetchAuthSession(any<AuthFetchSessionOptions>(), any(), any())
         } answers {
             val indexOfErrorConsumer = 2
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
@@ -413,7 +414,7 @@ class KotlinAuthFacadeTest {
     fun fetchAuthSessionThrowsSessionExpired(): Unit = runBlocking {
         val error = SessionExpiredException() as AuthException
         every {
-            delegate.fetchAuthSession(any(), any(), any())
+            delegate.fetchAuthSession(any<AuthFetchSessionOptions>(), any(), any())
         } answers {
             val indexOfErrorConsumer = 2
             val onError = it.invocation.args[indexOfErrorConsumer] as Consumer<AuthException>
@@ -923,7 +924,7 @@ class KotlinAuthFacadeTest {
         val expected = AuthSignOutResult()
         var onCompleteConsumer: Consumer<AuthSignOutResult>? = null
         every {
-            delegate.signOut(any(), any())
+            delegate.signOut(any<AuthSignOutOptions>(), any())
         } answers {
             val indexOfCompletionAction = 1
             onCompleteConsumer = it.invocation.args[indexOfCompletionAction] as Consumer<AuthSignOutResult>
@@ -933,7 +934,7 @@ class KotlinAuthFacadeTest {
         // Since nothing returned, just verify it called through.
         assertNotNull(onCompleteConsumer)
         verify {
-            delegate.signOut(any(), onCompleteConsumer!!)
+            delegate.signOut(any<AuthSignOutOptions>(), onCompleteConsumer!!)
         }
     }
 

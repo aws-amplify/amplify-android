@@ -20,7 +20,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.auth.options.AuthFetchSessionOptions;
+import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthVerifyTOTPSetupOptions;
+import com.amplifyframework.auth.result.AuthSignOutResult;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.category.CategoryType;
@@ -83,5 +86,54 @@ public abstract class AuthPlugin<E> implements AuthCategoryBehavior, Plugin<E> {
         @NonNull Consumer<AuthException> onError
     ) {
         throw new UnsupportedOperationException("TOTP is not implemented in this plugin");
+    }
+
+    /**
+     * Default implementation that throws UnsupportedOperationException. Plugins that support
+     * multi-user routing override this to fetch the session for the supplied userId.
+     */
+    @Override
+    public void fetchAuthSession(
+        @NonNull String userId,
+        @NonNull Consumer<AuthSession> onSuccess,
+        @NonNull Consumer<AuthException> onError
+    ) {
+        throw new UnsupportedOperationException("Multi-user fetchAuthSession is not implemented in this plugin");
+    }
+
+    /**
+     * Default implementation that throws UnsupportedOperationException. Plugins that support
+     * multi-user routing override this to fetch the session for the supplied userId.
+     */
+    @Override
+    public void fetchAuthSession(
+        @NonNull String userId,
+        @NonNull AuthFetchSessionOptions options,
+        @NonNull Consumer<AuthSession> onSuccess,
+        @NonNull Consumer<AuthException> onError
+    ) {
+        throw new UnsupportedOperationException("Multi-user fetchAuthSession is not implemented in this plugin");
+    }
+
+    /**
+     * Default implementation that throws UnsupportedOperationException. Plugins that support
+     * multi-user routing override this to sign out the supplied userId only.
+     */
+    @Override
+    public void signOut(@NonNull String userId, @NonNull Consumer<AuthSignOutResult> onComplete) {
+        throw new UnsupportedOperationException("Multi-user signOut is not implemented in this plugin");
+    }
+
+    /**
+     * Default implementation that throws UnsupportedOperationException. Plugins that support
+     * multi-user routing override this to sign out the supplied userId only.
+     */
+    @Override
+    public void signOut(
+        @NonNull String userId,
+        @NonNull AuthSignOutOptions options,
+        @NonNull Consumer<AuthSignOutResult> onComplete
+    ) {
+        throw new UnsupportedOperationException("Multi-user signOut is not implemented in this plugin");
     }
 }

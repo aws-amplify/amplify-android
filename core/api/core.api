@@ -494,6 +494,8 @@ public final class com/amplifyframework/auth/AuthCategory : com/amplifyframework
 	public fun deleteWebAuthnCredential (Ljava/lang/String;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public fun fetchAuthSession (Lcom/amplifyframework/auth/options/AuthFetchSessionOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun fetchAuthSession (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun fetchAuthSession (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthFetchSessionOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun fetchAuthSession (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun fetchDevices (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun fetchUserAttributes (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun forgetDevice (Lcom/amplifyframework/auth/AuthDevice;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
@@ -519,6 +521,8 @@ public final class com/amplifyframework/auth/AuthCategory : com/amplifyframework
 	public fun signInWithWebUI (Landroid/app/Activity;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun signOut (Lcom/amplifyframework/auth/options/AuthSignOutOptions;Lcom/amplifyframework/core/Consumer;)V
 	public fun signOut (Lcom/amplifyframework/core/Consumer;)V
+	public fun signOut (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthSignOutOptions;Lcom/amplifyframework/core/Consumer;)V
+	public fun signOut (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;)V
 	public fun signUp (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthSignUpOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public fun updatePassword (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public fun updateUserAttribute (Lcom/amplifyframework/auth/AuthUserAttribute;Lcom/amplifyframework/auth/options/AuthUpdateUserAttributeOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
@@ -545,6 +549,8 @@ public abstract interface class com/amplifyframework/auth/AuthCategoryBehavior {
 	public abstract fun deleteWebAuthnCredential (Ljava/lang/String;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun fetchAuthSession (Lcom/amplifyframework/auth/options/AuthFetchSessionOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun fetchAuthSession (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public abstract fun fetchAuthSession (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthFetchSessionOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public abstract fun fetchAuthSession (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun fetchDevices (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun fetchUserAttributes (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun forgetDevice (Lcom/amplifyframework/auth/AuthDevice;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
@@ -569,6 +575,8 @@ public abstract interface class com/amplifyframework/auth/AuthCategoryBehavior {
 	public abstract fun signInWithWebUI (Landroid/app/Activity;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun signOut (Lcom/amplifyframework/auth/options/AuthSignOutOptions;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun signOut (Lcom/amplifyframework/core/Consumer;)V
+	public abstract fun signOut (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthSignOutOptions;Lcom/amplifyframework/core/Consumer;)V
+	public abstract fun signOut (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun signUp (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthSignUpOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun updatePassword (Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public abstract fun updateUserAttribute (Lcom/amplifyframework/auth/AuthUserAttribute;Lcom/amplifyframework/auth/options/AuthUpdateUserAttributeOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
@@ -644,9 +652,13 @@ public final class com/amplifyframework/auth/AuthFactorType : java/lang/Enum {
 
 public abstract class com/amplifyframework/auth/AuthPlugin : com/amplifyframework/auth/AuthCategoryBehavior, com/amplifyframework/core/plugin/Plugin {
 	public fun <init> ()V
+	public fun fetchAuthSession (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthFetchSessionOptions;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun fetchAuthSession (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
 	public final fun getCategoryType ()Lcom/amplifyframework/core/category/CategoryType;
 	public fun initialize (Landroid/content/Context;)V
 	public fun setUpTOTP (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V
+	public fun signOut (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthSignOutOptions;Lcom/amplifyframework/core/Consumer;)V
+	public fun signOut (Ljava/lang/String;Lcom/amplifyframework/core/Consumer;)V
 	public fun verifyTOTPSetup (Ljava/lang/String;Lcom/amplifyframework/auth/options/AuthVerifyTOTPSetupOptions;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public fun verifyTOTPSetup (Ljava/lang/String;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 }

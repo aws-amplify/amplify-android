@@ -218,6 +218,25 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     }
 
     @Override
+    public void fetchAuthSession(
+            @NonNull String userId,
+            @NonNull Consumer<AuthSession> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().fetchAuthSession(userId, onSuccess, onError);
+    }
+
+    @Override
+    public void fetchAuthSession(
+            @NonNull String userId,
+            @NonNull AuthFetchSessionOptions options,
+            @NonNull Consumer<AuthSession> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().fetchAuthSession(userId, options, onSuccess, onError);
+    }
+
+    @Override
     public void rememberDevice(
             @NonNull Action onSuccess,
             @NonNull Consumer<AuthException> onError
@@ -391,6 +410,20 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
             @NonNull Consumer<AuthSignOutResult> onComplete
     ) {
         getSelectedPlugin().signOut(options, onComplete);
+    }
+
+    @Override
+    public void signOut(@NonNull String userId, @NonNull Consumer<AuthSignOutResult> onComplete) {
+        getSelectedPlugin().signOut(userId, onComplete);
+    }
+
+    @Override
+    public void signOut(
+            @NonNull String userId,
+            @NonNull AuthSignOutOptions options,
+            @NonNull Consumer<AuthSignOutResult> onComplete
+    ) {
+        getSelectedPlugin().signOut(userId, options, onComplete);
     }
 
     @Override

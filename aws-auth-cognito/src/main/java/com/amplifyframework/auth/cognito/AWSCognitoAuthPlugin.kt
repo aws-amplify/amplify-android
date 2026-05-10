@@ -331,13 +331,13 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
      * Reads the user's persisted state from `AuthStateRepo` and refreshes per-user when needed.
      * When [userId] is empty, behaves like the no-userId overload (active / single-user path).
      */
-    fun fetchAuthSession(userId: String, onSuccess: Consumer<AuthSession>, onError: Consumer<AuthException>) =
+    override fun fetchAuthSession(userId: String, onSuccess: Consumer<AuthSession>, onError: Consumer<AuthException>) =
         enqueue(onSuccess, onError) { useCaseFactory.fetchAuthSession().execute(userId) }
 
     /**
      * Multi-user fetch with options.
      */
-    fun fetchAuthSession(
+    override fun fetchAuthSession(
         userId: String,
         options: AuthFetchSessionOptions,
         onSuccess: Consumer<AuthSession>,
@@ -466,7 +466,7 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
      * to [userId], and removes only that user's persisted credentials. Other signed-in users are
      * unaffected.
      */
-    fun signOut(userId: String, onComplete: Consumer<AuthSignOutResult>) = enqueue(
+    override fun signOut(userId: String, onComplete: Consumer<AuthSignOutResult>) = enqueue(
         onComplete,
         onError = ::throwIt
     ) { useCaseFactory.signOut().execute(userId, AuthSignOutOptions.builder().build()) }
@@ -474,10 +474,8 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     /**
      * Multi-user sign-out with options.
      */
-    fun signOut(userId: String, options: AuthSignOutOptions, onComplete: Consumer<AuthSignOutResult>) = enqueue(
-        onComplete,
-        onError = ::throwIt
-    ) { useCaseFactory.signOut().execute(userId, options) }
+    override fun signOut(userId: String, options: AuthSignOutOptions, onComplete: Consumer<AuthSignOutResult>) =
+        enqueue(onComplete, onError = ::throwIt) { useCaseFactory.signOut().execute(userId, options) }
 
     override fun deleteUser(onSuccess: Action, onError: Consumer<AuthException>) = enqueue(onSuccess, onError) {
         useCaseFactory.deleteUser().execute()
