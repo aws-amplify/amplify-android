@@ -156,6 +156,16 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
             )
         }
 
+    override suspend fun fetchAuthSession(userId: String, options: AuthFetchSessionOptions): AuthSession =
+        suspendCoroutine { continuation ->
+            delegate.fetchAuthSession(
+                userId,
+                options,
+                { continuation.resume(it) },
+                { continuation.resumeWithException(it) }
+            )
+        }
+
     override suspend fun rememberDevice() = suspendCoroutine { continuation ->
         delegate.rememberDevice(
             { continuation.resume(Unit) },
@@ -283,6 +293,11 @@ class KotlinAuthFacade(private val delegate: Delegate = Amplify.Auth) : Auth {
     override suspend fun signOut(options: AuthSignOutOptions): AuthSignOutResult = suspendCoroutine { continuation ->
         delegate.signOut(options) { continuation.resume(it) }
     }
+
+    override suspend fun signOut(userId: String, options: AuthSignOutOptions): AuthSignOutResult =
+        suspendCoroutine { continuation ->
+            delegate.signOut(userId, options) { continuation.resume(it) }
+        }
 
     override suspend fun deleteUser() = suspendCoroutine { continuation ->
         delegate.deleteUser(

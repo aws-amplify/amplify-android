@@ -201,6 +201,19 @@ interface Auth {
     suspend fun fetchAuthSession(options: AuthFetchSessionOptions = AuthFetchSessionOptions.defaults()): AuthSession
 
     /**
+     * Multi-user fork extension. Retrieve the session information for the user identified by [userId].
+     * Plugins that don't support multi-user routing throw [UnsupportedOperationException].
+     * @param userId The userId whose session to fetch
+     * @param options Advanced options for fetching auth session. If not provided, default options are used.
+     * @return Information about the authenticated session for [userId], where applicable
+     */
+    @Throws(AuthException::class)
+    suspend fun fetchAuthSession(
+        userId: String,
+        options: AuthFetchSessionOptions = AuthFetchSessionOptions.defaults()
+    ): AuthSession
+
+    /**
      * Remember the user device that is currently being used.
      */
     @Throws(AuthException::class)
@@ -329,6 +342,19 @@ interface Auth {
      * @return A sign-out result; Check result types for next steps
      */
     suspend fun signOut(options: AuthSignOutOptions = AuthSignOutOptions.builder().build()): AuthSignOutResult
+
+    /**
+     * Multi-user fork extension. Sign out the user identified by [userId] only; other users
+     * remain signed in. Plugins that don't support multi-user routing throw
+     * [UnsupportedOperationException].
+     * @param userId The userId to sign out
+     * @param options Advanced options for sign out. If not provided, default options are used.
+     * @return A sign-out result; check result types for next steps
+     */
+    suspend fun signOut(
+        userId: String,
+        options: AuthSignOutOptions = AuthSignOutOptions.builder().build()
+    ): AuthSignOutResult
 
     /**
      * Delete the account of the currently signed in user.
