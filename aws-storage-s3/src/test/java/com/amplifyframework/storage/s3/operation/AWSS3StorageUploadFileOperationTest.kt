@@ -24,6 +24,7 @@ import com.amplifyframework.storage.s3.configuration.AWSS3PluginPrefixResolver
 import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadRequest
 import com.amplifyframework.storage.s3.service.StorageService
+import com.amplifyframework.storage.s3.transfer.TransferObserver
 import com.google.common.util.concurrent.MoreExecutors
 import java.io.File
 import org.junit.Before
@@ -31,6 +32,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.mockito.Mockito.any
+import org.mockito.Mockito.anyLong
+import org.mockito.Mockito.anyString
 import org.mockito.Mockito.eq
 import org.robolectric.RobolectricTestRunner
 
@@ -174,6 +177,68 @@ class AWSS3StorageUploadFileOperationTest {
             any(ObjectMetadata::class.java),
             eq(false),
             eq(0L)
+        )
+    }
+
+    /**
+     * Test that the Java-friendly constructor that accepts a resolved progress-stall timeout
+     * propagates the value all the way to `StorageService.uploadFile`. The plugin resolves the
+     * effective value before instantiating the operation, so the operation only needs to hand it
+     * to the service.
+     *
+     * - Given: a [AWSS3StorageUploadFileOperation] built via the new long-arg constructor
+     *   with a positive `progressStallTimeoutSeconds`
+     * - When: the operation starts
+     * - Then: `StorageService.uploadFile` receives the same `progressStallTimeoutSeconds`
+     */
+    @Test
+    fun `progressStallTimeoutSeconds is forwarded to storage service uploadFile`() {
+        val key = "123"
+        val expectedKey = "public/123"
+        val expectedStallTimeout = 30L
+        val tempFile = File.createTempFile("new", "file.tmp")
+        Mockito.`when`(
+            storageService.uploadFile(
+                anyString(),
+                anyString(),
+                any(),
+                any(),
+                eq(false),
+                anyLong()
+            )
+        ).thenReturn(Mockito.mock(TransferObserver::class.java))
+        val request = AWSS3StorageUploadRequest<File>(
+            key,
+            tempFile,
+            StorageAccessLevel.PUBLIC,
+            "",
+            "/image",
+            ServerSideEncryption.NONE,
+            mutableMapOf(),
+            false
+        )
+
+        awsS3StorageUploadFileOperation = AWSS3StorageUploadFileOperation(
+            storageService,
+            MoreExecutors.newDirectExecutorService(),
+            authCredentialsProvider,
+            request,
+            AWSS3StoragePluginConfiguration {},
+            {},
+            {},
+            {},
+            expectedStallTimeout
+        )
+
+        awsS3StorageUploadFileOperation.start()
+
+        Mockito.verify(storageService).uploadFile(
+            eq(awsS3StorageUploadFileOperation.transferId),
+            eq(expectedKey),
+            eq(tempFile),
+            any(ObjectMetadata::class.java),
+            eq(false),
+            eq(expectedStallTimeout)
         )
     }
 }

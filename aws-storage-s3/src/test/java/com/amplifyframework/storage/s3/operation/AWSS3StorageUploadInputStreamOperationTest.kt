@@ -215,4 +215,67 @@ class AWSS3StorageUploadInputStreamOperationTest {
             eq(0L)
         )
     }
+
+    /**
+     * Test that the Java-friendly constructor that accepts a resolved progress-stall timeout
+     * propagates the value all the way to `StorageService.uploadInputStream`. The plugin
+     * resolves the effective value before instantiating the operation, so the operation only
+     * needs to hand it to the service.
+     *
+     * - Given: a [AWSS3StorageUploadInputStreamOperation] built via the new long-arg constructor
+     *   with a positive `progressStallTimeoutSeconds`
+     * - When: the operation starts
+     * - Then: `StorageService.uploadInputStream` receives the same `progressStallTimeoutSeconds`
+     */
+    @Test
+    fun `progressStallTimeoutSeconds is forwarded to storage service uploadInputStream`() {
+        val key = "123"
+        val expectedKey = "public/123"
+        val expectedStallTimeout = 45L
+        val tempInputStream = File.createTempFile("new", "file.tmp").inputStream()
+        coEvery { authCredentialsProvider.getIdentityId() } returns "abc"
+        Mockito.`when`(
+            storageService.uploadInputStream(
+                any(),
+                any(),
+                any(),
+                any(),
+                eq(false),
+                anyLong()
+            )
+        ).thenReturn(Mockito.mock(TransferObserver::class.java))
+        val request = AWSS3StorageUploadRequest<InputStream>(
+            key,
+            tempInputStream,
+            StorageAccessLevel.PUBLIC,
+            "",
+            "/image",
+            ServerSideEncryption.NONE,
+            mutableMapOf(),
+            false
+        )
+
+        inputStreamOperation = AWSS3StorageUploadInputStreamOperation(
+            storageService,
+            MoreExecutors.newDirectExecutorService(),
+            authCredentialsProvider,
+            AWSS3StoragePluginConfiguration {},
+            request,
+            {},
+            {},
+            {},
+            expectedStallTimeout
+        )
+
+        inputStreamOperation.start()
+
+        Mockito.verify(storageService).uploadInputStream(
+            eq(inputStreamOperation.transferId),
+            eq(expectedKey),
+            eq(tempInputStream),
+            any(ObjectMetadata::class.java),
+            eq(false),
+            eq(expectedStallTimeout)
+        )
+    }
 }

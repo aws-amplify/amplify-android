@@ -209,6 +209,59 @@ class AWSS3StoragePathUploadFileOperationTest {
         }
     }
 
+    /**
+     * Test that the resolved progress-stall timeout from the upload request is forwarded to
+     * `StorageService.uploadFile`. The plugin resolves the effective seconds when it builds the
+     * request so the operation only needs to plumb the value through.
+     *
+     * - Given: a [AWSS3StoragePathUploadRequest] with `progressStallTimeoutSeconds = 30`
+     * - When: the operation starts and the path resolves successfully
+     * - Then: `StorageService.uploadFile` is invoked with `progressStallTimeoutSeconds = 30`
+     */
+    @Test
+    fun `progressStallTimeoutSeconds from request is forwarded to storage service`() {
+        // GIVEN
+        val path = StoragePath.fromString("public/123")
+        val tempFile = File.createTempFile("new", "file.tmp")
+        val expectedServiceKey = "public/123"
+        val expectedStallTimeout = 30L
+        val request = AWSS3StoragePathUploadRequest(
+            path,
+            tempFile,
+            "/image",
+            ServerSideEncryption.NONE,
+            emptyMap(),
+            false,
+            expectedStallTimeout
+        )
+        val onError = mockk<Consumer<StorageException>>(relaxed = true)
+        awsS3StorageUploadFileOperation = AWSS3StoragePathUploadFileOperation(
+            request = request,
+            storageService = storageService,
+            executorService = MoreExecutors.newDirectExecutorService(),
+            authCredentialsProvider = authCredentialsProvider,
+            {},
+            {},
+            onError
+        )
+
+        // WHEN
+        awsS3StorageUploadFileOperation.start()
+
+        // THEN
+        verify(exactly = 0) { onError.accept(any()) }
+        verify {
+            storageService.uploadFile(
+                awsS3StorageUploadFileOperation.transferId,
+                expectedServiceKey,
+                tempFile,
+                any(),
+                false,
+                expectedStallTimeout
+            )
+        }
+    }
+
     @Test
     fun `invalid storage path fails with unsupported storage path type`() {
         // GIVEN
