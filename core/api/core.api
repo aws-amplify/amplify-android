@@ -4682,6 +4682,38 @@ public final class com/amplifyframework/storage/ObjectMetadata {
 public final class com/amplifyframework/storage/ObjectMetadata$Companion {
 }
 
+public abstract class com/amplifyframework/storage/ProgressStallTimeout {
+	public static final field Companion Lcom/amplifyframework/storage/ProgressStallTimeout$Companion;
+	public static final fun disabled ()Lcom/amplifyframework/storage/ProgressStallTimeout;
+	public abstract fun getSecondsForStallTimer ()J
+	public static final fun interval (J)Lcom/amplifyframework/storage/ProgressStallTimeout;
+}
+
+public final class com/amplifyframework/storage/ProgressStallTimeout$Companion {
+	public final fun disabled ()Lcom/amplifyframework/storage/ProgressStallTimeout;
+	public final fun interval (J)Lcom/amplifyframework/storage/ProgressStallTimeout;
+}
+
+public final class com/amplifyframework/storage/ProgressStallTimeout$Disabled : com/amplifyframework/storage/ProgressStallTimeout {
+	public static final field INSTANCE Lcom/amplifyframework/storage/ProgressStallTimeout$Disabled;
+	public fun getSecondsForStallTimer ()J
+}
+
+public final class com/amplifyframework/storage/ProgressStallTimeout$Interval : com/amplifyframework/storage/ProgressStallTimeout {
+	public fun <init> (J)V
+	public final fun component1 ()J
+	public final fun copy (J)Lcom/amplifyframework/storage/ProgressStallTimeout$Interval;
+	public static synthetic fun copy$default (Lcom/amplifyframework/storage/ProgressStallTimeout$Interval;JILjava/lang/Object;)Lcom/amplifyframework/storage/ProgressStallTimeout$Interval;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSeconds ()J
+	public fun getSecondsForStallTimer ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/storage/ProgressStallTimeoutException : com/amplifyframework/AmplifyException {
+}
+
 public final class com/amplifyframework/storage/StorageAccessLevel : java/lang/Enum {
 	public static final field PRIVATE Lcom/amplifyframework/storage/StorageAccessLevel;
 	public static final field PROTECTED Lcom/amplifyframework/storage/StorageAccessLevel;

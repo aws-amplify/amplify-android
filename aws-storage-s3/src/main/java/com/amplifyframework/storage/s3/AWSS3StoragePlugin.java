@@ -31,6 +31,7 @@ import com.amplifyframework.core.configuration.AmplifyOutputsData;
 import com.amplifyframework.storage.BucketInfo;
 import com.amplifyframework.storage.InvalidStorageBucketException;
 import com.amplifyframework.storage.OutputsStorageBucket;
+import com.amplifyframework.storage.ProgressStallTimeout;
 import com.amplifyframework.storage.ResolvedStorageBucket;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageBucket;
@@ -657,6 +658,12 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
         GetStorageServiceResult result = getStorageServiceResult(options.getBucket());
 
+        long stallTimeoutSeconds = resolveProgressStallTimeoutSeconds(
+            options instanceof AWSS3StorageUploadFileOptions
+                ? ((AWSS3StorageUploadFileOptions) options).getProgressStallTimeout()
+                : null
+        );
+
         AWSS3StorageUploadFileOperation operation = new AWSS3StorageUploadFileOperation(
             result.storageService,
             executorService,
@@ -665,7 +672,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             awsS3StoragePluginConfiguration,
             onProgress,
             onSuccess,
-            onError
+            onError,
+            stallTimeoutSeconds
         );
 
         handleGetStorageServiceResult(onError, result, operation);
@@ -685,6 +693,11 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     ) {
         boolean useAccelerateEndpoint = options instanceof AWSS3StorageUploadFileOptions &&
                 ((AWSS3StorageUploadFileOptions) options).useAccelerateEndpoint();
+        long stallTimeoutSeconds = resolveProgressStallTimeoutSeconds(
+                options instanceof AWSS3StorageUploadFileOptions
+                        ? ((AWSS3StorageUploadFileOptions) options).getProgressStallTimeout()
+                        : null
+        );
         AWSS3StoragePathUploadRequest<File> request = new AWSS3StoragePathUploadRequest<>(
                 path,
                 local,
@@ -693,7 +706,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                         ? ((AWSS3StorageUploadFileOptions) options).getServerSideEncryption()
                         : ServerSideEncryption.NONE,
                 options.getMetadata(),
-                useAccelerateEndpoint
+                useAccelerateEndpoint,
+                stallTimeoutSeconds
         );
 
         GetStorageServiceResult result = getStorageServiceResult(options.getBucket());
@@ -791,6 +805,12 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
         GetStorageServiceResult result = getStorageServiceResult(options.getBucket());
 
+        long stallTimeoutSeconds = resolveProgressStallTimeoutSeconds(
+            options instanceof AWSS3StorageUploadInputStreamOptions
+                ? ((AWSS3StorageUploadInputStreamOptions) options).getProgressStallTimeout()
+                : null
+        );
+
         AWSS3StorageUploadInputStreamOperation operation = new AWSS3StorageUploadInputStreamOperation(
             result.storageService,
             executorService,
@@ -799,7 +819,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             request,
             onProgress,
             onSuccess,
-            onError
+            onError,
+            stallTimeoutSeconds
         );
 
         handleGetStorageServiceResult(onError, result, operation);
@@ -819,6 +840,11 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     ) {
         boolean useAccelerateEndpoint = options instanceof AWSS3StorageUploadInputStreamOptions &&
                 ((AWSS3StorageUploadInputStreamOptions) options).useAccelerateEndpoint();
+        long stallTimeoutSeconds = resolveProgressStallTimeoutSeconds(
+                options instanceof AWSS3StorageUploadInputStreamOptions
+                        ? ((AWSS3StorageUploadInputStreamOptions) options).getProgressStallTimeout()
+                        : null
+        );
         AWSS3StoragePathUploadRequest<InputStream> request = new AWSS3StoragePathUploadRequest<>(
                 path,
                 local,
@@ -827,7 +853,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                         ? ((AWSS3StorageUploadInputStreamOptions) options).getServerSideEncryption()
                         : ServerSideEncryption.NONE,
                 options.getMetadata(),
-                useAccelerateEndpoint
+                useAccelerateEndpoint,
+                stallTimeoutSeconds
         );
 
         GetStorageServiceResult result = getStorageServiceResult(options.getBucket());
@@ -846,6 +873,26 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         handleGetStorageServiceResult(onError, result, operation);
 
         return operation;
+    }
+
+    /**
+     * Resolves the effective stall-timer interval in seconds for an upload.
+     *
+     * <p>If {@code override} is non-null, it takes precedence over the plugin default. This
+     * includes {@link ProgressStallTimeout.Disabled}, which lets callers explicitly opt a single
+     * upload out of stall detection even when the plugin enables it. If {@code override} is
+     * {@code null}, the plugin-wide default from
+     * {@link com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration} is
+     * used. Returns {@code 0} whenever the resolved timeout disables stall detection.</p>
+     *
+     * @param override per-upload override or {@code null} to defer to the plugin default
+     * @return the stall interval in seconds, or {@code 0} if disabled
+     */
+    private long resolveProgressStallTimeoutSeconds(@Nullable ProgressStallTimeout override) {
+        ProgressStallTimeout effective = override != null
+            ? override
+            : awsS3StoragePluginConfiguration.getProgressStallTimeout();
+        return effective.getSecondsForStallTimer();
     }
 
     @SuppressWarnings("deprecation")

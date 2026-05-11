@@ -81,11 +81,14 @@ public interface StorageService {
                                     @NonNull File file,
                                     boolean useAccelerateEndpoint);
 
-
     /**
      * Begin uploading a file to a key in storage and return an observer
      * to monitor upload progress. This item will be stored with specified
      * metadata.
+     *
+     * <p>Delegates to {@link #uploadFile(String, String, File, ObjectMetadata, boolean, long)} with
+     * a stall timeout of {@code 0}, preserving legacy behavior when no stall detection is
+     * configured.</p>
      *
      * @param transferId unique id for this transfer
      * @param serviceKey Key to uniquely label item in storage
@@ -94,16 +97,45 @@ public interface StorageService {
      * @param useAccelerateEndpoint flag to use accelerate endpoint
      * @return An instance of {@link TransferObserver} to monitor upload
      */
+    default TransferObserver uploadFile(@NonNull String transferId,
+                                        @NonNull String serviceKey,
+                                        @NonNull File file,
+                                        @NonNull ObjectMetadata metadata,
+                                        boolean useAccelerateEndpoint) {
+        return uploadFile(transferId, serviceKey, file, metadata, useAccelerateEndpoint, 0L);
+    }
+
+    /**
+     * Begin uploading a file with progress-stall detection applied.
+     *
+     * <p>A {@code progressStallTimeoutSeconds} of {@code 0} disables stall detection (identical to
+     * the legacy overload). Any positive value arms a timer that cancels the upload if no forward
+     * progress is observed within that many seconds.</p>
+     *
+     * @param transferId unique id for this transfer
+     * @param serviceKey Key to uniquely label item in storage
+     * @param file       file to upload
+     * @param metadata   metadata to attach to uploaded item
+     * @param useAccelerateEndpoint flag to use accelerate endpoint
+     * @param progressStallTimeoutSeconds resolved stall interval in seconds; {@code 0} disables detection
+     * @return An instance of {@link TransferObserver} to monitor upload
+     */
     TransferObserver uploadFile(@NonNull String transferId,
                                 @NonNull String serviceKey,
                                 @NonNull File file,
                                 @NonNull ObjectMetadata metadata,
-                                boolean useAccelerateEndpoint);
+                                boolean useAccelerateEndpoint,
+                                long progressStallTimeoutSeconds);
 
     /**
      * Begin uploading an InputStream to a key in storage and return an observer
      * to monitor upload progress. This item will be stored with specified
      * metadata.
+     *
+     * <p>Delegates to
+     * {@link #uploadInputStream(String, String, InputStream, ObjectMetadata, boolean, long)} with a
+     * stall timeout of {@code 0}, preserving legacy behavior when no stall detection is
+     * configured.</p>
      *
      * @param transferId unique id for this transfer
      * @param serviceKey  key to uniquely label item in storage
@@ -114,11 +146,38 @@ public interface StorageService {
      * @throws IOException on error reading the InputStream, or saving it to a temporary
      *                     File before the upload begins.
      */
+    default TransferObserver uploadInputStream(@NonNull String transferId,
+                                               @NonNull String serviceKey,
+                                               @NonNull InputStream inputStream,
+                                               @NonNull ObjectMetadata metadata,
+                                               boolean useAccelerateEndpoint)
+        throws IOException {
+        return uploadInputStream(transferId, serviceKey, inputStream, metadata, useAccelerateEndpoint, 0L);
+    }
+
+    /**
+     * Begin uploading an InputStream with progress-stall detection applied.
+     *
+     * <p>A {@code progressStallTimeoutSeconds} of {@code 0} disables stall detection (identical to
+     * the legacy overload). Any positive value arms a timer that cancels the upload if no forward
+     * progress is observed within that many seconds.</p>
+     *
+     * @param transferId unique id for this transfer
+     * @param serviceKey  key to uniquely label item in storage
+     * @param inputStream InputStream from which to read content
+     * @param metadata    Metadata to attach to uploaded item
+     * @param useAccelerateEndpoint Flag to use accelerate endpoint
+     * @param progressStallTimeoutSeconds resolved stall interval in seconds; {@code 0} disables detection
+     * @return An instance of {@link TransferObserver} to monitor upload
+     * @throws IOException on error reading the InputStream, or saving it to a temporary
+     *                     File before the upload begins.
+     */
     TransferObserver uploadInputStream(@NonNull String transferId,
                                        @NonNull String serviceKey,
                                        @NonNull InputStream inputStream,
                                        @NonNull ObjectMetadata metadata,
-                                       boolean useAccelerateEndpoint)
+                                       boolean useAccelerateEndpoint,
+                                       long progressStallTimeoutSeconds)
         throws IOException;
 
     /**
