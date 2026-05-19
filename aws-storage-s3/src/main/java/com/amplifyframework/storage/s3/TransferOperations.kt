@@ -112,7 +112,8 @@ internal object TransferOperations {
         transferStatusUpdater: TransferStatusUpdater,
         workManager: WorkManager,
         workerObserver: TransferWorkerObserver,
-        transferDB: TransferDB
+        transferDB: TransferDB,
+        progressStallTimeoutSeconds: Long = 0L
     ): Boolean {
         if (!TransferState.isStarted(transferRecord.state) && !TransferState.isInTerminalState(transferRecord.state)) {
             start(
@@ -123,7 +124,7 @@ internal object TransferOperations {
                 workerObserver,
                 transferDB,
                 null,
-                0L
+                progressStallTimeoutSeconds
             )
             if (transferRecord.isMultipart == 0) {
                 transferStatusUpdater.updateTransferState(transferRecord.id, TransferState.RESUMED_WAITING)

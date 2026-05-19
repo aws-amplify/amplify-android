@@ -96,7 +96,8 @@ public final class StorageComponentTest {
                 region,
                 bucket,
                 clientProvider,
-                transferStatusUpdater
+                transferStatusUpdater,
+                defaultProgressStallTimeoutSeconds
         ) -> (AWSS3StorageService) storageService;
         AuthCredentialsProvider cognitoAuthProvider = mock(AuthCredentialsProvider.class);
         doReturn(RandomString.string()).when(cognitoAuthProvider).getIdentityId(null);

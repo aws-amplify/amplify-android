@@ -15,7 +15,6 @@
 
 package com.amplifyframework.storage.s3
 
-import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.AuthCredentialsProvider
@@ -32,72 +31,45 @@ import com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfigura
 import com.amplifyframework.storage.s3.options.AWSS3StorageUploadFileOptions
 import com.amplifyframework.storage.s3.options.AWSS3StorageUploadInputStreamOptions
 import com.amplifyframework.storage.s3.service.AWSS3StorageService
-import com.amplifyframework.storage.s3.service.StorageService
-import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.TransferObserver
-import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.verify
 import java.io.ByteArrayInputStream
 import org.json.JSONObject
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentCaptor
-import org.mockito.Mockito.any
-import org.mockito.Mockito.anyBoolean
-import org.mockito.Mockito.anyString
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.timeout
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class AWSS3StoragePluginProgressStallTimeoutTest {
 
-    private lateinit var storageService: StorageService
+    private lateinit var storageService: AWSS3StorageService
     private lateinit var authCredentialsProvider: AuthCredentialsProvider
     private lateinit var transferObserver: TransferObserver
 
     @Before
     fun setup() {
-        storageService = mock(AWSS3StorageService::class.java)
+        transferObserver = mockk(relaxed = true)
+        storageService = mockk(relaxed = true) {
+            every {
+                uploadFile(any(), any(), any(), any(), any(), any())
+            } returns transferObserver
+            every {
+                uploadInputStream(any(), any(), any(), any(), any(), any())
+            } returns transferObserver
+        }
         authCredentialsProvider = mockk(relaxed = true)
         coEvery { authCredentialsProvider.getIdentityId() } returns "test-identity"
-        transferObserver = mock(TransferObserver::class.java)
-        `when`(
-            storageService.uploadFile(
-                anyString(),
-                anyString(),
-                any(),
-                any(),
-                anyBoolean(),
-                org.mockito.ArgumentMatchers.anyLong()
-            )
-        ).thenReturn(transferObserver)
-        `when`(
-            storageService.uploadInputStream(
-                anyString(),
-                anyString(),
-                any(),
-                any(),
-                anyBoolean(),
-                org.mockito.ArgumentMatchers.anyLong()
-            )
-        ).thenReturn(transferObserver)
     }
 
     private fun configuredPlugin(pluginConfiguration: AWSS3StoragePluginConfiguration): AWSS3StoragePlugin {
-        val factory = object : AWSS3StorageService.Factory {
-            override fun create(
-                context: Context,
-                region: String,
-                bucketName: String,
-                clientProvider: StorageTransferClientProvider,
-                transferStatusUpdater: TransferStatusUpdater
-            ): AWSS3StorageService = storageService as AWSS3StorageService
+        val factory = mockk<AWSS3StorageService.Factory> {
+            every { create(any(), any(), any(), any(), any(), any()) } returns storageService
         }
         val plugin = AWSS3StoragePlugin(factory, authCredentialsProvider, pluginConfiguration)
         // Wire the plugin into a configured StorageCategory so executors and config are initialized.
@@ -131,31 +103,21 @@ class AWSS3StoragePluginProgressStallTimeoutTest {
     }
 
     private fun captureUploadFileStallSeconds(): Long {
-        val captor = ArgumentCaptor.forClass(Long::class.java)
+        val slot = slot<Long>()
         // The plugin schedules the actual `storageService.uploadFile` call on its internal
         // executor, so verification needs to wait for the asynchronous work to land.
-        verify(storageService, timeout(5_000)).uploadFile(
-            anyString(),
-            anyString(),
-            any(),
-            any(),
-            anyBoolean(),
-            captor.capture()
-        )
-        return captor.value
+        verify(timeout = 5_000L) {
+            storageService.uploadFile(any(), any(), any(), any(), any(), capture(slot))
+        }
+        return slot.captured
     }
 
     private fun captureUploadInputStreamStallSeconds(): Long {
-        val captor = ArgumentCaptor.forClass(Long::class.java)
-        verify(storageService, timeout(5_000)).uploadInputStream(
-            anyString(),
-            anyString(),
-            any(),
-            any(),
-            anyBoolean(),
-            captor.capture()
-        )
-        return captor.value
+        val slot = slot<Long>()
+        verify(timeout = 5_000L) {
+            storageService.uploadInputStream(any(), any(), any(), any(), any(), capture(slot))
+        }
+        return slot.captured
     }
 
     /**

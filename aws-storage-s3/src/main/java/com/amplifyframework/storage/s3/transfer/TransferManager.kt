@@ -49,7 +49,8 @@ internal class TransferManager(
     clientProvider: StorageTransferClientProvider,
     private val pluginKey: String,
     private val transferStatusUpdater: TransferStatusUpdater,
-    private val workManager: WorkManager = WorkManager.getInstance(context)
+    private val workManager: WorkManager = WorkManager.getInstance(context),
+    private val defaultProgressStallTimeoutSeconds: Long = 0L
 ) {
 
     private val transferDB: TransferDB = TransferDB.getInstance(context)
@@ -238,7 +239,8 @@ internal class TransferManager(
                 transferStatusUpdater,
                 workManager,
                 transferWorkerObserver,
-                transferDB
+                transferDB,
+                defaultProgressStallTimeoutSeconds
             )
             mainHandler.post {
                 workManager

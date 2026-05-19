@@ -176,7 +176,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
     @VisibleForTesting
     AWSS3StoragePlugin(AuthCredentialsProvider authCredentialsProvider) {
-        this((context, region, bucket, clientProvider, transferStatusUpdater) ->
+        this(
+            (context, region, bucket, clientProvider, transferStatusUpdater, defaultProgressStallTimeoutSeconds) ->
                 new AWSS3StorageService(
                     context,
                     region,
@@ -184,7 +185,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                     authCredentialsProvider,
                     AWS_S3_STORAGE_PLUGIN_KEY,
                     clientProvider,
-                    transferStatusUpdater
+                    transferStatusUpdater,
+                    defaultProgressStallTimeoutSeconds
                 ),
             authCredentialsProvider,
             new AWSS3StoragePluginConfiguration.Builder().build());
@@ -194,7 +196,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     AWSS3StoragePlugin(AuthCredentialsProvider authCredentialsProvider,
                        AWSS3StoragePluginConfiguration awss3StoragePluginConfiguration) {
 
-        this((context, region, bucket, clientProvider, transferStatusUpdater) ->
+        this(
+            (context, region, bucket, clientProvider, transferStatusUpdater, defaultProgressStallTimeoutSeconds) ->
                 new AWSS3StorageService(
                     context,
                     region,
@@ -202,7 +205,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                     authCredentialsProvider,
                     AWS_S3_STORAGE_PLUGIN_KEY,
                     clientProvider,
-                    transferStatusUpdater
+                    transferStatusUpdater,
+                    defaultProgressStallTimeoutSeconds
                 ),
             authCredentialsProvider,
             awss3StoragePluginConfiguration);
@@ -302,17 +306,22 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         try {
             this.transferStatusUpdater = new TransferStatusUpdater(TransferDB.Companion.getInstance(context));
 
+            long defaultProgressStallTimeoutSeconds = awsS3StoragePluginConfiguration
+                    .getProgressStallTimeout()
+                    .getSecondsForStallTimer();
             this.awss3StorageServiceContainer = new AWSS3StorageServiceContainer(
                     context, storageServiceFactory,
                     (S3StorageTransferClientProvider) clientProvider,
-                    transferStatusUpdater
+                    transferStatusUpdater,
+                    defaultProgressStallTimeoutSeconds
             );
             this.defaultStorageService = storageServiceFactory.create(
                     context,
                     region,
                     bucket.getBucketInfo().getBucketName(),
                     clientProvider,
-                    transferStatusUpdater
+                    transferStatusUpdater,
+                    defaultProgressStallTimeoutSeconds
             );
             this.awss3StorageServiceContainer.put(bucket.getBucketInfo().getBucketName(), this.defaultStorageService);
         } catch (RuntimeException exception) {
