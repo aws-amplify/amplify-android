@@ -54,12 +54,15 @@ import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
+import com.amplifyframework.statemachine.codegen.states.AuthState
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldNotBeBlank
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.flow.MutableSharedFlow
 import org.json.JSONObject
 import org.junit.Before
 import org.junit.Test
@@ -898,5 +901,30 @@ class AWSCognitoAuthPluginTest {
         val useCase = authPlugin.useCaseFactory.webUISignInResponse()
         authPlugin.handleWebUISignInResponse(null)
         coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute(null) }
+    }
+
+    @Test
+    fun `initialize completes when state machine reaches Configured`() {
+        val plugin = AWSCognitoAuthPlugin(configurationTimeout = 100.milliseconds)
+        plugin.authStateMachine = mockk(relaxed = true)
+
+        val stateFlow = MutableSharedFlow<AuthState>(replay = 1)
+        stateFlow.tryEmit(AuthState.Configured(null, null, null))
+        every { plugin.authStateMachine.state } returns stateFlow
+
+        plugin.initialize(mockk())
+    }
+
+    @Test
+    fun `initialize does not throw when state machine does not reach Configured within timeout`() {
+        val plugin = AWSCognitoAuthPlugin(configurationTimeout = 100.milliseconds)
+        plugin.authStateMachine = mockk(relaxed = true)
+
+        val stateFlow = MutableSharedFlow<AuthState>(replay = 1)
+        stateFlow.tryEmit(AuthState.ConfiguringAuth())
+        every { plugin.authStateMachine.state } returns stateFlow
+
+        // Should complete without throwing despite the state never reaching Configured
+        plugin.initialize(mockk())
     }
 }
