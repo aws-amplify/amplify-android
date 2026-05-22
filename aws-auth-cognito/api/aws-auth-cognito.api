@@ -10,6 +10,7 @@ public final class com/amplifyframework/auth/cognito/AWSCognitoAuthPlugin : com/
 	public static final field AWS_COGNITO_AUTH_LOG_NAMESPACE Ljava/lang/String;
 	public static final field Companion Lcom/amplifyframework/auth/cognito/AWSCognitoAuthPlugin$Companion;
 	public fun <init> ()V
+	public synthetic fun <init> (JILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun associateWebAuthnCredential (Landroid/app/Activity;Lcom/amplifyframework/auth/options/AuthAssociateWebAuthnCredentialsOptions;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public fun associateWebAuthnCredential (Landroid/app/Activity;Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V
 	public fun autoSignIn (Lcom/amplifyframework/core/Consumer;Lcom/amplifyframework/core/Consumer;)V

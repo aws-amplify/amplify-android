@@ -68,6 +68,7 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.configuration.AmplifyOutputsData
 import com.amplifyframework.statemachine.codegen.events.AuthEvent
 import com.amplifyframework.statemachine.codegen.states.AuthState
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -83,11 +84,15 @@ import org.json.JSONObject
 /**
  * A Cognito implementation of the Auth Plugin.
  */
-class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
+class AWSCognitoAuthPlugin internal constructor(
+    private val configurationTimeout: Duration = 10.seconds
+) : AuthPlugin<AWSCognitoAuthService>() {
     companion object {
         const val AWS_COGNITO_AUTH_LOG_NAMESPACE = "amplify:aws-cognito-auth:%s"
         private const val AWS_COGNITO_AUTH_PLUGIN_KEY = "awsCognitoAuthPlugin"
     }
+
+    constructor() : this(configurationTimeout = 10.seconds)
 
     private val logger = authLogger()
 
@@ -127,10 +132,10 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     }
 
     override fun initialize(context: Context) {
-        // Wait up to 10 seconds for the state machine to reach Configured, but do not throw on timeout.
+        // Wait up to the configured timeout for the state machine to reach Configured, but do not throw on timeout.
         // This matches legacy behavior where initialization proceeds regardless of whether configuration completes.
         runBlocking {
-            withTimeoutOrNull(10.seconds) {
+            withTimeoutOrNull(configurationTimeout) {
                 suspendWhileConfiguring()
             }
         }
