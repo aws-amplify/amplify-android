@@ -1,3 +1,13 @@
+## [Release 2.37.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.37.0)
+
+### Features
+- **api:** add sealed exception hierarchy for api plugin ([#3279](https://github.com/aws-amplify/amplify-android/issues/3279))
+
+### Bug Fixes
+- **auth:** Don't throw if the configuration timeout is exceeded ([#3321](https://github.com/aws-amplify/amplify-android/issues/3321))
+
+[See all changes between 2.36.0 and 2.37.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.36.0...release_v2.37.0)
+
 ## [Release 2.36.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.36.0)
 
 ### Features
