@@ -77,7 +77,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONObject
 
 /**
@@ -127,9 +127,10 @@ class AWSCognitoAuthPlugin : AuthPlugin<AWSCognitoAuthService>() {
     }
 
     override fun initialize(context: Context) {
-        // Block until the state machine is in the configured state.
+        // Wait up to 10 seconds for the state machine to reach Configured, but do not throw on timeout.
+        // This matches legacy behavior where initialization proceeds regardless of whether configuration completes.
         runBlocking {
-            withTimeout(10.seconds) {
+            withTimeoutOrNull(10.seconds) {
                 suspendWhileConfiguring()
             }
         }
