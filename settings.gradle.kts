@@ -64,13 +64,15 @@ include(":maplibre-adapter")
 include(":aws-pinpoint-core")
 include(":aws-push-notifications-pinpoint-common")
 
-// Events API
+// AppSync Libraries
 include(":aws-sdk-appsync-core")
 include(":aws-sdk-appsync-amplify")
 include(":aws-sdk-appsync-events")
+include(":aws-appsync")
 project(":aws-sdk-appsync-core").projectDir = file("appsync/aws-sdk-appsync-core")
 project(":aws-sdk-appsync-amplify").projectDir = file("appsync/aws-sdk-appsync-amplify")
 project(":aws-sdk-appsync-events").projectDir = file("appsync/aws-sdk-appsync-events")
+project(":aws-appsync").projectDir = file("appsync/aws-appsync")
 
 
 // Apollo Extensions
