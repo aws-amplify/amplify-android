@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /**
  * Class that defines inner classes and interfaces related to retry strategies.
@@ -71,7 +72,11 @@ public final class RetryStrategy {
             } else {
                 final long waitTimeSeconds = Double.valueOf(Math.pow(2, attemptNumber % maxExponent)).longValue();
                 LOG.debug("Waiting " + waitTimeSeconds + " seconds before retrying");
-                Completable.timer(TimeUnit.SECONDS.toMillis(waitTimeSeconds), TimeUnit.MILLISECONDS).blockingAwait();
+                Completable.timer(
+                    TimeUnit.SECONDS.toMillis(waitTimeSeconds),
+                    TimeUnit.MILLISECONDS,
+                    Schedulers.io()
+                ).blockingAwait();
                 return true;
             }
         }
