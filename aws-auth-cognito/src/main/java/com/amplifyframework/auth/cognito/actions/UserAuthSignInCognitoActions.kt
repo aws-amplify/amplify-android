@@ -83,7 +83,8 @@ internal object UserAuthSignInCognitoActions : UserAuthSignInActions {
                         availableChallenges = listOfChallenges,
                         authenticationResult = initiateAuthResponse.authenticationResult,
                         callingActivity = event.callingActivity,
-                        signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_AUTH)
+                        signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_AUTH),
+                        inputUsername = event.username
                     )
                 } else if (isSupportedChallenge(initiateAuthResponse?.challengeName) &&
                     initiateAuthResponse?.challengeParameters != null &&
@@ -98,7 +99,8 @@ internal object UserAuthSignInCognitoActions : UserAuthSignInActions {
                         challengeParameters = initiateAuthResponse.challengeParameters,
                         authenticationResult = initiateAuthResponse.authenticationResult,
                         callingActivity = event.callingActivity,
-                        signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_AUTH)
+                        signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_AUTH),
+                        inputUsername = event.username
                     )
                 } else {
                     throw ServiceException("Sign in failed", AmplifyException.TODO_RECOVERY_SUGGESTION)

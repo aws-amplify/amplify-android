@@ -47,7 +47,7 @@ internal class AWSCognitoAuthCredentialStore(
     )
 
     override fun saveDeviceMetadata(username: String, deviceMetadata: DeviceMetadata) = keyValue.put(
-        generateKey("$username.$KEY_DEVICE_METADATA"),
+        generateKey("${username.lowercase()}.$KEY_DEVICE_METADATA"),
         serializeMetaData(deviceMetadata)
     )
 
@@ -61,7 +61,7 @@ internal class AWSCognitoAuthCredentialStore(
     override fun retrieveCredential(): AmplifyCredential = deserializeCredential(keyValue.get(generateKey(KEY_SESSION)))
 
     override fun retrieveDeviceMetadata(username: String): DeviceMetadata = deserializeMetadata(
-        keyValue.get(generateKey("$username.$KEY_DEVICE_METADATA"))
+        keyValue.get(generateKey("${username.lowercase()}.$KEY_DEVICE_METADATA"))
     )
 
     override fun retrieveASFDevice(): AmplifyCredential.ASFDevice = deserializeASFDevice(
@@ -73,7 +73,7 @@ internal class AWSCognitoAuthCredentialStore(
     override fun deleteCredential() = keyValue.remove(generateKey(KEY_SESSION))
 
     override fun deleteDeviceKeyCredential(username: String) = keyValue.remove(
-        generateKey("$username.$KEY_DEVICE_METADATA")
+        generateKey("${username.lowercase()}.$KEY_DEVICE_METADATA")
     )
 
     override fun deleteASFDevice() = keyValue.remove(generateKey(KEY_ASF_DEVICE))

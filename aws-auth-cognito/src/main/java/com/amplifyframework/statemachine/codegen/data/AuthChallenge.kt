@@ -25,7 +25,8 @@ internal data class AuthChallenge(
     val username: String? = null,
     val session: String?,
     val parameters: Map<String, String>?,
-    val availableChallenges: List<String>? = null
+    val availableChallenges: List<String>? = null,
+    val inputUsername: String? = null
 ) {
     override fun toString(): String = "AuthChallenge(" +
         "challengeName='$challengeName', " +
