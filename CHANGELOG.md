@@ -1,3 +1,10 @@
+## [Release 2.38.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.38.0)
+
+### Features
+- **storage:** add progress stall timeout for S3 uploads ([#3306](https://github.com/aws-amplify/amplify-android/issues/3306))
+
+[See all changes between 2.37.0 and 2.38.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.37.0...release_v2.38.0)
+
 ## [Release 2.37.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.37.0)
 
 ### Features
