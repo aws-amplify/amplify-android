@@ -62,13 +62,20 @@ internal class AWSS3StorageService(
     private val authCredentialsProvider: AuthCredentialsProvider,
     private val awsS3StoragePluginKey: String,
     private val clientProvider: StorageTransferClientProvider,
-    private val transferStatusUpdater: TransferStatusUpdater
+    private val transferStatusUpdater: TransferStatusUpdater,
+    private val defaultProgressStallTimeoutSeconds: Long = 0L
 ) : StorageService {
 
     private var s3Client: S3Client = S3StorageTransferClientProvider.getS3Client(awsRegion, authCredentialsProvider)
 
     val transferManager: TransferManager =
-        TransferManager(context, clientProvider, awsS3StoragePluginKey, transferStatusUpdater)
+        TransferManager(
+            context,
+            clientProvider,
+            awsS3StoragePluginKey,
+            transferStatusUpdater,
+            defaultProgressStallTimeoutSeconds = defaultProgressStallTimeoutSeconds
+        )
 
     /**
      * Generate pre-signed URL for an object.
@@ -165,7 +172,8 @@ internal class AWSS3StorageService(
         serviceKey: String,
         file: File,
         metadata: ObjectMetadata,
-        useAccelerateEndpoint: Boolean
+        useAccelerateEndpoint: Boolean,
+        progressStallTimeoutSeconds: Long
     ): TransferObserver = transferManager.upload(
         transferId,
         s3BucketName,
@@ -173,7 +181,8 @@ internal class AWSS3StorageService(
         serviceKey,
         file,
         metadata,
-        useAccelerateEndpoint = useAccelerateEndpoint
+        useAccelerateEndpoint = useAccelerateEndpoint,
+        progressStallTimeoutSeconds = progressStallTimeoutSeconds
     )
 
     /**
@@ -189,10 +198,18 @@ internal class AWSS3StorageService(
         serviceKey: String,
         inputStream: InputStream,
         metadata: ObjectMetadata,
-        useAccelerateEndpoint: Boolean
+        useAccelerateEndpoint: Boolean,
+        progressStallTimeoutSeconds: Long
     ): TransferObserver {
         val uploadOptions = UploadOptions(s3BucketName, awsRegion, metadata)
-        return transferManager.upload(transferId, serviceKey, inputStream, uploadOptions, useAccelerateEndpoint)
+        return transferManager.upload(
+            transferId,
+            serviceKey,
+            inputStream,
+            uploadOptions,
+            useAccelerateEndpoint,
+            progressStallTimeoutSeconds
+        )
     }
 
     /**
@@ -434,6 +451,10 @@ internal class AWSS3StorageService(
          * @param context    Android context
          * @param region     S3 bucket region
          * @param bucketName Name of the bucket where the items are stored
+         * @param defaultProgressStallTimeoutSeconds Plugin-level default progress-stall interval in
+         *   seconds, used when a transfer is resumed (and any per-upload override has been lost
+         *   because it was only passed through `WorkData` for the original enqueue). `0` disables
+         *   stall detection on resume, preserving legacy behavior.
          * @return An instantiated storage service instance
          */
         fun create(
@@ -441,7 +462,8 @@ internal class AWSS3StorageService(
             region: String,
             bucketName: String,
             clientProvider: StorageTransferClientProvider,
-            transferStatusUpdater: TransferStatusUpdater
+            transferStatusUpdater: TransferStatusUpdater,
+            defaultProgressStallTimeoutSeconds: Long = 0L
         ): AWSS3StorageService
     }
 }

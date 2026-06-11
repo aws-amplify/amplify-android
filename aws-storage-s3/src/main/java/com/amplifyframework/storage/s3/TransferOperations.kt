@@ -49,7 +49,8 @@ internal object TransferOperations {
         workManager: WorkManager,
         workerObserver: TransferWorkerObserver,
         transferDB: TransferDB,
-        listener: TransferListener?
+        listener: TransferListener?,
+        progressStallTimeoutSeconds: Long = 0L
     ): TransferObserver {
         if (transferRecord.isMultipart == 1) {
             enqueueMultiPartUpload(
@@ -58,14 +59,22 @@ internal object TransferOperations {
                 workManager,
                 workerObserver,
                 transferStatusUpdater,
-                transferDB
+                transferDB,
+                progressStallTimeoutSeconds
             )
             transferStatusUpdater.registerMultiPartTransferListener(
                 transferRecord.id,
                 MultiPartUploadTaskListener(transferRecord, transferDB, transferStatusUpdater)
             )
         } else {
-            enqueueTransfer(transferRecord, pluginKey, workManager, workerObserver, transferStatusUpdater)
+            enqueueTransfer(
+                transferRecord,
+                pluginKey,
+                workManager,
+                workerObserver,
+                transferStatusUpdater,
+                progressStallTimeoutSeconds
+            )
         }
         return TransferObserver(
             transferRecord.id,
@@ -103,10 +112,20 @@ internal object TransferOperations {
         transferStatusUpdater: TransferStatusUpdater,
         workManager: WorkManager,
         workerObserver: TransferWorkerObserver,
-        transferDB: TransferDB
+        transferDB: TransferDB,
+        progressStallTimeoutSeconds: Long = 0L
     ): Boolean {
         if (!TransferState.isStarted(transferRecord.state) && !TransferState.isInTerminalState(transferRecord.state)) {
-            start(transferRecord, pluginKey, transferStatusUpdater, workManager, workerObserver, transferDB, null)
+            start(
+                transferRecord,
+                pluginKey,
+                transferStatusUpdater,
+                workManager,
+                workerObserver,
+                transferDB,
+                null,
+                progressStallTimeoutSeconds
+            )
             if (transferRecord.isMultipart == 0) {
                 transferStatusUpdater.updateTransferState(transferRecord.id, TransferState.RESUMED_WAITING)
             }
@@ -164,7 +183,8 @@ internal object TransferOperations {
         pluginKey: String,
         workManager: WorkManager,
         transferWorkerObserver: TransferWorkerObserver,
-        transferStatusUpdater: TransferStatusUpdater
+        transferStatusUpdater: TransferStatusUpdater,
+        progressStallTimeoutSeconds: Long
     ) {
         val type = transferRecord.type ?: throw IllegalStateException("Transfer type missing")
         val workerClassName =
@@ -179,7 +199,8 @@ internal object TransferOperations {
             workDataOf(
                 BaseTransferWorker.TRANSFER_RECORD_ID to transferRecord.id,
                 RouterWorker.WORKER_CLASS_NAME to workerClassName,
-                BaseTransferWorker.WORKER_ID to pluginKey
+                BaseTransferWorker.WORKER_ID to pluginKey,
+                BaseTransferWorker.PROGRESS_STALL_TIMEOUT_SECONDS to progressStallTimeoutSeconds
             ),
             listOf(pluginKey, transferRecord.id.toString())
         )
@@ -197,10 +218,11 @@ internal object TransferOperations {
         workManager: WorkManager,
         transferWorkerObserver: TransferWorkerObserver,
         transferStatusUpdater: TransferStatusUpdater,
-        transferDB: TransferDB
+        transferDB: TransferDB,
+        progressStallTimeoutSeconds: Long
     ) {
         transferRecord.multipartId?.let {
-            val pendingParts = pendingParts(transferRecord, pluginKey, transferDB)
+            val pendingParts = pendingParts(transferRecord, pluginKey, transferDB, progressStallTimeoutSeconds)
             if (pendingParts.size > 0) {
                 workManager
                     .beginUniqueWork(
@@ -225,7 +247,7 @@ internal object TransferOperations {
                 ExistingWorkPolicy.KEEP,
                 initiateRequest(transferRecord, pluginKey, transferStatusUpdater)
             )
-                .then(pendingParts(transferRecord, pluginKey, transferDB))
+                .then(pendingParts(transferRecord, pluginKey, transferDB, progressStallTimeoutSeconds))
                 .then(completeRequest(transferRecord, pluginKey, transferStatusUpdater))
                 .enqueue()
             transferStatusUpdater.updateTransferState(transferRecord.id, TransferState.WAITING)
@@ -254,7 +276,12 @@ internal object TransferOperations {
         return request
     }
 
-    private fun pendingParts(transferRecord: TransferRecord, pluginKey: String, transferDB: TransferDB) = let {
+    private fun pendingParts(
+        transferRecord: TransferRecord,
+        pluginKey: String,
+        transferDB: TransferDB,
+        progressStallTimeoutSeconds: Long = 0L
+    ) = let {
         val listOfPendingParts = transferDB.getNonCompletedPartRequestsFromDB(transferRecord.id)
         val pendingPartRequest = mutableListOf<OneTimeWorkRequest>()
         for (part in listOfPendingParts) {
@@ -266,7 +293,8 @@ internal object TransferOperations {
                         BaseTransferWorker.PART_RECORD_ID to part,
                         BaseTransferWorker.MULTI_PART_UPLOAD_ID to transferRecord.multipartId,
                         RouterWorker.WORKER_CLASS_NAME to PartUploadTransferWorker::class.java.name,
-                        BaseTransferWorker.WORKER_ID to pluginKey
+                        BaseTransferWorker.WORKER_ID to pluginKey,
+                        BaseTransferWorker.PROGRESS_STALL_TIMEOUT_SECONDS to progressStallTimeoutSeconds
                     ),
                     listOf(transferRecord.id.toString(), pluginKey, "PartUploadRequest")
                 )

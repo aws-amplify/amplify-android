@@ -59,6 +59,7 @@ import java.util.Date;
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyString;
@@ -95,7 +96,8 @@ public final class StorageComponentTest {
                 region,
                 bucket,
                 clientProvider,
-                transferStatusUpdater
+                transferStatusUpdater,
+                defaultProgressStallTimeoutSeconds
         ) -> (AWSS3StorageService) storageService;
         AuthCredentialsProvider cognitoAuthProvider = mock(AuthCredentialsProvider.class);
         doReturn(RandomString.string()).when(cognitoAuthProvider).getIdentityId(null);
@@ -269,7 +271,8 @@ public final class StorageComponentTest {
                 anyString(),
                 any(File.class),
                 any(ObjectMetadata.class),
-                anyBoolean())
+                anyBoolean(),
+                anyLong())
         )
                 .thenReturn(observer);
 
@@ -312,7 +315,8 @@ public final class StorageComponentTest {
             anyString(),
             any(InputStream.class),
             any(ObjectMetadata.class),
-            anyBoolean())
+            anyBoolean(),
+            anyLong())
         )
                 .thenReturn(observer);
 
@@ -361,7 +365,8 @@ public final class StorageComponentTest {
                 anyString(),
                 any(File.class),
                 any(ObjectMetadata.class),
-                anyBoolean())
+                anyBoolean(),
+                anyLong())
         ).thenReturn(observer);
 
         doAnswer(invocation -> {
@@ -407,7 +412,8 @@ public final class StorageComponentTest {
             anyString(),
             any(InputStream.class),
             any(ObjectMetadata.class),
-            anyBoolean())
+            anyBoolean(),
+            anyLong())
         )
                 .thenReturn(observer);
 

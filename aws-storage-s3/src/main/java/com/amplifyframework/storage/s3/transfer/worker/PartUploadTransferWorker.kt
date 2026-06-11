@@ -20,14 +20,21 @@ import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.uploadPart
 import aws.sdk.kotlin.services.s3.withConfig
 import aws.smithy.kotlin.runtime.content.asByteStream
+import com.amplifyframework.storage.ProgressStallTimeoutException
 import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.s3.transfer.PartUploadProgressListener
+import com.amplifyframework.storage.s3.transfer.ProgressListener
+import com.amplifyframework.storage.s3.transfer.StallDetectingProgressListener
 import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import com.amplifyframework.storage.s3.transfer.UploadProgressListenerInterceptor
 import com.amplifyframework.storage.s3.transfer.worker.BaseTransferWorker.Companion.MULTI_PART_UPLOAD_ID
+import com.amplifyframework.storage.s3.transfer.worker.BaseTransferWorker.Companion.PROGRESS_STALL_TIMEOUT_SECONDS
 import java.io.File
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -49,27 +56,62 @@ internal class PartUploadTransferWorker(
         transferStatusUpdater.updateTransferState(transferRecord.mainUploadId, TransferState.IN_PROGRESS)
         multiPartUploadId = inputData.keyValueMap[MULTI_PART_UPLOAD_ID] as String
         partUploadProgressListener = PartUploadProgressListener(transferRecord, transferStatusUpdater)
+        val stallTimeoutSeconds = (inputData.keyValueMap[PROGRESS_STALL_TIMEOUT_SECONDS] as? Long) ?: 0L
+        val stallDetected = AtomicBoolean(false)
         val s3: S3Client = clientProvider.getStorageTransferClient(transferRecord.region, transferRecord.bucketName)
 
-        return runBlocking {
-            s3.withConfig {
-                interceptors += UploadProgressListenerInterceptor(partUploadProgressListener)
-                enableAccelerate = transferRecord.useAccelerateEndpoint == 1
-            }.uploadPart {
-                bucket = transferRecord.bucketName
-                key = transferRecord.key
-                uploadId = multiPartUploadId
-                body = File(transferRecord.file).asByteStream(
-                    start = transferRecord.fileOffset,
-                    transferRecord.fileOffset + transferRecord.bytesTotal - 1
-                )
-                partNumber = transferRecord.partNumber
+        val uploadPartResponse = try {
+            runBlocking {
+                val uploadJob = coroutineContext[Job]
+                val stallDecorator: StallDetectingProgressListener? = if (stallTimeoutSeconds > 0L) {
+                    StallDetectingProgressListener(
+                        delegate = partUploadProgressListener,
+                        stallTimeoutSeconds = stallTimeoutSeconds,
+                        onStall = {
+                            if (stallDetected.compareAndSet(false, true)) {
+                                uploadJob?.cancel(CancellationException("Progress stall timeout"))
+                            }
+                        }
+                    )
+                } else {
+                    null
+                }
+                val effectiveListener: ProgressListener = stallDecorator ?: partUploadProgressListener
+                try {
+                    stallDecorator?.start()
+                    s3.withConfig {
+                        interceptors += UploadProgressListenerInterceptor(effectiveListener)
+                        enableAccelerate = transferRecord.useAccelerateEndpoint == 1
+                    }.uploadPart {
+                        bucket = transferRecord.bucketName
+                        key = transferRecord.key
+                        uploadId = multiPartUploadId
+                        body = File(transferRecord.file).asByteStream(
+                            start = transferRecord.fileOffset,
+                            transferRecord.fileOffset + transferRecord.bytesTotal - 1
+                        )
+                        partNumber = transferRecord.partNumber
+                    }
+                } finally {
+                    stallDecorator?.close()
+                }
             }
-        }.eTag?.let { tag ->
+        } catch (cancellation: CancellationException) {
+            if (stallDetected.get()) {
+                throw ProgressStallTimeoutException(
+                    "Upload cancelled due to progress stall timeout.",
+                    "Increase the configured progress stall timeout or verify the network conditions, " +
+                        "then retry the upload."
+                )
+            }
+            throw cancellation
+        }
+
+        return uploadPartResponse.eTag?.let { tag ->
             transferDB.updateETag(transferRecord.id, tag)
             transferDB.updateState(transferRecord.id, TransferState.PART_COMPLETED)
             updateProgress()
-            return Result.success(outputData)
+            Result.success(outputData)
         } ?: run {
             throw IllegalStateException("Etag is empty")
         }

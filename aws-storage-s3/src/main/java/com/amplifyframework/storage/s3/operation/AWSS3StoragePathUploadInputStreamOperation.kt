@@ -28,6 +28,7 @@ import com.amplifyframework.storage.result.StorageTransferProgress
 import com.amplifyframework.storage.result.StorageUploadInputStreamResult
 import com.amplifyframework.storage.s3.ServerSideEncryption
 import com.amplifyframework.storage.s3.extensions.toS3ServiceKey
+import com.amplifyframework.storage.s3.extensions.toStorageUploadException
 import com.amplifyframework.storage.s3.request.AWSS3StoragePathUploadRequest
 import com.amplifyframework.storage.s3.service.StorageService
 import com.amplifyframework.storage.s3.transfer.TransferListener
@@ -115,7 +116,8 @@ internal class AWSS3StoragePathUploadInputStreamOperation internal constructor(
                     serviceKey,
                     inputStream,
                     objectMetadata,
-                    request.useAccelerateEndpoint
+                    request.useAccelerateEndpoint,
+                    request.progressStallTimeoutSeconds
                 )
                 transferObserver?.setTransferListener(UploadTransferListener())
             } catch (exception: Exception) {
@@ -222,10 +224,8 @@ internal class AWSS3StoragePathUploadInputStreamOperation internal constructor(
                 HubEvent.create(StorageChannelEventName.UPLOAD_ERROR, ex)
             )
             onError?.accept(
-                StorageException(
-                    "Something went wrong with your AWS S3 Storage upload InputStream operation",
-                    ex,
-                    "See attached exception for more information and suggestions"
+                ex.toStorageUploadException(
+                    "Something went wrong with your AWS S3 Storage upload InputStream operation"
                 )
             )
         }

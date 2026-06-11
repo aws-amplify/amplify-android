@@ -23,6 +23,7 @@ import com.amplifyframework.core.async.Resumable
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
 import com.amplifyframework.hub.SubscriptionToken
+import com.amplifyframework.storage.ProgressStallTimeout
 import com.amplifyframework.storage.StorageCategory
 import com.amplifyframework.storage.StorageChannelEventName
 import com.amplifyframework.storage.StorageException
@@ -361,6 +362,38 @@ class AWSS3StoragePathUploadTest : DeviceFarmTestBase() {
             uploadFile,
             awss3StorageUploadFileOptions
         )
+    }
+
+    /**
+     * Given: A progress stall timeout configured on upload options
+     * When: A small file is uploaded over the network
+     * Then: The upload completes successfully (the stall timer must not break the happy path)
+     */
+    @Test
+    fun testUploadSmallFileWithProgressStallTimeoutOptionCompletesSuccessfully() {
+        val uploadFile: File = RandomTempFile(SMALL_FILE_SIZE)
+        storagePath = StoragePath.fromString("public/${uploadFile.name}")
+        val options = AWSS3StorageUploadFileOptions.builder()
+            .progressStallTimeout(ProgressStallTimeout.Interval(120))
+            .build()
+
+        synchronousStorage.uploadFile(storagePath, uploadFile, options)
+    }
+
+    /**
+     * Given: A progress stall timeout configured on upload options for a multipart upload
+     * When: A file larger than the multipart threshold is uploaded
+     * Then: The upload completes successfully across all parts
+     */
+    @Test
+    fun testUploadLargeFileWithProgressStallTimeoutOptionCompletesSuccessfully() {
+        val uploadFile: File = RandomTempFile(LARGE_FILE_SIZE)
+        storagePath = StoragePath.fromString("public/${uploadFile.name}")
+        val options = AWSS3StorageUploadFileOptions.builder()
+            .progressStallTimeout(ProgressStallTimeout.Interval(120))
+            .build()
+
+        synchronousStorage.uploadFile(storagePath, uploadFile, options, EXTENDED_TIMEOUT_MS)
     }
 
     @Test(expected = StorageException::class)
