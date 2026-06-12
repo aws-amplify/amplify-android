@@ -29,6 +29,7 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":aws-core"))
 
+    implementation(platform(libs.aws.bom))
     implementation(libs.aws.http)
     implementation(libs.aws.credentials)
     implementation(libs.aws.cognitoidentity)

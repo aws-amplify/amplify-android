@@ -30,6 +30,7 @@ dependencies {
     implementation(project(":aws-core"))
 
     implementation(libs.androidx.security)
+    implementation(platform(libs.aws.bom))
     implementation(libs.aws.signing)
     implementation(libs.okhttp)
     implementation(libs.aws.cloudwatchlogs)

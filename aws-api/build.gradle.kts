@@ -30,6 +30,7 @@ dependencies {
     implementation(project(":aws-api-appsync"))
 
     implementation(libs.androidx.appcompat)
+    implementation(platform(libs.aws.bom))
     implementation(libs.aws.signing)
     implementation(libs.gson)
     implementation(libs.okhttp)

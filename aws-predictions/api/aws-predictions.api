@@ -332,6 +332,7 @@ public final class com/amplifyframework/predictions/aws/service/AmazonPollyPresi
 	public fun listLexicons (Laws/sdk/kotlin/services/polly/model/ListLexiconsRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun listSpeechSynthesisTasks (Laws/sdk/kotlin/services/polly/model/ListSpeechSynthesisTasksRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun putLexicon (Laws/sdk/kotlin/services/polly/model/PutLexiconRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun startSpeechSynthesisStream (Laws/sdk/kotlin/services/polly/model/StartSpeechSynthesisStreamRequest;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun startSpeechSynthesisTask (Laws/sdk/kotlin/services/polly/model/StartSpeechSynthesisTaskRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun synthesizeSpeech (Laws/sdk/kotlin/services/polly/model/SynthesizeSpeechRequest;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
