@@ -122,7 +122,7 @@ class SignOutUseCaseTest {
 
     @Test
     fun `fails if in unexpected state`() = runTest {
-        stateFlow.value = authState(authNState = AuthenticationState.SigningIn())
+        stateFlow.value = authState(authNState = AuthenticationState.SigningOut())
 
         val result = useCase.execute()
 
@@ -161,6 +161,23 @@ class SignOutUseCaseTest {
 
     @Test
     fun `returns complete result`() = runTest {
+        val deferred = backgroundScope.async { useCase.execute() }
+        runCurrent()
+
+        val signedOutData = SignedOutData()
+
+        stateFlow.value = authState(
+            authNState = AuthenticationState.SignedOut(signedOutData),
+            authZState = AuthorizationState.Configured()
+        )
+
+        val result = deferred.await()
+        result shouldBe AWSCognitoAuthSignOutResult.CompleteSignOut
+    }
+
+    @Test
+    fun `returns complete result from signingIn state`() = runTest {
+        stateFlow.value = authState(authNState = AuthenticationState.SigningIn())
         val deferred = backgroundScope.async { useCase.execute() }
         runCurrent()
 

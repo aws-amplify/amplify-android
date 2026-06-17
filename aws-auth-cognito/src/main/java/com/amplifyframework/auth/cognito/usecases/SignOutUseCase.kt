@@ -56,6 +56,12 @@ internal class SignOutUseCase(
                     sendHubEvent = true
                 )
             }
+            is AuthenticationState.SigningIn -> {
+                completeSignOut(
+                    event = AuthenticationEvent(AuthenticationEvent.EventType.CancelSignIn()),
+                    sendHubEvent = false
+                )
+            }
             is AuthenticationState.FederatedToIdentityPool -> {
                 AWSCognitoAuthSignOutResult.FailedSignOut(
                     InvalidStateException(
