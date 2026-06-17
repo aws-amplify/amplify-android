@@ -25,7 +25,7 @@
         }
     },
     "AuthorizationState": {
-        "type": "AuthorizationState.SigningIn"
+        "type": "AuthorizationState.Configured"
     },
     "SignUpState": {
         "type": "SignUpState.NotStarted"
