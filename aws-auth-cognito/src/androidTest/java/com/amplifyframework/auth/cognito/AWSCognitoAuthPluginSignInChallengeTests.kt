@@ -108,6 +108,7 @@ class AWSCognitoAuthPluginSignInChallengeTests : DeviceFarmTestBase() {
         // Sign in and reach MFA challenge state
         var signInResult = synchronousAuth.signIn(username, password)
         signInResult.nextStep.signInStep shouldBe AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP
+        subscription.blockForCode(username)
 
         // Call signOut to cancel the in-progress sign-in
         val signOutResult = synchronousAuth.signOut()
