@@ -111,7 +111,7 @@ object AuthStateJsonGenerator : SerializableProvider {
                 )
             )
         ),
-        AuthorizationState.SigningIn(),
+        AuthorizationState.Configured(),
         SignUpState.NotStarted()
     )
 
@@ -211,7 +211,7 @@ object AuthStateJsonGenerator : SerializableProvider {
                 )
             )
         ),
-        AuthorizationState.SigningIn(),
+        AuthorizationState.Configured(),
         SignUpState.NotStarted()
     )
 

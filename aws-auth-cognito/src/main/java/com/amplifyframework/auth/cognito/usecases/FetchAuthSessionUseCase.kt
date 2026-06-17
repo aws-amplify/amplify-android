@@ -49,7 +49,8 @@ internal class FetchAuthSessionUseCase(
 
         return when (val authZState = currentState.authZState) {
             is AuthorizationState.Configured -> {
-                waitForSession(AuthorizationEvent(AuthorizationEvent.EventType.FetchUnAuthSession))
+                val event = AuthorizationEvent(AuthorizationEvent.EventType.FetchUnAuthSession)
+                waitForSession(event)
             }
             is AuthorizationState.SessionEstablished -> {
                 val credential = authZState.amplifyCredential
