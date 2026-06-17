@@ -1,3 +1,10 @@
+## [Release 2.38.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.38.1)
+
+### Bug Fixes
+- **auth:** Better align AuthorizationState with Swift implementation ([#3334](https://github.com/aws-amplify/amplify-android/issues/3334))
+
+[See all changes between 2.38.0 and 2.38.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.38.0...release_v2.38.1)
+
 ## [Release 2.38.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.38.0)
 
 ### Features
