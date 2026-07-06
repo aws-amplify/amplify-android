@@ -16,55 +16,66 @@ package com.amplifyframework.connect.internal
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKeys
 import java.util.UUID
 
 /**
- * Persists a stable device identifier in EncryptedSharedPreferences.
- * The deviceId is used as a UNIQUE key in Customer Profiles to deduplicate
- * device registrations across token refreshes.
+ * Persists a stable device identifier in SharedPreferences using the shared
+ * Amplify device ID contract.
+ *
+ * The device ID is a random UUID used as a UNIQUE key in Customer Profiles to
+ * deduplicate device registrations across token refreshes. It is stored in a
+ * plain (unencrypted) SharedPreferences file because a device UUID is an
+ * identifier, not a credential.
+ *
+ * The storage key and file name are shared with the event enrichment client
+ * so that a single device resolves to one ID across all Amplify packages.
+ * Whichever client initializes first generates the UUID; subsequent clients
+ * read the existing value.
  */
 internal class DeviceIdStore(context: Context) {
 
-    private val prefs: SharedPreferences
-
-    init {
-        val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
-
-        prefs = EncryptedSharedPreferences.create(
-            PREFS_FILE_NAME,
-            masterKeyAlias,
-            context.applicationContext,
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-        )
-    }
+    private val prefs: SharedPreferences = context.applicationContext
+        .getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
 
     /**
      * Returns the persisted device ID, or generates and persists a new one.
      */
-    fun getOrCreate(): String = prefs.getString(KEY_DEVICE_ID, null) ?: run {
+    fun getOrCreate(): String {
+        val existing = prefs.getString(DEVICE_ID_KEY, null)
+        if (!existing.isNullOrEmpty()) return existing
         val newId = UUID.randomUUID().toString()
-        prefs.edit().putString(KEY_DEVICE_ID, newId).apply()
-        newId
+        prefs.edit().putString(DEVICE_ID_KEY, newId).apply()
+        return newId
     }
 
     /**
      * Returns the current device ID without generating a new one.
      * @return The device ID, or null if none is persisted.
      */
-    fun get(): String? = prefs.getString(KEY_DEVICE_ID, null)
+    fun get(): String? = prefs.getString(DEVICE_ID_KEY, null)
 
     /**
      * Clears the persisted device ID.
      */
     fun clear() {
-        prefs.edit().remove(KEY_DEVICE_ID).apply()
+        prefs.edit().remove(DEVICE_ID_KEY).apply()
     }
 
     internal companion object {
-        const val PREFS_FILE_NAME = "com.amplifyframework.connect.device"
-        const val KEY_DEVICE_ID = "device_id"
+        /**
+         * SharedPreferences file name for the persistent device ID.
+         *
+         * Shared with the event enrichment client. Do not change without
+         * coordinating the cross-package contract.
+         */
+        const val PREFERENCES_NAME = "com.amplifyframework.device_id"
+
+        /**
+         * SharedPreferences key for the persistent device ID.
+         *
+         * Shared with the event enrichment client. Do not change without
+         * coordinating the cross-package contract.
+         */
+        const val DEVICE_ID_KEY = "com.amplifyframework.device_id"
     }
 }

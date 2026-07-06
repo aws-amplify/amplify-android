@@ -30,7 +30,7 @@ dependencies {
 
     implementation(libs.aws.customerprofiles)
     implementation(libs.aws.http)
-    implementation(libs.androidx.security)
+    implementation(libs.androidx.annotation)
     implementation(libs.kotlin.coroutines)
 
     testImplementation(libs.test.junit)
