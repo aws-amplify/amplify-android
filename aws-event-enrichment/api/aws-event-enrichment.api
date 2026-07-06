@@ -1,0 +1,263 @@
+public final class com/amplifyframework/eventenrichment/BuildConfig {
+	public static final field BUILD_TYPE Ljava/lang/String;
+	public static final field DEBUG Z
+	public static final field LIBRARY_PACKAGE_NAME Ljava/lang/String;
+	public static final field VERSION_NAME Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public final class com/amplifyframework/eventenrichment/EnrichedEvent {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;JLcom/amplifyframework/eventenrichment/session/Session;Ljava/util/Map;Ljava/util/Map;Lcom/amplifyframework/eventenrichment/metadata/DeviceMetadata;Lcom/amplifyframework/eventenrichment/metadata/AppMetadata;Lcom/amplifyframework/eventenrichment/metadata/SdkMetadata;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;JLcom/amplifyframework/eventenrichment/session/Session;Ljava/util/Map;Ljava/util/Map;Lcom/amplifyframework/eventenrichment/metadata/DeviceMetadata;Lcom/amplifyframework/eventenrichment/metadata/AppMetadata;Lcom/amplifyframework/eventenrichment/metadata/SdkMetadata;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component10 ()Ljava/lang/String;
+	public final fun component11 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()J
+	public final fun component4 ()Lcom/amplifyframework/eventenrichment/session/Session;
+	public final fun component5 ()Ljava/util/Map;
+	public final fun component6 ()Ljava/util/Map;
+	public final fun component7 ()Lcom/amplifyframework/eventenrichment/metadata/DeviceMetadata;
+	public final fun component8 ()Lcom/amplifyframework/eventenrichment/metadata/AppMetadata;
+	public final fun component9 ()Lcom/amplifyframework/eventenrichment/metadata/SdkMetadata;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;JLcom/amplifyframework/eventenrichment/session/Session;Ljava/util/Map;Ljava/util/Map;Lcom/amplifyframework/eventenrichment/metadata/DeviceMetadata;Lcom/amplifyframework/eventenrichment/metadata/AppMetadata;Lcom/amplifyframework/eventenrichment/metadata/SdkMetadata;Ljava/lang/String;Ljava/lang/String;)Lcom/amplifyframework/eventenrichment/EnrichedEvent;
+	public static synthetic fun copy$default (Lcom/amplifyframework/eventenrichment/EnrichedEvent;Ljava/lang/String;Ljava/lang/String;JLcom/amplifyframework/eventenrichment/session/Session;Ljava/util/Map;Ljava/util/Map;Lcom/amplifyframework/eventenrichment/metadata/DeviceMetadata;Lcom/amplifyframework/eventenrichment/metadata/AppMetadata;Lcom/amplifyframework/eventenrichment/metadata/SdkMetadata;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/eventenrichment/EnrichedEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getApp ()Lcom/amplifyframework/eventenrichment/metadata/AppMetadata;
+	public final fun getAttributes ()Ljava/util/Map;
+	public final fun getClientId ()Ljava/lang/String;
+	public final fun getDevice ()Lcom/amplifyframework/eventenrichment/metadata/DeviceMetadata;
+	public final fun getEventId ()Ljava/lang/String;
+	public final fun getEventTimestamp ()J
+	public final fun getEventType ()Ljava/lang/String;
+	public final fun getMetrics ()Ljava/util/Map;
+	public final fun getSdk ()Lcom/amplifyframework/eventenrichment/metadata/SdkMetadata;
+	public final fun getSession ()Lcom/amplifyframework/eventenrichment/session/Session;
+	public final fun getUserId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun toJson ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/eventenrichment/EventEnrichmentClient {
+	public fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/amplifyframework/eventenrichment/metadata/SdkMetadata;)V
+	public fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/amplifyframework/eventenrichment/metadata/SdkMetadata;Lcom/amplifyframework/eventenrichment/EventEnrichmentClientOptions;)V
+	public fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/amplifyframework/eventenrichment/metadata/SdkMetadata;Lcom/amplifyframework/eventenrichment/EventEnrichmentClientOptions;Lcom/amplifyframework/eventenrichment/EventSink;)V
+	public fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/amplifyframework/eventenrichment/metadata/SdkMetadata;Lcom/amplifyframework/eventenrichment/EventEnrichmentClientOptions;Lcom/amplifyframework/eventenrichment/EventSink;Lcom/amplifyframework/eventenrichment/metadata/AppMetadata;)V
+	public fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/amplifyframework/eventenrichment/metadata/SdkMetadata;Lcom/amplifyframework/eventenrichment/EventEnrichmentClientOptions;Lcom/amplifyframework/eventenrichment/EventSink;Lcom/amplifyframework/eventenrichment/metadata/AppMetadata;Lcom/amplifyframework/eventenrichment/metadata/DeviceMetadataProvider;)V
+	public fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/amplifyframework/eventenrichment/metadata/SdkMetadata;Lcom/amplifyframework/eventenrichment/EventEnrichmentClientOptions;Lcom/amplifyframework/eventenrichment/EventSink;Lcom/amplifyframework/eventenrichment/metadata/AppMetadata;Lcom/amplifyframework/eventenrichment/metadata/DeviceMetadataProvider;Lcom/amplifyframework/eventenrichment/clientid/ClientIdProvider;)V
+	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/amplifyframework/eventenrichment/metadata/SdkMetadata;Lcom/amplifyframework/eventenrichment/EventEnrichmentClientOptions;Lcom/amplifyframework/eventenrichment/EventSink;Lcom/amplifyframework/eventenrichment/metadata/AppMetadata;Lcom/amplifyframework/eventenrichment/metadata/DeviceMetadataProvider;Lcom/amplifyframework/eventenrichment/clientid/ClientIdProvider;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun addGlobalAttribute (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun addGlobalMetric (Ljava/lang/String;D)V
+	public final fun close ()V
+	public final fun handleAppPaused ()V
+	public final fun handleAppResumed ()V
+	public final fun isClosed ()Z
+	public final fun record (Ljava/lang/String;)Lcom/amplifyframework/foundation/result/Result;
+	public final fun record (Ljava/lang/String;Ljava/util/Map;)Lcom/amplifyframework/foundation/result/Result;
+	public final fun record (Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;)Lcom/amplifyframework/foundation/result/Result;
+	public static synthetic fun record$default (Lcom/amplifyframework/eventenrichment/EventEnrichmentClient;Ljava/lang/String;Ljava/util/Map;Ljava/util/Map;ILjava/lang/Object;)Lcom/amplifyframework/foundation/result/Result;
+	public final fun removeGlobalAttribute (Ljava/lang/String;)V
+	public final fun removeGlobalMetric (Ljava/lang/String;)V
+	public final fun setUserId (Ljava/lang/String;)V
+	public final fun startSession ()V
+	public final fun stopSession ()V
+}
+
+public final class com/amplifyframework/eventenrichment/EventEnrichmentClientOptions {
+	public static final field Companion Lcom/amplifyframework/eventenrichment/EventEnrichmentClientOptions$Companion;
+	public static final fun builder ()Lcom/amplifyframework/eventenrichment/EventEnrichmentClientOptions$Builder;
+	public final fun component1 ()Z
+	public final fun component2-UwyO8pc ()J
+	public static final fun defaults ()Lcom/amplifyframework/eventenrichment/EventEnrichmentClientOptions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAutoSessionTracking ()Z
+	public final fun getSessionTimeout-UwyO8pc ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/eventenrichment/EventEnrichmentClientOptions$Builder {
+	public final fun autoSessionTracking (Z)Lcom/amplifyframework/eventenrichment/EventEnrichmentClientOptions$Builder;
+	public final fun build ()Lcom/amplifyframework/eventenrichment/EventEnrichmentClientOptions;
+	public final fun getAutoSessionTracking ()Z
+	public final fun getSessionTimeout-UwyO8pc ()J
+	public final fun sessionTimeout-LRDsOJo (J)Lcom/amplifyframework/eventenrichment/EventEnrichmentClientOptions$Builder;
+	public final synthetic fun setAutoSessionTracking (Z)V
+	public final synthetic fun setSessionTimeout-LRDsOJo (J)V
+}
+
+public final class com/amplifyframework/eventenrichment/EventEnrichmentClientOptions$Companion {
+	public final fun builder ()Lcom/amplifyframework/eventenrichment/EventEnrichmentClientOptions$Builder;
+	public final fun defaults ()Lcom/amplifyframework/eventenrichment/EventEnrichmentClientOptions;
+	public final synthetic fun invoke (Lkotlin/jvm/functions/Function1;)Lcom/amplifyframework/eventenrichment/EventEnrichmentClientOptions;
+}
+
+public abstract interface class com/amplifyframework/eventenrichment/EventSink {
+	public abstract fun send (Lcom/amplifyframework/eventenrichment/EnrichedEvent;)V
+}
+
+public final class com/amplifyframework/eventenrichment/GlobalFieldsManager {
+	public fun <init> ()V
+	public final fun addAttribute (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun addMetric (Ljava/lang/String;D)V
+	public final fun getAttributes ()Ljava/util/Map;
+	public final fun getMetrics ()Ljava/util/Map;
+	public final fun removeAttribute (Ljava/lang/String;)V
+	public final fun removeMetric (Ljava/lang/String;)V
+}
+
+public abstract interface class com/amplifyframework/eventenrichment/clientid/ClientIdProvider {
+	public abstract fun getClientId ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/eventenrichment/clientid/SharedPreferencesClientIdProvider : com/amplifyframework/eventenrichment/clientid/ClientIdProvider {
+	public static final field CLIENT_ID_STORAGE_KEY Ljava/lang/String;
+	public static final field Companion Lcom/amplifyframework/eventenrichment/clientid/SharedPreferencesClientIdProvider$Companion;
+	public static final field PREFERENCES_NAME Ljava/lang/String;
+	public fun <init> (Landroid/content/Context;)V
+	public fun getClientId ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/eventenrichment/clientid/SharedPreferencesClientIdProvider$Companion {
+}
+
+public final class com/amplifyframework/eventenrichment/exception/EventEnrichmentClosedException : com/amplifyframework/eventenrichment/exception/EventEnrichmentException {
+	public fun <init> ()V
+}
+
+public abstract class com/amplifyframework/eventenrichment/exception/EventEnrichmentException : com/amplifyframework/foundation/exceptions/AmplifyException {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/amplifyframework/eventenrichment/lifecycle/AndroidLifecycleObserver : com/amplifyframework/eventenrichment/lifecycle/LifecycleObserver {
+	public fun <init> (Landroid/app/Application;Lcom/amplifyframework/eventenrichment/session/SessionManager;)V
+	public fun dispose ()V
+	public fun onPause ()V
+	public fun onResume ()V
+}
+
+public abstract interface class com/amplifyframework/eventenrichment/lifecycle/LifecycleObserver {
+	public abstract fun dispose ()V
+	public abstract fun onPause ()V
+	public abstract fun onResume ()V
+}
+
+public final class com/amplifyframework/eventenrichment/metadata/AndroidDeviceMetadataProvider : com/amplifyframework/eventenrichment/metadata/DeviceMetadataProvider {
+	public fun <init> ()V
+	public fun getDeviceMetadata ()Lcom/amplifyframework/eventenrichment/metadata/DeviceMetadata;
+}
+
+public final class com/amplifyframework/eventenrichment/metadata/AppMetadata {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/amplifyframework/eventenrichment/metadata/AppMetadata;
+	public static synthetic fun copy$default (Lcom/amplifyframework/eventenrichment/metadata/AppMetadata;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/eventenrichment/metadata/AppMetadata;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAppId ()Ljava/lang/String;
+	public final fun getPackageName ()Ljava/lang/String;
+	public final fun getTitle ()Ljava/lang/String;
+	public final fun getVersionCode ()Ljava/lang/String;
+	public final fun getVersionName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/eventenrichment/metadata/DeviceMetadata {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/amplifyframework/eventenrichment/metadata/DeviceMetadata;
+	public static synthetic fun copy$default (Lcom/amplifyframework/eventenrichment/metadata/DeviceMetadata;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/eventenrichment/metadata/DeviceMetadata;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLocale ()Ljava/lang/String;
+	public final fun getManufacturer ()Ljava/lang/String;
+	public final fun getModel ()Ljava/lang/String;
+	public final fun getPlatform ()Ljava/lang/String;
+	public final fun getPlatformVersion ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/amplifyframework/eventenrichment/metadata/DeviceMetadataProvider {
+	public abstract fun getDeviceMetadata ()Lcom/amplifyframework/eventenrichment/metadata/DeviceMetadata;
+}
+
+public final class com/amplifyframework/eventenrichment/metadata/SdkMetadata {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lcom/amplifyframework/eventenrichment/metadata/SdkMetadata;
+	public static synthetic fun copy$default (Lcom/amplifyframework/eventenrichment/metadata/SdkMetadata;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/eventenrichment/metadata/SdkMetadata;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public final fun getVersion ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/eventenrichment/session/CoroutineTimeoutScheduler : com/amplifyframework/eventenrichment/session/TimeoutScheduler {
+	public fun <init> ()V
+	public fun <init> (Lkotlinx/coroutines/CoroutineScope;)V
+	public synthetic fun <init> (Lkotlinx/coroutines/CoroutineScope;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun schedule-VtjQ1oo (JLkotlin/jvm/functions/Function0;)Lcom/amplifyframework/eventenrichment/session/TimeoutHandle;
+}
+
+public final class com/amplifyframework/eventenrichment/session/Session {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/Long;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;)Lcom/amplifyframework/eventenrichment/session/Session;
+	public static synthetic fun copy$default (Lcom/amplifyframework/eventenrichment/session/Session;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;ILjava/lang/Object;)Lcom/amplifyframework/eventenrichment/session/Session;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDuration ()Ljava/lang/Long;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getStartTimestamp ()Ljava/lang/String;
+	public final fun getStopTimestamp ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/eventenrichment/session/SessionManager {
+	public synthetic fun <init> (Ljava/lang/String;JLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Lcom/amplifyframework/eventenrichment/session/TimeoutScheduler;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;JLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Lcom/amplifyframework/eventenrichment/session/TimeoutScheduler;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun clearSession ()V
+	public final fun getSession ()Lcom/amplifyframework/eventenrichment/session/Session;
+	public final fun getState ()Lcom/amplifyframework/eventenrichment/session/SessionState;
+	public final fun handleAppPaused ()V
+	public final fun handleAppResumed ()V
+	public final fun startSession ()V
+	public final fun stopSession ()V
+}
+
+public final class com/amplifyframework/eventenrichment/session/SessionState : java/lang/Enum {
+	public static final field ACTIVE Lcom/amplifyframework/eventenrichment/session/SessionState;
+	public static final field PAUSED Lcom/amplifyframework/eventenrichment/session/SessionState;
+	public static final field STOPPED Lcom/amplifyframework/eventenrichment/session/SessionState;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/eventenrichment/session/SessionState;
+	public static fun values ()[Lcom/amplifyframework/eventenrichment/session/SessionState;
+}
+
+public abstract interface class com/amplifyframework/eventenrichment/session/TimeoutHandle {
+	public abstract fun cancel ()V
+}
+
+public abstract interface class com/amplifyframework/eventenrichment/session/TimeoutScheduler {
+	public abstract fun schedule-VtjQ1oo (JLkotlin/jvm/functions/Function0;)Lcom/amplifyframework/eventenrichment/session/TimeoutHandle;
+}
+
