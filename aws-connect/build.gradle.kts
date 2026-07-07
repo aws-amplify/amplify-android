@@ -15,6 +15,7 @@
 
 plugins {
     alias(libs.plugins.amplify.android.library)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.amplify.publishing)
 }
 
@@ -28,10 +29,10 @@ dependencies {
     implementation(project(":foundation"))
     implementation(project(":foundation-bridge"))
 
-    implementation(libs.aws.customerprofiles)
-    implementation(libs.aws.http)
     implementation(libs.androidx.annotation)
     implementation(libs.kotlin.coroutines)
+    implementation(libs.okhttp)
+    implementation(libs.kotlin.serializationJson)
 
     testImplementation(libs.test.junit)
     testImplementation(libs.test.mockk)
@@ -40,5 +41,6 @@ dependencies {
     testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.kotlin.coroutines)
     testImplementation(libs.test.kotest.assertions)
+    testImplementation(libs.test.mockwebserver)
     testImplementation(project(":testutils"))
 }

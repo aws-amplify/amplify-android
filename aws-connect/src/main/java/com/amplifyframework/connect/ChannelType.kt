@@ -17,13 +17,13 @@ package com.amplifyframework.connect
 /**
  * Push notification channel type for device registration.
  */
-enum class ChannelType {
+enum class ChannelType(val value: String) {
     /** Firebase Cloud Messaging (Android). */
-    GCM,
+    GCM("GCM"),
 
     /** Apple Push Notification Service. */
-    APNS,
+    APNS("APNS"),
 
     /** Apple Push Notification Service (Sandbox). */
-    APNS_SANDBOX
+    APNS_SANDBOX("APNS_SANDBOX")
 }

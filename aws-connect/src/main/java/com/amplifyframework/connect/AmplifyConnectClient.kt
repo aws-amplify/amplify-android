@@ -14,232 +14,176 @@
  */
 package com.amplifyframework.connect
 
-import android.content.Context
 import androidx.annotation.VisibleForTesting
-import aws.sdk.kotlin.services.customerprofiles.CustomerProfilesClient
-import aws.sdk.kotlin.services.customerprofiles.model.DeleteProfileObjectRequest
-import aws.sdk.kotlin.services.customerprofiles.model.PutProfileObjectRequest
 import com.amplifyframework.connect.internal.DeviceIdStore
-import com.amplifyframework.connect.internal.IdentityResolver
-import com.amplifyframework.foundation.credentials.AwsCredentials
-import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
-import com.amplifyframework.foundation.credentials.toSmithyProvider
+import com.amplifyframework.connect.internal.IdentifyUserService
 import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.foundation.logging.Logger
-import java.time.Instant
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import org.json.JSONObject
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonObject
 
 /**
- * Client for registering devices and associating user identity with Amazon Connect
- * Customer Profiles.
+ * A standalone, online-only client for the Amazon Connect Customer Profiles
+ * identify endpoint (a backend Lambda fronted by an HTTP API).
  *
- * Provides methods to identify the current user, register/remove the device for
- * push notifications, and reset local state on sign-out.
+ * The client is a thin authorized POST: it resolves the caller's session
+ * through an injected [ConnectCredentialsProvider] and sends the request to
+ * the authenticated or guest route accordingly. Device registration is folded
+ * into [identifyUser] via [IdentifyUserOptions] — there is no separate device
+ * route in the backend contract.
  *
- * Example usage:
- * ```kotlin
- * val connectClient = AmplifyConnectClient(
- *     context = applicationContext,
- *     configuration = ConnectClientConfiguration(
- *         domainName = "my-domain",
- *         region = "us-east-1"
- *     ),
- *     credentialsProvider = myCredentialsProvider,
- *     identityIdProvider = { fetchCognitoSub() }
- * )
+ * ## Deferred (Phase 2)
  *
- * connectClient.identifyUser(userId = "user-123")
- * connectClient.registerDevice(deviceToken = fcmToken, channelType = ChannelType.GCM)
- * ```
- *
- * @param context Android application context
- * @param configuration Domain name and region for Customer Profiles
- * @param credentialsProvider AWS credentials for authenticating API calls
- * @param identityIdProvider Suspending function that returns the Cognito sub (identity ID)
+ * Network calls happen immediately and surface [ConnectNetworkException] when
+ * offline. The offline queue, connectivity drain, and retry/backoff are not
+ * implemented here.
  */
 class AmplifyConnectClient(
-    context: Context,
-    private val configuration: ConnectClientConfiguration,
-    private val credentialsProvider: AwsCredentialsProvider<AwsCredentials>,
-    private val identityIdProvider: suspend () -> String
+    configuration: ConnectClientConfiguration,
+    private val credentialsProvider: ConnectCredentialsProvider,
+    private val deviceIdStore: DeviceIdStore,
+    private val platform: String? = null,
+    private val appVersion: String? = null
 ) {
-    private val logger: Logger = AmplifyLogging.logger<AmplifyConnectClient>()
-    private val mutex = Mutex()
-
     @VisibleForTesting
-    internal val customerProfilesClient: CustomerProfilesClient = CustomerProfilesClient {
+    internal var service: IdentifyUserService = IdentifyUserService(
+        endpoint = configuration.endpoint,
         region = configuration.region
-        this.credentialsProvider = this@AmplifyConnectClient.credentialsProvider.toSmithyProvider()
+    )
+
+    @VisibleForTesting
+    internal constructor(
+        configuration: ConnectClientConfiguration,
+        credentialsProvider: ConnectCredentialsProvider,
+        deviceIdStore: DeviceIdStore,
+        platform: String?,
+        appVersion: String?,
+        service: IdentifyUserService
+    ) : this(configuration, credentialsProvider, deviceIdStore, platform, appVersion) {
+        this.service = service
     }
-
-    @VisibleForTesting
-    internal val identityResolver = IdentityResolver(customerProfilesClient, configuration.domainName)
-
-    @VisibleForTesting
-    internal val deviceIdStore = DeviceIdStore(context.applicationContext)
-
-    @Volatile
-    private var profileId: String? = null
-
-    @Volatile
-    private var cognitoSub: String? = null
+    private val logger: Logger = AmplifyLogging.logger<AmplifyConnectClient>()
 
     /**
-     * Identifies the current user by resolving or creating a Customer Profiles record
-     * linked to their Cognito identity.
+     * Sends user information to the Customer Profiles endpoint.
      *
-     * This must be called before [registerDevice] or [removeDevice].
+     * Routes to the authenticated endpoint (bearer token, keyed on the Cognito
+     * `sub`) when the session has a user-pool token, otherwise to the guest
+     * endpoint (SigV4 `execute-api`, keyed on the Identity Pool `identityId`).
      *
-     * @param userId Application-level user identifier (informational; the Cognito sub is the authoritative key)
-     * @param userProfile Optional profile attributes to persist
-     * @throws ConnectNotSignedInException if credentials cannot be resolved
-     * @throws ConnectObjectTypeNotConfiguredException if the AmplifyDevice type is not provisioned
-     * @throws AmplifyConnectException for other service errors
+     * [userId] is optional; it is stored only as an attribute and is never the
+     * identity key. Device registration and merge-on-sign-in are expressed via
+     * [options].
+     *
+     * @param userProfile User profile attributes to send
+     * @param userId Optional application-level user identifier
+     * @param options Device registration and merge-on-sign-in options
+     * @throws ConnectNotSignedInException if no auth material is available
+     * @throws ConnectNetworkException on transport failure
+     * @throws AmplifyConnectException for endpoint errors
      */
-    suspend fun identifyUser(userId: String, userProfile: UserProfile? = null) {
-        mutex.withLock {
-            try {
-                logger.debug { "identifyUser: resolving identity for userId=$userId" }
-
-                val sub = resolveIdentity()
-                identityResolver.validateObjectType()
-                val resolvedId = identityResolver.resolveProfile(sub, userProfile)
-
-                profileId = resolvedId
-                cognitoSub = sub
-                logger.debug { "identifyUser: profile resolved, profileId=$resolvedId" }
-            } catch (e: AmplifyConnectException) {
-                throw e
-            } catch (e: Exception) {
-                throw AmplifyConnectException.from(e)
+    suspend fun identifyUser(userProfile: UserProfile, userId: String? = null, options: IdentifyUserOptions? = null) {
+        val session = credentialsProvider.fetchSession()
+        val body = buildJsonObject {
+            userId?.let { put("userId", it) }
+            putJsonObject("userProfile") {
+                userProfile.name?.let { put("name", it) }
+                userProfile.email?.let { put("email", it) }
+                userProfile.phoneNumber?.let { put("phoneNumber", it) }
+                userProfile.plan?.let { put("plan", it) }
+                userProfile.customAttributes?.takeIf { it.isNotEmpty() }?.let { attrs ->
+                    putJsonObject("customAttributes") {
+                        attrs.forEach { (k, v) -> put(k, v) }
+                    }
+                }
+            }
+            if (options != null && !options.isEmpty) {
+                putJsonObject("options") {
+                    options.toJson().forEach { (k, v) ->
+                        put(k, toJsonElement(v))
+                    }
+                }
             }
         }
+        service.identify(session = session, body = body.toString())
+        logger.info { "identifyUser sent (${if (session.isAuthenticated) "authenticated" else "guest"})" }
     }
 
     /**
-     * Registers the device for push notifications by creating a device profile object
-     * in Customer Profiles.
+     * Registers the current device's push token.
      *
-     * Requires a prior [identifyUser] call. If the device was previously registered,
-     * calling this again with a new token updates the registration in place
-     * (keyed by stable device ID).
+     * Folds into [identifyUser]: the token, the stable device id, and the
+     * channel are sent as [IdentifyUserOptions] on an identify call. Re-calling
+     * with the same device upserts in place (the backend keys the device object
+     * on deviceId).
      *
-     * @param deviceToken The platform push token (FCM registration token or APNs device token)
+     * @param deviceToken The platform push token (FCM/APNs)
      * @param channelType The notification channel type
-     * @throws ConnectNotSignedInException if identifyUser has not been called
-     * @throws AmplifyConnectException for service errors
+     * @param userId Optional user ID
+     * @param userProfile User profile to include (default empty)
+     * @param appVersion App version override
+     * @param previousGuestIdentityId For merge-on-sign-in
      */
-    suspend fun registerDevice(deviceToken: String, channelType: ChannelType) {
-        mutex.withLock {
-            try {
-                val currentProfileId = profileId ?: throw ConnectNotSignedInException(
-                    message = "identifyUser must be called before registerDevice."
-                )
-                val currentSub = cognitoSub ?: throw ConnectNotSignedInException(
-                    message = "Cognito identity not resolved. Call identifyUser first."
-                )
-
-                val deviceId = deviceIdStore.getOrCreate()
-                logger.debug { "registerDevice: deviceId=$deviceId, channelType=$channelType" }
-
-                val deviceObject = buildDeviceObject(
-                    deviceId = deviceId,
-                    deviceToken = deviceToken,
-                    channelType = channelType,
-                    cognitoUserId = currentSub
-                )
-
-                val request = PutProfileObjectRequest {
-                    this.domainName = configuration.domainName
-                    this.objectTypeName = IdentityResolver.OBJECT_TYPE_NAME
-                    this.`object` = deviceObject
-                }
-                customerProfilesClient.putProfileObject(request)
-
-                logger.debug { "registerDevice: device registered successfully" }
-            } catch (e: AmplifyConnectException) {
-                throw e
-            } catch (e: Exception) {
-                throw AmplifyConnectException.from(e)
-            }
-        }
-    }
-
-    /**
-     * Removes the device registration from Customer Profiles and clears the local device ID.
-     *
-     * @throws ConnectDeviceNotRegisteredException if no device is registered
-     * @throws ConnectNotSignedInException if identifyUser has not been called
-     * @throws AmplifyConnectException for service errors
-     */
-    suspend fun removeDevice() {
-        mutex.withLock {
-            try {
-                val currentProfileId = profileId ?: throw ConnectNotSignedInException(
-                    message = "identifyUser must be called before removeDevice."
-                )
-                val deviceId = deviceIdStore.get() ?: throw ConnectDeviceNotRegisteredException()
-
-                logger.debug { "removeDevice: removing deviceId=$deviceId" }
-
-                val request = DeleteProfileObjectRequest {
-                    this.domainName = configuration.domainName
-                    this.objectTypeName = IdentityResolver.OBJECT_TYPE_NAME
-                    this.profileId = currentProfileId
-                    this.profileObjectUniqueKey = deviceId
-                }
-                customerProfilesClient.deleteProfileObject(request)
-
-                deviceIdStore.clear()
-                logger.debug { "removeDevice: device removed successfully" }
-            } catch (e: AmplifyConnectException) {
-                throw e
-            } catch (e: Exception) {
-                throw AmplifyConnectException.from(e)
-            }
-        }
-    }
-
-    /**
-     * Resets all local state. Call this on user sign-out.
-     *
-     * Clears the cached profile ID, Cognito sub, and device ID.
-     * Does not make any network calls or remove data from Customer Profiles.
-     */
-    suspend fun reset() {
-        mutex.withLock {
-            logger.debug { "reset: clearing local state" }
-            profileId = null
-            cognitoSub = null
-            deviceIdStore.clear()
-        }
-    }
-
-    private suspend fun resolveIdentity(): String = try {
-        identityIdProvider()
-    } catch (e: Exception) {
-        throw ConnectNotSignedInException(
-            message = "Failed to resolve Cognito identity: ${e.message}",
-            cause = e
-        )
-    }
-
-    private fun buildDeviceObject(
-        deviceId: String,
+    suspend fun registerDevice(
         deviceToken: String,
         channelType: ChannelType,
-        cognitoUserId: String
-    ): String {
-        val json = JSONObject().apply {
-            put("deviceId", deviceId)
-            put("deviceToken", deviceToken)
-            put("channelType", channelType.name)
-            put("cognitoUserId", cognitoUserId)
-            put("platform", "Android")
-            put("registeredAt", Instant.now().toString())
+        userId: String? = null,
+        userProfile: UserProfile = UserProfile(),
+        appVersion: String? = null,
+        previousGuestIdentityId: String? = null
+    ) {
+        val deviceId = deviceIdStore.getOrCreate()
+        identifyUser(
+            userId = userId,
+            userProfile = userProfile,
+            options = IdentifyUserOptions(
+                address = deviceToken,
+                deviceId = deviceId,
+                channelType = channelType,
+                platform = platform,
+                appVersion = appVersion ?: this.appVersion,
+                previousGuestIdentityId = previousGuestIdentityId
+            )
+        )
+        logger.info { "registerDevice sent for channel ${channelType.value}" }
+    }
+
+    /**
+     * Device removal is not supported by the current backend contract.
+     *
+     * The identify endpoint exposes no device-deletion route. This throws
+     * until the backend adds a client-facing removal route.
+     */
+    suspend fun removeDevice(): Unit = throw ConnectUnsupportedOperationException(
+        "removeDevice is not supported: the identify endpoint has no device-removal route."
+    )
+
+    /**
+     * Clears in-memory session state.
+     *
+     * The client holds no cross-call identity state in the endpoint model, so
+     * this is a no-op beyond logging; call on sign-out for symmetry. The shared
+     * device id is intentionally retained (it identifies the device, not the user).
+     */
+    fun reset() {
+        logger.info { "Client reset" }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun toJsonElement(value: Any): JsonElement = when (value) {
+        is String -> JsonPrimitive(value)
+        is Number -> JsonPrimitive(value)
+        is Boolean -> JsonPrimitive(value)
+        is Map<*, *> -> buildJsonObject {
+            (value as Map<String, Any>).forEach { (k, v) -> put(k, toJsonElement(v)) }
         }
-        return json.toString()
+        is List<*> -> kotlinx.serialization.json.JsonArray(
+            value.map { toJsonElement(it ?: JsonNull) }
+        )
+        else -> JsonPrimitive(value.toString())
     }
 }

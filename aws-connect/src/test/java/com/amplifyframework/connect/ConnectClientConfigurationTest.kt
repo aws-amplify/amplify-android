@@ -16,39 +16,89 @@ package com.amplifyframework.connect
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import org.junit.Test
 
 class ConnectClientConfigurationTest {
 
     @Test
-    fun `valid configuration is created successfully`() {
-        val config = ConnectClientConfiguration(
-            domainName = "my-domain",
-            region = "us-west-2"
+    fun `fromAmplifyOutputs parses valid config`() {
+        val outputs = mapOf(
+            "analytics" to mapOf(
+                "amazon_connect_customer_profiles" to mapOf(
+                    "aws_region" to "us-east-1",
+                    "endpoint" to "https://abc123.execute-api.us-east-1.amazonaws.com"
+                )
+            )
         )
-
-        config.domainName shouldBe "my-domain"
-        config.region shouldBe "us-west-2"
+        val config = ConnectClientConfiguration.fromAmplifyOutputs(outputs)
+        config.endpoint shouldBe "https://abc123.execute-api.us-east-1.amazonaws.com"
+        config.region shouldBe "us-east-1"
     }
 
     @Test
-    fun `blank domainName throws`() {
+    fun `fromAmplifyOutputs trims trailing slash`() {
+        val outputs = mapOf(
+            "analytics" to mapOf(
+                "amazon_connect_customer_profiles" to mapOf(
+                    "aws_region" to "us-west-2",
+                    "endpoint" to "https://example.com/"
+                )
+            )
+        )
+        val config = ConnectClientConfiguration.fromAmplifyOutputs(outputs)
+        config.endpoint shouldBe "https://example.com"
+    }
+
+    @Test
+    fun `fromAmplifyOutputs throws when section missing`() {
+        val exception = shouldThrow<ConnectConfigurationException> {
+            ConnectClientConfiguration.fromAmplifyOutputs(emptyMap())
+        }
+        exception.message shouldContain "amazon_connect_customer_profiles"
+    }
+
+    @Test
+    fun `fromAmplifyOutputs throws when endpoint missing`() {
+        val outputs = mapOf(
+            "analytics" to mapOf(
+                "amazon_connect_customer_profiles" to mapOf(
+                    "aws_region" to "us-east-1"
+                )
+            )
+        )
+        val exception = shouldThrow<ConnectConfigurationException> {
+            ConnectClientConfiguration.fromAmplifyOutputs(outputs)
+        }
+        exception.message shouldContain "endpoint"
+    }
+
+    @Test
+    fun `fromAmplifyOutputs throws when region missing`() {
+        val outputs = mapOf(
+            "analytics" to mapOf(
+                "amazon_connect_customer_profiles" to mapOf(
+                    "endpoint" to "https://example.com"
+                )
+            )
+        )
+        val exception = shouldThrow<ConnectConfigurationException> {
+            ConnectClientConfiguration.fromAmplifyOutputs(outputs)
+        }
+        exception.message shouldContain "aws_region"
+    }
+
+    @Test
+    fun `blank endpoint throws`() {
         shouldThrow<IllegalArgumentException> {
-            ConnectClientConfiguration(domainName = "", region = "us-east-1")
+            ConnectClientConfiguration(endpoint = "", region = "us-east-1")
         }
     }
 
     @Test
     fun `blank region throws`() {
         shouldThrow<IllegalArgumentException> {
-            ConnectClientConfiguration(domainName = "domain", region = "")
-        }
-    }
-
-    @Test
-    fun `whitespace-only domainName throws`() {
-        shouldThrow<IllegalArgumentException> {
-            ConnectClientConfiguration(domainName = "   ", region = "us-east-1")
+            ConnectClientConfiguration(endpoint = "https://x.com", region = "")
         }
     }
 }

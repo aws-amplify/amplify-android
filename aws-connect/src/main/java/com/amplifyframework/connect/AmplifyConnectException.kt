@@ -14,132 +14,92 @@
  */
 package com.amplifyframework.connect
 
-import aws.sdk.kotlin.services.customerprofiles.model.AccessDeniedException
-import aws.sdk.kotlin.services.customerprofiles.model.BadRequestException
-import aws.sdk.kotlin.services.customerprofiles.model.InternalServerException
-import aws.sdk.kotlin.services.customerprofiles.model.ResourceNotFoundException
-import aws.sdk.kotlin.services.customerprofiles.model.ThrottlingException
 import com.amplifyframework.foundation.exceptions.AmplifyException
-import com.amplifyframework.foundation.exceptions.DEFAULT_RECOVERY_SUGGESTION
 
 /**
- * Base exception for all Connect client operations.
- *
- * This is a sealed hierarchy. Callers can exhaustively match on the subtype:
- * - [ConnectObjectTypeNotConfiguredException] — AmplifyDevice object type not provisioned
- * - [ConnectNotSignedInException] — operation requires an authenticated user
- * - [ConnectDeviceNotRegisteredException] — removeDevice called before registerDevice
- * - [ConnectAccessDeniedException] — IAM policy missing required permissions
- * - [ConnectNetworkException] — network connectivity failure
- * - [ConnectServiceException] — Customer Profiles service error
- * - [ConnectValidationException] — invalid input parameters
- * - [ConnectUnknownException] — unexpected or uncategorized error
+ * Base exception for all Amplify Connect client errors.
  */
 sealed class AmplifyConnectException(
     message: String,
     recoverySuggestion: String,
     cause: Throwable? = null
-) : AmplifyException(message, recoverySuggestion, cause) {
-    companion object {
-        /**
-         * Maps a [Throwable] into the appropriate [AmplifyConnectException] subtype.
-         */
-        internal fun from(error: Throwable): AmplifyConnectException = when (error) {
-            is AmplifyConnectException -> error
-            is AccessDeniedException -> ConnectAccessDeniedException(
-                message = error.message ?: "Access denied",
-                recoverySuggestion = "Verify the Cognito authenticated role has the required " +
-                    "Customer Profiles IAM permissions (profile:SearchProfiles, profile:CreateProfile, " +
-                    "profile:UpdateProfile, profile:PutProfileObject, profile:DeleteProfileObject, " +
-                    "profile:GetProfileObjectType).",
-                cause = error
-            )
-            is ThrottlingException -> ConnectServiceException(
-                message = error.message ?: "Request throttled",
-                recoverySuggestion = "Reduce request frequency or implement backoff.",
-                cause = error
-            )
-            is ResourceNotFoundException -> ConnectServiceException(
-                message = error.message ?: "Resource not found",
-                recoverySuggestion = "Verify the Customer Profiles domain name and region are correct.",
-                cause = error
-            )
-            is BadRequestException -> ConnectValidationException(
-                message = error.message ?: "Invalid request",
-                recoverySuggestion = "Check the input parameters.",
-                cause = error
-            )
-            is InternalServerException -> ConnectServiceException(
-                message = error.message ?: "Internal service error",
-                recoverySuggestion = "Retry the request. If the issue persists, contact AWS support.",
-                cause = error
-            )
-            is java.io.IOException -> ConnectNetworkException(
-                message = error.message ?: "Network error",
-                recoverySuggestion = "Check network connectivity and retry.",
-                cause = error
-            )
-            else -> ConnectUnknownException(
-                message = error.message ?: "An unknown error occurred",
-                recoverySuggestion = DEFAULT_RECOVERY_SUGGESTION,
-                cause = error
-            )
-        }
-    }
-}
+) : AmplifyException(message, recoverySuggestion, cause)
 
-/** AmplifyDevice ProfileObjectType is not provisioned in the Customer Profiles domain. */
-class ConnectObjectTypeNotConfiguredException(
-    message: String,
-    recoverySuggestion: String,
-    cause: Throwable? = null
-) : AmplifyConnectException(message, recoverySuggestion, cause)
-
-/** Operation requires an authenticated user but no auth session is available. */
+/** Neither a Cognito access token nor guest credentials could be resolved. */
 class ConnectNotSignedInException(
-    message: String,
-    recoverySuggestion: String = "Ensure the user is signed in via Amplify Auth before calling Connect client methods.",
     cause: Throwable? = null
-) : AmplifyConnectException(message, recoverySuggestion, cause)
+) : AmplifyConnectException(
+    message = "No Cognito access token or guest credentials were found.",
+    recoverySuggestion = "Ensure Amplify Auth is configured with a Cognito Identity Pool " +
+        "(guest access) or sign the user in before calling identifyUser.",
+    cause = cause
+)
 
-/** removeDevice was called but no device is registered. */
-class ConnectDeviceNotRegisteredException(
-    message: String = "No device is registered. Call registerDevice before removeDevice.",
-    recoverySuggestion: String = "Call registerDevice with a valid device token first.",
-    cause: Throwable? = null
-) : AmplifyConnectException(message, recoverySuggestion, cause)
+/** The backend identify endpoint does not expose this operation. */
+class ConnectUnsupportedOperationException(
+    detail: String
+) : AmplifyConnectException(
+    message = detail,
+    recoverySuggestion = "This operation has no client-facing route in the current backend " +
+        "construct. Track backend support before relying on it."
+)
 
-/** IAM policy is missing required permissions. */
-class ConnectAccessDeniedException(
-    message: String,
-    recoverySuggestion: String,
-    cause: Throwable? = null
-) : AmplifyConnectException(message, recoverySuggestion, cause)
-
-/** Network connectivity failure. */
+/** Request failed due to connectivity or transport errors. */
 class ConnectNetworkException(
-    message: String,
-    recoverySuggestion: String,
     cause: Throwable? = null
-) : AmplifyConnectException(message, recoverySuggestion, cause)
+) : AmplifyConnectException(
+    message = "The request to the Customer Profiles endpoint failed to complete.",
+    recoverySuggestion = "Check the device connectivity and that the configured endpoint " +
+        "is reachable, then retry.",
+    cause = cause
+)
 
-/** Customer Profiles service error (throttling, internal error, resource not found). */
-class ConnectServiceException(
-    message: String,
-    recoverySuggestion: String,
+/** The endpoint rate limit was exceeded. */
+class ConnectThrottlingException(
     cause: Throwable? = null
-) : AmplifyConnectException(message, recoverySuggestion, cause)
+) : AmplifyConnectException(
+    message = "The request was throttled by the endpoint.",
+    recoverySuggestion = "Retry the request with exponential backoff.",
+    cause = cause
+)
 
-/** Invalid input parameters. */
+/** The request is not authorized (bad token or missing guest permissions). */
+class ConnectAccessDeniedException(
+    cause: Throwable? = null
+) : AmplifyConnectException(
+    message = "Access was denied by the Customer Profiles endpoint.",
+    recoverySuggestion = "Ensure the caller is signed in (valid access token) or that the " +
+        "guest role can invoke execute-api on the identify-user-guest route.",
+    cause = cause
+)
+
+/** The endpoint rejected a request as malformed. */
 class ConnectValidationException(
-    message: String,
-    recoverySuggestion: String,
+    detail: String? = null,
     cause: Throwable? = null
-) : AmplifyConnectException(message, recoverySuggestion, cause)
+) : AmplifyConnectException(
+    message = detail ?: "The request was rejected as invalid.",
+    recoverySuggestion = "This is likely a developer error. Verify the request inputs.",
+    cause = cause
+)
 
-/** Unexpected or uncategorized error. */
-class ConnectUnknownException(
-    message: String,
-    recoverySuggestion: String,
+/** The client configuration is missing or malformed. */
+class ConnectConfigurationException(
+    detail: String
+) : AmplifyConnectException(
+    message = detail,
+    recoverySuggestion = "Provide a valid ConnectClientConfiguration, or add an " +
+        "\"analytics.amazon_connect_customer_profiles\" section with " +
+        "\"endpoint\" and \"aws_region\" to amplify_outputs."
+)
+
+/** Unclassified endpoint error (e.g., 5xx responses). */
+class ConnectServiceException(
+    detail: String,
     cause: Throwable? = null
-) : AmplifyConnectException(message, recoverySuggestion, cause)
+) : AmplifyConnectException(
+    message = detail,
+    recoverySuggestion = "Retry the request. If it persists, verify the backend identify " +
+        "Lambda and endpoint health.",
+    cause = cause
+)
