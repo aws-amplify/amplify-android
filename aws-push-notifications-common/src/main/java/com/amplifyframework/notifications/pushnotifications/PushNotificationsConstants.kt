@@ -38,7 +38,13 @@ object PushNotificationsConstants {
     /** Action key indicating the app should be opened when the notification is tapped. */
     const val OPEN_APP = "openApp"
 
-    /** Action key holding an HTTP(S) URL to open when the notification is tapped. */
+    /**
+     * Action key holding a URL to open when the notification is tapped.
+     *
+     * The library enforces HTTPS: a value whose scheme is `http` is upgraded to `https` before it is
+     * used. Values with any other scheme (including custom schemes) are left untouched. Senders that
+     * need to reach an HTTP-only host should use [DEEPLINK] instead.
+     */
     const val URL = "url"
 
     /** Action key holding a deep link URI to open when the notification is tapped. */
@@ -49,6 +55,13 @@ object PushNotificationsConstants {
 
     /** Optional per-message notification channel id. */
     const val CHANNEL_ID = "channelId"
+
+    /**
+     * Optional stable notification id. When present, senders can use it to de-duplicate: two
+     * deliveries carrying the same id replace one another instead of stacking. See
+     * [PushNotificationPayload.notificationId] for the fallback used when this key is absent.
+     */
+    const val NOTIFICATION_ID = "notificationId"
 
     /** Default notification channel id used when a payload does not specify one. */
     const val DEFAULT_NOTIFICATION_CHANNEL_ID = "amplify.notifications"

@@ -73,6 +73,9 @@ class PushNotificationPermission(private val context: Context) {
         // Build a uri like "package:com.example.myapplication". See docs for ACTION_APPLICATION_DETAILS_SETTINGS.
         val uri = Uri.fromParts("package", context.packageName, null)
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, uri)
+        // Starting an Activity from a non-Activity Context (service, application, receiver) requires this flag,
+        // otherwise startActivity() throws AndroidRuntimeException. requestPermission() sets it for the same reason.
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         context.startActivity(intent)
     }
 }

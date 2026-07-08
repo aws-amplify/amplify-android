@@ -124,6 +124,11 @@ class ChannelBuilder(id: String, name: String, importance: NotificationImportanc
             builder.setShowBadge(value)
         }
 
+    // sound and audioAttributes are interdependent: each setter re-applies the pair via
+    // builder.setSound(sound, audioAttributes) using the current value of the other. Because both start
+    // from these defaults, order matters at the edges. For example setting audioAttributes first then
+    // sound = null yields silence as intended, whereas setting sound = null first (before any
+    // audioAttributes) re-applies with the default attributes. Set audioAttributes before clearing sound.
     var sound: Uri? = Settings.System.DEFAULT_NOTIFICATION_URI
         set(value) {
             field = value

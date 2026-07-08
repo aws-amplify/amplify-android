@@ -27,8 +27,12 @@ import kotlinx.coroutines.flow.map
 internal object PermissionRequestChannel {
     private class IdAndResult(val requestId: String, val result: PermissionRequestResult)
 
+    // Results are keyed by requestId and each caller filters for its own. A larger buffer keeps
+    // several in-flight requests from evicting one another: with a capacity of 1 and DROP_OLDEST,
+    // two results emitted before their collectors run would drop the first and leave its
+    // listen().first() suspended forever.
     private val flow = MutableSharedFlow<IdAndResult>(
-        extraBufferCapacity = 1,
+        extraBufferCapacity = 64,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
 

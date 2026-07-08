@@ -83,6 +83,7 @@ public final class com/amplifyframework/notifications/pushnotifications/PushNoti
 	public final fun getBody ()Ljava/lang/String;
 	public final fun getCanBeDisplayed ()Z
 	public final fun getImageUrl ()Ljava/lang/String;
+	public final fun getNotificationId ()I
 	public final fun getSilentPush ()Z
 	public final fun getTitle ()Ljava/lang/String;
 }
@@ -102,6 +103,7 @@ public final class com/amplifyframework/notifications/pushnotifications/PushNoti
 	public static final field IMAGE_URL Ljava/lang/String;
 	public static final field INSTANCE Lcom/amplifyframework/notifications/pushnotifications/PushNotificationsConstants;
 	public static final field MESSAGE Ljava/lang/String;
+	public static final field NOTIFICATION_ID Ljava/lang/String;
 	public static final field OPEN_APP Ljava/lang/String;
 	public static final field SILENT_PUSH Ljava/lang/String;
 	public static final field TITLE Ljava/lang/String;
@@ -109,11 +111,15 @@ public final class com/amplifyframework/notifications/pushnotifications/PushNoti
 }
 
 public final class com/amplifyframework/notifications/pushnotifications/PushNotificationsUtils {
-	public fun <init> (Landroid/content/Context;Ljava/lang/String;)V
-	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final field Companion Lcom/amplifyframework/notifications/pushnotifications/PushNotificationsUtils$Companion;
+	public fun <init> (Landroid/content/Context;ILkotlinx/coroutines/CoroutineScope;Ljava/lang/String;)V
+	public synthetic fun <init> (Landroid/content/Context;ILkotlinx/coroutines/CoroutineScope;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun areNotificationsEnabled ()Z
 	public final fun isAppInForeground ()Z
 	public final fun showNotification (ILcom/amplifyframework/notifications/pushnotifications/PushNotificationPayload;Ljava/lang/Class;)V
+}
+
+public final class com/amplifyframework/notifications/pushnotifications/PushNotificationsUtils$Companion {
 }
 
 public abstract interface class com/amplifyframework/notifications/pushnotifications/permissions/PermissionRequestResult {

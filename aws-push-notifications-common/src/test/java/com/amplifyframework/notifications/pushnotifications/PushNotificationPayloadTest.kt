@@ -92,6 +92,69 @@ class PushNotificationPayloadTest {
     }
 
     @Test
+    fun `leaves an https url untouched`() {
+        val payload = PushNotificationPayload.fromData(
+            mapOf(PushNotificationsConstants.URL to "https://example.com/page")
+        )
+
+        payload.shouldNotBeNull()
+        payload.action shouldContain (PushNotificationsConstants.URL to "https://example.com/page")
+    }
+
+    @Test
+    fun `does not rewrite http appearing later in an https url`() {
+        // The scheme is checked via the parsed URI, so an embedded "http://" in a query is not rewritten.
+        val url = "https://example.com/redirect?to=http://inner.example.com"
+        val payload = PushNotificationPayload.fromData(mapOf(PushNotificationsConstants.URL to url))
+
+        payload.shouldNotBeNull()
+        payload.action shouldContain (PushNotificationsConstants.URL to url)
+    }
+
+    @Test
+    fun `leaves a custom scheme url untouched`() {
+        val payload = PushNotificationPayload.fromData(
+            mapOf(PushNotificationsConstants.URL to "myapp://open/thing")
+        )
+
+        payload.shouldNotBeNull()
+        payload.action shouldContain (PushNotificationsConstants.URL to "myapp://open/thing")
+    }
+
+    @Test
+    fun `derives notification id from the standard key when present`() {
+        val payload = PushNotificationPayload.fromData(
+            mapOf(
+                PushNotificationsConstants.TITLE to "Hello",
+                PushNotificationsConstants.NOTIFICATION_ID to "42"
+            )
+        )
+
+        payload.shouldNotBeNull()
+        payload.notificationId shouldBe 42
+    }
+
+    @Test
+    fun `falls back to a stable title-body hash for notification id`() {
+        val first = PushNotificationPayload.fromData(
+            mapOf(PushNotificationsConstants.TITLE to "Hello", PushNotificationsConstants.BODY to "World")
+        )
+        val second = PushNotificationPayload.fromData(
+            mapOf(PushNotificationsConstants.TITLE to "Hello", PushNotificationsConstants.BODY to "World")
+        )
+        val different = PushNotificationPayload.fromData(
+            mapOf(PushNotificationsConstants.TITLE to "Hello", PushNotificationsConstants.BODY to "Other")
+        )
+
+        first.shouldNotBeNull()
+        second.shouldNotBeNull()
+        different.shouldNotBeNull()
+        // Same content produces the same id across deliveries; different content differs.
+        first.notificationId shouldBe second.notificationId
+        (first.notificationId == different.notificationId).shouldBeFalse()
+    }
+
+    @Test
     fun `does not drop a non-pinpoint payload`() {
         // Regression guard: the legacy Pinpoint parser returned null for payloads without pinpoint.* keys,
         // silently dropping valid FCM pushes. The backend-agnostic parser must not do that.

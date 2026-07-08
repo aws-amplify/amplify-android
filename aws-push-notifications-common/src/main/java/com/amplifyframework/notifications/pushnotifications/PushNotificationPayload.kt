@@ -17,6 +17,8 @@ package com.amplifyframework.notifications.pushnotifications
 
 import android.content.Intent
 import com.google.firebase.messaging.RemoteMessage
+import java.net.URI
+import java.net.URISyntaxException
 
 /**
  * A parsed, displayable view of a push notification, built from a backend-agnostic FCM payload.
@@ -24,6 +26,15 @@ import com.google.firebase.messaging.RemoteMessage
  * This is the vendor-neutral successor to the Pinpoint-specific payload parser. Unlike that parser,
  * it reads only standard payload keys (see [PushNotificationsConstants]) and never drops a valid FCM
  * message: any payload that carries data is parsed, so plain (non-Pinpoint) pushes are displayable.
+ *
+ * Migration notes (from `aws-push-notifications-pinpoint-common`):
+ * - Body key preference: this parser prefers [PushNotificationsConstants.BODY] and falls back to
+ *   [PushNotificationsConstants.MESSAGE]. The Pinpoint parser preferred `message`. A sender that
+ *   includes both keys will see the displayed body change; prefer a single key.
+ * - Notification de-duplication: the Pinpoint parser derived a stable id from campaign/journey ids,
+ *   which this backend-neutral module does not carry. Use [notificationId] instead: it reads the
+ *   standard [PushNotificationsConstants.NOTIFICATION_ID] key when present, otherwise falls back to a
+ *   stable hash of title and body so repeated deliveries of the same content replace one another.
  *
  * @property title notification title, if present
  * @property body notification body, if present
@@ -48,6 +59,16 @@ class PushNotificationPayload internal constructor(
      */
     val canBeDisplayed: Boolean
         get() = !silentPush && (!title.isNullOrEmpty() || !body.isNullOrEmpty())
+
+    /**
+     * A stable id suitable for de-duplicating notifications. Uses the standard
+     * [PushNotificationsConstants.NOTIFICATION_ID] value when the sender provides one, otherwise a
+     * stable hash of title and body so repeated deliveries of the same content replace one another
+     * rather than stacking.
+     */
+    val notificationId: Int
+        get() = rawData[PushNotificationsConstants.NOTIFICATION_ID]?.toIntOrNull()
+            ?: "$title:$body".hashCode()
 
     companion object {
         /**
@@ -108,12 +129,26 @@ class PushNotificationPayload internal constructor(
         private fun parseAction(data: Map<String, String>): Map<String, String> {
             val action = mutableMapOf<String, String>()
             data[PushNotificationsConstants.OPEN_APP]?.let { action[PushNotificationsConstants.OPEN_APP] = it }
-            data[PushNotificationsConstants.URL]?.let {
-                // force HTTPS URL scheme
-                action[PushNotificationsConstants.URL] = it.replaceFirst("http://", "https://")
-            }
+            data[PushNotificationsConstants.URL]?.let { action[PushNotificationsConstants.URL] = enforceHttps(it) }
             data[PushNotificationsConstants.DEEPLINK]?.let { action[PushNotificationsConstants.DEEPLINK] = it }
             return action
+        }
+
+        /**
+         * Upgrade an `http` URL to `https`. The scheme is matched on the parsed URI component rather
+         * than a substring, so only genuine http URLs are rewritten; values with any other scheme (or
+         * that do not parse as a URI) are returned unchanged.
+         */
+        private fun enforceHttps(url: String): String = try {
+            if (URI(url).scheme.equals("http", ignoreCase = true)) {
+                // Scheme confirmed http via the parsed URI; rewrite only the leading scheme component
+                // and preserve the rest of the value verbatim.
+                url.replaceFirst(Regex("(?i)^http:"), "https:")
+            } else {
+                url
+            }
+        } catch (e: URISyntaxException) {
+            url
         }
     }
 }
