@@ -1,12 +1,8 @@
 public final class com/amplifyframework/connect/AmplifyConnectClient {
-	public fun <init> (Lcom/amplifyframework/connect/ConnectClientConfiguration;Lcom/amplifyframework/connect/ConnectCredentialsProvider;Lcom/amplifyframework/connect/internal/DeviceIdStore;Ljava/lang/String;Ljava/lang/String;)V
-	public synthetic fun <init> (Lcom/amplifyframework/connect/ConnectClientConfiguration;Lcom/amplifyframework/connect/ConnectCredentialsProvider;Lcom/amplifyframework/connect/internal/DeviceIdStore;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lcom/amplifyframework/connect/ConnectClientConfiguration;Lcom/amplifyframework/connect/ConnectCredentialsProvider;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Lcom/amplifyframework/connect/ConnectClientConfiguration;Lcom/amplifyframework/connect/ConnectCredentialsProvider;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun identifyUser (Lcom/amplifyframework/connect/UserProfile;Ljava/lang/String;Lcom/amplifyframework/connect/IdentifyUserOptions;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun identifyUser$default (Lcom/amplifyframework/connect/AmplifyConnectClient;Lcom/amplifyframework/connect/UserProfile;Ljava/lang/String;Lcom/amplifyframework/connect/IdentifyUserOptions;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public final fun registerDevice (Ljava/lang/String;Lcom/amplifyframework/connect/ChannelType;Ljava/lang/String;Lcom/amplifyframework/connect/UserProfile;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public static synthetic fun registerDevice$default (Lcom/amplifyframework/connect/AmplifyConnectClient;Ljava/lang/String;Lcom/amplifyframework/connect/ChannelType;Ljava/lang/String;Lcom/amplifyframework/connect/UserProfile;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public final fun removeDevice (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public final fun reset ()V
 }
 
 public abstract class com/amplifyframework/connect/AmplifyConnectException : com/amplifyframework/foundation/exceptions/AmplifyException {
@@ -104,10 +100,6 @@ public final class com/amplifyframework/connect/ConnectThrottlingException : com
 	public fun <init> ()V
 	public fun <init> (Ljava/lang/Throwable;)V
 	public synthetic fun <init> (Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-}
-
-public final class com/amplifyframework/connect/ConnectUnsupportedOperationException : com/amplifyframework/connect/AmplifyConnectException {
-	public fun <init> (Ljava/lang/String;)V
 }
 
 public final class com/amplifyframework/connect/ConnectValidationException : com/amplifyframework/connect/AmplifyConnectException {

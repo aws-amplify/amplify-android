@@ -14,15 +14,12 @@
  */
 package com.amplifyframework.connect
 
-import com.amplifyframework.connect.internal.DeviceIdStore
 import com.amplifyframework.connect.internal.IdentifyUserService
 import com.amplifyframework.foundation.credentials.AwsCredentials
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
@@ -35,7 +32,6 @@ import org.robolectric.RobolectricTestRunner
 class AmplifyConnectClientTest {
 
     private val mockService = mockk<IdentifyUserService>(relaxed = true)
-    private val mockDeviceIdStore = mockk<DeviceIdStore>(relaxed = true)
     private val mockCredentialsProvider = mockk<ConnectCredentialsProvider>()
 
     private fun createClient(platform: String? = "Android", appVersion: String? = "1.0.0") = AmplifyConnectClient(
@@ -44,7 +40,6 @@ class AmplifyConnectClientTest {
             region = "us-east-1"
         ),
         credentialsProvider = mockCredentialsProvider,
-        deviceIdStore = mockDeviceIdStore,
         platform = platform,
         appVersion = appVersion,
         service = mockService
@@ -111,17 +106,21 @@ class AmplifyConnectClientTest {
     }
 
     @Test
-    fun `registerDevice folds into identifyUser with device options`() = runTest {
+    fun `identifyUser with device options sends deviceId and channelType`() = runTest {
         coEvery { mockCredentialsProvider.fetchSession() } returns ConnectSession(
             accessToken = "token"
         )
-        every { mockDeviceIdStore.getOrCreate() } returns "stable-device-uuid"
 
         val client = createClient()
-        client.registerDevice(
-            deviceToken = "fcm-token-abc",
-            channelType = ChannelType.GCM,
-            userId = "user-1"
+        client.identifyUser(
+            userProfile = UserProfile(),
+            options = IdentifyUserOptions(
+                address = "fcm-token-abc",
+                deviceId = "stable-device-uuid",
+                channelType = ChannelType.GCM,
+                platform = "Android",
+                appVersion = "1.0.0"
+            )
         )
 
         val bodySlot = slot<String>()
@@ -134,35 +133,21 @@ class AmplifyConnectClientTest {
     }
 
     @Test
-    fun `registerDevice uses previousGuestIdentityId for merge on sign-in`() = runTest {
+    fun `identifyUser with previousGuestIdentityId sends merge option`() = runTest {
         coEvery { mockCredentialsProvider.fetchSession() } returns ConnectSession(
             accessToken = "token"
         )
-        every { mockDeviceIdStore.getOrCreate() } returns "device-id"
 
         val client = createClient()
-        client.registerDevice(
-            deviceToken = "token",
-            channelType = ChannelType.GCM,
-            previousGuestIdentityId = "us-east-1:old-guest-id"
+        client.identifyUser(
+            userProfile = UserProfile(),
+            options = IdentifyUserOptions(
+                previousGuestIdentityId = "us-east-1:old-guest-id"
+            )
         )
 
         val bodySlot = slot<String>()
         coVerify { mockService.identify(any(), capture(bodySlot)) }
         bodySlot.captured shouldContain "\"previousGuestIdentityId\":\"us-east-1:old-guest-id\""
-    }
-
-    @Test
-    fun `removeDevice throws unsupported`() = runTest {
-        val client = createClient()
-        shouldThrow<ConnectUnsupportedOperationException> {
-            client.removeDevice()
-        }
-    }
-
-    @Test
-    fun `reset does not throw`() {
-        val client = createClient()
-        client.reset() // no-op, should not throw
     }
 }

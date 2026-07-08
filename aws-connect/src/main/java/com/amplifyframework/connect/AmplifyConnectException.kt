@@ -35,15 +35,6 @@ class ConnectNotSignedInException(
     cause = cause
 )
 
-/** The backend identify endpoint does not expose this operation. */
-class ConnectUnsupportedOperationException(
-    detail: String
-) : AmplifyConnectException(
-    message = detail,
-    recoverySuggestion = "This operation has no client-facing route in the current backend " +
-        "construct. Track backend support before relying on it."
-)
-
 /** Request failed due to connectivity or transport errors. */
 class ConnectNetworkException(
     cause: Throwable? = null

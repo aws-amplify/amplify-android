@@ -15,7 +15,6 @@
 package com.amplifyframework.connect
 
 import androidx.annotation.VisibleForTesting
-import com.amplifyframework.connect.internal.DeviceIdStore
 import com.amplifyframework.connect.internal.IdentifyUserService
 import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.foundation.logging.Logger
@@ -45,7 +44,6 @@ import kotlinx.serialization.json.putJsonObject
 class AmplifyConnectClient(
     configuration: ConnectClientConfiguration,
     private val credentialsProvider: ConnectCredentialsProvider,
-    private val deviceIdStore: DeviceIdStore,
     private val platform: String? = null,
     private val appVersion: String? = null
 ) {
@@ -59,11 +57,10 @@ class AmplifyConnectClient(
     internal constructor(
         configuration: ConnectClientConfiguration,
         credentialsProvider: ConnectCredentialsProvider,
-        deviceIdStore: DeviceIdStore,
         platform: String?,
         appVersion: String?,
         service: IdentifyUserService
-    ) : this(configuration, credentialsProvider, deviceIdStore, platform, appVersion) {
+    ) : this(configuration, credentialsProvider, platform, appVersion) {
         this.service = service
     }
     private val logger: Logger = AmplifyLogging.logger<AmplifyConnectClient>()
@@ -111,66 +108,6 @@ class AmplifyConnectClient(
         }
         service.identify(session = session, body = body.toString())
         logger.info { "identifyUser sent (${if (session.isAuthenticated) "authenticated" else "guest"})" }
-    }
-
-    /**
-     * Registers the current device's push token.
-     *
-     * Folds into [identifyUser]: the token, the stable device id, and the
-     * channel are sent as [IdentifyUserOptions] on an identify call. Re-calling
-     * with the same device upserts in place (the backend keys the device object
-     * on deviceId).
-     *
-     * @param deviceToken The platform push token (FCM/APNs)
-     * @param channelType The notification channel type
-     * @param userId Optional user ID
-     * @param userProfile User profile to include (default empty)
-     * @param appVersion App version override
-     * @param previousGuestIdentityId For merge-on-sign-in
-     */
-    suspend fun registerDevice(
-        deviceToken: String,
-        channelType: ChannelType,
-        userId: String? = null,
-        userProfile: UserProfile = UserProfile(),
-        appVersion: String? = null,
-        previousGuestIdentityId: String? = null
-    ) {
-        val deviceId = deviceIdStore.getOrCreate()
-        identifyUser(
-            userId = userId,
-            userProfile = userProfile,
-            options = IdentifyUserOptions(
-                address = deviceToken,
-                deviceId = deviceId,
-                channelType = channelType,
-                platform = platform,
-                appVersion = appVersion ?: this.appVersion,
-                previousGuestIdentityId = previousGuestIdentityId
-            )
-        )
-        logger.info { "registerDevice sent for channel ${channelType.value}" }
-    }
-
-    /**
-     * Device removal is not supported by the current backend contract.
-     *
-     * The identify endpoint exposes no device-deletion route. This throws
-     * until the backend adds a client-facing removal route.
-     */
-    suspend fun removeDevice(): Unit = throw ConnectUnsupportedOperationException(
-        "removeDevice is not supported: the identify endpoint has no device-removal route."
-    )
-
-    /**
-     * Clears in-memory session state.
-     *
-     * The client holds no cross-call identity state in the endpoint model, so
-     * this is a no-op beyond logging; call on sign-out for symmetry. The shared
-     * device id is intentionally retained (it identifies the device, not the user).
-     */
-    fun reset() {
-        logger.info { "Client reset" }
     }
 
     @Suppress("UNCHECKED_CAST")
