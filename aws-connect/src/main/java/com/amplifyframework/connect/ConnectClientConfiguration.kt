@@ -38,46 +38,43 @@ data class ConnectClientConfiguration(
 
     companion object {
         /**
-         * Parses configuration from the
-         * `analytics.amazon_connect_customer_profiles` section of a decoded
-         * amplify_outputs map.
+         * Parses configuration from the `custom.CustomerProfiles` section of a
+         * decoded amplify_outputs map.
          *
          * Expects:
          * ```json
          * {
-         *   "analytics": {
-         *     "amazon_connect_customer_profiles": {
-         *       "aws_region": "us-east-1",
-         *       "endpoint": "https://abc123.execute-api.us-east-1.amazonaws.com"
+         *   "custom": {
+         *     "CustomerProfiles": {
+         *       "endpoint": "https://abc123.execute-api.us-east-1.amazonaws.com",
+         *       "region": "us-east-1"
          *     }
          *   }
          * }
          * ```
          *
-         * @throws ConnectConfigurationException if the section or fields are missing
+         * @throws ConnectConfigurationException if the section or either required
+         *   field is missing
          */
         @JvmStatic
         fun fromAmplifyOutputs(amplifyOutputs: Map<String, Any?>): ConnectClientConfiguration {
-            val analytics = amplifyOutputs["analytics"]
-            val section = (analytics as? Map<*, *>)?.get("amazon_connect_customer_profiles")
+            val custom = amplifyOutputs["custom"]
+            val section = (custom as? Map<*, *>)?.get("CustomerProfiles")
             if (section !is Map<*, *>) {
                 throw ConnectConfigurationException(
-                    "Missing \"analytics.amazon_connect_customer_profiles\" section " +
-                        "in amplify_outputs."
+                    "Missing \"custom.CustomerProfiles\" section in amplify_outputs."
                 )
             }
             val endpoint = section["endpoint"]
-            val region = section["aws_region"]
+            val region = section["region"]
             if (endpoint !is String || endpoint.isBlank()) {
                 throw ConnectConfigurationException(
-                    "Missing \"analytics.amazon_connect_customer_profiles.endpoint\" " +
-                        "in amplify_outputs."
+                    "Missing \"custom.CustomerProfiles.endpoint\" in amplify_outputs."
                 )
             }
             if (region !is String || region.isBlank()) {
                 throw ConnectConfigurationException(
-                    "Missing \"analytics.amazon_connect_customer_profiles.aws_region\" " +
-                        "in amplify_outputs."
+                    "Missing \"custom.CustomerProfiles.region\" in amplify_outputs."
                 )
             }
             return ConnectClientConfiguration(
