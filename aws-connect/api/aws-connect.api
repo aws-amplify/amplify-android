@@ -110,8 +110,8 @@ public final class com/amplifyframework/connect/ConnectValidationException : com
 
 public final class com/amplifyframework/connect/IdentifyUserOptions {
 	public fun <init> ()V
-	public fun <init> (Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/ChannelType;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/OptOut;Ljava/lang/String;)V
-	public synthetic fun <init> (Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/ChannelType;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/OptOut;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/ChannelType;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/OptOut;)V
+	public synthetic fun <init> (Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/ChannelType;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/OptOut;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/util/Map;
 	public final fun component2 ()Ljava/lang/String;
 	public final fun component3 ()Ljava/lang/String;
@@ -119,9 +119,8 @@ public final class com/amplifyframework/connect/IdentifyUserOptions {
 	public final fun component5 ()Ljava/lang/String;
 	public final fun component6 ()Ljava/lang/String;
 	public final fun component7 ()Lcom/amplifyframework/connect/OptOut;
-	public final fun component8 ()Ljava/lang/String;
-	public final fun copy (Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/ChannelType;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/OptOut;Ljava/lang/String;)Lcom/amplifyframework/connect/IdentifyUserOptions;
-	public static synthetic fun copy$default (Lcom/amplifyframework/connect/IdentifyUserOptions;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/ChannelType;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/OptOut;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/connect/IdentifyUserOptions;
+	public final fun copy (Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/ChannelType;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/OptOut;)Lcom/amplifyframework/connect/IdentifyUserOptions;
+	public static synthetic fun copy$default (Lcom/amplifyframework/connect/IdentifyUserOptions;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/ChannelType;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/OptOut;ILjava/lang/Object;)Lcom/amplifyframework/connect/IdentifyUserOptions;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAddress ()Ljava/lang/String;
 	public final fun getAppVersion ()Ljava/lang/String;
@@ -129,7 +128,6 @@ public final class com/amplifyframework/connect/IdentifyUserOptions {
 	public final fun getDeviceId ()Ljava/lang/String;
 	public final fun getOptOut ()Lcom/amplifyframework/connect/OptOut;
 	public final fun getPlatform ()Ljava/lang/String;
-	public final fun getPreviousGuestIdentityId ()Ljava/lang/String;
 	public final fun getUserAttributes ()Ljava/util/Map;
 	public fun hashCode ()I
 	public final fun isEmpty ()Z

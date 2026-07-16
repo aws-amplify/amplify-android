@@ -94,14 +94,12 @@ class AmplifyConnectClientTest {
         client.identifyUser(
             userProfile = UserProfile(),
             options = IdentifyUserOptions(
-                previousGuestIdentityId = "us-east-1:old-guest",
                 deviceId = "device-123"
             )
         )
 
         val bodySlot = slot<String>()
         coVerify { mockService.identify(any(), capture(bodySlot)) }
-        bodySlot.captured shouldContain "\"previousGuestIdentityId\":\"us-east-1:old-guest\""
         bodySlot.captured shouldContain "\"deviceId\":\"device-123\""
     }
 
@@ -130,24 +128,5 @@ class AmplifyConnectClientTest {
         bodySlot.captured shouldContain "\"channelType\":\"GCM\""
         bodySlot.captured shouldContain "\"platform\":\"Android\""
         bodySlot.captured shouldContain "\"appVersion\":\"1.0.0\""
-    }
-
-    @Test
-    fun `identifyUser with previousGuestIdentityId sends merge option`() = runTest {
-        coEvery { mockCredentialsProvider.fetchSession() } returns ConnectSession(
-            accessToken = "token"
-        )
-
-        val client = createClient()
-        client.identifyUser(
-            userProfile = UserProfile(),
-            options = IdentifyUserOptions(
-                previousGuestIdentityId = "us-east-1:old-guest-id"
-            )
-        )
-
-        val bodySlot = slot<String>()
-        coVerify { mockService.identify(any(), capture(bodySlot)) }
-        bodySlot.captured shouldContain "\"previousGuestIdentityId\":\"us-east-1:old-guest-id\""
     }
 }

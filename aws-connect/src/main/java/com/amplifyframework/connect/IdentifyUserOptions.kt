@@ -29,7 +29,6 @@ package com.amplifyframework.connect
  * @param platform Client OS platform
  * @param appVersion App version
  * @param optOut Opt-out preference (accepted but no backend effect)
- * @param previousGuestIdentityId Prior guest identityId for merge-on-sign-in
  */
 data class IdentifyUserOptions(
     val userAttributes: Map<String, List<String>>? = null,
@@ -38,8 +37,7 @@ data class IdentifyUserOptions(
     val channelType: ChannelType? = null,
     val platform: String? = null,
     val appVersion: String? = null,
-    val optOut: OptOut? = null,
-    val previousGuestIdentityId: String? = null
+    val optOut: OptOut? = null
 ) {
     /** Whether every field is null/empty (nothing to send). */
     val isEmpty: Boolean get() = toJson().isEmpty()
@@ -53,7 +51,6 @@ data class IdentifyUserOptions(
         platform?.let { put("platform", it) }
         appVersion?.let { put("appVersion", it) }
         optOut?.let { put("optOut", it.value) }
-        previousGuestIdentityId?.let { put("previousGuestIdentityId", it) }
     }
 }
 
