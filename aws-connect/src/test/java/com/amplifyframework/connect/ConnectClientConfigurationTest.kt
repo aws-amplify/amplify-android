@@ -24,9 +24,9 @@ class ConnectClientConfigurationTest {
     @Test
     fun `fromAmplifyOutputs parses valid config`() {
         val outputs = mapOf(
-            "custom" to mapOf(
-                "CustomerProfiles" to mapOf(
-                    "region" to "us-east-1",
+            "notifications" to mapOf(
+                "amazon_connect_customer_profiles" to mapOf(
+                    "aws_region" to "us-east-1",
                     "endpoint" to "https://abc123.execute-api.us-east-1.amazonaws.com"
                 )
             )
@@ -39,9 +39,9 @@ class ConnectClientConfigurationTest {
     @Test
     fun `fromAmplifyOutputs trims trailing slash`() {
         val outputs = mapOf(
-            "custom" to mapOf(
-                "CustomerProfiles" to mapOf(
-                    "region" to "us-west-2",
+            "notifications" to mapOf(
+                "amazon_connect_customer_profiles" to mapOf(
+                    "aws_region" to "us-west-2",
                     "endpoint" to "https://example.com/"
                 )
             )
@@ -51,28 +51,28 @@ class ConnectClientConfigurationTest {
     }
 
     @Test
-    fun `fromAmplifyOutputs throws when custom section missing`() {
+    fun `fromAmplifyOutputs throws when notifications section missing`() {
         val exception = shouldThrow<ConnectConfigurationException> {
             ConnectClientConfiguration.fromAmplifyOutputs(emptyMap())
         }
-        exception.message shouldContain "custom.CustomerProfiles"
+        exception.message shouldContain "notifications.amazon_connect_customer_profiles"
     }
 
     @Test
-    fun `fromAmplifyOutputs throws when CustomerProfiles section missing`() {
-        val outputs = mapOf("custom" to mapOf("Other" to "value"))
+    fun `fromAmplifyOutputs throws when amazon_connect_customer_profiles section missing`() {
+        val outputs = mapOf("notifications" to mapOf("other" to "value"))
         val exception = shouldThrow<ConnectConfigurationException> {
             ConnectClientConfiguration.fromAmplifyOutputs(outputs)
         }
-        exception.message shouldContain "custom.CustomerProfiles"
+        exception.message shouldContain "notifications.amazon_connect_customer_profiles"
     }
 
     @Test
     fun `fromAmplifyOutputs throws when endpoint missing`() {
         val outputs = mapOf(
-            "custom" to mapOf(
-                "CustomerProfiles" to mapOf(
-                    "region" to "us-east-1"
+            "notifications" to mapOf(
+                "amazon_connect_customer_profiles" to mapOf(
+                    "aws_region" to "us-east-1"
                 )
             )
         )
@@ -83,10 +83,10 @@ class ConnectClientConfigurationTest {
     }
 
     @Test
-    fun `fromAmplifyOutputs throws when region missing`() {
+    fun `fromAmplifyOutputs throws when aws_region missing`() {
         val outputs = mapOf(
-            "custom" to mapOf(
-                "CustomerProfiles" to mapOf(
+            "notifications" to mapOf(
+                "amazon_connect_customer_profiles" to mapOf(
                     "endpoint" to "https://example.com"
                 )
             )
@@ -94,7 +94,7 @@ class ConnectClientConfigurationTest {
         val exception = shouldThrow<ConnectConfigurationException> {
             ConnectClientConfiguration.fromAmplifyOutputs(outputs)
         }
-        exception.message shouldContain "region"
+        exception.message shouldContain "aws_region"
     }
 
     @Test

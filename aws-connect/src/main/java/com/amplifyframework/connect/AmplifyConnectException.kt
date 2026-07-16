@@ -80,8 +80,8 @@ class ConnectConfigurationException(
 ) : AmplifyConnectException(
     message = detail,
     recoverySuggestion = "Provide a valid ConnectClientConfiguration, or add a " +
-        "\"custom.CustomerProfiles\" section with " +
-        "\"endpoint\" and \"region\" to amplify_outputs."
+        "\"notifications.amazon_connect_customer_profiles\" section with " +
+        "\"endpoint\" and \"aws_region\" to amplify_outputs."
 )
 
 /** Unclassified endpoint error (e.g., 5xx responses). */
