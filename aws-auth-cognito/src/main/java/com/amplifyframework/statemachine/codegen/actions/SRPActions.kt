@@ -26,6 +26,7 @@ internal interface SRPActions {
         challengeParameters: Map<String, String>,
         metadata: Map<String, String>,
         session: String?,
-        signInMethod: SignInMethod
+        signInMethod: SignInMethod,
+        inputUsername: String? = null
     ): Action
 }

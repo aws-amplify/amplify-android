@@ -71,7 +71,8 @@ internal object SignInCustomCognitoActions : CustomSignInActions {
                         session = initiateAuthResponse.session,
                         challengeParameters = initiateAuthResponse.challengeParameters,
                         authenticationResult = initiateAuthResponse.authenticationResult,
-                        signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.CUSTOM_AUTH)
+                        signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.CUSTOM_AUTH),
+                        inputUsername = event.username
                     )
                 } else {
                     throw ServiceException(
