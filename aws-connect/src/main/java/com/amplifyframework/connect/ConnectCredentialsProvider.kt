@@ -17,35 +17,23 @@ package com.amplifyframework.connect
 import com.amplifyframework.foundation.credentials.AwsCredentials
 
 /**
- * The resolved auth material used to authorize an identify request.
+ * Resolves AWS credentials for signing requests to the Customer Profiles
+ * endpoint.
  *
- * Exactly one path applies:
- *  - Authenticated: [accessToken] is non-null. The auth route is used with
- *    `Authorization: Bearer <accessToken>`.
- *  - Guest: [accessToken] is null but [credentials] are present. The guest
- *    route is used, SigV4-signed (`execute-api`) with those credentials.
- *
- * @param accessToken The Cognito user-pool access token, or null for guest
- * @param credentials The Identity Pool AWS credentials for signing the guest route
- * @param identityId The Identity Pool identityId, if available
- */
-data class ConnectSession(
-    val accessToken: String? = null,
-    val credentials: AwsCredentials? = null,
-    val identityId: String? = null
-) {
-    /** Whether an authenticated access token is present. */
-    val isAuthenticated: Boolean get() = accessToken != null
-}
-
-/**
- * Resolves a [ConnectSession] for the current caller.
+ * All routes use SigV4 (`execute-api`) — both authenticated users (Cognito
+ * Identity Pool credentials derived from the user-pool token) and
+ * unauthenticated guests (guest Identity Pool credentials). The backend
+ * Lambda derives the principal identity from the signer.
  *
  * The Amplify Auth integration layer implements this against
- * `Amplify.Auth.fetchAuthSession()` to extract the access token and/or
- * guest credentials.
+ * `Amplify.Auth.fetchAuthSession()` to extract the Identity Pool AWS
+ * credentials.
  */
 fun interface ConnectCredentialsProvider {
-    /** Resolves the auth material for the current caller. */
-    suspend fun fetchSession(): ConnectSession
+    /**
+     * Resolves the AWS credentials for signing the request.
+     *
+     * @throws ConnectNotSignedInException if credentials cannot be obtained
+     */
+    suspend fun resolve(): AwsCredentials
 }

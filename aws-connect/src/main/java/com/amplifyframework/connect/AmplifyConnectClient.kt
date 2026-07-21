@@ -15,40 +15,48 @@
 package com.amplifyframework.connect
 
 import androidx.annotation.VisibleForTesting
-import com.amplifyframework.connect.internal.IdentifyUserService
+import com.amplifyframework.connect.internal.ConnectService
+import com.amplifyframework.connect.internal.DeviceIdStore
 import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.foundation.logging.Logger
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 
 /**
- * A standalone, online-only client for the Amazon Connect Customer Profiles
- * identify endpoint (a backend Lambda fronted by an HTTP API).
+ * Client for the Amazon Connect Customer Profiles identify endpoint.
  *
- * The client is a thin authorized POST: it resolves the caller's session
- * through an injected [ConnectCredentialsProvider] and sends the request to
- * the authenticated or guest route accordingly. Device registration is folded
- * into [identifyUser] via [IdentifyUserOptions] — there is no separate device
- * route in the backend contract.
+ * All routes are SigV4-signed (`execute-api`). The backend Lambda derives
+ * the caller's identity (Cognito sub or guest identityId) from the signer.
+ *
+ * Public API:
+ * - [identifyUser] — sends profile attributes
+ * - [registerDevice] — registers the device for push notifications
+ * - [removeDevice] — removes the device from the profile
  *
  * ## Deferred (Phase 2)
  *
- * Network calls happen immediately and surface [ConnectNetworkException] when
+ * Network calls are synchronous and surface [ConnectNetworkException] when
  * offline. The offline queue, connectivity drain, and retry/backoff are not
  * implemented here.
+ *
+ * @param configuration Endpoint and region from amplify_outputs
+ * @param credentialsProvider Resolves AWS credentials for SigV4 signing
+ * @param deviceIdStore Persistent device id store (shared key with enrichment)
+ * @param platform Client OS platform (e.g. "Android")
+ * @param appVersion Application version string
+ * @param channelType Push channel type for this device
  */
 class AmplifyConnectClient(
     configuration: ConnectClientConfiguration,
     private val credentialsProvider: ConnectCredentialsProvider,
+    private val deviceIdStore: DeviceIdStore,
     private val platform: String? = null,
-    private val appVersion: String? = null
+    private val appVersion: String? = null,
+    private val channelType: ChannelType = ChannelType.GCM
 ) {
     @VisibleForTesting
-    internal var service: IdentifyUserService = IdentifyUserService(
+    internal var service: ConnectService = ConnectService(
         endpoint = configuration.endpoint,
         region = configuration.region
     )
@@ -57,70 +65,102 @@ class AmplifyConnectClient(
     internal constructor(
         configuration: ConnectClientConfiguration,
         credentialsProvider: ConnectCredentialsProvider,
+        deviceIdStore: DeviceIdStore,
         platform: String?,
         appVersion: String?,
-        service: IdentifyUserService
-    ) : this(configuration, credentialsProvider, platform, appVersion) {
+        channelType: ChannelType,
+        service: ConnectService
+    ) : this(configuration, credentialsProvider, deviceIdStore, platform, appVersion, channelType) {
         this.service = service
     }
+
     private val logger: Logger = AmplifyLogging.logger<AmplifyConnectClient>()
 
     /**
-     * Sends user information to the Customer Profiles endpoint.
+     * Sends user profile attributes to the Customer Profiles endpoint.
      *
-     * Routes to the authenticated endpoint (bearer token, keyed on the Cognito
-     * `sub`) when the session has a user-pool token, otherwise to the guest
-     * endpoint (SigV4 `execute-api`, keyed on the Identity Pool `identityId`).
-     *
-     * [userId] is optional; it is stored only as an attribute and is never the
-     * identity key. Device registration and merge-on-sign-in are expressed via
-     * [options].
+     * POST /identify-user with body `{ userProfile }`.
      *
      * @param userProfile User profile attributes to send
-     * @param userId Optional application-level user identifier
-     * @param options Device registration and merge-on-sign-in options
-     * @throws ConnectNotSignedInException if no auth material is available
+     * @throws ConnectNotSignedInException if credentials cannot be resolved
      * @throws ConnectNetworkException on transport failure
      * @throws AmplifyConnectException for endpoint errors
      */
-    suspend fun identifyUser(userProfile: UserProfile, userId: String? = null, options: IdentifyUserOptions? = null) {
-        val session = credentialsProvider.fetchSession()
+    suspend fun identifyUser(userProfile: UserProfile) {
+        val credentials = credentialsProvider.resolve()
         val body = buildJsonObject {
-            userId?.let { put("userId", it) }
             putJsonObject("userProfile") {
-                userProfile.name?.let { put("name", it) }
                 userProfile.email?.let { put("email", it) }
-                userProfile.phoneNumber?.let { put("phoneNumber", it) }
-                userProfile.plan?.let { put("plan", it) }
+                userProfile.name?.let { put("name", it) }
+                userProfile.phone?.let { put("phone", it) }
                 userProfile.customAttributes?.takeIf { it.isNotEmpty() }?.let { attrs ->
                     putJsonObject("customAttributes") {
                         attrs.forEach { (k, v) -> put(k, v) }
                     }
                 }
-            }
-            if (options != null && !options.isEmpty) {
-                putJsonObject("options") {
-                    options.toJson().forEach { (k, v) ->
-                        put(k, toJsonElement(v))
+                userProfile.location?.let { loc ->
+                    putJsonObject("location") {
+                        loc.city?.let { put("city", it) }
+                        loc.country?.let { put("country", it) }
+                        loc.postalCode?.let { put("postalCode", it) }
+                        loc.region?.let { put("region", it) }
                     }
                 }
             }
         }
-        service.identify(session = session, body = body.toString())
-        logger.info { "identifyUser sent (${if (session.isAuthenticated) "authenticated" else "guest"})" }
+        service.identifyUser(credentials, body.toString())
+        logger.info { "identifyUser sent" }
     }
 
-    @Suppress("UNCHECKED_CAST")
-    private fun toJsonElement(value: Any): JsonElement = when (value) {
-        is String -> JsonPrimitive(value)
-        is Number -> JsonPrimitive(value)
-        is Boolean -> JsonPrimitive(value)
-        is Map<*, *> -> buildJsonObject {
-            (value as Map<String, Any>).forEach { (k, v) -> put(k, toJsonElement(v)) }
+    /**
+     * Registers the current device for push notifications.
+     *
+     * POST /register-device with body `{ device: { token, deviceId, platform?, appVersion?, channelType } }`.
+     *
+     * The [deviceId] is resolved from the shared device-id store
+     * (`com.amplifyframework.device_id`). It is the server-side upsert key —
+     * stable across launches and token refreshes so a device always maps to
+     * one profile object.
+     *
+     * @param token The platform push token (FCM registration token or APNs device token)
+     * @throws ConnectNotSignedInException if credentials cannot be resolved
+     * @throws ConnectNetworkException on transport failure
+     * @throws AmplifyConnectException for endpoint errors
+     */
+    suspend fun registerDevice(token: String) {
+        val credentials = credentialsProvider.resolve()
+        val deviceId = deviceIdStore.getOrCreate()
+        val body = buildJsonObject {
+            putJsonObject("device") {
+                put("token", token)
+                put("deviceId", deviceId)
+                platform?.let { put("platform", it) }
+                appVersion?.let { put("appVersion", it) }
+                put("channelType", channelType.value)
+            }
         }
-        is List<*> -> kotlinx.serialization.json.JsonArray(
-            value.map { toJsonElement(it ?: JsonNull) }
-        )
-        else -> JsonPrimitive(value.toString())
+        service.registerDevice(credentials, body.toString())
+        logger.info { "registerDevice sent for channel ${channelType.value}" }
+    }
+
+    /**
+     * Removes the current device from the caller's profile.
+     *
+     * POST /remove-device with body `{ deviceId }`.
+     *
+     * The [deviceId] is resolved from the shared device-id store.
+     *
+     * @throws ConnectNotSignedInException if credentials cannot be resolved
+     * @throws ConnectNetworkException on transport failure
+     * @throws AmplifyConnectException for endpoint errors
+     */
+    suspend fun removeDevice() {
+        val credentials = credentialsProvider.resolve()
+        val deviceId = deviceIdStore.getOrCreate()
+        val body = buildJsonObject {
+            put("deviceId", deviceId)
+        }
+        service.removeDevice(credentials, body.toString())
+        logger.info { "removeDevice sent" }
     }
 }

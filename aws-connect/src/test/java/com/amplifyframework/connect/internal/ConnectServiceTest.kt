@@ -16,9 +16,7 @@ package com.amplifyframework.connect.internal
 
 import com.amplifyframework.connect.ConnectAccessDeniedException
 import com.amplifyframework.connect.ConnectNetworkException
-import com.amplifyframework.connect.ConnectNotSignedInException
 import com.amplifyframework.connect.ConnectServiceException
-import com.amplifyframework.connect.ConnectSession
 import com.amplifyframework.connect.ConnectThrottlingException
 import com.amplifyframework.connect.ConnectValidationException
 import com.amplifyframework.foundation.credentials.AwsCredentials
@@ -36,16 +34,22 @@ import org.robolectric.RobolectricTestRunner
 
 @OptIn(kotlin.time.ExperimentalTime::class)
 @RunWith(RobolectricTestRunner::class)
-class IdentifyUserServiceTest {
+class ConnectServiceTest {
 
     private lateinit var server: MockWebServer
-    private lateinit var service: IdentifyUserService
+    private lateinit var service: ConnectService
+    private val testCredentials = AwsCredentials.Temporary(
+        accessKeyId = "AKID",
+        secretAccessKey = "secret",
+        sessionToken = "session",
+        expiration = kotlin.time.Instant.DISTANT_FUTURE
+    )
 
     @Before
     fun setup() {
         server = MockWebServer()
         server.start()
-        service = IdentifyUserService(
+        service = ConnectService(
             endpoint = server.url("").toString().trimEnd('/'),
             region = "us-east-1"
         )
@@ -57,48 +61,41 @@ class IdentifyUserServiceTest {
     }
 
     @Test
-    fun `authenticated path sends POST to identify-user with bearer token`() = runTest {
+    fun `identifyUser sends POST to identify-user with SigV4`() = runTest {
         server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
 
-        val session = ConnectSession(accessToken = "my-token")
-        service.identify(session, """{"userId":"u1"}""")
+        service.identifyUser(testCredentials, """{"userProfile":{"name":"Alice"}}""")
 
         val request = server.takeRequest()
         request.method shouldBe "POST"
         request.path shouldBe "/identify-user"
-        request.getHeader("Authorization") shouldBe "Bearer my-token"
-        request.getHeader("Content-Type") shouldContain "application/json"
-        request.body.readUtf8() shouldBe """{"userId":"u1"}"""
+        request.getHeader("Authorization")!! shouldContain "AWS4-HMAC-SHA256"
+        request.getHeader("X-Amz-Security-Token") shouldBe "session"
+        request.body.readUtf8() shouldBe """{"userProfile":{"name":"Alice"}}"""
     }
 
     @Test
-    fun `guest path sends POST to identify-user-guest with SigV4 headers`() = runTest {
+    fun `registerDevice sends POST to register-device with SigV4`() = runTest {
         server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
 
-        val session = ConnectSession(
-            credentials = AwsCredentials.Temporary(
-                accessKeyId = "AKID",
-                secretAccessKey = "secret",
-                sessionToken = "session",
-                expiration = kotlin.time.Instant.DISTANT_FUTURE
-            )
-        )
-        service.identify(session, """{"userId":"g1"}""")
+        service.registerDevice(testCredentials, """{"device":{"token":"t","deviceId":"d"}}""")
 
         val request = server.takeRequest()
         request.method shouldBe "POST"
-        request.path shouldBe "/identify-user-guest"
-        // SigV4 adds Authorization header with AWS4-HMAC-SHA256
+        request.path shouldBe "/register-device"
         request.getHeader("Authorization")!! shouldContain "AWS4-HMAC-SHA256"
-        request.getHeader("X-Amz-Security-Token") shouldBe "session"
     }
 
     @Test
-    fun `throws NotSignedInException when no token and no credentials`() = runTest {
-        val session = ConnectSession()
-        shouldThrow<ConnectNotSignedInException> {
-            service.identify(session, "{}")
-        }
+    fun `removeDevice sends POST to remove-device with SigV4`() = runTest {
+        server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
+
+        service.removeDevice(testCredentials, """{"deviceId":"d"}""")
+
+        val request = server.takeRequest()
+        request.method shouldBe "POST"
+        request.path shouldBe "/remove-device"
+        request.getHeader("Authorization")!! shouldContain "AWS4-HMAC-SHA256"
     }
 
     @Test
@@ -106,7 +103,7 @@ class IdentifyUserServiceTest {
         server.enqueue(MockResponse().setResponseCode(429).setBody("{}"))
 
         shouldThrow<ConnectThrottlingException> {
-            service.identify(ConnectSession(accessToken = "t"), "{}")
+            service.identifyUser(testCredentials, "{}")
         }
     }
 
@@ -115,7 +112,7 @@ class IdentifyUserServiceTest {
         server.enqueue(MockResponse().setResponseCode(401).setBody("{}"))
 
         shouldThrow<ConnectAccessDeniedException> {
-            service.identify(ConnectSession(accessToken = "t"), "{}")
+            service.identifyUser(testCredentials, "{}")
         }
     }
 
@@ -124,46 +121,44 @@ class IdentifyUserServiceTest {
         server.enqueue(MockResponse().setResponseCode(403).setBody("{}"))
 
         shouldThrow<ConnectAccessDeniedException> {
-            service.identify(ConnectSession(accessToken = "t"), "{}")
+            service.identifyUser(testCredentials, "{}")
         }
     }
 
     @Test
-    fun `maps 400 to ValidationException with error detail`() = runTest {
+    fun `maps 400 to ValidationException with detail`() = runTest {
         server.enqueue(
-            MockResponse().setResponseCode(400)
-                .setBody("""{"error":"Invalid userId"}""")
+            MockResponse().setResponseCode(400).setBody("""{"error":"Bad input"}""")
         )
 
         val ex = shouldThrow<ConnectValidationException> {
-            service.identify(ConnectSession(accessToken = "t"), "{}")
+            service.identifyUser(testCredentials, "{}")
         }
-        ex.message shouldContain "Invalid userId"
+        ex.message shouldContain "Bad input"
     }
 
     @Test
     fun `maps 500 to ServiceException`() = runTest {
         server.enqueue(
-            MockResponse().setResponseCode(500)
-                .setBody("""{"message":"Internal error"}""")
+            MockResponse().setResponseCode(500).setBody("""{"message":"Internal"}""")
         )
 
         val ex = shouldThrow<ConnectServiceException> {
-            service.identify(ConnectSession(accessToken = "t"), "{}")
+            service.identifyUser(testCredentials, "{}")
         }
-        ex.message shouldContain "Internal error"
+        ex.message shouldContain "Internal"
     }
 
     @Test
     fun `network failure throws ConnectNetworkException`() = runTest {
-        server.shutdown() // force connection refused
-        val brokenService = IdentifyUserService(
+        server.shutdown()
+        val brokenService = ConnectService(
             endpoint = "http://localhost:1",
             region = "us-east-1"
         )
 
         shouldThrow<ConnectNetworkException> {
-            brokenService.identify(ConnectSession(accessToken = "t"), "{}")
+            brokenService.identifyUser(testCredentials, "{}")
         }
     }
 }

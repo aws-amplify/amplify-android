@@ -14,12 +14,14 @@
  */
 package com.amplifyframework.connect
 
-import com.amplifyframework.connect.internal.IdentifyUserService
+import com.amplifyframework.connect.internal.ConnectService
+import com.amplifyframework.connect.internal.DeviceIdStore
 import com.amplifyframework.foundation.credentials.AwsCredentials
-import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
@@ -31,102 +33,111 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class AmplifyConnectClientTest {
 
-    private val mockService = mockk<IdentifyUserService>(relaxed = true)
+    private val mockService = mockk<ConnectService>(relaxed = true)
+    private val mockDeviceIdStore = mockk<DeviceIdStore>()
     private val mockCredentialsProvider = mockk<ConnectCredentialsProvider>()
+    private val testCredentials = AwsCredentials.Temporary(
+        accessKeyId = "AKID",
+        secretAccessKey = "secret",
+        sessionToken = "session",
+        expiration = kotlin.time.Instant.DISTANT_FUTURE
+    )
 
-    private fun createClient(platform: String? = "Android", appVersion: String? = "1.0.0") = AmplifyConnectClient(
+    private fun createClient(
+        platform: String? = "Android",
+        appVersion: String? = "1.0.0",
+        channelType: ChannelType = ChannelType.GCM
+    ) = AmplifyConnectClient(
         configuration = ConnectClientConfiguration(
             endpoint = "https://test.execute-api.us-east-1.amazonaws.com",
             region = "us-east-1"
         ),
         credentialsProvider = mockCredentialsProvider,
+        deviceIdStore = mockDeviceIdStore,
         platform = platform,
         appVersion = appVersion,
+        channelType = channelType,
         service = mockService
     )
 
     @Test
-    fun `identifyUser sends authenticated request with bearer token`() = runTest {
-        coEvery { mockCredentialsProvider.fetchSession() } returns ConnectSession(
-            accessToken = "test-access-token"
-        )
+    fun `identifyUser sends userProfile with all fields`() = runTest {
+        coEvery { mockCredentialsProvider.resolve() } returns testCredentials
 
         val client = createClient()
-        client.identifyUser(userProfile = UserProfile(name = "Alice"), userId = "user-1")
+        client.identifyUser(
+            UserProfile(
+                email = "alice@test.com",
+                name = "Alice",
+                phone = "+1234567890",
+                customAttributes = mapOf("tier" to "premium"),
+                location = UserProfileLocation(city = "Seattle", country = "US")
+            )
+        )
 
-        val sessionSlot = slot<ConnectSession>()
         val bodySlot = slot<String>()
-        coVerify { mockService.identify(capture(sessionSlot), capture(bodySlot)) }
-        sessionSlot.captured.isAuthenticated shouldBe true
-        bodySlot.captured shouldContain "\"userId\":\"user-1\""
+        coVerify { mockService.identifyUser(testCredentials, capture(bodySlot)) }
+        bodySlot.captured shouldContain "\"email\":\"alice@test.com\""
         bodySlot.captured shouldContain "\"name\":\"Alice\""
+        bodySlot.captured shouldContain "\"phone\":\"+1234567890\""
+        bodySlot.captured shouldContain "\"tier\":\"premium\""
+        bodySlot.captured shouldContain "\"city\":\"Seattle\""
+        bodySlot.captured shouldContain "\"country\":\"US\""
     }
 
     @Test
-    fun `identifyUser sends guest request with credentials`() = runTest {
-        val guestCreds = AwsCredentials.Temporary(
-            accessKeyId = "AKIA_GUEST",
-            secretAccessKey = "secret",
-            sessionToken = "session-token",
-            expiration = kotlin.time.Instant.DISTANT_FUTURE
-        )
-        coEvery { mockCredentialsProvider.fetchSession() } returns ConnectSession(
-            credentials = guestCreds,
-            identityId = "us-east-1:guest-id"
-        )
+    fun `identifyUser does not send userId`() = runTest {
+        coEvery { mockCredentialsProvider.resolve() } returns testCredentials
 
         val client = createClient()
-        client.identifyUser(userProfile = UserProfile(email = "guest@test.com"))
-
-        val sessionSlot = slot<ConnectSession>()
-        coVerify { mockService.identify(capture(sessionSlot), any()) }
-        sessionSlot.captured.isAuthenticated shouldBe false
-        sessionSlot.captured.credentials shouldBe guestCreds
-    }
-
-    @Test
-    fun `identifyUser includes options when non-empty`() = runTest {
-        coEvery { mockCredentialsProvider.fetchSession() } returns ConnectSession(
-            accessToken = "token"
-        )
-
-        val client = createClient()
-        client.identifyUser(
-            userProfile = UserProfile(),
-            options = IdentifyUserOptions(
-                deviceId = "device-123"
-            )
-        )
+        client.identifyUser(UserProfile(name = "Bob"))
 
         val bodySlot = slot<String>()
-        coVerify { mockService.identify(any(), capture(bodySlot)) }
-        bodySlot.captured shouldContain "\"deviceId\":\"device-123\""
+        coVerify { mockService.identifyUser(testCredentials, capture(bodySlot)) }
+        bodySlot.captured shouldNotContain "userId"
     }
 
     @Test
-    fun `identifyUser with device options sends deviceId and channelType`() = runTest {
-        coEvery { mockCredentialsProvider.fetchSession() } returns ConnectSession(
-            accessToken = "token"
-        )
+    fun `registerDevice sends device object with token and deviceId`() = runTest {
+        coEvery { mockCredentialsProvider.resolve() } returns testCredentials
+        every { mockDeviceIdStore.getOrCreate() } returns "stable-device-uuid"
 
         val client = createClient()
-        client.identifyUser(
-            userProfile = UserProfile(),
-            options = IdentifyUserOptions(
-                address = "fcm-token-abc",
-                deviceId = "stable-device-uuid",
-                channelType = ChannelType.GCM,
-                platform = "Android",
-                appVersion = "1.0.0"
-            )
-        )
+        client.registerDevice("fcm-token-abc")
 
         val bodySlot = slot<String>()
-        coVerify { mockService.identify(any(), capture(bodySlot)) }
-        bodySlot.captured shouldContain "\"address\":\"fcm-token-abc\""
+        coVerify { mockService.registerDevice(testCredentials, capture(bodySlot)) }
+        bodySlot.captured shouldContain "\"token\":\"fcm-token-abc\""
         bodySlot.captured shouldContain "\"deviceId\":\"stable-device-uuid\""
-        bodySlot.captured shouldContain "\"channelType\":\"GCM\""
         bodySlot.captured shouldContain "\"platform\":\"Android\""
         bodySlot.captured shouldContain "\"appVersion\":\"1.0.0\""
+        bodySlot.captured shouldContain "\"channelType\":\"GCM\""
+    }
+
+    @Test
+    fun `registerDevice omits null platform and appVersion`() = runTest {
+        coEvery { mockCredentialsProvider.resolve() } returns testCredentials
+        every { mockDeviceIdStore.getOrCreate() } returns "device-id"
+
+        val client = createClient(platform = null, appVersion = null)
+        client.registerDevice("token")
+
+        val bodySlot = slot<String>()
+        coVerify { mockService.registerDevice(testCredentials, capture(bodySlot)) }
+        bodySlot.captured shouldNotContain "\"platform\""
+        bodySlot.captured shouldNotContain "\"appVersion\""
+    }
+
+    @Test
+    fun `removeDevice sends deviceId from store`() = runTest {
+        coEvery { mockCredentialsProvider.resolve() } returns testCredentials
+        every { mockDeviceIdStore.getOrCreate() } returns "my-device-id"
+
+        val client = createClient()
+        client.removeDevice()
+
+        val bodySlot = slot<String>()
+        coVerify { mockService.removeDevice(testCredentials, capture(bodySlot)) }
+        bodySlot.captured shouldContain "\"deviceId\":\"my-device-id\""
     }
 }

@@ -16,9 +16,7 @@ package com.amplifyframework.connect.internal
 
 import com.amplifyframework.connect.ConnectAccessDeniedException
 import com.amplifyframework.connect.ConnectNetworkException
-import com.amplifyframework.connect.ConnectNotSignedInException
 import com.amplifyframework.connect.ConnectServiceException
-import com.amplifyframework.connect.ConnectSession
 import com.amplifyframework.connect.ConnectThrottlingException
 import com.amplifyframework.connect.ConnectValidationException
 import com.amplifyframework.foundation.credentials.AwsCredentials
@@ -38,52 +36,39 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 
 /**
- * Sends identify requests to the Customer Profiles endpoint.
+ * Sends SigV4-signed requests to the Customer Profiles endpoint.
  *
- * Selects the route and authorization from the resolved [ConnectSession]:
- *  - Authenticated: `POST {endpoint}/identify-user` with a bearer token.
- *  - Guest: `POST {endpoint}/identify-user-guest`, SigV4-signed for
- *    `execute-api` with the guest credentials.
+ * All routes are SigV4-signed for service `execute-api`. The backend Lambda
+ * derives the principal identity from the signer (Cognito sub for authed
+ * users, identityId for guests).
  */
-internal class IdentifyUserService(
+internal class ConnectService(
     private val endpoint: String,
     private val region: String,
     private val httpClient: OkHttpClient = OkHttpClient()
 ) {
     /**
-     * Sends an identify request with [body], authorized per [session].
+     * POST /identify-user with the given [body], SigV4-signed with [credentials].
      */
-    suspend fun identify(session: ConnectSession, body: String) {
-        val response = if (session.isAuthenticated) {
-            sendAuthenticated(session.accessToken!!, body)
-        } else {
-            val credentials = session.credentials
-                ?: throw ConnectNotSignedInException()
-            sendGuest(credentials, body)
-        }
-
-        if (response.code !in 200..299) {
-            val responseBody = response.body?.string().orEmpty()
-            throw mapErrorResponse(response.code, responseBody)
-        }
+    suspend fun identifyUser(credentials: AwsCredentials, body: String) {
+        sendSigV4("$endpoint$IDENTIFY_USER_PATH", credentials, body)
     }
 
-    private fun sendAuthenticated(accessToken: String, body: String): okhttp3.Response {
-        val request = Request.Builder()
-            .url("$endpoint$IDENTIFY_USER_PATH")
-            .addHeader("Content-Type", "application/json")
-            .addHeader("Authorization", "Bearer $accessToken")
-            .post(body.toRequestBody(JSON_MEDIA_TYPE))
-            .build()
-        return try {
-            httpClient.newCall(request).execute()
-        } catch (e: Exception) {
-            throw ConnectNetworkException(cause = e)
-        }
+    /**
+     * POST /register-device with the given [body], SigV4-signed with [credentials].
+     */
+    suspend fun registerDevice(credentials: AwsCredentials, body: String) {
+        sendSigV4("$endpoint$REGISTER_DEVICE_PATH", credentials, body)
     }
 
-    private fun sendGuest(credentials: AwsCredentials, body: String): okhttp3.Response {
-        val url = "$endpoint$GUEST_IDENTIFY_USER_PATH"
+    /**
+     * POST /remove-device with the given [body], SigV4-signed with [credentials].
+     */
+    suspend fun removeDevice(credentials: AwsCredentials, body: String) {
+        sendSigV4("$endpoint$REMOVE_DEVICE_PATH", credentials, body)
+    }
+
+    private fun sendSigV4(url: String, credentials: AwsCredentials, body: String) {
         val parsedUrl = URL(url)
         val host = parsedUrl.host
         val path = parsedUrl.path.ifEmpty { "/" }
@@ -95,7 +80,6 @@ internal class IdentifyUserService(
 
         val payloadHash = sha256Hex(bodyBytes)
 
-        // Build canonical request
         val signedHeaders = buildList {
             add("content-type")
             add("host")
@@ -115,13 +99,12 @@ internal class IdentifyUserService(
         val canonicalRequest = listOf(
             "POST",
             path,
-            "", // empty query string
+            "",
             canonicalHeaders,
             signedHeaders,
             payloadHash
         ).joinToString("\n")
 
-        // String to sign
         val credentialScope = "$dateStamp/$region/$SERVICE_EXECUTE_API/aws4_request"
         val stringToSign = listOf(
             "AWS4-HMAC-SHA256",
@@ -130,7 +113,6 @@ internal class IdentifyUserService(
             sha256Hex(canonicalRequest.toByteArray(Charsets.UTF_8))
         ).joinToString("\n")
 
-        // Signing key
         val signingKey = getSignatureKey(credentials.secretAccessKey, dateStamp, region)
         val signature = hmacSha256Hex(signingKey, stringToSign)
 
@@ -149,10 +131,15 @@ internal class IdentifyUserService(
             requestBuilder.addHeader("X-Amz-Security-Token", credentials.sessionToken)
         }
 
-        return try {
+        val response = try {
             httpClient.newCall(requestBuilder.build()).execute()
         } catch (e: Exception) {
             throw ConnectNetworkException(cause = e)
+        }
+
+        if (response.code !in 200..299) {
+            val responseBody = response.body?.string().orEmpty()
+            throw mapErrorResponse(response.code, responseBody)
         }
     }
 
@@ -183,10 +170,8 @@ internal class IdentifyUserService(
         }
     }
 
-    private fun sha256Hex(data: ByteArray): String {
-        val digest = MessageDigest.getInstance("SHA-256").digest(data)
-        return digest.joinToString("") { "%02x".format(it) }
-    }
+    private fun sha256Hex(data: ByteArray): String =
+        MessageDigest.getInstance("SHA-256").digest(data).joinToString("") { "%02x".format(it) }
 
     private fun hmacSha256(key: ByteArray, data: String): ByteArray {
         val mac = Mac.getInstance("HmacSHA256")
@@ -206,7 +191,8 @@ internal class IdentifyUserService(
 
     internal companion object {
         const val IDENTIFY_USER_PATH = "/identify-user"
-        const val GUEST_IDENTIFY_USER_PATH = "/identify-user-guest"
+        const val REGISTER_DEVICE_PATH = "/register-device"
+        const val REMOVE_DEVICE_PATH = "/remove-device"
         const val SERVICE_EXECUTE_API = "execute-api"
         val JSON_MEDIA_TYPE = "application/json".toMediaType()
         val AMZ_DATE_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")

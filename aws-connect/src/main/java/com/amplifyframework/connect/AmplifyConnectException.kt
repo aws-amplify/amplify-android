@@ -29,9 +29,9 @@ sealed class AmplifyConnectException(
 class ConnectNotSignedInException(
     cause: Throwable? = null
 ) : AmplifyConnectException(
-    message = "No Cognito access token or guest credentials were found.",
+    message = "No AWS credentials could be resolved for signing the request.",
     recoverySuggestion = "Ensure Amplify Auth is configured with a Cognito Identity Pool " +
-        "(guest access) or sign the user in before calling identifyUser.",
+        "and the user is signed in or guest access is enabled.",
     cause = cause
 )
 

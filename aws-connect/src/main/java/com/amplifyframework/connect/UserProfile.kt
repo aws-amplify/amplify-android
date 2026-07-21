@@ -17,16 +17,31 @@ package com.amplifyframework.connect
 /**
  * User profile attributes to associate with the Customer Profiles record.
  *
- * @param name Display name (maps to FirstName in Customer Profiles)
- * @param email Email address (maps to EmailAddress)
- * @param phoneNumber Phone number (maps to PhoneNumber)
- * @param plan Subscription plan or tier (stored as custom attribute)
- * @param customAttributes Additional key-value attributes to store on the profile
+ * @param email Email address
+ * @param name Display name
+ * @param phone Phone number
+ * @param customAttributes Additional key-value string attributes
+ * @param location Geographic location attributes
  */
 data class UserProfile(
-    val name: String? = null,
     val email: String? = null,
-    val phoneNumber: String? = null,
-    val plan: String? = null,
-    val customAttributes: Map<String, String>? = null
+    val name: String? = null,
+    val phone: String? = null,
+    val customAttributes: Map<String, String>? = null,
+    val location: UserProfileLocation? = null
+)
+
+/**
+ * Geographic location attributes for a user profile.
+ *
+ * @param city City name
+ * @param country Country name or code
+ * @param postalCode Postal or zip code
+ * @param region State, province, or region
+ */
+data class UserProfileLocation(
+    val city: String? = null,
+    val country: String? = null,
+    val postalCode: String? = null,
+    val region: String? = null
 )
