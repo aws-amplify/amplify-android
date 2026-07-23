@@ -63,6 +63,7 @@ include(":aws-api-appsync")
 include(":maplibre-adapter")
 include(":aws-pinpoint-core")
 include(":aws-push-notifications-pinpoint-common")
+include(":aws-push-notifications-common")
 
 // Events API
 include(":aws-sdk-appsync-core")
