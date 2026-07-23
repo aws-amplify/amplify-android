@@ -19,6 +19,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+import com.amplifyframework.annotations.InternalAmplifyApi;
+
 /**
  * Utility to create a ISO 8601 compliant timestamps.
  * This utility only created US-locale timestamps. It is intended for
@@ -26,10 +28,12 @@ import java.util.Locale;
  * timestamp returned by this utility should not be displayed to end
  * users in a UI, as it is not localized.
  */
-final class Iso8601Timestamp {
+@InternalAmplifyApi
+public final class Iso8601Timestamp {
     private Iso8601Timestamp() {}
 
-    static String now() {
+    @InternalAmplifyApi
+    public static String now() {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'", Locale.US);
         return formatter.format(new Date());
     }
