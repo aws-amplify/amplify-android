@@ -57,7 +57,7 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
             }
 
             defaultConfig {
-                minSdk = 24
+                minSdk = 26
                 testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
                 testInstrumentationRunnerArguments += "clearPackageData" to "true"
                 consumerProguardFiles += rootProject.file("configuration/consumer-rules.pro")
@@ -83,10 +83,6 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                 )
             }
 
-            compileOptions {
-                isCoreLibraryDesugaringEnabled = true
-            }
-
             // Needed when running integration tests. The oauth2 library uses relies on two
             // dependencies (Apache's httpcore and httpclient), both of which include
             // META-INF/DEPENDENCIES. Tried a couple other options to no avail.
@@ -103,7 +99,6 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
         }
 
         dependencies {
-            "coreLibraryDesugaring"(libs.findLibrary("android-desugartools").get())
             constraints {
                 add("implementation", libs.findLibrary("androidx-annotation-experimental").get()) {
                     because("Fixes a lint bug with RequiresOptIn")
