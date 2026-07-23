@@ -95,7 +95,8 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                     listOf(
                         "META-INF/DEPENDENCIES",
                         "META-INF/LICENSE.md",
-                        "META-INF/LICENSE-notice.md"
+                        "META-INF/LICENSE-notice.md",
+                        "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
                     )
                 )
             }

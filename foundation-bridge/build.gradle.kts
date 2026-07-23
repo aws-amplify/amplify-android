@@ -8,6 +8,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":foundation"))
+                api(project.dependencies.platform(libs.aws.bom))
                 api(libs.aws.credentials)
                 implementation(libs.aws.config)
                 implementation(libs.aws.http)

@@ -36,6 +36,7 @@ dependencies {
     api(platform(libs.firebase.bom))
     api(libs.firebase.messaging)
 
+    implementation(platform(libs.aws.bom))
     implementation(libs.aws.http)
     implementation(libs.aws.pinpoint)
 

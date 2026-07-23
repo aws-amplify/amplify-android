@@ -29,6 +29,7 @@ dependencies {
     implementation(libs.kotlin.stdlib)
     implementation(libs.kotlin.coroutines)
 
+    implementation(platform(libs.aws.bom))
     implementation(libs.aws.smithy.http)
     compileOnly(libs.aws.smithy.okhttp4)
 
