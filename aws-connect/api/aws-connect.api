@@ -1,0 +1,133 @@
+public final class com/amplifyframework/connect/AmplifyConnectClient {
+	public fun <init> (Lcom/amplifyframework/connect/ConnectClientConfiguration;Lcom/amplifyframework/connect/ConnectCredentialsProvider;Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/ChannelType;)V
+	public synthetic fun <init> (Lcom/amplifyframework/connect/ConnectClientConfiguration;Lcom/amplifyframework/connect/ConnectCredentialsProvider;Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/ChannelType;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun identifyUser (Lcom/amplifyframework/connect/UserProfile;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun registerDevice (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun removeDevice (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract class com/amplifyframework/connect/AmplifyConnectException : com/amplifyframework/foundation/exceptions/AmplifyException {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/amplifyframework/connect/BuildConfig {
+	public static final field BUILD_TYPE Ljava/lang/String;
+	public static final field DEBUG Z
+	public static final field LIBRARY_PACKAGE_NAME Ljava/lang/String;
+	public static final field VERSION_NAME Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public final class com/amplifyframework/connect/ChannelType : java/lang/Enum {
+	public static final field APNS Lcom/amplifyframework/connect/ChannelType;
+	public static final field APNS_SANDBOX Lcom/amplifyframework/connect/ChannelType;
+	public static final field GCM Lcom/amplifyframework/connect/ChannelType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getValue ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/connect/ChannelType;
+	public static fun values ()[Lcom/amplifyframework/connect/ChannelType;
+}
+
+public final class com/amplifyframework/connect/ConnectAccessDeniedException : com/amplifyframework/connect/AmplifyConnectException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/amplifyframework/connect/ConnectClientConfiguration {
+	public static final field Companion Lcom/amplifyframework/connect/ConnectClientConfiguration$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lcom/amplifyframework/connect/ConnectClientConfiguration;
+	public static synthetic fun copy$default (Lcom/amplifyframework/connect/ConnectClientConfiguration;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/connect/ConnectClientConfiguration;
+	public fun equals (Ljava/lang/Object;)Z
+	public static final fun fromAmplifyOutputs (Ljava/util/Map;)Lcom/amplifyframework/connect/ConnectClientConfiguration;
+	public final fun getEndpoint ()Ljava/lang/String;
+	public final fun getRegion ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/connect/ConnectClientConfiguration$Companion {
+	public final fun fromAmplifyOutputs (Ljava/util/Map;)Lcom/amplifyframework/connect/ConnectClientConfiguration;
+}
+
+public final class com/amplifyframework/connect/ConnectConfigurationException : com/amplifyframework/connect/AmplifyConnectException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public abstract interface class com/amplifyframework/connect/ConnectCredentialsProvider {
+	public abstract fun resolve (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/amplifyframework/connect/ConnectNetworkException : com/amplifyframework/connect/AmplifyConnectException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/amplifyframework/connect/ConnectNotSignedInException : com/amplifyframework/connect/AmplifyConnectException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/amplifyframework/connect/ConnectServiceException : com/amplifyframework/connect/AmplifyConnectException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/amplifyframework/connect/ConnectThrottlingException : com/amplifyframework/connect/AmplifyConnectException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/amplifyframework/connect/ConnectValidationException : com/amplifyframework/connect/AmplifyConnectException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/amplifyframework/connect/UserProfile {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lcom/amplifyframework/connect/UserProfileLocation;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lcom/amplifyframework/connect/UserProfileLocation;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/util/Map;
+	public final fun component5 ()Lcom/amplifyframework/connect/UserProfileLocation;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lcom/amplifyframework/connect/UserProfileLocation;)Lcom/amplifyframework/connect/UserProfile;
+	public static synthetic fun copy$default (Lcom/amplifyframework/connect/UserProfile;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/util/Map;Lcom/amplifyframework/connect/UserProfileLocation;ILjava/lang/Object;)Lcom/amplifyframework/connect/UserProfile;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCustomAttributes ()Ljava/util/Map;
+	public final fun getEmail ()Ljava/lang/String;
+	public final fun getLocation ()Lcom/amplifyframework/connect/UserProfileLocation;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getPhone ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/connect/UserProfileLocation {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/amplifyframework/connect/UserProfileLocation;
+	public static synthetic fun copy$default (Lcom/amplifyframework/connect/UserProfileLocation;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/connect/UserProfileLocation;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCity ()Ljava/lang/String;
+	public final fun getCountry ()Ljava/lang/String;
+	public final fun getPostalCode ()Ljava/lang/String;
+	public final fun getRegion ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
