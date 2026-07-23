@@ -27,6 +27,8 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -68,80 +70,81 @@ internal class ConnectService(
         sendSigV4("$endpoint$REMOVE_DEVICE_PATH", credentials, body)
     }
 
-    private fun sendSigV4(url: String, credentials: AwsCredentials, body: String) {
-        val parsedUrl = URL(url)
-        val host = parsedUrl.host
-        val path = parsedUrl.path.ifEmpty { "/" }
-        val bodyBytes = body.toByteArray(Charsets.UTF_8)
+    private suspend fun sendSigV4(url: String, credentials: AwsCredentials, body: String) =
+        withContext(Dispatchers.IO) {
+            val parsedUrl = URL(url)
+            val host = parsedUrl.host
+            val path = parsedUrl.path.ifEmpty { "/" }
+            val bodyBytes = body.toByteArray(Charsets.UTF_8)
 
-        val now = ZonedDateTime.now(ZoneOffset.UTC)
-        val amzDate = now.format(AMZ_DATE_FORMAT)
-        val dateStamp = now.format(DATE_STAMP_FORMAT)
+            val now = ZonedDateTime.now(ZoneOffset.UTC)
+            val amzDate = now.format(AMZ_DATE_FORMAT)
+            val dateStamp = now.format(DATE_STAMP_FORMAT)
 
-        val payloadHash = sha256Hex(bodyBytes)
+            val payloadHash = sha256Hex(bodyBytes)
 
-        val signedHeaders = buildList {
-            add("content-type")
-            add("host")
-            add("x-amz-date")
-            if (credentials is AwsCredentials.Temporary) add("x-amz-security-token")
-        }.sorted().joinToString(";")
+            val signedHeaders = buildList {
+                add("content-type")
+                add("host")
+                add("x-amz-date")
+                if (credentials is AwsCredentials.Temporary) add("x-amz-security-token")
+            }.sorted().joinToString(";")
 
-        val canonicalHeaders = buildString {
-            append("content-type:application/json\n")
-            append("host:$host\n")
-            append("x-amz-date:$amzDate\n")
+            val canonicalHeaders = buildString {
+                append("content-type:application/json\n")
+                append("host:$host\n")
+                append("x-amz-date:$amzDate\n")
+                if (credentials is AwsCredentials.Temporary) {
+                    append("x-amz-security-token:${credentials.sessionToken}\n")
+                }
+            }
+
+            val canonicalRequest = listOf(
+                "POST",
+                path,
+                "",
+                canonicalHeaders,
+                signedHeaders,
+                payloadHash
+            ).joinToString("\n")
+
+            val credentialScope = "$dateStamp/$region/$SERVICE_EXECUTE_API/aws4_request"
+            val stringToSign = listOf(
+                "AWS4-HMAC-SHA256",
+                amzDate,
+                credentialScope,
+                sha256Hex(canonicalRequest.toByteArray(Charsets.UTF_8))
+            ).joinToString("\n")
+
+            val signingKey = getSignatureKey(credentials.secretAccessKey, dateStamp, region)
+            val signature = hmacSha256Hex(signingKey, stringToSign)
+
+            val authHeader = "AWS4-HMAC-SHA256 Credential=${credentials.accessKeyId}/$credentialScope, " +
+                "SignedHeaders=$signedHeaders, Signature=$signature"
+
+            val requestBuilder = Request.Builder()
+                .url(url)
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Host", host)
+                .addHeader("X-Amz-Date", amzDate)
+                .addHeader("Authorization", authHeader)
+                .post(body.toRequestBody(JSON_MEDIA_TYPE))
+
             if (credentials is AwsCredentials.Temporary) {
-                append("x-amz-security-token:${credentials.sessionToken}\n")
+                requestBuilder.addHeader("X-Amz-Security-Token", credentials.sessionToken)
+            }
+
+            val response = try {
+                httpClient.newCall(requestBuilder.build()).execute()
+            } catch (e: Exception) {
+                throw ConnectNetworkException(cause = e)
+            }
+
+            if (response.code !in 200..299) {
+                val responseBody = response.body?.string().orEmpty()
+                throw mapErrorResponse(response.code, responseBody)
             }
         }
-
-        val canonicalRequest = listOf(
-            "POST",
-            path,
-            "",
-            canonicalHeaders,
-            signedHeaders,
-            payloadHash
-        ).joinToString("\n")
-
-        val credentialScope = "$dateStamp/$region/$SERVICE_EXECUTE_API/aws4_request"
-        val stringToSign = listOf(
-            "AWS4-HMAC-SHA256",
-            amzDate,
-            credentialScope,
-            sha256Hex(canonicalRequest.toByteArray(Charsets.UTF_8))
-        ).joinToString("\n")
-
-        val signingKey = getSignatureKey(credentials.secretAccessKey, dateStamp, region)
-        val signature = hmacSha256Hex(signingKey, stringToSign)
-
-        val authHeader = "AWS4-HMAC-SHA256 Credential=${credentials.accessKeyId}/$credentialScope, " +
-            "SignedHeaders=$signedHeaders, Signature=$signature"
-
-        val requestBuilder = Request.Builder()
-            .url(url)
-            .addHeader("Content-Type", "application/json")
-            .addHeader("Host", host)
-            .addHeader("X-Amz-Date", amzDate)
-            .addHeader("Authorization", authHeader)
-            .post(body.toRequestBody(JSON_MEDIA_TYPE))
-
-        if (credentials is AwsCredentials.Temporary) {
-            requestBuilder.addHeader("X-Amz-Security-Token", credentials.sessionToken)
-        }
-
-        val response = try {
-            httpClient.newCall(requestBuilder.build()).execute()
-        } catch (e: Exception) {
-            throw ConnectNetworkException(cause = e)
-        }
-
-        if (response.code !in 200..299) {
-            val responseBody = response.body?.string().orEmpty()
-            throw mapErrorResponse(response.code, responseBody)
-        }
-    }
 
     private fun mapErrorResponse(statusCode: Int, responseBody: String): Exception {
         val detail = parseErrorDetail(responseBody)

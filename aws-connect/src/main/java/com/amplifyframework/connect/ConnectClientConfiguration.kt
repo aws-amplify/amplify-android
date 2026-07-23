@@ -33,6 +33,7 @@ data class ConnectClientConfiguration(
 ) {
     init {
         require(endpoint.isNotBlank()) { "endpoint must not be blank" }
+        require(endpoint.startsWith("https://")) { "endpoint must use https" }
         require(region.isNotBlank()) { "region must not be blank" }
     }
 
@@ -73,6 +74,11 @@ data class ConnectClientConfiguration(
                 throw ConnectConfigurationException(
                     "Missing \"notifications.amazon_connect_customer_profiles.endpoint\" " +
                         "in amplify_outputs."
+                )
+            }
+            if (!endpoint.startsWith("https://")) {
+                throw ConnectConfigurationException(
+                    "\"notifications.amazon_connect_customer_profiles.endpoint\" must use https."
                 )
             }
             if (region !is String || region.isBlank()) {

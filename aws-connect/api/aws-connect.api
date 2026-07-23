@@ -1,6 +1,6 @@
 public final class com/amplifyframework/connect/AmplifyConnectClient {
-	public fun <init> (Lcom/amplifyframework/connect/ConnectClientConfiguration;Lcom/amplifyframework/connect/ConnectCredentialsProvider;Lcom/amplifyframework/connect/internal/DeviceIdStore;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/ChannelType;)V
-	public synthetic fun <init> (Lcom/amplifyframework/connect/ConnectClientConfiguration;Lcom/amplifyframework/connect/ConnectCredentialsProvider;Lcom/amplifyframework/connect/internal/DeviceIdStore;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/ChannelType;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lcom/amplifyframework/connect/ConnectClientConfiguration;Lcom/amplifyframework/connect/ConnectCredentialsProvider;Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/ChannelType;)V
+	public synthetic fun <init> (Lcom/amplifyframework/connect/ConnectClientConfiguration;Lcom/amplifyframework/connect/ConnectCredentialsProvider;Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/ChannelType;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun identifyUser (Lcom/amplifyframework/connect/UserProfile;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun registerDevice (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun removeDevice (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -129,14 +129,5 @@ public final class com/amplifyframework/connect/UserProfileLocation {
 	public final fun getRegion ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
-}
-
-public final class com/amplifyframework/connect/internal/DeviceIdStore {
-	public static final field DEVICE_ID_KEY Ljava/lang/String;
-	public static final field PREFERENCES_NAME Ljava/lang/String;
-	public fun <init> (Landroid/content/Context;)V
-	public final fun clear ()V
-	public final fun get ()Ljava/lang/String;
-	public final fun getOrCreate ()Ljava/lang/String;
 }
 

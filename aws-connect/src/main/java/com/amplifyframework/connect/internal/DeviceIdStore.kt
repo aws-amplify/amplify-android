@@ -32,7 +32,7 @@ import java.util.UUID
  * Whichever client initializes first generates the UUID; subsequent clients
  * read the existing value.
  */
-class DeviceIdStore(context: Context) {
+internal class DeviceIdStore(context: Context) {
 
     private val prefs: SharedPreferences = context.applicationContext
         .getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)

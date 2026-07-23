@@ -47,18 +47,30 @@ class AmplifyConnectClientTest {
         platform: String? = "Android",
         appVersion: String? = "1.0.0",
         channelType: ChannelType = ChannelType.GCM
-    ) = AmplifyConnectClient(
-        configuration = ConnectClientConfiguration(
-            endpoint = "https://test.execute-api.us-east-1.amazonaws.com",
-            region = "us-east-1"
-        ),
-        credentialsProvider = mockCredentialsProvider,
-        deviceIdStore = mockDeviceIdStore,
-        platform = platform,
-        appVersion = appVersion,
-        channelType = channelType,
-        service = mockService
-    )
+    ): AmplifyConnectClient {
+        val context = mockk<android.content.Context>(relaxed = true)
+        every { context.applicationContext } returns context
+        // Provide a real SharedPreferences via Robolectric for DeviceIdStore init
+        every {
+            context.getSharedPreferences(any<String>(), any())
+        } returns androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
+            .getSharedPreferences("test_prefs", android.content.Context.MODE_PRIVATE)
+
+        val client = AmplifyConnectClient(
+            configuration = ConnectClientConfiguration(
+                endpoint = "https://test.execute-api.us-east-1.amazonaws.com",
+                region = "us-east-1"
+            ),
+            credentialsProvider = mockCredentialsProvider,
+            context = context,
+            platform = platform,
+            appVersion = appVersion,
+            channelType = channelType
+        )
+        client.service = mockService
+        client.deviceIdStore = mockDeviceIdStore
+        return client
+    }
 
     @Test
     fun `identifyUser sends userProfile with all fields`() = runTest {

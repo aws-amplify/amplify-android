@@ -105,6 +105,38 @@ class ConnectClientConfigurationTest {
     }
 
     @Test
+    fun `http endpoint throws`() {
+        shouldThrow<IllegalArgumentException> {
+            ConnectClientConfiguration(endpoint = "http://example.com", region = "us-east-1")
+        }
+    }
+
+    @Test
+    fun `https endpoint accepted`() {
+        val config = ConnectClientConfiguration(
+            endpoint = "https://example.com",
+            region = "us-east-1"
+        )
+        config.endpoint shouldBe "https://example.com"
+    }
+
+    @Test
+    fun `fromAmplifyOutputs rejects http endpoint`() {
+        val outputs = mapOf(
+            "notifications" to mapOf(
+                "amazon_connect_customer_profiles" to mapOf(
+                    "aws_region" to "us-east-1",
+                    "endpoint" to "http://insecure.com"
+                )
+            )
+        )
+        val exception = shouldThrow<ConnectConfigurationException> {
+            ConnectClientConfiguration.fromAmplifyOutputs(outputs)
+        }
+        exception.message shouldContain "https"
+    }
+
+    @Test
     fun `blank region throws`() {
         shouldThrow<IllegalArgumentException> {
             ConnectClientConfiguration(endpoint = "https://x.com", region = "")

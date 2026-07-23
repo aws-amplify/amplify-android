@@ -17,6 +17,7 @@ package com.amplifyframework.connect
 import androidx.annotation.VisibleForTesting
 import com.amplifyframework.connect.internal.ConnectService
 import com.amplifyframework.connect.internal.DeviceIdStore
+import com.amplifyframework.connect.internal.InputValidation
 import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.foundation.logging.Logger
 import kotlinx.serialization.json.buildJsonObject
@@ -50,29 +51,19 @@ import kotlinx.serialization.json.putJsonObject
 class AmplifyConnectClient(
     configuration: ConnectClientConfiguration,
     private val credentialsProvider: ConnectCredentialsProvider,
-    private val deviceIdStore: DeviceIdStore,
+    context: android.content.Context,
     private val platform: String? = null,
     private val appVersion: String? = null,
     private val channelType: ChannelType = ChannelType.GCM
 ) {
     @VisibleForTesting
+    internal var deviceIdStore: DeviceIdStore = DeviceIdStore(context)
+
+    @VisibleForTesting
     internal var service: ConnectService = ConnectService(
         endpoint = configuration.endpoint,
         region = configuration.region
     )
-
-    @VisibleForTesting
-    internal constructor(
-        configuration: ConnectClientConfiguration,
-        credentialsProvider: ConnectCredentialsProvider,
-        deviceIdStore: DeviceIdStore,
-        platform: String?,
-        appVersion: String?,
-        channelType: ChannelType,
-        service: ConnectService
-    ) : this(configuration, credentialsProvider, deviceIdStore, platform, appVersion, channelType) {
-        this.service = service
-    }
 
     private val logger: Logger = AmplifyLogging.logger<AmplifyConnectClient>()
 
@@ -87,6 +78,7 @@ class AmplifyConnectClient(
      * @throws AmplifyConnectException for endpoint errors
      */
     suspend fun identifyUser(userProfile: UserProfile) {
+        InputValidation.validateUserProfile(userProfile)
         val credentials = credentialsProvider.resolve()
         val body = buildJsonObject {
             putJsonObject("userProfile") {
@@ -128,6 +120,7 @@ class AmplifyConnectClient(
      * @throws AmplifyConnectException for endpoint errors
      */
     suspend fun registerDevice(token: String) {
+        InputValidation.validateToken(token)
         val credentials = credentialsProvider.resolve()
         val deviceId = deviceIdStore.getOrCreate()
         val body = buildJsonObject {
