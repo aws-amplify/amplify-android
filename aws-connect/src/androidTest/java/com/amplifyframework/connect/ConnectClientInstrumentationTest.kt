@@ -15,13 +15,23 @@
 package com.amplifyframework.connect
 
 import android.content.Context
+import androidx.annotation.RawRes
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.amplifyframework.auth.CognitoCredentialsProvider
+import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
+import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.configuration.AmplifyOutputs
 import com.amplifyframework.foundation.credentials.AwsCredentials
+import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
+import com.amplifyframework.foundation.credentials.toAwsCredentialsProvider
+import com.amplifyframework.testutils.Resources
+import com.amplifyframework.testutils.sync.SynchronousAuth
 import kotlinx.coroutines.runBlocking
-import org.json.JSONObject
+import org.json.JSONException
 import org.junit.Assume.assumeTrue
 import org.junit.Before
+import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -29,84 +39,147 @@ import org.junit.runner.RunWith
  * Integration tests for the Connect client against a deployed backend
  * (backend-notifications construct).
  *
- * These tests exercise the real Option C wire contract over HTTPS with
- * SigV4 signing — the unit tests use MockWebServer so real signing is
- * not covered there.
+ * Exercises the real Option C wire contract over HTTPS with SigV4 signing.
  *
  * ## Setup
  *
- * Place an `amplify_outputs.json` in `src/androidTest/res/raw/` with a
- * deployed construct endpoint:
+ * Place the following in `src/androidTest/res/raw/` (both gitignored):
+ *
+ * **amplify_outputs.json** — deployed construct config:
  * ```json
  * {
  *   "notifications": {
- *     "amazon_connect_customer_profiles": {
+ *     "amazon_connect": {
  *       "aws_region": "us-east-1",
  *       "endpoint": "https://<api-id>.execute-api.<region>.amazonaws.com"
  *     }
- *   }
+ *   },
+ *   "auth": { ... }
  * }
  * ```
  *
- * And a `credentials.json` in the same directory with temporary AWS
- * credentials (from a Cognito Identity Pool):
+ * **credentials.json** — Cognito user credentials:
  * ```json
  * {
- *   "accessKeyId": "ASIA...",
- *   "secretAccessKey": "...",
- *   "sessionToken": "..."
+ *   "credentials": [
+ *     { "username": "integ-test-user", "password": "..." }
+ *   ]
  * }
  * ```
  *
- * Both files are gitignored. When absent, all tests in this class are
- * skipped (not failed) with "Backend not configured".
+ * When either file is absent, all tests skip (not fail) via JUnit Assume.
  *
  * ## CI gating
  *
- * This suite is NOT in the unit-test/apiCheck gates that run on every PR.
- * It only runs in an instrumentation lane with a device/emulator and a
- * configured backend.
+ * This suite is NOT in the unit-test/apiCheck gates. It only runs in an
+ * instrumentation lane with a device/emulator and a configured backend.
  */
-@OptIn(kotlin.time.ExperimentalTime::class)
 @RunWith(AndroidJUnit4::class)
 class ConnectClientInstrumentationTest {
 
+    companion object {
+        private lateinit var credentialsProvider: AwsCredentialsProvider<AwsCredentials>
+        private lateinit var configuration: ConnectClientConfiguration
+        private var configured = false
+
+        @BeforeClass
+        @JvmStatic
+        fun setupBefore() {
+            val context = ApplicationProvider.getApplicationContext<Context>()
+
+            // Check if raw resources exist (gitignored — absent in CI)
+            val outputsId = context.resources.getIdentifier(
+                "amplify_outputs",
+                "raw",
+                context.packageName
+            )
+            val credsId = context.resources.getIdentifier(
+                "credentials",
+                "raw",
+                context.packageName
+            )
+            if (outputsId == 0 || credsId == 0) {
+                configured = false
+                return
+            }
+
+            try {
+                // Configure Amplify with Auth (same pattern as kinesis)
+                Amplify.Auth.addPlugin(AWSCognitoAuthPlugin())
+                Amplify.configure(AmplifyOutputs(outputsId), context)
+
+                // Sign in using credentials from raw resource
+                val synchronousAuth = SynchronousAuth.delegatingTo(Amplify.Auth)
+                val (user, password) = readCredentialsFromResource(context, credsId)
+                synchronousAuth.signOut()
+                synchronousAuth.signIn(user, password)
+
+                // Resolve AWS credentials via Cognito (authed path)
+                credentialsProvider = CognitoCredentialsProvider().toAwsCredentialsProvider()
+
+                // Parse Connect config from the same amplify_outputs
+                val outputsJson = Resources.readAsJson(context, outputsId)
+                val map = jsonToMap(outputsJson)
+                configuration = ConnectClientConfiguration.fromAmplifyOutputs(map)
+
+                configured = true
+            } catch (e: Exception) {
+                configured = false
+            }
+        }
+
+        private fun readCredentialsFromResource(context: Context, @RawRes resourceId: Int): Pair<String, String> {
+            val resource = Resources.readAsJson(context, resourceId)
+            return try {
+                val credentials = resource.getJSONArray("credentials")
+                val lastIndex = credentials.length() - 1
+                val credential = credentials.getJSONObject(lastIndex)
+                Pair(credential.getString("username"), credential.getString("password"))
+            } catch (e: JSONException) {
+                throw RuntimeException("Failed to read credentials resource", e)
+            }
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        private fun jsonToMap(json: org.json.JSONObject): Map<String, Any?> {
+            val map = mutableMapOf<String, Any?>()
+            json.keys().forEach { key ->
+                val value = json.get(key)
+                map[key] = when (value) {
+                    is org.json.JSONObject -> jsonToMap(value)
+                    else -> value
+                }
+            }
+            return map
+        }
+    }
+
     private lateinit var client: AmplifyConnectClient
-    private lateinit var context: Context
 
     @Before
     fun setup() {
-        context = ApplicationProvider.getApplicationContext()
-
-        val config = loadConfig()
         assumeTrue(
             "Backend not configured: place amplify_outputs.json and credentials.json " +
                 "in src/androidTest/res/raw/ to enable integration tests.",
-            config != null
+            configured
         )
 
-        val credentials = loadCredentials()
-        assumeTrue(
-            "Credentials not configured: place credentials.json in " +
-                "src/androidTest/res/raw/ to enable integration tests.",
-            credentials != null
-        )
-
+        val context = ApplicationProvider.getApplicationContext<Context>()
         client = AmplifyConnectClient(
-            configuration = config!!,
-            credentialsProvider = { credentials!! },
+            configuration = configuration,
+            credentialsProvider = { credentialsProvider.resolve() },
             context = context,
             platform = "Android",
-            appVersion = "1.0.0-test",
+            appVersion = "1.0.0-integ",
             channelType = ChannelType.GCM
         )
     }
 
     @Test
-    fun identifyUser_withProfile_succeeds() = runBlocking {
+    fun identifyUser_withFullProfile_succeeds() = runBlocking {
         client.identifyUser(
             UserProfile(
-                email = "integration-test@example.com",
+                email = "integ-test@example.com",
                 name = "Integration Test",
                 phone = "+15555555555",
                 customAttributes = mapOf("testRun" to System.currentTimeMillis().toString()),
@@ -118,89 +191,23 @@ class ConnectClientInstrumentationTest {
                 )
             )
         )
-        // If we reach here without throwing, the endpoint accepted the request.
     }
 
     @Test
     fun registerDevice_thenRemoveDevice_roundTrip() = runBlocking {
-        // First identify (required for the profile to exist)
+        // Ensure profile exists
         client.identifyUser(UserProfile(name = "Device Round-Trip"))
 
-        // Register a device with a fake FCM token
+        // Register with a fake FCM token
         client.registerDevice("fake-fcm-token-${System.currentTimeMillis()}")
 
-        // Remove the same device (deviceId resolved from SharedPreferences)
+        // Remove the device (deviceId resolved from SharedPreferences)
         client.removeDevice()
-        // If we reach here without throwing, the round-trip succeeded.
     }
 
     @Test
-    fun identifyUser_guestPath_sigV4Signing() = runBlocking {
-        // This test exercises the SigV4 signing path.
-        // The credentials loaded are Identity Pool guest credentials.
-        client.identifyUser(
-            UserProfile(
-                name = "Guest User",
-                customAttributes = mapOf("guestTest" to "true")
-            )
-        )
-    }
-
-    // ------------------------------------------------------------------
-    // Config loading helpers
-    // ------------------------------------------------------------------
-
-    private fun loadConfig(): ConnectClientConfiguration? {
-        val rawId = context.resources.getIdentifier(
-            "amplify_outputs",
-            "raw",
-            context.packageName
-        )
-        if (rawId == 0) return null
-        return try {
-            val json = context.resources.openRawResource(rawId)
-                .bufferedReader().use { it.readText() }
-            val map = jsonToMap(JSONObject(json))
-            ConnectClientConfiguration.fromAmplifyOutputs(map)
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    @Suppress("kotlin:S6518")
-    private fun loadCredentials(): AwsCredentials? {
-        val rawId = context.resources.getIdentifier(
-            "credentials",
-            "raw",
-            context.packageName
-        )
-        if (rawId == 0) return null
-        return try {
-            val json = JSONObject(
-                context.resources.openRawResource(rawId)
-                    .bufferedReader().use { it.readText() }
-            )
-            AwsCredentials.Temporary(
-                accessKeyId = json.getString("accessKeyId"),
-                secretAccessKey = json.getString("secretAccessKey"),
-                sessionToken = json.getString("sessionToken"),
-                expiration = kotlin.time.Instant.DISTANT_FUTURE
-            )
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun jsonToMap(json: JSONObject): Map<String, Any?> {
-        val map = mutableMapOf<String, Any?>()
-        json.keys().forEach { key ->
-            val value = json.get(key)
-            map[key] = when (value) {
-                is JSONObject -> jsonToMap(value)
-                else -> value
-            }
-        }
-        return map
+    fun identifyUser_minimalProfile_succeeds() = runBlocking {
+        // Empty profile — only the SigV4 signer identity reaches the backend
+        client.identifyUser(UserProfile())
     }
 }
