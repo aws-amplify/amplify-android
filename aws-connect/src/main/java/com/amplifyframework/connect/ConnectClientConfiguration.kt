@@ -40,14 +40,14 @@ data class ConnectClientConfiguration(
     companion object {
         /**
          * Parses configuration from the
-         * `notifications.amazon_connect_customer_profiles` section of a decoded
+         * `notifications.amazon_connect` section of a decoded
          * amplify_outputs map.
          *
          * Expects:
          * ```json
          * {
          *   "notifications": {
-         *     "amazon_connect_customer_profiles": {
+         *     "amazon_connect": {
          *       "aws_region": "us-east-1",
          *       "endpoint": "https://abc123.execute-api.us-east-1.amazonaws.com"
          *     }
@@ -61,10 +61,10 @@ data class ConnectClientConfiguration(
         @JvmStatic
         fun fromAmplifyOutputs(amplifyOutputs: Map<String, Any?>): ConnectClientConfiguration {
             val notifications = amplifyOutputs["notifications"]
-            val section = (notifications as? Map<*, *>)?.get("amazon_connect_customer_profiles")
+            val section = (notifications as? Map<*, *>)?.get("amazon_connect")
             if (section !is Map<*, *>) {
                 throw ConnectConfigurationException(
-                    "Missing \"notifications.amazon_connect_customer_profiles\" section " +
+                    "Missing \"notifications.amazon_connect\" section " +
                         "in amplify_outputs."
                 )
             }
@@ -72,18 +72,18 @@ data class ConnectClientConfiguration(
             val region = section["aws_region"]
             if (endpoint !is String || endpoint.isBlank()) {
                 throw ConnectConfigurationException(
-                    "Missing \"notifications.amazon_connect_customer_profiles.endpoint\" " +
+                    "Missing \"notifications.amazon_connect.endpoint\" " +
                         "in amplify_outputs."
                 )
             }
             if (!endpoint.startsWith("https://")) {
                 throw ConnectConfigurationException(
-                    "\"notifications.amazon_connect_customer_profiles.endpoint\" must use https."
+                    "\"notifications.amazon_connect.endpoint\" must use https."
                 )
             }
             if (region !is String || region.isBlank()) {
                 throw ConnectConfigurationException(
-                    "Missing \"notifications.amazon_connect_customer_profiles.aws_region\" " +
+                    "Missing \"notifications.amazon_connect.aws_region\" " +
                         "in amplify_outputs."
                 )
             }

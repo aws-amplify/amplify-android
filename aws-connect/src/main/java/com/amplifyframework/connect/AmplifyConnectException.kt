@@ -80,7 +80,7 @@ class ConnectConfigurationException(
 ) : AmplifyConnectException(
     message = detail,
     recoverySuggestion = "Provide a valid ConnectClientConfiguration, or add a " +
-        "\"notifications.amazon_connect_customer_profiles\" section with " +
+        "\"notifications.amazon_connect\" section with " +
         "\"endpoint\" and \"aws_region\" to amplify_outputs."
 )
 
