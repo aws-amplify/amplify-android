@@ -1976,6 +1976,7 @@ public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Ge
 
 public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Notifications {
 	public static final field Companion Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications$Companion;
+	public fun <init> ()V
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications$AmazonConnect;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications$AmazonConnect;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
