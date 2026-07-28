@@ -14,6 +14,8 @@
  */
 package com.amplifyframework.connect
 
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
+
 /**
  * User profile attributes to associate with the Customer Profiles record.
  *
@@ -23,11 +25,12 @@ package com.amplifyframework.connect
  * @param customAttributes Additional key-value string attributes
  * @param location Geographic location attributes
  */
+@ExperimentalAmplifyApi
 data class UserProfile(
     val email: String? = null,
     val name: String? = null,
     val phone: String? = null,
-    val customAttributes: Map<String, String>? = null,
+    val customAttributes: Map<String, String> = emptyMap(),
     val location: UserProfileLocation? = null
 )
 
@@ -39,6 +42,7 @@ data class UserProfile(
  * @param postalCode Postal or zip code
  * @param region State, province, or region
  */
+@ExperimentalAmplifyApi
 data class UserProfileLocation(
     val city: String? = null,
     val country: String? = null,

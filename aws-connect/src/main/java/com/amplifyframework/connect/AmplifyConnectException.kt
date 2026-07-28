@@ -14,11 +14,13 @@
  */
 package com.amplifyframework.connect
 
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
 import com.amplifyframework.foundation.exceptions.AmplifyException
 
 /**
  * Base exception for all Amplify Connect client errors.
  */
+@ExperimentalAmplifyApi
 sealed class AmplifyConnectException(
     message: String,
     recoverySuggestion: String,
@@ -26,6 +28,7 @@ sealed class AmplifyConnectException(
 ) : AmplifyException(message, recoverySuggestion, cause)
 
 /** Neither a Cognito access token nor guest credentials could be resolved. */
+@ExperimentalAmplifyApi
 class ConnectNotSignedInException(
     cause: Throwable? = null
 ) : AmplifyConnectException(
@@ -36,6 +39,7 @@ class ConnectNotSignedInException(
 )
 
 /** Request failed due to connectivity or transport errors. */
+@ExperimentalAmplifyApi
 class ConnectNetworkException(
     cause: Throwable? = null
 ) : AmplifyConnectException(
@@ -46,6 +50,7 @@ class ConnectNetworkException(
 )
 
 /** The endpoint rate limit was exceeded. */
+@ExperimentalAmplifyApi
 class ConnectThrottlingException(
     cause: Throwable? = null
 ) : AmplifyConnectException(
@@ -55,6 +60,7 @@ class ConnectThrottlingException(
 )
 
 /** The request is not authorized (bad token or missing guest permissions). */
+@ExperimentalAmplifyApi
 class ConnectAccessDeniedException(
     cause: Throwable? = null
 ) : AmplifyConnectException(
@@ -65,6 +71,7 @@ class ConnectAccessDeniedException(
 )
 
 /** The endpoint rejected a request as malformed. */
+@ExperimentalAmplifyApi
 class ConnectValidationException(
     detail: String? = null,
     cause: Throwable? = null
@@ -75,6 +82,7 @@ class ConnectValidationException(
 )
 
 /** The client configuration is missing or malformed. */
+@ExperimentalAmplifyApi
 class ConnectConfigurationException(
     detail: String
 ) : AmplifyConnectException(
@@ -85,6 +93,7 @@ class ConnectConfigurationException(
 )
 
 /** Unclassified endpoint error (e.g., 5xx responses). */
+@ExperimentalAmplifyApi
 class ConnectServiceException(
     detail: String,
     cause: Throwable? = null

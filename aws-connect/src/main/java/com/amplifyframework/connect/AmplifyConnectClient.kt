@@ -14,14 +14,18 @@
  */
 package com.amplifyframework.connect
 
+import android.content.Context
 import androidx.annotation.VisibleForTesting
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
 import com.amplifyframework.connect.internal.ConnectService
 import com.amplifyframework.connect.internal.DeviceIdStore
 import com.amplifyframework.connect.internal.InputValidation
+import com.amplifyframework.foundation.credentials.AwsCredentials
+import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
 import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.foundation.logging.Logger
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.amplifyframework.foundation.result.Result
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
@@ -32,18 +36,14 @@ import kotlinx.serialization.json.putJsonObject
  * All routes are SigV4-signed (`execute-api`). The backend Lambda derives
  * the caller's identity (Cognito sub or guest identityId) from the signer.
  *
+ * Each public method returns a [Result] with an empty success data type and an
+ * [AmplifyConnectException] failure type, mirroring the other foundation-based
+ * Amplify clients.
+ *
  * Public API:
- * - [identifyUser] — sends profile attributes
- * - [registerDevice] — registers the device for push notifications
- * - [removeDevice] — removes the device from the profile
- *
- * ## Error handling
- *
- * These suspend functions return no result type. On failure they throw from the
- * [AmplifyConnectException] hierarchy (for example [ConnectNotSignedInException],
- * [ConnectNetworkException], or [ConnectValidationException]). This throwing
- * contract is intentional. It keeps the Connect client consistent with the
- * Flutter and Swift clients, which surface the same failures as thrown errors.
+ * - [identifyUser] sends profile attributes
+ * - [registerDevice] registers the device for push notifications
+ * - [removeDevice] removes the device from the profile
  *
  * ## Deferred (Phase 2)
  *
@@ -51,17 +51,18 @@ import kotlinx.serialization.json.putJsonObject
  * offline. The offline queue, connectivity drain, and retry/backoff are not
  * implemented here.
  *
+ * @param context Android context used to reach the shared device id store
  * @param configuration Endpoint and region from amplify_outputs
  * @param credentialsProvider Resolves AWS credentials for SigV4 signing
- * @param deviceIdStore Persistent device id store (shared key with enrichment)
  * @param platform Client OS platform (e.g. "Android")
  * @param appVersion Application version string
  * @param channelType Push channel type for this device
  */
+@ExperimentalAmplifyApi
 class AmplifyConnectClient(
+    context: Context,
     configuration: ConnectClientConfiguration,
-    private val credentialsProvider: ConnectCredentialsProvider,
-    context: android.content.Context,
+    private val credentialsProvider: AwsCredentialsProvider<AwsCredentials>,
     private val platform: String? = null,
     private val appVersion: String? = null,
     private val channelType: ChannelType = ChannelType.GCM
@@ -83,11 +84,10 @@ class AmplifyConnectClient(
      * POST /identify-user with body `{ userProfile }`.
      *
      * @param userProfile User profile attributes to send
-     * @throws ConnectNotSignedInException if credentials cannot be resolved
-     * @throws ConnectNetworkException on transport failure
-     * @throws AmplifyConnectException for endpoint errors
+     * @return [IdentifyUserResult] which is a success on completion, or a
+     *   failure carrying an [AmplifyConnectException]
      */
-    suspend fun identifyUser(userProfile: UserProfile) {
+    suspend fun identifyUser(userProfile: UserProfile): IdentifyUserResult = connectResult {
         InputValidation.validateUserProfile(userProfile)
         val credentials = credentialsProvider.resolve()
         val body = buildJsonObject {
@@ -95,7 +95,7 @@ class AmplifyConnectClient(
                 userProfile.email?.let { put("email", it) }
                 userProfile.name?.let { put("name", it) }
                 userProfile.phone?.let { put("phone", it) }
-                userProfile.customAttributes?.takeIf { it.isNotEmpty() }?.let { attrs ->
+                userProfile.customAttributes.takeIf { it.isNotEmpty() }?.let { attrs ->
                     putJsonObject("customAttributes") {
                         attrs.forEach { (k, v) -> put(k, v) }
                     }
@@ -111,7 +111,8 @@ class AmplifyConnectClient(
             }
         }
         service.identifyUser(credentials, body.toString())
-        logger.info { "identifyUser sent" }
+        logger.debug { "identifyUser request completed" }
+        IdentifyUserData()
     }
 
     /**
@@ -119,20 +120,19 @@ class AmplifyConnectClient(
      *
      * POST /register-device with body `{ device: { token, deviceId, platform?, appVersion?, channelType } }`.
      *
-     * The [deviceId] is resolved from the shared device-id store
-     * (`com.amplifyframework.device_id`). It is the server-side upsert key —
+     * The device id is resolved from the shared device-id store
+     * (`com.amplifyframework.device_id`). It is the server-side upsert key,
      * stable across launches and token refreshes so a device always maps to
      * one profile object.
      *
      * @param token The platform push token (FCM registration token or APNs device token)
-     * @throws ConnectNotSignedInException if credentials cannot be resolved
-     * @throws ConnectNetworkException on transport failure
-     * @throws AmplifyConnectException for endpoint errors
+     * @return [RegisterDeviceResult] which is a success on completion, or a
+     *   failure carrying an [AmplifyConnectException]
      */
-    suspend fun registerDevice(token: String) {
+    suspend fun registerDevice(token: String): RegisterDeviceResult = connectResult {
         InputValidation.validateToken(token)
         val credentials = credentialsProvider.resolve()
-        val deviceId = withContext(Dispatchers.IO) { deviceIdStore.getOrCreate() }
+        val deviceId = deviceIdStore.getOrCreate()
         val body = buildJsonObject {
             putJsonObject("device") {
                 put("token", token)
@@ -143,7 +143,8 @@ class AmplifyConnectClient(
             }
         }
         service.registerDevice(credentials, body.toString())
-        logger.info { "registerDevice sent for channel ${channelType.value}" }
+        logger.debug { "registerDevice request completed for channel ${channelType.value}" }
+        RegisterDeviceData()
     }
 
     /**
@@ -151,19 +152,41 @@ class AmplifyConnectClient(
      *
      * POST /remove-device with body `{ deviceId }`.
      *
-     * The [deviceId] is resolved from the shared device-id store.
+     * The device id is read from the shared device-id store. When no device id
+     * has been persisted there is nothing registered to remove, so the call
+     * succeeds without contacting the endpoint.
      *
-     * @throws ConnectNotSignedInException if credentials cannot be resolved
-     * @throws ConnectNetworkException on transport failure
-     * @throws AmplifyConnectException for endpoint errors
+     * @return [RemoveDeviceResult] which is a success on completion, or a
+     *   failure carrying an [AmplifyConnectException]
      */
-    suspend fun removeDevice() {
+    suspend fun removeDevice(): RemoveDeviceResult = connectResult {
+        val deviceId = deviceIdStore.get()
+        if (deviceId == null) {
+            logger.debug { "removeDevice skipped, no device id persisted" }
+            return@connectResult RemoveDeviceData()
+        }
         val credentials = credentialsProvider.resolve()
-        val deviceId = withContext(Dispatchers.IO) { deviceIdStore.getOrCreate() }
         val body = buildJsonObject {
             put("deviceId", deviceId)
         }
         service.removeDevice(credentials, body.toString())
-        logger.info { "removeDevice sent" }
+        logger.debug { "removeDevice request completed" }
+        RemoveDeviceData()
+    }
+
+    /**
+     * Runs [block] and maps its outcome to a [Result]. [CancellationException]
+     * is rethrown so coroutine cancellation is never swallowed. A thrown
+     * [AmplifyConnectException] becomes a typed failure, and any other
+     * exception is wrapped in a [ConnectServiceException].
+     */
+    private suspend fun <T> connectResult(block: suspend () -> T): Result<T, AmplifyConnectException> = try {
+        Result.Success(block())
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: AmplifyConnectException) {
+        Result.Failure(e)
+    } catch (e: Exception) {
+        Result.Failure(ConnectServiceException(e.message ?: "An unexpected error occurred.", e))
     }
 }

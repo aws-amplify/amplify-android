@@ -17,6 +17,9 @@ package com.amplifyframework.connect
 import com.amplifyframework.connect.internal.ConnectService
 import com.amplifyframework.connect.internal.DeviceIdStore
 import com.amplifyframework.foundation.credentials.AwsCredentials
+import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
+import com.amplifyframework.testutils.assertions.shouldBeSuccess
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import io.mockk.coEvery
@@ -35,7 +38,7 @@ class AmplifyConnectClientTest {
 
     private val mockService = mockk<ConnectService>(relaxed = true)
     private val mockDeviceIdStore = mockk<DeviceIdStore>()
-    private val mockCredentialsProvider = mockk<ConnectCredentialsProvider>()
+    private val mockCredentialsProvider = mockk<AwsCredentialsProvider<AwsCredentials>>()
     private val testCredentials = AwsCredentials.Temporary(
         accessKeyId = "AKID",
         secretAccessKey = "secret",
@@ -57,12 +60,12 @@ class AmplifyConnectClientTest {
             .getSharedPreferences("test_prefs", android.content.Context.MODE_PRIVATE)
 
         val client = AmplifyConnectClient(
+            context = context,
             configuration = ConnectClientConfiguration(
                 endpoint = "https://test.execute-api.us-east-1.amazonaws.com",
                 region = "us-east-1"
             ),
             credentialsProvider = mockCredentialsProvider,
-            context = context,
             platform = platform,
             appVersion = appVersion,
             channelType = channelType
@@ -77,7 +80,7 @@ class AmplifyConnectClientTest {
         coEvery { mockCredentialsProvider.resolve() } returns testCredentials
 
         val client = createClient()
-        client.identifyUser(
+        val result = client.identifyUser(
             UserProfile(
                 email = "alice@test.com",
                 name = "Alice",
@@ -87,6 +90,7 @@ class AmplifyConnectClientTest {
             )
         )
 
+        result.shouldBeSuccess()
         val bodySlot = slot<String>()
         coVerify { mockService.identifyUser(testCredentials, capture(bodySlot)) }
         bodySlot.captured shouldContain "\"email\":\"alice@test.com\""
@@ -102,8 +106,9 @@ class AmplifyConnectClientTest {
         coEvery { mockCredentialsProvider.resolve() } returns testCredentials
 
         val client = createClient()
-        client.identifyUser(UserProfile(name = "Bob"))
+        val result = client.identifyUser(UserProfile(name = "Bob"))
 
+        result.shouldBeSuccess()
         val bodySlot = slot<String>()
         coVerify { mockService.identifyUser(testCredentials, capture(bodySlot)) }
         bodySlot.captured shouldNotContain "userId"
@@ -112,11 +117,12 @@ class AmplifyConnectClientTest {
     @Test
     fun `registerDevice sends device object with token and deviceId`() = runTest {
         coEvery { mockCredentialsProvider.resolve() } returns testCredentials
-        every { mockDeviceIdStore.getOrCreate() } returns "stable-device-uuid"
+        coEvery { mockDeviceIdStore.getOrCreate() } returns "stable-device-uuid"
 
         val client = createClient()
-        client.registerDevice("fcm-token-abc")
+        val result = client.registerDevice("fcm-token-abc")
 
+        result.shouldBeSuccess()
         val bodySlot = slot<String>()
         coVerify { mockService.registerDevice(testCredentials, capture(bodySlot)) }
         bodySlot.captured shouldContain "\"token\":\"fcm-token-abc\""
@@ -129,11 +135,12 @@ class AmplifyConnectClientTest {
     @Test
     fun `registerDevice omits null platform and appVersion`() = runTest {
         coEvery { mockCredentialsProvider.resolve() } returns testCredentials
-        every { mockDeviceIdStore.getOrCreate() } returns "device-id"
+        coEvery { mockDeviceIdStore.getOrCreate() } returns "device-id"
 
         val client = createClient(platform = null, appVersion = null)
-        client.registerDevice("token")
+        val result = client.registerDevice("token")
 
+        result.shouldBeSuccess()
         val bodySlot = slot<String>()
         coVerify { mockService.registerDevice(testCredentials, capture(bodySlot)) }
         bodySlot.captured shouldNotContain "\"platform\""
@@ -141,15 +148,39 @@ class AmplifyConnectClientTest {
     }
 
     @Test
-    fun `removeDevice sends deviceId from store`() = runTest {
+    fun `removeDevice sends deviceId read from store`() = runTest {
         coEvery { mockCredentialsProvider.resolve() } returns testCredentials
-        every { mockDeviceIdStore.getOrCreate() } returns "my-device-id"
+        coEvery { mockDeviceIdStore.get() } returns "my-device-id"
 
         val client = createClient()
-        client.removeDevice()
+        val result = client.removeDevice()
 
+        result.shouldBeSuccess()
         val bodySlot = slot<String>()
         coVerify { mockService.removeDevice(testCredentials, capture(bodySlot)) }
         bodySlot.captured shouldContain "\"deviceId\":\"my-device-id\""
+    }
+
+    @Test
+    fun `removeDevice succeeds without a request when no device id is persisted`() = runTest {
+        coEvery { mockDeviceIdStore.get() } returns null
+
+        val client = createClient()
+        val result = client.removeDevice()
+
+        result.shouldBeSuccess()
+        coVerify(exactly = 0) { mockService.removeDevice(any(), any()) }
+    }
+
+    @Test
+    fun `identifyUser returns failure when the service throws`() = runTest {
+        coEvery { mockCredentialsProvider.resolve() } returns testCredentials
+        coEvery { mockService.identifyUser(any(), any()) } throws ConnectNetworkException()
+
+        val client = createClient()
+        val result = client.identifyUser(UserProfile(name = "Bob"))
+
+        val failure = result as com.amplifyframework.foundation.result.Result.Failure
+        (failure.error is ConnectNetworkException) shouldBe true
     }
 }
