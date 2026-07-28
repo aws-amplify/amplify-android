@@ -24,7 +24,6 @@ public final class com/amplifyframework/connect/ChannelType : java/lang/Enum {
 	public static final field APNS_SANDBOX Lcom/amplifyframework/connect/ChannelType;
 	public static final field GCM Lcom/amplifyframework/connect/ChannelType;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public final fun getValue ()Ljava/lang/String;
 	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/connect/ChannelType;
 	public static fun values ()[Lcom/amplifyframework/connect/ChannelType;
 }
