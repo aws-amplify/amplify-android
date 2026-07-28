@@ -1,6 +1,6 @@
 public final class com/amplifyframework/connect/AmplifyConnectClient {
-	public fun <init> (Lcom/amplifyframework/connect/ConnectClientConfiguration;Lcom/amplifyframework/connect/ConnectCredentialsProvider;Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/ChannelType;)V
-	public synthetic fun <init> (Lcom/amplifyframework/connect/ConnectClientConfiguration;Lcom/amplifyframework/connect/ConnectCredentialsProvider;Landroid/content/Context;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/ChannelType;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Landroid/content/Context;Lcom/amplifyframework/connect/ConnectClientConfiguration;Lcom/amplifyframework/foundation/credentials/AwsCredentialsProvider;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/ChannelType;)V
+	public synthetic fun <init> (Landroid/content/Context;Lcom/amplifyframework/connect/ConnectClientConfiguration;Lcom/amplifyframework/foundation/credentials/AwsCredentialsProvider;Ljava/lang/String;Ljava/lang/String;Lcom/amplifyframework/connect/ChannelType;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun identifyUser (Lcom/amplifyframework/connect/UserProfile;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun registerDevice (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun removeDevice (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -43,7 +43,7 @@ public final class com/amplifyframework/connect/ConnectClientConfiguration {
 	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lcom/amplifyframework/connect/ConnectClientConfiguration;
 	public static synthetic fun copy$default (Lcom/amplifyframework/connect/ConnectClientConfiguration;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/connect/ConnectClientConfiguration;
 	public fun equals (Ljava/lang/Object;)Z
-	public static final fun fromAmplifyOutputs (Ljava/util/Map;)Lcom/amplifyframework/connect/ConnectClientConfiguration;
+	public static final fun fromAmplifyOutputs (Lcom/amplifyframework/core/configuration/AmplifyOutputsData;)Lcom/amplifyframework/connect/ConnectClientConfiguration;
 	public final fun getEndpoint ()Ljava/lang/String;
 	public final fun getRegion ()Ljava/lang/String;
 	public fun hashCode ()I
@@ -51,15 +51,11 @@ public final class com/amplifyframework/connect/ConnectClientConfiguration {
 }
 
 public final class com/amplifyframework/connect/ConnectClientConfiguration$Companion {
-	public final fun fromAmplifyOutputs (Ljava/util/Map;)Lcom/amplifyframework/connect/ConnectClientConfiguration;
+	public final fun fromAmplifyOutputs (Lcom/amplifyframework/core/configuration/AmplifyOutputsData;)Lcom/amplifyframework/connect/ConnectClientConfiguration;
 }
 
 public final class com/amplifyframework/connect/ConnectConfigurationException : com/amplifyframework/connect/AmplifyConnectException {
 	public fun <init> (Ljava/lang/String;)V
-}
-
-public abstract interface class com/amplifyframework/connect/ConnectCredentialsProvider {
-	public abstract fun resolve (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class com/amplifyframework/connect/ConnectNetworkException : com/amplifyframework/connect/AmplifyConnectException {
@@ -89,6 +85,15 @@ public final class com/amplifyframework/connect/ConnectValidationException : com
 	public fun <init> ()V
 	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/amplifyframework/connect/IdentifyUserData {
+}
+
+public final class com/amplifyframework/connect/RegisterDeviceData {
+}
+
+public final class com/amplifyframework/connect/RemoveDeviceData {
 }
 
 public final class com/amplifyframework/connect/UserProfile {

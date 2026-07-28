@@ -1976,13 +1976,16 @@ public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Ge
 
 public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Notifications {
 	public static final field Companion Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications$Companion;
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications$AmazonConnect;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications$AmazonConnect;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Ljava/lang/String;
 	public final fun component3 ()Ljava/util/List;
-	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications;
-	public static synthetic fun copy$default (Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications;
+	public final fun component4 ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications$AmazonConnect;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications$AmazonConnect;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications;
+	public static synthetic fun copy$default (Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications$AmazonConnect;ILjava/lang/Object;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAmazonConnect ()Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications$AmazonConnect;
 	public final fun getAmazonPinpointAppId ()Ljava/lang/String;
 	public final fun getAwsRegion ()Ljava/lang/String;
 	public final fun getChannels ()Ljava/util/List;
@@ -1999,6 +2002,35 @@ public final synthetic class com/amplifyframework/core/configuration/AmplifyOutp
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
 	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Notifications$AmazonConnect {
+	public static final field Companion Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications$AmazonConnect$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications$AmazonConnect;
+	public static synthetic fun copy$default (Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications$AmazonConnect;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications$AmazonConnect;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAwsRegion ()Ljava/lang/String;
+	public final fun getEndpoint ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/amplifyframework/core/configuration/AmplifyOutputsData$Notifications$AmazonConnect$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications$AmazonConnect$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications$AmazonConnect;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/amplifyframework/core/configuration/AmplifyOutputsData$Notifications$AmazonConnect;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Notifications$AmazonConnect$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/amplifyframework/core/configuration/AmplifyOutputsData$Notifications$Companion {
