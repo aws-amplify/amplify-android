@@ -22,6 +22,7 @@ import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.configuration.AmplifyOutputs
+import com.amplifyframework.core.configuration.AmplifyOutputsData
 import com.amplifyframework.foundation.credentials.AwsCredentials
 import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
 import com.amplifyframework.foundation.credentials.toAwsCredentialsProvider
@@ -118,9 +119,9 @@ class ConnectClientInstrumentationTest {
                 credentialsProvider = CognitoCredentialsProvider().toAwsCredentialsProvider()
 
                 // Parse Connect config from the same amplify_outputs
-                val outputsJson = Resources.readAsJson(context, outputsId)
-                val map = jsonToMap(outputsJson)
-                configuration = ConnectClientConfiguration.fromAmplifyOutputs(map)
+                configuration = ConnectClientConfiguration.fromAmplifyOutputs(
+                    AmplifyOutputsData.deserialize(context, AmplifyOutputs(outputsId))
+                )
 
                 configured = true
             } catch (e: Exception) {
@@ -139,19 +140,6 @@ class ConnectClientInstrumentationTest {
                 throw RuntimeException("Failed to read credentials resource", e)
             }
         }
-
-        @Suppress("UNCHECKED_CAST")
-        private fun jsonToMap(json: org.json.JSONObject): Map<String, Any?> {
-            val map = mutableMapOf<String, Any?>()
-            json.keys().forEach { key ->
-                val value = json.get(key)
-                map[key] = when (value) {
-                    is org.json.JSONObject -> jsonToMap(value)
-                    else -> value
-                }
-            }
-            return map
-        }
     }
 
     private lateinit var client: AmplifyConnectClient
@@ -166,9 +154,9 @@ class ConnectClientInstrumentationTest {
 
         val context = ApplicationProvider.getApplicationContext<Context>()
         client = AmplifyConnectClient(
-            configuration = configuration,
-            credentialsProvider = { credentialsProvider.resolve() },
             context = context,
+            configuration = configuration,
+            credentialsProvider = credentialsProvider,
             platform = "Android",
             appVersion = "1.0.0-integ",
             channelType = ChannelType.GCM

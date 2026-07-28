@@ -14,6 +14,7 @@
  */
 package com.amplifyframework.connect
 
+import com.amplifyframework.core.configuration.AmplifyOutputsData
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -21,80 +22,68 @@ import org.junit.Test
 
 class ConnectClientConfigurationTest {
 
+    private fun outputs(
+        endpoint: String? = "https://abc123.execute-api.us-east-1.amazonaws.com",
+        awsRegion: String = "us-east-1",
+        includeConnect: Boolean = true,
+        includeNotifications: Boolean = true
+    ): AmplifyOutputsData {
+        val connect = if (includeConnect && endpoint != null) {
+            AmplifyOutputsData.Notifications.AmazonConnect(awsRegion = awsRegion, endpoint = endpoint)
+        } else {
+            null
+        }
+        val notifications = if (includeNotifications) {
+            AmplifyOutputsData.Notifications(
+                awsRegion = "us-east-1",
+                amazonPinpointAppId = "app-id",
+                channels = emptyList(),
+                amazonConnect = connect
+            )
+        } else {
+            null
+        }
+        return AmplifyOutputsData(notifications = notifications)
+    }
+
     @Test
     fun `fromAmplifyOutputs parses valid config`() {
-        val outputs = mapOf(
-            "notifications" to mapOf(
-                "amazon_connect" to mapOf(
-                    "aws_region" to "us-east-1",
-                    "endpoint" to "https://abc123.execute-api.us-east-1.amazonaws.com"
-                )
-            )
-        )
-        val config = ConnectClientConfiguration.fromAmplifyOutputs(outputs)
+        val config = ConnectClientConfiguration.fromAmplifyOutputs(outputs())
         config.endpoint shouldBe "https://abc123.execute-api.us-east-1.amazonaws.com"
         config.region shouldBe "us-east-1"
     }
 
     @Test
     fun `fromAmplifyOutputs trims trailing slash`() {
-        val outputs = mapOf(
-            "notifications" to mapOf(
-                "amazon_connect" to mapOf(
-                    "aws_region" to "us-west-2",
-                    "endpoint" to "https://example.com/"
-                )
-            )
+        val config = ConnectClientConfiguration.fromAmplifyOutputs(
+            outputs(endpoint = "https://example.com/", awsRegion = "us-west-2")
         )
-        val config = ConnectClientConfiguration.fromAmplifyOutputs(outputs)
         config.endpoint shouldBe "https://example.com"
+        config.region shouldBe "us-west-2"
     }
 
     @Test
     fun `fromAmplifyOutputs throws when notifications section missing`() {
         val exception = shouldThrow<ConnectConfigurationException> {
-            ConnectClientConfiguration.fromAmplifyOutputs(emptyMap())
+            ConnectClientConfiguration.fromAmplifyOutputs(outputs(includeNotifications = false))
         }
         exception.message shouldContain "notifications.amazon_connect"
     }
 
     @Test
     fun `fromAmplifyOutputs throws when amazon_connect section missing`() {
-        val outputs = mapOf("notifications" to mapOf("other" to "value"))
         val exception = shouldThrow<ConnectConfigurationException> {
-            ConnectClientConfiguration.fromAmplifyOutputs(outputs)
+            ConnectClientConfiguration.fromAmplifyOutputs(outputs(includeConnect = false))
         }
         exception.message shouldContain "notifications.amazon_connect"
     }
 
     @Test
-    fun `fromAmplifyOutputs throws when endpoint missing`() {
-        val outputs = mapOf(
-            "notifications" to mapOf(
-                "amazon_connect" to mapOf(
-                    "aws_region" to "us-east-1"
-                )
-            )
-        )
+    fun `fromAmplifyOutputs rejects http endpoint`() {
         val exception = shouldThrow<ConnectConfigurationException> {
-            ConnectClientConfiguration.fromAmplifyOutputs(outputs)
+            ConnectClientConfiguration.fromAmplifyOutputs(outputs(endpoint = "http://insecure.com"))
         }
-        exception.message shouldContain "endpoint"
-    }
-
-    @Test
-    fun `fromAmplifyOutputs throws when aws_region missing`() {
-        val outputs = mapOf(
-            "notifications" to mapOf(
-                "amazon_connect" to mapOf(
-                    "endpoint" to "https://example.com"
-                )
-            )
-        )
-        val exception = shouldThrow<ConnectConfigurationException> {
-            ConnectClientConfiguration.fromAmplifyOutputs(outputs)
-        }
-        exception.message shouldContain "aws_region"
+        exception.message shouldContain "https"
     }
 
     @Test
@@ -118,22 +107,6 @@ class ConnectClientConfigurationTest {
             region = "us-east-1"
         )
         config.endpoint shouldBe "https://example.com"
-    }
-
-    @Test
-    fun `fromAmplifyOutputs rejects http endpoint`() {
-        val outputs = mapOf(
-            "notifications" to mapOf(
-                "amazon_connect" to mapOf(
-                    "aws_region" to "us-east-1",
-                    "endpoint" to "http://insecure.com"
-                )
-            )
-        )
-        val exception = shouldThrow<ConnectConfigurationException> {
-            ConnectClientConfiguration.fromAmplifyOutputs(outputs)
-        }
-        exception.message shouldContain "https"
     }
 
     @Test
