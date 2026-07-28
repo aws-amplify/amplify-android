@@ -20,6 +20,8 @@ import com.amplifyframework.connect.internal.DeviceIdStore
 import com.amplifyframework.connect.internal.InputValidation
 import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.foundation.logging.Logger
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
@@ -34,6 +36,14 @@ import kotlinx.serialization.json.putJsonObject
  * - [identifyUser] — sends profile attributes
  * - [registerDevice] — registers the device for push notifications
  * - [removeDevice] — removes the device from the profile
+ *
+ * ## Error handling
+ *
+ * These suspend functions return no result type. On failure they throw from the
+ * [AmplifyConnectException] hierarchy (for example [ConnectNotSignedInException],
+ * [ConnectNetworkException], or [ConnectValidationException]). This throwing
+ * contract is intentional. It keeps the Connect client consistent with the
+ * Flutter and Swift clients, which surface the same failures as thrown errors.
  *
  * ## Deferred (Phase 2)
  *
@@ -122,7 +132,7 @@ class AmplifyConnectClient(
     suspend fun registerDevice(token: String) {
         InputValidation.validateToken(token)
         val credentials = credentialsProvider.resolve()
-        val deviceId = deviceIdStore.getOrCreate()
+        val deviceId = withContext(Dispatchers.IO) { deviceIdStore.getOrCreate() }
         val body = buildJsonObject {
             putJsonObject("device") {
                 put("token", token)
@@ -149,7 +159,7 @@ class AmplifyConnectClient(
      */
     suspend fun removeDevice() {
         val credentials = credentialsProvider.resolve()
-        val deviceId = deviceIdStore.getOrCreate()
+        val deviceId = withContext(Dispatchers.IO) { deviceIdStore.getOrCreate() }
         val body = buildJsonObject {
             put("deviceId", deviceId)
         }

@@ -14,6 +14,7 @@
  */
 package com.amplifyframework.connect.internal
 
+import com.amplifyframework.connect.BuildConfig
 import com.amplifyframework.connect.ConnectAccessDeniedException
 import com.amplifyframework.connect.ConnectNetworkException
 import com.amplifyframework.connect.ConnectServiceException
@@ -47,7 +48,9 @@ import okhttp3.RequestBody.Companion.toRequestBody
 internal class ConnectService(
     private val endpoint: String,
     private val region: String,
-    private val httpClient: OkHttpClient = OkHttpClient()
+    private val httpClient: OkHttpClient = OkHttpClient.Builder()
+        .addInterceptor(ConnectUserAgentInterceptor(BuildConfig.VERSION_NAME))
+        .build()
 ) {
     /**
      * POST /identify-user with the given [body], SigV4-signed with [credentials].

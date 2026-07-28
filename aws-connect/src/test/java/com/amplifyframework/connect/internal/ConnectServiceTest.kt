@@ -99,6 +99,17 @@ class ConnectServiceTest {
     }
 
     @Test
+    fun `requests carry the Amplify connect user agent`() = runTest {
+        server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
+
+        service.identifyUser(testCredentials, "{}")
+
+        val userAgent = server.takeRequest().getHeader("User-Agent")!!
+        userAgent shouldContain "md/amplify-connect#"
+        userAgent shouldContain "lib/amplify-android#"
+    }
+
+    @Test
     fun `maps 429 to ThrottlingException`() = runTest {
         server.enqueue(MockResponse().setResponseCode(429).setBody("{}"))
 
