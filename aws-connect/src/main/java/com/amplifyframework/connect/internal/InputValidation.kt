@@ -19,8 +19,8 @@ import com.amplifyframework.connect.UserProfile
 import com.amplifyframework.connect.UserProfileLocation
 
 /**
- * Client-side input length validation mirroring backend limits (construct head
- * aeffa206). MAX_ATTRIBUTE_LENGTH = 255 on all string fields.
+ * Client-side input length validation mirroring backend limits.
+ * MAX_ATTRIBUTE_LENGTH = 255 on all string fields.
  */
 internal object InputValidation {
     const val MAX_ATTRIBUTE_LENGTH = 255
