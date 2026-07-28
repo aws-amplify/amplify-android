@@ -23,6 +23,8 @@ import com.amplifyframework.foundation.credentials.AwsCredentials
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import kotlinx.coroutines.test.runTest
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
@@ -107,6 +109,35 @@ class ConnectServiceTest {
         val userAgent = server.takeRequest().getHeader("User-Agent")!!
         userAgent shouldContain "md/amplify-connect#"
         userAgent shouldContain "lib/amplify-android#"
+    }
+
+    @Test
+    fun `buildAuthorizationHeader produces the expected SigV4 signature`() {
+        // Known-answer test. The expected Signature was computed independently with a
+        // reference SigV4 implementation (Python hmac/sha256) over the same canonical
+        // inputs, so it verifies the signing math rather than echoing our own output:
+        //   POST /identify-user, host connect.example.com, region us-east-1,
+        //   service execute-api, x-amz-date 20230101T000000Z,
+        //   body {"userProfile":{"name":"Alice"}}, static creds AKIDEXAMPLE / secret.
+        val service = ConnectService(endpoint = "https://connect.example.com", region = "us-east-1")
+        val credentials = AwsCredentials.Static(
+            accessKeyId = "AKIDEXAMPLE",
+            secretAccessKey = "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY"
+        )
+        val timestamp = ZonedDateTime.of(2023, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)
+
+        val header = service.buildAuthorizationHeader(
+            url = "https://connect.example.com/identify-user",
+            credentials = credentials,
+            body = """{"userProfile":{"name":"Alice"}}""",
+            timestamp = timestamp
+        )
+
+        header shouldBe (
+            "AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20230101/us-east-1/execute-api/aws4_request, " +
+                "SignedHeaders=content-type;host;x-amz-date, " +
+                "Signature=4993af8526864666b5158fc626c65e5f34b6dfc7fb6f1046b5af042ae5a33b0d"
+            )
     }
 
     @Test
