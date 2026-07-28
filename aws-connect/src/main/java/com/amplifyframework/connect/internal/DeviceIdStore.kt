@@ -17,6 +17,9 @@ package com.amplifyframework.connect.internal
 import android.content.Context
 import android.content.SharedPreferences
 import java.util.UUID
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Persists a stable device identifier in SharedPreferences using the shared
@@ -31,8 +34,17 @@ import java.util.UUID
  * so that a single device resolves to one ID across all Amplify packages.
  * Whichever client initializes first generates the UUID; subsequent clients
  * read the existing value.
+ *
+ * All reads and writes hop to [dispatcher] so callers can invoke these methods
+ * from any coroutine context without touching disk on the calling thread.
+ *
+ * @param context Android context used to open the shared preferences file
+ * @param dispatcher Dispatcher for the blocking SharedPreferences access
  */
-internal class DeviceIdStore(context: Context) {
+internal class DeviceIdStore(
+    context: Context,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO
+) {
 
     private val prefs: SharedPreferences = context.applicationContext
         .getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
@@ -40,24 +52,29 @@ internal class DeviceIdStore(context: Context) {
     /**
      * Returns the persisted device ID, or generates and persists a new one.
      */
-    fun getOrCreate(): String {
+    suspend fun getOrCreate(): String = withContext(dispatcher) {
         val existing = prefs.getString(DEVICE_ID_KEY, null)
-        if (!existing.isNullOrEmpty()) return existing
-        val newId = UUID.randomUUID().toString()
-        prefs.edit().putString(DEVICE_ID_KEY, newId).apply()
-        return newId
+        if (!existing.isNullOrEmpty()) {
+            existing
+        } else {
+            val newId = UUID.randomUUID().toString()
+            prefs.edit().putString(DEVICE_ID_KEY, newId).apply()
+            newId
+        }
     }
 
     /**
      * Returns the current device ID without generating a new one.
      * @return The device ID, or null if none is persisted.
      */
-    fun get(): String? = prefs.getString(DEVICE_ID_KEY, null)
+    suspend fun get(): String? = withContext(dispatcher) {
+        prefs.getString(DEVICE_ID_KEY, null)
+    }
 
     /**
      * Clears the persisted device ID.
      */
-    fun clear() {
+    suspend fun clear() = withContext(dispatcher) {
         prefs.edit().remove(DEVICE_ID_KEY).apply()
     }
 

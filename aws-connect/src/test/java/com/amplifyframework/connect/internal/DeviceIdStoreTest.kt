@@ -19,11 +19,14 @@ import androidx.test.core.app.ApplicationProvider
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldMatch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class DeviceIdStoreTest {
 
@@ -38,43 +41,43 @@ class DeviceIdStoreTest {
             DeviceIdStore.PREFERENCES_NAME,
             Context.MODE_PRIVATE
         ).edit().clear().commit()
-        store = DeviceIdStore(context)
+        store = DeviceIdStore(context, UnconfinedTestDispatcher())
     }
 
     @Test
-    fun `getOrCreate generates a UUID when no value exists`() {
+    fun `getOrCreate generates a UUID when no value exists`() = runTest {
         val id = store.getOrCreate()
         id shouldNotBe null
         id shouldMatch "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
     }
 
     @Test
-    fun `getOrCreate returns the same value on subsequent calls`() {
+    fun `getOrCreate returns the same value on subsequent calls`() = runTest {
         val first = store.getOrCreate()
         val second = store.getOrCreate()
         second shouldBe first
     }
 
     @Test
-    fun `get returns null when no value exists`() {
+    fun `get returns null when no value exists`() = runTest {
         store.get() shouldBe null
     }
 
     @Test
-    fun `get returns the value after getOrCreate`() {
+    fun `get returns the value after getOrCreate`() = runTest {
         val id = store.getOrCreate()
         store.get() shouldBe id
     }
 
     @Test
-    fun `clear removes the stored value`() {
+    fun `clear removes the stored value`() = runTest {
         store.getOrCreate()
         store.clear()
         store.get() shouldBe null
     }
 
     @Test
-    fun `getOrCreate generates a new value after clear`() {
+    fun `getOrCreate generates a new value after clear`() = runTest {
         val first = store.getOrCreate()
         store.clear()
         val second = store.getOrCreate()
@@ -82,7 +85,7 @@ class DeviceIdStoreTest {
     }
 
     @Test
-    fun `shared-key contract - reads value written by enrichment under same key`() {
+    fun `shared-key contract - reads value written by enrichment under same key`() = runTest {
         // Simulate what enrichment's SharedPreferencesClientIdProvider does:
         // writes a UUID to SharedPreferences file "com.amplifyframework.device_id"
         // under key "com.amplifyframework.device_id"
@@ -96,13 +99,13 @@ class DeviceIdStoreTest {
         ).commit()
 
         // Connect's DeviceIdStore should read the same value
-        val connectStore = DeviceIdStore(context)
+        val connectStore = DeviceIdStore(context, UnconfinedTestDispatcher())
         connectStore.getOrCreate() shouldBe enrichmentWrittenId
         connectStore.get() shouldBe enrichmentWrittenId
     }
 
     @Test
-    fun `shared-key contract - value written by Connect is readable by enrichment`() {
+    fun `shared-key contract - value written by Connect is readable by enrichment`() = runTest {
         // Connect generates the id first
         val connectId = store.getOrCreate()
 
