@@ -20,7 +20,7 @@ import com.amplifyframework.annotations.ExperimentalAmplifyApi
  * Push notification channel type for device registration.
  */
 @ExperimentalAmplifyApi
-enum class ChannelType(val value: String) {
+enum class ChannelType(internal val value: String) {
     /** Firebase Cloud Messaging (Android). */
     GCM("GCM"),
 
