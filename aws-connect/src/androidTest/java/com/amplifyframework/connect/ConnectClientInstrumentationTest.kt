@@ -27,6 +27,7 @@ import com.amplifyframework.foundation.credentials.AwsCredentials
 import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
 import com.amplifyframework.foundation.credentials.toAwsCredentialsProvider
 import com.amplifyframework.testutils.Resources
+import com.amplifyframework.testutils.assertions.shouldBeSuccess
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import kotlinx.coroutines.runBlocking
 import org.json.JSONException
@@ -164,38 +165,44 @@ class ConnectClientInstrumentationTest {
     }
 
     @Test
-    fun identifyUser_withFullProfile_succeeds() = runBlocking {
-        client.identifyUser(
-            UserProfile(
-                email = "integ-test@example.com",
-                name = "Integration Test",
-                phone = "+15555555555",
-                customAttributes = mapOf("testRun" to System.currentTimeMillis().toString()),
-                location = UserProfileLocation(
-                    city = "Seattle",
-                    country = "US",
-                    postalCode = "98101",
-                    region = "WA"
+    fun identifyUser_withFullProfile_succeeds() {
+        runBlocking {
+            client.identifyUser(
+                UserProfile(
+                    email = "integ-test@example.com",
+                    name = "Integration Test",
+                    phone = "+15555555555",
+                    customAttributes = mapOf("testRun" to System.currentTimeMillis().toString()),
+                    location = UserProfileLocation(
+                        city = "Seattle",
+                        country = "US",
+                        postalCode = "98101",
+                        region = "WA"
+                    )
                 )
-            )
-        )
+            ).shouldBeSuccess()
+        }
     }
 
     @Test
-    fun registerDevice_thenRemoveDevice_roundTrip() = runBlocking {
-        // Ensure profile exists
-        client.identifyUser(UserProfile(name = "Device Round-Trip"))
+    fun registerDevice_thenRemoveDevice_roundTrip() {
+        runBlocking {
+            // Ensure profile exists
+            client.identifyUser(UserProfile(name = "Device Round-Trip")).shouldBeSuccess()
 
-        // Register with a fake FCM token
-        client.registerDevice("fake-fcm-token-${System.currentTimeMillis()}")
+            // Register with a fake FCM token
+            client.registerDevice("fake-fcm-token-${System.currentTimeMillis()}").shouldBeSuccess()
 
-        // Remove the device (deviceId resolved from SharedPreferences)
-        client.removeDevice()
+            // Remove the device (deviceId resolved from SharedPreferences)
+            client.removeDevice().shouldBeSuccess()
+        }
     }
 
     @Test
-    fun identifyUser_minimalProfile_succeeds() = runBlocking {
-        // Empty profile — only the SigV4 signer identity reaches the backend
-        client.identifyUser(UserProfile())
+    fun identifyUser_minimalProfile_succeeds() {
+        runBlocking {
+            // Empty profile, only the SigV4 signer identity reaches the backend
+            client.identifyUser(UserProfile()).shouldBeSuccess()
+        }
     }
 }
