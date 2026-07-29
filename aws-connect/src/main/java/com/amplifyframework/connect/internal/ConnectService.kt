@@ -92,7 +92,7 @@ internal class ConnectService(
             .addHeader("Host", host)
             .addHeader("X-Amz-Date", amzDate)
             .addHeader("Authorization", authHeader)
-            .post(body.toRequestBody(JSON_MEDIA_TYPE))
+            .post(body.toByteArray(Charsets.UTF_8).toRequestBody(JSON_MEDIA_TYPE))
 
         if (credentials is AwsCredentials.Temporary) {
             requestBuilder.addHeader("X-Amz-Security-Token", credentials.sessionToken)
