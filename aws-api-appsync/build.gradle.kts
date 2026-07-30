@@ -32,10 +32,9 @@ dependencies {
     implementation(libs.androidx.core)
     implementation(libs.gson)
 
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.robolectric)
+    testImplementation(libs.bundles.test.unit)
+    testImplementation(libs.bundles.test.unit.android)
     testImplementation(libs.test.jsonassert)
-    testImplementation(libs.test.kotest.assertions)
     testImplementation(project(":testmodels"))
     testImplementation(project(":testutils"))
 }

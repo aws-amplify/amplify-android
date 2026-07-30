@@ -41,21 +41,10 @@ dependencies {
     implementation(libs.kotlin.futures)
 
     testImplementation(project(":testutils"))
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.mockk)
-    testImplementation(libs.test.robolectric)
-    testImplementation(libs.test.androidx.core)
-    testImplementation(libs.test.kotlin.coroutines)
+    testImplementation(libs.bundles.test.unit)
+    testImplementation(libs.bundles.test.unit.android)
     testImplementation(libs.test.androidx.workmanager)
 
-    androidTestImplementation(libs.test.robolectric)
-    androidTestImplementation(libs.androidx.annotation)
-    androidTestImplementation(libs.test.androidx.core)
-    androidTestImplementation(libs.test.androidx.runner)
-    androidTestImplementation(libs.test.androidx.junit)
-    androidTestImplementation(libs.test.kotlin.coroutines)
-    androidTestImplementation(libs.test.mockk)
-    androidTestImplementation(libs.test.kotest.assertions)
-
+    androidTestImplementation(libs.bundles.test.android)
     androidTestImplementation(project(":testutils"))
 }

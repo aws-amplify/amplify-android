@@ -51,8 +51,8 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.StreamSupport;
 
-import io.reactivex.rxjava3.core.Observable;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -193,10 +193,9 @@ public final class AWSApiPluginTest {
 
         assertEquals(
             Arrays.asList("Curly", "Moe", "Larry"),
-            Observable.fromIterable(actualResponse.getData())
+            StreamSupport.stream(actualResponse.getData().spliterator(), false)
                 .map(BlogOwner::getName)
                 .toList()
-                .blockingGet()
         );
     }
 
@@ -218,10 +217,9 @@ public final class AWSApiPluginTest {
 
         assertEquals(
                 Arrays.asList("Curly", "Moe", "Larry"),
-                Observable.fromIterable(actualResponse.getData().getItems())
-                        .map(BlogOwner::getName)
-                        .toList()
-                        .blockingGet()
+                StreamSupport.stream(actualResponse.getData().spliterator(), false)
+                    .map(BlogOwner::getName)
+                    .toList()
         );
         assertTrue(actualResponse.getData().hasNextResult());
         assertNotNull(actualResponse.getData().getRequestForNextResult());
@@ -355,10 +353,9 @@ public final class AWSApiPluginTest {
         assertEquals("FAKE_TOKEN", recordedRequest.getHeader("authorization"));
         assertEquals(
             Arrays.asList("Curly", "Moe", "Larry"),
-            Observable.fromIterable(actualResponse.getData())
-                      .map(BlogOwner::getName)
-                      .toList()
-                      .blockingGet()
+            StreamSupport.stream(actualResponse.getData().spliterator(), false)
+                .map(BlogOwner::getName)
+                .toList()
         );
     }
 
@@ -386,10 +383,9 @@ public final class AWSApiPluginTest {
         assertTrue(recordedRequest.getHeader("authorization").startsWith("AWS4-HMAC-SHA256"));
         assertEquals(
             Arrays.asList("Curly", "Moe", "Larry"),
-            Observable.fromIterable(actualResponse.getData())
-                      .map(BlogOwner::getName)
-                      .toList()
-                      .blockingGet()
+            StreamSupport.stream(actualResponse.getData().spliterator(), false)
+                .map(BlogOwner::getName)
+                .toList()
         );
     }
 

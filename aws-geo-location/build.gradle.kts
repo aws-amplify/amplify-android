@@ -30,14 +30,10 @@ dependencies {
     implementation(libs.aws.location)
 
     testImplementation(project(":testutils"))
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.robolectric)
-    testImplementation(libs.test.kotest.assertions)
+    testImplementation(libs.bundles.test.unit)
+    testImplementation(libs.bundles.test.unit.android)
 
+    androidTestImplementation(libs.bundles.test.android)
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(project(":aws-auth-cognito"))
-    androidTestImplementation(libs.androidx.annotation)
-    androidTestImplementation(libs.test.androidx.core)
-    androidTestImplementation(libs.test.androidx.runner)
-    androidTestImplementation(libs.test.androidx.junit)
 }

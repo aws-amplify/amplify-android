@@ -55,8 +55,5 @@ sourceSets.main {
 dependencies {
     api(libs.apollo.runtime)
 
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.mockk)
-    testImplementation(libs.test.kotlin.coroutines)
-    testImplementation(libs.test.kotest.assertions)
+    testImplementation(libs.bundles.test.unit)
 }

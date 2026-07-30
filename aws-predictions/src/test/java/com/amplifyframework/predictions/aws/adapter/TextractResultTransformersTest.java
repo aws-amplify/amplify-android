@@ -47,7 +47,6 @@ import aws.sdk.kotlin.services.textract.model.Geometry;
 import aws.sdk.kotlin.services.textract.model.Point;
 import aws.sdk.kotlin.services.textract.model.Relationship;
 import aws.sdk.kotlin.services.textract.model.SelectionStatus;
-import io.reactivex.rxjava3.core.Observable;
 import kotlin.Unit;
 
 import static org.junit.Assert.assertEquals;
@@ -198,8 +197,9 @@ public final class TextractResultTransformersTest {
 
         // Construct a map to act as a graph
         Map<String, Block> blockMap = new HashMap<>();
-        Observable.fromArray(cellTextBlock, cellSelectionBlock, cellBlock, tableBlock)
-                .blockingForEach(block -> blockMap.put(block.getId(), block));
+        for (Block block : Arrays.asList(cellTextBlock, cellSelectionBlock, cellBlock, tableBlock)) {
+            blockMap.put(block.getId(), block);
+        }
 
         // Test table block conversion
         Table table = TextractResultTransformers.fetchTable(tableBlock, blockMap);
@@ -261,8 +261,9 @@ public final class TextractResultTransformersTest {
 
         // Construct a map to act as a graph
         Map<String, Block> blockMap = new HashMap<>();
-        Observable.fromArray(valueTextBlock, keyTextBlock, valueBlock, keyBlock)
-                .blockingForEach(block -> blockMap.put(block.getId(), block));
+        for (Block block : Arrays.asList(valueTextBlock, keyTextBlock, valueBlock, keyBlock)) {
+            blockMap.put(block.getId(), block);
+        }
 
         // Test block conversion
         BoundedKeyValue keyValue = TextractResultTransformers.fetchKeyValue(keyBlock, blockMap);
