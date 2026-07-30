@@ -1,3 +1,10 @@
+## [Release 2.39.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.39.0)
+
+### Features
+- **notifications:** add Amplify Connect client for Customer Profiles ([#3341](https://github.com/aws-amplify/amplify-android/issues/3341))
+
+[See all changes between 2.38.1 and 2.39.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.38.1...release_v2.39.0)
+
 ## [Release 2.38.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.38.1)
 
 ### Bug Fixes
