@@ -168,10 +168,17 @@ data class AmplifyOutputsData(
 
     @Serializable
     data class Notifications(
-        val awsRegion: String,
-        val amazonPinpointAppId: String,
-        val channels: List<AmazonPinpointChannels>
-    )
+        val awsRegion: String? = null,
+        val amazonPinpointAppId: String? = null,
+        val channels: List<AmazonPinpointChannels> = emptyList(),
+        val amazonConnect: AmazonConnect? = null
+    ) {
+        @Serializable
+        data class AmazonConnect(
+            val awsRegion: String,
+            val endpoint: String
+        )
+    }
 
     @Serializable
     data class Storage(
