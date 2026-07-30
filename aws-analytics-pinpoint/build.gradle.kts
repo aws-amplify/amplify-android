@@ -45,7 +45,6 @@ dependencies {
     testImplementation(libs.test.kotlin.coroutines)
     testImplementation(libs.test.kotest.assertions)
     testImplementation(project(":testutils"))
-    testImplementation(project(":aws-analytics-pinpoint"))
 
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(libs.test.androidx.core)
@@ -53,5 +52,4 @@ dependencies {
     androidTestImplementation(libs.test.androidx.runner)
     androidTestImplementation(libs.test.kotlin.coroutines)
     androidTestImplementation(libs.test.androidx.junit)
-    androidTestImplementation(project(":aws-analytics-pinpoint"))
 }

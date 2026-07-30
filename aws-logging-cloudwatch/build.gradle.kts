@@ -57,6 +57,5 @@ dependencies {
     androidTestImplementation(libs.test.mockk)
     androidTestImplementation(libs.test.kotest.assertions)
 
-    androidTestImplementation(project(":aws-logging-cloudwatch"))
     androidTestImplementation(project(":testutils"))
 }

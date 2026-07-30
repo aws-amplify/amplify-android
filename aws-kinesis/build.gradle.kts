@@ -50,7 +50,6 @@ dependencies {
     testImplementation(libs.test.kotest.assertions)
     testImplementation(libs.androidx.sqlite.bundled.jvm)
     testImplementation(project(":testutils"))
-    testImplementation(project(":aws-kinesis"))
 
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(libs.test.androidx.core)
@@ -61,6 +60,5 @@ dependencies {
     androidTestImplementation(libs.test.kotlin.coroutines)
     androidTestImplementation(libs.test.androidx.junit)
     androidTestImplementation(libs.test.kotest.assertions)
-    androidTestImplementation(project(":aws-kinesis"))
     androidTestImplementation(libs.androidx.sqlite)
 }

@@ -50,7 +50,6 @@ dependencies {
     androidTestImplementation(project(":testmodels"))
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(project(":aws-api"))
-    androidTestImplementation(project(":aws-datastore"))
     androidTestImplementation(libs.androidx.annotation)
     androidTestImplementation(libs.test.androidx.core)
     androidTestImplementation(libs.test.androidx.runner)

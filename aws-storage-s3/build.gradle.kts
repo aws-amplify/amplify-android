@@ -45,7 +45,6 @@ dependencies {
     testImplementation(libs.test.androidx.workmanager)
     testImplementation(libs.test.kotlin.coroutines)
     testImplementation(libs.test.kotest.assertions)
-    testImplementation(project(":aws-storage-s3"))
 
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(project(":aws-auth-cognito"))
@@ -54,5 +53,4 @@ dependencies {
     androidTestImplementation(libs.test.androidx.junit)
     androidTestImplementation(libs.test.androidx.workmanager)
     androidTestImplementation(libs.test.kotest.assertions)
-    androidTestImplementation(project(":aws-storage-s3"))
 }

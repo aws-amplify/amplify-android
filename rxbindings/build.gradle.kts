@@ -37,5 +37,4 @@ dependencies {
     testImplementation(libs.test.mockk)
     testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.robolectric)
-    testImplementation(project(":rxbindings"))
 }
