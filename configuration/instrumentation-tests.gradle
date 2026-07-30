@@ -12,7 +12,8 @@ def module_backends = [
         'core'                  : 'NONE',
         'aws-auth-cognito'      : 'AuthIntegrationTests',
         'aws-sdk-appsync-events': 'NONE',
-        'aws-kinesis'           : 'KinesisIntegrationTests'
+        'aws-kinesis'           : 'KinesisIntegrationTests',
+        'aws-connect'           : 'NONE'
 ]
 
 def module_subpaths = [
