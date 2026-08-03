@@ -15,7 +15,8 @@
             "SECRET_BLOCK": "secretBlock",
             "SRP_B": "def",
             "USERNAME": "alternateUsername"
-          }
+          },
+          "inputUsername": "username"
         },
         "signInMethod": {
           "type": "SignInMethod.ApiBased",
