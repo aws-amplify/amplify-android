@@ -24,6 +24,7 @@ import android.database.sqlite.SQLiteOpenHelper
 import android.database.sqlite.SQLiteQueryBuilder
 import android.net.Uri
 import android.text.TextUtils
+import androidx.core.net.toUri
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
@@ -60,7 +61,7 @@ internal class TransferDBHelper(private val context: Context) : SQLiteOpenHelper
     init {
         val authority = context.applicationContext.packageName
         database = writableDatabase
-        contentUri = Uri.parse("content://$authority/$BASE_PATH")
+        contentUri = "content://$authority/$BASE_PATH".toUri()
         uriMatcher = UriMatcher(UriMatcher.NO_MATCH)
 
         // The Uri of TRANSFERS is for all records in the table.
@@ -109,7 +110,7 @@ internal class TransferDBHelper(private val context: Context) : SQLiteOpenHelper
             )
             else -> throw IllegalArgumentException("Unknown URI: $uri")
         }
-        return Uri.parse("$BASE_PATH/$id")
+        return "$BASE_PATH/$id".toUri()
     }
 
     /**

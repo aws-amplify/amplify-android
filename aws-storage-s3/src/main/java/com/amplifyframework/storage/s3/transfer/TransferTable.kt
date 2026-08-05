@@ -16,6 +16,7 @@
 package com.amplifyframework.storage.s3.transfer
 
 import android.database.sqlite.SQLiteDatabase
+import androidx.core.database.sqlite.transaction
 import java.util.UUID
 
 internal class TransferTable {
@@ -200,37 +201,35 @@ internal class TransferTable {
          */
         @JvmStatic
         fun onUpgrade(database: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-            database.beginTransaction()
-
-            if (TABLE_VERSION_2 in (oldVersion + 1)..newVersion) {
-                addVersion2Columns(database)
+            database.transaction {
+                if (TABLE_VERSION_2 in (oldVersion + 1)..newVersion) {
+                    addVersion2Columns(database)
+                }
+                if (TABLE_VERSION_3 in (oldVersion + 1)..newVersion) {
+                    addVersion3Columns(database)
+                }
+                if (TABLE_VERSION_4 in (oldVersion + 1)..newVersion) {
+                    addVersion4Columns(database)
+                }
+                if (TABLE_VERSION_5 in (oldVersion + 1)..newVersion) {
+                    addVersion5Columns(database)
+                }
+                if (TABLE_VERSION_6 in (oldVersion + 1)..newVersion) {
+                    addVersion6Columns(database)
+                }
+                if (TABLE_VERSION_7 in (oldVersion + 1)..newVersion) {
+                    addVersion7Columns(database)
+                }
+                if (TABLE_VERSION_8 in (oldVersion + 1)..newVersion) {
+                    addVersion8Columns(database)
+                }
+                if (TABLE_VERSION_9 in (oldVersion + 1)..newVersion) {
+                    addVersion9Columns(database)
+                }
+                if (TABLE_VERSION_10 in (oldVersion + 1)..newVersion) {
+                    addVersion10Columns(database)
+                }
             }
-            if (TABLE_VERSION_3 in (oldVersion + 1)..newVersion) {
-                addVersion3Columns(database)
-            }
-            if (TABLE_VERSION_4 in (oldVersion + 1)..newVersion) {
-                addVersion4Columns(database)
-            }
-            if (TABLE_VERSION_5 in (oldVersion + 1)..newVersion) {
-                addVersion5Columns(database)
-            }
-            if (TABLE_VERSION_6 in (oldVersion + 1)..newVersion) {
-                addVersion6Columns(database)
-            }
-            if (TABLE_VERSION_7 in (oldVersion + 1)..newVersion) {
-                addVersion7Columns(database)
-            }
-            if (TABLE_VERSION_8 in (oldVersion + 1)..newVersion) {
-                addVersion8Columns(database)
-            }
-            if (TABLE_VERSION_9 in (oldVersion + 1)..newVersion) {
-                addVersion9Columns(database)
-            }
-            if (TABLE_VERSION_10 in (oldVersion + 1)..newVersion) {
-                addVersion10Columns(database)
-            }
-            database.setTransactionSuccessful()
-            database.endTransaction()
         }
 
         /**
