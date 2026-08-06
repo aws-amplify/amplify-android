@@ -12,15 +12,18 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package com.amplifyframework.eventenrichment.session
 
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldMatch
-import java.time.Instant
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 import org.junit.Test
 
 class SessionManagerTest {
@@ -92,7 +95,7 @@ class SessionManagerTest {
     fun `stopSession records stop timestamp and duration`() {
         val manager = manager()
         manager.startSession()
-        clock = clock.plusMillis(10_000)
+        clock += 10_000.milliseconds
         manager.stopSession()
 
         manager.state shouldBe SessionState.STOPPED
@@ -163,7 +166,7 @@ class SessionManagerTest {
         val manager = manager()
         manager.startSession()
         val firstId = manager.session.shouldNotBeNull().id
-        clock = clock.plusMillis(1_000)
+        clock += 1_000.milliseconds
         manager.startSession()
 
         val session = manager.session.shouldNotBeNull()

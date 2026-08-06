@@ -12,6 +12,8 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package com.amplifyframework.eventenrichment
 
 import com.amplifyframework.eventenrichment.exception.EventEnrichmentClosedException
@@ -20,14 +22,18 @@ import com.amplifyframework.eventenrichment.metadata.DeviceMetadata
 import com.amplifyframework.eventenrichment.metadata.SdkMetadata
 import com.amplifyframework.eventenrichment.session.SessionManager
 import com.amplifyframework.eventenrichment.session.SessionState
+import com.amplifyframework.eventenrichment.session.TimeoutHandle
+import com.amplifyframework.eventenrichment.session.TimeoutScheduler
 import com.amplifyframework.foundation.result.Result
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import java.time.Instant
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
+import kotlinx.coroutines.Dispatchers
 import org.junit.Test
 
 class EventEnrichmentClientTest {
@@ -47,7 +53,8 @@ class EventEnrichmentClientTest {
         appId = appId,
         sessionTimeout = 5.seconds,
         now = { clock },
-        generateId = { "session${idSequence++}0-1111-2222-3333-444455556666" }
+        generateId = { "session${idSequence++}0-1111-2222-3333-444455556666" },
+        scheduler = TimeoutScheduler { _, _ -> TimeoutHandle { } }
     )
 
     private fun client(
@@ -65,7 +72,9 @@ class EventEnrichmentClientTest {
         autoSessionTracking = autoSessionTracking,
         application = null,
         clock = { clock },
-        generateEventId = { "event${idSequence++}" }
+        generateEventId = { "event${idSequence++}" },
+        // Unconfined keeps the async sink delivery synchronous for assertions.
+        sinkDispatcher = Dispatchers.Unconfined
     )
 
     @Test
@@ -100,7 +109,7 @@ class EventEnrichmentClientTest {
         val firstSessionId = first.session.id
 
         client.stopSession()
-        clock = clock.plusMillis(1_000)
+        clock += 1_000.milliseconds
 
         val second = (client.record("second") as Result.Success).data
 
