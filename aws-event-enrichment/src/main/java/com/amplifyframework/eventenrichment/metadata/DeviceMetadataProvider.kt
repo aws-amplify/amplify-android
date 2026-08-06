@@ -40,7 +40,7 @@ fun interface DeviceMetadataProvider {
  * [com.amplifyframework.eventenrichment.EventEnrichmentClient]; there is no
  * need to construct it directly outside of testing.
  */
-class AndroidDeviceMetadataProvider : DeviceMetadataProvider {
+internal class AndroidDeviceMetadataProvider : DeviceMetadataProvider {
     override fun getDeviceMetadata(): DeviceMetadata = DeviceMetadata(
         platform = PLATFORM_ANDROID,
         platformVersion = Build.VERSION.RELEASE,

@@ -23,7 +23,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 /** Handle for a scheduled timeout that can be cancelled before it fires. */
-fun interface TimeoutHandle {
+internal fun interface TimeoutHandle {
     /** Cancels the pending timeout. No-op if it has already fired. */
     fun cancel()
 }
@@ -34,7 +34,7 @@ fun interface TimeoutHandle {
  * Injected into [SessionManager] so tests can drive session timeouts
  * deterministically instead of waiting on wall-clock time.
  */
-fun interface TimeoutScheduler {
+internal fun interface TimeoutScheduler {
     /**
      * Schedules [action] to run once after [delay], returning a handle that can
      * cancel it before it fires.
@@ -46,7 +46,7 @@ fun interface TimeoutScheduler {
  * Default [TimeoutScheduler] backed by a coroutine [delay] on the provided
  * [scope]. The scope defaults to a supervised scope on [Dispatchers.Default].
  */
-class CoroutineTimeoutScheduler(
+internal class CoroutineTimeoutScheduler(
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) : TimeoutScheduler {
     override fun schedule(delay: Duration, action: () -> Unit): TimeoutHandle {

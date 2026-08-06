@@ -17,7 +17,6 @@ package com.amplifyframework.eventenrichment
 import android.app.Application
 import android.content.Context
 import androidx.annotation.VisibleForTesting
-import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.eventenrichment.clientid.ClientIdProvider
 import com.amplifyframework.eventenrichment.clientid.SharedPreferencesClientIdProvider
 import com.amplifyframework.eventenrichment.exception.EventEnrichmentClosedException
@@ -73,7 +72,6 @@ import java.util.UUID
  * @param appMetadata Optional full application metadata. When provided, its
  *   [AppMetadata.appId] must equal [appId].
  */
-@OptIn(InternalAmplifyApi::class)
 class EventEnrichmentClient @VisibleForTesting internal constructor(
     private val appMetadata: AppMetadata,
     private val deviceMetadata: DeviceMetadata,
@@ -119,8 +117,7 @@ class EventEnrichmentClient @VisibleForTesting internal constructor(
      * The session manager for this client. Exposed for advanced integrations
      * and platform lifecycle observers.
      */
-    @get:VisibleForTesting
-    val sessionManager: SessionManager = sessionManager
+    internal val sessionManager: SessionManager = sessionManager
 
     private var lifecycleObserver: LifecycleObserver? = null
 

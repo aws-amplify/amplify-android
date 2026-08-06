@@ -31,7 +31,7 @@ import com.amplifyframework.eventenrichment.session.SessionManager
  * @param application Application to register lifecycle callbacks on.
  * @param sessionManager Session manager driven by the lifecycle transitions.
  */
-class AndroidLifecycleObserver(
+internal class AndroidLifecycleObserver(
     private val application: Application,
     private val sessionManager: SessionManager
 ) : LifecycleObserver {

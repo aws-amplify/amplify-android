@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * Values are in-memory only and not persisted between sessions.
  */
-class GlobalFieldsManager {
+internal class GlobalFieldsManager {
     private val attributesMap = ConcurrentHashMap<String, String>()
     private val metricsMap = ConcurrentHashMap<String, Double>()
 

@@ -21,7 +21,7 @@ package com.amplifyframework.eventenrichment.lifecycle
  * manager. The default [AndroidLifecycleObserver] uses
  * [android.app.Application.ActivityLifecycleCallbacks].
  */
-interface LifecycleObserver {
+internal interface LifecycleObserver {
     /** Called when the app moves to the background. */
     fun onPause()
 

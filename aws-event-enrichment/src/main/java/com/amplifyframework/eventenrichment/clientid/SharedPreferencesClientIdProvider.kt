@@ -43,7 +43,7 @@ fun interface ClientIdProvider {
  *
  * @param context Android context used to access SharedPreferences.
  */
-class SharedPreferencesClientIdProvider(context: Context) : ClientIdProvider {
+internal class SharedPreferencesClientIdProvider(context: Context) : ClientIdProvider {
     private val preferences = context.applicationContext
         .getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
 

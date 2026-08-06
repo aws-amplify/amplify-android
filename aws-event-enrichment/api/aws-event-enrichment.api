@@ -97,29 +97,8 @@ public abstract interface class com/amplifyframework/eventenrichment/EventSink {
 	public abstract fun send (Lcom/amplifyframework/eventenrichment/EnrichedEvent;)V
 }
 
-public final class com/amplifyframework/eventenrichment/GlobalFieldsManager {
-	public fun <init> ()V
-	public final fun addAttribute (Ljava/lang/String;Ljava/lang/String;)V
-	public final fun addMetric (Ljava/lang/String;D)V
-	public final fun getAttributes ()Ljava/util/Map;
-	public final fun getMetrics ()Ljava/util/Map;
-	public final fun removeAttribute (Ljava/lang/String;)V
-	public final fun removeMetric (Ljava/lang/String;)V
-}
-
 public abstract interface class com/amplifyframework/eventenrichment/clientid/ClientIdProvider {
 	public abstract fun getClientId ()Ljava/lang/String;
-}
-
-public final class com/amplifyframework/eventenrichment/clientid/SharedPreferencesClientIdProvider : com/amplifyframework/eventenrichment/clientid/ClientIdProvider {
-	public static final field CLIENT_ID_STORAGE_KEY Ljava/lang/String;
-	public static final field Companion Lcom/amplifyframework/eventenrichment/clientid/SharedPreferencesClientIdProvider$Companion;
-	public static final field PREFERENCES_NAME Ljava/lang/String;
-	public fun <init> (Landroid/content/Context;)V
-	public fun getClientId ()Ljava/lang/String;
-}
-
-public final class com/amplifyframework/eventenrichment/clientid/SharedPreferencesClientIdProvider$Companion {
 }
 
 public final class com/amplifyframework/eventenrichment/exception/EventEnrichmentClosedException : com/amplifyframework/eventenrichment/exception/EventEnrichmentException {
@@ -129,24 +108,6 @@ public final class com/amplifyframework/eventenrichment/exception/EventEnrichmen
 public abstract class com/amplifyframework/eventenrichment/exception/EventEnrichmentException : com/amplifyframework/foundation/exceptions/AmplifyException {
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
-}
-
-public final class com/amplifyframework/eventenrichment/lifecycle/AndroidLifecycleObserver : com/amplifyframework/eventenrichment/lifecycle/LifecycleObserver {
-	public fun <init> (Landroid/app/Application;Lcom/amplifyframework/eventenrichment/session/SessionManager;)V
-	public fun dispose ()V
-	public fun onPause ()V
-	public fun onResume ()V
-}
-
-public abstract interface class com/amplifyframework/eventenrichment/lifecycle/LifecycleObserver {
-	public abstract fun dispose ()V
-	public abstract fun onPause ()V
-	public abstract fun onResume ()V
-}
-
-public final class com/amplifyframework/eventenrichment/metadata/AndroidDeviceMetadataProvider : com/amplifyframework/eventenrichment/metadata/DeviceMetadataProvider {
-	public fun <init> ()V
-	public fun getDeviceMetadata ()Lcom/amplifyframework/eventenrichment/metadata/DeviceMetadata;
 }
 
 public final class com/amplifyframework/eventenrichment/metadata/AppMetadata {
@@ -207,13 +168,6 @@ public final class com/amplifyframework/eventenrichment/metadata/SdkMetadata {
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class com/amplifyframework/eventenrichment/session/CoroutineTimeoutScheduler : com/amplifyframework/eventenrichment/session/TimeoutScheduler {
-	public fun <init> ()V
-	public fun <init> (Lkotlinx/coroutines/CoroutineScope;)V
-	public synthetic fun <init> (Lkotlinx/coroutines/CoroutineScope;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun schedule-VtjQ1oo (JLkotlin/jvm/functions/Function0;)Lcom/amplifyframework/eventenrichment/session/TimeoutHandle;
-}
-
 public final class com/amplifyframework/eventenrichment/session/Session {
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -232,18 +186,6 @@ public final class com/amplifyframework/eventenrichment/session/Session {
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class com/amplifyframework/eventenrichment/session/SessionManager {
-	public synthetic fun <init> (Ljava/lang/String;JLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Lcom/amplifyframework/eventenrichment/session/TimeoutScheduler;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun <init> (Ljava/lang/String;JLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Lcom/amplifyframework/eventenrichment/session/TimeoutScheduler;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun clearSession ()V
-	public final fun getSession ()Lcom/amplifyframework/eventenrichment/session/Session;
-	public final fun getState ()Lcom/amplifyframework/eventenrichment/session/SessionState;
-	public final fun handleAppPaused ()V
-	public final fun handleAppResumed ()V
-	public final fun startSession ()V
-	public final fun stopSession ()V
-}
-
 public final class com/amplifyframework/eventenrichment/session/SessionState : java/lang/Enum {
 	public static final field ACTIVE Lcom/amplifyframework/eventenrichment/session/SessionState;
 	public static final field PAUSED Lcom/amplifyframework/eventenrichment/session/SessionState;
@@ -251,13 +193,5 @@ public final class com/amplifyframework/eventenrichment/session/SessionState : j
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/eventenrichment/session/SessionState;
 	public static fun values ()[Lcom/amplifyframework/eventenrichment/session/SessionState;
-}
-
-public abstract interface class com/amplifyframework/eventenrichment/session/TimeoutHandle {
-	public abstract fun cancel ()V
-}
-
-public abstract interface class com/amplifyframework/eventenrichment/session/TimeoutScheduler {
-	public abstract fun schedule-VtjQ1oo (JLkotlin/jvm/functions/Function0;)Lcom/amplifyframework/eventenrichment/session/TimeoutHandle;
 }
 

@@ -28,7 +28,7 @@ android {
 dependencies {
     implementation(project(":foundation"))
 
-    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.annotation)
     implementation(libs.kotlin.coroutines)
     implementation(libs.kotlin.serializationJson)
 
@@ -40,5 +40,4 @@ dependencies {
     testImplementation(libs.test.kotlin.coroutines)
     testImplementation(libs.test.kotest.assertions)
     testImplementation(libs.test.kotest.assertions.json)
-    testImplementation(project(":aws-event-enrichment"))
 }

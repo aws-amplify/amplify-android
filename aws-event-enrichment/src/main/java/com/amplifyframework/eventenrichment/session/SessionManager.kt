@@ -42,7 +42,7 @@ private const val SESSION_ID_UNIQUE_LENGTH = 8
  * @param generateId Supplier of unique ids for session id generation.
  * @param scheduler Schedules the background pause timeout.
  */
-class SessionManager(
+internal class SessionManager(
     private val appId: String,
     private val sessionTimeout: Duration,
     private val now: () -> Instant = Instant::now,
