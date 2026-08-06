@@ -50,7 +50,7 @@ robolectric = "4.7"
 rxjava = "3.0.6"
 slf4j = "2.0.6"
 sqlcipher = "4.6.1"
-uuid = "4.0.1"
+uuid = "5.2.0"
 totp = "1.0.1"
 turbine = "1.1.0"
 
