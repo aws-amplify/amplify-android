@@ -29,17 +29,17 @@ android {
 
 dependencies {
     implementation(project(":aws-auth-cognito"))
-    implementation(project(":aws-geo-location"))
-    implementation(project(":core"))
+    api(project(":aws-geo-location"))
+    api(project(":core"))
     implementation(platform(libs.aws.bom))
     implementation(libs.aws.signing)
-    implementation(libs.maplibre.sdk)
-    implementation(libs.gson) // forces maplibre to pull at least the same gson version as other amplify libs
-    implementation(libs.maplibre.annotations)
+    api(libs.maplibre.sdk)
+    api(libs.gson) // forces maplibre to pull at least the same gson version as other amplify libs
+    api(libs.maplibre.annotations)
     implementation(libs.okhttp)
     implementation(libs.kotlin.coroutines)
 
-    implementation(libs.androidx.lifecycle.runtime)
+    api(libs.androidx.lifecycle.runtime)
     implementation(libs.google.material)
 
     compileOnly(libs.aws.location)

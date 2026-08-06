@@ -28,11 +28,11 @@ android {
 dependencies {
     api(project(":annotations"))
     implementation(libs.androidx.v4support)
-    implementation(libs.androidx.annotation)
+    api(libs.androidx.annotation)
     implementation(libs.androidx.nav.fragment)
     implementation(libs.androidx.nav.ui)
     implementation(libs.androidx.security)
-    implementation(libs.kotlin.serializationJson)
+    api(libs.kotlin.serializationJson)
 
     api(project(":common-core"))
 

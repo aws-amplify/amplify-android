@@ -26,13 +26,13 @@ android {
 }
 
 dependencies {
-    implementation(project(":foundation"))
-    implementation(project(":foundation-bridge"))
+    api(project(":foundation"))
+    api(project(":foundation-bridge"))
 
     implementation(libs.androidx.appcompat)
     implementation(platform(libs.aws.bom))
-    implementation(libs.aws.kinesis)
-    implementation(libs.aws.firehose)
+    api(libs.aws.kinesis)
+    api(libs.aws.firehose)
     implementation(libs.aws.http)
     implementation(libs.kotlin.serializationJson)
     implementation(libs.androidx.sqlite)

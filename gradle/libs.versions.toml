@@ -91,9 +91,11 @@ aws-polly = { module = "aws.sdk.kotlin:polly" }
 aws-rekognition = { module = "aws.sdk.kotlin:rekognition" }
 aws-s3 = { module = "aws.sdk.kotlin:s3" }
 aws-signing = { module = "aws.smithy.kotlin:aws-signing-default" }
+aws-smithy-client = { module = "aws.smithy.kotlin:smithy-client" }
 aws-smithy-http = { module = "aws.smithy.kotlin:http-client" }
 aws-smithy-http-kmp = { module = "aws.smithy.kotlin:http-client" }
 aws-smithy-okhttp4 = { module = "aws.smithy.kotlin:http-client-engine-okhttp4" }
+aws-smithy-runtime-core = { module = "aws.smithy.kotlin:runtime-core" }
 aws-textract = { module = "aws.sdk.kotlin:textract" }
 aws-translate = { module = "aws.sdk.kotlin:translate" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }

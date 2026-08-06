@@ -26,15 +26,19 @@ android {
 }
 
 dependencies {
-    implementation(project(":core"))
-    implementation(project(":aws-core"))
+    api(project(":core"))
+    api(project(":aws-core"))
     implementation(libs.androidx.appcompat)
     implementation(platform(libs.aws.bom))
-    implementation(libs.aws.comprehend)
-    implementation(libs.aws.polly)
-    implementation(libs.aws.rekognition)
-    implementation(libs.aws.textract)
-    implementation(libs.aws.translate)
+    api(libs.aws.comprehend)
+    api(libs.aws.polly)
+    api(libs.aws.rekognition)
+    api(libs.aws.textract)
+    api(libs.aws.translate)
+    // Smithy types leak into this module's public API: CredentialsProvider (AWSPredictionsService,
+    // PresignedSynthesizeSpeechUrlOptions) and SdkClientConfig (AmazonPollyPresigningClient).
+    api(libs.aws.credentials)
+    api(libs.aws.smithy.client)
     implementation(libs.kotlin.serializationJson)
     implementation(libs.okhttp)
 

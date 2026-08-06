@@ -25,10 +25,10 @@ android {
 }
 
 dependencies {
-    implementation(project(":core"))
+    api(project(":core"))
     implementation(project(":aws-core"))
     implementation(libs.androidx.appcompat)
-    implementation(libs.litert)
+    api(libs.litert)
 
     testImplementation(project(":testutils"))
     testImplementation(libs.test.junit)

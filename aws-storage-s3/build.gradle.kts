@@ -25,12 +25,12 @@ android {
 }
 
 dependencies {
-    implementation(project(":core"))
-    implementation(project(":aws-core"))
+    api(project(":core"))
+    api(project(":aws-core"))
 
     implementation(libs.androidx.appcompat)
     implementation(platform(libs.aws.bom))
-    implementation(libs.aws.s3)
+    api(libs.aws.s3)
     implementation(libs.androidx.workmanager)
     implementation(libs.kotlin.futures)
     implementation(libs.gson)

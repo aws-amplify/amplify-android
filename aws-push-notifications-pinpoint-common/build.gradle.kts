@@ -25,14 +25,14 @@ android {
 }
 
 dependencies {
-    implementation(project(":annotations"))
+    api(project(":annotations"))
     api(project(":common-core"))
 
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.activity)
+    api(libs.androidx.activity)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.annotation)
-    implementation(libs.androidx.core)
+    api(libs.androidx.core)
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)

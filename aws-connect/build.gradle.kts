@@ -26,8 +26,8 @@ android {
 }
 
 dependencies {
-    implementation(project(":core"))
-    implementation(project(":foundation"))
+    api(project(":core"))
+    api(project(":foundation"))
     implementation(project(":foundation-bridge"))
 
     implementation(libs.androidx.annotation)
