@@ -40,7 +40,9 @@ class SessionManagerTest {
         }
 
         fun fireTimeout() {
-            scheduledAction?.invoke()
+            // Assert a timeout is actually scheduled so the test cannot fire
+            // it in an invalid situation.
+            scheduledAction.shouldNotBeNull().invoke()
         }
     }
 

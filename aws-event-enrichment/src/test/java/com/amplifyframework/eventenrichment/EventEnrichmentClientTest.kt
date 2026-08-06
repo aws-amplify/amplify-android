@@ -25,6 +25,7 @@ import com.amplifyframework.eventenrichment.session.SessionState
 import com.amplifyframework.eventenrichment.session.TimeoutHandle
 import com.amplifyframework.eventenrichment.session.TimeoutScheduler
 import com.amplifyframework.foundation.result.Result
+import com.amplifyframework.foundation.result.get
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -105,13 +106,13 @@ class EventEnrichmentClientTest {
     fun `record starts a fresh session after a stop instead of reusing the stopped one`() {
         val client = client(autoSessionTracking = true)
 
-        val first = (client.record("first") as Result.Success).data
+        val first = client.record("first").get()
         val firstSessionId = first.session.id
 
         client.stopSession()
         clock += 1_000.milliseconds
 
-        val second = (client.record("second") as Result.Success).data
+        val second = client.record("second").get()
 
         // A new session is started, and the stopped session is not stamped
         // onto the new event.
@@ -140,7 +141,7 @@ class EventEnrichmentClientTest {
         client.addGlobalAttribute("app_theme", "dark")
         client.addGlobalMetric("battery", 0.8)
 
-        val event = (client.record("open") as Result.Success).data
+        val event = client.record("open").get()
         event.attributes["app_theme"] shouldBe "dark"
         event.metrics["battery"] shouldBe 0.8
     }
@@ -150,7 +151,7 @@ class EventEnrichmentClientTest {
         val client = client()
         client.addGlobalAttribute("screen", "home")
 
-        val event = (client.record("nav", attributes = mapOf("screen" to "settings")) as Result.Success).data
+        val event = client.record("nav", attributes = mapOf("screen" to "settings")).get()
         event.attributes["screen"] shouldBe "settings"
     }
 
@@ -162,7 +163,7 @@ class EventEnrichmentClientTest {
         client.removeGlobalAttribute("a")
         client.removeGlobalMetric("m")
 
-        val event = (client.record("x") as Result.Success).data
+        val event = client.record("x").get()
         event.attributes.containsKey("a") shouldBe false
         event.metrics.containsKey("m") shouldBe false
     }
@@ -172,7 +173,7 @@ class EventEnrichmentClientTest {
         val client = client()
         client.setUserId("user-42")
 
-        val event = (client.record("x") as Result.Success).data
+        val event = client.record("x").get()
         event.userId shouldBe "user-42"
     }
 
@@ -182,7 +183,7 @@ class EventEnrichmentClientTest {
         val attributes = (0 until 500).associate { "a$it" to "v$it" }
         val metrics = (0 until 500).associate { "m$it" to it.toDouble() }
 
-        val event = (client.record("x", attributes = attributes, metrics = metrics) as Result.Success).data
+        val event = client.record("x", attributes = attributes, metrics = metrics).get()
         event.attributes.size shouldBe 500
         event.metrics.size shouldBe 500
     }

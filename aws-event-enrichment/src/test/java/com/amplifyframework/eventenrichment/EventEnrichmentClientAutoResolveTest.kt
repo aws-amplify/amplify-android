@@ -19,7 +19,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.eventenrichment.clientid.SharedPreferencesClientIdProvider
 import com.amplifyframework.eventenrichment.metadata.AppMetadata
 import com.amplifyframework.eventenrichment.metadata.SdkMetadata
-import com.amplifyframework.foundation.result.Result
+import com.amplifyframework.foundation.result.get
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import org.junit.Test
@@ -45,7 +45,7 @@ class EventEnrichmentClientAutoResolveTest {
             options = options()
         )
 
-        val event = (client.record("x") as Result.Success).data
+        val event = client.record("x").get()
         event.device.platform shouldBe "Android"
     }
 
@@ -58,7 +58,7 @@ class EventEnrichmentClientAutoResolveTest {
             options = options()
         )
 
-        val event = (client.record("x") as Result.Success).data
+        val event = client.record("x").get()
         val stored = context
             .getSharedPreferences(SharedPreferencesClientIdProvider.PREFERENCES_NAME, Context.MODE_PRIVATE)
             .getString(SharedPreferencesClientIdProvider.CLIENT_ID_STORAGE_KEY, null)
@@ -89,7 +89,7 @@ class EventEnrichmentClientAutoResolveTest {
             appMetadata = AppMetadata(appId = "my-app", title = "My App")
         )
 
-        val event = (client.record("x") as Result.Success).data
+        val event = client.record("x").get()
         event.app.title shouldBe "My App"
     }
 }
