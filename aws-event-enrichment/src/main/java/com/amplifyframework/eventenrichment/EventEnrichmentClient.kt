@@ -12,6 +12,8 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package com.amplifyframework.eventenrichment
 
 import android.app.Application
@@ -29,13 +31,22 @@ import com.amplifyframework.eventenrichment.metadata.AppMetadata
 import com.amplifyframework.eventenrichment.metadata.DeviceMetadata
 import com.amplifyframework.eventenrichment.metadata.DeviceMetadataProvider
 import com.amplifyframework.eventenrichment.metadata.SdkMetadata
+import com.amplifyframework.eventenrichment.session.CoroutineTimeoutScheduler
 import com.amplifyframework.eventenrichment.session.SessionManager
-import com.amplifyframework.eventenrichment.session.SessionState
 import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.foundation.logging.Logger
 import com.amplifyframework.foundation.result.Result
-import java.time.Instant
 import java.util.UUID
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
+import kotlin.time.Clock
+import kotlin.time.Instant
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 /**
  * Client for recording enriched analytics events.
@@ -43,12 +54,12 @@ import java.util.UUID
  * Collects device, app, session, and SDK metadata and produces [EnrichedEvent]
  * instances that serialize to a structured analytics JSON envelope. The client
  * is transport-agnostic; provide an [EventSink] to forward events to Kinesis,
- * Firehose, or any custom destination.
+ * Firehose, or any custom destination. The sink is invoked asynchronously on a
+ * background dispatcher; exceptions it throws are caught and logged.
  *
- * The client auto-resolves the device metadata (via [AndroidDeviceMetadataProvider])
- * and the persistent client id (via [SharedPreferencesClientIdProvider], using a
- * key shared across Amplify packages) from the supplied [Context]. Callers only
- * provide the [appId] and [SdkMetadata].
+ * The client auto-resolves the device metadata and the persistent client id
+ * (using a key shared across Amplify packages) from the supplied [Context].
+ * Callers only provide the [appId] and [SdkMetadata].
  *
  * Example usage:
  * ```kotlin
@@ -84,7 +95,10 @@ class EventEnrichmentClient @VisibleForTesting internal constructor(
     private val autoSessionTracking: Boolean,
     private val application: Application?,
     private val clock: () -> Instant,
-    private val generateEventId: () -> String
+    private val generateEventId: () -> String,
+    private val lock: ReentrantLock = ReentrantLock(),
+    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+    private val sinkDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     /**
      * Creates a client that auto-resolves device metadata and the client id
@@ -101,16 +115,51 @@ class EventEnrichmentClient @VisibleForTesting internal constructor(
         deviceMetadataProvider: DeviceMetadataProvider = AndroidDeviceMetadataProvider(),
         clientIdProvider: ClientIdProvider = SharedPreferencesClientIdProvider(context)
     ) : this(
+        context = context,
+        appId = appId,
+        sdkMetadata = sdkMetadata,
+        options = options,
+        sink = sink,
+        appMetadata = appMetadata,
+        deviceMetadataProvider = deviceMetadataProvider,
+        clientIdProvider = clientIdProvider,
+        lock = ReentrantLock(),
+        scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    )
+
+    /**
+     * Bridging constructor that shares one [lock] and one [scope] between the
+     * client and the [SessionManager]'s timeout scheduler.
+     */
+    private constructor(
+        context: Context,
+        appId: String,
+        sdkMetadata: SdkMetadata,
+        options: EventEnrichmentClientOptions,
+        sink: EventSink?,
+        appMetadata: AppMetadata?,
+        deviceMetadataProvider: DeviceMetadataProvider,
+        clientIdProvider: ClientIdProvider,
+        lock: ReentrantLock,
+        scope: CoroutineScope
+    ) : this(
         appMetadata = resolveAppMetadata(appId, appMetadata),
         deviceMetadata = deviceMetadataProvider.getDeviceMetadata(),
         sdkMetadata = sdkMetadata,
         clientId = clientIdProvider.getClientId(),
         sink = sink,
-        sessionManager = SessionManager(appId = appId, sessionTimeout = options.sessionTimeout),
+        sessionManager = SessionManager(
+            appId = appId,
+            sessionTimeout = options.sessionTimeout,
+            lock = lock,
+            scheduler = CoroutineTimeoutScheduler(scope)
+        ),
         autoSessionTracking = options.autoSessionTracking,
         application = context.applicationContext as? Application,
-        clock = Instant::now,
-        generateEventId = { UUID.randomUUID().toString() }
+        clock = Clock.System::now,
+        generateEventId = { UUID.randomUUID().toString() },
+        lock = lock,
+        scope = scope
     )
 
     private val logger: Logger = AmplifyLogging.logger<EventEnrichmentClient>()
@@ -151,6 +200,10 @@ class EventEnrichmentClient @VisibleForTesting internal constructor(
      * client has been closed. Attributes are String-valued and metrics are
      * Double-valued; no length or count caps are applied.
      *
+     * When a [sink] is configured, the event is forwarded to it asynchronously
+     * on [sinkDispatcher]; any exception the sink throws is caught and logged
+     * as a warning.
+     *
      * @param eventType Type of the event.
      * @param attributes Per-event attributes merged over the global attributes.
      * @param metrics Per-event metrics merged over the global metrics.
@@ -161,33 +214,34 @@ class EventEnrichmentClient @VisibleForTesting internal constructor(
         attributes: Map<String, String> = emptyMap(),
         metrics: Map<String, Double> = emptyMap()
     ): Result<EnrichedEvent, EventEnrichmentException> {
-        if (closed) return Result.Failure(EventEnrichmentClosedException())
-
-        // A stopped session is still exposed by the manager for inspection, so
-        // start a fresh one instead of stamping the stopped session (which
-        // carries a stop_timestamp) onto a new event.
-        if (sessionManager.session == null || sessionManager.state == SessionState.STOPPED) {
-            sessionManager.startSession()
+        // Serialized against close() and session mutations via the shared lock.
+        // The sink callback is deliberately invoked outside the lock.
+        val event = lock.withLock {
+            if (closed) return Result.Failure(EventEnrichmentClosedException())
+            EnrichedEvent(
+                eventId = generateEventId(),
+                eventType = eventType,
+                eventTimestamp = clock().toEpochMilliseconds(),
+                session = sessionManager.ensureActiveSession(),
+                attributes = globalFields.attributes + attributes,
+                metrics = globalFields.metrics + metrics,
+                device = deviceMetadata,
+                app = appMetadata,
+                sdk = sdkMetadata,
+                clientId = clientId,
+                userId = userId
+            )
         }
 
-        val mergedAttributes = globalFields.attributes + attributes
-        val mergedMetrics = globalFields.metrics + metrics
-
-        val event = EnrichedEvent(
-            eventId = generateEventId(),
-            eventType = eventType,
-            eventTimestamp = clock().toEpochMilli(),
-            session = requireNotNull(sessionManager.session) { "Session must be active while recording" },
-            attributes = mergedAttributes,
-            metrics = mergedMetrics,
-            device = deviceMetadata,
-            app = appMetadata,
-            sdk = sdkMetadata,
-            clientId = clientId,
-            userId = userId
-        )
-
-        sink?.send(event)
+        sink?.let { sink ->
+            scope.launch(sinkDispatcher) {
+                try {
+                    sink.send(event)
+                } catch (e: Exception) {
+                    logger.warn(e) { "Event sink failed for event: $eventType" }
+                }
+            }
+        }
         logger.verbose { "Recorded event: $eventType" }
         return Result.Success(event)
     }
@@ -222,17 +276,22 @@ class EventEnrichmentClient @VisibleForTesting internal constructor(
     fun removeGlobalMetric(key: String) = globalFields.removeMetric(key)
 
     /**
-     * Releases resources and stops session tracking. The client cannot be
-     * reused after closing.
+     * Releases resources, stops session tracking, and cancels the client's
+     * coroutine scope. The client cannot be reused after closing.
      */
     fun close() {
-        closed = true
-        lifecycleObserver?.dispose()
-        lifecycleObserver = null
-        // Stop the session to record its end, then drop it so no stale session
-        // is readable after close.
-        sessionManager.stopSession()
-        sessionManager.clearSession()
+        // Serialized against record() via the shared lock so a concurrent
+        // record cannot observe a half-closed client.
+        lock.withLock {
+            closed = true
+            lifecycleObserver?.dispose()
+            lifecycleObserver = null
+            // Stop the session to record its end, then drop it so no stale
+            // session is readable after close.
+            sessionManager.stopSession()
+            sessionManager.clearSession()
+            scope.cancel()
+        }
         logger.info { "Client closed" }
     }
 

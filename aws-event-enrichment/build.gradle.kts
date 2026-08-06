@@ -30,6 +30,7 @@ dependencies {
 
     implementation(libs.androidx.annotation)
     implementation(libs.kotlin.coroutines)
+    implementation(libs.kotlin.datetime)
     implementation(libs.kotlin.serializationJson)
 
     testImplementation(libs.test.junit)

@@ -16,8 +16,6 @@ package com.amplifyframework.eventenrichment.session
 
 import kotlin.time.Duration
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -44,10 +42,10 @@ internal fun interface TimeoutScheduler {
 
 /**
  * Default [TimeoutScheduler] backed by a coroutine [delay] on the provided
- * [scope]. The scope defaults to a supervised scope on [Dispatchers.Default].
+ * [scope]. The scope is owned by the client, which cancels it on close.
  */
 internal class CoroutineTimeoutScheduler(
-    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope: CoroutineScope
 ) : TimeoutScheduler {
     override fun schedule(delay: Duration, action: () -> Unit): TimeoutHandle {
         val job = scope.launch {
