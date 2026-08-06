@@ -31,6 +31,9 @@ dependencies {
     api(libs.androidx.annotation)
     implementation(libs.androidx.nav.fragment)
     implementation(libs.androidx.nav.ui)
+    // Fragment / FragmentActivity appear in this module's public API; declare directly as api
+    // so consumers can compile against those signatures.
+    api(libs.androidx.fragment)
     implementation(libs.androidx.security)
     api(libs.kotlin.serializationJson)
 

@@ -40,6 +40,8 @@ dependencies {
     implementation(libs.kotlin.coroutines)
 
     api(libs.androidx.lifecycle.runtime)
+    // CoordinatorLayout is a supertype of the public AmplifyMapView; declare directly as api.
+    api(libs.androidx.coordinatorlayout)
     implementation(libs.google.material)
 
     compileOnly(libs.aws.location)
