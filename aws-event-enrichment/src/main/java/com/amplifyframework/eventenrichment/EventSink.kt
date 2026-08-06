@@ -14,6 +14,8 @@
  */
 package com.amplifyframework.eventenrichment
 
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
+
 /**
  * Interface for transporting enriched events to a destination.
  *
@@ -21,6 +23,7 @@ package com.amplifyframework.eventenrichment
  * No default implementation is provided, keeping this module free of transport
  * dependencies.
  */
+@ExperimentalAmplifyApi
 fun interface EventSink {
     /** Sends an enriched event to the configured destination. */
     fun send(event: EnrichedEvent)

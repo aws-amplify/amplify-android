@@ -14,7 +14,10 @@
  */
 package com.amplifyframework.eventenrichment.session
 
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
+
 /** The state of the [SessionManager]. */
+@ExperimentalAmplifyApi
 enum class SessionState {
     /** No active session. */
     STOPPED,

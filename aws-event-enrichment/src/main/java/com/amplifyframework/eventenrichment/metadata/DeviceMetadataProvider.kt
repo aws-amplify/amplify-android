@@ -15,6 +15,7 @@
 package com.amplifyframework.eventenrichment.metadata
 
 import android.os.Build
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
 import java.util.Locale
 
 private const val PLATFORM_ANDROID = "Android"
@@ -26,6 +27,7 @@ private const val PLATFORM_ANDROID = "Android"
  * [AndroidDeviceMetadataProvider] resolves values from [android.os.Build] and
  * the default [java.util.Locale].
  */
+@ExperimentalAmplifyApi
 fun interface DeviceMetadataProvider {
     /** Returns device metadata for the current device. */
     fun getDeviceMetadata(): DeviceMetadata

@@ -14,12 +14,15 @@
  */
 package com.amplifyframework.eventenrichment.metadata
 
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
+
 /**
  * SDK-level metadata stamped on every event.
  *
  * @param name SDK name (e.g. "amplify-android").
  * @param version SDK version string.
  */
+@ExperimentalAmplifyApi
 data class SdkMetadata(
     val name: String,
     val version: String

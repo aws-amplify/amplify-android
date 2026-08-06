@@ -15,6 +15,7 @@
 package com.amplifyframework.eventenrichment.clientid
 
 import android.content.Context
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
 import java.util.UUID
 
 /**
@@ -24,6 +25,7 @@ import java.util.UUID
  * [SharedPreferencesClientIdProvider] reads or creates a UUID persisted in
  * SharedPreferences under a key shared with other Amplify clients.
  */
+@ExperimentalAmplifyApi
 fun interface ClientIdProvider {
     /** Returns the persistent client ID, creating one if it does not exist. */
     fun getClientId(): String

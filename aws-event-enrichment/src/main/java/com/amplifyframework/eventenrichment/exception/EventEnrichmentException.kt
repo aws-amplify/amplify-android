@@ -14,6 +14,7 @@
  */
 package com.amplifyframework.eventenrichment.exception
 
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
 import com.amplifyframework.foundation.exceptions.AmplifyException
 
 /**
@@ -26,6 +27,7 @@ import com.amplifyframework.foundation.exceptions.AmplifyException
  * @param recoverySuggestion Suggested action to resolve the error.
  * @param cause Underlying cause of the exception.
  */
+@ExperimentalAmplifyApi
 sealed class EventEnrichmentException(
     message: String,
     recoverySuggestion: String,
@@ -33,6 +35,7 @@ sealed class EventEnrichmentException(
 ) : AmplifyException(message, recoverySuggestion, cause)
 
 /** Thrown when an operation is attempted on a closed client. */
+@ExperimentalAmplifyApi
 class EventEnrichmentClosedException : EventEnrichmentException(
     message = "Client has been closed",
     recoverySuggestion = "Create a new EventEnrichmentClient instance."

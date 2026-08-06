@@ -14,6 +14,7 @@
  */
 package com.amplifyframework.eventenrichment
 
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -32,6 +33,7 @@ private val DEFAULT_SESSION_TIMEOUT = 5.seconds
  * @param sessionTimeout Duration the app can remain backgrounded before a new
  *   session starts. Defaults to 5 seconds.
  */
+@ExperimentalAmplifyApi
 data class EventEnrichmentClientOptions internal constructor(
     val autoSessionTracking: Boolean,
     val sessionTimeout: Duration

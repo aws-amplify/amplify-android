@@ -14,6 +14,8 @@
  */
 package com.amplifyframework.eventenrichment.metadata
 
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
+
 /**
  * Device-level metadata stamped on every event.
  *
@@ -23,6 +25,7 @@ package com.amplifyframework.eventenrichment.metadata
  * @param model Device model (e.g. "iPhone", "SM-G900F").
  * @param locale Device locale code (e.g. "en_US").
  */
+@ExperimentalAmplifyApi
 data class DeviceMetadata(
     val platform: String? = null,
     val platformVersion: String? = null,

@@ -14,6 +14,8 @@
  */
 package com.amplifyframework.eventenrichment.metadata
 
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
+
 /**
  * Application-level metadata stamped on every event.
  *
@@ -23,6 +25,7 @@ package com.amplifyframework.eventenrichment.metadata
  * @param versionCode Application version code.
  * @param title Application display title.
  */
+@ExperimentalAmplifyApi
 data class AppMetadata(
     val appId: String,
     val packageName: String? = null,

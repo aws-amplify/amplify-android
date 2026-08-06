@@ -14,6 +14,7 @@
  */
 package com.amplifyframework.eventenrichment
 
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
 import com.amplifyframework.eventenrichment.metadata.AppMetadata
 import com.amplifyframework.eventenrichment.metadata.DeviceMetadata
 import com.amplifyframework.eventenrichment.metadata.SdkMetadata
@@ -48,6 +49,7 @@ private const val EVENT_VERSION = "3.1"
  * @param clientId Persistent client/device identifier.
  * @param userId Optional user identifier.
  */
+@ExperimentalAmplifyApi
 data class EnrichedEvent(
     val eventId: String,
     val eventType: String,

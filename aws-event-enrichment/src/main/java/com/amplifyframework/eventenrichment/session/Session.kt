@@ -14,6 +14,8 @@
  */
 package com.amplifyframework.eventenrichment.session
 
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
+
 /**
  * Represents an app session with start/stop timestamps and duration.
  *
@@ -24,6 +26,7 @@ package com.amplifyframework.eventenrichment.session
  * @param duration Duration of the session in milliseconds, or null while the
  *   session is active.
  */
+@ExperimentalAmplifyApi
 data class Session(
     val id: String,
     val startTimestamp: String,
