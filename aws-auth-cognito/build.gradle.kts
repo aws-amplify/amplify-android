@@ -49,32 +49,24 @@ dependencies {
     testImplementation(project(":core"))
     testImplementation(project(":aws-core"))
     //noinspection GradleDependency
+    testImplementation(libs.bundles.test.unit)
+    testImplementation(libs.bundles.test.unit.android)
     testImplementation(libs.test.json)
 
     testImplementation(libs.test.kotlin.junit)
     testImplementation(libs.test.kotlin.kotlinTest)
-    testImplementation(libs.test.kotlin.coroutines)
 
     testImplementation(libs.gson)
-    testImplementation(libs.test.junit)
     testImplementation(libs.test.mockito.core)
-    testImplementation(libs.test.mockk)
-    testImplementation(libs.test.robolectric)
-    testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.kotlin.reflection)
-    testImplementation(libs.test.kotest.assertions)
     testImplementation(libs.test.kotest.assertions.json)
-    testImplementation(libs.test.turbine)
 
+    androidTestImplementation(libs.bundles.test.android)
     androidTestImplementation(libs.gson)
     //noinspection GradleDependency
     androidTestImplementation(libs.test.aws.sdk.core)
-    androidTestImplementation(libs.test.androidx.runner)
-    androidTestImplementation(libs.test.androidx.junit)
-    androidTestImplementation(libs.test.kotlin.coroutines)
     androidTestImplementation(libs.test.kotlin.kotlinTest)
     androidTestImplementation(libs.test.totp)
-    androidTestImplementation(libs.test.kotest.assertions)
 
     androidTestImplementation(project(":aws-api"))
     androidTestImplementation(project(":aws-api-appsync"))

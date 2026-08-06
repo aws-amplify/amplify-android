@@ -55,8 +55,5 @@ sourceSets.main {
 dependencies {
     implementation(libs.test.jetbrains.annotations)
 
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.mockk)
-    testImplementation(libs.test.kotlin.coroutines)
-    testImplementation(libs.test.kotest.assertions)
+    testImplementation(libs.bundles.test.unit)
 }

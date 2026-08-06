@@ -38,19 +38,13 @@ dependencies {
     implementation(libs.kotlin.serializationJson)
     implementation(libs.okhttp)
 
+    testImplementation(libs.bundles.test.unit)
+    testImplementation(libs.bundles.test.unit.android)
     testImplementation(project(":testutils"))
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.robolectric)
-    testImplementation(libs.rxjava)
     testImplementation(libs.test.mockwebserver)
-    testImplementation(libs.test.mockk)
-    testImplementation(libs.test.kotlin.coroutines)
-    testImplementation(libs.test.kotest.assertions)
 
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(project(":aws-auth-cognito"))
-    androidTestImplementation(libs.test.androidx.core)
-    androidTestImplementation(libs.test.androidx.runner)
+    androidTestImplementation(libs.bundles.test.android)
     androidTestImplementation(libs.test.mockk.android)
-    androidTestImplementation(libs.rxjava)
 }

@@ -37,7 +37,6 @@ dependencies {
     // slf4j dependency is added to fix https://github.com/awslabs/aws-sdk-kotlin/issues/993#issuecomment-1678885524
     implementation(libs.slf4j)
 
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.kotest.assertions)
-    testImplementation(libs.test.robolectric)
+    testImplementation(libs.bundles.test.unit)
+    testImplementation(libs.bundles.test.unit.android)
 }

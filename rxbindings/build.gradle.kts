@@ -32,10 +32,7 @@ dependencies {
     implementation(libs.rxjava)
 
     testImplementation(project(":testutils"))
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.mockito.core)
-    testImplementation(libs.test.mockk)
-    testImplementation(libs.test.androidx.core)
-    testImplementation(libs.test.robolectric)
-    testImplementation(project(":rxbindings"))
+    testImplementation(libs.bundles.test.unit)
+    testImplementation(libs.bundles.test.unit.android)
+    testImplementation(libs.bundles.test.mockito)
 }

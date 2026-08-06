@@ -17,7 +17,3 @@ plugins {
     alias(libs.plugins.amplify.kotlin)
     alias(libs.plugins.amplify.publishing)
 }
-
-dependencies {
-    implementation(libs.kotlin.stdlib)
-}

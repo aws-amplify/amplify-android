@@ -39,21 +39,13 @@ dependencies {
     implementation(libs.kotlin.serializationJson)
     implementation(libs.kotlin.coroutines)
 
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.mockk)
-    testImplementation(libs.test.kotlin.coroutines)
-    testImplementation(libs.test.kotest.assertions)
+    testImplementation(libs.bundles.test.unit)
     testImplementation(libs.test.kotest.assertions.json)
     testImplementation(libs.test.mockwebserver)
-    testImplementation(libs.test.turbine)
 
     androidTestApi(project(":aws-sdk-appsync-amplify"))
     androidTestImplementation(project(":aws-auth-cognito"))
     androidTestImplementation(project(":core-kotlin"))
     androidTestImplementation(project(":testutils"))
-    androidTestImplementation(libs.test.androidx.runner)
-    androidTestImplementation(libs.test.androidx.junit)
-    androidTestImplementation(libs.test.kotlin.coroutines)
-    androidTestImplementation(libs.test.kotest.assertions)
-    androidTestImplementation(libs.test.turbine)
+    androidTestImplementation(libs.bundles.test.android)
 }

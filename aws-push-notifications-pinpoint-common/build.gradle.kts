@@ -37,9 +37,7 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
 
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.mockk)
+    testImplementation(libs.bundles.test.unit)
 
-    androidTestImplementation(libs.test.androidx.runner)
-    androidTestImplementation(libs.test.androidx.junit)
+    androidTestImplementation(libs.bundles.test.android)
 }

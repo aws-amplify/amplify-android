@@ -44,11 +44,9 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.kotlin.serializationJson)
 
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.kotest.assertions)
+    testImplementation(libs.bundles.test.unit)
     testImplementation(project(":testutils"))
 
     androidTestImplementation(project(":aws-auth-cognito"))
-    androidTestImplementation(libs.test.androidx.runner)
-    androidTestImplementation(libs.test.androidx.junit)
+    androidTestImplementation(libs.bundles.test.android)
 }

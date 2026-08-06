@@ -26,15 +26,7 @@ dependencies {
     implementation(platform(libs.aws.bom))
     implementation(libs.aws.signing)
 
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.mockk)
-    testImplementation(libs.test.kotlin.coroutines)
-    testImplementation(libs.test.kotest.assertions)
+    testImplementation(libs.bundles.test.unit)
 
-    androidTestImplementation(libs.test.junit)
-    androidTestImplementation(libs.test.androidx.core)
-    androidTestImplementation(libs.test.kotest.assertions)
-    androidTestImplementation(libs.test.androidx.runner)
-    androidTestImplementation(libs.test.kotlin.coroutines)
-    androidTestImplementation(libs.test.turbine)
+    androidTestImplementation(libs.bundles.test.android)
 }

@@ -17,14 +17,14 @@
 package com.amplifyframework.pinpoint.core
 
 import android.os.Build
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.amplifyframework.pinpoint.core.util.putString
 import junit.framework.TestCase
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-@RunWith(AndroidJUnit4::class)
+@RunWith(RobolectricTestRunner::class)
 @Config(sdk = [Build.VERSION_CODES.O_MR1])
 class SharedPreferencesUtilTest : TestCase() {
     @Test

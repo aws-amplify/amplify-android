@@ -32,7 +32,7 @@ import com.amplifyframework.util.Empty;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.reactivex.rxjava3.core.Observable;
+import java.util.stream.Collectors;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertFalse;
@@ -80,10 +80,10 @@ public final class AWSPredictionsIdentifyCelebritiesTest extends DeviceFarmTestB
 
         // Assert that Jeff Bezos is detected
         assertFalse(Empty.check(result.getCelebrities()));
-        assertTrue(Observable.fromIterable(result.getCelebrities())
-                .map(celeb -> celeb.getCelebrity().getName())
-                .toList()
-                .blockingGet()
-                .contains("Jeff Bezos"));
+        assertTrue(result.getCelebrities().stream()
+                       .map(celeb -> celeb.getCelebrity().getName())
+                       .collect(Collectors.toList())
+                       .contains("Jeff Bezos")
+        );
     }
 }

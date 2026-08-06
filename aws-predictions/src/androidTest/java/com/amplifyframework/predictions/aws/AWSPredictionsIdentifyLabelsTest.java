@@ -35,7 +35,7 @@ import com.amplifyframework.util.Empty;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.reactivex.rxjava3.core.Observable;
+import java.util.stream.Collectors;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertFalse;
@@ -97,10 +97,6 @@ public final class AWSPredictionsIdentifyLabelsTest extends DeviceFarmTestBase {
 
         // Assert at least one label is detected as "Person"
         assertFalse(Empty.check(result.getLabels()));
-        assertTrue(Observable.fromIterable(result.getLabels())
-                .map(Label::getName)
-                .toList()
-                .blockingGet()
-                .contains("Person"));
+        assertTrue(result.getLabels().stream().map(Label::getName).collect(Collectors.toList()).contains("Person"));
     }
 }
