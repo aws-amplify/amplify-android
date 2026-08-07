@@ -29,7 +29,7 @@ dependencies {
     api(project(":aws-core"))
 
     implementation(libs.androidx.appcompat)
-    implementation(platform(libs.aws.bom))
+    api(platform(libs.aws.bom))
     api(libs.aws.s3)
     implementation(libs.androidx.workmanager)
     implementation(libs.kotlin.futures)

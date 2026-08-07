@@ -29,7 +29,7 @@ dependencies {
     api(project(":core"))
     api(project(":aws-core"))
     implementation(libs.androidx.appcompat)
-    implementation(platform(libs.aws.bom))
+    api(platform(libs.aws.bom))
     api(libs.aws.comprehend)
     api(libs.aws.polly)
     api(libs.aws.rekognition)

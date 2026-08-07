@@ -31,7 +31,7 @@ dependencies {
     api(project(":aws-pinpoint-core"))
 
     implementation(libs.androidx.appcompat)
-    implementation(platform(libs.aws.bom))
+    api(platform(libs.aws.bom))
     api(libs.aws.pinpoint)
     implementation(libs.kotlin.serializationJson)
 

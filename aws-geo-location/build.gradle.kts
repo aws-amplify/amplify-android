@@ -26,7 +26,7 @@ android {
 dependencies {
     api(project(":core"))
     implementation(project(":aws-core"))
-    implementation(platform(libs.aws.bom))
+    api(platform(libs.aws.bom))
     api(libs.aws.location)
 
     testImplementation(project(":testutils"))

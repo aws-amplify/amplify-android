@@ -40,7 +40,7 @@ dependencies {
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services)
 
-    implementation(platform(libs.aws.bom))
+    api(platform(libs.aws.bom))
     implementation(libs.aws.http)
     api(libs.aws.cognitoidentity)
     api(libs.aws.cognitoidentityprovider)

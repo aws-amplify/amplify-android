@@ -30,7 +30,7 @@ dependencies {
     api(project(":aws-api-appsync"))
 
     implementation(libs.androidx.appcompat)
-    implementation(platform(libs.aws.bom))
+    api(platform(libs.aws.bom))
     api(libs.aws.signing)
     // Smithy types leak into this module's public API: CredentialsProvider (ApiAuthProviders,
     // IamRequestDecorator) and HttpRequest (AWS4Signer.sign).
