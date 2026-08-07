@@ -8,6 +8,7 @@ import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.extra
+import org.gradle.kotlin.dsl.findByType
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.provideDelegate
 import org.gradle.kotlin.dsl.withType
@@ -47,6 +48,23 @@ class PublishingConventionPlugin : Plugin<Project> {
         target.afterEvaluate {
             configureMavenPublishing()
             configureSigning()
+            registerPrintPublishedCoordinates()
+        }
+    }
+
+    // Registers a task that prints the published Maven coordinates (group:artifact:version) for
+    // every MavenPublication this project produces, one per line. Reading straight off the
+    // publications is authoritative: it reflects the exact coordinates that get published,
+    // including modules that override the group (e.g. com.amazonaws) or version, and KMP modules
+    // that publish multiple coordinates.
+    private fun Project.registerPrintPublishedCoordinates() {
+        val publishing = extensions.findByType<PublishingExtension>() ?: return
+        tasks.register("printPublishedCoordinates") {
+            doLast {
+                publishing.publications.withType<MavenPublication>().forEach {
+                    println("${it.groupId}:${it.artifactId}:${it.version}")
+                }
+            }
         }
     }
 
