@@ -28,11 +28,14 @@ android {
 dependencies {
     api(project(":annotations"))
     implementation(libs.androidx.v4support)
-    implementation(libs.androidx.annotation)
+    api(libs.androidx.annotation)
     implementation(libs.androidx.nav.fragment)
     implementation(libs.androidx.nav.ui)
+    // Fragment / FragmentActivity appear in this module's public API; declare directly as api
+    // so consumers can compile against those signatures.
+    api(libs.androidx.fragment)
     implementation(libs.androidx.security)
-    implementation(libs.kotlin.serializationJson)
+    api(libs.kotlin.serializationJson)
 
     api(project(":common-core"))
 

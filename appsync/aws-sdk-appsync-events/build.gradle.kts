@@ -35,9 +35,11 @@ android {
 dependencies {
     api(project(":aws-sdk-appsync-core"))
 
-    implementation(libs.okhttp)
-    implementation(libs.kotlin.serializationJson)
-    implementation(libs.kotlin.coroutines)
+    // These types appear in this module's public API (OkHttpClient, kotlinx.serialization
+    // serializers, Flow), so declare them as api rather than relying on transitive resolution.
+    api(libs.okhttp)
+    api(libs.kotlin.serializationJson)
+    api(libs.kotlin.coroutines)
 
     testImplementation(libs.bundles.test.unit)
     testImplementation(libs.test.kotest.assertions.json)

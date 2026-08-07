@@ -26,14 +26,18 @@ android {
 
 dependencies {
     api(project(":core"))
-    api(project(":aws-core"))
-    implementation(project(":aws-api-appsync"))
+    implementation(project(":aws-core"))
+    api(project(":aws-api-appsync"))
 
     implementation(libs.androidx.appcompat)
-    implementation(platform(libs.aws.bom))
-    implementation(libs.aws.signing)
+    api(platform(libs.aws.bom))
+    api(libs.aws.signing)
+    // Smithy types leak into this module's public API: CredentialsProvider (ApiAuthProviders,
+    // IamRequestDecorator) and HttpRequest (AWS4Signer.sign).
+    api(libs.aws.credentials)
+    api(libs.aws.smithy.http)
     implementation(libs.gson)
-    implementation(libs.okhttp)
+    api(libs.okhttp)
 
     testImplementation(libs.bundles.test.unit)
     testImplementation(libs.bundles.test.unit.android)

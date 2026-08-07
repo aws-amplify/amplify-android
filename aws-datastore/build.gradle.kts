@@ -25,14 +25,17 @@ android {
 }
 
 dependencies {
-    implementation(project(":core"))
+    api(project(":core"))
     implementation(project(":aws-core"))
-    implementation(project(":aws-api-appsync"))
+    api(project(":aws-api-appsync"))
 
     implementation(libs.androidx.appcompat)
-    implementation(libs.gson)
+    // androidx.core's Supplier leaks into the public API (Orchestrator constructor); declare
+    // androidx.core directly as api rather than relying on transitive resolution via appcompat.
+    api(libs.androidx.core)
+    api(libs.gson)
     implementation(libs.kotlin.coroutines.rx3)
-    implementation(libs.rxjava)
+    api(libs.rxjava)
     implementation(libs.uuidgen)
 
     testImplementation(libs.bundles.test.unit)

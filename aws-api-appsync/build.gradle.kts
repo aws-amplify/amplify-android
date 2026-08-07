@@ -25,12 +25,12 @@ android {
 }
 
 dependencies {
-    implementation(project(":core"))
+    api(project(":core"))
     implementation(project(":aws-core"))
 
-    implementation(libs.androidx.annotation)
+    api(libs.androidx.annotation)
     implementation(libs.androidx.core)
-    implementation(libs.gson)
+    api(libs.gson)
 
     testImplementation(libs.bundles.test.unit)
     testImplementation(libs.bundles.test.unit.android)

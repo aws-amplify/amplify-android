@@ -25,11 +25,11 @@ android {
 }
 
 dependencies {
-    implementation(project(":core"))
-    implementation(project(":common-core"))
-    implementation(libs.androidx.annotation)
+    api(project(":core"))
+    api(project(":common-core"))
+    api(libs.androidx.annotation)
     implementation(libs.androidx.appcompat)
-    implementation(libs.rxjava)
+    api(libs.rxjava)
 
     testImplementation(project(":testutils"))
     testImplementation(libs.bundles.test.unit)

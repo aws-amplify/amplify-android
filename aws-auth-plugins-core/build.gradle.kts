@@ -26,15 +26,15 @@ android {
 }
 
 dependencies {
-    implementation(project(":core"))
+    api(project(":core"))
     implementation(project(":aws-core"))
 
-    implementation(platform(libs.aws.bom))
+    api(platform(libs.aws.bom))
     implementation(libs.aws.http)
     implementation(libs.aws.credentials)
-    implementation(libs.aws.cognitoidentity)
+    api(libs.aws.cognitoidentity)
 
-    implementation(libs.kotlin.serializationJson)
+    api(libs.kotlin.serializationJson)
 
     testImplementation(libs.bundles.test.unit)
     testImplementation(libs.bundles.test.unit.android)

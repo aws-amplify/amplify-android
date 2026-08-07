@@ -25,15 +25,19 @@ android {
 }
 
 dependencies {
-    implementation(project(":core"))
+    api(project(":core"))
     implementation(libs.kotlin.stdlib)
     implementation(libs.kotlin.coroutines)
 
-    implementation(platform(libs.aws.bom))
+    api(platform(libs.aws.bom))
     implementation(libs.aws.smithy.http)
     compileOnly(libs.aws.smithy.okhttp4)
 
-    implementation(libs.aws.credentials)
+    api(libs.aws.credentials)
+    // Smithy runtime-core types (Instant, Attributes) appear in this module's public API
+    // (e.g. AWSTemporaryCredentials, CognitoCredentialsProvider), so declare it directly as api
+    // rather than relying on transitive resolution.
+    api(libs.aws.smithy.runtime.core)
     // slf4j dependency is added to fix https://github.com/awslabs/aws-sdk-kotlin/issues/993#issuecomment-1678885524
     implementation(libs.slf4j)
 
