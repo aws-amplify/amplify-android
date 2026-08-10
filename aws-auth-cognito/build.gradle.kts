@@ -29,8 +29,8 @@ android {
 }
 
 dependencies {
-    implementation(project(":core"))
-    implementation(project(":aws-core"))
+    api(project(":core"))
+    api(project(":aws-core"))
     implementation(project(":aws-auth-plugins-core"))
     implementation(libs.kotlin.coroutines)
     implementation(libs.kotlin.serializationJson)
@@ -40,10 +40,10 @@ dependencies {
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services)
 
-    implementation(platform(libs.aws.bom))
+    api(platform(libs.aws.bom))
     implementation(libs.aws.http)
-    implementation(libs.aws.cognitoidentity)
-    implementation(libs.aws.cognitoidentityprovider)
+    api(libs.aws.cognitoidentity)
+    api(libs.aws.cognitoidentityprovider)
 
     testImplementation(project(":testutils"))
     testImplementation(project(":core"))

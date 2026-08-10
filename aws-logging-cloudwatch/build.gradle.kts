@@ -26,17 +26,21 @@ android {
 }
 
 dependencies {
-    implementation(project(":core"))
+    api(project(":core"))
     implementation(project(":aws-core"))
 
     implementation(libs.androidx.security)
-    implementation(platform(libs.aws.bom))
+    api(platform(libs.aws.bom))
     implementation(libs.aws.signing)
-    implementation(libs.okhttp)
-    implementation(libs.aws.cloudwatchlogs)
+    api(libs.okhttp)
+    api(libs.aws.cloudwatchlogs)
     implementation(libs.sqlcipher)
     implementation(libs.androidx.sqlite)
-    implementation(libs.kotlin.serializationJson)
+    api(libs.kotlin.serializationJson)
+    // CredentialsProvider and CoroutineDispatcher leak into this module's public API
+    // (DefaultRemoteLoggingConstraintProvider constructor); declare both directly as api.
+    api(libs.aws.credentials)
+    api(libs.kotlin.coroutines)
     implementation(libs.androidx.workmanager)
     implementation(libs.kotlin.futures)
 

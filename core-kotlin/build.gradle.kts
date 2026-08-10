@@ -24,10 +24,10 @@ android {
 
 dependencies {
     implementation(libs.kotlin.stdlib)
-    implementation(libs.kotlin.coroutines)
+    api(libs.kotlin.coroutines)
     implementation(libs.androidx.core.ktx)
-    implementation(project(":core"))
-    implementation(project(":common-core"))
+    api(project(":core"))
+    api(project(":common-core"))
 
     testImplementation(libs.bundles.test.unit)
     testImplementation(project(":testmodels"))

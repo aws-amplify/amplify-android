@@ -26,12 +26,12 @@ android {
 }
 
 dependencies {
-    implementation(project(":core"))
+    api(project(":core"))
 
     implementation(libs.androidx.appcompat)
     implementation(platform(libs.aws.bom))
     implementation(libs.aws.pinpoint)
-    implementation(libs.kotlin.serializationJson)
+    api(libs.kotlin.serializationJson)
 
     testImplementation(libs.bundles.test.unit)
     testImplementation(libs.bundles.test.unit.android)

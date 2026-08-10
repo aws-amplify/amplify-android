@@ -1,14 +1,11 @@
 
 import com.android.build.gradle.LibraryExtension
-import groovy.util.Node
-import groovy.util.NodeList
 import java.net.URI
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
-import org.gradle.api.publish.tasks.GenerateModuleMetadata
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.extra
 import org.gradle.kotlin.dsl.get
@@ -107,14 +104,6 @@ class PublishingConventionPlugin : Plugin<Project> {
                         configurePom(this@configureMavenPublishing)
                     }
                 }
-
-                if (useLegacyPublishingConventions) {
-                    // Turn off Gradle metadata. This is to maintain compatibility with the way Amplify V2 has
-                    // been published historically. For v3 we should remove this and publish the gradle metadata.
-                    tasks.withType<GenerateModuleMetadata>().configureEach {
-                        enabled = false
-                    }
-                }
             }
 
             repositories {
@@ -170,20 +159,6 @@ class PublishingConventionPlugin : Plugin<Project> {
                     id.set(POM_DEVELOPER_ID)
                     organizationUrl.set(POM_DEVELOPER_ORGANIZATION_URL)
                     roles.set(listOf("developer"))
-                }
-            }
-
-            if (project.useLegacyPublishingConventions) {
-                // Remove the scope information for all dependencies. This puts
-                // everything at "compile" scope, which matches the way Amplify V2 has been
-                // published historically. For v3 we should remove this and include the
-                // scope information for our dependencies.
-                withXml {
-                    val dependencies = asNode().childNodes("dependencies").first()
-                    for (dependency in dependencies.childNodes("dependency")) {
-                        val scope = dependency.childNodes("scope").first()
-                        dependency.remove(scope)
-                    }
                 }
             }
         }
@@ -248,15 +223,6 @@ class PublishingConventionPlugin : Plugin<Project> {
     private fun Project.getPropertyOrDefault(property: String, default: String) = propertyString(property) ?: default
 
     private fun Project.propertyString(property: String) = properties[property]?.toString()
-
-    // This check should be controlled from the module's build.gradle.kts via extension instead of by looking at
-    // the project name
-    private val Project.useLegacyPublishingConventions: Boolean
-        get() = !name.startsWith("apollo") &&
-            !name.startsWith("aws-sdk-appsync") &&
-            !isKotlinMultiplatform
-
-    private fun Node.childNodes(name: String) = (get(name) as? NodeList)?.filterIsInstance<Node>() ?: emptyList()
 
     private val Project.isKotlinMultiplatform: Boolean
         get() = pluginManager.hasPlugin("org.jetbrains.kotlin.multiplatform")

@@ -26,19 +26,19 @@ android {
 
 dependencies {
 
-    implementation(project(":core"))
+    api(project(":core"))
     implementation(project(":aws-core"))
-    implementation(project(":common-core"))
-    implementation(project(":aws-pinpoint-core"))
+    api(project(":common-core"))
+    api(project(":aws-pinpoint-core"))
 
     implementation(project(":aws-push-notifications-pinpoint-common"))
 
     api(platform(libs.firebase.bom))
     api(libs.firebase.messaging)
 
-    implementation(platform(libs.aws.bom))
+    api(platform(libs.aws.bom))
     implementation(libs.aws.http)
-    implementation(libs.aws.pinpoint)
+    api(libs.aws.pinpoint)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
