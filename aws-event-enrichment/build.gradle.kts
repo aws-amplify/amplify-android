@@ -26,7 +26,7 @@ android {
 }
 
 dependencies {
-    implementation(project(":foundation"))
+    api(project(":foundation"))
 
     implementation(libs.androidx.annotation)
     implementation(libs.kotlin.coroutines)
