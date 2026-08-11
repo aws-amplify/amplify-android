@@ -35,7 +35,7 @@ class LicensesConventionPlugin : Plugin<Project> {
                 allowUrl("https://opensource.org/license/mit") {
                     because("MIT license - alternate URL used by slf4j 2.0.17+")
                 }
-                allowDependency("net.zetetic", "sqlcipher-android", "4.6.1") {
+                allowDependency("net.zetetic", "sqlcipher-android", "4.17.0") {
                     because("BSD style License")
                 }
                 allowDependency("org.jetbrains", "annotations", "16.0.1") {
