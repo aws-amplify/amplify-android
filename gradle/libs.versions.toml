@@ -33,6 +33,7 @@ jsonassert = "1.5.0"
 junit = "4.13.2"
 kotest = "5.9.0"
 kotlin = "2.2.0"
+kotlin-datetime = "0.7.1"
 kotlin-serialization = "1.6.0"
 kover = "0.9.7"
 ktlint = "12.2.0"
@@ -109,6 +110,7 @@ gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlin-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlin-coroutines-rx3 = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-rx3", version.ref = "coroutines" }
+kotlin-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlin-datetime" }
 kotlin-futures = { module = "androidx.concurrent:concurrent-futures-ktx", version.ref = "androidx-concurrent" }
 kotlin-serializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlin-serialization" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref="kotlin" }
