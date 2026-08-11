@@ -1,0 +1,34 @@
+# Verifies that every external type in each published module's public API surface is
+# resolvable on the compile classpath a downstream consumer assembles from the published
+# artifact. A failure means a dependency supplying a public-API type is scoped
+# `implementation` (runtime) but must be `api` (compile).
+
+name: Verify API Scopes
+
+on:
+  pull_request:
+    branches:
+      - 'main'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scope-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
+
+      - name: Verify API scopes
+        run: scripts/verify_api_scopes.sh
