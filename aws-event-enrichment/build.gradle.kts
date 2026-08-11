@@ -26,19 +26,14 @@ android {
 }
 
 dependencies {
-    implementation(project(":foundation"))
+    api(project(":foundation"))
 
     implementation(libs.androidx.annotation)
     implementation(libs.kotlin.coroutines)
     implementation(libs.kotlin.datetime)
     implementation(libs.kotlin.serializationJson)
 
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.mockk)
-    testImplementation(libs.test.robolectric)
-    testImplementation(libs.test.androidx.junit)
-    testImplementation(libs.test.androidx.core)
-    testImplementation(libs.test.kotlin.coroutines)
-    testImplementation(libs.test.kotest.assertions)
+    testImplementation(libs.bundles.test.unit)
+    testImplementation(libs.bundles.test.unit.android)
     testImplementation(libs.test.kotest.assertions.json)
 }
