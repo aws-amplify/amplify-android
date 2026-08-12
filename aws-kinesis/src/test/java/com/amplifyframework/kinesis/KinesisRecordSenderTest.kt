@@ -16,7 +16,6 @@ package com.amplifyframework.kinesis
 
 import aws.sdk.kotlin.services.kinesis.KinesisClient
 import com.amplifyframework.recordcache.Record
-import io.kotest.assertions.fail
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -30,11 +29,6 @@ class KinesisRecordSenderTest {
     private val testStreamName = "test-stream"
     private val maxRetries = 3
     private val mockClient = mockk<KinesisClient>()
-
-    @Test
-    fun `deliberate failure`() {
-        fail("Intentional failure to validate verification workflow")
-    }
 
     @Test
     fun `createRequest should construct correct PutRecordsRequest`() = runTest {
