@@ -18,7 +18,6 @@ package com.amplifyframework.api.aws;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
-import com.amplifyframework.annotations.InternalAmplifyApi;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.aws.auth.AuthRuleRequestDecorator;
@@ -38,8 +37,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-@InternalAmplifyApi
-public final class MultiAuthSubscriptionOperation<T> extends AWSGraphQLOperation<T> {
+final class MultiAuthSubscriptionOperation<T> extends AWSGraphQLOperation<T> {
     private static final Logger LOG = Amplify.Logging.logger(CategoryType.API, "amplify:aws-api");
 
     private final SubscriptionEndpoint subscriptionEndpoint;
@@ -70,8 +68,7 @@ public final class MultiAuthSubscriptionOperation<T> extends AWSGraphQLOperation
     }
 
     @NonNull
-    @InternalAmplifyApi
-    public static <T> Builder<T> builder() {
+    static <T> Builder<T> builder() {
         return new Builder<>();
     }
 
@@ -201,8 +198,7 @@ public final class MultiAuthSubscriptionOperation<T> extends AWSGraphQLOperation
         return subscriptionFuture;
     }
 
-    @InternalAmplifyApi
-    public static final class Builder<T> {
+    static final class Builder<T> {
         private SubscriptionEndpoint subscriptionEndpoint;
         private AppSyncGraphQLRequest<T> graphQlRequest;
         private GraphQLResponse.Factory responseFactory;
@@ -215,76 +211,65 @@ public final class MultiAuthSubscriptionOperation<T> extends AWSGraphQLOperation
         private String apiName;
 
         @NonNull
-        @InternalAmplifyApi
         public Builder<T> subscriptionEndpoint(@NonNull SubscriptionEndpoint subscriptionEndpoint) {
             this.subscriptionEndpoint = Objects.requireNonNull(subscriptionEndpoint);
             return this;
         }
 
         @NonNull
-        @InternalAmplifyApi
         public Builder<T> graphQlRequest(@NonNull AppSyncGraphQLRequest<T> graphQlRequest) {
             this.graphQlRequest = Objects.requireNonNull(graphQlRequest);
             return this;
         }
 
         @NonNull
-        @InternalAmplifyApi
         public Builder<T> responseFactory(@NonNull GraphQLResponse.Factory responseFactory) {
             this.responseFactory = Objects.requireNonNull(responseFactory);
             return this;
         }
 
         @NonNull
-        @InternalAmplifyApi
         public Builder<T> executorService(@NonNull ExecutorService executorService) {
             this.executorService = Objects.requireNonNull(executorService);
             return this;
         }
 
         @NonNull
-        @InternalAmplifyApi
         public Builder<T> onSubscriptionStart(@NonNull Consumer<String> onSubscriptionStart) {
             this.onSubscriptionStart = Objects.requireNonNull(onSubscriptionStart);
             return this;
         }
 
         @NonNull
-        @InternalAmplifyApi
         public Builder<T> onNextItem(@NonNull Consumer<GraphQLResponse<T>> onNextItem) {
             this.onNextItem = Objects.requireNonNull(onNextItem);
             return this;
         }
 
         @NonNull
-        @InternalAmplifyApi
         public Builder<T> onSubscriptionError(@NonNull Consumer<ApiException> onSubscriptionError) {
             this.onSubscriptionError = Objects.requireNonNull(onSubscriptionError);
             return this;
         }
 
         @NonNull
-        @InternalAmplifyApi
         public Builder<T> onSubscriptionComplete(@NonNull Action onSubscriptionComplete) {
             this.onSubscriptionComplete = Objects.requireNonNull(onSubscriptionComplete);
             return this;
         }
 
-        @InternalAmplifyApi
         public Builder<T> requestDecorator(AuthRuleRequestDecorator requestDecorator) {
             this.requestDecorator = requestDecorator;
             return this;
         }
 
         @NonNull
-        @InternalAmplifyApi
         public Builder<T> apiName(String apiName) {
             this.apiName = apiName;
             return this;
         }
 
         @NonNull
-        @InternalAmplifyApi
         public MultiAuthSubscriptionOperation<T> build() {
             return new MultiAuthSubscriptionOperation<>(this);
         }
