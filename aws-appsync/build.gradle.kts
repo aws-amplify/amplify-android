@@ -32,10 +32,5 @@ dependencies {
     api(project(":foundation"))
     implementation(project(":foundation-bridge"))
 
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.mockk)
-    testImplementation(libs.test.kotlin.coroutines)
-    testImplementation(libs.test.kotest.assertions)
-    testImplementation(libs.test.mockwebserver)
-    testImplementation(libs.test.turbine)
+    testImplementation(libs.bundles.test.unit)
 }
