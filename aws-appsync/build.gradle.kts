@@ -13,19 +13,10 @@
  * permissions and limitations under the License.
  */
 
-import java.util.Properties
-
 plugins {
     alias(libs.plugins.amplify.android.library)
     alias(libs.plugins.amplify.publishing)
 }
-
-fun readVersion() = Properties().run {
-    file("../version.properties").inputStream().use { load(it) }
-    get("VERSION_NAME").toString()
-}
-
-project.setProperty("VERSION_NAME", readVersion())
 
 android {
     namespace = "com.amazonaws.appsync"
