@@ -24,7 +24,6 @@ android {
 
 dependencies {
     api(project(":core"))
-    implementation(project(":aws-api"))
     implementation(project(":aws-api-appsync"))
 
     implementation(libs.okhttp)
