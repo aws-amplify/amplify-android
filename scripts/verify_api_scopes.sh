@@ -43,7 +43,13 @@ COORDS_FILE="$WORK/coords.txt"
 : > "$COORDS_FILE"
 
 # Collect (projectPath -> coordinate) by running the task across all projects at once.
-(cd "$REPO" && ./gradlew -q printPublishedCoordinates 2>/dev/null) \
+# Must pass the SAME -PVERSION_NAME override used when publishing above: otherwise this reports
+# the real release version (e.g. 2.39.0) while the artifacts were published under $VER, so the
+# consumer would resolve released Central artifacts instead of the freshly-built ones — silently
+# validating the wrong bits for released modules and producing a false failure for any module not
+# yet released at that version. Modules that hard-override their version (apollo/appsync) still
+# report their own coordinate, since the override wins over the property.
+(cd "$REPO" && ./gradlew -q printPublishedCoordinates -PVERSION_NAME="$VER" 2>/dev/null) \
   | grep -E '^[a-z0-9.]+:[a-z0-9-]+:' | sort -u > "$COORDS_FILE" || true
 
 if [ ! -s "$COORDS_FILE" ]; then
@@ -79,6 +85,22 @@ while IFS= read -r coord; do
         -PmoduleCoords="$coord" -Pagp="$AGP" -Pkgp="$KGP" \
         --rerun-tasks --quiet > "$WORK/resolve-$artifact.log" 2>&1; then
     echo "SKIP [$coord]: consumer failed to resolve (see $WORK/resolve-$artifact.log)"
+    SKIP=$((SKIP+1)); continue
+  fi
+
+  # Guard against the consumer's lenient artifactView silently swallowing an unresolved target
+  # module: if the target isn't actually on the resolved classpath (e.g. a brand-new module not
+  # yet published, or a skipped publish), the classpath comes back near-empty and the type check
+  # would false-FAIL on EVERY public-API type. Require the target's own coordinate to appear on
+  # the classpath before trusting the containment check. group and version are taken from $coord,
+  # so version-overriding modules (apollo/appsync publish under their own group/version) are
+  # handled. The artifact segment is left open ([^/]+) because KMP root coords resolve to their
+  # `-android` sibling (foundation -> foundation-android). Both path layouts are matched: the
+  # Gradle module cache uses a dotted group dir (com.amplifyframework/), mavenLocal uses a slashed
+  # one (com/amplifyframework/).
+  grp_slash="${group//./\/}"
+  if ! grep -Eq "($group|$grp_slash)/[^/]+/$version/" "$CONSUMER/build/compile-classpath.txt"; then
+    echo "SKIP [$coord]: target artifact did not resolve onto the consumer classpath (not published at $version?) — skipping to avoid a false scope failure"
     SKIP=$((SKIP+1)); continue
   fi
 
