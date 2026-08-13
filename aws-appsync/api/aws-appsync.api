@@ -1,0 +1,179 @@
+public final class com/amazonaws/appsync/AmplifyAppSyncClient {
+	public fun <init> (Lcom/amazonaws/appsync/AmplifyAppSyncClient$Configuration;)V
+	public final fun close ()V
+	public final fun getConfiguration ()Lcom/amazonaws/appsync/AmplifyAppSyncClient$Configuration;
+	public final fun getEvents ()Lkotlinx/coroutines/flow/SharedFlow;
+	public final fun mutate (Lcom/amplifyframework/api/graphql/GraphQLRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun query (Lcom/amplifyframework/api/graphql/GraphQLRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun subscribe (Lcom/amplifyframework/api/graphql/GraphQLRequest;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class com/amazonaws/appsync/AmplifyAppSyncClient$Configuration {
+	public static final field Companion Lcom/amazonaws/appsync/AmplifyAppSyncClient$Configuration$Companion;
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/amazonaws/appsync/AppSyncAuthorization;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lkotlin/jvm/functions/Function1;
+	public final fun component5 ()Lkotlin/jvm/functions/Function1;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAuthorization ()Lcom/amazonaws/appsync/AppSyncAuthorization;
+	public final fun getEndpoint ()Ljava/lang/String;
+	public final fun getHttpClientConfigurator ()Lkotlin/jvm/functions/Function1;
+	public final fun getRegion ()Ljava/lang/String;
+	public final fun getWebSocketClientConfigurator ()Lkotlin/jvm/functions/Function1;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amazonaws/appsync/AmplifyAppSyncClient$Configuration$Builder {
+	public field authorization Lcom/amazonaws/appsync/AppSyncAuthorization;
+	public field endpoint Ljava/lang/String;
+	public final fun getAuthorization ()Lcom/amazonaws/appsync/AppSyncAuthorization;
+	public final fun getEndpoint ()Ljava/lang/String;
+	public final fun getHttpClientConfigurator ()Lkotlin/jvm/functions/Function1;
+	public final fun getRegion ()Ljava/lang/String;
+	public final fun getWebSocketClientConfigurator ()Lkotlin/jvm/functions/Function1;
+	public final fun setAuthorization (Lcom/amazonaws/appsync/AppSyncAuthorization;)V
+	public final fun setEndpoint (Ljava/lang/String;)V
+	public final fun setHttpClientConfigurator (Lkotlin/jvm/functions/Function1;)V
+	public final fun setRegion (Ljava/lang/String;)V
+	public final fun setWebSocketClientConfigurator (Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class com/amazonaws/appsync/AmplifyAppSyncClient$Configuration$Companion {
+	public final fun invoke (Lkotlin/jvm/functions/Function1;)Lcom/amazonaws/appsync/AmplifyAppSyncClient$Configuration;
+}
+
+public final class com/amazonaws/appsync/AppSyncAuthMode : java/lang/Enum {
+	public static final field API_KEY Lcom/amazonaws/appsync/AppSyncAuthMode;
+	public static final field IAM Lcom/amazonaws/appsync/AppSyncAuthMode;
+	public static final field LAMBDA Lcom/amazonaws/appsync/AppSyncAuthMode;
+	public static final field OIDC Lcom/amazonaws/appsync/AppSyncAuthMode;
+	public static final field USER_POOLS Lcom/amazonaws/appsync/AppSyncAuthMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amazonaws/appsync/AppSyncAuthMode;
+	public static fun values ()[Lcom/amazonaws/appsync/AppSyncAuthMode;
+}
+
+public abstract class com/amazonaws/appsync/AppSyncAuthorization {
+}
+
+public final class com/amazonaws/appsync/AppSyncAuthorization$Multi : com/amazonaws/appsync/AppSyncAuthorization {
+	public fun <init> (Lcom/amazonaws/appsync/AppSyncAuthMode;Ljava/util/List;)V
+	public final fun component1 ()Lcom/amazonaws/appsync/AppSyncAuthMode;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Lcom/amazonaws/appsync/AppSyncAuthMode;Ljava/util/List;)Lcom/amazonaws/appsync/AppSyncAuthorization$Multi;
+	public static synthetic fun copy$default (Lcom/amazonaws/appsync/AppSyncAuthorization$Multi;Lcom/amazonaws/appsync/AppSyncAuthMode;Ljava/util/List;ILjava/lang/Object;)Lcom/amazonaws/appsync/AppSyncAuthorization$Multi;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAuthorizers ()Ljava/util/List;
+	public final fun getDefaultAuthMode ()Lcom/amazonaws/appsync/AppSyncAuthMode;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amazonaws/appsync/AppSyncAuthorization$Single : com/amazonaws/appsync/AppSyncAuthorization {
+	public fun <init> (Lcom/amazonaws/appsync/AppSyncClientAuthorizer;)V
+	public final fun component1 ()Lcom/amazonaws/appsync/AppSyncClientAuthorizer;
+	public final fun copy (Lcom/amazonaws/appsync/AppSyncClientAuthorizer;)Lcom/amazonaws/appsync/AppSyncAuthorization$Single;
+	public static synthetic fun copy$default (Lcom/amazonaws/appsync/AppSyncAuthorization$Single;Lcom/amazonaws/appsync/AppSyncClientAuthorizer;ILjava/lang/Object;)Lcom/amazonaws/appsync/AppSyncAuthorization$Single;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAuthorizer ()Lcom/amazonaws/appsync/AppSyncClientAuthorizer;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class com/amazonaws/appsync/AppSyncClientAuthorizer {
+	public synthetic fun <init> (Lcom/amazonaws/appsync/AppSyncAuthMode;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getAuthMode ()Lcom/amazonaws/appsync/AppSyncAuthMode;
+}
+
+public final class com/amazonaws/appsync/AppSyncClientAuthorizer$ApiKey : com/amazonaws/appsync/AppSyncClientAuthorizer {
+	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class com/amazonaws/appsync/AppSyncClientAuthorizer$Iam : com/amazonaws/appsync/AppSyncClientAuthorizer {
+	public fun <init> (Lcom/amplifyframework/foundation/credentials/AwsCredentialsProvider;)V
+}
+
+public final class com/amazonaws/appsync/AppSyncClientAuthorizer$Lambda : com/amazonaws/appsync/AppSyncClientAuthorizer {
+	public fun <init> (Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class com/amazonaws/appsync/AppSyncClientAuthorizer$Oidc : com/amazonaws/appsync/AppSyncClientAuthorizer {
+	public fun <init> (Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class com/amazonaws/appsync/AppSyncClientAuthorizer$UserPools : com/amazonaws/appsync/AppSyncClientAuthorizer {
+	public fun <init> (Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class com/amazonaws/appsync/BuildConfig {
+	public static final field BUILD_TYPE Ljava/lang/String;
+	public static final field DEBUG Z
+	public static final field LIBRARY_PACKAGE_NAME Ljava/lang/String;
+	public static final field VERSION_NAME Ljava/lang/String;
+	public fun <init> ()V
+}
+
+public abstract class com/amazonaws/appsync/ConnectionState {
+}
+
+public final class com/amazonaws/appsync/ConnectionState$Connected : com/amazonaws/appsync/ConnectionState {
+	public static final field INSTANCE Lcom/amazonaws/appsync/ConnectionState$Connected;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amazonaws/appsync/ConnectionState$Connecting : com/amazonaws/appsync/ConnectionState {
+	public static final field INSTANCE Lcom/amazonaws/appsync/ConnectionState$Connecting;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amazonaws/appsync/ConnectionState$Disconnected : com/amazonaws/appsync/ConnectionState {
+	public fun <init> ()V
+	public fun <init> (Lcom/amplifyframework/api/ApiException;)V
+	public synthetic fun <init> (Lcom/amplifyframework/api/ApiException;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/amplifyframework/api/ApiException;
+	public final fun copy (Lcom/amplifyframework/api/ApiException;)Lcom/amazonaws/appsync/ConnectionState$Disconnected;
+	public static synthetic fun copy$default (Lcom/amazonaws/appsync/ConnectionState$Disconnected;Lcom/amplifyframework/api/ApiException;ILjava/lang/Object;)Lcom/amazonaws/appsync/ConnectionState$Disconnected;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCause ()Lcom/amplifyframework/api/ApiException;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class com/amazonaws/appsync/SubscriptionEvent {
+}
+
+public abstract class com/amazonaws/appsync/SubscriptionEvent$Connection : com/amazonaws/appsync/SubscriptionEvent {
+}
+
+public final class com/amazonaws/appsync/SubscriptionEvent$Connection$Connected : com/amazonaws/appsync/SubscriptionEvent$Connection {
+	public static final field INSTANCE Lcom/amazonaws/appsync/SubscriptionEvent$Connection$Connected;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amazonaws/appsync/SubscriptionEvent$Connection$Connecting : com/amazonaws/appsync/SubscriptionEvent$Connection {
+	public static final field INSTANCE Lcom/amazonaws/appsync/SubscriptionEvent$Connection$Connecting;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/amazonaws/appsync/SubscriptionEvent$Data : com/amazonaws/appsync/SubscriptionEvent {
+	public fun <init> (Lcom/amplifyframework/api/graphql/GraphQLResponse;)V
+	public final fun component1 ()Lcom/amplifyframework/api/graphql/GraphQLResponse;
+	public final fun copy (Lcom/amplifyframework/api/graphql/GraphQLResponse;)Lcom/amazonaws/appsync/SubscriptionEvent$Data;
+	public static synthetic fun copy$default (Lcom/amazonaws/appsync/SubscriptionEvent$Data;Lcom/amplifyframework/api/graphql/GraphQLResponse;ILjava/lang/Object;)Lcom/amazonaws/appsync/SubscriptionEvent$Data;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getResponse ()Lcom/amplifyframework/api/graphql/GraphQLResponse;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
