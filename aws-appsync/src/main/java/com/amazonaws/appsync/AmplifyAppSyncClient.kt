@@ -161,8 +161,7 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
             /**
              * Create a [Configuration] using the builder DSL.
              */
-            operator fun invoke(block: Builder.() -> Unit): Configuration =
-                Builder().apply(block).build()
+            operator fun invoke(block: Builder.() -> Unit): Configuration = Builder().apply(block).build()
 
             /**
              * Infer the AWS region from an AppSync endpoint URL.
