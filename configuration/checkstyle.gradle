@@ -47,4 +47,3 @@ def javaSources() {
     }
     return files
 }
-
