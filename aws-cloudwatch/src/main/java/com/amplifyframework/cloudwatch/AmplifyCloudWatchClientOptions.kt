@@ -19,7 +19,8 @@ import com.amplifyframework.annotations.ExperimentalAmplifyApi
 import com.amplifyframework.foundation.config.SdkClientConfigurationProvider
 
 /** Provides custom configuration for the underlying [CloudWatchLogsClient]. */
-typealias CloudWatchLogsClientConfigurationProvider = SdkClientConfigurationProvider<CloudWatchLogsClient.Config.Builder>
+typealias CloudWatchLogsClientConfigurationProvider =
+    SdkClientConfigurationProvider<CloudWatchLogsClient.Config.Builder>
 
 private const val DEFAULT_LOCAL_STORE_MAX_SIZE_IN_MB = 5
 

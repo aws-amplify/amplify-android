@@ -15,11 +15,16 @@
 package com.amplifyframework.cloudwatch
 
 import com.amplifyframework.annotations.ExperimentalAmplifyApi
+import com.amplifyframework.foundation.result.Result
 
 /**
- * The successful result of a [AmplifyCloudWatchClient.flushLogs] call.
- *
- * @param success Whether the flush completed successfully
+ * Data returned by a successful [AmplifyCloudWatchClient.flushLogs] call. It
+ * currently carries no fields and exists so the operation can grow its result
+ * shape without a breaking change.
  */
 @ExperimentalAmplifyApi
-data class FlushData(val success: Boolean = true)
+class FlushData internal constructor()
+
+/** Result of [AmplifyCloudWatchClient.flushLogs]. */
+@ExperimentalAmplifyApi
+typealias FlushResult = Result<FlushData, AmplifyCloudWatchException>

@@ -19,10 +19,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Strategy for flushing cached log events to CloudWatch.
- *
- * There is intentionally no "none" strategy — automatic flushing is turned off via
- * [AmplifyCloudWatchClient.disable] instead.
+ * Strategy for automatically flushing cached log events to CloudWatch.
  */
 @ExperimentalAmplifyApi
 sealed class FlushStrategy {
@@ -32,4 +29,10 @@ sealed class FlushStrategy {
      * @param interval Time between automatic flush operations. Defaults to 60 seconds.
      */
     data class Interval(val interval: Duration = 60.seconds) : FlushStrategy()
+
+    /**
+     * Disable automatic flushing. Log events continue to be buffered locally and
+     * must be flushed manually by calling [AmplifyCloudWatchClient.flushLogs].
+     */
+    data object None : FlushStrategy()
 }

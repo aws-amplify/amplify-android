@@ -23,10 +23,17 @@ import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.foundation.logging.LogLevel
 import com.amplifyframework.foundation.logging.LogMessage
 import com.amplifyframework.foundation.logging.LogSink
-import com.amplifyframework.foundation.result.Result
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+
+/**
+ * Buffer capacity for the [AmplifyCloudWatchClient.events] flow. Kept small: it only needs to
+ * absorb short bursts of failure notifications, and events are dropped oldest-first on overflow
+ * rather than back-pressuring the emitting coroutine.
+ */
+private const val EVENTS_BUFFER_CAPACITY = 64
 
 /**
  * A standalone client for sending log events to Amazon CloudWatch Logs.
@@ -70,7 +77,10 @@ class AmplifyCloudWatchClient(
     options: AmplifyCloudWatchClientOptions
 ) : LogSink {
 
-    private val eventsFlow = MutableSharedFlow<LoggingEvent>()
+    private val eventsFlow = MutableSharedFlow<LoggingEvent>(
+        extraBufferCapacity = EVENTS_BUFFER_CAPACITY,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
 
     /**
      * A stream of [LoggingEvent]s (flush failures, write failures, etc.).
@@ -94,7 +104,7 @@ class AmplifyCloudWatchClient(
     fun disable(): Unit = TODO("Not yet implemented")
 
     /** Flush all pending log entries to CloudWatch. */
-    suspend fun flushLogs(): Result<FlushData, AmplifyCloudWatchException> = TODO("Not yet implemented")
+    suspend fun flushLogs(): FlushResult = TODO("Not yet implemented")
 
     /** Returns the underlying AWS CloudWatch Logs SDK client. */
     fun getCloudWatchLogsClient(): CloudWatchLogsClient = TODO("Not yet implemented")

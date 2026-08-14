@@ -15,7 +15,6 @@
 
 plugins {
     alias(libs.plugins.amplify.android.library)
-    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.amplify.publishing)
 }
 
@@ -26,32 +25,14 @@ android {
 }
 
 dependencies {
-    implementation(project(":foundation"))
-    implementation(project(":foundation-bridge"))
+    api(project(":foundation"))
+    api(project(":foundation-bridge"))
 
-    implementation(libs.androidx.appcompat)
-    implementation(libs.aws.cloudwatchlogs)
+    api(platform(libs.aws.bom))
+    api(libs.aws.cloudwatchlogs)
     implementation(libs.aws.http)
-    implementation(libs.kotlin.serializationJson)
 
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.mockk)
-    testImplementation(libs.test.robolectric)
-    testImplementation(libs.test.androidx.junit)
-    testImplementation(libs.test.androidx.core)
-    testImplementation(libs.test.kotlin.coroutines)
-    testImplementation(libs.test.kotest.assertions)
+    testImplementation(libs.bundles.test.unit)
+    testImplementation(libs.bundles.test.unit.android)
     testImplementation(project(":testutils"))
-    testImplementation(project(":aws-cloudwatch"))
-
-    androidTestImplementation(project(":testutils"))
-    androidTestImplementation(libs.test.androidx.core)
-    androidTestImplementation(project(":core"))
-    androidTestImplementation(project(":aws-core"))
-    androidTestImplementation(project(":aws-auth-cognito"))
-    androidTestImplementation(libs.test.androidx.runner)
-    androidTestImplementation(libs.test.kotlin.coroutines)
-    androidTestImplementation(libs.test.androidx.junit)
-    androidTestImplementation(libs.test.kotest.assertions)
-    androidTestImplementation(project(":aws-cloudwatch"))
 }
