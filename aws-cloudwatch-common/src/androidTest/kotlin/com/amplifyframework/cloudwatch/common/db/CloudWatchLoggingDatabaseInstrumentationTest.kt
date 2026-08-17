@@ -12,11 +12,12 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.logging.cloudwatch.db
+package com.amplifyframework.cloudwatch.common.db
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
+import com.amplifyframework.annotations.InternalAmplifyApi
+import com.amplifyframework.cloudwatch.common.models.CloudWatchLogEvent
 import com.amplifyframework.testutils.DeviceFarmTestBase
 import io.kotest.matchers.Matcher
 import io.kotest.matchers.MatcherResult
@@ -36,7 +37,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, InternalAmplifyApi::class)
 class CloudWatchLoggingDatabaseInstrumentationTest : DeviceFarmTestBase() {
     private val context = InstrumentationRegistry.getInstrumentation().context
     private val testCoroutine = UnconfinedTestDispatcher()

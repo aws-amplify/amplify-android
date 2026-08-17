@@ -11,6 +11,12 @@ kotlin {
             }
         }
 
+        getByName("androidMain") {
+            dependencies {
+                implementation(libs.androidx.security)
+            }
+        }
+
         commonTest {
             dependencies {
                 implementation(libs.test.kotest.assertions)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2026 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -14,10 +14,9 @@
  */
 @file:OptIn(InternalAmplifyApi::class)
 
-package com.amplifyframework.logging.cloudwatch
+package com.amplifyframework.cloudwatch
 
 import android.content.Context
-import androidx.core.content.edit
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
@@ -33,20 +32,13 @@ import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.cloudwatch.common.db.CloudWatchLoggingDatabase
 import com.amplifyframework.cloudwatch.common.db.LogEvent
 import com.amplifyframework.cloudwatch.common.models.CloudWatchLogEvent
-import com.amplifyframework.core.Amplify
-import com.amplifyframework.core.category.CategoryType
-import com.amplifyframework.hub.HubChannel
-import com.amplifyframework.hub.HubEvent
-import com.amplifyframework.logging.LoggingEventName
-import com.amplifyframework.logging.cloudwatch.models.AWSCloudWatchLoggingPluginConfiguration
-import com.amplifyframework.logging.cloudwatch.models.LogStreamContext
-import com.amplifyframework.logging.cloudwatch.models.LogStreamNameFormatter
-import com.amplifyframework.logging.cloudwatch.worker.CloudwatchLogsSyncWorker
-import com.amplifyframework.logging.cloudwatch.worker.CloudwatchRouterWorker
+import com.amplifyframework.cloudwatch.worker.CloudWatchLogsSyncWorker
+import com.amplifyframework.cloudwatch.worker.CloudWatchRouterWorker
+import com.amplifyframework.cloudwatch.worker.CloudWatchWorkerFactory
+import com.amplifyframework.foundation.logging.AmplifyLogging
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.TimerTask
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -56,31 +48,49 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+/**
+ * Engine for buffering and delivering CloudWatch log events for [AmplifyCloudWatchClient]. Ported
+ * from the v2 `AWSCloudWatchLoggingPlugin`, decoupled from `:core`: failures are reported through
+ * the [onWriteLogFailure] / [onFlushLogFailure] callbacks (instead of Hub), user identity is set
+ * explicitly via [setUserIdentifier] (instead of resolved from Auth), and diagnostics use the
+ * foundation logger. Log persistence is delegated to the shared `:aws-cloudwatch-common` store.
+ *
+ * @param flushIntervalInSeconds interval between automatic flushes; `null` disables automatic
+ *   flushing (used for `FlushStrategy.None`).
+ */
 internal class CloudWatchLogManager(
     private val context: Context,
-    private val pluginConfiguration: AWSCloudWatchLoggingPluginConfiguration,
+    private val logGroupName: String,
+    private val localStoreMaxSizeInMB: Int,
+    private val flushIntervalInSeconds: Long?,
     private val awsCloudWatchLogsClient: CloudWatchLogsClient,
-    private val loggingConstraintsResolver: LoggingConstraintsResolver,
-    private val cloudWatchLoggingDatabase: CloudWatchLoggingDatabase = CloudWatchLoggingDatabase(context),
-    private val customCognitoCredentialsProvider: CustomCognitoCredentialsProvider = CustomCognitoCredentialsProvider(),
-    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val logStreamNameFormatter: LogStreamNameFormatter? = null
+    databaseName: String,
+    passphrasePreferencesName: String,
+    private val onWriteLogFailure: (context: String?, cause: Throwable?) -> Unit,
+    private val onFlushLogFailure: (context: String?, cause: Throwable?) -> Unit,
+    private val cloudWatchLoggingDatabase: CloudWatchLoggingDatabase = CloudWatchLoggingDatabase(
+        context,
+        databaseName = databaseName,
+        passphrasePreferencesName = passphrasePreferencesName
+    ),
+    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
+
     private val deviceIdKey = "unique_device_id"
     private var stopSync = false
+
+    @Volatile
     private var userIdentityId: String? = null
-        set(value) {
-            field = value
-            loggingConstraintsResolver.userId = value
-        }
     private val todayDate: String = SimpleDateFormat("MM-dd-yyyy", Locale.US).format(Date())
     private val coroutineScope = CoroutineScope(coroutineDispatcher)
     private var isSyncInProgress = AtomicBoolean(false)
-    private val logger = Amplify.Logging.logger(CategoryType.LOGGING, this::class.java.simpleName)
-    private var syncTask: TimerTask? = null
+    private val logger = AmplifyLogging.logger(CloudWatchLogManager::class.java.simpleName)
 
     init {
-        onSignIn()
+        // Register the delegate factory so the WorkManager-instantiated CloudWatchRouterWorker can
+        // create a CloudWatchLogsSyncWorker wired to this manager.
+        CloudWatchRouterWorker.workerFactories[CloudWatchRouterWorker.WORKER_FACTORY_KEY] =
+            CloudWatchWorkerFactory(this)
     }
 
     suspend fun saveLogEvent(event: CloudWatchLogEvent) = withContext(coroutineDispatcher) {
@@ -91,10 +101,18 @@ internal class CloudWatchLogManager(
             }
         } catch (e: Exception) {
             logger.error("failed to save event", e)
-            Amplify.Hub.publish(
-                HubChannel.LOGGING,
-                HubEvent.create(LoggingEventName.WRITE_LOG_FAILURE, event)
-            )
+            onWriteLogFailure(event.message, e)
+        }
+    }
+
+    /**
+     * Update the current user identifier. Pending events are flushed to the previous user's stream
+     * before the identifier changes, mirroring the v2 plugin's sign-in behavior.
+     */
+    fun setUserIdentifier(identifier: String?) {
+        coroutineScope.launch {
+            syncLogEventsWithCloudwatch()
+            userIdentityId = identifier
         }
     }
 
@@ -103,14 +121,14 @@ internal class CloudWatchLogManager(
         enqueueSync()
     }
 
-    internal fun stopSync() {
+    fun stopSync() {
         stopSync = true
         cancelSync()
         clearCache()
         logger.debug("stopping sync")
     }
 
-    internal suspend fun syncLogEventsWithCloudwatch() {
+    suspend fun syncLogEventsWithCloudwatch() {
         if (isSyncInProgress.get()) {
             return
         }
@@ -123,14 +141,11 @@ internal class CloudWatchLogManager(
                         val queriedEvents = cloudWatchLoggingDatabase.queryAllEvents().toMutableList()
                         if (queriedEvents.isEmpty()) break
                         while (queriedEvents.isNotEmpty()) {
-                            val groupName = pluginConfiguration.logGroupName
+                            val groupName = logGroupName
                             val deviceId = uniqueDeviceId()
-                            val context = LogStreamContext(deviceId = deviceId, userId = userIdentityId)
 
-                            // Generate stream name: use custom formatter if provided, otherwise use default format
-                            val streamName = logStreamNameFormatter?.format(context)
-                                ?: // Default format: MM-dd-yyyy.deviceId.userId
-                                "$todayDate.$deviceId.${userIdentityId ?: "guest"}"
+                            // Default format: MM-dd-yyyy.deviceId.userId
+                            val streamName = "$todayDate.$deviceId.${userIdentityId ?: "guest"}"
 
                             val nextBatch = getNextBatch(queriedEvents)
                             val inputLogEvents = nextBatch.first
@@ -157,13 +172,11 @@ internal class CloudWatchLogManager(
                     }
                 }
             } catch (exception: Exception) {
-                Amplify.Hub.publish(
-                    HubChannel.LOGGING,
-                    HubEvent.create(LoggingEventName.FLUSH_LOG_FAILURE, exception)
-                )
+                onFlushLogFailure(null, exception)
                 if (isCacheFull()) {
                     cloudWatchLoggingDatabase.bulkDelete(inputLogEventsIdToBeDeleted)
                 }
+                throw exception
             } finally {
                 isSyncInProgress.set(false)
             }
@@ -227,45 +240,25 @@ internal class CloudWatchLogManager(
     private fun clearCache() {
         coroutineScope.launch {
             cloudWatchLoggingDatabase.clearDatabase()
-            context.getSharedPreferences(
-                AWSCloudWatchLoggingPlugin.SHARED_PREFERENCE_FILENAME,
-                Context.MODE_PRIVATE
-            ).edit { remove(LoggingConstraintsResolver.REMOTE_LOGGING_CONSTRAINTS_KEY) }
         }
-    }
-
-    internal fun onSignIn() {
-        coroutineScope.launch {
-            syncLogEventsWithCloudwatch()
-            userIdentityId = try {
-                val authUser = customCognitoCredentialsProvider.getCurrentUser()
-                authUser.userId
-            } catch (exception: Exception) {
-                null
-            }
-        }
-    }
-
-    internal fun onSignOut() {
-        userIdentityId = null
-        clearCache()
     }
 
     internal fun enqueueSync() {
+        val interval = flushIntervalInSeconds ?: return
         if (!stopSync) {
-            val syncRequest = OneTimeWorkRequest.Builder(CloudwatchRouterWorker::class.java)
-                .setInitialDelay(pluginConfiguration.flushIntervalInSeconds.toLong(), TimeUnit.SECONDS)
+            val syncRequest = OneTimeWorkRequest.Builder(CloudWatchRouterWorker::class.java)
+                .setInitialDelay(interval, TimeUnit.SECONDS)
                 .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
                 .setInputData(
                     workDataOf(
-                        CloudwatchRouterWorker.WORKER_CLASS_NAME to CloudwatchLogsSyncWorker::class.java.simpleName,
-                        CloudwatchRouterWorker.WORKER_ID to CloudwatchRouterWorker.WORKER_FACTORY_KEY
+                        CloudWatchRouterWorker.WORKER_CLASS_NAME to CloudWatchLogsSyncWorker::class.java.simpleName,
+                        CloudWatchRouterWorker.WORKER_ID to CloudWatchRouterWorker.WORKER_FACTORY_KEY
                     )
                 )
-                .addTag(CloudwatchLogsSyncWorker.WORKER_NAME_TAG)
+                .addTag(CloudWatchLogsSyncWorker.WORKER_NAME_TAG)
                 .build()
             WorkManager.getInstance(context).beginUniqueWork(
-                CloudwatchLogsSyncWorker.WORKER_NAME_TAG,
+                CloudWatchLogsSyncWorker.WORKER_NAME_TAG,
                 ExistingWorkPolicy.REPLACE,
                 syncRequest
             ).enqueue()
@@ -273,16 +266,20 @@ internal class CloudWatchLogManager(
     }
 
     private fun cancelSync() {
-        WorkManager.getInstance(context).cancelUniqueWork(CloudwatchLogsSyncWorker.WORKER_NAME_TAG)
+        WorkManager.getInstance(context).cancelUniqueWork(CloudWatchLogsSyncWorker.WORKER_NAME_TAG)
     }
 
     private fun uniqueDeviceId(): String {
-        val sharedPreferences =
-            context.getSharedPreferences(AWSCloudWatchLoggingPlugin.SHARED_PREFERENCE_FILENAME, Context.MODE_PRIVATE)
+        val sharedPreferences = context.getSharedPreferences(SHARED_PREFERENCE_FILENAME, Context.MODE_PRIVATE)
         return sharedPreferences.getString(deviceIdKey, null) ?: UUID.randomUUID().toString().also { id ->
-            sharedPreferences.edit { putString(deviceIdKey, id) }
+            sharedPreferences.edit().putString(deviceIdKey, id).apply()
         }
     }
 
-    private fun isCacheFull() = cloudWatchLoggingDatabase.isCacheFull(pluginConfiguration.localStoreMaxSizeInMB)
+    private fun isCacheFull() = cloudWatchLoggingDatabase.isCacheFull(localStoreMaxSizeInMB)
+
+    internal companion object {
+        // Reused from the v2 plugin so the persisted device id carries across a v2 -> v3 migration.
+        internal const val SHARED_PREFERENCE_FILENAME = "com.amplify.logging.a3fa4188-0ac5-11ee-be56-0242ac120002"
+    }
 }

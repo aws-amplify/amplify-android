@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2026 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -12,6 +12,10 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.logging.cloudwatch.models
+package com.amplifyframework.cloudwatch.common.models
 
-internal data class CloudWatchLogEvent(val timestamp: Long, val message: String)
+import com.amplifyframework.annotations.InternalAmplifyApi
+
+/** A log event awaiting delivery to CloudWatch Logs. */
+@InternalAmplifyApi
+data class CloudWatchLogEvent(val timestamp: Long, val message: String)

@@ -15,7 +15,6 @@
 package com.amplifyframework.logging.cloudwatch
 
 import android.content.Context
-import android.net.Uri
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.work.Configuration
@@ -28,11 +27,12 @@ import aws.sdk.kotlin.services.cloudwatchlogs.model.InputLogEvent
 import aws.sdk.kotlin.services.cloudwatchlogs.model.PutLogEventsRequest
 import aws.sdk.kotlin.services.cloudwatchlogs.model.PutLogEventsResponse
 import aws.sdk.kotlin.services.cloudwatchlogs.model.RejectedLogEventsInfo
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.AuthUser
-import com.amplifyframework.logging.cloudwatch.db.CloudWatchLoggingDatabase
-import com.amplifyframework.logging.cloudwatch.db.LogEvent
+import com.amplifyframework.cloudwatch.common.db.CloudWatchLoggingDatabase
+import com.amplifyframework.cloudwatch.common.db.LogEvent
+import com.amplifyframework.cloudwatch.common.models.CloudWatchLogEvent
 import com.amplifyframework.logging.cloudwatch.models.AWSCloudWatchLoggingPluginConfiguration
-import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
 import io.mockk.CapturingSlot
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -50,7 +50,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, InternalAmplifyApi::class)
 @RunWith(RobolectricTestRunner::class)
 internal class CloudWatchLogManagerTest {
     private val pluginConfiguration = mockk<AWSCloudWatchLoggingPluginConfiguration>()
@@ -112,7 +112,7 @@ internal class CloudWatchLogManagerTest {
         val cloudwatchEvent = CloudWatchLogEvent(System.currentTimeMillis(), "Sample log")
         val logEvent = LogEvent(cloudwatchEvent.timestamp, cloudwatchEvent.message, 1L)
         every { cloudWatchLoggingDatabase.isCacheFull(any()) }.answers { true }
-        coEvery { cloudWatchLoggingDatabase.saveLogEvent(any()) }.answers { Uri.parse("something/1") }
+        coEvery { cloudWatchLoggingDatabase.saveLogEvent(any()) }.answers { 1L }
         coEvery {
             cloudWatchLoggingDatabase.queryAllEvents()
         } returns listOf(logEvent) andThen emptyList()

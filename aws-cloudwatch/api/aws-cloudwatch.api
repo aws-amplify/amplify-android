@@ -59,8 +59,12 @@ public final class com/amplifyframework/cloudwatch/AmplifyCloudWatchConfiguratio
 }
 
 public abstract class com/amplifyframework/cloudwatch/AmplifyCloudWatchException : com/amplifyframework/foundation/exceptions/AmplifyException {
+	public static final field Companion Lcom/amplifyframework/cloudwatch/AmplifyCloudWatchException$Companion;
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/amplifyframework/cloudwatch/AmplifyCloudWatchException$Companion {
 }
 
 public final class com/amplifyframework/cloudwatch/AmplifyCloudWatchServiceException : com/amplifyframework/cloudwatch/AmplifyCloudWatchException {

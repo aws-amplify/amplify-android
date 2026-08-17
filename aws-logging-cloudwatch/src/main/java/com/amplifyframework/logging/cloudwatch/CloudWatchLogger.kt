@@ -12,12 +12,15 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+@file:OptIn(InternalAmplifyApi::class)
+
 package com.amplifyframework.logging.cloudwatch
 
+import com.amplifyframework.annotations.InternalAmplifyApi
+import com.amplifyframework.cloudwatch.common.models.CloudWatchLogEvent
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.logging.LogLevel
 import com.amplifyframework.logging.Logger
-import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
 import java.util.Queue
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlinx.coroutines.CoroutineDispatcher

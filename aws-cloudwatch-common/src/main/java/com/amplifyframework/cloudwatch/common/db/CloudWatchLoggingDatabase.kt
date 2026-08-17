@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2026 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -12,60 +12,51 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.logging.cloudwatch.db
+@file:OptIn(InternalAmplifyApi::class)
+
+package com.amplifyframework.cloudwatch.common.db
 
 import android.content.ContentValues
 import android.content.Context
-import android.content.UriMatcher
 import android.database.Cursor
-import android.net.Uri
-import androidx.annotation.VisibleForTesting
-import androidx.core.net.toUri
-import com.amplifyframework.core.store.AmplifyKeyValueRepository
-import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
+import com.amplifyframework.annotations.InternalAmplifyApi
+import com.amplifyframework.cloudwatch.common.models.CloudWatchLogEvent
+import com.amplifyframework.foundation.store.AmplifyKeyValueRepository
 import java.util.UUID
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.zetetic.database.sqlcipher.SQLiteQueryBuilder
 
-internal class CloudWatchLoggingDatabase(
+/**
+ * SQLCipher-backed local buffer for CloudWatch log events. The database is encrypted with a
+ * randomly-generated passphrase persisted via [AmplifyKeyValueRepository].
+ */
+@InternalAmplifyApi
+class CloudWatchLoggingDatabase(
     private val context: Context,
-    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val databaseName: String = DEFAULT_DATABASE_NAME,
+    private val passphrasePreferencesName: String = DEFAULT_PASSPHRASE_PREFERENCES_NAME
 ) {
-    private val logEvents = 10
-    private val logEventsId = 20
     private val passphraseKey = "passphrase"
     private val mb = 1024 * 1024
     private val amplifyKeyValueRepository: AmplifyKeyValueRepository by lazy {
         AmplifyKeyValueRepository(
             context,
-            "awscloudwatchloggingdb"
+            passphrasePreferencesName
         )
     }
     private val database by lazy {
         System.loadLibrary("sqlcipher")
-        CloudWatchDatabaseHelper(context, getDatabasePassphrase()).writableDatabase
-    }
-    private val basePath = "cloudwatchlogevents"
-    private val contentUri: Uri
-    private val uriMatcher: UriMatcher
-
-    init {
-        val authority = context.applicationContext.packageName
-        contentUri = "content://$authority/$basePath".toUri()
-        uriMatcher = UriMatcher(UriMatcher.NO_MATCH)
-        // The Uri of LOG_EVENTS is for all records in the LogEventTable table.
-        uriMatcher.addURI(authority, basePath, logEvents)
-        // the URI of log_event_id is for a single record
-        uriMatcher.addURI(authority, "$basePath/#", logEventsId)
+        CloudWatchDatabaseHelper(context, databaseName, getDatabasePassphrase()).writableDatabase
     }
 
-    internal suspend fun saveLogEvent(event: CloudWatchLogEvent): Uri = withContext(coroutineDispatcher) {
+    suspend fun saveLogEvent(event: CloudWatchLogEvent): Long = withContext(coroutineDispatcher) {
         insertEvent(event)
     }
 
-    internal suspend fun queryAllEvents(): List<LogEvent> = withContext(coroutineDispatcher) {
+    suspend fun queryAllEvents(): List<LogEvent> = withContext(coroutineDispatcher) {
         val cloudWatchLogEvents = mutableListOf<LogEvent>()
         val cursor = query(null, null, null, LogEventTable.COLUMN_TIMESTAMP, "10000")
         cursor.use {
@@ -82,7 +73,7 @@ internal class CloudWatchLoggingDatabase(
         cloudWatchLogEvents
     }
 
-    internal suspend fun bulkDelete(eventIds: List<Long>) = withContext(coroutineDispatcher) {
+    suspend fun bulkDelete(eventIds: List<Long>) = withContext(coroutineDispatcher) {
         if (eventIds.isNotEmpty()) {
             val params = List(eventIds.size) { "?" }.joinToString(",")
             val whereClause = "${LogEventTable.COLUMN_ID} in ($params)"
@@ -94,8 +85,8 @@ internal class CloudWatchLoggingDatabase(
         }
     }
 
-    internal fun isCacheFull(cacheSizeInMB: Int): Boolean {
-        val path = context.getDatabasePath(CloudWatchDatabaseHelper.DATABASE_NAME)
+    fun isCacheFull(cacheSizeInMB: Int): Boolean {
+        val path = context.getDatabasePath(databaseName)
         return if (path.exists()) {
             path.length() >= cacheSizeInMB * mb
         } else {
@@ -103,16 +94,15 @@ internal class CloudWatchLoggingDatabase(
         }
     }
 
-    internal suspend fun clearDatabase() = withContext(coroutineDispatcher) {
+    suspend fun clearDatabase() = withContext(coroutineDispatcher) {
         database.delete(LogEventTable.TABLE_LOG_EVENT, null, null)
     }
 
-    private fun insertEvent(event: CloudWatchLogEvent): Uri {
+    private fun insertEvent(event: CloudWatchLogEvent): Long {
         val contentValues = ContentValues()
         contentValues.put(LogEventTable.COLUMN_TIMESTAMP, event.timestamp)
         contentValues.put(LogEventTable.COLUMN_MESSAGE, event.message)
-        val id = database.insertOrThrow(LogEventTable.TABLE_LOG_EVENT, null, contentValues)
-        return "$basePath/$id".toUri()
+        return database.insertOrThrow(LogEventTable.TABLE_LOG_EVENT, null, contentValues)
     }
 
     private fun query(
@@ -136,17 +126,22 @@ internal class CloudWatchLoggingDatabase(
         )
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     fun getDatabasePassphrase(): String = amplifyKeyValueRepository.get(passphraseKey) ?: kotlin.run {
         val passphrase = UUID.randomUUID().toString()
         // If the database is restored from backup and the passphrase key is not present,
         // this would result in the database file not getting loaded.
-        // To avoid this error, check to see if the database file exists and, if so, delete it and then recreate the database.
-        val path = context.getDatabasePath(CloudWatchDatabaseHelper.DATABASE_NAME)
+        // To avoid this error, check to see if the database file exists and, if so, delete it and then recreate it.
+        val path = context.getDatabasePath(databaseName)
         if (path.exists()) {
             path.delete()
         }
         amplifyKeyValueRepository.put(passphraseKey, passphrase)
         passphrase
+    }
+
+    internal companion object {
+        // Defaults preserve the v2 plugin's store so it continues reading its existing encrypted DB.
+        internal const val DEFAULT_DATABASE_NAME = "amplify.logging.cloudwatch.db"
+        internal const val DEFAULT_PASSPHRASE_PREFERENCES_NAME = "awscloudwatchloggingdb"
     }
 }

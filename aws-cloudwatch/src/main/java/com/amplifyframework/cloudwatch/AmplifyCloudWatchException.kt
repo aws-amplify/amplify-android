@@ -14,6 +14,7 @@
  */
 package com.amplifyframework.cloudwatch
 
+import aws.sdk.kotlin.services.cloudwatchlogs.model.CloudWatchLogsException
 import com.amplifyframework.foundation.exceptions.AmplifyException
 
 /**
@@ -34,7 +35,24 @@ sealed class AmplifyCloudWatchException(
     message: String,
     recoverySuggestion: String,
     cause: Throwable? = null
-) : AmplifyException(message, recoverySuggestion, cause)
+) : AmplifyException(message, recoverySuggestion, cause) {
+    companion object {
+        /** Maps an arbitrary [error] to the most appropriate [AmplifyCloudWatchException] subtype. */
+        internal fun from(error: Throwable): AmplifyCloudWatchException = when (error) {
+            is AmplifyCloudWatchException -> error
+            is CloudWatchLogsException -> AmplifyCloudWatchServiceException(
+                message = error.message ?: "A CloudWatch Logs API call failed.",
+                recoverySuggestion = "Verify the log group name, region, and credentials, then retry.",
+                cause = error
+            )
+            else -> AmplifyCloudWatchUnknownException(
+                message = error.message ?: "An unknown error occurred.",
+                recoverySuggestion = "See the attached exception for more details.",
+                cause = error
+            )
+        }
+    }
+}
 
 /** Local file I/O or log-rotation error. */
 class AmplifyCloudWatchStorageException(
