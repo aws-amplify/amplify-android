@@ -2,6 +2,8 @@
 
 ### Features
 - **analytics:** add Event Enrichment client module ([#3337](https://github.com/aws-amplify/amplify-android/issues/3337))
+- **notifications:** add Amplify Connect client for Customer Profiles ([#3341](https://github.com/aws-amplify/amplify-android/issues/3341))
+
 
 ### Bug Fixes
 - **all:** Publish dependencies under proper scoping ([#3362](https://github.com/aws-amplify/amplify-android/issues/3362))
