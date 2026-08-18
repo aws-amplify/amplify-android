@@ -25,6 +25,7 @@ import com.amplifyframework.auth.cognito.AuthConfiguration
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.StoreClientBehavior
 import com.amplifyframework.auth.cognito.mockSignedInData
+import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.EventDispatcher
 import com.amplifyframework.statemachine.StateMachineEvent
@@ -77,6 +78,37 @@ class FetchAuthSessionCognitoActionsTest {
     }
 
     private lateinit var authEnvironment: AuthEnvironment
+
+    private val notAuthorizedSignedInData = mockSignedInData(
+        username = "username",
+        cognitoUserPoolTokens = CognitoUserPoolTokens(
+            accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
+                "eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ." +
+                "XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o",
+            idToken = "old_id",
+            refreshToken = "refresh_token",
+            expiration = 0
+        )
+    )
+
+    private fun capturedThrownError(): Exception {
+        val event = capturedEvent.captured
+        event.shouldBeInstanceOf<AuthorizationEvent>()
+        val eventType = event.eventType
+        eventType.shouldBeInstanceOf<AuthorizationEvent.EventType.ThrowError>()
+        return eventType.exception
+    }
+
+    /**
+     * The service message travels in [ServiceErrorMetadata], which the wire deserializer populates and the
+     * generated builder does not, so stub it rather than constructing the exception directly. Note that
+     * NotAuthorizedException.message is synthesized from error metadata and is not the service message.
+     */
+    private fun notAuthorizedWithServiceMessage(serviceMessage: String?) = mockk<NotAuthorizedException> {
+        every { sdkErrorMetadata } returns mockk {
+            every { errorMessage } returns serviceMessage
+        }
+    }
 
     @Before
     fun setup() {
@@ -191,6 +223,61 @@ class FetchAuthSessionCognitoActionsTest {
             .execute(dispatcher, authEnvironment)
 
         capturedEvent.captured.shouldBeInstanceOf<AuthorizationEvent>()
+    }
+
+    @Test
+    fun `refreshUserPoolTokensAction reports the reason Cognito rejected the refresh token`() = runTest {
+        // Cognito uses NotAuthorizedException for several unrelated failures and only distinguishes them in
+        // the service message, so the message must reach the caller for the failures to be told apart.
+        val reasons = listOf(
+            "Refresh Token has expired",
+            "Refresh Token has been revoked",
+            "Invalid Refresh Token."
+        )
+
+        reasons.forEach { reason ->
+            val serviceException = notAuthorizedWithServiceMessage(reason)
+            coEvery {
+                cognitoIdentityProviderClientMock.getTokensFromRefreshToken(any())
+            } throws serviceException
+
+            FetchAuthSessionCognitoActions.refreshUserPoolTokensAction(notAuthorizedSignedInData)
+                .execute(dispatcher, authEnvironment)
+
+            val error = capturedThrownError()
+            error.shouldBeInstanceOf<SessionExpiredException>()
+            error.message shouldBe "Your session has expired. ($reason)"
+            // The originating exception stays reachable for callers that need the raw service error.
+            error.cause shouldBe serviceException
+        }
+    }
+
+    @Test
+    fun `refreshUserPoolTokensAction falls back to the default message when Cognito sends no reason`() = runTest {
+        coEvery {
+            cognitoIdentityProviderClientMock.getTokensFromRefreshToken(any())
+        } throws notAuthorizedWithServiceMessage(null)
+
+        FetchAuthSessionCognitoActions.refreshUserPoolTokensAction(notAuthorizedSignedInData)
+            .execute(dispatcher, authEnvironment)
+
+        val error = capturedThrownError()
+        error.shouldBeInstanceOf<SessionExpiredException>()
+        error.message shouldBe "Your session has expired."
+    }
+
+    @Test
+    fun `refreshUserPoolTokensAction ignores a blank reason from Cognito`() = runTest {
+        coEvery {
+            cognitoIdentityProviderClientMock.getTokensFromRefreshToken(any())
+        } throws notAuthorizedWithServiceMessage("   ")
+
+        FetchAuthSessionCognitoActions.refreshUserPoolTokensAction(notAuthorizedSignedInData)
+            .execute(dispatcher, authEnvironment)
+
+        val error = capturedThrownError()
+        error.shouldBeInstanceOf<SessionExpiredException>()
+        error.message shouldBe "Your session has expired."
     }
 
     @Test

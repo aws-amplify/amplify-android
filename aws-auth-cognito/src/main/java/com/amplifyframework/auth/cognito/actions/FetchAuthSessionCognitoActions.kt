@@ -78,7 +78,10 @@ internal object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                     RefreshSessionEvent(RefreshSessionEvent.EventType.Refreshed(updatedSignedInData))
                 }
             } catch (notAuthorized: aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException) {
-                val error = SessionExpiredException(cause = notAuthorized)
+                val error = SessionExpiredException(
+                    message = refreshRejectedMessage(notAuthorized),
+                    cause = notAuthorized
+                )
                 AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(error))
             } catch (e: Exception) {
                 AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(e))
@@ -170,4 +173,29 @@ internal object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
             logger.verbose("$id Sending event ${evt.type}")
             dispatcher.send(evt)
         }
+
+    /**
+     * Cognito rejects a refresh token with NotAuthorizedException for several distinct reasons: the token
+     * has expired, it has been revoked, or it is no longer valid for the device it is bound to. The reason
+     * is only conveyed in the service message, so include it in the exception message.
+     *
+     * Without it, every rejection is reported as "Your session has expired.", which is inaccurate for
+     * device-binding and revocation failures and leaves all three modes indistinguishable in logs and
+     * crash reports. The originating exception remains available as [Throwable.cause].
+     *
+     * Reads the modeled service message rather than [Throwable.message], which the SDK synthesizes from
+     * error metadata when the service sends no message and would contribute only noise here.
+     */
+    private fun refreshRejectedMessage(
+        notAuthorized: aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException
+    ): String {
+        val reason = notAuthorized.sdkErrorMetadata.errorMessage?.trim()?.takeIf { it.isNotEmpty() }
+        return if (reason == null) {
+            DEFAULT_SESSION_EXPIRED_MESSAGE
+        } else {
+            "$DEFAULT_SESSION_EXPIRED_MESSAGE ($reason)"
+        }
+    }
+
+    private const val DEFAULT_SESSION_EXPIRED_MESSAGE = "Your session has expired."
 }
