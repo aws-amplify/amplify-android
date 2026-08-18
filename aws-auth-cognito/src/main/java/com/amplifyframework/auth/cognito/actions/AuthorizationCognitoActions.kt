@@ -18,6 +18,7 @@ package com.amplifyframework.auth.cognito.actions
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.exceptions.ConfigurationException
+import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
@@ -44,12 +45,10 @@ internal object AuthorizationCognitoActions : AuthorizationActions {
         val evt = configuration.identityPool?.poolId?.let {
             FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(LoginsMapProvider.UnAuthLogins()))
         } ?: AuthorizationEvent(
-            AuthorizationEvent.EventType.ThrowError(
-                ConfigurationException(
-                    "Identity Pool not configured.",
-                    "Please check amplifyconfiguration.json file."
-                )
-            )
+            // No identity pool means guest credentials are impossible, so for a signed-out user the
+            // accurate answer is that they are signed out. Reporting a configuration error here would
+            // suggest the app is misconfigured, when a user pool only configuration is perfectly valid.
+            AuthorizationEvent.EventType.ThrowError(SignedOutException())
         )
         logger.verbose("$id Sending event ${evt.type}")
         dispatcher.send(evt)
