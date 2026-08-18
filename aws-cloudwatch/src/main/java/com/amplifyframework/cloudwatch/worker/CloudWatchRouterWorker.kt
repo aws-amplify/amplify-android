@@ -39,7 +39,7 @@ internal class CloudWatchRouterWorker(appContext: Context, private val parameter
     companion object {
         internal const val WORKER_CLASS_NAME = "WORKER_CLASS_NAME"
         internal const val WORKER_ID = "WORKER_ID"
-        internal const val WORKER_FACTORY_KEY = "AWSCloudwatchFactory"
+        internal const val WORKER_FACTORY_KEY = "AmplifyCloudWatchFactory"
         private var isWorkerFactoriesInitialized: Boolean = false
         val workerFactories = object : AbstractMutableMap<String, CloudWatchWorkerFactory>() {
 

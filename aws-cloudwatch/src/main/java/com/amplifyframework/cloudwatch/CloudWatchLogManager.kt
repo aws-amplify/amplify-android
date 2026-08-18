@@ -29,7 +29,8 @@ import aws.sdk.kotlin.services.cloudwatchlogs.model.DescribeLogStreamsRequest
 import aws.sdk.kotlin.services.cloudwatchlogs.model.InputLogEvent
 import aws.sdk.kotlin.services.cloudwatchlogs.model.PutLogEventsRequest
 import com.amplifyframework.annotations.InternalAmplifyApi
-import com.amplifyframework.cloudwatch.common.db.CloudWatchLoggingDatabase
+import com.amplifyframework.cloudwatch.common.CloudWatchPreferences
+import com.amplifyframework.cloudwatch.common.db.CloudWatchDatabase
 import com.amplifyframework.cloudwatch.common.db.LogEvent
 import com.amplifyframework.cloudwatch.common.models.CloudWatchLogEvent
 import com.amplifyframework.cloudwatch.worker.CloudWatchLogsSyncWorker
@@ -49,11 +50,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * Engine for buffering and delivering CloudWatch log events for [AmplifyCloudWatchClient]. Ported
- * from the v2 `AWSCloudWatchLoggingPlugin`, decoupled from `:core`: failures are reported through
- * the [onWriteLogFailure] / [onFlushLogFailure] callbacks (instead of Hub), user identity is set
- * explicitly via [setUserIdentifier] (instead of resolved from Auth), and diagnostics use the
- * foundation logger. Log persistence is delegated to the shared `:aws-cloudwatch-common` store.
+ * Engine for buffering and delivering CloudWatch log events for [AmplifyCloudWatchClient]. Failures
+ * are reported through the [onWriteLogFailure] / [onFlushLogFailure] callbacks, user identity is set
+ * explicitly via [setUserIdentifier], and log persistence is delegated to the shared
+ * `:aws-cloudwatch-common` store.
  *
  * @param flushIntervalInSeconds interval between automatic flushes; `null` disables automatic
  *   flushing (used for `FlushStrategy.None`).
@@ -68,7 +68,7 @@ internal class CloudWatchLogManager(
     passphrasePreferencesName: String,
     private val onWriteLogFailure: (context: String?, cause: Throwable?) -> Unit,
     private val onFlushLogFailure: (context: String?, cause: Throwable?) -> Unit,
-    private val cloudWatchLoggingDatabase: CloudWatchLoggingDatabase = CloudWatchLoggingDatabase(
+    private val cloudWatchLoggingDatabase: CloudWatchDatabase = CloudWatchDatabase(
         context,
         databaseName = databaseName,
         passphrasePreferencesName = passphrasePreferencesName
@@ -76,7 +76,6 @@ internal class CloudWatchLogManager(
     private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
 
-    private val deviceIdKey = "unique_device_id"
     private var stopSync = false
 
     @Volatile
@@ -107,7 +106,7 @@ internal class CloudWatchLogManager(
 
     /**
      * Update the current user identifier. Pending events are flushed to the previous user's stream
-     * before the identifier changes, mirroring the v2 plugin's sign-in behavior.
+     * before the identifier changes.
      */
     fun setUserIdentifier(identifier: String?) {
         coroutineScope.launch {
@@ -270,16 +269,13 @@ internal class CloudWatchLogManager(
     }
 
     private fun uniqueDeviceId(): String {
-        val sharedPreferences = context.getSharedPreferences(SHARED_PREFERENCE_FILENAME, Context.MODE_PRIVATE)
+        val deviceIdKey = CloudWatchPreferences.DEVICE_ID_KEY
+        val sharedPreferences =
+            context.getSharedPreferences(CloudWatchPreferences.SHARED_PREFERENCE_FILENAME, Context.MODE_PRIVATE)
         return sharedPreferences.getString(deviceIdKey, null) ?: UUID.randomUUID().toString().also { id ->
             sharedPreferences.edit().putString(deviceIdKey, id).apply()
         }
     }
 
     private fun isCacheFull() = cloudWatchLoggingDatabase.isCacheFull(localStoreMaxSizeInMB)
-
-    internal companion object {
-        // Reused from the v2 plugin so the persisted device id carries across a v2 -> v3 migration.
-        internal const val SHARED_PREFERENCE_FILENAME = "com.amplify.logging.a3fa4188-0ac5-11ee-be56-0242ac120002"
-    }
 }

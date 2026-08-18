@@ -30,7 +30,8 @@ import aws.sdk.kotlin.services.cloudwatchlogs.model.DescribeLogStreamsRequest
 import aws.sdk.kotlin.services.cloudwatchlogs.model.InputLogEvent
 import aws.sdk.kotlin.services.cloudwatchlogs.model.PutLogEventsRequest
 import com.amplifyframework.annotations.InternalAmplifyApi
-import com.amplifyframework.cloudwatch.common.db.CloudWatchLoggingDatabase
+import com.amplifyframework.cloudwatch.common.CloudWatchPreferences
+import com.amplifyframework.cloudwatch.common.db.CloudWatchDatabase
 import com.amplifyframework.cloudwatch.common.db.LogEvent
 import com.amplifyframework.cloudwatch.common.models.CloudWatchLogEvent
 import com.amplifyframework.core.Amplify
@@ -61,12 +62,15 @@ internal class CloudWatchLogManager(
     private val pluginConfiguration: AWSCloudWatchLoggingPluginConfiguration,
     private val awsCloudWatchLogsClient: CloudWatchLogsClient,
     private val loggingConstraintsResolver: LoggingConstraintsResolver,
-    private val cloudWatchLoggingDatabase: CloudWatchLoggingDatabase = CloudWatchLoggingDatabase(context),
+    private val cloudWatchLoggingDatabase: CloudWatchDatabase = CloudWatchDatabase(
+        context,
+        databaseName = "amplify.logging.cloudwatch.db",
+        passphrasePreferencesName = "awscloudwatchloggingdb"
+    ),
     private val customCognitoCredentialsProvider: CustomCognitoCredentialsProvider = CustomCognitoCredentialsProvider(),
     private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val logStreamNameFormatter: LogStreamNameFormatter? = null
 ) {
-    private val deviceIdKey = "unique_device_id"
     private var stopSync = false
     private var userIdentityId: String? = null
         set(value) {
@@ -228,7 +232,7 @@ internal class CloudWatchLogManager(
         coroutineScope.launch {
             cloudWatchLoggingDatabase.clearDatabase()
             context.getSharedPreferences(
-                AWSCloudWatchLoggingPlugin.SHARED_PREFERENCE_FILENAME,
+                CloudWatchPreferences.SHARED_PREFERENCE_FILENAME,
                 Context.MODE_PRIVATE
             ).edit { remove(LoggingConstraintsResolver.REMOTE_LOGGING_CONSTRAINTS_KEY) }
         }
@@ -277,8 +281,9 @@ internal class CloudWatchLogManager(
     }
 
     private fun uniqueDeviceId(): String {
+        val deviceIdKey = CloudWatchPreferences.DEVICE_ID_KEY
         val sharedPreferences =
-            context.getSharedPreferences(AWSCloudWatchLoggingPlugin.SHARED_PREFERENCE_FILENAME, Context.MODE_PRIVATE)
+            context.getSharedPreferences(CloudWatchPreferences.SHARED_PREFERENCE_FILENAME, Context.MODE_PRIVATE)
         return sharedPreferences.getString(deviceIdKey, null) ?: UUID.randomUUID().toString().also { id ->
             sharedPreferences.edit { putString(deviceIdKey, id) }
         }

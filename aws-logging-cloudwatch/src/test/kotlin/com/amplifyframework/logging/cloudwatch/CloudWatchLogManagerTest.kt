@@ -29,7 +29,8 @@ import aws.sdk.kotlin.services.cloudwatchlogs.model.PutLogEventsResponse
 import aws.sdk.kotlin.services.cloudwatchlogs.model.RejectedLogEventsInfo
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.AuthUser
-import com.amplifyframework.cloudwatch.common.db.CloudWatchLoggingDatabase
+import com.amplifyframework.cloudwatch.common.CloudWatchPreferences
+import com.amplifyframework.cloudwatch.common.db.CloudWatchDatabase
 import com.amplifyframework.cloudwatch.common.db.LogEvent
 import com.amplifyframework.cloudwatch.common.models.CloudWatchLogEvent
 import com.amplifyframework.logging.cloudwatch.models.AWSCloudWatchLoggingPluginConfiguration
@@ -57,7 +58,7 @@ internal class CloudWatchLogManagerTest {
     private val loggingConstraintsResolver = mockk<LoggingConstraintsResolver>()
     private val customCognitoCredentialsProvider = mockk<CustomCognitoCredentialsProvider>()
     private val cloudWatchLogsClient = mockk<CloudWatchLogsClient>()
-    private val cloudWatchLoggingDatabase = mockk<CloudWatchLoggingDatabase>()
+    private val cloudWatchLoggingDatabase = mockk<CloudWatchDatabase>()
     private lateinit var cloudWatchLogManager: CloudWatchLogManager
     private var context: Context = ApplicationProvider.getApplicationContext()
     private lateinit var userIdSlot: CapturingSlot<String>
@@ -145,14 +146,17 @@ internal class CloudWatchLogManagerTest {
 
     @Test
     fun `test onStopSync`() = runTest {
-        context.getSharedPreferences(AWSCloudWatchLoggingPlugin.SHARED_PREFERENCE_FILENAME, Context.MODE_PRIVATE).edit()
+        context.getSharedPreferences(
+            CloudWatchPreferences.SHARED_PREFERENCE_FILENAME,
+            Context.MODE_PRIVATE
+        ).edit()
             .putString(LoggingConstraintsResolver.REMOTE_LOGGING_CONSTRAINTS_KEY, "{}").apply()
         coEvery { cloudWatchLoggingDatabase.clearDatabase() }.answers { 1 }
         cloudWatchLogManager.stopSync()
         coVerify(exactly = 1) { cloudWatchLoggingDatabase.clearDatabase() }
         assertFalse(
             context.getSharedPreferences(
-                AWSCloudWatchLoggingPlugin.SHARED_PREFERENCE_FILENAME,
+                CloudWatchPreferences.SHARED_PREFERENCE_FILENAME,
                 Context.MODE_PRIVATE
             ).contains(LoggingConstraintsResolver.REMOTE_LOGGING_CONSTRAINTS_KEY)
         )

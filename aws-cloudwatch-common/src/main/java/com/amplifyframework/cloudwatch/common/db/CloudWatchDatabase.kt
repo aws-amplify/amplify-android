@@ -33,11 +33,11 @@ import net.zetetic.database.sqlcipher.SQLiteQueryBuilder
  * randomly-generated passphrase persisted via [AmplifyKeyValueRepository].
  */
 @InternalAmplifyApi
-class CloudWatchLoggingDatabase(
+class CloudWatchDatabase(
     private val context: Context,
-    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val databaseName: String = DEFAULT_DATABASE_NAME,
-    private val passphrasePreferencesName: String = DEFAULT_PASSPHRASE_PREFERENCES_NAME
+    private val databaseName: String,
+    private val passphrasePreferencesName: String,
+    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private val passphraseKey = "passphrase"
     private val mb = 1024 * 1024
@@ -137,11 +137,5 @@ class CloudWatchLoggingDatabase(
         }
         amplifyKeyValueRepository.put(passphraseKey, passphrase)
         passphrase
-    }
-
-    internal companion object {
-        // Defaults preserve the v2 plugin's store so it continues reading its existing encrypted DB.
-        internal const val DEFAULT_DATABASE_NAME = "amplify.logging.cloudwatch.db"
-        internal const val DEFAULT_PASSPHRASE_PREFERENCES_NAME = "awscloudwatchloggingdb"
     }
 }

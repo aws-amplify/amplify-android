@@ -46,9 +46,8 @@ import kotlinx.coroutines.launch
 private const val EVENTS_BUFFER_CAPACITY = 64
 
 /**
- * Local store identity for the standalone client. Distinct from the v2 `AWSCloudWatchLoggingPlugin`
- * store (`amplify.logging.cloudwatch.db` / `awscloudwatchloggingdb`) so the two never read or write
- * the same on-device buffer, mirroring the Swift client's separate `amplify-cloudwatch-client` folder.
+ * Names for the client's own encrypted on-device store (database + passphrase preferences), kept
+ * distinct from any other CloudWatch logging store on the device.
  */
 private const val CLIENT_DATABASE_NAME = "amplify.cloudwatch.client.db"
 private const val CLIENT_PASSPHRASE_PREFERENCES_NAME = "awscloudwatchclientdb"

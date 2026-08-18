@@ -30,7 +30,7 @@ import aws.sdk.kotlin.services.cloudwatchlogs.model.PutLogEventsRequest
 import aws.sdk.kotlin.services.cloudwatchlogs.model.PutLogEventsResponse
 import aws.sdk.kotlin.services.cloudwatchlogs.model.RejectedLogEventsInfo
 import com.amplifyframework.annotations.InternalAmplifyApi
-import com.amplifyframework.cloudwatch.common.db.CloudWatchLoggingDatabase
+import com.amplifyframework.cloudwatch.common.db.CloudWatchDatabase
 import com.amplifyframework.cloudwatch.common.db.LogEvent
 import com.amplifyframework.cloudwatch.common.models.CloudWatchLogEvent
 import com.amplifyframework.cloudwatch.worker.CloudWatchLogsSyncWorker
@@ -60,7 +60,7 @@ import org.robolectric.RobolectricTestRunner
 internal class CloudWatchLogManagerTest {
 
     private val cloudWatchLogsClient = mockk<CloudWatchLogsClient>()
-    private val database = mockk<CloudWatchLoggingDatabase>()
+    private val database = mockk<CloudWatchDatabase>()
     private val context: Context = ApplicationProvider.getApplicationContext()
 
     private val writeFailures = mutableListOf<Throwable?>()

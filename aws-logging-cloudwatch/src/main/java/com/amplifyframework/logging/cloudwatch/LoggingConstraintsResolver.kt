@@ -12,6 +12,8 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+@file:OptIn(InternalAmplifyApi::class)
+
 package com.amplifyframework.logging.cloudwatch
 
 import android.content.Context
@@ -23,6 +25,8 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import com.amplifyframework.annotations.InternalAmplifyApi
+import com.amplifyframework.cloudwatch.common.CloudWatchPreferences
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.logging.LogLevel
@@ -112,7 +116,7 @@ internal class LoggingConstraintsResolver internal constructor(
     private fun saveRemoteConstraintsToSharedPreference(loggingConstraint: LoggingConstraints) {
         context?.let {
             val sharedPreferences =
-                it.getSharedPreferences(AWSCloudWatchLoggingPlugin.SHARED_PREFERENCE_FILENAME, Context.MODE_PRIVATE)
+                it.getSharedPreferences(CloudWatchPreferences.SHARED_PREFERENCE_FILENAME, Context.MODE_PRIVATE)
             sharedPreferences.edit {
                 putString(REMOTE_LOGGING_CONSTRAINTS_KEY, LoggingConstraints.toJsonString(loggingConstraint))
             }
@@ -121,7 +125,7 @@ internal class LoggingConstraintsResolver internal constructor(
 
     private fun getRemoteConstraintsFromSharedPreference(): LoggingConstraints? = context?.let {
         val remoteConstraints = it.getSharedPreferences(
-            AWSCloudWatchLoggingPlugin.SHARED_PREFERENCE_FILENAME,
+            CloudWatchPreferences.SHARED_PREFERENCE_FILENAME,
             Context.MODE_PRIVATE
         )
             .getString(REMOTE_LOGGING_CONSTRAINTS_KEY, null)

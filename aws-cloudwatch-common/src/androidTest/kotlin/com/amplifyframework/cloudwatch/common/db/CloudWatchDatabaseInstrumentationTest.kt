@@ -38,10 +38,15 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 @OptIn(ExperimentalCoroutinesApi::class, InternalAmplifyApi::class)
-class CloudWatchLoggingDatabaseInstrumentationTest : DeviceFarmTestBase() {
+class CloudWatchDatabaseInstrumentationTest : DeviceFarmTestBase() {
     private val context = InstrumentationRegistry.getInstrumentation().context
     private val testCoroutine = UnconfinedTestDispatcher()
-    private val loggingDbClass = CloudWatchLoggingDatabase(context, testCoroutine)
+    private val loggingDbClass = CloudWatchDatabase(
+        context,
+        databaseName = "test.cloudwatch.logging.db",
+        passphrasePreferencesName = "test.cloudwatch.prefs",
+        coroutineDispatcher = testCoroutine
+    )
 
     private val testTimestamp1 = Instant.now().epochSecond
     private val testTimestamp2 = Instant.now().epochSecond + 300
