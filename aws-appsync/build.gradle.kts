@@ -24,12 +24,12 @@ android {
 
 dependencies {
     api(project(":core"))
-    implementation(project(":aws-api-appsync"))
+    api(libs.okhttp)
+    api(project(":foundation"))
 
-    implementation(libs.okhttp)
+    implementation(project(":aws-api-appsync"))
     implementation(libs.gson)
     implementation(libs.kotlin.coroutines)
-    api(project(":foundation"))
     implementation(project(":foundation-bridge"))
 
     testImplementation(libs.bundles.test.unit)
