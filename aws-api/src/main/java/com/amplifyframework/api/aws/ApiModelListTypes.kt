@@ -28,6 +28,7 @@ import com.amplifyframework.core.model.PaginationToken
 import com.amplifyframework.core.model.query.predicate.QueryField
 import com.amplifyframework.core.model.query.predicate.QueryPredicate
 import com.amplifyframework.core.model.query.predicate.QueryPredicates
+import com.amplifyframework.util.TypeMaker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -90,6 +91,7 @@ internal class ApiLazyModelList<out M : Model> constructor(
         AppSyncGraphQLRequestFactory.buildModelPageQuery(
             clazz,
             queryPredicate,
+            TypeMaker.getParameterizedType(ApiModelPage::class.java, clazz),
             (paginationToken as? ApiPaginationToken)?.nextToken
         )
 

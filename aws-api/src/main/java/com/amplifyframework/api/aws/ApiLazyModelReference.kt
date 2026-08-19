@@ -24,7 +24,6 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.NullableConsumer
 import com.amplifyframework.core.model.LazyModelReference
 import com.amplifyframework.core.model.Model
-import com.amplifyframework.core.model.ModelSchema
 import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -90,22 +89,7 @@ internal class ApiLazyModelReference<M : Model> internal constructor(
             }
 
             return try {
-                val modelSchema = ModelSchema.fromModelClass(clazz)
-                val primaryIndexFields = modelSchema.primaryIndexFields
-                val variables = primaryIndexFields.map { key ->
-                    // Find target field to pull type info
-                    val targetField = requireNotNull(modelSchema.fields[key])
-                    val requiredSuffix = if (targetField.isRequired) "!" else ""
-                    val targetTypeString = "${targetField.targetType}$requiredSuffix"
-                    val value = requireNotNull(keyMap[key])
-                    GraphQLRequestVariable(key, value, targetTypeString)
-                }
-
-                val request: GraphQLRequest<M?> = AppSyncGraphQLRequestFactory.buildQueryInternal(
-                    clazz,
-                    null,
-                    *variables.toTypedArray()
-                )
+                val request: GraphQLRequest<M?> = AppSyncGraphQLRequestFactory.buildQueryFromKeyMap(clazz, keyMap)
 
                 val value = query(
                     apiCategory,
