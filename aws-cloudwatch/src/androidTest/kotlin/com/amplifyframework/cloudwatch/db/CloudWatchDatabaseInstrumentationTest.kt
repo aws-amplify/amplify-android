@@ -12,12 +12,12 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.cloudwatch.common.db
+package com.amplifyframework.cloudwatch.db
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.amplifyframework.annotations.InternalAmplifyApi
-import com.amplifyframework.cloudwatch.common.models.CloudWatchLogEvent
+import com.amplifyframework.cloudwatch.models.CloudWatchLogEvent
 import com.amplifyframework.testutils.DeviceFarmTestBase
 import io.kotest.matchers.Matcher
 import io.kotest.matchers.MatcherResult

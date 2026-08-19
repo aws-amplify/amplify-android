@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2026 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -12,14 +12,10 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.core.store
+package com.amplifyframework.cloudwatch.models
 
-import java.util.concurrent.ConcurrentHashMap
+import com.amplifyframework.annotations.InternalAmplifyApi
 
-internal object InMemoryKeyValueRepositoryProvider {
-    private val inMemoryRepositories = ConcurrentHashMap<String, InMemoryKeyValueRepository>()
-
-    @Synchronized
-    fun getKeyValueRepository(name: String): InMemoryKeyValueRepository =
-        inMemoryRepositories.getOrPut(name) { InMemoryKeyValueRepository() }
-}
+/** A log event awaiting delivery to CloudWatch Logs. */
+@InternalAmplifyApi
+data class CloudWatchLogEvent(val timestamp: Long, val message: String)

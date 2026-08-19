@@ -31,7 +31,7 @@ import java.io.File
 import java.security.KeyStore
 import java.util.UUID
 
-internal class EncryptedKeyValueRepository @VisibleForTesting constructor(
+class EncryptedKeyValueRepository @VisibleForTesting constructor(
     private val context: Context,
     private val sharedPreferencesName: String,
     private val defaultMasterKeySpec: KeyGenParameterSpec,
@@ -198,6 +198,12 @@ internal class EncryptedKeyValueRepository @VisibleForTesting constructor(
         // We create our own KeyGenParameterSpec that is exactly like MasterKeys.AES256_GCM_SPEC except with a different
         // alias. This allows us to safely delete this key should it become corrupted without potentially impacting any
         // other part of the customer's application.
+        //
+        // NOTE: this single alias is intentionally shared by every Amplify component that persists encrypted data
+        // (Cognito credentials, Pinpoint, the standalone CloudWatch client, etc.). If the key becomes corrupted, the
+        // recovery path below deletes it, which resets ALL Amplify-encrypted stores together. This is an accepted
+        // tradeoff: a shared, centrally-managed key avoids duplicate keystore-management implementations. It does not
+        // affect any non-Amplify EncryptedSharedPreferences, which use the platform default master key.
         private fun getAmplifyMasterKeySpec() = KeyGenParameterSpec.Builder(
             "amplify_master_key",
             KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT

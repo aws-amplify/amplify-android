@@ -25,7 +25,7 @@ import androidx.work.WorkManager
 import androidx.work.testing.SynchronousExecutor
 import androidx.work.testing.WorkManagerTestInitHelper
 import com.amplifyframework.annotations.InternalAmplifyApi
-import com.amplifyframework.cloudwatch.common.CloudWatchPreferences
+import com.amplifyframework.cloudwatch.CloudWatchPreferences
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.logging.LogLevel

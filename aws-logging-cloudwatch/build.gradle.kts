@@ -28,7 +28,7 @@ android {
 dependencies {
     api(project(":core"))
     implementation(project(":aws-core"))
-    implementation(project(":aws-cloudwatch-common"))
+    implementation(project(":aws-cloudwatch"))
 
     implementation(libs.androidx.security)
     api(platform(libs.aws.bom))

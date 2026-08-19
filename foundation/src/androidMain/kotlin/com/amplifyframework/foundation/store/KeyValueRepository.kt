@@ -14,13 +14,10 @@
  */
 package com.amplifyframework.foundation.store
 
-import com.amplifyframework.annotations.InternalAmplifyApi
-
 /**
  * A simple key-value store abstraction that lets standalone clients persist small secrets
  * (for example a database passphrase).
  */
-@InternalAmplifyApi
 interface KeyValueRepository {
     fun put(dataKey: String, value: String?)
     fun get(dataKey: String): String?

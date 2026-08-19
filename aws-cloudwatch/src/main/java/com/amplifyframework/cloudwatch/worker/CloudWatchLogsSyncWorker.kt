@@ -12,18 +12,25 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+@file:OptIn(InternalAmplifyApi::class)
+
 package com.amplifyframework.cloudwatch.worker
 
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.cloudwatch.CloudWatchLogManager
+import com.amplifyframework.foundation.logging.AmplifyLogging
+import kotlinx.coroutines.CancellationException
 
 internal class CloudWatchLogsSyncWorker(
     context: Context,
     workerParameters: WorkerParameters,
     private val cloudWatchLogManager: CloudWatchLogManager
 ) : CoroutineWorker(context, workerParameters) {
+
+    private val logger = AmplifyLogging.logger<CloudWatchLogsSyncWorker>()
 
     companion object {
         // Distinct from the v2 plugin's unique-work name so the two never clobber each other's
@@ -34,8 +41,14 @@ internal class CloudWatchLogsSyncWorker(
     override suspend fun doWork(): Result = try {
         cloudWatchLogManager.syncLogEventsWithCloudwatch()
         Result.success()
+    } catch (exception: CancellationException) {
+        throw exception
     } catch (exception: Exception) {
-        Result.retry()
+        // Report success and rely on the re-enqueue below for the next attempt: enqueueSync() uses
+        // ExistingWorkPolicy.REPLACE on the same unique name, so it would supersede Result.retry()
+        // anyway. The interval re-enqueue is the single retry path.
+        logger.warn(exception) { "Scheduled CloudWatch flush failed; will retry on the next interval" }
+        Result.success()
     } finally {
         cloudWatchLogManager.enqueueSync()
     }

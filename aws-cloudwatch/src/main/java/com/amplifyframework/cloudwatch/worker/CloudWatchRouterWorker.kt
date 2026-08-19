@@ -56,7 +56,10 @@ internal class CloudWatchRouterWorker(appContext: Context, private val parameter
     }
 
     override fun startWork(): ListenableFuture<Result> {
-        val delegateWorkerFactory: CloudWatchWorkerFactory? = workerFactories[WORKER_FACTORY_KEY]
+        // Route to the factory registered for this work's log group (see CloudWatchLogManager), so multiple
+        // clients don't hijack each other. Falls back to the shared key if no id was provided.
+        val factoryKey = parameter.inputData.getString(WORKER_ID) ?: WORKER_FACTORY_KEY
+        val delegateWorkerFactory: CloudWatchWorkerFactory? = workerFactories[factoryKey]
         delegateWorker = delegateWorkerFactory?.createWorker(
             applicationContext,
             workerClassName,

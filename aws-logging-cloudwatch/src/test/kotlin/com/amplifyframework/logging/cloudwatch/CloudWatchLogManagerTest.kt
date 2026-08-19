@@ -29,10 +29,10 @@ import aws.sdk.kotlin.services.cloudwatchlogs.model.PutLogEventsResponse
 import aws.sdk.kotlin.services.cloudwatchlogs.model.RejectedLogEventsInfo
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.AuthUser
-import com.amplifyframework.cloudwatch.common.CloudWatchPreferences
-import com.amplifyframework.cloudwatch.common.db.CloudWatchDatabase
-import com.amplifyframework.cloudwatch.common.db.LogEvent
-import com.amplifyframework.cloudwatch.common.models.CloudWatchLogEvent
+import com.amplifyframework.cloudwatch.CloudWatchPreferences
+import com.amplifyframework.cloudwatch.db.CloudWatchDatabase
+import com.amplifyframework.cloudwatch.db.LogEvent
+import com.amplifyframework.cloudwatch.models.CloudWatchLogEvent
 import com.amplifyframework.logging.cloudwatch.models.AWSCloudWatchLoggingPluginConfiguration
 import io.mockk.CapturingSlot
 import io.mockk.coEvery

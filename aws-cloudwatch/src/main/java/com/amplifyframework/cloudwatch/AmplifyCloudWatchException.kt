@@ -15,6 +15,7 @@
 package com.amplifyframework.cloudwatch
 
 import aws.sdk.kotlin.services.cloudwatchlogs.model.CloudWatchLogsException
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
 import com.amplifyframework.foundation.exceptions.AmplifyException
 
 /**
@@ -31,6 +32,7 @@ import com.amplifyframework.foundation.exceptions.AmplifyException
  * @param recoverySuggestion Suggested action to resolve the error
  * @param cause Underlying cause of the exception
  */
+@ExperimentalAmplifyApi
 sealed class AmplifyCloudWatchException(
     message: String,
     recoverySuggestion: String,
@@ -55,6 +57,7 @@ sealed class AmplifyCloudWatchException(
 }
 
 /** Local file I/O or log-rotation error. */
+@ExperimentalAmplifyApi
 class AmplifyCloudWatchStorageException(
     message: String,
     recoverySuggestion: String,
@@ -62,6 +65,7 @@ class AmplifyCloudWatchStorageException(
 ) : AmplifyCloudWatchException(message, recoverySuggestion, cause)
 
 /** A CloudWatch Logs API call failed. */
+@ExperimentalAmplifyApi
 class AmplifyCloudWatchServiceException(
     message: String,
     recoverySuggestion: String,
@@ -69,6 +73,7 @@ class AmplifyCloudWatchServiceException(
 ) : AmplifyCloudWatchException(message, recoverySuggestion, cause)
 
 /** The client is misconfigured. */
+@ExperimentalAmplifyApi
 class AmplifyCloudWatchConfigurationException(
     message: String,
     recoverySuggestion: String,
@@ -76,6 +81,7 @@ class AmplifyCloudWatchConfigurationException(
 ) : AmplifyCloudWatchException(message, recoverySuggestion, cause)
 
 /** Unexpected / uncategorized error. */
+@ExperimentalAmplifyApi
 class AmplifyCloudWatchUnknownException(
     message: String,
     recoverySuggestion: String,

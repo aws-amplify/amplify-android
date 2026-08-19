@@ -1,4 +1,4 @@
-package com.amplifyframework.core.store
+package com.amplifyframework.foundation.store
 
 import android.security.keystore.KeyProperties
 import androidx.test.platform.app.InstrumentationRegistry

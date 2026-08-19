@@ -1,4 +1,4 @@
-package com.amplifyframework.core.store
+package com.amplifyframework.foundation.store
 
 import io.kotest.matchers.equals.shouldBeEqual
 import java.util.UUID

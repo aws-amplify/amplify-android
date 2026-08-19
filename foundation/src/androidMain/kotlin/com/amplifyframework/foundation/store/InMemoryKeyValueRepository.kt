@@ -12,14 +12,13 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-@file:OptIn(InternalAmplifyApi::class)
-
 package com.amplifyframework.foundation.store
 
-import com.amplifyframework.annotations.InternalAmplifyApi
+import com.amplifyframework.annotations.InternalApiWarning
 import java.util.concurrent.ConcurrentHashMap
 
-internal class InMemoryKeyValueRepository : KeyValueRepository {
+@InternalApiWarning
+class InMemoryKeyValueRepository : KeyValueRepository {
     private val cache = ConcurrentHashMap<String, String?>()
 
     override fun put(dataKey: String, value: String?) {

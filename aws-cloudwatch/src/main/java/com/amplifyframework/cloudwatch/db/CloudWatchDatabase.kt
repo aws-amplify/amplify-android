@@ -14,13 +14,13 @@
  */
 @file:OptIn(InternalAmplifyApi::class)
 
-package com.amplifyframework.cloudwatch.common.db
+package com.amplifyframework.cloudwatch.db
 
 import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import com.amplifyframework.annotations.InternalAmplifyApi
-import com.amplifyframework.cloudwatch.common.models.CloudWatchLogEvent
+import com.amplifyframework.cloudwatch.models.CloudWatchLogEvent
 import com.amplifyframework.foundation.store.AmplifyKeyValueRepository
 import java.util.UUID
 import kotlinx.coroutines.CoroutineDispatcher

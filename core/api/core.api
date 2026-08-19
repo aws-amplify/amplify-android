@@ -2853,25 +2853,6 @@ public abstract interface class com/amplifyframework/core/plugin/Plugin : com/am
 	public abstract fun initialize (Landroid/content/Context;)V
 }
 
-public final class com/amplifyframework/core/store/EncryptedKeyValueRepository : com/amplifyframework/core/store/KeyValueRepository {
-	public fun <init> (Landroid/content/Context;Ljava/lang/String;)V
-	public fun get (Ljava/lang/String;)Ljava/lang/String;
-	public fun put (Ljava/lang/String;Ljava/lang/String;)V
-	public fun remove (Ljava/lang/String;)V
-	public fun removeAll ()V
-}
-
-public abstract interface class com/amplifyframework/core/store/KeyValueRepository {
-	public abstract fun get (Ljava/lang/String;)Ljava/lang/String;
-	public abstract fun put (Ljava/lang/String;Ljava/lang/String;)V
-	public abstract fun remove (Ljava/lang/String;)V
-	public fun removeAll ()V
-}
-
-public final class com/amplifyframework/core/store/KeyValueRepository$DefaultImpls {
-	public static fun removeAll (Lcom/amplifyframework/core/store/KeyValueRepository;)V
-}
-
 public final class com/amplifyframework/datastore/DataStoreCategory : com/amplifyframework/core/category/Category, com/amplifyframework/datastore/DataStoreCategoryBehavior {
 	public fun <init> ()V
 	public fun clear (Lcom/amplifyframework/core/Action;Lcom/amplifyframework/core/Consumer;)V

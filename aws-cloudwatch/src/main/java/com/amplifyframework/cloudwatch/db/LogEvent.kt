@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2026 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -12,12 +12,10 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+package com.amplifyframework.cloudwatch.db
 
-package com.amplifyframework.core.store
+import com.amplifyframework.annotations.InternalAmplifyApi
 
-interface KeyValueRepository {
-    fun put(dataKey: String, value: String?)
-    fun get(dataKey: String): String?
-    fun remove(dataKey: String)
-    fun removeAll() = Unit
-}
+/** A persisted log event, including its database row [id]. */
+@InternalAmplifyApi
+data class LogEvent(val timestamp: Long, val message: String, val id: Long)

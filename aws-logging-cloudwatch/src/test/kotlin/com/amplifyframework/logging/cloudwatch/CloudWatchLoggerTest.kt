@@ -15,7 +15,7 @@
 package com.amplifyframework.logging.cloudwatch
 
 import com.amplifyframework.annotations.InternalAmplifyApi
-import com.amplifyframework.cloudwatch.common.models.CloudWatchLogEvent
+import com.amplifyframework.cloudwatch.models.CloudWatchLogEvent
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.logging.LogLevel
 import io.mockk.coEvery

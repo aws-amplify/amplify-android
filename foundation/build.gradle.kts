@@ -27,6 +27,8 @@ kotlin {
             dependencies {
                 implementation(libs.test.mockk)
                 implementation(project(":testutils"))
+                // Robolectric + androidx.test for the relocated KeyValueRepository/keystore tests.
+                implementation(libs.bundles.test.unit.android)
             }
         }
     }

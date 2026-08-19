@@ -17,7 +17,7 @@ package com.amplifyframework.analytics.pinpoint
 import android.content.Context
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
-import com.amplifyframework.core.store.AmplifyKeyValueRepository
+import com.amplifyframework.foundation.store.AmplifyKeyValueRepository
 import com.amplifyframework.pinpoint.core.AnalyticsClient
 import com.amplifyframework.pinpoint.core.TargetingClient
 import com.amplifyframework.pinpoint.core.data.AndroidAppDetails

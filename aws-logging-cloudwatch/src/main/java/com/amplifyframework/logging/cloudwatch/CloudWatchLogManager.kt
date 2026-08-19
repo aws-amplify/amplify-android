@@ -30,10 +30,10 @@ import aws.sdk.kotlin.services.cloudwatchlogs.model.DescribeLogStreamsRequest
 import aws.sdk.kotlin.services.cloudwatchlogs.model.InputLogEvent
 import aws.sdk.kotlin.services.cloudwatchlogs.model.PutLogEventsRequest
 import com.amplifyframework.annotations.InternalAmplifyApi
-import com.amplifyframework.cloudwatch.common.CloudWatchPreferences
-import com.amplifyframework.cloudwatch.common.db.CloudWatchDatabase
-import com.amplifyframework.cloudwatch.common.db.LogEvent
-import com.amplifyframework.cloudwatch.common.models.CloudWatchLogEvent
+import com.amplifyframework.cloudwatch.CloudWatchPreferences
+import com.amplifyframework.cloudwatch.db.CloudWatchDatabase
+import com.amplifyframework.cloudwatch.db.LogEvent
+import com.amplifyframework.cloudwatch.models.CloudWatchLogEvent
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.hub.HubChannel

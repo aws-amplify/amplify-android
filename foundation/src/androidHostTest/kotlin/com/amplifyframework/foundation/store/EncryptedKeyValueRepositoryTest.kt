@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.store
+package com.amplifyframework.foundation.store
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -22,7 +22,7 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV
 import androidx.security.crypto.EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
 import androidx.security.crypto.MasterKeys
-import com.amplifyframework.core.store.EncryptedKeyValueRepository.Companion.AMPLIFY_IDENTIFIER_PREFIX
+import com.amplifyframework.foundation.store.EncryptedKeyValueRepository.Companion.AMPLIFY_IDENTIFIER_PREFIX
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic

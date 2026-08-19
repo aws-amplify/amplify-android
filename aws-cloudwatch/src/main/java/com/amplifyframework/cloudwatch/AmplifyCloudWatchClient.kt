@@ -18,7 +18,7 @@ import android.content.Context
 import aws.sdk.kotlin.services.cloudwatchlogs.CloudWatchLogsClient
 import com.amplifyframework.annotations.ExperimentalAmplifyApi
 import com.amplifyframework.annotations.InternalAmplifyApi
-import com.amplifyframework.cloudwatch.common.models.CloudWatchLogEvent
+import com.amplifyframework.cloudwatch.models.CloudWatchLogEvent
 import com.amplifyframework.foundation.credentials.AwsCredentials
 import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
 import com.amplifyframework.foundation.credentials.toSmithyProvider
@@ -29,6 +29,7 @@ import com.amplifyframework.foundation.logging.LogSink
 import com.amplifyframework.foundation.logging.Logger
 import com.amplifyframework.foundation.result.Result
 import com.amplifyframework.foundation.useragent.AmplifyUserAgentInterceptor
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -46,11 +47,15 @@ import kotlinx.coroutines.launch
 private const val EVENTS_BUFFER_CAPACITY = 64
 
 /**
- * Names for the client's own encrypted on-device store (database + passphrase preferences), kept
- * distinct from any other CloudWatch logging store on the device.
+ * Base names for the client's own encrypted on-device store (database + passphrase preferences), kept
+ * distinct from any other CloudWatch logging store on the device. The target log group is appended (see
+ * [storeToken]) so that clients targeting different log groups keep separate stores and never mix events.
  */
-private const val CLIENT_DATABASE_NAME = "amplify.cloudwatch.client.db"
-private const val CLIENT_PASSPHRASE_PREFERENCES_NAME = "awscloudwatchclientdb"
+private const val CLIENT_DATABASE_NAME_PREFIX = "amplify.cloudwatch.client"
+private const val CLIENT_PASSPHRASE_PREFERENCES_PREFIX = "awscloudwatchclientdb"
+
+/** A filesystem-safe, stable token derived from the log group, used to name the client's on-device store. */
+private fun storeToken(logGroupName: String): String = logGroupName.hashCode().toUInt().toString(16)
 
 /**
  * A standalone client for sending log events to Amazon CloudWatch Logs.
@@ -111,6 +116,7 @@ class AmplifyCloudWatchClient internal constructor(
         initialConstraints = options.loggingConstraints,
         scope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
         logManagerFactory = { client, events ->
+            val token = storeToken(options.logGroupName)
             CloudWatchLogManager(
                 context = context.applicationContext,
                 logGroupName = options.logGroupName,
@@ -120,8 +126,8 @@ class AmplifyCloudWatchClient internal constructor(
                     FlushStrategy.None -> null
                 },
                 awsCloudWatchLogsClient = client,
-                databaseName = CLIENT_DATABASE_NAME,
-                passphrasePreferencesName = CLIENT_PASSPHRASE_PREFERENCES_NAME,
+                databaseName = "$CLIENT_DATABASE_NAME_PREFIX.$token.db",
+                passphrasePreferencesName = "$CLIENT_PASSPHRASE_PREFERENCES_PREFIX.$token",
                 onWriteLogFailure = { context, cause -> events.tryEmit(LoggingEvent.WriteLogFailure(context, cause)) },
                 onFlushLogFailure = { context, cause -> events.tryEmit(LoggingEvent.FlushLogFailure(context, cause)) }
             )
@@ -183,7 +189,11 @@ class AmplifyCloudWatchClient internal constructor(
         scope.launch { logManager.startSync() }
     }
 
-    /** Disable logging and automatic flushing. Messages emitted while disabled are dropped. */
+    /**
+     * Disable logging and automatic flushing. Messages emitted while disabled are dropped, but any
+     * log entries already buffered locally are preserved and will be sent on the next [flushLogs] or
+     * once re-[enable]d.
+     */
     fun disable() {
         logger.info { "Disabling CloudWatch logging and automatic flushing" }
         isEnabled = false
@@ -194,6 +204,8 @@ class AmplifyCloudWatchClient internal constructor(
     suspend fun flushLogs(): FlushResult = try {
         logManager.syncLogEventsWithCloudwatch()
         Result.Success(FlushData())
+    } catch (error: CancellationException) {
+        throw error
     } catch (error: Exception) {
         Result.Failure(AmplifyCloudWatchException.from(error))
     }

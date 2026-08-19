@@ -18,6 +18,7 @@ import android.content.Context
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.work.Configuration
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.impl.utils.SynchronousExecutor
 import androidx.work.testing.WorkManagerTestInitHelper
@@ -30,12 +31,14 @@ import aws.sdk.kotlin.services.cloudwatchlogs.model.PutLogEventsRequest
 import aws.sdk.kotlin.services.cloudwatchlogs.model.PutLogEventsResponse
 import aws.sdk.kotlin.services.cloudwatchlogs.model.RejectedLogEventsInfo
 import com.amplifyframework.annotations.InternalAmplifyApi
-import com.amplifyframework.cloudwatch.common.db.CloudWatchDatabase
-import com.amplifyframework.cloudwatch.common.db.LogEvent
-import com.amplifyframework.cloudwatch.common.models.CloudWatchLogEvent
+import com.amplifyframework.cloudwatch.db.CloudWatchDatabase
+import com.amplifyframework.cloudwatch.db.LogEvent
+import com.amplifyframework.cloudwatch.models.CloudWatchLogEvent
 import com.amplifyframework.cloudwatch.worker.CloudWatchLogsSyncWorker
+import com.amplifyframework.cloudwatch.worker.CloudWatchRouterWorker
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
@@ -66,6 +69,7 @@ internal class CloudWatchLogManagerTest {
     private val writeFailures = mutableListOf<Throwable?>()
     private val flushFailures = mutableListOf<Throwable?>()
     private val putRequestSlot = slot<PutLogEventsRequest>()
+    private val putRequests = mutableListOf<PutLogEventsRequest>()
     private val testDispatcher = UnconfinedTestDispatcher()
 
     private lateinit var manager: CloudWatchLogManager
@@ -89,19 +93,20 @@ internal class CloudWatchLogManagerTest {
         WorkManagerTestInitHelper.closeWorkDatabase()
     }
 
-    private fun newManager(flushIntervalInSeconds: Long? = 60L) = CloudWatchLogManager(
-        context = context,
-        logGroupName = "LOG_GROUP",
-        localStoreMaxSizeInMB = 5,
-        flushIntervalInSeconds = flushIntervalInSeconds,
-        awsCloudWatchLogsClient = cloudWatchLogsClient,
-        databaseName = "test.cloudwatch.db",
-        passphrasePreferencesName = "test.prefs",
-        onWriteLogFailure = { _, cause -> writeFailures.add(cause) },
-        onFlushLogFailure = { _, cause -> flushFailures.add(cause) },
-        cloudWatchLoggingDatabase = database,
-        coroutineDispatcher = testDispatcher
-    )
+    private fun newManager(flushIntervalInSeconds: Long? = 60L, logGroupName: String = "LOG_GROUP") =
+        CloudWatchLogManager(
+            context = context,
+            logGroupName = logGroupName,
+            localStoreMaxSizeInMB = 5,
+            flushIntervalInSeconds = flushIntervalInSeconds,
+            awsCloudWatchLogsClient = cloudWatchLogsClient,
+            databaseName = "test.cloudwatch.db",
+            passphrasePreferencesName = "test.prefs",
+            onWriteLogFailure = { _, cause -> writeFailures.add(cause) },
+            onFlushLogFailure = { _, cause -> flushFailures.add(cause) },
+            cloudWatchLoggingDatabase = database,
+            coroutineDispatcher = testDispatcher
+        )
 
     /** Stubs a successful describe/create/put cycle, capturing the put request. */
     private fun stubSuccessfulUpload(tooNewLogEventStartIndex: Int? = null, existingStream: Boolean = false) {
@@ -115,6 +120,75 @@ internal class CloudWatchLogManagerTest {
             }
         }
         coJustRun { database.bulkDelete(any()) }
+    }
+
+    /** Stubs a successful describe/put cycle, capturing every batch's put request into [putRequests]. */
+    private fun stubBatchCapture() {
+        coEvery { cloudWatchLogsClient.describeLogStreams(any()) } returns DescribeLogStreamsResponse.invoke {
+            logStreams = listOf(LogStream.invoke { logStreamName = "existing" })
+        }
+        coEvery { cloudWatchLogsClient.createLogStream(any()) } returns CreateLogStreamResponse.invoke { }
+        coEvery { cloudWatchLogsClient.putLogEvents(capture(putRequests)) } returns PutLogEventsResponse.invoke { }
+        coJustRun { database.bulkDelete(any()) }
+    }
+
+    @Test
+    fun `batches split at the 10,000 event per-request limit`() = runTest {
+        val events = (1..10_001L).map { LogEvent(timestamp = it, message = "m", id = it) }
+        coEvery { database.queryAllEvents() } returns events andThen emptyList()
+        stubBatchCapture()
+
+        manager.syncLogEventsWithCloudwatch()
+
+        putRequests.map { it.logEvents!!.size } shouldBe listOf(10_000, 1)
+    }
+
+    @Test
+    fun `batches split at the 1 MB per-request size limit`() = runTest {
+        // Each event is 100_000 bytes + 26 overhead = 100_026; ten fit under 1_048_576, the eleventh spills over.
+        val big = "a".repeat(100_000)
+        val events = (1..11L).map { LogEvent(timestamp = it, message = big, id = it) }
+        coEvery { database.queryAllEvents() } returns events andThen emptyList()
+        stubBatchCapture()
+
+        manager.syncLogEventsWithCloudwatch()
+
+        putRequests.map { it.logEvents!!.size } shouldBe listOf(10, 1)
+    }
+
+    @Test
+    fun `batches split when events span more than 24 hours`() = runTest {
+        val hour = 3_600_000L
+        // 0h and 1h share a batch; 25h is >= 24h from the batch start, so it opens a new batch.
+        val events = listOf(
+            LogEvent(timestamp = 0L, message = "m", id = 1L),
+            LogEvent(timestamp = hour, message = "m", id = 2L),
+            LogEvent(timestamp = 25 * hour, message = "m", id = 3L)
+        )
+        coEvery { database.queryAllEvents() } returns events andThen emptyList()
+        stubBatchCapture()
+
+        manager.syncLogEventsWithCloudwatch()
+
+        putRequests.map { it.logEvents!!.size } shouldBe listOf(2, 1)
+    }
+
+    @Test
+    fun `events larger than the per-event limit are dropped, not sent`() = runTest {
+        val oversized = "a".repeat(262_145) // exceeds the 262_144-byte per-event limit on its own
+        val events = listOf(
+            LogEvent(timestamp = 1L, message = oversized, id = 1L),
+            LogEvent(timestamp = 2L, message = "ok", id = 2L)
+        )
+        coEvery { database.queryAllEvents() } returns events andThen emptyList()
+        stubBatchCapture()
+
+        manager.syncLogEventsWithCloudwatch()
+
+        // Only the sendable event is uploaded...
+        putRequests.flatMap { it.logEvents!! }.map { it.message } shouldBe listOf("ok")
+        // ...and the oversized event is deleted so it can't permanently block the buffer.
+        coVerify { database.bulkDelete(listOf(1L)) }
     }
 
     @Test
@@ -229,12 +303,17 @@ internal class CloudWatchLogManagerTest {
     }
 
     @Test
-    fun `stopSync clears the local cache`() = runTest {
-        coEvery { database.clearDatabase() } returns 1
+    fun `stopSync preserves the local cache and cancels scheduled work`() = runTest {
+        manager.startSync()
 
         manager.stopSync()
 
-        coVerify(exactly = 1) { database.clearDatabase() }
+        // Disabling preserves buffered entries; the local cache is never cleared.
+        coVerify(exactly = 0) { database.clearDatabase() }
+        // The scheduled auto-flush is canceled.
+        val work = WorkManager.getInstance(context)
+            .getWorkInfosForUniqueWork("${CloudWatchLogsSyncWorker.WORKER_NAME_TAG}.LOG_GROUP").get()
+        work.all { it.state == WorkInfo.State.CANCELLED } shouldBe true
     }
 
     @Test
@@ -242,8 +321,23 @@ internal class CloudWatchLogManagerTest {
         manager.startSync()
 
         val work = WorkManager.getInstance(context)
-            .getWorkInfosForUniqueWork(CloudWatchLogsSyncWorker.WORKER_NAME_TAG).get()
+            .getWorkInfosForUniqueWork("${CloudWatchLogsSyncWorker.WORKER_NAME_TAG}.LOG_GROUP").get()
         work.shouldNotBeEmpty()
+    }
+
+    @Test
+    fun `distinct log groups get isolated worker factories and scheduled work`() = runTest {
+        newManager(logGroupName = "group-A").startSync()
+        newManager(logGroupName = "group-B").startSync()
+
+        val wm = WorkManager.getInstance(context)
+        wm.getWorkInfosForUniqueWork("${CloudWatchLogsSyncWorker.WORKER_NAME_TAG}.group-A").get().shouldNotBeEmpty()
+        wm.getWorkInfosForUniqueWork("${CloudWatchLogsSyncWorker.WORKER_NAME_TAG}.group-B").get().shouldNotBeEmpty()
+        // Each manager registers under its own factory key, so a second client can't hijack the first's routing.
+        CloudWatchRouterWorker.workerFactories.keys shouldContainAll listOf(
+            "${CloudWatchRouterWorker.WORKER_FACTORY_KEY}.group-A",
+            "${CloudWatchRouterWorker.WORKER_FACTORY_KEY}.group-B"
+        )
     }
 
     @Test
@@ -253,7 +347,7 @@ internal class CloudWatchLogManagerTest {
         noAutoFlush.startSync()
 
         val work = WorkManager.getInstance(context)
-            .getWorkInfosForUniqueWork(CloudWatchLogsSyncWorker.WORKER_NAME_TAG).get()
+            .getWorkInfosForUniqueWork("${CloudWatchLogsSyncWorker.WORKER_NAME_TAG}.LOG_GROUP").get()
         work.shouldBeEmpty()
     }
 

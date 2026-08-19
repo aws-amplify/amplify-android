@@ -12,7 +12,7 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.cloudwatch.common.db
+package com.amplifyframework.cloudwatch.db
 
 import net.zetetic.database.sqlcipher.SQLiteDatabase
 

@@ -29,10 +29,9 @@ import aws.sdk.kotlin.services.cloudwatchlogs.model.DescribeLogStreamsRequest
 import aws.sdk.kotlin.services.cloudwatchlogs.model.InputLogEvent
 import aws.sdk.kotlin.services.cloudwatchlogs.model.PutLogEventsRequest
 import com.amplifyframework.annotations.InternalAmplifyApi
-import com.amplifyframework.cloudwatch.common.CloudWatchPreferences
-import com.amplifyframework.cloudwatch.common.db.CloudWatchDatabase
-import com.amplifyframework.cloudwatch.common.db.LogEvent
-import com.amplifyframework.cloudwatch.common.models.CloudWatchLogEvent
+import com.amplifyframework.cloudwatch.db.CloudWatchDatabase
+import com.amplifyframework.cloudwatch.db.LogEvent
+import com.amplifyframework.cloudwatch.models.CloudWatchLogEvent
 import com.amplifyframework.cloudwatch.worker.CloudWatchLogsSyncWorker
 import com.amplifyframework.cloudwatch.worker.CloudWatchRouterWorker
 import com.amplifyframework.cloudwatch.worker.CloudWatchWorkerFactory
@@ -43,17 +42,27 @@ import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Duration.Companion.hours
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+// AWS PutLogEvents limits (https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutLogEvents.html)
+private const val MAX_LOG_EVENTS_PER_BATCH = 10_000
+private const val MAX_BATCH_SIZE_BYTES = 1_048_576L
+private const val MAX_EVENT_SIZE_BYTES = 262_144L
+private const val PER_EVENT_OVERHEAD_BYTES = 26
+private val MAX_BATCH_SPAN = 24.hours
+private const val STREAM_DATE_FORMAT = "MM-dd-yyyy"
 
 /**
  * Engine for buffering and delivering CloudWatch log events for [AmplifyCloudWatchClient]. Failures
  * are reported through the [onWriteLogFailure] / [onFlushLogFailure] callbacks, user identity is set
- * explicitly via [setUserIdentifier], and log persistence is delegated to the shared
- * `:aws-cloudwatch-common` store.
+ * explicitly via [setUserIdentifier], and log persistence is delegated to [CloudWatchDatabase].
  *
  * @param flushIntervalInSeconds interval between automatic flushes; `null` disables automatic
  *   flushing (used for `FlushStrategy.None`).
@@ -76,20 +85,25 @@ internal class CloudWatchLogManager(
     private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
 
+    @Volatile
     private var stopSync = false
 
     @Volatile
     private var userIdentityId: String? = null
-    private val todayDate: String = SimpleDateFormat("MM-dd-yyyy", Locale.US).format(Date())
-    private val coroutineScope = CoroutineScope(coroutineDispatcher)
-    private var isSyncInProgress = AtomicBoolean(false)
-    private val logger = AmplifyLogging.logger(CloudWatchLogManager::class.java.simpleName)
+    private val coroutineScope = CoroutineScope(SupervisorJob() + coroutineDispatcher)
+    private val isSyncInProgress = AtomicBoolean(false)
+    private val logger = AmplifyLogging.logger<CloudWatchLogManager>()
+
+    // Key the worker-factory registration and the WorkManager unique work by log group so that two clients
+    // targeting different log groups don't hijack each other's delegate factory or scheduled auto-flush (both
+    // the factory map and unique-work names are app-global).
+    private val workerFactoryKey = "${CloudWatchRouterWorker.WORKER_FACTORY_KEY}.$logGroupName"
+    private val uniqueWorkName = "${CloudWatchLogsSyncWorker.WORKER_NAME_TAG}.$logGroupName"
 
     init {
         // Register the delegate factory so the WorkManager-instantiated CloudWatchRouterWorker can
         // create a CloudWatchLogsSyncWorker wired to this manager.
-        CloudWatchRouterWorker.workerFactories[CloudWatchRouterWorker.WORKER_FACTORY_KEY] =
-            CloudWatchWorkerFactory(this)
+        CloudWatchRouterWorker.workerFactories[workerFactoryKey] = CloudWatchWorkerFactory(this)
     }
 
     suspend fun saveLogEvent(event: CloudWatchLogEvent) = withContext(coroutineDispatcher) {
@@ -98,8 +112,10 @@ internal class CloudWatchLogManager(
             if (isCacheFull()) {
                 syncLogEventsWithCloudwatch()
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            logger.error("failed to save event", e)
+            logger.error(e) { "Failed to save event" }
             onWriteLogFailure(event.message, e)
         }
     }
@@ -110,8 +126,15 @@ internal class CloudWatchLogManager(
      */
     fun setUserIdentifier(identifier: String?) {
         coroutineScope.launch {
-            syncLogEventsWithCloudwatch()
-            userIdentityId = identifier
+            try {
+                syncLogEventsWithCloudwatch()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.warn(e) { "Failed to flush pending events before switching user" }
+            } finally {
+                userIdentityId = identifier
+            }
         }
     }
 
@@ -123,57 +146,60 @@ internal class CloudWatchLogManager(
     fun stopSync() {
         stopSync = true
         cancelSync()
-        clearCache()
-        logger.debug("stopping sync")
+        logger.debug { "Stopping sync" }
     }
 
     suspend fun syncLogEventsWithCloudwatch() {
-        if (isSyncInProgress.get()) {
+        // Atomic guard so overlapping triggers (manual flush, cache-full write, WorkManager) can't
+        // run concurrently and delete each other's rows.
+        if (!isSyncInProgress.compareAndSet(false, true)) {
             return
         }
         withContext(coroutineDispatcher) {
-            var inputLogEventsIdToBeDeleted: List<Long> = emptyList()
+            var lastAttemptedIds: List<Long> = emptyList()
             try {
-                isSyncInProgress.set(true)
-                awsCloudWatchLogsClient.let { client ->
-                    while (true) {
-                        val queriedEvents = cloudWatchLoggingDatabase.queryAllEvents().toMutableList()
-                        if (queriedEvents.isEmpty()) break
-                        while (queriedEvents.isNotEmpty()) {
-                            val groupName = logGroupName
-                            val deviceId = uniqueDeviceId()
+                val streamDate = SimpleDateFormat(STREAM_DATE_FORMAT, Locale.US).format(Date())
+                val client = awsCloudWatchLogsClient
+                while (true) {
+                    val queriedEvents = cloudWatchLoggingDatabase.queryAllEvents().toMutableList()
+                    if (queriedEvents.isEmpty()) break
+                    while (queriedEvents.isNotEmpty()) {
+                        val deviceId = uniqueDeviceId()
+                        // Default format: MM-dd-yyyy.deviceId.userId
+                        val streamName = "$streamDate.$deviceId.${userIdentityId ?: "guest"}"
 
-                            // Default format: MM-dd-yyyy.deviceId.userId
-                            val streamName = "$todayDate.$deviceId.${userIdentityId ?: "guest"}"
-
-                            val nextBatch = getNextBatch(queriedEvents)
-                            val inputLogEvents = nextBatch.first
-                            inputLogEventsIdToBeDeleted = nextBatch.second
-                            if (inputLogEvents.isEmpty()) {
-                                return@withContext
-                            }
-                            createLogStreamIfNotCreated(streamName, groupName, client)
-                            client.putLogEvents(
-                                PutLogEventsRequest {
-                                    logEvents = inputLogEvents
-                                    logGroupName = groupName
-                                    logStreamName = streamName
-                                }
-                            ).also { response ->
-                                response.rejectedLogEventsInfo?.tooNewLogEventStartIndex?.let {
-                                    inputLogEventsIdToBeDeleted = inputLogEventsIdToBeDeleted.slice(
-                                        IntRange(0, it - 1)
-                                    ).toMutableList()
-                                }
-                                cloudWatchLoggingDatabase.bulkDelete(inputLogEventsIdToBeDeleted)
-                            }
+                        val batch = getNextBatch(queriedEvents)
+                        // Events too large to ever be accepted are dropped so they can't block the buffer.
+                        if (batch.oversizedIds.isNotEmpty()) {
+                            cloudWatchLoggingDatabase.bulkDelete(batch.oversizedIds)
                         }
+                        if (batch.events.isEmpty()) continue
+
+                        createLogStreamIfNotCreated(streamName, logGroupName, client)
+                        val response = client.putLogEvents(
+                            PutLogEventsRequest {
+                                logEvents = batch.events
+                                logGroupName = this@CloudWatchLogManager.logGroupName
+                                logStreamName = streamName
+                            }
+                        )
+                        // Everything up to tooNewLogEventStartIndex was accepted; the rest stays for retry.
+                        var acceptedIds = batch.sendableIds
+                        response.rejectedLogEventsInfo?.tooNewLogEventStartIndex?.let {
+                            acceptedIds = acceptedIds.slice(IntRange(0, it - 1))
+                        }
+                        lastAttemptedIds = acceptedIds
+                        // Nothing accepted (all too new): re-querying would return the same rows forever.
+                        if (acceptedIds.isEmpty()) return@withContext
+                        cloudWatchLoggingDatabase.bulkDelete(acceptedIds)
                     }
                 }
+            } catch (exception: CancellationException) {
+                throw exception
             } catch (exception: Exception) {
                 onFlushLogFailure(null, exception)
                 if (isCacheFull()) {
-                    cloudWatchLoggingDatabase.bulkDelete(inputLogEventsIdToBeDeleted)
+                    cloudWatchLoggingDatabase.bulkDelete(lastAttemptedIds)
                 }
                 throw exception
             } finally {
@@ -204,42 +230,53 @@ internal class CloudWatchLogManager(
         }
     }
 
-    private fun getNextBatch(queriedEvents: MutableList<LogEvent>): Pair<List<InputLogEvent>, List<Long>> {
+    /**
+     * Pulls the next PutLogEvents batch off [queriedEvents], removing whatever it consumes. Enforces
+     * the AWS per-batch limits, always includes at least one sendable event (so the buffer can't
+     * stall), and diverts events too large to ever be sent into [LogBatch.oversizedIds] for dropping.
+     */
+    private fun getNextBatch(queriedEvents: MutableList<LogEvent>): LogBatch {
         var totalBatchSize = 0L
         val inputLogEvents = mutableListOf<InputLogEvent>()
-        val inputLogEventsIdToBeDeleted = mutableListOf<Long>()
-        val firstEvent = queriedEvents[0]
+        val sendableIds = mutableListOf<Long>()
+        val oversizedIds = mutableListOf<Long>()
+        var batchStartTimestamp = 0L
         val iterator = queriedEvents.iterator()
         while (iterator.hasNext()) {
             val cloudWatchEvent = iterator.next()
-            totalBatchSize = totalBatchSize.plus(cloudWatchEvent.message.length).plus(26)
-            if (
-                // The maximum number of log events in a batch is 10,000.
-                inputLogEvents.size >= 10000 ||
-                // The maximum batch size is 1,048,576 bytes.
-                totalBatchSize >= 1048576 ||
-                // A batch of log events in a single request cannot span more than 24 hours.
-                // Otherwise, the operation fails.
-                cloudWatchEvent.timestamp - firstEvent.timestamp >= 24 * 60 * 60L
+            val eventSize = cloudWatchEvent.message.toByteArray(Charsets.UTF_8).size + PER_EVENT_OVERHEAD_BYTES
+            // A single event over the AWS per-event limit can never be sent; drop it instead of stalling.
+            if (eventSize > MAX_EVENT_SIZE_BYTES) {
+                oversizedIds.add(cloudWatchEvent.id)
+                iterator.remove()
+                continue
+            }
+            if (inputLogEvents.isNotEmpty() &&
+                (
+                    // The maximum number of log events in a batch is 10,000.
+                    inputLogEvents.size >= MAX_LOG_EVENTS_PER_BATCH ||
+                        // The maximum batch size is 1,048,576 bytes.
+                        totalBatchSize + eventSize > MAX_BATCH_SIZE_BYTES ||
+                        // A batch of log events in a single request cannot span more than 24 hours.
+                        cloudWatchEvent.timestamp - batchStartTimestamp >= MAX_BATCH_SPAN.inWholeMilliseconds
+                    )
             ) {
                 break
             }
+            if (inputLogEvents.isEmpty()) {
+                batchStartTimestamp = cloudWatchEvent.timestamp
+            }
+            totalBatchSize += eventSize
             inputLogEvents.add(
                 InputLogEvent {
                     timestamp = cloudWatchEvent.timestamp
                     message = cloudWatchEvent.message
                 }
             )
-            inputLogEventsIdToBeDeleted.add(cloudWatchEvent.id)
+            sendableIds.add(cloudWatchEvent.id)
             iterator.remove()
         }
-        return Pair(inputLogEvents, inputLogEventsIdToBeDeleted)
-    }
-
-    private fun clearCache() {
-        coroutineScope.launch {
-            cloudWatchLoggingDatabase.clearDatabase()
-        }
+        return LogBatch(inputLogEvents, sendableIds, oversizedIds)
     }
 
     internal fun enqueueSync() {
@@ -251,13 +288,13 @@ internal class CloudWatchLogManager(
                 .setInputData(
                     workDataOf(
                         CloudWatchRouterWorker.WORKER_CLASS_NAME to CloudWatchLogsSyncWorker::class.java.simpleName,
-                        CloudWatchRouterWorker.WORKER_ID to CloudWatchRouterWorker.WORKER_FACTORY_KEY
+                        CloudWatchRouterWorker.WORKER_ID to workerFactoryKey
                     )
                 )
-                .addTag(CloudWatchLogsSyncWorker.WORKER_NAME_TAG)
+                .addTag(uniqueWorkName)
                 .build()
             WorkManager.getInstance(context).beginUniqueWork(
-                CloudWatchLogsSyncWorker.WORKER_NAME_TAG,
+                uniqueWorkName,
                 ExistingWorkPolicy.REPLACE,
                 syncRequest
             ).enqueue()
@@ -265,7 +302,7 @@ internal class CloudWatchLogManager(
     }
 
     private fun cancelSync() {
-        WorkManager.getInstance(context).cancelUniqueWork(CloudWatchLogsSyncWorker.WORKER_NAME_TAG)
+        WorkManager.getInstance(context).cancelUniqueWork(uniqueWorkName)
     }
 
     private fun uniqueDeviceId(): String {
@@ -278,4 +315,11 @@ internal class CloudWatchLogManager(
     }
 
     private fun isCacheFull() = cloudWatchLoggingDatabase.isCacheFull(localStoreMaxSizeInMB)
+
+    /** A single PutLogEvents batch plus the ids of events to drop as unsendable. */
+    private data class LogBatch(
+        val events: List<InputLogEvent>,
+        val sendableIds: List<Long>,
+        val oversizedIds: List<Long>
+    )
 }

@@ -12,41 +12,39 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+@file:OptIn(ExperimentalAmplifyApi::class, InternalAmplifyApi::class)
+
 package com.amplifyframework.cloudwatch
 
 import com.amplifyframework.annotations.ExperimentalAmplifyApi
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.foundation.logging.LogLevel
+import com.amplifyframework.foundation.logging.allows
 
 /**
  * Decides whether a log message passes the current [LoggingConstraints]. Precedence, highest first:
  * per-user override (by exact user id), then per-namespace override (namespace keys matched
  * case-insensitively), then the default level. A threshold of [LogLevel.None] blocks everything.
  */
-@ExperimentalAmplifyApi
 internal class CloudWatchLoggingFilter(initialConstraints: LoggingConstraints) {
 
     @Volatile
     var loggingConstraints: LoggingConstraints = initialConstraints
 
     fun canLog(namespace: String, level: LogLevel, userIdentifier: String?): Boolean {
-        if (level == LogLevel.None) return false
         val constraints = loggingConstraints
 
         val userLogLevel = userIdentifier?.let { constraints.userLogLevel[it] }
         if (userLogLevel != null) {
             val threshold = userLogLevel.namespaceLogLevel.matching(namespace) ?: userLogLevel.defaultLogLevel
-            return threshold.allows(level)
+            return threshold allows level
         }
 
-        constraints.namespaceLogLevel.matching(namespace)?.let { return it.allows(level) }
+        constraints.namespaceLogLevel.matching(namespace)?.let { return it allows level }
 
-        return constraints.defaultLogLevel.allows(level)
+        return constraints.defaultLogLevel allows level
     }
 
     private fun Map<String, LogLevel>.matching(namespace: String): LogLevel? =
         entries.firstOrNull { it.key.equals(namespace, ignoreCase = true) }?.value
-
-    // A threshold allows a message when the message level is at or above the threshold. LogLevel is
-    // ordered Verbose < Debug < Info < Warn < Error < None, so None as a threshold allows nothing.
-    private fun LogLevel.allows(level: LogLevel): Boolean = this != LogLevel.None && this <= level
 }
