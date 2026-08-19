@@ -5,12 +5,20 @@ name: Notify Pull Request
 # pull requests opened from forks. This is safe because the workflow does not
 # check out or execute any PR code — it only reads PR metadata and posts a
 # Slack notification.
+#
+# Two consequences of pull_request_target worth noting:
+#   - The workflow definition that runs comes from the PR's base branch, so
+#     changes to this file only take effect once merged to that branch.
+#   - Unlike pull_request, runs are not gated behind maintainer approval for
+#     first-time contributors, so notifications fire immediately on fork PRs.
 on:
   pull_request_target:
     types: [opened, ready_for_review, reopened]
 
-permissions:
-  contents: read
+# This job only posts to an external webhook — it makes no GitHub API calls and
+# checks out no code, so the GITHUB_TOKEN needs no scopes. This matters under
+# pull_request_target, where the token would otherwise default to read/write.
+permissions: {}
 
 jobs:
   notify:
@@ -30,6 +38,6 @@ jobs:
             --arg title "$TITLE" \
             --arg user "$USER" \
             '{url: $url, title: $title, user: $user}')"
-          curl -sf -X POST "$WEBHOOK_URL" \
+          curl -sSf --max-time 30 -X POST "$WEBHOOK_URL" \
             -H "Content-Type: application/json" \
             --data "$payload"
