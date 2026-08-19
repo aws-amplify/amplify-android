@@ -21,14 +21,11 @@ import android.os.Looper;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 
-import com.amplifyframework.annotations.InternalAmplifyApi;
-
 /**
  * Closes the WebSocket connection if the time remaining has elapsed.
  * Enables resetting of the watchdog remaining time.
  */
-@InternalAmplifyApi
-public final class TimeoutWatchdog {
+final class TimeoutWatchdog {
     private final Handler handler;
 
     private Runnable timeoutAction;

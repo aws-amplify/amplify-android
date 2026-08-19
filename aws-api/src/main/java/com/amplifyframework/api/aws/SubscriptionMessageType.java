@@ -17,16 +17,13 @@ package com.amplifyframework.api.aws;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.annotations.InternalAmplifyApi;
-
 /**
  * An enumeration of the values that are possible in the "type" field
  * of a subscription message.
  * @see <a href="http://bit.ly/gql-ws-message-types">GraphQL Over WebSocket Message Types</a>
  * @see <a href="http://bit.ly/gql-ws-protocol">GraphQL Over WebSocket Protocol</a>
  */
-@InternalAmplifyApi
-public enum SubscriptionMessageType {
+enum SubscriptionMessageType {
 
     /**
      * Client requests initialization of a connection, to the server.

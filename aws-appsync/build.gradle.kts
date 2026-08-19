@@ -13,19 +13,10 @@
  * permissions and limitations under the License.
  */
 
-import java.util.Properties
-
 plugins {
     alias(libs.plugins.amplify.android.library)
     alias(libs.plugins.amplify.publishing)
 }
-
-fun readVersion() = Properties().run {
-    file("../version.properties").inputStream().use { load(it) }
-    get("VERSION_NAME").toString()
-}
-
-project.setProperty("VERSION_NAME", readVersion())
 
 android {
     namespace = "com.amazonaws.appsync"
@@ -33,19 +24,13 @@ android {
 
 dependencies {
     api(project(":core"))
-    implementation(project(":aws-api"))
-    implementation(project(":aws-api-appsync"))
+    api(libs.okhttp)
+    api(project(":foundation"))
 
-    implementation(libs.okhttp)
+    implementation(project(":aws-api-appsync"))
     implementation(libs.gson)
     implementation(libs.kotlin.coroutines)
-    api(project(":foundation"))
     implementation(project(":foundation-bridge"))
 
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.mockk)
-    testImplementation(libs.test.kotlin.coroutines)
-    testImplementation(libs.test.kotest.assertions)
-    testImplementation(libs.test.mockwebserver)
-    testImplementation(libs.test.turbine)
+    testImplementation(libs.bundles.test.unit)
 }
