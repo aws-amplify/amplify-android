@@ -1,7 +1,12 @@
 name: Notify Pull Request
 
+# Use pull_request_target so the workflow runs in the context of the base
+# repository and has access to secrets (e.g. SLACK_PR_WEBHOOK_URL) even for
+# pull requests opened from forks. This is safe because the workflow does not
+# check out or execute any PR code — it only reads PR metadata and posts a
+# Slack notification.
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, ready_for_review, reopened]
 
 permissions:
@@ -19,4 +24,12 @@ jobs:
           TITLE: ${{ github.event.pull_request.title }}
           USER: ${{ github.event.pull_request.user.login }}
         shell: bash
-        run: curl -s POST "$WEBHOOK_URL" -H "Content-Type:application/json" --data "{\"url\":\"$URL\", \"title\":\"$TITLE\", \"user\":\"$USER\"}"
+        run: |
+          payload="$(jq -n \
+            --arg url "$URL" \
+            --arg title "$TITLE" \
+            --arg user "$USER" \
+            '{url: $url, title: $title, user: $user}')"
+          curl -sf -X POST "$WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            --data "$payload"
