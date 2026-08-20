@@ -44,7 +44,9 @@ internal object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
             val evt = try {
                 val username = signedInData.username
                 val tokens = signedInData.cognitoUserPoolTokens
-                val deviceMetadata: DeviceMetadata.Metadata? = getDeviceMetadata(username)
+                // Alias candidates let us recover device metadata keyed by an older SDK version.
+                val deviceMetadata: DeviceMetadata.Metadata? =
+                    getDeviceMetadata(username, tokens.idToken?.signInAliases ?: emptyList())
 
                 val response = cognitoAuthService.cognitoIdentityProviderClient?.getTokensFromRefreshToken {
                     refreshToken = tokens.refreshToken?.tokenValue
