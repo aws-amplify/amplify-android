@@ -267,6 +267,24 @@ public class com/amplifyframework/auth/cognito/exceptions/service/UsernameExists
 public final class com/amplifyframework/auth/cognito/exceptions/service/WebAuthnNotEnabledException : com/amplifyframework/auth/exceptions/ServiceException {
 }
 
+public final class com/amplifyframework/auth/cognito/exceptions/session/AWSCognitoSessionExpiredException : com/amplifyframework/auth/exceptions/SessionExpiredException {
+	public final fun getReason ()Lcom/amplifyframework/auth/cognito/exceptions/session/RefreshFailureReason;
+	public final fun getServiceMessage ()Ljava/lang/String;
+}
+
+public final class com/amplifyframework/auth/cognito/exceptions/session/RefreshFailureReason : java/lang/Enum {
+	public static final field DeviceBindingFailed Lcom/amplifyframework/auth/cognito/exceptions/session/RefreshFailureReason;
+	public static final field Expired Lcom/amplifyframework/auth/cognito/exceptions/session/RefreshFailureReason;
+	public static final field Invalid Lcom/amplifyframework/auth/cognito/exceptions/session/RefreshFailureReason;
+	public static final field Revoked Lcom/amplifyframework/auth/cognito/exceptions/session/RefreshFailureReason;
+	public static final field Unknown Lcom/amplifyframework/auth/cognito/exceptions/session/RefreshFailureReason;
+	public static final field UserDeleted Lcom/amplifyframework/auth/cognito/exceptions/session/RefreshFailureReason;
+	public static final field UserDisabled Lcom/amplifyframework/auth/cognito/exceptions/session/RefreshFailureReason;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/amplifyframework/auth/cognito/exceptions/session/RefreshFailureReason;
+	public static fun values ()[Lcom/amplifyframework/auth/cognito/exceptions/session/RefreshFailureReason;
+}
+
 public final class com/amplifyframework/auth/cognito/exceptions/webauthn/WebAuthnCredentialAlreadyExistsException : com/amplifyframework/auth/cognito/exceptions/webauthn/WebAuthnFailedException {
 }
 
