@@ -20,8 +20,8 @@ import aws.sdk.kotlin.services.cognitoidentity.model.GetIdRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.getTokensFromRefreshToken
 import aws.smithy.kotlin.runtime.time.Instant
 import com.amplifyframework.auth.cognito.AuthEnvironment
+import com.amplifyframework.auth.cognito.exceptions.session.AWSCognitoSessionExpiredException
 import com.amplifyframework.auth.exceptions.NotAuthorizedException
-import com.amplifyframework.auth.exceptions.SessionExpiredException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.FetchAuthSessionActions
@@ -79,7 +79,13 @@ internal object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
                 }
             } catch (notAuthorized: aws.sdk.kotlin.services.cognitoidentityprovider.model.NotAuthorizedException) {
                 logger.error("$id Failed to refresh user pool tokens: NotAuthorizedException", notAuthorized)
-                val error = SessionExpiredException(cause = notAuthorized)
+                // Cognito distinguishes refresh rejections only by message, so classify it and pass
+                // it through instead of reporting every rejection as a plain expired session.
+                val error = AWSCognitoSessionExpiredException(
+                    reason = AWSCognitoSessionExpiredException.classify(notAuthorized.message),
+                    serviceMessage = notAuthorized.message,
+                    cause = notAuthorized
+                )
                 AuthorizationEvent(AuthorizationEvent.EventType.ThrowError(error))
             } catch (e: Exception) {
                 logger.error("$id Failed to refresh user pool tokens", e)
