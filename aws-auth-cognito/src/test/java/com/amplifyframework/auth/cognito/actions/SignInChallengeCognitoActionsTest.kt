@@ -29,6 +29,7 @@ import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.CredentialType
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
 import io.mockk.coEvery
@@ -57,6 +58,9 @@ class SignInChallengeCognitoActionsTest {
     private val cognitoAuthService = mockk<AWSCognitoAuthService>()
     private val credentialStoreClient = mockk<StoreClientBehavior> {
         coEvery { loadCredentials(CredentialType.ASF) } returns AmplifyCredential.ASFDevice("asf_id")
+        coEvery { loadCredentials(match { it is CredentialType.Device }) } returns AmplifyCredential.DeviceData(
+            DeviceMetadata.Empty
+        )
     }
     private val logger = mockk<Logger>(relaxed = true)
     private val cognitoIdentityProviderClientMock = mockk<CognitoIdentityProviderClient>()
@@ -258,6 +262,83 @@ class SignInChallengeCognitoActionsTest {
             emptyList(),
             AuthChallenge(
                 "SELECT_CHALLENGE",
+                username = username,
+                session = null,
+                parameters = null
+            ),
+            SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
+        ).execute(dispatcher, authEnvironment)
+
+        assertTrue(capturedRequest.isCaptured)
+        assertEquals(expectedChallengeResponses, capturedRequest.captured.challengeResponses)
+    }
+
+    @Test
+    fun `device key is included in challenge response when device metadata exists`() = runTest {
+        val deviceKey = "fakeDeviceKey"
+        coEvery {
+            credentialStoreClient.loadCredentials(match { it is CredentialType.Device })
+        } returns AmplifyCredential.DeviceData(
+            DeviceMetadata.Metadata(
+                deviceKey = deviceKey,
+                deviceGroupKey = "fakeDeviceGroup"
+            )
+        )
+
+        val expectedChallengeResponses = mapOf(
+            "USERNAME" to username,
+            "DEVICE_KEY" to deviceKey,
+            "SMS_MFA_CODE" to answer
+        )
+
+        val capturedRequest = slot<RespondToAuthChallengeRequest>()
+        coEvery {
+            cognitoIdentityProviderClientMock.respondToAuthChallenge(capture(capturedRequest))
+        }.answers {
+            mockk()
+        }
+
+        SignInChallengeCognitoActions.verifyChallengeAuthAction(
+            answer,
+            emptyMap(),
+            emptyList(),
+            AuthChallenge(
+                "SMS_MFA",
+                username = username,
+                session = null,
+                parameters = null
+            ),
+            SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
+        ).execute(dispatcher, authEnvironment)
+
+        assertTrue(capturedRequest.isCaptured)
+        assertEquals(expectedChallengeResponses, capturedRequest.captured.challengeResponses)
+    }
+
+    @Test
+    fun `device key is not included in challenge response when no device metadata exists`() = runTest {
+        coEvery {
+            credentialStoreClient.loadCredentials(match { it is CredentialType.Device })
+        } returns AmplifyCredential.DeviceData(DeviceMetadata.Empty)
+
+        val expectedChallengeResponses = mapOf(
+            "USERNAME" to username,
+            "SMS_MFA_CODE" to answer
+        )
+
+        val capturedRequest = slot<RespondToAuthChallengeRequest>()
+        coEvery {
+            cognitoIdentityProviderClientMock.respondToAuthChallenge(capture(capturedRequest))
+        }.answers {
+            mockk()
+        }
+
+        SignInChallengeCognitoActions.verifyChallengeAuthAction(
+            answer,
+            emptyMap(),
+            emptyList(),
+            AuthChallenge(
+                "SMS_MFA",
                 username = username,
                 session = null,
                 parameters = null

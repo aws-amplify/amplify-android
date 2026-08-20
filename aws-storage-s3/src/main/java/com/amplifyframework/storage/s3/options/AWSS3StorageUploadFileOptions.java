@@ -16,8 +16,10 @@
 package com.amplifyframework.storage.s3.options;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.storage.ProgressStallTimeout;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.s3.ServerSideEncryption;
 
@@ -29,11 +31,13 @@ import java.util.Objects;
 public final class AWSS3StorageUploadFileOptions extends StorageUploadFileOptions {
     private final ServerSideEncryption serverSideEncryption;
     private final boolean useAccelerationMode;
+    private final ProgressStallTimeout progressStallTimeout;
 
     private AWSS3StorageUploadFileOptions(final Builder builder) {
         super(builder);
         this.serverSideEncryption = builder.getServerSideEncryption();
         this.useAccelerationMode = builder.useAccelerateEndpoint;
+        this.progressStallTimeout = builder.progressStallTimeout;
     }
 
     /**
@@ -76,7 +80,8 @@ public final class AWSS3StorageUploadFileOptions extends StorageUploadFileOption
                 .contentType(options.getContentType())
                 .serverSideEncryption(options.getServerSideEncryption())
                 .metadata(options.getMetadata())
-                .bucket(options.getBucket());
+                .bucket(options.getBucket())
+                .progressStallTimeout(options.getProgressStallTimeout());
     }
 
     /**
@@ -97,6 +102,21 @@ public final class AWSS3StorageUploadFileOptions extends StorageUploadFileOption
         return useAccelerationMode;
     }
 
+    /**
+     * Per-upload override for the progress stall timeout.
+     *
+     * <p>When {@code null}, the value configured on
+     * {@link com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration}
+     * is applied instead. When non-null, this value takes precedence and disables plugin-level
+     * stall detection overrides for this single upload.</p>
+     *
+     * @return a {@link ProgressStallTimeout} override, or {@code null} to defer to the plugin default
+     */
+    @Nullable
+    public ProgressStallTimeout getProgressStallTimeout() {
+        return progressStallTimeout;
+    }
+
     @Override
     @SuppressWarnings("deprecation")
     public boolean equals(Object obj) {
@@ -111,7 +131,8 @@ public final class AWSS3StorageUploadFileOptions extends StorageUploadFileOption
                     ObjectsCompat.equals(getContentType(), that.getContentType()) &&
                     ObjectsCompat.equals(getServerSideEncryption(), that.getServerSideEncryption()) &&
                     ObjectsCompat.equals(getMetadata(), that.getMetadata()) &&
-                    ObjectsCompat.equals(getBucket(), that.getBucket());
+                    ObjectsCompat.equals(getBucket(), that.getBucket()) &&
+                    ObjectsCompat.equals(getProgressStallTimeout(), that.getProgressStallTimeout());
         }
     }
 
@@ -124,7 +145,8 @@ public final class AWSS3StorageUploadFileOptions extends StorageUploadFileOption
                 getContentType(),
                 getServerSideEncryption(),
                 getMetadata(),
-                getBucket()
+                getBucket(),
+                getProgressStallTimeout()
         );
     }
 
@@ -139,6 +161,7 @@ public final class AWSS3StorageUploadFileOptions extends StorageUploadFileOption
                 ", serverSideEncryption=" + getServerSideEncryption().getName() +
                 ", metadata=" + getMetadata() +
                 ", bucket=" + getBucket() +
+                ", progressStallTimeout=" + getProgressStallTimeout() +
                 '}';
     }
 
@@ -150,6 +173,8 @@ public final class AWSS3StorageUploadFileOptions extends StorageUploadFileOption
     public static final class Builder extends StorageUploadFileOptions.Builder<Builder> {
         private ServerSideEncryption serverSideEncryption;
         private boolean useAccelerateEndpoint;
+        @Nullable
+        private ProgressStallTimeout progressStallTimeout;
 
         private Builder() {
             super();
@@ -174,6 +199,22 @@ public final class AWSS3StorageUploadFileOptions extends StorageUploadFileOption
         @NonNull
         public Builder serverSideEncryption(@NonNull ServerSideEncryption serverSideEncryption) {
             this.serverSideEncryption = Objects.requireNonNull(serverSideEncryption);
+            return this;
+        }
+
+        /**
+         * Configures the {@link ProgressStallTimeout} override for a single upload.
+         *
+         * <p>When {@code null} (the default), the value configured on
+         * {@link com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration} is
+         * applied. When non-null, this value takes precedence for this upload.</p>
+         *
+         * @param progressStallTimeout per-upload override, or {@code null} to defer to the plugin default
+         * @return Current Builder instance for fluent chaining
+         */
+        @NonNull
+        public Builder progressStallTimeout(@Nullable ProgressStallTimeout progressStallTimeout) {
+            this.progressStallTimeout = progressStallTimeout;
             return this;
         }
 

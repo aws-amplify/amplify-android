@@ -30,6 +30,7 @@ import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 
 import org.junit.After;
 import org.junit.Before;
@@ -49,7 +50,7 @@ import static org.junit.Assert.assertTrue;
  * Tests that the {@link SQLiteStorageAdapter} is able to serve as as repository
  * for {@link PendingMutation.PersistentRecord}s.
  */
-public final class MutationPersistenceInstrumentationTest {
+public final class MutationPersistenceInstrumentationTest extends DeviceFarmTestBase {
     private static final String DATABASE_NAME = "AmplifyDatastore.db";
 
     private SchemaRegistry schemaRegistry;

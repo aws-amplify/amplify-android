@@ -65,6 +65,10 @@ readonly config_files=(
     "aws-auth-cognito/src/androidTest/res/raw/amplify_outputs.json"
     "aws-auth-cognito/src/androidTest/res/raw/amplify_outputs_email_or_totp_mfa.json"
 
+    # Kinesis
+    "aws-kinesis/src/androidTest/res/raw/amplify_outputs.json"
+    "aws-kinesis/src/androidTest/res/raw/credentials.json"
+
     # Events
     "appsync/aws-sdk-appsync-events/src/androidTest/res/raw/amplify_outputs.json"
     "appsync/aws-sdk-appsync-events/src/androidTest/res/raw/credentials.json"

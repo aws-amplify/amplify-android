@@ -23,11 +23,15 @@ import java.util.Set;
 final class CreateSqlCommands {
     private final Set<SqlCommand> createTableCommands;
     private final Set<SqlCommand> createIndexCommands;
+    private final Set<SqlCommand> createInsertCommands;
 
     CreateSqlCommands(Set<SqlCommand> createTableCommands,
-                      Set<SqlCommand> createIndexCommands) {
+                      Set<SqlCommand> createIndexCommands,
+                      Set<SqlCommand> createInsertCommands
+    ) {
         this.createTableCommands = createTableCommands;
         this.createIndexCommands = createIndexCommands;
+        this.createInsertCommands = createInsertCommands;
     }
 
     Set<SqlCommand> getCreateTableCommands() {
@@ -36,5 +40,9 @@ final class CreateSqlCommands {
 
     Set<SqlCommand> getCreateIndexCommands() {
         return createIndexCommands;
+    }
+
+    Set<SqlCommand> getCreateInsertCommands() {
+        return createInsertCommands;
     }
 }

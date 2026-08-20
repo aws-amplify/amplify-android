@@ -16,44 +16,32 @@
 plugins {
     alias(libs.plugins.amplify.android.library)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.amplify.api)
+    alias(libs.plugins.amplify.publishing)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
-apply(from = rootProject.file("configuration/publishing.gradle"))
-
-group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.analytics.pinpoint"
 }
 
 dependencies {
-    implementation(project(":core"))
+    api(project(":core"))
     implementation(project(":aws-core"))
-    implementation(project(":aws-pinpoint-core"))
+    api(project(":aws-pinpoint-core"))
 
     implementation(libs.androidx.appcompat)
-    implementation(libs.aws.pinpoint)
+    api(platform(libs.aws.bom))
+    api(libs.aws.pinpoint)
     implementation(libs.kotlin.serializationJson)
 
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.mockk)
-    testImplementation(libs.test.mockito.core)
-    testImplementation(libs.test.mockito.inline)
-    testImplementation(libs.test.robolectric)
+    testImplementation(libs.bundles.test.unit)
+    testImplementation(libs.bundles.test.unit.android)
+    testImplementation(libs.bundles.test.mockito)
     testImplementation(libs.test.androidx.junit)
-    testImplementation(libs.test.androidx.core)
-    testImplementation(libs.test.kotlin.coroutines)
-    testImplementation(libs.test.kotest.assertions)
     testImplementation(project(":testutils"))
-    testImplementation(project(":aws-analytics-pinpoint"))
 
+    androidTestImplementation(libs.bundles.test.android)
     androidTestImplementation(project(":testutils"))
-    androidTestImplementation(libs.test.androidx.core)
     androidTestImplementation(project(":aws-auth-cognito"))
-    androidTestImplementation(libs.test.androidx.runner)
-    androidTestImplementation(libs.test.kotlin.coroutines)
-    androidTestImplementation(libs.test.androidx.junit)
-    androidTestImplementation(project(":aws-analytics-pinpoint"))
 }

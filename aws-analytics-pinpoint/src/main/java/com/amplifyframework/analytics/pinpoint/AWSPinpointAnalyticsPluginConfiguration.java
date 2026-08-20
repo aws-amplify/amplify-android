@@ -86,6 +86,7 @@ final class AWSPinpointAnalyticsPluginConfiguration {
         return new Builder();
     }
 
+    @SuppressWarnings("deprecation")
     @InternalAmplifyApi
     static AWSPinpointAnalyticsPluginConfiguration from(
         @NonNull AmplifyOutputsData outputs,

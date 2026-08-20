@@ -38,7 +38,6 @@ import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 internal sealed class AuthorizationState : State {
     data class NotConfigured(val id: String = "") : AuthorizationState()
     data class Configured(val id: String = "") : AuthorizationState()
-    data class SigningIn(val id: String = "") : AuthorizationState()
     data class SigningOut(val amplifyCredential: AmplifyCredential) : AuthorizationState()
     data class FetchingAuthSession(
         val signedInData: SignedInData,
@@ -85,12 +84,18 @@ internal sealed class AuthorizationState : State {
             val deleteUserEvent = event.isDeleteUserEvent()
             val defaultResolution = StateResolution(oldState)
 
-            if (authenticationEvent is AuthenticationEvent.EventType.SignInCompleted) {
-                val action = authorizationActions.initializeFetchAuthSession(authenticationEvent.signedInData)
-                return StateResolution(
-                    FetchingAuthSession(authenticationEvent.signedInData, FetchAuthSessionState.NotStarted()),
-                    listOf(action)
-                )
+            when (authenticationEvent) {
+                is AuthenticationEvent.EventType.SignInCompleted -> {
+                    val action = authorizationActions.initializeFetchAuthSession(authenticationEvent.signedInData)
+                    return StateResolution(
+                        FetchingAuthSession(authenticationEvent.signedInData, FetchAuthSessionState.NotStarted()),
+                        listOf(action)
+                    )
+                }
+                is AuthenticationEvent.EventType.CancelSignIn -> {
+                    return StateResolution(Configured())
+                }
+                else -> Unit // no-op
             }
 
             return when (oldState) {
@@ -125,7 +130,6 @@ internal sealed class AuthorizationState : State {
                         )
                         StateResolution(newState, listOf(action))
                     }
-                    authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> StateResolution(SigningIn())
                     else -> defaultResolution
                 }
                 is StoringCredentials -> when (authEvent) {
@@ -137,17 +141,6 @@ internal sealed class AuthorizationState : State {
                         }
                     }
                     is AuthEvent.EventType.CachedCredentialsFailed -> StateResolution(NotConfigured())
-                    else -> defaultResolution
-                }
-                is SigningIn -> when (authenticationEvent) {
-                    is AuthenticationEvent.EventType.SignInCompleted -> {
-                        val action = authorizationActions.initializeFetchAuthSession(authenticationEvent.signedInData)
-                        StateResolution(
-                            FetchingAuthSession(authenticationEvent.signedInData, FetchAuthSessionState.NotStarted()),
-                            listOf(action)
-                        )
-                    }
-                    is AuthenticationEvent.EventType.CancelSignIn -> StateResolution(Configured())
                     else -> defaultResolution
                 }
                 is SigningOut -> when {
@@ -265,7 +258,6 @@ internal sealed class AuthorizationState : State {
                     }
                 }
                 is SessionEstablished -> when {
-                    authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> StateResolution(SigningIn())
                     authenticationEvent is AuthenticationEvent.EventType.SignOutRequested ||
                         authenticationEvent is AuthenticationEvent.EventType.ClearFederationToIdentityPool -> {
                         StateResolution(SigningOut(oldState.amplifyCredential))
@@ -300,7 +292,6 @@ internal sealed class AuthorizationState : State {
                     else -> defaultResolution
                 }
                 is Error -> when {
-                    authenticationEvent is AuthenticationEvent.EventType.SignInRequested -> StateResolution(SigningIn())
                     authenticationEvent is AuthenticationEvent.EventType.SignOutRequested -> StateResolution(
                         SigningOut(AmplifyCredential.Empty)
                     )

@@ -17,10 +17,8 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.amplify.android.library)
-    alias(libs.plugins.amplify.api)
+    alias(libs.plugins.amplify.publishing)
 }
-
-apply(from = rootProject.file("configuration/publishing.gradle"))
 
 fun readVersion() = Properties().run {
     file("../version.properties").inputStream().use { load(it) }
@@ -28,7 +26,6 @@ fun readVersion() = Properties().run {
 }
 
 project.setProperty("VERSION_NAME", readVersion())
-group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amazonaws.sdk.appsync.amplify"
@@ -41,10 +38,8 @@ dependencies {
 
     implementation(project(":aws-auth-cognito"))
     implementation(project(":aws-core"))
+    implementation(platform(libs.aws.bom))
     implementation(libs.aws.signing)
 
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.mockk)
-    testImplementation(libs.test.kotlin.coroutines)
-    testImplementation(libs.test.kotest.assertions)
+    testImplementation(libs.bundles.test.unit)
 }

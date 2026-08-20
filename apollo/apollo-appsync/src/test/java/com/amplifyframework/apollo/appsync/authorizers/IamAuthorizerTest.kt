@@ -20,9 +20,11 @@ import com.amplifyframework.apollo.appsync.toJson
 import com.apollographql.apollo.api.ApolloRequest
 import com.apollographql.apollo.api.http.HttpRequest
 import io.kotest.matchers.maps.shouldContainAll
+import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
@@ -33,6 +35,21 @@ class IamAuthorizerTest {
     private val delegate: (
         HttpRequest
     ) -> Map<String, String> = { mapOf("header1" to "header1Value", "header2" to "header2Value") }
+
+    @Test
+    fun `appends connect to realtime url`() = runTest {
+        val mockDelegate: (HttpRequest) -> Map<String, String> = mockk(relaxed = true)
+        val authorizer = IamAuthorizer(generateSignatureHeaders = mockDelegate)
+        authorizer.getWebsocketConnectionHeaders(endpoint)
+        verify {
+            mockDelegate(
+                withArg {
+                    it.url shouldBe
+                        "https://example1234567890123456789.appsync-realtime-api.us-east-1.amazonaws.com/graphql/connect"
+                }
+            )
+        }
+    }
 
     @Test
     fun `returns authorization header for HTTP requests`() = runTest {

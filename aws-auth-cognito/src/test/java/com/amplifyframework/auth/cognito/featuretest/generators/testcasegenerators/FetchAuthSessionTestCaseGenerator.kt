@@ -20,6 +20,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResourceNotFoundExc
 import com.amplifyframework.auth.AWSCognitoUserPoolTokens
 import com.amplifyframework.auth.AWSCredentials
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
+import com.amplifyframework.auth.cognito.exceptions.service.ResourceNotFoundException as AmplifyResourceNotFoundException
 import com.amplifyframework.auth.cognito.featuretest.API
 import com.amplifyframework.auth.cognito.featuretest.AuthAPI
 import com.amplifyframework.auth.cognito.featuretest.CognitoType
@@ -50,9 +51,9 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
         TimeZone.setDefault(initialTimeZone)
     }
 
-    private val mockedRefreshInitiateAuthResponse = MockResponse(
+    private val mockedRefreshGetTokensFromRefreshTokenResponse = MockResponse(
         CognitoType.CognitoIdentityProvider,
-        "initiateAuth",
+        "getTokensFromRefreshToken",
         ResponseType.Success,
         mapOf(
             "authenticationResult" to mapOf(
@@ -75,7 +76,7 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
         CognitoType.CognitoIdentity,
         "getId",
         ResponseType.Failure,
-        TooManyRequestsException.invoke {
+        TooManyRequestsException {
             message = "Error type: Client, Protocol response: (empty response)"
         }.toJsonElement()
     )
@@ -98,16 +99,16 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
         CognitoType.CognitoIdentity,
         "getCredentialsForIdentity",
         ResponseType.Failure,
-        TooManyRequestsException.invoke {
+        TooManyRequestsException {
             message = "Error type: Client, Protocol response: (empty response)"
         }.toJsonElement()
     )
 
-    private val mockedRefreshInitiateAuthFailureResponse = MockResponse(
+    private val mockedRefreshGetTokensFromRefreshTokenFailureResponse = MockResponse(
         CognitoType.CognitoIdentityProvider,
-        "initiateAuth",
+        "getTokensFromRefreshToken",
         ResponseType.Failure,
-        ResourceNotFoundException.invoke {
+        ResourceNotFoundException {
             message = "Error type: Client, Protocol response: (empty response)"
         }.toJsonElement()
     )
@@ -156,20 +157,24 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
 
     private val unknownRefreshException = UnknownException(
         message = "Fetch auth session failed.",
-        cause = ResourceNotFoundException.invoke { }
+        cause = ResourceNotFoundException { }
     )
 
     private val identityRefreshException = UnknownException(
         message = "Fetch auth session failed.",
-        cause = TooManyRequestsException.invoke { }
+        cause = TooManyRequestsException { }
+    )
+
+    private val resourceNotFoundException = AmplifyResourceNotFoundException(
+        cause = ResourceNotFoundException { }
     )
 
     private val expectedRefreshFailure = AWSCognitoAuthSession(
         isSignedIn = true,
-        identityIdResult = AuthSessionResult.failure(unknownRefreshException),
-        awsCredentialsResult = AuthSessionResult.failure(unknownRefreshException),
-        userSubResult = AuthSessionResult.failure(unknownRefreshException),
-        userPoolTokensResult = AuthSessionResult.failure(unknownRefreshException)
+        identityIdResult = AuthSessionResult.failure(resourceNotFoundException),
+        awsCredentialsResult = AuthSessionResult.failure(resourceNotFoundException),
+        userSubResult = AuthSessionResult.failure(resourceNotFoundException),
+        userPoolTokensResult = AuthSessionResult.failure(resourceNotFoundException)
     ).toJsonElement()
 
     private val expectedRefreshIdentityFailure = AWSCognitoAuthSession(
@@ -225,7 +230,7 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
             "authconfiguration.json",
             "SignedIn_SessionEstablished.json",
             mockedResponses = listOf(
-                mockedRefreshInitiateAuthResponse,
+                mockedRefreshGetTokensFromRefreshTokenResponse,
                 mockedRefreshGetIdResponse,
                 mockedRefreshGetAWSCredentialsResponse
             )
@@ -243,7 +248,7 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
         preConditions = PreConditions(
             "authconfiguration.json",
             "SignedIn_SessionEstablished.json",
-            mockedResponses = listOf(mockedRefreshInitiateAuthFailureResponse)
+            mockedResponses = listOf(mockedRefreshGetTokensFromRefreshTokenFailureResponse)
         ),
         api = API(
             name = AuthAPI.fetchAuthSession,
@@ -259,7 +264,7 @@ object FetchAuthSessionTestCaseGenerator : SerializableProvider {
             "authconfiguration.json",
             "SignedIn_SessionEstablished.json",
             mockedResponses = listOf(
-                mockedRefreshInitiateAuthResponse,
+                mockedRefreshGetTokensFromRefreshTokenResponse,
                 mockedRefreshGetIdFailureResponse,
                 mockedRefreshGetAWSCredentialsFailureResponse
             )

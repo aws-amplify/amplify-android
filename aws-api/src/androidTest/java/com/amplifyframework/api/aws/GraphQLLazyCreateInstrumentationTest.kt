@@ -31,6 +31,7 @@ import com.amplifyframework.datastore.generated.model.HasOneChild
 import com.amplifyframework.datastore.generated.model.Parent
 import com.amplifyframework.datastore.generated.model.ParentPath
 import com.amplifyframework.kotlin.core.Amplify
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -38,7 +39,7 @@ import org.junit.Assert.fail
 import org.junit.BeforeClass
 import org.junit.Test
 
-class GraphQLLazyCreateInstrumentationTest {
+class GraphQLLazyCreateInstrumentationTest : DeviceFarmTestBase() {
 
     companion object {
         @JvmStatic

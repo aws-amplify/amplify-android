@@ -21,19 +21,18 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.BuildConfig;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.util.UserAgent;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.util.LinkedHashMap;
 
 import static org.junit.Assert.assertTrue;
 
 /**
  * Tests that configuring {@link UserAgent} via Amplify behaves as intended.
  */
-public final class UserAgentConfigurationTest {
+public final class UserAgentConfigurationTest extends DeviceFarmTestBase {
     /**
      * Since Amplify can only be configured once at the time of writing this test,
      * call {@link Amplify#configure(AmplifyConfiguration, Context)} once during
@@ -55,15 +54,5 @@ public final class UserAgentConfigurationTest {
                 UserAgent.Platform.ANDROID.getLibraryName() + "/" +
                 BuildConfig.VERSION_NAME + " md/"; // "(" asserts that system info follows this prefix
         assertTrue(UserAgent.string().startsWith(expectedUserAgentPrefix));
-    }
-
-    /**
-     * Tests that attempting to configure {@link UserAgent} externally
-     * (after configuring Amplify) fails.
-     * @throws AmplifyException if configuration fails.
-     */
-    @Test(expected = AmplifyException.class)
-    public void configuringUserAgentExternallyFails() throws AmplifyException {
-        UserAgent.configure(new LinkedHashMap<>());
     }
 }

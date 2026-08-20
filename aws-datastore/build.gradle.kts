@@ -15,50 +15,42 @@
 
 plugins {
     alias(libs.plugins.amplify.android.library)
-    alias(libs.plugins.amplify.api)
+    alias(libs.plugins.amplify.publishing)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
-apply(from = rootProject.file("configuration/publishing.gradle"))
-
-group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.datastore"
 }
 
 dependencies {
-    implementation(project(":core"))
+    api(project(":core"))
     implementation(project(":aws-core"))
-    implementation(project(":aws-api-appsync"))
+    api(project(":aws-api-appsync"))
 
     implementation(libs.androidx.appcompat)
-    implementation(libs.gson)
+    // androidx.core's Supplier leaks into the public API (Orchestrator constructor); declare
+    // androidx.core directly as api rather than relying on transitive resolution via appcompat.
+    api(libs.androidx.core)
+    api(libs.gson)
     implementation(libs.kotlin.coroutines.rx3)
-    implementation(libs.rxjava)
+    api(libs.rxjava)
     implementation(libs.uuidgen)
 
+    testImplementation(libs.bundles.test.unit)
+    testImplementation(libs.bundles.test.unit.android)
+    testImplementation(libs.bundles.test.mockito)
+    testImplementation(libs.test.jsonassert)
     testImplementation(project(":testmodels"))
     testImplementation(project(":testutils"))
-    testImplementation(libs.test.jsonassert)
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.mockito.core)
-    testImplementation(libs.test.robolectric)
-    testImplementation(libs.test.androidx.core)
-    testImplementation(libs.test.mockk)
-    testImplementation(libs.test.kotlin.coroutines)
 
-    androidTestImplementation(libs.test.mockito.core)
+    androidTestImplementation(libs.bundles.test.android)
     androidTestImplementation(project(":testmodels"))
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(project(":aws-api"))
-    androidTestImplementation(project(":aws-datastore"))
     androidTestImplementation(libs.androidx.annotation)
-    androidTestImplementation(libs.test.androidx.core)
-    androidTestImplementation(libs.test.androidx.runner)
-    androidTestImplementation(libs.test.androidx.junit)
     androidTestImplementation(project(":aws-auth-cognito"))
-    androidTestImplementation(libs.rxjava)
     androidTestImplementation(libs.okhttp)
     androidTestImplementation(libs.oauth2)
 }

@@ -17,6 +17,7 @@ package com.amplifyframework.auth.cognito
 
 import android.app.Activity
 import android.content.Intent
+import com.amplifyframework.auth.AWSCognitoAuthMetadataType
 import com.amplifyframework.auth.AuthCodeDeliveryDetails
 import com.amplifyframework.auth.AuthDevice
 import com.amplifyframework.auth.AuthException
@@ -53,11 +54,16 @@ import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.auth.result.AuthUpdateAttributeResult
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
+import com.amplifyframework.statemachine.codegen.states.AuthState
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldNotBeBlank
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlin.test.assertEquals
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.flow.MutableSharedFlow
+import org.json.JSONObject
 import org.junit.Before
 import org.junit.Test
 
@@ -68,12 +74,13 @@ class AWSCognitoAuthPluginTest {
     }
 
     private lateinit var authPlugin: AWSCognitoAuthPlugin
-    private val realPlugin: RealAWSCognitoAuthPlugin = mockk(relaxed = true)
 
     @Before
     fun setup() {
         authPlugin = AWSCognitoAuthPlugin()
-        authPlugin.realPlugin = realPlugin
+        authPlugin.authEnvironment = mockk(relaxed = true)
+        authPlugin.authStateMachine = mockk(relaxed = true)
+        authPlugin.authConfiguration = mockk(relaxed = true)
         authPlugin.useCaseFactory = mockk(relaxed = true)
     }
 
@@ -176,9 +183,11 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthSignInResult> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.signIn()
+
         authPlugin.signIn(expectedUsername, expectedPassword, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.signIn(expectedUsername, expectedPassword, any(), any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute(expectedUsername, expectedPassword) }
     }
 
     @Test
@@ -189,17 +198,11 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthSignInResult> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.signIn()
+
         authPlugin.signIn(expectedUsername, expectedPassword, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.signIn(
-                expectedUsername,
-                expectedPassword,
-                expectedOptions,
-                any(),
-                any()
-            )
-        }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute(expectedUsername, expectedPassword, expectedOptions) }
     }
 
     @Test
@@ -208,9 +211,11 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthSignInResult> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.confirmSignIn()
+
         authPlugin.confirmSignIn(expectedChallengeResponse, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.confirmSignIn(expectedChallengeResponse, any(), any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute(expectedChallengeResponse) }
     }
 
     @Test
@@ -220,11 +225,11 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthSignInResult> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.confirmSignIn()
+
         authPlugin.confirmSignIn(expectedConfirmationCode, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.confirmSignIn(expectedConfirmationCode, expectedOptions, any(), any())
-        }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute(expectedConfirmationCode, expectedOptions) }
     }
 
     @Test
@@ -234,15 +239,12 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthSignInResult> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.webUiSignIn()
+
         authPlugin.signInWithSocialWebUI(expectedProvider, expectedActivity, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.signInWithSocialWebUI(
-                expectedProvider,
-                expectedActivity,
-                any(),
-                any()
-            )
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute(expectedActivity, expectedProvider)
         }
     }
 
@@ -254,6 +256,8 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthSignInResult> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.webUiSignIn()
+
         authPlugin.signInWithSocialWebUI(
             expectedProvider,
             expectedActivity,
@@ -262,14 +266,8 @@ class AWSCognitoAuthPluginTest {
             expectedOnError
         )
 
-        verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.signInWithSocialWebUI(
-                expectedProvider,
-                expectedActivity,
-                expectedOptions,
-                any(),
-                any()
-            )
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute(expectedActivity, expectedProvider, expectedOptions)
         }
     }
 
@@ -279,9 +277,11 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthSignInResult> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.webUiSignIn()
+
         authPlugin.signInWithWebUI(expectedActivity, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.signInWithWebUI(expectedActivity, any(), any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute(expectedActivity) }
     }
 
     @Test
@@ -291,20 +291,21 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthSignInResult> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.webUiSignIn()
+
         authPlugin.signInWithWebUI(expectedActivity, expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.signInWithWebUI(expectedActivity, expectedOptions, any(), any())
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute(callingActivity = expectedActivity, options = expectedOptions)
         }
     }
 
     @Test
     fun verifyHandleWebUISignInResponse() {
         val expectedIntent: Intent = mockk()
-
+        val useCase = authPlugin.useCaseFactory.webUISignInResponse()
         authPlugin.handleWebUISignInResponse(expectedIntent)
-
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.handleWebUISignInResponse(expectedIntent) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute(expectedIntent) }
     }
 
     @Test
@@ -313,9 +314,11 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthSession> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.fetchAuthSession()
+
         authPlugin.fetchAuthSession(expectedOptions, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.fetchAuthSession(expectedOptions, any(), any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute(expectedOptions) }
     }
 
     @Test
@@ -323,9 +326,11 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Consumer<AuthSession> { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.fetchAuthSession()
+
         authPlugin.fetchAuthSession(expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.fetchAuthSession(any(), any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute() }
     }
 
     @Test
@@ -548,9 +553,9 @@ class AWSCognitoAuthPluginTest {
     @Test
     fun verifyEscapeHatch() {
         val expectedEscapeHatch = mockk<AWSCognitoAuthService>()
-        every { realPlugin.escapeHatch() } returns expectedEscapeHatch
+        every { authPlugin.authEnvironment.cognitoAuthService } returns expectedEscapeHatch
 
-        assertEquals(expectedEscapeHatch, authPlugin.escapeHatch)
+        authPlugin.escapeHatch shouldBe expectedEscapeHatch
     }
 
     @Test
@@ -620,9 +625,10 @@ class AWSCognitoAuthPluginTest {
     fun verifySignOut() {
         val expectedOnComplete = Consumer<AuthSignOutResult> { }
 
+        val useCase = authPlugin.useCaseFactory.signOut()
         authPlugin.signOut(expectedOnComplete)
 
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.signOut(any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute() }
     }
 
     @Test
@@ -630,9 +636,10 @@ class AWSCognitoAuthPluginTest {
         val expectedOptions = AuthSignOutOptions.builder().build()
         val expectedOnComplete = Consumer<AuthSignOutResult> { }
 
+        val useCase = authPlugin.useCaseFactory.signOut()
         authPlugin.signOut(expectedOptions, expectedOnComplete)
 
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.signOut(expectedOptions, any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute(expectedOptions) }
     }
 
     @Test
@@ -652,18 +659,13 @@ class AWSCognitoAuthPluginTest {
         val expectedProvider = AuthProvider.amazon()
         val expectedOnSuccess = Consumer<FederateToIdentityPoolResult> { }
         val expectedOnError = Consumer<AuthException> { }
-        val options = FederateToIdentityPoolOptions.builder().build()
+
+        val useCase = authPlugin.useCaseFactory.federateToIdentityPool()
 
         authPlugin.federateToIdentityPool(expectedToken, expectedProvider, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.federateToIdentityPool(
-                expectedToken,
-                expectedProvider,
-                options,
-                any(),
-                any()
-            )
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute(expectedToken, expectedProvider)
         }
     }
 
@@ -678,16 +680,12 @@ class AWSCognitoAuthPluginTest {
             .developerProvidedIdentityId("devid")
             .build()
 
+        val useCase = authPlugin.useCaseFactory.federateToIdentityPool()
+
         authPlugin.federateToIdentityPool(expectedToken, expectedProvider, options, expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) {
-            realPlugin.federateToIdentityPool(
-                expectedToken,
-                expectedProvider,
-                options,
-                any(),
-                any()
-            )
+        coVerify(timeout = CHANNEL_TIMEOUT) {
+            useCase.execute(expectedToken, expectedProvider, options)
         }
     }
 
@@ -696,9 +694,10 @@ class AWSCognitoAuthPluginTest {
         val expectedOnSuccess = Action { }
         val expectedOnError = Consumer<AuthException> { }
 
+        val useCase = authPlugin.useCaseFactory.clearFederationToIdentityPool()
         authPlugin.clearFederationToIdentityPool(expectedOnSuccess, expectedOnError)
 
-        verify(timeout = CHANNEL_TIMEOUT) { realPlugin.clearFederationToIdentityPool(any(), any()) }
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute() }
     }
 
     @Test
@@ -853,6 +852,79 @@ class AWSCognitoAuthPluginTest {
 
     @Test
     fun verifyPluginKey() {
-        assertEquals("awsCognitoAuthPlugin", authPlugin.pluginKey)
+        authPlugin.pluginKey shouldBe "awsCognitoAuthPlugin"
+    }
+
+    @Test
+    fun verifyGetVersion() {
+        authPlugin.version.shouldNotBeBlank()
+    }
+
+    @Test
+    fun verifyGetAuthConfiguration() {
+        val expectedConfig = mockk<AuthConfiguration>()
+        authPlugin.authConfiguration = expectedConfig
+
+        authPlugin.getAuthConfiguration() shouldBe expectedConfig
+    }
+
+    @Test
+    fun verifyAddToUserAgent() {
+        val mockPairs = mutableMapOf<String, String>()
+        val mockService = mockk<AWSCognitoAuthService>(relaxed = true) {
+            every { customUserAgentPairs } returns mockPairs
+        }
+        every { authPlugin.authEnvironment.cognitoAuthService } returns mockService
+
+        authPlugin.addToUserAgent(AWSCognitoAuthMetadataType.Authenticator, "1.0.0")
+
+        mockPairs[AWSCognitoAuthMetadataType.Authenticator.key] shouldBe "1.0.0"
+    }
+
+    @Test
+    fun verifyGetPluginConfiguration() {
+        val expectedJson = JSONObject()
+        val mockConfig = mockk<AuthConfiguration> {
+            every { toGen1Json(any()) } returns expectedJson
+        }
+        authPlugin.authConfiguration = mockConfig
+
+        @Suppress("DEPRECATION")
+        val result = authPlugin.getPluginConfiguration()
+
+        result shouldBe expectedJson
+        verify { mockConfig.toGen1Json() }
+    }
+
+    @Test
+    fun verifyHandleWebUISignInResponseWithNullIntent() {
+        val useCase = authPlugin.useCaseFactory.webUISignInResponse()
+        authPlugin.handleWebUISignInResponse(null)
+        coVerify(timeout = CHANNEL_TIMEOUT) { useCase.execute(null) }
+    }
+
+    @Test
+    fun `initialize completes when state machine reaches Configured`() {
+        val plugin = AWSCognitoAuthPlugin(configurationTimeout = 100.milliseconds)
+        plugin.authStateMachine = mockk(relaxed = true)
+
+        val stateFlow = MutableSharedFlow<AuthState>(replay = 1)
+        stateFlow.tryEmit(AuthState.Configured(null, null, null))
+        every { plugin.authStateMachine.state } returns stateFlow
+
+        plugin.initialize(mockk())
+    }
+
+    @Test
+    fun `initialize does not throw when state machine does not reach Configured within timeout`() {
+        val plugin = AWSCognitoAuthPlugin(configurationTimeout = 100.milliseconds)
+        plugin.authStateMachine = mockk(relaxed = true)
+
+        val stateFlow = MutableSharedFlow<AuthState>(replay = 1)
+        stateFlow.tryEmit(AuthState.ConfiguringAuth())
+        every { plugin.authStateMachine.state } returns stateFlow
+
+        // Should complete without throwing despite the state never reaching Configured
+        plugin.initialize(mockk())
     }
 }

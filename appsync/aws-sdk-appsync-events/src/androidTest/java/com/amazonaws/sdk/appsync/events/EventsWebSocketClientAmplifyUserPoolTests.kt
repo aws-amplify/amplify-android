@@ -26,6 +26,7 @@ import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.configuration.AmplifyOutputs
 import com.amplifyframework.kotlin.core.Amplify
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.coroutines.runBlockingWithTimeout
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
@@ -36,7 +37,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import org.junit.BeforeClass
 import org.junit.Test
 
-internal class EventsWebSocketClientAmplifyUserPoolTests {
+internal class EventsWebSocketClientAmplifyUserPoolTests : DeviceFarmTestBase() {
     private val eventsConfig = getEventsConfig(InstrumentationRegistry.getInstrumentation().targetContext)
     private val userPoolAuthorizer = AmplifyUserPoolAuthorizer()
     private val defaultChannel = "default/${UUID.randomUUID()}"

@@ -19,6 +19,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AuthFlowType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ConfirmSignUpRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ForgotPasswordRequest
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetTokensFromRefreshTokenRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.InitiateAuthRequest
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.SignUpRequest
 import com.amplifyframework.auth.cognito.featuretest.ExpectationShapes
@@ -99,6 +100,20 @@ object CognitoRequestFactory {
                 secretHash = AuthHelper.getSecretHash("", "", "")
             }
             SignUpRequest.invoke(expectedRequest)
+        }
+
+        "getTokensFromRefreshToken" -> {
+            val params = targetApi.request as JsonObject
+            val expectedRequestBuilder: GetTokensFromRefreshTokenRequest.Builder.() -> Unit = {
+                refreshToken = (params["refreshToken"] as JsonPrimitive).content
+                clientId = (params["clientId"] as JsonPrimitive).content
+                clientSecret = (params["clientSecret"] as? JsonPrimitive)?.content
+                deviceKey = (params["deviceKey"] as? JsonPrimitive)?.content
+                clientMetadata = params["clientMetadata"]?.let {
+                    Json.decodeFromJsonElement<Map<String, String>>(it as JsonObject)
+                }
+            }
+            GetTokensFromRefreshTokenRequest.invoke(expectedRequestBuilder)
         }
 
         else -> error("Expected request for $targetApi for Cognito is not defined")

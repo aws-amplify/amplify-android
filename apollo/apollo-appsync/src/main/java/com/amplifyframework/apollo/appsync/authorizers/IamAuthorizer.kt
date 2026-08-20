@@ -54,7 +54,7 @@ class IamAuthorizer(private val generateSignatureHeaders: suspend (HttpRequest) 
     // See SubscriptionAuthorizer.forIam
     override suspend fun getWebsocketConnectionHeaders(endpoint: AppSyncEndpoint): Map<String, String> {
         val request = createHttpRequestForSigning(
-            url = endpoint.websocketConnection.toString(),
+            url = endpoint.realtime.toString() + "/connect",
             host = endpoint.serverUrl.host,
             json = "{}"
         )

@@ -23,6 +23,7 @@ import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.testmodels.customprimarykey.AmplifyModelProvider;
 import com.amplifyframework.testmodels.customprimarykey.Comment;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 
 import org.junit.After;
 import org.junit.Before;
@@ -40,7 +41,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test the delete functionality of {@link SQLiteStorageAdapter} operations.
  */
-public final class SQLiteStorageAdapterDeleteWithCpkTest {
+public final class SQLiteStorageAdapterDeleteWithCpkTest extends DeviceFarmTestBase {
     private SynchronousStorageAdapter adapter;
 
     /**

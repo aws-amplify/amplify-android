@@ -28,6 +28,7 @@ import com.amplifyframework.datastore.generated.model.HasOneChild
 import com.amplifyframework.datastore.generated.model.Parent
 import com.amplifyframework.datastore.generated.model.ParentPath
 import com.amplifyframework.kotlin.core.Amplify
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -42,7 +43,7 @@ import org.junit.Assert.assertEquals
 import org.junit.BeforeClass
 import org.junit.Test
 
-class GraphQLLazySubscribeInstrumentationTest {
+class GraphQLLazySubscribeInstrumentationTest : DeviceFarmTestBase() {
 
     companion object {
 

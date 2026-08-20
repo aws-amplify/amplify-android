@@ -15,13 +15,10 @@
 
 plugins {
     alias(libs.plugins.amplify.android.library)
-    alias(libs.plugins.amplify.api)
+    alias(libs.plugins.amplify.publishing)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
-apply(from = rootProject.file("configuration/publishing.gradle"))
-
-group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.api.aws"
@@ -29,36 +26,31 @@ android {
 
 dependencies {
     api(project(":core"))
-    api(project(":aws-core"))
-    implementation(project(":aws-api-appsync"))
+    implementation(project(":aws-core"))
+    api(project(":aws-api-appsync"))
 
     implementation(libs.androidx.appcompat)
-    implementation(libs.aws.signing)
+    api(platform(libs.aws.bom))
+    api(libs.aws.signing)
+    // Smithy types leak into this module's public API: CredentialsProvider (ApiAuthProviders,
+    // IamRequestDecorator) and HttpRequest (AWS4Signer.sign).
+    api(libs.aws.credentials)
+    api(libs.aws.smithy.http)
     implementation(libs.gson)
-    implementation(libs.okhttp)
+    api(libs.okhttp)
 
+    testImplementation(libs.bundles.test.unit)
+    testImplementation(libs.bundles.test.unit.android)
     testImplementation(project(":testutils"))
     testImplementation(project(":testmodels"))
-    testImplementation(libs.test.androidx.core)
     testImplementation(libs.test.jsonassert)
-    testImplementation(libs.test.junit)
     testImplementation(libs.test.mockito.core)
-    testImplementation(libs.test.mockk)
-    testImplementation(libs.test.kotest.assertions)
     testImplementation(libs.test.mockwebserver)
-    testImplementation(libs.rxjava)
-    testImplementation(libs.test.robolectric)
-    testImplementation(libs.test.kotlin.coroutines)
 
+    androidTestImplementation(libs.bundles.test.android)
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(project(":testmodels"))
-    androidTestImplementation(libs.test.androidx.core)
     androidTestImplementation(project(":aws-auth-cognito"))
     androidTestImplementation(project(":core-kotlin"))
-    androidTestImplementation(libs.test.androidx.runner)
-    androidTestImplementation(libs.test.androidx.junit)
     androidTestImplementation(libs.rxjava)
-    androidTestImplementation(libs.test.kotlin.coroutines)
-
-    androidTestUtil(libs.test.androidx.orchestrator)
 }

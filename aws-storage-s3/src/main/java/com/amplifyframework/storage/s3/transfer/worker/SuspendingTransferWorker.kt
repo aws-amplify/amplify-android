@@ -29,6 +29,7 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.category.CategoryType
+import com.amplifyframework.storage.ProgressStallTimeoutException
 import com.amplifyframework.storage.TransferState
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin
 import com.amplifyframework.storage.s3.R
@@ -95,7 +96,7 @@ internal abstract class SuspendingTransferWorker(
                 if (!currentCoroutineContext().isActive && isRetryableError(ex)) {
                     Result.retry()
                 } else {
-                    transferStatusUpdater.updateOnError(transferRecord.id, Exception(ex))
+                    transferStatusUpdater.updateOnError(transferRecord.id, ex.asReportableException())
                     transferStatusUpdater.updateTransferState(
                         transferRecord.id,
                         TransferState.FAILED
@@ -127,11 +128,22 @@ internal abstract class SuspendingTransferWorker(
         )
     }
 
-    private fun isRetryableError(e: Throwable?): Boolean = !isNetworkAvailable(applicationContext) ||
-        runAttemptCount < maxRetryCount ||
-        e is CancellationException ||
-        // SocketException is thrown when download is terminated due to network disconnection.
-        e is SocketException
+    private fun isRetryableError(e: Throwable?): Boolean {
+        // Progress-stall cancellations are terminal; retrying will almost certainly hit the same
+        // stall again and keeps the user waiting. Report the typed failure instead.
+        if (e is ProgressStallTimeoutException) return false
+        return !isNetworkAvailable(applicationContext) ||
+            runAttemptCount < maxRetryCount ||
+            e is CancellationException ||
+            // SocketException is thrown when download is terminated due to network disconnection.
+            e is SocketException
+    }
+
+    private fun Throwable?.asReportableException(): Exception = when (this) {
+        null -> Exception()
+        is Exception -> this
+        else -> Exception(this)
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createChannel() {

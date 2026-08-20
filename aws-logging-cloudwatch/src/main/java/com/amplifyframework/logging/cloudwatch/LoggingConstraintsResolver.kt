@@ -16,6 +16,7 @@ package com.amplifyframework.logging.cloudwatch
 
 import android.content.Context
 import android.util.Log
+import androidx.core.content.edit
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
@@ -112,8 +113,9 @@ internal class LoggingConstraintsResolver internal constructor(
         context?.let {
             val sharedPreferences =
                 it.getSharedPreferences(AWSCloudWatchLoggingPlugin.SHARED_PREFERENCE_FILENAME, Context.MODE_PRIVATE)
-            sharedPreferences.edit()
-                .putString(REMOTE_LOGGING_CONSTRAINTS_KEY, LoggingConstraints.toJsonString(loggingConstraint)).apply()
+            sharedPreferences.edit {
+                putString(REMOTE_LOGGING_CONSTRAINTS_KEY, LoggingConstraints.toJsonString(loggingConstraint))
+            }
         }
     }
 

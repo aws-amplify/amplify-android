@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.webkit.CookieManager
@@ -14,7 +13,9 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.IntentCompat
 import androidx.core.net.toUri
+import androidx.core.os.BundleCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -23,26 +24,21 @@ import com.amplifyframework.auth.cognito.R
 import com.amplifyframework.core.Amplify
 import com.google.android.material.appbar.MaterialToolbar
 
-class WebViewActivity : AppCompatActivity(R.layout.activity_auth_webview) {
+internal class WebViewActivity : AppCompatActivity(R.layout.activity_auth_webview) {
 
     private lateinit var webView: WebView
     private lateinit var startUri: Uri
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        this.startUri = if (Build.VERSION.SDK_INT >= 33) {
-            savedInstanceState?.getParcelable(EXTRA_START_URI, Uri::class.java)
-                ?: intent.getParcelableExtra(EXTRA_START_URI, Uri::class.java)
-        } else {
-            @Suppress("DEPRECATION")
-            savedInstanceState?.getParcelable(EXTRA_START_URI)
-                ?: @Suppress("DEPRECATION") intent.getParcelableExtra(EXTRA_START_URI)
-        } ?: run { cancel(); return }
+        this.startUri = resolveStartUri(savedInstanceState) ?: run {
+            cancel()
+            return
+        }
 
         setupSystemBars()
         setupToolbar()
         setupWebView()
-
 
         if (savedInstanceState != null) {
             this.webView.restoreState(savedInstanceState)
@@ -50,16 +46,19 @@ class WebViewActivity : AppCompatActivity(R.layout.activity_auth_webview) {
             this.webView.loadUrl(this.startUri.toString())
         }
 
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                if (webView.canGoBack()) webView.goBack() else cancel()
+        onBackPressedDispatcher.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    if (webView.canGoBack()) webView.goBack() else cancel()
+                }
             }
-        })
+        )
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        intent?.data?.let { complete(it) }
+        intent.data?.let { complete(it) }
     }
 
     override fun onPause() {
@@ -81,6 +80,14 @@ class WebViewActivity : AppCompatActivity(R.layout.activity_auth_webview) {
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
         if (level >= TRIM_MEMORY_UI_HIDDEN) CookieManager.getInstance().flush()
+    }
+
+    private fun resolveStartUri(savedInstanceState: Bundle?): Uri? {
+        val savedUri = savedInstanceState?.let {
+            BundleCompat.getParcelable(it, EXTRA_START_URI, Uri::class.java)
+        }
+
+        return savedUri ?: IntentCompat.getParcelableExtra(intent, EXTRA_START_URI, Uri::class.java)
     }
 
     private fun setupSystemBars() {
@@ -126,14 +133,11 @@ class WebViewActivity : AppCompatActivity(R.layout.activity_auth_webview) {
             )
             cm.flush()
             webViewClient = object : WebViewClient() {
-                override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest): Boolean {
-                    return handleUri(request.url)
-                }
+                override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest): Boolean =
+                    handleUri(request.url)
 
                 @Deprecated("For pre-N")
-                override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
-                    return handleUri(url.toUri())
-                }
+                override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean = handleUri(url.toUri())
 
                 override fun onPageFinished(view: WebView?, url: String?) {
                     CookieManager.getInstance().flush()

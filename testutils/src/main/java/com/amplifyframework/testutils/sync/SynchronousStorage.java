@@ -18,10 +18,12 @@ package com.amplifyframework.testutils.sync;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageCategoryBehavior;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StoragePath;
+import com.amplifyframework.storage.operation.StorageTransferOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageGetUrlOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
@@ -33,6 +35,8 @@ import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
+import com.amplifyframework.storage.result.StorageTransferProgress;
+import com.amplifyframework.storage.result.StorageTransferResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.result.StorageUploadInputStreamResult;
 import com.amplifyframework.testutils.Await;
@@ -149,7 +153,6 @@ public final class SynchronousStorage {
      * @throws StorageException if download fails or times out
      */
     @NonNull
-    @SuppressWarnings("deprecation")
     public StorageDownloadFileResult downloadFile(
             @NonNull StoragePath path,
             @NonNull File local,
@@ -171,7 +174,6 @@ public final class SynchronousStorage {
      * @throws StorageException if upload fails or times out
      */
     @NonNull
-    @SuppressWarnings("deprecation")
     public StorageUploadFileResult uploadFile(
             @NonNull String key,
             @NonNull File local,
@@ -213,7 +215,6 @@ public final class SynchronousStorage {
      * @throws StorageException if upload fails or times out
      */
     @NonNull
-    @SuppressWarnings("deprecation")
     public StorageUploadFileResult uploadFile(
             @NonNull StoragePath path,
             @NonNull File local,
@@ -417,6 +418,17 @@ public final class SynchronousStorage {
         );
     }
 
+    @NonNull
+    @SuppressWarnings("deprecation")
+    public StorageGetUrlResult getUrl(
+        @NonNull String key,
+        @NonNull StorageGetUrlOptions options
+    ) throws StorageException {
+        return Await.<StorageGetUrlResult, StorageException>result(STORAGE_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                                                                                                     asyncDelegate.getUrl(key, options, onResult, onError)
+        );
+    }
+
     /**
      * List the files in S3 bucket synchronously.
      *
@@ -452,6 +464,14 @@ public final class SynchronousStorage {
         return Await.<StorageListResult, StorageException>result(timeoutMs, (onResult, onError) ->
                 asyncDelegate.list(path, options, onResult, onError)
         );
+    }
+
+    @NonNull
+    public StorageListResult list(
+        @NonNull String path,
+        @NonNull StoragePagedListOptions options
+    ) throws StorageException {
+        return list(path, options, STORAGE_OPERATION_TIMEOUT_MS);
     }
 
     /**
@@ -490,6 +510,15 @@ public final class SynchronousStorage {
     ) throws StorageException {
         return Await.<StorageListResult, StorageException>result(STORAGE_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.list(path, options, onResult, onError)
+        );
+    }
+
+    @NonNull
+    public StorageTransferOperation<?, ? extends StorageTransferResult> getTransfer(
+        @NonNull String transferId
+    ) throws StorageException {
+        return Await.<StorageTransferOperation<?, ? extends StorageTransferResult>, StorageException>result(STORAGE_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+            asyncDelegate.getTransfer(transferId, onResult, onError)
         );
     }
 }

@@ -19,7 +19,6 @@ import android.net.Uri;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.aws.auth.IamRequestDecorator;
 import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 import com.amplifyframework.api.aws.sigv4.AppSyncV4Signer;
@@ -101,11 +100,10 @@ final class SubscriptionAuthorizer {
                 OidcAuthProvider oidcProvider = authProviders.getOidcAuthProvider();
                 if (oidcProvider == null) {
                     oidcProvider = () -> {
-                        throw new ApiAuthException(
-                                "OidcAuthProvider interface is not implemented.",
+                        throw new AppSyncProviderNotConfiguredException(
+                                "OidcAuthProvider interface is not implemented.", null,
                                 "Please implement OidcAuthProvider interface to return " +
-                                        "appropriate token from the appropriate service."
-                        );
+                                        "appropriate token from the appropriate service.");
                     };
                 }
                 return forOidc(oidcProvider);
@@ -113,11 +111,10 @@ final class SubscriptionAuthorizer {
                 FunctionAuthProvider functionAuthProvider = authProviders.getFunctionAuthProvider();
                 if (functionAuthProvider == null) {
                     functionAuthProvider = () -> {
-                        throw new ApiAuthException(
-                                "FunctionAuthProvider interface is not implemented.",
+                        throw new AppSyncProviderNotConfiguredException(
+                                "FunctionAuthProvider interface is not implemented.", null,
                                 "Please implement FunctionAuthProvider interface to return " +
-                                        "appropriate token from the appropriate service."
-                        );
+                                        "appropriate token from the appropriate service.");
                     };
                 }
                 return forAwsLambda(functionAuthProvider);
@@ -136,7 +133,7 @@ final class SubscriptionAuthorizer {
                     .put("x-api-key", keyProvider.getAPIKey());
         } catch (JSONException jsonException) {
             // This error should never be thrown
-            throw new ApiException(
+            throw new AppSyncUnknownException(
                     "Error constructing the authorization json for Api key.",
                     jsonException, AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
             );
@@ -150,7 +147,7 @@ final class SubscriptionAuthorizer {
                     .put("Authorization", cognitoProvider.getLatestAuthToken());
         } catch (JSONException jsonException) {
             // This error should never be thrown
-            throw new ApiException(
+            throw new AppSyncUnknownException(
                     "Error constructing the authorization json for Cognito User Pools.",
                     jsonException, AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
             );
@@ -164,7 +161,7 @@ final class SubscriptionAuthorizer {
                     .put("Authorization", oidcProvider.getLatestAuthToken());
         } catch (JSONException jsonException) {
             // This error should never be thrown
-            throw new ApiException(
+            throw new AppSyncUnknownException(
                     "Error constructing the authorization json for Open ID Connect.",
                     jsonException, AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
             );
@@ -178,7 +175,7 @@ final class SubscriptionAuthorizer {
                     .put("Authorization", functionAuthProvider.getLatestAuthToken());
         } catch (JSONException jsonException) {
             // This error should never be thrown
-            throw new ApiException(
+            throw new AppSyncUnknownException(
                     "Error constructing the authorization json for the AWS_LAMBDA auth type.",
                     jsonException, AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
             );
@@ -220,7 +217,7 @@ final class SubscriptionAuthorizer {
             String connectionUrl = connectionFlag ? baseUrl + "/connect" : baseUrl;
             return new URI(connectionUrl);
         } catch (URISyntaxException uriException) {
-            throw new ApiException(
+            throw new AppSyncEndpointResolutionException(
                     "Error constructing canonical URI for IAM request signature",
                     uriException,
                     "Verify that the API configuration contains valid GraphQL endpoint."

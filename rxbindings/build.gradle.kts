@@ -15,30 +15,24 @@
 
 plugins {
     alias(libs.plugins.amplify.android.library)
-    alias(libs.plugins.amplify.api)
+    alias(libs.plugins.amplify.publishing)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
-apply(from = rootProject.file("configuration/publishing.gradle"))
-
-group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.rx"
 }
 
 dependencies {
-    implementation(project(":core"))
-    implementation(project(":common-core"))
-    implementation(libs.androidx.annotation)
+    api(project(":core"))
+    api(project(":common-core"))
+    api(libs.androidx.annotation)
     implementation(libs.androidx.appcompat)
-    implementation(libs.rxjava)
+    api(libs.rxjava)
 
     testImplementation(project(":testutils"))
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.mockito.core)
-    testImplementation(libs.test.mockk)
-    testImplementation(libs.test.androidx.core)
-    testImplementation(libs.test.robolectric)
-    testImplementation(project(":rxbindings"))
+    testImplementation(libs.bundles.test.unit)
+    testImplementation(libs.bundles.test.unit.android)
+    testImplementation(libs.bundles.test.mockito)
 }

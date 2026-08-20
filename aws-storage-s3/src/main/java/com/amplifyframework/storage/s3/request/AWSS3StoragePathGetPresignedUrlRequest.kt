@@ -15,6 +15,7 @@
 package com.amplifyframework.storage.s3.request
 
 import com.amplifyframework.storage.StoragePath
+import com.amplifyframework.storage.s3.StorageAccessMethod
 
 /**
  * Parameters to provide to S3 that describe a request to retrieve a pre-signed object URL.
@@ -23,5 +24,6 @@ internal data class AWSS3StoragePathGetPresignedUrlRequest(
     val path: StoragePath,
     val expires: Int,
     val useAccelerateEndpoint: Boolean,
-    val validateObjectExistence: Boolean
+    val validateObjectExistence: Boolean,
+    val method: StorageAccessMethod
 )

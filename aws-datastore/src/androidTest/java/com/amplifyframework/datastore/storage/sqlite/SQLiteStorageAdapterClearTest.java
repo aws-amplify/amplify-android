@@ -30,6 +30,7 @@ import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 
 import org.junit.After;
 import org.junit.Before;
@@ -48,7 +49,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-public final class SQLiteStorageAdapterClearTest {
+public final class SQLiteStorageAdapterClearTest extends DeviceFarmTestBase {
     private static final String DATABASE_NAME = "AmplifyDatastore.db";
     private static final long TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
 

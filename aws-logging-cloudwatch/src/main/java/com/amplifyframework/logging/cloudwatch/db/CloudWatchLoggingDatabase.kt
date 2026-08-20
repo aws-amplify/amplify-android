@@ -20,6 +20,7 @@ import android.content.UriMatcher
 import android.database.Cursor
 import android.net.Uri
 import androidx.annotation.VisibleForTesting
+import androidx.core.net.toUri
 import com.amplifyframework.core.store.AmplifyKeyValueRepository
 import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
 import java.util.UUID
@@ -52,7 +53,7 @@ internal class CloudWatchLoggingDatabase(
 
     init {
         val authority = context.applicationContext.packageName
-        contentUri = Uri.parse("content://$authority/$basePath")
+        contentUri = "content://$authority/$basePath".toUri()
         uriMatcher = UriMatcher(UriMatcher.NO_MATCH)
         // The Uri of LOG_EVENTS is for all records in the LogEventTable table.
         uriMatcher.addURI(authority, basePath, logEvents)
@@ -111,7 +112,7 @@ internal class CloudWatchLoggingDatabase(
         contentValues.put(LogEventTable.COLUMN_TIMESTAMP, event.timestamp)
         contentValues.put(LogEventTable.COLUMN_MESSAGE, event.message)
         val id = database.insertOrThrow(LogEventTable.TABLE_LOG_EVENT, null, contentValues)
-        return Uri.parse("$basePath/$id")
+        return "$basePath/$id".toUri()
     }
 
     private fun query(

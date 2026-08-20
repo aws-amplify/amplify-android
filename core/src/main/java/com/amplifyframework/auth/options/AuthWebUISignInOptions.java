@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.options;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.util.Immutable;
@@ -29,13 +30,17 @@ import java.util.Objects;
  */
 public class AuthWebUISignInOptions {
     private final List<String> scopes;
+    private final Boolean preferPrivateSession;
 
     /**
      * Advanced options for signing in with a hosted web UI.
      * @param scopes specify OAUTH scopes
+     * @param preferPrivateSession specifying whether or not to launch web ui in an ephemeral CustomTab.
+     *                             Default value is unset (null), which behaves the same as false.
      */
-    protected AuthWebUISignInOptions(List<String> scopes) {
+    protected AuthWebUISignInOptions(List<String> scopes, Boolean preferPrivateSession) {
         this.scopes = scopes;
+        this.preferPrivateSession = preferPrivateSession;
     }
 
     /**
@@ -45,6 +50,16 @@ public class AuthWebUISignInOptions {
     @NonNull
     public List<String> getScopes() {
         return scopes;
+    }
+
+    /**
+     * Optional override to prefer launching in an Ephemeral CustomTab, if available.
+     * @return optional override to prefer launching in an Ephemeral CustomTab, if available.
+     * Default value is unset (null), which behaves the same as false.
+     */
+    @Nullable
+    public Boolean getPreferPrivateSession() {
+        return preferPrivateSession;
     }
 
     /**
@@ -63,7 +78,8 @@ public class AuthWebUISignInOptions {
     @Override
     public int hashCode() {
         return ObjectsCompat.hash(
-                getScopes()
+                getScopes(),
+                getPreferPrivateSession()
         );
     }
 
@@ -79,7 +95,8 @@ public class AuthWebUISignInOptions {
             return false;
         } else {
             AuthWebUISignInOptions authWebUISignInOptions = (AuthWebUISignInOptions) obj;
-            return ObjectsCompat.equals(getScopes(), authWebUISignInOptions.getScopes());
+            return ObjectsCompat.equals(getScopes(), authWebUISignInOptions.getScopes()) &&
+                    ObjectsCompat.equals(getPreferPrivateSession(), authWebUISignInOptions.getPreferPrivateSession());
         }
     }
 
@@ -91,6 +108,7 @@ public class AuthWebUISignInOptions {
     public String toString() {
         return "AuthWebUISignInOptions{" +
                 "scopes=" + getScopes() +
+                ", preferPrivateSession=" + getPreferPrivateSession() +
                 '}';
     }
 
@@ -100,6 +118,7 @@ public class AuthWebUISignInOptions {
      */
     public abstract static class Builder<T extends Builder<T>> {
         private List<String> scopes;
+        private Boolean preferPrivateSession;
 
         /**
          * Initialize the builder object with fields initialized with empty collection objects.
@@ -123,6 +142,16 @@ public class AuthWebUISignInOptions {
         }
 
         /**
+         * Optional override to prefer launching in an Ephemeral CustomTab, if available.
+         * @return optional override to prefer launching in an Ephemeral CustomTab, if available.
+         * Default value is unset (null), which behaves the same as false.
+         */
+        @Nullable
+        public Boolean getPreferPrivateSession() {
+            return preferPrivateSession;
+        }
+
+        /**
          * Map of custom parameters to send associated with sign in process.
          * @param scopes specify OAUTH scopes
          * @return The type of Builder object being used.
@@ -136,13 +165,26 @@ public class AuthWebUISignInOptions {
         }
 
         /**
+         * This can optionally be set to prefer launching in an Ephemeral CustomTab, if available.
+         *
+         * @param preferPrivateSession Boolean specifying whether or not to launch web ui in an
+         * ephemeral CustomTab. Default value is unset (null), which behaves the same as false.
+         * @return the instance of the builder.
+         */
+        public T preferPrivateSession(@NonNull Boolean preferPrivateSession) {
+            this.preferPrivateSession = preferPrivateSession;
+            return getThis();
+        }
+
+        /**
          * Build an instance of AuthWebUISignInOptions (or one of its subclasses).
          * @return an instance of AuthWebUISignInOptions (or one of its subclasses)
          */
         @NonNull
         public AuthWebUISignInOptions build() {
             return new AuthWebUISignInOptions(
-                    Immutable.of(scopes)
+                    Immutable.of(scopes),
+                    preferPrivateSession
             );
         }
     }

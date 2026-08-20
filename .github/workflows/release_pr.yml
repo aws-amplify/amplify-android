@@ -18,6 +18,10 @@ env:
   GIT_USER_NAME: amplify-android-dev+ghops
   GIT_USER_EMAIL: amplify-android-dev+ghops@amazon.com
   BASE_BRANCH: ${{ github.ref_name }}
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   create_pr_for_next_release:
     runs-on: ubuntu-latest
@@ -27,19 +31,19 @@ jobs:
         sudo add-apt-repository -y ppa:git-core/ppa
         sudo apt-get update
         sudo apt-get install git -y
-    - uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         ref: ${{ env.BASE_BRANCH }}
         fetch-depth: 0
     - name: Set up Ruby
-      uses: ruby/setup-ruby@32110d4e311bd8996b2a82bf2a43b714ccc91777 # v1.221.0
+      uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
       with:
         ruby-version: "3.0"
     - name: Install dependencies
       run: |
         cd scripts
         gem install bundler
-        bundle install --full-index
+        bundle install
     - name: Configure git options
       run: |
         cd scripts

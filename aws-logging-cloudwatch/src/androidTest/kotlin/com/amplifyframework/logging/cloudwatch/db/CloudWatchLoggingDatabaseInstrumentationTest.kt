@@ -17,6 +17,7 @@ package com.amplifyframework.logging.cloudwatch.db
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import io.kotest.matchers.Matcher
 import io.kotest.matchers.MatcherResult
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -36,7 +37,7 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 @OptIn(ExperimentalCoroutinesApi::class)
-class CloudWatchLoggingDatabaseInstrumentationTest {
+class CloudWatchLoggingDatabaseInstrumentationTest : DeviceFarmTestBase() {
     private val context = InstrumentationRegistry.getInstrumentation().context
     private val testCoroutine = UnconfinedTestDispatcher()
     private val loggingDbClass = CloudWatchLoggingDatabase(context, testCoroutine)

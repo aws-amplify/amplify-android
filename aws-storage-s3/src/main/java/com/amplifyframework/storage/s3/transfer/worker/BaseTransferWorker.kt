@@ -49,6 +49,15 @@ internal interface BaseTransferWorker {
         internal const val COMPLETION_REQUEST_TAG: String = "COMPLETION_REQUEST_TAG_%s"
         internal const val INITIATION_REQUEST_TAG: String = "INITIATION_REQUEST_TAG_%s"
         internal const val MULTIPART_UPLOAD: String = "MULTIPART_UPLOAD"
+
+        /**
+         * WorkData key carrying the resolved progress-stall interval (seconds) for this transfer.
+         *
+         * A value of `0` (or absence of the key) disables stall detection. Upload workers consume
+         * this value to decide whether to wrap their [ProgressListener] in a stall-detecting
+         * decorator.
+         */
+        internal const val PROGRESS_STALL_TIMEOUT_SECONDS = "PROGRESS_STALL_TIMEOUT_SECONDS"
     }
 
     fun isNetworkAvailable(context: Context): Boolean {

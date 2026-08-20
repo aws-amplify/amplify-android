@@ -27,6 +27,7 @@ import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.s3.UserCredentials.Credential;
 import com.amplifyframework.storage.s3.test.R;
 import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.testutils.random.RandomTempFile;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousStorage;
@@ -48,7 +49,7 @@ import static com.amplifyframework.storage.s3.UserCredentials.IdentityIdSource;
  * correctly with regards to the provided storage access level.
  */
 @SuppressWarnings("deprecation")
-public final class AWSS3StorageUploadAccessLevelTest {
+public final class AWSS3StorageUploadAccessLevelTest extends DeviceFarmTestBase {
     private static final long UPLOAD_SIZE = 100L;
 
     private static SynchronousStorage storage;

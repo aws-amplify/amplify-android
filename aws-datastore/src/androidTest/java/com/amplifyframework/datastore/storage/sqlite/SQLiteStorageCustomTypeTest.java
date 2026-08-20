@@ -24,6 +24,7 @@ import com.amplifyframework.testmodels.parenting.Child;
 import com.amplifyframework.testmodels.parenting.City;
 import com.amplifyframework.testmodels.parenting.Parent;
 import com.amplifyframework.testmodels.parenting.Phonenumber;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 
 import org.junit.After;
 import org.junit.Before;
@@ -39,7 +40,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test that nested custom types can be safely used in Models.
  */
-public final class SQLiteStorageCustomTypeTest {
+public final class SQLiteStorageCustomTypeTest extends DeviceFarmTestBase {
     private SynchronousStorageAdapter adapter;
 
     /**

@@ -17,7 +17,6 @@ contribution.
   - [Workflows](#workflows)
     - [Adding Code to Support a New Feature](#adding-code-to-support-a-new-feature)
     - [Build and Validate Your Work](#build-and-validate-your-work)
-    - [Run Instrumentation Tests](#run-instrumentation-tests)
     - [Test changes to CodeBuild build definitions](#test-changes-to-codebuild-build-definitions)
   - [Reporting Bugs/Feature Requests](#reporting-bugsfeature-requests)
   - [Contributing via Pull Requests](#contributing-via-pull-requests)
@@ -318,37 +317,6 @@ tests. This must complete successfully before proposing a PR.
 Tip: Checkstyle specifies a specific ordering and spacing of import statements, maximum line length, and other rules.
 To setup the Android Studio editor to automatically organize import according to the project checkstyle,  go to
 Preferences > Editor > Code Style > Java.  Under Scheme, select "Project".
-
-### Run Instrumentation Tests
-
-The instrumentation tests presume the presence of various backend resources.
-Currently, there is no mechanism for contributors to easily allocate
-these resources. This is tracked in [Amplify issue 301](https://github.com/aws-amplify/amplify-android/issues/301).
-
-AWS maintainers can gain access to `awsconfiguration.json` and
-`amplifyconfiguration.json` files in an S3 bucket, to find
-configurations suitable for running the integration tests.
-
-If you are part of the private access list, the command below will copy
-those configurations to your local workspace:
-
-```shell
-cd amplify-android
-.circleci/copy-configs
-```
-
-To run a __specific__ test:
-
-```shell
-test='com.amplifyframework.api.aws.RestApiInstrumentationTest#getRequestWithIAM'
-./gradlew cAT -Pandroid.testInstrumentationRunnerArguments.class="$test"
-```
-
-To run __all__ tests:
-
-```shell
-./gradlew cAT
-```
 
 ### Test changes to CodeBuild build definitions
 

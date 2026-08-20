@@ -38,7 +38,7 @@ internal class SignUpEvent(
 
         data class SignedUp(val signUpData: SignUpData, val signUpResult: AuthSignUpResult) : EventType()
 
-        data class ThrowError(val exception: Exception) : EventType()
+        data class ThrowError(val signUpData: SignUpData, val exception: Exception) : EventType()
     }
 
     override val type: String = eventType.javaClass.simpleName

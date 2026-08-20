@@ -50,6 +50,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Unit test for implementation of ResponseFactory.
@@ -109,9 +110,10 @@ public final class GsonGraphQLResponseFactoryTest {
         GraphQLRequest<PaginatedResult<Todo>> request = buildDummyRequest(responseType);
 
         // Assert that the appropriate exception is thrown
-        assertThrows(ApiException.class, () -> {
+        ApiException thrown = assertThrows(ApiException.class, () -> {
             responseFactory.buildResponse(request, nonJsonResponse);
         });
+        assertTrue(thrown instanceof AppSyncDeserializationException);
     }
 
     /**
@@ -129,9 +131,10 @@ public final class GsonGraphQLResponseFactoryTest {
         GraphQLRequest<PaginatedResult<Todo>> request = buildDummyRequest(responseType);
 
         // Assert that the appropriate exception is thrown
-        assertThrows(ApiException.class, () -> {
+        ApiException thrown = assertThrows(ApiException.class, () -> {
             responseFactory.buildResponse(request, emptyResponse);
         });
+        assertTrue(thrown instanceof AppSyncDeserializationException);
     }
 
     /**

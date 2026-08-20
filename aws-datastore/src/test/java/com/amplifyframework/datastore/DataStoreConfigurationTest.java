@@ -64,6 +64,8 @@ public final class DataStoreConfigurationTest {
             dataStoreConfiguration.getSyncPageSize().intValue());
         assertEquals(DataStoreConfiguration.DEFAULT_SYNC_MAX_CONCURRENT_MODELS,
             dataStoreConfiguration.getSyncMaxConcurrentModels().intValue());
+        assertEquals(DataStoreConfiguration.DEFAULT_LOCAL_STORAGE_NUM_THREADS,
+            dataStoreConfiguration.getLocalStorageThreadPoolSize());
 
         assertTrue(dataStoreConfiguration.getConflictHandler() instanceof AlwaysApplyRemoteHandler);
         assertTrue(dataStoreConfiguration.getErrorHandler() instanceof DefaultDataStoreErrorHandler);
@@ -148,6 +150,30 @@ public final class DataStoreConfigurationTest {
         expectedSyncExpressions.put(BlogOwner.class.getSimpleName(), ownerSyncExpression);
         expectedSyncExpressions.put(Post.class.getSimpleName(), postSyncExpression);
         assertEquals(expectedSyncExpressions, dataStoreConfiguration.getSyncExpressions());
+    }
+
+    /**
+     * Tests that localStorageNumThreads configuration works correctly.
+     * @throws DataStoreException On failure to build a config object
+     */
+    @Test
+    public void testLocalStorageNumThreadsConfiguration() throws DataStoreException {
+        int expectedThreads = 50;
+        DataStoreConfiguration configuration = DataStoreConfiguration.builder()
+            .localStorageThreadPoolSize(expectedThreads)
+            .build();
+        assertEquals(expectedThreads, configuration.getLocalStorageThreadPoolSize());
+    }
+
+    /**
+     * Tests that localStorageNumThreads uses default value when not specified.
+     * @throws DataStoreException On failure to build a config object
+     */
+    @Test
+    public void testLocalStorageNumThreadsDefault() throws DataStoreException {
+        DataStoreConfiguration configuration = DataStoreConfiguration.defaults();
+        assertEquals(DataStoreConfiguration.DEFAULT_LOCAL_STORAGE_NUM_THREADS, 
+            configuration.getLocalStorageThreadPoolSize());
     }
 
     /**

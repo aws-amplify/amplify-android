@@ -239,6 +239,30 @@ class AmplifyOutputsDataTest {
     }
 
     @Test
+    fun `parses Connect-only notifications configuration`() {
+        val json = createJson(
+            Keys.notifications to mapOf(
+                "amazon_connect" to mapOf(
+                    "aws_region" to "us-west-2",
+                    "endpoint" to "https://abc123.execute-api.us-west-2.amazonaws.com"
+                )
+            )
+        )
+
+        val outputs = AmplifyOutputsData.deserialize(json)
+
+        outputs.notifications.shouldNotBeNull()
+        outputs.notifications?.run {
+            awsRegion shouldBe null
+            amazonPinpointAppId shouldBe null
+            channels shouldBe emptyList()
+            amazonConnect.shouldNotBeNull()
+            amazonConnect?.awsRegion shouldBe "us-west-2"
+            amazonConnect?.endpoint shouldBe "https://abc123.execute-api.us-west-2.amazonaws.com"
+        }
+    }
+
+    @Test
     fun `parses storage configuration`() {
         val json = createJson(
             Keys.storage to mapOf(

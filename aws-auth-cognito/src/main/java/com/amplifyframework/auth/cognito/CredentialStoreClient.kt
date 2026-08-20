@@ -16,17 +16,20 @@
 package com.amplifyframework.auth.cognito
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
+import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore
+import com.amplifyframework.auth.cognito.helpers.collectWhile
+import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.logging.Logger
-import com.amplifyframework.statemachine.StateChangeListenerToken
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.events.CredentialStoreEvent
 import com.amplifyframework.statemachine.codegen.states.CredentialStoreState
-import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onSubscription
 
 internal interface StoreClientBehavior {
     suspend fun loadCredentials(credentialType: CredentialType): AmplifyCredential
@@ -34,109 +37,58 @@ internal interface StoreClientBehavior {
     suspend fun clearCredentials(credentialType: CredentialType)
 }
 
-internal class CredentialStoreClient(configuration: AuthConfiguration, context: Context, val logger: Logger) :
-    StoreClientBehavior {
-    private val credentialStoreStateMachine = createCredentialStoreStateMachine(configuration, context)
+internal class CredentialStoreClient @VisibleForTesting constructor(
+    private val credentialStoreStateMachine: CredentialStoreStateMachine,
+    val logger: Logger
+) : StoreClientBehavior {
 
-    private fun createCredentialStoreStateMachine(
-        configuration: AuthConfiguration,
-        context: Context
-    ): CredentialStoreStateMachine {
-        val awsCognitoAuthCredentialStore = AWSCognitoAuthCredentialStore(context.applicationContext, configuration)
-        val legacyCredentialStore = AWSCognitoLegacyCredentialStore(context.applicationContext, configuration)
-        val credentialStoreEnvironment =
-            CredentialStoreEnvironment(awsCognitoAuthCredentialStore, legacyCredentialStore, logger)
-        return CredentialStoreStateMachine(credentialStoreEnvironment)
-    }
+    constructor(configuration: AuthConfiguration, context: Context, logger: Logger) : this(
+        credentialStoreStateMachine = createCredentialStoreStateMachine(configuration, context, logger),
+        logger = logger
+    )
 
-    private fun listenForResult(
-        event: CredentialStoreEvent,
-        onSuccess: (Result<AmplifyCredential>) -> Unit,
-        onError: (Exception) -> Unit
-    ) {
-        val token = StateChangeListenerToken()
-        val credentialStoreStateListener = OneShotCredentialStoreStateListener(
-            {
-                credentialStoreStateMachine.cancel(token)
-                onSuccess(it)
-            },
-            {
-                credentialStoreStateMachine.cancel(token)
-                onError(it)
-            },
-            logger
+    private suspend fun listenForResult(event: CredentialStoreEvent.EventType): AmplifyCredential {
+        var result: Result<AmplifyCredential>? = null
+        credentialStoreStateMachine.state
+            .onSubscription { credentialStoreStateMachine.send(CredentialStoreEvent(event)) }
+            .drop(1) // skip current state
+            .onEach { state ->
+                when (state) {
+                    is CredentialStoreState.Error -> result = result ?: Result.failure(state.error)
+                    is CredentialStoreState.Success -> result = Result.success(state.storedCredentials)
+                    else -> Unit // no-op
+                }
+            }
+            .collectWhile { state -> state !is CredentialStoreState.Idle }
+        return result?.getOrThrow() ?: throw InvalidStateException(
+            message = "Credential operation failed",
+            recoverySuggestion = AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
         )
-        credentialStoreStateMachine.listen(
-            token,
-            credentialStoreStateListener::listen
-        ) { credentialStoreStateMachine.send(event) }
     }
 
     override suspend fun loadCredentials(credentialType: CredentialType): AmplifyCredential =
-        suspendCoroutine { continuation ->
-            listenForResult(
-                CredentialStoreEvent(CredentialStoreEvent.EventType.LoadCredentialStore(credentialType)),
-                { continuation.resumeWith(it) },
-                { continuation.resumeWithException(it) }
-            )
-        }
+        listenForResult(CredentialStoreEvent.EventType.LoadCredentialStore(credentialType))
 
-    override suspend fun storeCredentials(credentialType: CredentialType, amplifyCredential: AmplifyCredential) =
-        suspendCoroutine { continuation ->
-            listenForResult(
-                CredentialStoreEvent(
-                    CredentialStoreEvent.EventType.StoreCredentials(credentialType, amplifyCredential)
-                ),
-                { continuation.resumeWith(Result.success(Unit)) },
-                { continuation.resumeWithException(it) }
-            )
-        }
-
-    override suspend fun clearCredentials(credentialType: CredentialType) = suspendCoroutine { continuation ->
-        listenForResult(
-            CredentialStoreEvent(CredentialStoreEvent.EventType.ClearCredentialStore(credentialType)),
-            { continuation.resumeWith(Result.success(Unit)) },
-            { continuation.resumeWithException(it) }
-        )
+    override suspend fun storeCredentials(credentialType: CredentialType, amplifyCredential: AmplifyCredential) {
+        listenForResult(CredentialStoreEvent.EventType.StoreCredentials(credentialType, amplifyCredential))
     }
 
-    /*
-    This class is a necessary workaround due to undesirable threading issues within the Auth State Machine. If state
-    machine threading is improved, this class should be considered for removal.
-     */
-    internal class OneShotCredentialStoreStateListener(
-        val onSuccess: (Result<AmplifyCredential>) -> Unit,
-        val onError: (Exception) -> Unit,
-        val logger: Logger
-    ) {
-        private var capturedSuccess: Result<AmplifyCredential>? = null
-        private var capturedError: Exception? = null
-        private val isActive = AtomicBoolean(true)
-        fun listen(storeState: CredentialStoreState) {
-            logger.verbose("Credential Store State Change: $storeState")
-            when (storeState) {
-                is CredentialStoreState.Success -> {
-                    capturedSuccess = Result.success(storeState.storedCredentials)
-                }
+    override suspend fun clearCredentials(credentialType: CredentialType) {
+        listenForResult(CredentialStoreEvent.EventType.ClearCredentialStore(credentialType))
+    }
 
-                is CredentialStoreState.Error -> {
-                    capturedError = storeState.error
-                }
-
-                is CredentialStoreState.Idle -> {
-                    val success = capturedSuccess
-                    val error = capturedError
-
-                    if ((success != null || error != null) && isActive.getAndSet(false)) {
-                        if (success != null) {
-                            onSuccess(success)
-                        } else if (error != null) {
-                            onError(error)
-                        }
-                    }
-                }
-                else -> Unit
-            }
+    companion object {
+        private fun createCredentialStoreStateMachine(
+            configuration: AuthConfiguration,
+            context: Context,
+            logger: Logger
+        ): CredentialStoreStateMachine {
+            val awsCognitoAuthCredentialStore =
+                AWSCognitoAuthCredentialStore(context.applicationContext, configuration)
+            val legacyCredentialStore = AWSCognitoLegacyCredentialStore(context.applicationContext, configuration)
+            val credentialStoreEnvironment =
+                CredentialStoreEnvironment(awsCognitoAuthCredentialStore, legacyCredentialStore, logger)
+            return CredentialStoreStateMachine(credentialStoreEnvironment)
         }
     }
 }

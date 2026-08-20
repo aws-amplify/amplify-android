@@ -16,31 +16,26 @@
 plugins {
     alias(libs.plugins.amplify.android.library)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.amplify.api)
+    alias(libs.plugins.amplify.publishing)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
-apply(from = rootProject.file("configuration/publishing.gradle"))
-
-group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.plugins.core"
 }
 
 dependencies {
-    implementation(project(":core"))
+    api(project(":core"))
     implementation(project(":aws-core"))
 
+    api(platform(libs.aws.bom))
     implementation(libs.aws.http)
     implementation(libs.aws.credentials)
-    implementation(libs.aws.cognitoidentity)
+    api(libs.aws.cognitoidentity)
 
-    implementation(libs.kotlin.serializationJson)
+    api(libs.kotlin.serializationJson)
 
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.mockk)
-    testImplementation(libs.test.kotlin.junit)
-    testImplementation(libs.test.kotlin.coroutines)
-    testImplementation(libs.test.robolectric)
+    testImplementation(libs.bundles.test.unit)
+    testImplementation(libs.bundles.test.unit.android)
 }

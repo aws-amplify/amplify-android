@@ -16,36 +16,26 @@
 plugins {
     alias(libs.plugins.amplify.android.library)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.amplify.api)
+    alias(libs.plugins.amplify.publishing)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
-apply(from = rootProject.file("configuration/publishing.gradle"))
-
-group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.pinpoint.core"
 }
 
 dependencies {
-    implementation(project(":core"))
+    api(project(":core"))
 
     implementation(libs.androidx.appcompat)
+    implementation(platform(libs.aws.bom))
     implementation(libs.aws.pinpoint)
-    implementation(libs.kotlin.serializationJson)
+    api(libs.kotlin.serializationJson)
 
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.mockk)
-    testImplementation(libs.test.mockito.core)
-    testImplementation(libs.test.mockito.inline)
-    testImplementation(libs.test.robolectric)
-    testImplementation(libs.test.androidx.core)
-    testImplementation(libs.test.kotlin.coroutines)
-    testImplementation(libs.test.kotest.assertions)
-    testImplementation(libs.test.androidx.junit.ktx)
+    testImplementation(libs.bundles.test.unit)
+    testImplementation(libs.bundles.test.unit.android)
+    testImplementation(libs.bundles.test.mockito)
 
-    androidTestImplementation(libs.test.androidx.core)
-    androidTestImplementation(libs.test.androidx.runner)
-    androidTestImplementation(libs.test.androidx.junit)
+    androidTestImplementation(libs.bundles.test.android)
 }

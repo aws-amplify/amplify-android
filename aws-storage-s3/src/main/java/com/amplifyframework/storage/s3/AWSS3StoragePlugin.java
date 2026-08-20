@@ -19,11 +19,9 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.OptIn;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.annotations.InternalAmplifyApi;
-import com.amplifyframework.annotations.InternalApiWarning;
 import com.amplifyframework.auth.AuthCredentialsProvider;
 import com.amplifyframework.auth.CognitoCredentialsProvider;
 import com.amplifyframework.core.Consumer;
@@ -33,6 +31,7 @@ import com.amplifyframework.core.configuration.AmplifyOutputsData;
 import com.amplifyframework.storage.BucketInfo;
 import com.amplifyframework.storage.InvalidStorageBucketException;
 import com.amplifyframework.storage.OutputsStorageBucket;
+import com.amplifyframework.storage.ProgressStallTimeout;
 import com.amplifyframework.storage.ResolvedStorageBucket;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageBucket;
@@ -94,6 +93,7 @@ import com.amplifyframework.storage.s3.service.AWSS3StorageService;
 import com.amplifyframework.storage.s3.service.AWSS3StorageServiceContainer;
 import com.amplifyframework.storage.s3.transfer.S3StorageTransferClientProvider;
 import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider;
+import com.amplifyframework.storage.s3.transfer.TransferDB;
 import com.amplifyframework.storage.s3.transfer.TransferObserver;
 import com.amplifyframework.storage.s3.transfer.TransferRecord;
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater;
@@ -154,11 +154,12 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                 return defaultStorageService.getClient();
             });
 
+    private TransferStatusUpdater transferStatusUpdater;
+
     /**
      * Constructs the AWS S3 Storage Plugin initializing the executor service.
      */
     @SuppressWarnings("unused") // This is a public API.
-    @OptIn(markerClass = InternalApiWarning.class)
     public AWSS3StoragePlugin() {
         this(new CognitoCredentialsProvider());
     }
@@ -169,21 +170,23 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
      * @param awsS3StoragePluginConfiguration storage plugin configuration
      */
     @SuppressWarnings("unused") // This is a public API.
-    @OptIn(markerClass = InternalApiWarning.class)
     public AWSS3StoragePlugin(AWSS3StoragePluginConfiguration awsS3StoragePluginConfiguration) {
         this(new CognitoCredentialsProvider(), awsS3StoragePluginConfiguration);
     }
 
     @VisibleForTesting
     AWSS3StoragePlugin(AuthCredentialsProvider authCredentialsProvider) {
-        this((context, region, bucket, clientProvider) ->
+        this(
+            (context, region, bucket, clientProvider, transferStatusUpdater, defaultProgressStallTimeoutSeconds) ->
                 new AWSS3StorageService(
                     context,
                     region,
                     bucket,
                     authCredentialsProvider,
                     AWS_S3_STORAGE_PLUGIN_KEY,
-                    clientProvider
+                    clientProvider,
+                    transferStatusUpdater,
+                    defaultProgressStallTimeoutSeconds
                 ),
             authCredentialsProvider,
             new AWSS3StoragePluginConfiguration.Builder().build());
@@ -193,14 +196,17 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     AWSS3StoragePlugin(AuthCredentialsProvider authCredentialsProvider,
                        AWSS3StoragePluginConfiguration awss3StoragePluginConfiguration) {
 
-        this((context, region, bucket, clientProvider) ->
+        this(
+            (context, region, bucket, clientProvider, transferStatusUpdater, defaultProgressStallTimeoutSeconds) ->
                 new AWSS3StorageService(
                     context,
                     region,
                     bucket,
                     authCredentialsProvider,
                     AWS_S3_STORAGE_PLUGIN_KEY,
-                    clientProvider
+                    clientProvider,
+                    transferStatusUpdater,
+                    defaultProgressStallTimeoutSeconds
                 ),
             authCredentialsProvider,
             awss3StoragePluginConfiguration);
@@ -298,14 +304,25 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             @NonNull ResolvedStorageBucket bucket
     ) throws StorageException {
         try {
+            this.transferStatusUpdater = new TransferStatusUpdater(TransferDB.Companion.getInstance(context));
+
+            long defaultProgressStallTimeoutSeconds = awsS3StoragePluginConfiguration
+                    .getProgressStallTimeout()
+                    .getSecondsForStallTimer();
+            this.awss3StorageServiceContainer = new AWSS3StorageServiceContainer(
+                    context, storageServiceFactory,
+                    (S3StorageTransferClientProvider) clientProvider,
+                    transferStatusUpdater,
+                    defaultProgressStallTimeoutSeconds
+            );
             this.defaultStorageService = storageServiceFactory.create(
                     context,
                     region,
                     bucket.getBucketInfo().getBucketName(),
-                    clientProvider);
-            this.awss3StorageServiceContainer = new AWSS3StorageServiceContainer(
-                    context, storageServiceFactory,
-                    (S3StorageTransferClientProvider) clientProvider);
+                    clientProvider,
+                    transferStatusUpdater,
+                    defaultProgressStallTimeoutSeconds
+            );
             this.awss3StorageServiceContainer.put(bucket.getBucketInfo().getBucketName(), this.defaultStorageService);
         } catch (RuntimeException exception) {
             throw new StorageException(
@@ -365,6 +382,9 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             ((AWSS3StorageGetPresignedUrlOptions) options).useAccelerateEndpoint();
         boolean validateObjectExistence = options instanceof AWSS3StorageGetPresignedUrlOptions &&
                 ((AWSS3StorageGetPresignedUrlOptions) options).getValidateObjectExistence();
+        StorageAccessMethod method = options instanceof AWSS3StorageGetPresignedUrlOptions
+                ? ((AWSS3StorageGetPresignedUrlOptions) options).getMethod()
+                : StorageAccessMethod.GET;
         AWSS3StorageGetPresignedUrlRequest request = new AWSS3StorageGetPresignedUrlRequest(
             key,
             options.getAccessLevel() != null
@@ -375,7 +395,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                 ? options.getExpires()
                 : defaultUrlExpiration,
             useAccelerateEndpoint,
-            validateObjectExistence
+            validateObjectExistence,
+            method
         );
 
         GetStorageServiceResult result = getStorageServiceResult(options.getBucket());
@@ -409,11 +430,16 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         boolean validateObjectExistence = options instanceof AWSS3StorageGetPresignedUrlOptions &&
                 ((AWSS3StorageGetPresignedUrlOptions) options).getValidateObjectExistence();
 
+        StorageAccessMethod method = options instanceof AWSS3StorageGetPresignedUrlOptions
+                ? ((AWSS3StorageGetPresignedUrlOptions) options).getMethod()
+                : StorageAccessMethod.GET;
+
         AWSS3StoragePathGetPresignedUrlRequest request = new AWSS3StoragePathGetPresignedUrlRequest(
                 path,
                 options.getExpires() != 0 ? options.getExpires() : defaultUrlExpiration,
                 useAccelerateEndpoint,
-                validateObjectExistence
+                validateObjectExistence,
+                method
         );
 
         GetStorageServiceResult result = getStorageServiceResult(options.getBucket());
@@ -641,6 +667,12 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
         GetStorageServiceResult result = getStorageServiceResult(options.getBucket());
 
+        long stallTimeoutSeconds = resolveProgressStallTimeoutSeconds(
+            options instanceof AWSS3StorageUploadFileOptions
+                ? ((AWSS3StorageUploadFileOptions) options).getProgressStallTimeout()
+                : null
+        );
+
         AWSS3StorageUploadFileOperation operation = new AWSS3StorageUploadFileOperation(
             result.storageService,
             executorService,
@@ -649,7 +681,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             awsS3StoragePluginConfiguration,
             onProgress,
             onSuccess,
-            onError
+            onError,
+            stallTimeoutSeconds
         );
 
         handleGetStorageServiceResult(onError, result, operation);
@@ -669,6 +702,11 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     ) {
         boolean useAccelerateEndpoint = options instanceof AWSS3StorageUploadFileOptions &&
                 ((AWSS3StorageUploadFileOptions) options).useAccelerateEndpoint();
+        long stallTimeoutSeconds = resolveProgressStallTimeoutSeconds(
+                options instanceof AWSS3StorageUploadFileOptions
+                        ? ((AWSS3StorageUploadFileOptions) options).getProgressStallTimeout()
+                        : null
+        );
         AWSS3StoragePathUploadRequest<File> request = new AWSS3StoragePathUploadRequest<>(
                 path,
                 local,
@@ -677,7 +715,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                         ? ((AWSS3StorageUploadFileOptions) options).getServerSideEncryption()
                         : ServerSideEncryption.NONE,
                 options.getMetadata(),
-                useAccelerateEndpoint
+                useAccelerateEndpoint,
+                stallTimeoutSeconds
         );
 
         GetStorageServiceResult result = getStorageServiceResult(options.getBucket());
@@ -775,6 +814,12 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
 
         GetStorageServiceResult result = getStorageServiceResult(options.getBucket());
 
+        long stallTimeoutSeconds = resolveProgressStallTimeoutSeconds(
+            options instanceof AWSS3StorageUploadInputStreamOptions
+                ? ((AWSS3StorageUploadInputStreamOptions) options).getProgressStallTimeout()
+                : null
+        );
+
         AWSS3StorageUploadInputStreamOperation operation = new AWSS3StorageUploadInputStreamOperation(
             result.storageService,
             executorService,
@@ -783,7 +828,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
             request,
             onProgress,
             onSuccess,
-            onError
+            onError,
+            stallTimeoutSeconds
         );
 
         handleGetStorageServiceResult(onError, result, operation);
@@ -803,6 +849,11 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
     ) {
         boolean useAccelerateEndpoint = options instanceof AWSS3StorageUploadInputStreamOptions &&
                 ((AWSS3StorageUploadInputStreamOptions) options).useAccelerateEndpoint();
+        long stallTimeoutSeconds = resolveProgressStallTimeoutSeconds(
+                options instanceof AWSS3StorageUploadInputStreamOptions
+                        ? ((AWSS3StorageUploadInputStreamOptions) options).getProgressStallTimeout()
+                        : null
+        );
         AWSS3StoragePathUploadRequest<InputStream> request = new AWSS3StoragePathUploadRequest<>(
                 path,
                 local,
@@ -811,7 +862,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                         ? ((AWSS3StorageUploadInputStreamOptions) options).getServerSideEncryption()
                         : ServerSideEncryption.NONE,
                 options.getMetadata(),
-                useAccelerateEndpoint
+                useAccelerateEndpoint,
+                stallTimeoutSeconds
         );
 
         GetStorageServiceResult result = getStorageServiceResult(options.getBucket());
@@ -830,6 +882,26 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
         handleGetStorageServiceResult(onError, result, operation);
 
         return operation;
+    }
+
+    /**
+     * Resolves the effective stall-timer interval in seconds for an upload.
+     *
+     * <p>If {@code override} is non-null, it takes precedence over the plugin default. This
+     * includes {@link ProgressStallTimeout.Disabled}, which lets callers explicitly opt a single
+     * upload out of stall detection even when the plugin enables it. If {@code override} is
+     * {@code null}, the plugin-wide default from
+     * {@link com.amplifyframework.storage.s3.configuration.AWSS3StoragePluginConfiguration} is
+     * used. Returns {@code 0} whenever the resolved timeout disables stall detection.</p>
+     *
+     * @param override per-upload override or {@code null} to defer to the plugin default
+     * @return the stall interval in seconds, or {@code 0} if disabled
+     */
+    private long resolveProgressStallTimeoutSeconds(@Nullable ProgressStallTimeout override) {
+        ProgressStallTimeout effective = override != null
+            ? override
+            : awsS3StoragePluginConfiguration.getProgressStallTimeout();
+        return effective.getSecondsForStallTimer();
     }
 
     @SuppressWarnings("deprecation")
@@ -927,7 +999,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<S3Client> {
                     TransferObserver transferObserver =
                         new TransferObserver(
                             transferRecord.getId(),
-                            defaultStorageService.getTransferManager().getTransferStatusUpdater(),
+                            transferStatusUpdater,
                             transferRecord.getBucketName(),
                             transferRecord.getRegion(),
                             transferRecord.getKey(),

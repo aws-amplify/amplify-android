@@ -21,7 +21,7 @@ internal sealed class LoginsMapProvider {
     data class CognitoUserPoolLogins(
         private val region: String? = "",
         private val poolId: String? = "",
-        private val idToken: String
+        private val idToken: IdToken
     ) : LoginsMapProvider() {
 
         /**
@@ -30,7 +30,7 @@ internal sealed class LoginsMapProvider {
          */
         val providerName = "cognito-idp.$region.amazonaws.com/$poolId"
 
-        override val logins = mapOf(providerName to idToken)
+        override val logins = mapOf(providerName to idToken.tokenValue)
     }
 
     data class AuthProviderLogins(private val federatedToken: FederatedToken) : LoginsMapProvider() {

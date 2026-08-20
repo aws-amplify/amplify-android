@@ -32,10 +32,10 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.mockkObject
-import kotlin.test.assertEquals
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith

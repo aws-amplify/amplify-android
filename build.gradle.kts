@@ -44,6 +44,10 @@ plugins {
     alias(libs.plugins.amplify.kover) apply false
     alias(libs.plugins.amplify.ktlint) apply false
     alias(libs.plugins.amplify.licenses) apply false
+
+    alias(libs.plugins.kotlin.multiplatform) apply false
+    alias(libs.plugins.android.kotlin.multiplatform.library) apply false
+    alias(libs.plugins.android.lint) apply false
 }
 
 tasks.register<Delete>("clean").configure {

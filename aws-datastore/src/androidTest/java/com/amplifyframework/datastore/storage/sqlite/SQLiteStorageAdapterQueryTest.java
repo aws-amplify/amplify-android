@@ -38,6 +38,7 @@ import com.amplifyframework.testmodels.cpk.PostCPK;
 import com.amplifyframework.testmodels.phonecall.Call;
 import com.amplifyframework.testmodels.phonecall.Person;
 import com.amplifyframework.testmodels.phonecall.Phone;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 
 import org.junit.After;
 import org.junit.Before;
@@ -63,7 +64,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test the query functionality of {@link SQLiteStorageAdapter} operations.
  */
-public final class SQLiteStorageAdapterQueryTest {
+public final class SQLiteStorageAdapterQueryTest extends DeviceFarmTestBase {
     private SynchronousStorageAdapter adapter;
 
     /**

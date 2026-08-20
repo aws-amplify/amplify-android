@@ -16,12 +16,9 @@
 plugins {
     alias(libs.plugins.amplify.android.library)
     alias(libs.plugins.kotlin.parcelize)
-    alias(libs.plugins.amplify.api)
+    alias(libs.plugins.amplify.publishing)
 }
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
-apply(from = rootProject.file("configuration/publishing.gradle"))
-
-group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.geo.maplibre"
@@ -32,25 +29,25 @@ android {
 
 dependencies {
     implementation(project(":aws-auth-cognito"))
-    implementation(project(":aws-geo-location"))
-    implementation(project(":core"))
+    api(project(":aws-geo-location"))
+    api(project(":core"))
+    implementation(platform(libs.aws.bom))
     implementation(libs.aws.signing)
-    implementation(libs.maplibre.sdk)
-    implementation(libs.gson) // forces maplibre to pull at least the same gson version as other amplify libs
-    implementation(libs.maplibre.annotations)
+    api(libs.maplibre.sdk)
+    api(libs.gson) // forces maplibre to pull at least the same gson version as other amplify libs
+    api(libs.maplibre.annotations)
     implementation(libs.okhttp)
     implementation(libs.kotlin.coroutines)
 
-    implementation(libs.androidx.lifecycle.runtime)
+    api(libs.androidx.lifecycle.runtime)
+    // CoordinatorLayout is a supertype of the public AmplifyMapView; declare directly as api.
+    api(libs.androidx.coordinatorlayout)
     implementation(libs.google.material)
 
     compileOnly(libs.aws.location)
 
+    androidTestImplementation(libs.bundles.test.android)
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(libs.androidx.appcompat)
-    androidTestImplementation(libs.test.androidx.junit)
-    androidTestImplementation(libs.test.androidx.core)
     androidTestImplementation(libs.test.androidx.core.ktx)
-    androidTestImplementation(libs.test.androidx.runner)
-    androidTestImplementation(libs.kotlin.coroutines.android)
 }

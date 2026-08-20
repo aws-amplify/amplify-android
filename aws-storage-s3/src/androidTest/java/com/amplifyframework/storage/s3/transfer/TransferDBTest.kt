@@ -20,6 +20,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.storage.ObjectMetadata
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import java.io.File
 import java.sql.Date
 import java.time.Instant
@@ -29,7 +30,7 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
-open class TransferDBTest {
+open class TransferDBTest : DeviceFarmTestBase() {
     private val bucketName = "bucket_name"
     private val region = "us-east-1"
     private val fileKey = "file_key"

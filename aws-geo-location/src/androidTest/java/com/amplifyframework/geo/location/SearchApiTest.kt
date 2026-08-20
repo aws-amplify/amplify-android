@@ -24,6 +24,7 @@ import com.amplifyframework.geo.models.Coordinates
 import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions
 import com.amplifyframework.geo.options.GeoSearchByTextOptions
 import com.amplifyframework.geo.result.GeoSearchResult
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousGeo
 import com.amplifyframework.testutils.sync.TestCategory
@@ -39,7 +40,7 @@ import org.junit.Test
 /**
  * Tests various functionalities related to Search API in [AWSLocationGeoPlugin].
  */
-class SearchApiTest {
+class SearchApiTest : DeviceFarmTestBase() {
     lateinit var geo: SynchronousGeo
 
     @Before
@@ -96,7 +97,7 @@ class SearchApiTest {
     fun searchByTextReturnsResult() {
         signInWithCognito()
         val query = UUID.randomUUID().toString()
-        val result = geo?.searchByText(query, GeoSearchByTextOptions.defaults())
+        val result = geo.searchByText(query, GeoSearchByTextOptions.defaults())
         Assert.assertNotNull(result)
         Assert.assertNotNull(result!!.places)
     }
@@ -115,7 +116,7 @@ class SearchApiTest {
             nextDouble(-90.0, 90.0),
             nextDouble(-180.0, 180.0)
         )
-        val result = geo?.searchByCoordinates(coordinates, GeoSearchByCoordinatesOptions.defaults())
+        val result = geo.searchByCoordinates(coordinates, GeoSearchByCoordinatesOptions.defaults())
         Assert.assertNotNull(result)
         Assert.assertNotNull(result!!.places)
 

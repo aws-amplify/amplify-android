@@ -14,6 +14,7 @@
  */
 package com.amplifyframework.storage.s3.extensions
 
+import com.amplifyframework.storage.ProgressStallTimeoutException
 import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.StorageFilePermissionException
 import com.amplifyframework.storage.StoragePathValidationException
@@ -41,3 +42,43 @@ internal fun StorageFilePermissionException.Companion.unableToOverwriteFileExcep
     ),
     "Acquire write permission for this file before attempting to overwrite it."
 )
+
+internal fun ProgressStallTimeoutException.Companion.progressStallTimeoutException(
+    cause: ProgressStallTimeoutException? = null
+) = StorageException(
+    "Upload cancelled due to progress stall timeout.",
+    cause ?: ProgressStallTimeoutException(
+        "Upload cancelled due to progress stall timeout.",
+        "Increase the configured progress stall timeout or verify the network conditions, " +
+            "then retry the upload."
+    ),
+    "Increase the configured progress stall timeout or verify the network conditions, " +
+        "then retry the upload."
+)
+
+/**
+ * Wraps [this] into the appropriate [StorageException] for an upload callback.
+ *
+ * When the underlying failure is a [ProgressStallTimeoutException], the typed stall exception is
+ * surfaced verbatim via [ProgressStallTimeoutException.Companion.progressStallTimeoutException] so
+ * callers can branch on `storageException.cause is ProgressStallTimeoutException`. All other
+ * throwables are wrapped in a generic [StorageException] using [defaultMessage].
+ */
+internal fun Throwable.toStorageUploadException(defaultMessage: String): StorageException {
+    val stall = findProgressStallTimeoutCause()
+    if (stall != null) {
+        return ProgressStallTimeoutException.progressStallTimeoutException(stall)
+    }
+    return StorageException(
+        defaultMessage,
+        this,
+        "See attached exception for more information and suggestions"
+    )
+}
+
+private tailrec fun Throwable.findProgressStallTimeoutCause(): ProgressStallTimeoutException? {
+    if (this is ProgressStallTimeoutException) return this
+    val next = cause ?: return null
+    if (next === this) return null
+    return next.findProgressStallTimeoutCause()
+}

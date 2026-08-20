@@ -26,6 +26,7 @@ import com.amplifyframework.storage.options.StorageDownloadFileOptions
 import com.amplifyframework.storage.options.StorageUploadFileOptions
 import com.amplifyframework.storage.s3.test.R
 import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils.initializeWorkmanagerTestUtil
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.FileAssert
 import com.amplifyframework.testutils.Sleep
 import com.amplifyframework.testutils.random.RandomTempFile
@@ -38,7 +39,7 @@ import java.util.concurrent.TimeUnit
 import org.junit.BeforeClass
 import org.junit.Test
 
-class StorageStressTest {
+class StorageStressTest : DeviceFarmTestBase() {
     companion object {
         private lateinit var storageCategory: StorageCategory
         lateinit var synchronousStorage: SynchronousStorage

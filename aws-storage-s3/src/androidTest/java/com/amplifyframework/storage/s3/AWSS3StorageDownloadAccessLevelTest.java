@@ -29,6 +29,7 @@ import com.amplifyframework.storage.s3.UserCredentials.Credential;
 import com.amplifyframework.storage.s3.UserCredentials.IdentityIdSource;
 import com.amplifyframework.storage.s3.test.R;
 import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.testutils.FileAssert;
 import com.amplifyframework.testutils.random.RandomTempFile;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
@@ -49,7 +50,7 @@ import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
  * correctly with regards to the provided storage access level.
  */
 @SuppressWarnings("deprecation")
-public final class AWSS3StorageDownloadAccessLevelTest {
+public final class AWSS3StorageDownloadAccessLevelTest extends DeviceFarmTestBase {
     private static final long UPLOAD_SIZE = 100L;
     private static final String UPLOAD_NAME = "test-" + System.currentTimeMillis();
 

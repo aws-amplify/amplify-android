@@ -21,6 +21,7 @@ import com.amplifyframework.auth.AuthCategory
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.geo.GeoCategory
 import com.amplifyframework.geo.location.AWSLocationGeoPlugin
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousGeo
 import com.amplifyframework.testutils.sync.TestCategory
@@ -36,7 +37,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-class MapViewStressTest {
+class MapViewStressTest : DeviceFarmTestBase() {
     @get:Rule
     var rule = ActivityScenarioRule(MapViewTestActivity::class.java)
 

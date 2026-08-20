@@ -120,6 +120,11 @@ public final class SynchronousGeo {
                 asyncDelegate.searchByText(query, options, onResult, onError));
     }
 
+    public GeoSearchResult searchByText(String query) throws GeoException {
+        return Await.<GeoSearchResult, GeoException>result(TIMEOUT, (onResult, onError) ->
+                asyncDelegate.searchByText(query, onResult, onError));
+    }
+
     /**
      * Fetches geocode of provided geo-spacial coordinates.
      *
@@ -134,5 +139,12 @@ public final class SynchronousGeo {
     ) throws GeoException {
         return Await.<GeoSearchResult, GeoException>result(TIMEOUT, (onResult, onError) ->
                 asyncDelegate.searchByCoordinates(coordinates, options, onResult, onError));
+    }
+
+    public GeoSearchResult searchByCoordinates(
+        Coordinates coordinates
+    ) throws GeoException {
+        return Await.<GeoSearchResult, GeoException>result(TIMEOUT, (onResult, onError) ->
+                asyncDelegate.searchByCoordinates(coordinates, onResult, onError));
     }
 }

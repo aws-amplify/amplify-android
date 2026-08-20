@@ -66,9 +66,7 @@ internal fun AmplifyCredential.isValid(): Boolean = when (this) {
     else -> false
 }
 
-internal fun AmplifyCredential.getCognitoSession(
-    exception: AuthException? = null
-): AWSAuthSessionBehavior<AWSCognitoUserPoolTokens> {
+internal fun AmplifyCredential.getCognitoSession(exception: AuthException? = null): AWSCognitoAuthSession {
     fun getCredentialsResult(
         awsCredentials: CognitoCredentials,
         exception: AuthException?
@@ -99,7 +97,7 @@ internal fun AmplifyCredential.getCognitoSession(
         }
 
         return try {
-            AuthSessionResult.success(userPoolTokens?.accessToken?.let(SessionHelper::getUserSub))
+            AuthSessionResult.success(userPoolTokens?.accessToken?.userSub)
         } catch (e: Exception) {
             AuthSessionResult.failure(UnknownException(cause = e))
         }
@@ -115,9 +113,9 @@ internal fun AmplifyCredential.getCognitoSession(
 
         return AuthSessionResult.success(
             AWSCognitoUserPoolTokens(
-                accessToken = cognitoUserPoolTokens.accessToken,
-                idToken = cognitoUserPoolTokens.idToken,
-                refreshToken = cognitoUserPoolTokens.refreshToken
+                accessToken = cognitoUserPoolTokens.accessToken?.tokenValue,
+                idToken = cognitoUserPoolTokens.idToken?.tokenValue,
+                refreshToken = cognitoUserPoolTokens.refreshToken?.tokenValue
             )
         )
     }

@@ -25,6 +25,7 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.logging.AndroidLoggingPlugin;
 import com.amplifyframework.logging.LogLevel;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.sync.SynchronousDataStore;
 
@@ -39,7 +40,7 @@ import java.util.concurrent.TimeUnit;
  * Tests running DataStore.stop() and then calling DataStore.start() from within the stop() callback.
  * This is the recommended method for resetting sync expressions in the Amplify documentation.
  */
-public final class StartStopInstrumentationTest {
+public final class StartStopInstrumentationTest extends DeviceFarmTestBase {
     private static final int TIMEOUT_SECONDS = 60;
     private static SynchronousDataStore dataStore;
     private static DataStoreCategory dataStoreCategory;

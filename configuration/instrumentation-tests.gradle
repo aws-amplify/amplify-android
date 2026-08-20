@@ -11,7 +11,8 @@ def module_backends = [
         'aws-predictions'       : 'NONE',
         'core'                  : 'NONE',
         'aws-auth-cognito'      : 'AuthIntegrationTests',
-        'aws-sdk-appsync-events': 'NONE'
+        'aws-sdk-appsync-events': 'NONE',
+        'aws-kinesis'           : 'KinesisIntegrationTests'
 ]
 
 def module_subpaths = [
@@ -19,13 +20,13 @@ def module_subpaths = [
 ]
 
 def canaryTests = [
-        'aws-datastore'   : ['com.amplifyframework.datastore.DatastoreCanaryTest', 'com.amplifyframework.datastore.DatastoreCanaryTestGen2'],
-        'aws-auth-cognito': ['com.amplifyframework.auth.cognito.AuthCanaryTest', 'com.amplifyframework.auth.cognito.AuthCanaryTestGen2'],
+        'aws-datastore'   : ['com.amplifyframework.datastore.DatastoreCanaryTest'],
+        'aws-auth-cognito': ['com.amplifyframework.auth.cognito.AuthCanaryTest'],
         'aws-analytics-pinpoint': ['com.amplifyframework.analytics.pinpoint.PinpointAnalyticsCanaryTest'],
-        'aws-geo-location': ['com.amplifyframework.geo.location.GeoCanaryTest', 'com.amplifyframework.geo.location.GeoCanaryTestGen2'],
+        'aws-geo-location': ['com.amplifyframework.geo.location.GeoCanaryTest'],
         'aws-predictions': ['com.amplifyframework.predictions.aws.PredictionsCanaryTest'],
-//      'aws-push-notifications-pinpoint': ['com.amplifyframework.pushnotifications.pinpoint.NotificationsCanaryTest'],
-        'aws-storage-s3': ['com.amplifyframework.storage.s3.StorageCanaryTest', 'com.amplifyframework.storage.s3.StorageCanaryTestGen2']
+        'aws-storage-s3': ['com.amplifyframework.storage.s3.StorageCanaryTest'],
+        'aws-kinesis': ['com.amplifyframework.kinesis.KinesisDataStreamsInstrumentationTest']
 ]
 
 subprojects {
@@ -38,15 +39,6 @@ subprojects {
                     exec {
                         commandLine("$rootDir.path/scripts/run_test_in_devicefarm.sh")
                         args([moduleWithSubPath])
-                    }
-                }
-            }
-            task runNightlyTestsInDeviceFarmPool {
-                dependsOn(assembleAndroidTest)
-                doLast {
-                    exec {
-                        commandLine("$rootDir.path/scripts/run_nightly_tests_in_devicefarm_pool.sh")
-                        args([project.name])
                     }
                 }
             }

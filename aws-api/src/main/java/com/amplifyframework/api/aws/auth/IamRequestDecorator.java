@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws.auth;
 
 import com.amplifyframework.api.ApiException.ApiAuthException;
+import com.amplifyframework.api.aws.AppSyncSigningException;
 import com.amplifyframework.api.aws.sigv4.AWS4Signer;
 
 import aws.smithy.kotlin.runtime.net.url.Url;
@@ -143,7 +144,8 @@ public class IamRequestDecorator implements RequestDecorator {
             }
             return output.toByteArray();
         } catch (IOException exception) {
-            throw new ApiAuthException("Unable to calculate SigV4 signature for the request",
+            throw new AppSyncSigningException(
+                "Unable to calculate SigV4 signature for the request",
                 exception,
                 "Check your application logs for details.");
         }

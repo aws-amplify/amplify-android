@@ -1,13 +1,3 @@
-import org.gradle.api.Plugin
-import org.gradle.api.Project
-import org.gradle.api.tasks.compile.JavaCompile
-import org.gradle.api.tasks.testing.Test
-import org.gradle.kotlin.dsl.configure
-import org.gradle.kotlin.dsl.extra
-import org.gradle.kotlin.dsl.withType
-import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 /*
  * Copyright 2025 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
@@ -23,6 +13,15 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
  * permissions and limitations under the License.
  */
 
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.api.tasks.testing.Test
+import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 class KotlinConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target.pluginManager) {
@@ -36,23 +35,9 @@ class KotlinConventionPlugin : Plugin<Project> {
 
             // Apply other convention plugins
             apply("amplify.ktlint")
-
-            // Note: these only need to be applied in a future publishing convention plugin
-            withPlugin("maven-publish") {
-                apply("amplify.kover")
-                apply("amplify.licenses")
-            }
         }
 
         with(target) {
-            // Set up signing properties for publishing
-            if (hasProperty("signingKeyId")) {
-                println("Getting signing info from protected source.")
-                extra["signing.keyId"] = findProperty("signingKeyId")
-                extra["signing.password"] = findProperty("signingPassword")
-                extra["signing.inMemoryKey"] = findProperty("signingInMemoryKey")
-            }
-
             configure<KotlinProjectExtension> {
                 jvmToolchain(17)
             }
@@ -71,7 +56,7 @@ class KotlinConventionPlugin : Plugin<Project> {
 
             tasks.withType<KotlinCompile>().configureEach {
                 compilerOptions {
-                    freeCompilerArgs.addAll(amplifyInternalMarkers.map { "-opt-in=$it" })
+                    freeCompilerArgs.addAll(optInAnnotations.map { "-opt-in=$it" })
                     freeCompilerArgs.add("-Xconsistent-data-class-copy-visibility")
                 }
             }

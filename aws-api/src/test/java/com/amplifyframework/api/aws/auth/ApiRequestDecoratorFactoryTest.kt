@@ -20,9 +20,11 @@ import aws.smithy.kotlin.runtime.collections.Attributes
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.ApiException.ApiAuthException
 import com.amplifyframework.api.aws.ApiAuthProviders
+import com.amplifyframework.api.aws.AppSyncProviderNotConfiguredException
 import com.amplifyframework.api.aws.AuthorizationType
 import com.amplifyframework.api.aws.EndpointType
 import com.amplifyframework.api.aws.sigv4.FunctionAuthProvider
+import io.kotest.matchers.types.shouldBeInstanceOf
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Request
 import okhttp3.Request.Builder
@@ -74,9 +76,10 @@ class ApiRequestDecoratorFactoryTest {
             null
         )
         val request: Request = Builder().url("https://localhost/").build()
-        Assert.assertThrows(
+        val thrown = Assert.assertThrows(
             ApiAuthException::class.java
         ) { factory.forAuthType(AuthorizationType.API_KEY).decorate(request) }
+        thrown.shouldBeInstanceOf<AppSyncProviderNotConfiguredException>()
     }
 
     /**
@@ -145,9 +148,10 @@ class ApiRequestDecoratorFactoryTest {
             "CONFIG_API_KEY"
         )
         val request: Request = Builder().url("https://localhost/").build()
-        Assert.assertThrows(
+        val thrown = Assert.assertThrows(
             ApiAuthException::class.java
         ) { factory.forAuthType(AuthorizationType.OPENID_CONNECT).decorate(request) }
+        thrown.shouldBeInstanceOf<AppSyncProviderNotConfiguredException>()
     }
 
     /**
@@ -193,9 +197,10 @@ class ApiRequestDecoratorFactoryTest {
             "CONFIG_API_KEY"
         )
         val request: Request = Builder().url("https://localhost/").build()
-        Assert.assertThrows(
+        val thrown = Assert.assertThrows(
             ApiAuthException::class.java
         ) { factory.forAuthType(AuthorizationType.AWS_LAMBDA).decorate(request) }
+        thrown.shouldBeInstanceOf<AppSyncProviderNotConfiguredException>()
     }
 
     /**

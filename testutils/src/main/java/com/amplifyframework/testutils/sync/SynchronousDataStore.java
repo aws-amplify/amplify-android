@@ -128,6 +128,11 @@ public final class SynchronousDataStore {
         return Immutable.of(items);
     }
 
+    @NonNull
+    public <T extends Model> Iterator<T> query(@NonNull Class<T> clazz) throws DataStoreException {
+        return awaitIterator((onResult, onError) -> asyncDelegate.query(clazz, onResult, onError));
+    }
+
     /**
      * Calls the start method of the underlying DataStore implementation.
      * @throws DataStoreException On failure to start data store.

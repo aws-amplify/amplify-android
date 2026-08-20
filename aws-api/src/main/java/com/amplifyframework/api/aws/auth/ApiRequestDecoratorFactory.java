@@ -22,6 +22,8 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.aws.ApiAuthProviders;
 import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
+import com.amplifyframework.api.aws.AppSyncProviderNotConfiguredException;
+import com.amplifyframework.api.aws.AppSyncTokenFetchException;
 import com.amplifyframework.api.aws.AuthorizationType;
 import com.amplifyframework.api.aws.EndpointType;
 import com.amplifyframework.api.aws.sigv4.AWS4Signer;
@@ -105,6 +107,8 @@ public final class ApiRequestDecoratorFactory {
      * @param authorizationType the authorization type to be used for the request.
      * @return the appropriate request decorator for the given authorization type.
      * @throws ApiAuthException if unable to get a request decorator.
+     * @throws AppSyncTokenFetchException if unable to fetch auth token.
+     * @throws AppSyncProviderNotConfiguredException if auth provider is missing.
      */
     public RequestDecorator forAuthType(@NonNull AuthorizationType authorizationType) throws ApiAuthException {
         switch (authorizationType) {
@@ -124,40 +128,44 @@ public final class ApiRequestDecoratorFactory {
                 try {
                     token = cognitoUserPoolsAuthProvider.getLatestAuthToken();
                 } catch (ApiException exception) {
-                    throw new ApiAuthException("Failed to retrieve auth token from Cognito provider.",
-                                                            exception,
-                                                            "Check the application logs for details.");
+                    throw new AppSyncTokenFetchException(
+                        "Failed to retrieve auth token from Cognito provider.",
+                        exception,
+                        "Check the application logs for details.");
                 }
                 return new TokenRequestDecorator(() -> token);
             case OPENID_CONNECT:
                 if (apiAuthProviders.getOidcAuthProvider() == null) {
-                    throw new ApiAuthException("Attempting to use OPENID_CONNECT authorization " +
-                                                                "without an OIDC provider.",
-                                                            "Configure an OidcAuthProvider when initializing " +
-                                                                "the API plugin.");
+                    throw new AppSyncProviderNotConfiguredException(
+                        "Attempting to use OPENID_CONNECT authorization without an OIDC provider.",
+                        null,
+                        "Configure an OidcAuthProvider when initializing the API plugin.");
                 }
                 final String oidcToken;
                 try {
                     oidcToken = apiAuthProviders.getOidcAuthProvider().getLatestAuthToken();
                 } catch (ApiException exception) {
-                    throw new ApiAuthException("Failed to retrieve auth token from OIDC provider.",
-                                               exception,
-                                               "Check the application logs for details.");
+                    throw new AppSyncTokenFetchException(
+                        "Failed to retrieve auth token from OIDC provider.",
+                        exception,
+                        "Check the application logs for details.");
                 }
                 return new TokenRequestDecorator(() -> oidcToken);
             case AWS_LAMBDA:
                 if (apiAuthProviders.getFunctionAuthProvider() == null) {
-                    throw new ApiAuthException("Attempting to use AWS_LAMBDA authorization " +
-                            "without a provider implemented.",
-                            "Configure a FunctionAuthProvider when initializing the API plugin.");
+                    throw new AppSyncProviderNotConfiguredException(
+                        "Attempting to use AWS_LAMBDA authorization without a provider implemented.",
+                        null,
+                        "Configure a FunctionAuthProvider when initializing the API plugin.");
                 }
                 final String functionToken;
                 try {
                     functionToken = apiAuthProviders.getFunctionAuthProvider().getLatestAuthToken();
                 } catch (ApiException exception) {
-                    throw new ApiAuthException("Failed to retrieve auth token from function auth provider.",
-                            exception,
-                            "Check the application logs for details.");
+                    throw new AppSyncTokenFetchException(
+                        "Failed to retrieve auth token from function auth provider.",
+                        exception,
+                        "Check the application logs for details.");
                 }
                 return new TokenRequestDecorator(() -> functionToken);
             case API_KEY:
@@ -166,11 +174,12 @@ public final class ApiRequestDecoratorFactory {
                 } else if (apiKey != null) {
                     return new ApiKeyRequestDecorator(() -> apiKey);
                 } else {
-                    throw new ApiAuthException("Attempting to use API_KEY authorization without " +
-                                                "an API key provider or an API key in the config file",
-                                                "Verify that an API key is in the config file or an " +
-                                                "ApiKeyAuthProvider is setup during the API " +
-                                                "plugin initialization.");
+                    throw new AppSyncProviderNotConfiguredException(
+                        "Attempting to use API_KEY authorization without " +
+                            "an API key provider or an API key in the config file.",
+                        null,
+                        "Verify that an API key is in the config file or an " +
+                            "ApiKeyAuthProvider is setup during the API plugin initialization.");
                 }
             case AWS_IAM:
                 CredentialsProvider credentialsProvider = apiAuthProviders.getAWSCredentialsProvider() != null

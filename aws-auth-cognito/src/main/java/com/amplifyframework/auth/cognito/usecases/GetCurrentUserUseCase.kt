@@ -18,20 +18,12 @@ package com.amplifyframework.auth.cognito.usecases
 import com.amplifyframework.auth.AuthUser
 import com.amplifyframework.auth.cognito.AuthStateMachine
 import com.amplifyframework.auth.cognito.requireSignedInState
-import com.amplifyframework.auth.exceptions.SessionExpiredException
-import com.amplifyframework.util.throwIf
 
 internal class GetCurrentUserUseCase(
-    private val fetchAuthSession: FetchAuthSessionUseCase,
     private val stateMachine: AuthStateMachine
 ) {
     suspend fun execute(): AuthUser {
         val state = stateMachine.requireSignedInState()
-
-        // Throw exception if session is expired
-        val result = fetchAuthSession.execute().userPoolTokensResult
-        result.error.throwIf<SessionExpiredException>()
-
         return AuthUser(
             state.signedInData.userId,
             state.signedInData.username

@@ -69,12 +69,24 @@ public class ApiException extends AmplifyException {
 
             super(message, recoverySuggestion);
         }
+
+        /**
+         * Constructor for NonRetryable Exception with cause.
+         * @param message message for exception.
+         * @param throwable The underlying cause of this exception.
+         * @param recoverySuggestion recovery suggestions.
+         */
+        public NonRetryableException(@NonNull String message,
+                                      Throwable throwable,
+                                      @NonNull String recoverySuggestion) {
+            super(message, throwable, recoverySuggestion);
+        }
     }
 
     /**
      * Represents authn/authz errors as it relates to interacting with the API backend.
      */
-    public static final class ApiAuthException extends ApiException {
+    public static class ApiAuthException extends ApiException {
         private static final long serialVersionUID = 1L;
 
         /**

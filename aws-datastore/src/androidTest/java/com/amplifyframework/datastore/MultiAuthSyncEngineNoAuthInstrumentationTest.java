@@ -24,7 +24,7 @@ import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.aws.AWSApiPlugin;
 import com.amplifyframework.api.aws.AuthModeStrategyType;
 import com.amplifyframework.api.aws.AuthorizationType;
-import com.amplifyframework.auth.cognito.helpers.JWTParser;
+import com.amplifyframework.api.aws.auth.CognitoJWTParser;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.category.CategoryConfiguration;
@@ -42,6 +42,7 @@ import com.amplifyframework.logging.LogLevel;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.testmodels.commentsblog.Author;
 import com.amplifyframework.testmodels.multiauth.MultiAuthTestModelProvider;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.random.RandomString;
@@ -76,7 +77,7 @@ import static org.junit.Assert.fail;
  * Tests a set of possible combinations of models, auth modes and login status to
  * verify behavior when in multi-auth mode.
  */
-public final class MultiAuthSyncEngineNoAuthInstrumentationTest {
+public final class MultiAuthSyncEngineNoAuthInstrumentationTest extends DeviceFarmTestBase {
     private static final Logger LOG = Amplify.Logging.logger(
         CategoryType.DATASTORE,
         "MultiAuthSyncEngineInstrumentationTest"
@@ -223,7 +224,7 @@ public final class MultiAuthSyncEngineNoAuthInstrumentationTest {
         if (authHeaderValue.startsWith("AWS4-HMAC-SHA256")) {
             return AuthorizationType.AWS_IAM;
         }
-        String iss = JWTParser.INSTANCE.getClaim(authHeaderValue, "iss");
+        String iss = CognitoJWTParser.Companion.getClaim(authHeaderValue, "iss");
         if (iss == null) {
             throw new IllegalStateException("Could not find any valid auth headers");
         }

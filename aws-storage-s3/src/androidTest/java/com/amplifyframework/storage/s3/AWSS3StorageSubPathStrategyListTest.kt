@@ -26,6 +26,7 @@ import com.amplifyframework.storage.options.SubpathStrategy
 import com.amplifyframework.storage.s3.options.AWSS3StoragePagedListOptions
 import com.amplifyframework.storage.s3.test.R
 import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.random.RandomTempFile
 import com.amplifyframework.testutils.sync.SynchronousAuth
 import com.amplifyframework.testutils.sync.SynchronousStorage
@@ -40,7 +41,7 @@ import org.junit.Test
 /**
  * Integration tests for using SubpathStrategy with Storage List API
  */
-class AWSS3StorageSubPathStrategyListTest {
+class AWSS3StorageSubPathStrategyListTest : DeviceFarmTestBase() {
     companion object {
         private const val SMALL_FILE_SIZE = 100L
         private const val FIRST_FILE_NAME = "01"

@@ -17,6 +17,7 @@ package com.amplifyframework.storage.s3.configuration
 
 import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.core.Consumer
+import com.amplifyframework.storage.ProgressStallTimeout
 import com.amplifyframework.storage.StorageAccessLevel
 import com.amplifyframework.storage.StorageException
 import io.mockk.mockk
@@ -50,5 +51,50 @@ class AWSS3StoragePluginConfigurationTest : TestCase() {
         val awsS3PluginPrefixResolver =
             awsS3StoragePluginConfiguration.getAWSS3PluginPrefixResolver(authCredentialsProvider)
         assert(awsS3PluginPrefixResolver is StorageAccessLevelAwarePrefixResolver)
+    }
+
+    /**
+     * When no [ProgressStallTimeout] is supplied via the builder, the plugin configuration
+     * should default to [ProgressStallTimeout.Disabled] to preserve existing upload behavior.
+     *
+     * - Given: a plugin configuration built without overriding `progressStallTimeout`
+     * - When: the configuration is constructed
+     * - Then: `progressStallTimeout` equals [ProgressStallTimeout.Disabled]
+     */
+    fun testProgressStallTimeoutDefaultsToDisabled() {
+        val configuration = AWSS3StoragePluginConfiguration {}
+        assertEquals(ProgressStallTimeout.Disabled, configuration.progressStallTimeout)
+    }
+
+    /**
+     * A custom [ProgressStallTimeout.Interval] provided on the builder must be honored by the
+     * resulting configuration so that it can be propagated to uploads that do not override it.
+     *
+     * - Given: a builder that sets `progressStallTimeout` to an [ProgressStallTimeout.Interval]
+     * - When: the configuration is built
+     * - Then: the same [ProgressStallTimeout.Interval] is exposed on the configuration
+     */
+    fun testProgressStallTimeoutIntervalPropagatesFromBuilder() {
+        val interval = ProgressStallTimeout.Interval(seconds = 15L)
+        val configuration = AWSS3StoragePluginConfiguration {
+            progressStallTimeout = interval
+        }
+        assertEquals(interval, configuration.progressStallTimeout)
+    }
+
+    /**
+     * Non-positive intervals must not attempt to schedule a stall timer. The [ProgressStallTimeout]
+     * sealed class reports `secondsForStallTimer = 0` for such values, effectively disabling
+     * detection while still preserving the original user-provided configuration object.
+     *
+     * - Given: a configuration with an [ProgressStallTimeout.Interval] of `0` seconds
+     * - When: `secondsForStallTimer` is read from the configured timeout
+     * - Then: the returned value is `0`, disabling the stall timer
+     */
+    fun testProgressStallTimeoutZeroIntervalDisablesStallTimer() {
+        val configuration = AWSS3StoragePluginConfiguration {
+            progressStallTimeout = ProgressStallTimeout.Interval(seconds = 0L)
+        }
+        assertEquals(0L, configuration.progressStallTimeout.secondsForStallTimer)
     }
 }

@@ -31,6 +31,7 @@ import com.amplifyframework.testmodels.ratingsblog.Rating;
 import com.amplifyframework.testmodels.ratingsblog.User;
 import com.amplifyframework.testmodels.teamproject.Projectfields;
 import com.amplifyframework.testmodels.teamproject.Team;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.testutils.ModelAssert;
 import com.amplifyframework.testutils.sync.SynchronousApi;
 
@@ -50,7 +51,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * TODO: document how to configure a remote endpoint that can accomodate this test.
  */
-public final class CodeGenerationInstrumentationTest {
+public final class CodeGenerationInstrumentationTest extends DeviceFarmTestBase {
     private static final String PERSON_API_NAME = "personApi";
     private static final String PROJECT_API_NAME = "projectApi";
     private static final String BLOG_API_NAME = "blogApi";

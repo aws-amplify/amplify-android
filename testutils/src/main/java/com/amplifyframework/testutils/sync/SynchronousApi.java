@@ -28,6 +28,7 @@ import com.amplifyframework.api.graphql.model.ModelQuery;
 import com.amplifyframework.api.graphql.model.ModelSubscription;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -52,12 +53,17 @@ import io.reactivex.rxjava3.disposables.Disposable;
  * performing various operations.
  */
 public final class SynchronousApi {
-    private static final long OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
 
     private final ApiCategoryBehavior asyncDelegate;
+    private final long timeoutMs;
 
     private SynchronousApi(ApiCategoryBehavior asyncDelegate) {
+        this(asyncDelegate, TimeUnit.SECONDS.toMillis(5));
+    }
+
+    private SynchronousApi(ApiCategoryBehavior asyncDelegate, long timeoutMs) {
         this.asyncDelegate = asyncDelegate;
+        this.timeoutMs = timeoutMs;
     }
 
     /**
@@ -72,6 +78,23 @@ public final class SynchronousApi {
         Objects.requireNonNull(asyncDelegate);
         return new SynchronousApi(asyncDelegate);
     }
+
+    @NonNull
+    public static SynchronousApi delegatingTo(@NonNull ApiCategoryBehavior asyncDelegate, long timeoutMs) {
+        Objects.requireNonNull(asyncDelegate);
+        return new SynchronousApi(asyncDelegate, timeoutMs);
+    }
+
+    @NonNull
+    public static SynchronousApi delegatingToAmplify() {
+        return delegatingTo(Amplify.API);
+    }
+
+    @NonNull
+    public static SynchronousApi delegatingToAmplify(long timeoutMs) {
+        return delegatingTo(Amplify.API, timeoutMs);
+    }
+
 
     /**
      * Create a model via API.
@@ -244,6 +267,11 @@ public final class SynchronousApi {
                 asyncDelegate.post(apiName, options, onResponse, onFailure));
     }
 
+    public RestResponse post(@NonNull RestOptions options) throws ApiException {
+        return awaitRestResponse((onResponse, onFailure) ->
+                                     asyncDelegate.post(options, onResponse, onFailure));
+    }
+
     /**
      * Gets a list of models of certain class and that match a querying predicate.
      *
@@ -310,7 +338,7 @@ public final class SynchronousApi {
     @NonNull
     public <T extends Model> Observable<GraphQLResponse<T>> onCreate(@NonNull String apiName, @NonNull Class<T> clazz) {
         return Observable.create(emitter -> {
-            Await.<String, ApiException>result(OPERATION_TIMEOUT_MS,
+            Await.<String, ApiException>result(timeoutMs,
                 (onSubscriptionStarted, onError) -> {
                     Cancelable cancelable = asyncDelegate.subscribe(
                             apiName,
@@ -340,7 +368,7 @@ public final class SynchronousApi {
             CompositeDisposable disposable = new CompositeDisposable();
             emitter.setDisposable(disposable);
             Await.<String, ApiException>result(
-                OPERATION_TIMEOUT_MS,
+                timeoutMs,
                 (onSubscriptionStarted, onError) -> {
                     Cancelable cancelable = asyncDelegate.subscribe(
                             apiName,
@@ -362,7 +390,7 @@ public final class SynchronousApi {
     private <T> T awaitResponseData(
             Await.ResultErrorEmitter<GraphQLResponse<T>, ApiException> resultErrorEmitter)
             throws ApiException {
-        final GraphQLResponse<T> response = Await.result(OPERATION_TIMEOUT_MS, resultErrorEmitter);
+        final GraphQLResponse<T> response = Await.result(timeoutMs, resultErrorEmitter);
         if (response.hasErrors()) {
             String firstErrorMessage = response.getErrors().get(0).getMessage();
             throw new RuntimeException("Response has error:" + firstErrorMessage);
@@ -376,7 +404,7 @@ public final class SynchronousApi {
     private <T> List<GraphQLResponse.Error> awaitResponseErrors(
             Await.ResultErrorEmitter<GraphQLResponse<T>, ApiException> resultErrorEmitter)
             throws ApiException {
-        final GraphQLResponse<T> response = Await.result(OPERATION_TIMEOUT_MS, resultErrorEmitter);
+        final GraphQLResponse<T> response = Await.result(timeoutMs, resultErrorEmitter);
         if (!response.hasErrors()) {
             throw new RuntimeException("No errors in response.");
         }
@@ -387,6 +415,6 @@ public final class SynchronousApi {
     private RestResponse awaitRestResponse(
             Await.ResultErrorEmitter<RestResponse, ApiException> resultErrorEmitter)
             throws ApiException {
-        return Await.result(OPERATION_TIMEOUT_MS, resultErrorEmitter);
+        return Await.result(timeoutMs, resultErrorEmitter);
     }
 }

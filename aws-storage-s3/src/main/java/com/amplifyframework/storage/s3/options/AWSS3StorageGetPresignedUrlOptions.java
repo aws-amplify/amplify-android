@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.storage.options.StorageGetUrlOptions;
+import com.amplifyframework.storage.s3.StorageAccessMethod;
 
 /**
  * Options to specify attributes of presigned URL generation from an AWS S3 bucket.
@@ -27,11 +28,13 @@ import com.amplifyframework.storage.options.StorageGetUrlOptions;
 public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptions {
     private final boolean useAccelerationMode;
     private final boolean validateObjectExistence;
+    private final StorageAccessMethod method;
 
     private AWSS3StorageGetPresignedUrlOptions(final Builder builder) {
         super(builder);
         this.useAccelerationMode = builder.useAccelerateEndpoint;
         this.validateObjectExistence = builder.validateObjectExistence;
+        this.method = builder.method;
     }
 
     /**
@@ -63,6 +66,7 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
             .targetIdentityId(options.getTargetIdentityId())
             .expires(options.getExpires())
             .setValidateObjectExistence(options.getValidateObjectExistence())
+            .method(options.getMethod())
             .expires(options.getExpires())
             .bucket(options.getBucket());
     }
@@ -95,6 +99,17 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
         return validateObjectExistence;
     }
 
+    /**
+     * Gets the HTTP method to use for pre-signed URL generation.
+     * Defaults to {@link StorageAccessMethod#GET}.
+     *
+     * @return the storage access method
+     */
+    @NonNull
+    public StorageAccessMethod getMethod() {
+        return method;
+    }
+
     @Override
     @SuppressWarnings("deprecation")
     public boolean equals(Object obj) {
@@ -108,7 +123,8 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
                     ObjectsCompat.equals(getTargetIdentityId(), that.getTargetIdentityId()) &&
                     ObjectsCompat.equals(getExpires(), that.getExpires()) &&
                     ObjectsCompat.equals(getBucket(), that.getBucket()) &&
-                    ObjectsCompat.equals(getValidateObjectExistence(), that.getValidateObjectExistence());
+                    ObjectsCompat.equals(getValidateObjectExistence(), that.getValidateObjectExistence()) &&
+                    ObjectsCompat.equals(getMethod(), that.getMethod());
         }
     }
 
@@ -120,6 +136,7 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
                 getTargetIdentityId(),
                 getExpires(),
                 getValidateObjectExistence(),
+                getMethod(),
                 getBucket()
         );
     }
@@ -133,6 +150,7 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
                 ", targetIdentityId=" + getTargetIdentityId() +
                 ", expires=" + getExpires() +
                 ", validateObjectExistence=" + getValidateObjectExistence() +
+                ", method=" + getMethod() +
                 ", bucket=" + getBucket() +
                 '}';
     }
@@ -145,6 +163,7 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
     public static final class Builder extends StorageGetUrlOptions.Builder<Builder> {
         private boolean useAccelerateEndpoint;
         private boolean validateObjectExistence;
+        private StorageAccessMethod method = StorageAccessMethod.GET;
 
         /**
          * Configure to use acceleration mode on new StorageGetPresignedUrlOptions instances.
@@ -163,6 +182,18 @@ public final class AWSS3StorageGetPresignedUrlOptions extends StorageGetUrlOptio
          */
         public Builder setValidateObjectExistence(boolean validateObjectExistence) {
             this.validateObjectExistence = validateObjectExistence;
+            return this;
+        }
+
+        /**
+         * Configure the HTTP method for pre-signed URL generation.
+         * Defaults to {@link StorageAccessMethod#GET}.
+         * @param method the storage access method (GET or PUT)
+         * @return Current Builder instance for fluent chaining
+         */
+        @NonNull
+        public Builder method(@NonNull StorageAccessMethod method) {
+            this.method = method;
             return this;
         }
 

@@ -15,43 +15,32 @@
 
 plugins {
     alias(libs.plugins.amplify.android.library)
-    alias(libs.plugins.amplify.api)
+    alias(libs.plugins.amplify.publishing)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
-apply(from = rootProject.file("configuration/publishing.gradle"))
-
-group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.aws.core"
 }
 
 dependencies {
-    implementation(project(":core"))
+    api(project(":core"))
     implementation(libs.kotlin.stdlib)
     implementation(libs.kotlin.coroutines)
 
+    api(platform(libs.aws.bom))
     implementation(libs.aws.smithy.http)
     compileOnly(libs.aws.smithy.okhttp4)
 
-    implementation(libs.aws.credentials)
+    api(libs.aws.credentials)
+    // Smithy runtime-core types (Instant, Attributes) appear in this module's public API
+    // (e.g. AWSTemporaryCredentials, CognitoCredentialsProvider), so declare it directly as api
+    // rather than relying on transitive resolution.
+    api(libs.aws.smithy.runtime.core)
     // slf4j dependency is added to fix https://github.com/awslabs/aws-sdk-kotlin/issues/993#issuecomment-1678885524
     implementation(libs.slf4j)
 
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.kotest.assertions)
-    testImplementation(libs.test.robolectric)
-}
-
-afterEvaluate {
-    // Disables this warning:
-    // warning: listOf(classfile) MethodParameters attribute
-    // introduced in version 52.0 class files is ignored in
-    // version 51.0 class files
-    // Root project has -Werror, so this warning
-    // would fail the build, otherwise.
-    tasks.withType<JavaCompile>().configureEach {
-        options.compilerArgs.add("-Xlint:-classfile")
-    }
+    testImplementation(libs.bundles.test.unit)
+    testImplementation(libs.bundles.test.unit.android)
 }

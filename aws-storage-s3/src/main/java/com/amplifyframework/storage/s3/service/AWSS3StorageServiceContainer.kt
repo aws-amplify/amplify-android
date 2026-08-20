@@ -18,6 +18,7 @@ import android.content.Context
 import com.amplifyframework.storage.ResolvedStorageBucket
 import com.amplifyframework.storage.s3.transfer.S3StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider
+import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -28,13 +29,24 @@ internal class AWSS3StorageServiceContainer(
     private val context: Context,
     private val storageServiceFactory: AWSS3StorageService.Factory,
     private val clientProvider: StorageTransferClientProvider,
-    private val awsS3StorageServicesByBucketName: ConcurrentHashMap<String, AWSS3StorageService>
+    private val awsS3StorageServicesByBucketName: ConcurrentHashMap<String, AWSS3StorageService>,
+    private val transferStatusUpdater: TransferStatusUpdater,
+    private val defaultProgressStallTimeoutSeconds: Long = 0L
 ) {
     constructor(
         context: Context,
         storageServiceFactory: AWSS3StorageService.Factory,
-        clientProvider: S3StorageTransferClientProvider
-    ) : this(context, storageServiceFactory, clientProvider, ConcurrentHashMap())
+        clientProvider: S3StorageTransferClientProvider,
+        transferStatusUpdater: TransferStatusUpdater,
+        defaultProgressStallTimeoutSeconds: Long = 0L
+    ) : this(
+        context,
+        storageServiceFactory,
+        clientProvider,
+        ConcurrentHashMap(),
+        transferStatusUpdater,
+        defaultProgressStallTimeoutSeconds
+    )
 
     private val lock = Any()
 
@@ -61,7 +73,14 @@ internal class AWSS3StorageServiceContainer(
             var service = awsS3StorageServicesByBucketName.get(bucketName)
             if (service == null) {
                 val region: String = resolvedStorageBucket.bucketInfo.region
-                service = storageServiceFactory.create(context, region, bucketName, clientProvider)
+                service = storageServiceFactory.create(
+                    context,
+                    region,
+                    bucketName,
+                    clientProvider,
+                    transferStatusUpdater,
+                    defaultProgressStallTimeoutSeconds
+                )
                 awsS3StorageServicesByBucketName[bucketName] = service
             }
             return service
@@ -78,7 +97,14 @@ internal class AWSS3StorageServiceContainer(
         synchronized(lock) {
             var service = awsS3StorageServicesByBucketName[bucketName]
             if (service == null) {
-                service = storageServiceFactory.create(context, region, bucketName, clientProvider)
+                service = storageServiceFactory.create(
+                    context,
+                    region,
+                    bucketName,
+                    clientProvider,
+                    transferStatusUpdater,
+                    defaultProgressStallTimeoutSeconds
+                )
                 awsS3StorageServicesByBucketName[bucketName] = service
             }
 

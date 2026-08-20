@@ -132,12 +132,11 @@ internal class AuthStateMachine(
 }
 
 // This function throws if the state machine is *not* in the required state
-internal suspend inline fun <reified T : AuthenticationState> AuthStateMachine.requireAuthenticationState() {
-    if (getCurrentState().authNState !is T) {
-        throw InvalidStateException(
-            "Auth State Machine is not in the required authentication state: ${T::class.simpleName}"
-        )
-    }
+internal suspend inline fun <reified T : AuthenticationState> AuthStateMachine.requireAuthenticationState(): T {
+    val currentState = getCurrentState()
+    return currentState.authNState as? T ?: throw InvalidStateException(
+        "Auth State Machine is not in the required authentication state: ${T::class.simpleName}"
+    )
 }
 
 // Returns the SignedInState or throws SignedOutException or InvalidStateException

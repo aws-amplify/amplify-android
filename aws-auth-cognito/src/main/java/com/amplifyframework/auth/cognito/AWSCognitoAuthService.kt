@@ -22,6 +22,7 @@ import aws.sdk.kotlin.services.cognitoidentityprovider.endpoints.CognitoIdentity
 import aws.smithy.kotlin.runtime.client.RequestInterceptorContext
 import aws.smithy.kotlin.runtime.client.endpoints.Endpoint
 import aws.smithy.kotlin.runtime.http.interceptors.HttpInterceptor
+import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
 import com.amplifyframework.util.setHttpEngine
 
 interface AWSCognitoAuthService {
@@ -75,3 +76,6 @@ interface AWSCognitoAuthService {
         }
     }
 }
+
+internal fun AWSCognitoAuthService.requireIdentityClient() =
+    cognitoIdentityProviderClient ?: throw InvalidUserPoolConfigurationException()

@@ -28,7 +28,6 @@ internal sealed class SetupTOTPState : State {
     data class SetupTOTP(val id: String = "") : SetupTOTPState()
     data class WaitingForAnswer(
         val signInTOTPSetupData: SignInTOTPSetupData,
-        var hasNewResponse: Boolean = false,
         val challengeParams: Map<String, String>?,
         val signInMethod: SignInMethod
     ) : SetupTOTPState()
@@ -39,8 +38,7 @@ internal sealed class SetupTOTPState : State {
         val exception: Exception,
         val username: String,
         val session: String?,
-        val signInMethod: SignInMethod,
-        var hasNewResponse: Boolean = false
+        val signInMethod: SignInMethod
     ) : SetupTOTPState()
 
     class Resolver(private val setupTOTPActions: SetupTOTPActions) : StateMachineResolver<SetupTOTPState> {
@@ -75,7 +73,6 @@ internal sealed class SetupTOTPState : State {
                         StateResolution(
                             WaitingForAnswer(
                                 signInTOTPSetupData = challengeEvent.totpSetupDetails,
-                                hasNewResponse = true,
                                 challengeParams = challengeEvent.challengeParams,
                                 signInMethod = challengeEvent.signInMethod
                             )
@@ -131,8 +128,7 @@ internal sealed class SetupTOTPState : State {
                             challengeEvent.exception,
                             challengeEvent.username,
                             challengeEvent.session,
-                            challengeEvent.signInMethod,
-                            true
+                            challengeEvent.signInMethod
                         )
                     )
 
@@ -170,7 +166,6 @@ internal sealed class SetupTOTPState : State {
                         StateResolution(
                             WaitingForAnswer(
                                 signInTOTPSetupData = challengeEvent.totpSetupDetails,
-                                hasNewResponse = true,
                                 challengeParams = challengeEvent.challengeParams,
                                 signInMethod = challengeEvent.signInMethod
                             )

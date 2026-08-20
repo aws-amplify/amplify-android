@@ -18,6 +18,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import app.cash.turbine.test
 import app.cash.turbine.turbineScope
 import com.amazonaws.sdk.appsync.core.authorizers.ApiKeyAuthorizer
+import com.amazonaws.sdk.appsync.events.data.ConnectException
 import com.amazonaws.sdk.appsync.events.data.InvalidInputException
 import com.amazonaws.sdk.appsync.events.data.PublishResult
 import com.amazonaws.sdk.appsync.events.data.UnauthorizedException
@@ -26,6 +27,7 @@ import com.amazonaws.sdk.appsync.events.testmodels.TestMessage
 import com.amazonaws.sdk.appsync.events.utils.EventsLibraryLogCapture
 import com.amazonaws.sdk.appsync.events.utils.JsonUtils
 import com.amazonaws.sdk.appsync.events.utils.getEventsConfig
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.coroutines.runBlockingWithTimeout
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
@@ -44,9 +46,14 @@ import kotlinx.serialization.json.encodeToJsonElement
 import org.junit.After
 import org.junit.Test
 
-internal class EventsWebSocketClientTests {
+internal class EventsWebSocketClientTests : DeviceFarmTestBase() {
+    companion object {
+        private val TEST_TIMEOUT = 30.seconds
+    }
+
     private val eventsConfig = getEventsConfig(InstrumentationRegistry.getInstrumentation().targetContext)
     private val apiKeyAuthorizer = ApiKeyAuthorizer(eventsConfig.apiKey)
+    private val badApiKeyAuthorizer = ApiKeyAuthorizer("bad-api-key")
     private val webSocketLogCapture = EventsLibraryLogCapture()
     private val defaultChannel = "default/${UUID.randomUUID()}"
     private val customChannel = "custom/${UUID.randomUUID()}"
@@ -60,37 +67,43 @@ internal class EventsWebSocketClientTests {
             loggerProvider = { _ -> webSocketLogCapture }
         )
     )
+
+    private val badWebSocketClient = events.createWebSocketClient(
+        badApiKeyAuthorizer,
+        badApiKeyAuthorizer,
+        badApiKeyAuthorizer
+    )
     private val backgroundScope = CoroutineScope(Dispatchers.IO)
 
     @After
     fun tearDown() {
-        runBlockingWithTimeout {
+        runBlockingWithTimeout(TEST_TIMEOUT) {
             webSocketClient.disconnect(flushEvents = false)
         }
     }
 
     @Test
-    fun testSinglePrimitivePublish() = runBlockingWithTimeout {
+    fun testSinglePrimitivePublish() = runBlockingWithTimeout(TEST_TIMEOUT) {
         testSinglePublish(JsonPrimitive(true))
     }
 
     @Test
-    fun testSingleArrayPublish() = runBlockingWithTimeout {
+    fun testSingleArrayPublish() = runBlockingWithTimeout(TEST_TIMEOUT) {
         testSinglePublish(JsonArray(listOf(JsonPrimitive(true), JsonPrimitive(false))))
     }
 
     @Test
-    fun testSingleObjectPublish() = runBlockingWithTimeout {
+    fun testSingleObjectPublish() = runBlockingWithTimeout(TEST_TIMEOUT) {
         testSinglePublish(json.encodeToJsonElement(TestMessage()))
     }
 
     @Test
-    fun testMultiplePrimitivePublish() = runBlockingWithTimeout {
+    fun testMultiplePrimitivePublish() = runBlockingWithTimeout(TEST_TIMEOUT) {
         testMultiplePublish(listOf(JsonPrimitive(true), JsonPrimitive(false)))
     }
 
     @Test
-    fun testMultipleArrayPublish() = runBlockingWithTimeout {
+    fun testMultipleArrayPublish() = runBlockingWithTimeout(TEST_TIMEOUT) {
         testMultiplePublish(
             listOf(
                 JsonArray(listOf(JsonPrimitive(true), JsonPrimitive(false))),
@@ -100,7 +113,7 @@ internal class EventsWebSocketClientTests {
     }
 
     @Test
-    fun testMultipleObjectPublish() = runBlockingWithTimeout {
+    fun testMultipleObjectPublish() = runBlockingWithTimeout(TEST_TIMEOUT) {
         testMultiplePublish(
             listOf(
                 json.encodeToJsonElement(TestMessage(messageId = "1", content = "hi")),
@@ -110,7 +123,16 @@ internal class EventsWebSocketClientTests {
     }
 
     @Test
-    fun testPublishWithBadAuth(): Unit = runBlockingWithTimeout {
+    fun testConnectionFailure() = runBlockingWithTimeout(TEST_TIMEOUT) {
+        turbineScope(timeout = TEST_TIMEOUT) {
+            badWebSocketClient.subscribe(defaultChannel).test(timeout = TEST_TIMEOUT) {
+                awaitError() shouldBe ConnectException(UnauthorizedException())
+            }
+        }
+    }
+
+    @Test
+    fun testPublishWithBadAuth(): Unit = runBlockingWithTimeout(TEST_TIMEOUT) {
         // Publish the message
         val webSocketClient = events.createWebSocketClient(apiKeyAuthorizer, apiKeyAuthorizer, apiKeyAuthorizer)
         val result = webSocketClient.publish(
@@ -129,7 +151,7 @@ internal class EventsWebSocketClientTests {
     }
 
     @Test
-    fun testPublishWithTooManyEvents(): Unit = runBlockingWithTimeout {
+    fun testPublishWithTooManyEvents(): Unit = runBlockingWithTimeout(TEST_TIMEOUT) {
         val sendEvents = (0 until 6).map { JsonPrimitive(true) }
         // Publish the message
         val webSocketClient = events.createWebSocketClient(apiKeyAuthorizer, apiKeyAuthorizer, apiKeyAuthorizer)
@@ -146,7 +168,7 @@ internal class EventsWebSocketClientTests {
     }
 
     @Test
-    fun testPublishToNonConfiguredChannel(): Unit = runBlockingWithTimeout {
+    fun testPublishToNonConfiguredChannel(): Unit = runBlockingWithTimeout(TEST_TIMEOUT) {
         // Publish the message
         val webSocketClient = events.createWebSocketClient(apiKeyAuthorizer, apiKeyAuthorizer, apiKeyAuthorizer)
         val result = webSocketClient.publish(
@@ -162,7 +184,7 @@ internal class EventsWebSocketClientTests {
     }
 
     @Test
-    fun testWebSocketFlowLifecycle(): Unit = runBlockingWithTimeout(15.seconds) {
+    fun testWebSocketFlowLifecycle(): Unit = runBlockingWithTimeout(TEST_TIMEOUT) {
         val expectedLogs = listOf(
             "Opening Websocket Connection",
             "onOpen: sending connection init",
@@ -173,8 +195,8 @@ internal class EventsWebSocketClientTests {
             "emit ${WebSocketMessage.Closed::class.java}"
         )
 
-        turbineScope(timeout = 10.seconds) {
-            webSocketClient.subscribe(defaultChannel).test(timeout = 10.seconds) {
+        turbineScope(timeout = TEST_TIMEOUT) {
+            webSocketClient.subscribe(defaultChannel).test(timeout = TEST_TIMEOUT) {
                 // Wait for subscription to return success
                 webSocketLogCapture.messages.filter {
                     it == "Successfully subscribed to: $defaultChannel"
@@ -216,13 +238,13 @@ internal class EventsWebSocketClientTests {
     }
 
     @Test
-    fun channelsOnlyReceiveEventsFromTheirChannel(): Unit = runBlockingWithTimeout {
+    fun channelsOnlyReceiveEventsFromTheirChannel(): Unit = runBlockingWithTimeout(TEST_TIMEOUT) {
         val expectedCustomMessage = JsonPrimitive(false)
         val expectedDefaultMessage = JsonPrimitive(true)
 
-        turbineScope {
-            webSocketClient.subscribe(defaultChannel).test {
-                webSocketClient.subscribe(customChannel).test {
+        turbineScope(timeout = TEST_TIMEOUT) {
+            webSocketClient.subscribe(defaultChannel).test(timeout = TEST_TIMEOUT) {
+                webSocketClient.subscribe(customChannel).test(timeout = TEST_TIMEOUT) {
                     // Wait for subscription to return success
                     webSocketLogCapture.messages.filter {
                         it == "Successfully subscribed to: $defaultChannel" ||
@@ -260,7 +282,7 @@ internal class EventsWebSocketClientTests {
     }
 
     @Test
-    fun testWebSocketRecreateScenario(): Unit = runBlockingWithTimeout {
+    fun testWebSocketRecreateScenario(): Unit = runBlockingWithTimeout(TEST_TIMEOUT) {
         testSinglePublish(JsonPrimitive(true))
 
         // websocket has disconnected at this point
@@ -279,8 +301,8 @@ internal class EventsWebSocketClientTests {
     }
 
     private suspend fun testSinglePublish(jsonItem: JsonElement) {
-        turbineScope(timeout = 10.seconds) {
-            webSocketClient.subscribe(defaultChannel).test(timeout = 10.seconds) {
+        turbineScope(timeout = TEST_TIMEOUT) {
+            webSocketClient.subscribe(defaultChannel).test(timeout = TEST_TIMEOUT) {
                 // Wait for subscription to return success
                 webSocketLogCapture.messages.filter {
                     it == "Successfully subscribed to: $defaultChannel"
@@ -316,8 +338,8 @@ internal class EventsWebSocketClientTests {
     }
 
     private suspend fun testMultiplePublish(jsonItems: List<JsonElement>) {
-        turbineScope(timeout = 10.seconds) {
-            webSocketClient.subscribe(defaultChannel).test(timeout = 10.seconds) {
+        turbineScope(timeout = TEST_TIMEOUT) {
+            webSocketClient.subscribe(defaultChannel).test(timeout = TEST_TIMEOUT) {
                 // Wait for subscription to return success
                 webSocketLogCapture.messages.filter {
                     it == "Successfully subscribed to: $defaultChannel"

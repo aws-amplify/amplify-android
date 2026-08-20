@@ -1,0 +1,28 @@
+version: 2
+updates:
+  # Check for updates to gradle dependencies
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"
+    ignore:
+      # AGP upgrades can be tricky and shouldn't be done by dependabot.
+      # Covers the AGP artifact (com.android.tools.build:gradle) and the
+      # com.android.* Gradle plugin ids, which all share the `agp` version.
+      - dependency-name: "com.android.tools.build:*"
+      - dependency-name: "com.android.*"
+      # Kotlin language version upgrades are potentially costly to customers and shouldn't be done
+      # without careful consideration. Covers the compiler/stdlib/reflect/test artifacts
+      # (org.jetbrains.kotlin:*) and the org.jetbrains.kotlin.* plugin ids,
+      # which all share the `kotlin` version.
+      - dependency-name: "org.jetbrains.kotlin:*"
+      - dependency-name: "org.jetbrains.kotlin.*"
+  # Check for updates to GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"

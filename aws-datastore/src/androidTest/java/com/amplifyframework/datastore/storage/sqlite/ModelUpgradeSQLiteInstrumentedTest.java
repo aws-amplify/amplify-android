@@ -32,6 +32,7 @@ import com.amplifyframework.datastore.model.SystemModelsProviderFactory;
 import com.amplifyframework.testmodels.personcar.AmplifyCliGeneratedModelProvider;
 import com.amplifyframework.testmodels.personcar.RandomVersionModelProvider;
 import com.amplifyframework.testutils.Await;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.util.Empty;
 
 import org.junit.After;
@@ -49,7 +50,7 @@ import static org.junit.Assert.assertFalse;
 /**
  * Test the functionality of {@link SQLiteStorageAdapter} with model update operations.
  */
-public final class ModelUpgradeSQLiteInstrumentedTest {
+public final class ModelUpgradeSQLiteInstrumentedTest extends DeviceFarmTestBase {
     private static final long SQLITE_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
     private static final String DATABASE_NAME = "AmplifyDatastore.db";
 

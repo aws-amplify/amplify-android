@@ -24,16 +24,15 @@ import aws.smithy.kotlin.runtime.content.ByteStream
 import aws.smithy.kotlin.runtime.content.writeToFile
 import aws.smithy.kotlin.runtime.io.SdkSource
 import aws.smithy.kotlin.runtime.io.buffer
+import com.amplifyframework.storage.s3.transfer.ClearableBufferedOutputStream
 import com.amplifyframework.storage.s3.transfer.DownloadProgressListener
 import com.amplifyframework.storage.s3.transfer.DownloadProgressListenerInterceptor
 import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
-import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 
@@ -101,9 +100,11 @@ internal class DownloadWorker(
                     val append = file.length() > 0
                     val fileOutputStream = FileOutputStream(file, append)
                     var totalRead = 0L
-                    BufferedOutputStream(fileOutputStream).use { fileOutput ->
+                    // use ensures the underlying source is closed. In this case, a BufferedOutputStream. By default,
+                    // a bos flushes on close. We may not want this behavior, so we use ClearableBufferedOutputStream.
+                    ClearableBufferedOutputStream(fileOutputStream).use { fileOutput ->
                         val copied = 0L
-                        while (currentCoroutineContext().isActive) {
+                        while (isActive) {
                             val remaining = limit - copied
                             if (remaining == 0L) break
                             val readBytes =
@@ -112,10 +113,24 @@ internal class DownloadWorker(
                             if (readBytes > 0) {
                                 totalRead += readBytes
                             }
-                            fileOutput.write(buffer, 0, readBytes)
+                            if (isActive) {
+                                // Double check to make sure that we are still active before writing to buffer
+                                fileOutput.write(buffer, 0, readBytes)
+                            } else {
+                                // If we are no longer active, clear the buffer so that no more data is written to the
+                                // file. A resume operation may have already started, and it resumes based on the
+                                // file size at its start. A flush here could result in duplicating file data
+                                fileOutput.clear()
+                            }
                         }
-                        if (sourceStream.buffer().exhausted()) {
+                        if (sourceStream.buffer().exhausted() && isActive) {
+                            // Double check to make sure that we are still active before flushing to buffer
                             fileOutput.flush()
+                        } else {
+                            // If we are no longer active, clear the buffer so that no more data is written to the
+                            // file. A resume operation may have already started, and it resumes based on the
+                            // file size at its start. A flush here could result in duplicating file data
+                            fileOutput.clear()
                         }
                     }
                 }

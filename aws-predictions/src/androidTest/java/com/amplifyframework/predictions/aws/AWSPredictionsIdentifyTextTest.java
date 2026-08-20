@@ -31,6 +31,7 @@ import com.amplifyframework.predictions.models.TextFormatType;
 import com.amplifyframework.predictions.result.IdentifyDocumentTextResult;
 import com.amplifyframework.predictions.result.IdentifyTextResult;
 import com.amplifyframework.testutils.Assets;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.testutils.FeatureAssert;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousPredictions;
@@ -50,7 +51,7 @@ import static org.junit.Assert.assertNotNull;
  * Tests that Predictions identify delivers a non-null
  * text detection result for valid input.
  */
-public final class AWSPredictionsIdentifyTextTest {
+public final class AWSPredictionsIdentifyTextTest extends DeviceFarmTestBase {
 
     private SynchronousPredictions predictions;
 

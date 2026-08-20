@@ -16,49 +16,39 @@
 plugins {
     alias(libs.plugins.amplify.android.library)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.amplify.api)
+    alias(libs.plugins.amplify.publishing)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
-apply(from = rootProject.file("configuration/publishing.gradle"))
-
-group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.logging.cloudwatch"
 }
 
 dependencies {
-    implementation(project(":core"))
+    api(project(":core"))
     implementation(project(":aws-core"))
 
     implementation(libs.androidx.security)
+    api(platform(libs.aws.bom))
     implementation(libs.aws.signing)
-    implementation(libs.okhttp)
-    implementation(libs.aws.cloudwatchlogs)
+    api(libs.okhttp)
+    api(libs.aws.cloudwatchlogs)
     implementation(libs.sqlcipher)
     implementation(libs.androidx.sqlite)
-    implementation(libs.kotlin.serializationJson)
+    api(libs.kotlin.serializationJson)
+    // CredentialsProvider and CoroutineDispatcher leak into this module's public API
+    // (DefaultRemoteLoggingConstraintProvider constructor); declare both directly as api.
+    api(libs.aws.credentials)
+    api(libs.kotlin.coroutines)
     implementation(libs.androidx.workmanager)
     implementation(libs.kotlin.futures)
 
     testImplementation(project(":testutils"))
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.mockk)
-    testImplementation(libs.test.robolectric)
-    testImplementation(libs.test.androidx.core)
-    testImplementation(libs.test.kotlin.coroutines)
+    testImplementation(libs.bundles.test.unit)
+    testImplementation(libs.bundles.test.unit.android)
     testImplementation(libs.test.androidx.workmanager)
 
-    androidTestImplementation(libs.test.robolectric)
-    androidTestImplementation(libs.androidx.annotation)
-    androidTestImplementation(libs.test.androidx.core)
-    androidTestImplementation(libs.test.androidx.runner)
-    androidTestImplementation(libs.test.androidx.junit)
-    androidTestImplementation(libs.test.kotlin.coroutines)
-    androidTestImplementation(libs.test.mockk)
-    androidTestImplementation(libs.test.kotest.assertions)
-
-    androidTestImplementation(project(":aws-logging-cloudwatch"))
+    androidTestImplementation(libs.bundles.test.android)
     androidTestImplementation(project(":testutils"))
 }

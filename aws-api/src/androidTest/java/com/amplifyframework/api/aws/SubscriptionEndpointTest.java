@@ -22,6 +22,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest;
 import com.amplifyframework.testutils.Assets;
 import com.amplifyframework.testutils.Await;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.random.RandomString;
 
@@ -47,7 +48,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * Tests the {@link SubscriptionEndpoint}.
  */
-public final class SubscriptionEndpointTest {
+public final class SubscriptionEndpointTest extends DeviceFarmTestBase {
     private Executor executor;
     private SubscriptionEndpoint subscriptionEndpoint;
     private String eventId;

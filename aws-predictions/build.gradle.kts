@@ -16,43 +16,39 @@
 plugins {
     alias(libs.plugins.amplify.android.library)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.amplify.api)
+    alias(libs.plugins.amplify.publishing)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
-apply(from = rootProject.file("configuration/publishing.gradle"))
-
-group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.predictions.aws"
 }
 
 dependencies {
-    implementation(project(":core"))
-    implementation(project(":aws-core"))
+    api(project(":core"))
+    api(project(":aws-core"))
     implementation(libs.androidx.appcompat)
-    implementation(libs.aws.comprehend)
-    implementation(libs.aws.polly)
-    implementation(libs.aws.rekognition)
-    implementation(libs.aws.textract)
-    implementation(libs.aws.translate)
+    api(platform(libs.aws.bom))
+    api(libs.aws.comprehend)
+    api(libs.aws.polly)
+    api(libs.aws.rekognition)
+    api(libs.aws.textract)
+    api(libs.aws.translate)
+    // Smithy types leak into this module's public API: CredentialsProvider (AWSPredictionsService,
+    // PresignedSynthesizeSpeechUrlOptions) and SdkClientConfig (AmazonPollyPresigningClient).
+    api(libs.aws.credentials)
+    api(libs.aws.smithy.client)
     implementation(libs.kotlin.serializationJson)
     implementation(libs.okhttp)
 
+    testImplementation(libs.bundles.test.unit)
+    testImplementation(libs.bundles.test.unit.android)
     testImplementation(project(":testutils"))
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.robolectric)
-    testImplementation(libs.rxjava)
     testImplementation(libs.test.mockwebserver)
-    testImplementation(libs.test.mockk)
-    testImplementation(libs.test.kotlin.coroutines)
-    testImplementation(libs.test.kotest.assertions)
 
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(project(":aws-auth-cognito"))
-    androidTestImplementation(libs.test.androidx.core)
-    androidTestImplementation(libs.test.androidx.runner)
+    androidTestImplementation(libs.bundles.test.android)
     androidTestImplementation(libs.test.mockk.android)
-    androidTestImplementation(libs.rxjava)
 }

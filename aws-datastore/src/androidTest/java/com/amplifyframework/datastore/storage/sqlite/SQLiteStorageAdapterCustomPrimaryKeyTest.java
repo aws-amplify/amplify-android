@@ -20,6 +20,7 @@ import com.amplifyframework.datastore.StrictMode;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.testmodels.ecommerce.AmplifyModelProvider;
 import com.amplifyframework.testmodels.ecommerce.Customer;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 
 import org.junit.After;
 import org.junit.Before;
@@ -29,7 +30,7 @@ import org.junit.Test;
 /**
  * Test the functionality of {@link SQLiteStorageAdapter} operations with types that use a custom primary key.
  */
-public final class SQLiteStorageAdapterCustomPrimaryKeyTest {
+public final class SQLiteStorageAdapterCustomPrimaryKeyTest extends DeviceFarmTestBase {
 
     private SynchronousStorageAdapter adapter;
 

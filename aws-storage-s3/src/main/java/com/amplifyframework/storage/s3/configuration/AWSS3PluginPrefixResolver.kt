@@ -15,6 +15,7 @@
 
 package com.amplifyframework.storage.s3.configuration
 
+import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.storage.StorageAccessLevel
@@ -69,7 +70,11 @@ internal class StorageAccessLevelAwarePrefixResolver(
             }
             else -> {
                 onError?.accept(
-                    StorageException("Failed to fetch identity ID", identityId.exceptionOrNull().toString())
+                    StorageException(
+                        "Failed to fetch identity ID",
+                        identityId.exceptionOrNull(),
+                        AmplifyException.RECOVERY_SUGGESTION_WITH_THROWABLE
+                    )
                 )
             }
         }

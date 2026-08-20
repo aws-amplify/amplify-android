@@ -15,34 +15,29 @@
 
 plugins {
     alias(libs.plugins.amplify.android.library)
-    alias(libs.plugins.amplify.api)
+    alias(libs.plugins.amplify.publishing)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
-apply(from = rootProject.file("configuration/publishing.gradle"))
-
-group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.pushnotifications.pinpoint.common"
 }
 
 dependencies {
-    implementation(project(":annotations"))
+    api(project(":annotations"))
     api(project(":common-core"))
 
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.activity)
+    api(libs.androidx.activity)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.annotation)
-    implementation(libs.androidx.core)
+    api(libs.androidx.core)
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
 
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.mockk)
+    testImplementation(libs.bundles.test.unit)
 
-    androidTestImplementation(libs.test.androidx.runner)
-    androidTestImplementation(libs.test.androidx.junit)
+    androidTestImplementation(libs.bundles.test.android)
 }

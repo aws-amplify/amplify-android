@@ -106,7 +106,6 @@ internal data class AuthStatesProxy(
                 }
             } as T
         }
-        "AuthorizationState.SigningIn" -> AuthorizationState.SigningIn() as T
         "SignInState.ResolvingChallenge" -> SignInState.ResolvingChallenge(signInChallengeState) as T
         "SignInChallengeState.WaitingForAnswer" -> authChallenge?.let {
             SignInChallengeState.WaitingForAnswer(it, signInMethod!!)
@@ -171,9 +170,6 @@ internal data class AuthStatesProxy(
                     is AuthorizationState.SessionEstablished -> AuthStatesProxy(
                         type = "AuthorizationState.SessionEstablished",
                         amplifyCredential = authState.amplifyCredential
-                    )
-                    is AuthorizationState.SigningIn -> AuthStatesProxy(
-                        type = "AuthorizationState.SigningIn"
                     )
                     is AuthorizationState.SigningOut -> TODO()
                     is AuthorizationState.StoringCredentials -> TODO()

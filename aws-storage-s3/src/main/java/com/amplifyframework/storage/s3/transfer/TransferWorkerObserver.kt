@@ -39,7 +39,7 @@ internal class TransferWorkerObserver private constructor(
     private val workManager: WorkManager,
     private val transferStatusUpdater: TransferStatusUpdater,
     private val transferDB: TransferDB
-) : Observer<MutableList<WorkInfo>> {
+) : Observer<List<WorkInfo>> {
 
     private val coroutineScope =
         CoroutineScope(Executors.newSingleThreadExecutor().asCoroutineDispatcher())
@@ -79,9 +79,9 @@ internal class TransferWorkerObserver private constructor(
         }
     }
 
-    override fun onChanged(workInfoList: MutableList<WorkInfo>?) {
+    override fun onChanged(workInfoList: List<WorkInfo>) {
         coroutineScope.launch {
-            workInfoList?.forEach { workInfo ->
+            workInfoList.forEach { workInfo ->
                 val transferRecordId =
                     transferStatusUpdater.getTransferRecordIdForWorkInfo(workInfo.id.toString())
                         ?: workInfo.outputData.getInt(BaseTransferWorker.OUTPUT_TRANSFER_RECORD_ID, -1)

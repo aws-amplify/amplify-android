@@ -22,8 +22,10 @@ import aws.sdk.kotlin.services.s3.listObjectsV2
 import aws.sdk.kotlin.services.s3.model.GetObjectRequest
 import aws.sdk.kotlin.services.s3.model.HeadObjectRequest
 import aws.sdk.kotlin.services.s3.model.NotFound
+import aws.sdk.kotlin.services.s3.model.PutObjectRequest
 import aws.sdk.kotlin.services.s3.paginators.listObjectsV2Paginated
 import aws.sdk.kotlin.services.s3.presigners.presignGetObject
+import aws.sdk.kotlin.services.s3.presigners.presignPutObject
 import aws.sdk.kotlin.services.s3.withConfig
 import com.amplifyframework.auth.AuthCredentialsProvider
 import com.amplifyframework.storage.ObjectMetadata
@@ -32,11 +34,13 @@ import com.amplifyframework.storage.StorageItem
 import com.amplifyframework.storage.options.SubpathStrategy
 import com.amplifyframework.storage.options.SubpathStrategy.Exclude
 import com.amplifyframework.storage.result.StorageListResult
+import com.amplifyframework.storage.s3.StorageAccessMethod
 import com.amplifyframework.storage.s3.transfer.S3StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.TransferManager
 import com.amplifyframework.storage.s3.transfer.TransferObserver
 import com.amplifyframework.storage.s3.transfer.TransferRecord
+import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import com.amplifyframework.storage.s3.transfer.UploadOptions
 import com.amplifyframework.storage.s3.utils.S3Keys
 import java.io.File
@@ -57,13 +61,21 @@ internal class AWSS3StorageService(
     private val s3BucketName: String,
     private val authCredentialsProvider: AuthCredentialsProvider,
     private val awsS3StoragePluginKey: String,
-    private val clientProvider: StorageTransferClientProvider
+    private val clientProvider: StorageTransferClientProvider,
+    private val transferStatusUpdater: TransferStatusUpdater,
+    private val defaultProgressStallTimeoutSeconds: Long = 0L
 ) : StorageService {
 
     private var s3Client: S3Client = S3StorageTransferClientProvider.getS3Client(awsRegion, authCredentialsProvider)
 
     val transferManager: TransferManager =
-        TransferManager(context, clientProvider, awsS3StoragePluginKey)
+        TransferManager(
+            context,
+            clientProvider,
+            awsS3StoragePluginKey,
+            transferStatusUpdater,
+            defaultProgressStallTimeoutSeconds = defaultProgressStallTimeoutSeconds
+        )
 
     /**
      * Generate pre-signed URL for an object.
@@ -72,18 +84,32 @@ internal class AWSS3StorageService(
      * @return A pre-signed URL
      */
     @OptIn(ExperimentalTime::class)
-    override fun getPresignedUrl(serviceKey: String, expires: Int, useAccelerateEndpoint: Boolean): URL {
+    override fun getPresignedUrl(
+        serviceKey: String,
+        method: StorageAccessMethod,
+        expires: Int,
+        useAccelerateEndpoint: Boolean
+    ): URL {
         val presignUrlRequest = s3Client.withConfig {
             enableAccelerate = useAccelerateEndpoint
-        }.use {
+        }.use { client ->
             runBlocking {
-                it.presignGetObject(
-                    GetObjectRequest {
-                        bucket = s3BucketName
-                        key = serviceKey
-                    },
-                    expires.seconds
-                )
+                when (method) {
+                    StorageAccessMethod.PUT -> client.presignPutObject(
+                        PutObjectRequest {
+                            bucket = s3BucketName
+                            key = serviceKey
+                        },
+                        expires.seconds
+                    )
+                    StorageAccessMethod.GET -> client.presignGetObject(
+                        GetObjectRequest {
+                            bucket = s3BucketName
+                            key = serviceKey
+                        },
+                        expires.seconds
+                    )
+                }
             }
         }
         return URL(presignUrlRequest.url.toString())
@@ -146,7 +172,8 @@ internal class AWSS3StorageService(
         serviceKey: String,
         file: File,
         metadata: ObjectMetadata,
-        useAccelerateEndpoint: Boolean
+        useAccelerateEndpoint: Boolean,
+        progressStallTimeoutSeconds: Long
     ): TransferObserver = transferManager.upload(
         transferId,
         s3BucketName,
@@ -154,7 +181,8 @@ internal class AWSS3StorageService(
         serviceKey,
         file,
         metadata,
-        useAccelerateEndpoint = useAccelerateEndpoint
+        useAccelerateEndpoint = useAccelerateEndpoint,
+        progressStallTimeoutSeconds = progressStallTimeoutSeconds
     )
 
     /**
@@ -170,10 +198,18 @@ internal class AWSS3StorageService(
         serviceKey: String,
         inputStream: InputStream,
         metadata: ObjectMetadata,
-        useAccelerateEndpoint: Boolean
+        useAccelerateEndpoint: Boolean,
+        progressStallTimeoutSeconds: Long
     ): TransferObserver {
         val uploadOptions = UploadOptions(s3BucketName, awsRegion, metadata)
-        return transferManager.upload(transferId, serviceKey, inputStream, uploadOptions, useAccelerateEndpoint)
+        return transferManager.upload(
+            transferId,
+            serviceKey,
+            inputStream,
+            uploadOptions,
+            useAccelerateEndpoint,
+            progressStallTimeoutSeconds
+        )
     }
 
     /**
@@ -415,13 +451,19 @@ internal class AWSS3StorageService(
          * @param context    Android context
          * @param region     S3 bucket region
          * @param bucketName Name of the bucket where the items are stored
+         * @param defaultProgressStallTimeoutSeconds Plugin-level default progress-stall interval in
+         *   seconds, used when a transfer is resumed (and any per-upload override has been lost
+         *   because it was only passed through `WorkData` for the original enqueue). `0` disables
+         *   stall detection on resume, preserving legacy behavior.
          * @return An instantiated storage service instance
          */
         fun create(
             context: Context,
             region: String,
             bucketName: String,
-            clientProvider: StorageTransferClientProvider
+            clientProvider: StorageTransferClientProvider,
+            transferStatusUpdater: TransferStatusUpdater,
+            defaultProgressStallTimeoutSeconds: Long = 0L
         ): AWSS3StorageService
     }
 }

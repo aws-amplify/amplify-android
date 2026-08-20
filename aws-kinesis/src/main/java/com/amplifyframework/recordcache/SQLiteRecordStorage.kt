@@ -1,0 +1,326 @@
+/*
+ * Copyright 2026 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+package com.amplifyframework.recordcache
+
+import android.content.Context
+import androidx.annotation.VisibleForTesting
+import androidx.sqlite.SQLiteConnection
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import androidx.sqlite.execSQL
+import com.amplifyframework.annotations.InternalAmplifyApi
+import com.amplifyframework.foundation.exceptions.DEFAULT_RECOVERY_SUGGESTION
+import com.amplifyframework.foundation.logging.AmplifyLogging
+import com.amplifyframework.foundation.logging.Logger
+import com.amplifyframework.foundation.result.Result
+import com.amplifyframework.foundation.result.mapFailure
+import com.amplifyframework.foundation.result.resultCatching
+import java.io.File
+import java.util.concurrent.atomic.AtomicInteger
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+
+@OptIn(InternalAmplifyApi::class)
+internal class SQLiteRecordStorage internal constructor(
+    maxRecordsByStream: Int,
+    cacheMaxBytes: Long,
+    identifier: String,
+    connectionFactory: () -> SQLiteConnection,
+    maxRecordSizeBytes: Long,
+    maxBytesPerStream: Long,
+    maxPartitionKeyLength: Int? = null,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO
+) : RecordStorage(
+    maxRecordsByStream,
+    cacheMaxBytes,
+    identifier,
+    maxRecordSizeBytes,
+    maxBytesPerStream,
+    maxPartitionKeyLength
+) {
+    private val logger: Logger = AmplifyLogging.logger<SQLiteRecordStorage>()
+    private val connection: SQLiteConnection = connectionFactory()
+    private var cachedSize = AtomicInteger(0)
+    private val dbMutex = Mutex()
+    private val maxRecordsByStream = maxRecordsByStream
+    private val hasPartitionKey = maxPartitionKeyLength != null
+
+    constructor(
+        context: Context,
+        dbPrefix: String,
+        maxRecordsByStream: Int,
+        cacheMaxBytes: Long,
+        identifier: String,
+        maxRecordSizeBytes: Long,
+        maxBytesPerStream: Long,
+        maxPartitionKeyLength: Int? = null,
+        dispatcher: CoroutineDispatcher = Dispatchers.IO
+    ) : this(maxRecordsByStream, cacheMaxBytes, identifier, {
+        val dbFile = File(context.getDatabasePath("${dbPrefix}_$identifier.db").absolutePath)
+        BundledSQLiteDriver().open(dbFile.absolutePath)
+    }, maxRecordSizeBytes, maxBytesPerStream, maxPartitionKeyLength, dispatcher)
+
+    init {
+        // Create DB
+        val partitionKeyColumn = if (hasPartitionKey) "partition_key TEXT NOT NULL," else ""
+        connection.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS records (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                stream_name TEXT NOT NULL,
+                $partitionKeyColumn
+                data BLOB NOT NULL,
+                data_size INTEGER NOT NULL,
+                retry_count INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """.trimIndent()
+        )
+
+        // Create indices for performance
+        connection.execSQL("CREATE INDEX IF NOT EXISTS idx_stream_id ON records (stream_name, id)")
+        connection.execSQL("CREATE INDEX IF NOT EXISTS idx_data_size ON records (data_size)")
+
+        // Initialize cached size from database
+        resetCacheSizeFromDb()
+    }
+
+    /**
+     * Helper to wrap DB queries with locking and dispatch
+     */
+    private suspend fun <T> wrapDispatchAndCatching(block: () -> T): Result<T, Throwable> = resultCatching {
+        withContext(dispatcher) {
+            dbMutex.withLock {
+                block()
+            }
+        }
+    }
+
+    /**
+     * Helper to wrap DB queries in a transaction and suspend
+     */
+    private suspend fun <T> wrapDispatchAndTransactionAndCatching(block: () -> T): Result<T, Throwable> =
+        wrapDispatchAndCatching {
+            connection.execSQL("BEGIN IMMEDIATE TRANSACTION")
+            try {
+                val result = block()
+                connection.execSQL("END TRANSACTION")
+                result
+            } catch (e: Exception) {
+                connection.execSQL("ROLLBACK TRANSACTION")
+                throw e
+            }
+        }
+
+    override suspend fun addRecord(record: RecordInput): Result<Unit, RecordCacheException> = wrapDispatchAndCatching {
+        // Validate partition key length when partition keys are supported
+        if (hasPartitionKey) {
+            val partitionKey = record.partitionKey
+                ?: throw RecordCacheValidationException(
+                    "Partition key is required but was null",
+                    "Provide a non-null partition key between 1 and $maxPartitionKeyLength characters."
+                )
+            val partitionKeyCodePointCount = partitionKey.codePointCount(0, partitionKey.length)
+            if (partitionKeyCodePointCount == 0 || partitionKeyCodePointCount > maxPartitionKeyLength!!) {
+                throw RecordCacheValidationException(
+                    "Partition key length $partitionKeyCodePointCount characters is outside the allowed range of 1-$maxPartitionKeyLength characters",
+                    "Use a partition key between 1 and $maxPartitionKeyLength characters."
+                )
+            }
+        }
+
+        // Validate per-record size limit (partition key bytes + data bytes must not exceed maxRecordSizeBytes)
+        if (record.dataSize > maxRecordSizeBytes) {
+            throw RecordCacheValidationException(
+                "Record size ${record.dataSize} bytes exceeds the maximum of $maxRecordSizeBytes bytes (partition key + data blob)",
+                "Reduce the size of the data blob or partition key so their combined size does not exceed $maxRecordSizeBytes bytes."
+            )
+        }
+
+        // Check cache size limit before adding
+        if (cachedSize.get() + record.dataSize > cacheMaxBytes) {
+            throw RecordCacheLimitExceededException(
+                "Cache size limit exceeded: ${cachedSize.get() + record.dataSize} bytes > $cacheMaxBytes bytes",
+                "Call flush() to send cached records or increase cache size limit"
+            )
+        }
+
+        if (hasPartitionKey) {
+            connection.prepare(
+                "INSERT INTO records (stream_name, partition_key, data, data_size) VALUES (?, ?, ?, ?)"
+            ).use { stmt ->
+                stmt.bindText(1, record.streamName)
+                stmt.bindText(2, record.partitionKey!!)
+                stmt.bindBlob(3, record.data)
+                stmt.bindInt(4, record.dataSize)
+                stmt.step()
+            }
+        } else {
+            connection.prepare(
+                "INSERT INTO records (stream_name, data, data_size) VALUES (?, ?, ?)"
+            ).use { stmt ->
+                stmt.bindText(1, record.streamName)
+                stmt.bindBlob(2, record.data)
+                stmt.bindInt(3, record.dataSize)
+                stmt.step()
+            }
+        }
+        cachedSize.addAndGet(record.dataSize)
+        Unit
+    }.recoverAsRecordCacheException("Failed to add record to cache")
+
+    override suspend fun getRecordsByStream(
+        afterIdByStream: Map<String, Long>
+    ): Result<List<List<Record>>, RecordCacheException> = wrapDispatchAndTransactionAndCatching {
+        // Build per-stream WHERE clauses: id > lastProcessedId for streams we've already seen
+        val streamFilter = if (afterIdByStream.isNotEmpty()) {
+            val conditions = afterIdByStream.entries.joinToString(" AND ") {
+                "NOT (stream_name = ? AND id <= ?)"
+            }
+            "WHERE $conditions"
+        } else {
+            ""
+        }
+
+        val columns = if (hasPartitionKey) {
+            "id, stream_name, partition_key, data, data_size, retry_count, created_at"
+        } else {
+            "id, stream_name, data, data_size, retry_count, created_at"
+        }
+
+        val sql = """
+                SELECT $columns
+                FROM (
+                    SELECT *, 
+                           ROW_NUMBER() OVER (PARTITION BY stream_name ORDER BY id) as rn,
+                           SUM(data_size) OVER (PARTITION BY stream_name ORDER BY id) as running_size
+                    FROM records
+                    $streamFilter
+                ) 
+                WHERE rn <= ? AND running_size <= ?
+                ORDER BY stream_name, id
+                """
+
+        connection.prepare(sql).use { stmt ->
+            var bindIndex = 1
+
+            // Bind per-stream after-id filters
+            for ((streamName, afterId) in afterIdByStream) {
+                stmt.bindText(bindIndex++, streamName)
+                stmt.bindLong(bindIndex++, afterId)
+            }
+
+            stmt.bindInt(bindIndex++, maxRecordsByStream)
+            stmt.bindLong(bindIndex, maxBytesPerStream)
+
+            val recordsByStream = mutableMapOf<String, MutableList<Record>>()
+
+            while (stmt.step()) {
+                val streamName = stmt.getText(1)
+                if (hasPartitionKey) {
+                    recordsByStream.getOrPut(streamName) { mutableListOf() }.add(
+                        Record(
+                            id = stmt.getLong(0),
+                            streamName = streamName,
+                            partitionKey = stmt.getText(2),
+                            data = stmt.getBlob(3),
+                            dataSize = stmt.getInt(4),
+                            retryCount = stmt.getInt(5),
+                            createdAt = stmt.getLong(6)
+                        )
+                    )
+                } else {
+                    recordsByStream.getOrPut(streamName) { mutableListOf() }.add(
+                        Record(
+                            id = stmt.getLong(0),
+                            streamName = streamName,
+                            data = stmt.getBlob(2),
+                            dataSize = stmt.getInt(3),
+                            retryCount = stmt.getInt(4),
+                            createdAt = stmt.getLong(5)
+                        )
+                    )
+                }
+            }
+            recordsByStream.values.toList()
+        }
+    }.recoverAsRecordCacheException("Could not retrieve records from storage")
+
+    override suspend fun deleteRecords(ids: List<Long>): Result<Unit, RecordCacheException> = wrapDispatchAndCatching {
+        if (ids.isNotEmpty()) {
+            val placeholders = ids.joinToString(",") { "?" }
+
+            connection.prepare("DELETE FROM records WHERE id IN ($placeholders)").use { stmt ->
+                ids.forEachIndexed { index, id ->
+                    stmt.bindLong(index + 1, id)
+                }
+                stmt.step()
+            }
+            resetCacheSizeFromDb()
+        }
+    }.recoverAsRecordCacheException("Failed to delete records from cache")
+
+    override suspend fun incrementRetryCount(ids: List<Long>): Result<Unit, RecordCacheException> =
+        wrapDispatchAndCatching {
+            if (ids.isNotEmpty()) {
+                val placeholders = ids.joinToString(",") { "?" }
+                connection.prepare(
+                    "UPDATE records SET retry_count = retry_count + 1 WHERE id IN ($placeholders)"
+                ).use { stmt ->
+                    ids.forEachIndexed { index, id ->
+                        stmt.bindLong(index + 1, id)
+                    }
+                    stmt.step()
+                }
+            }
+        }.recoverAsRecordCacheException("Failed to increment retry count")
+
+    /**
+     * Resets the cached size by recalculating from the database.
+     * Use when manual tracking might be out of sync.
+     */
+    @VisibleForTesting
+    internal fun resetCacheSizeFromDb() {
+        cachedSize.set(
+            connection.prepare("SELECT COALESCE(SUM(data_size), 0) FROM records").use { stmt ->
+                if (stmt.step()) stmt.getLong(0) else 0L
+            }.toInt()
+        )
+    }
+
+    override suspend fun getCurrentCacheSize(): Result<Int, RecordCacheException> = Result.Success(cachedSize.toInt())
+
+    override suspend fun clearRecords(): Result<ClearCacheData, RecordCacheException> =
+        wrapDispatchAndTransactionAndCatching {
+            val count = connection.prepare("SELECT COUNT(*) FROM records").use { stmt ->
+                if (stmt.step()) stmt.getInt(0) else 0
+            }
+
+            connection.execSQL("DELETE FROM records")
+            cachedSize.set(0)
+            ClearCacheData(count)
+        }.recoverAsRecordCacheException("Failed to clear cache")
+
+    private fun <R> Result<R, Throwable>.recoverAsRecordCacheException(
+        message: String
+    ): Result<R, RecordCacheException> = mapFailure { exception ->
+        when (exception) {
+            is RecordCacheException -> exception
+            else -> RecordCacheDatabaseException(message, DEFAULT_RECOVERY_SUGGESTION, exception)
+        }
+    }
+}

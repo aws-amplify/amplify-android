@@ -8,6 +8,7 @@ import com.amplifyframework.datastore.storage.StorageOperation
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider
 import com.amplifyframework.testmodels.commentsblog.BlogOwner
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -15,7 +16,7 @@ import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 
-class SQLiteStorageAdapterBatchTest {
+class SQLiteStorageAdapterBatchTest : DeviceFarmTestBase() {
     private lateinit var adapter: SynchronousStorageAdapter
 
     @Before

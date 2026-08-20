@@ -26,6 +26,7 @@ import com.amplifyframework.auth.cognito.helpers.SRPHelper
 import com.amplifyframework.auth.cognito.helpers.SignInChallengeHelper
 import com.amplifyframework.auth.cognito.helpers.toCognitoType
 import com.amplifyframework.auth.cognito.options.AuthFlowType
+import com.amplifyframework.auth.cognito.requireIdentityClient
 import com.amplifyframework.auth.exceptions.ServiceException
 import com.amplifyframework.auth.exceptions.UnknownException
 import com.amplifyframework.statemachine.Action
@@ -62,6 +63,8 @@ internal object SRPCognitoActions : SRPActions {
             val evt = try {
                 srpHelper = SRPHelper(event.password)
 
+                val client = cognitoAuthService.requireIdentityClient()
+
                 val secretHash = AuthHelper.getSecretHash(
                     event.username,
                     configuration.userPool?.appClient,
@@ -79,7 +82,7 @@ internal object SRPCognitoActions : SRPActions {
                 if (event.respondToAuthChallenge?.session != null) {
                     authParams[KEY_ANSWER] = ChallengeNameType.PasswordSrp.value
 
-                    val response = cognitoAuthService.cognitoIdentityProviderClient?.respondToAuthChallenge {
+                    val response = client.respondToAuthChallenge {
                         clientId = configuration.userPool?.appClient
                         challengeName = ChallengeNameType.SelectChallenge
                         this.challengeResponses = authParams
@@ -90,19 +93,13 @@ internal object SRPCognitoActions : SRPActions {
                     }
 
                     val updatedDeviceMetadata = getDeviceMetadata(
-                        AuthHelper.getActiveUsername(
-                            username = event.username,
-                            alternateUsername = response?.challengeParameters?.get(KEY_USERNAME),
-                            userIDForSRP = response?.challengeParameters?.get(
-                                KEY_USERID_FOR_SRP
-                            )
-                        )
+                        AuthHelper.getActiveUsername(event.username, response)
                     )
 
                     parseResponseChallenge(
-                        challengeNameType = response?.challengeName,
-                        challengeParams = response?.challengeParameters,
-                        session = response?.session,
+                        challengeNameType = response.challengeName,
+                        challengeParams = response.challengeParameters,
+                        session = response.session,
                         updatedDeviceMetadata = updatedDeviceMetadata,
                         metadata = event.metadata
                     )
@@ -110,7 +107,7 @@ internal object SRPCognitoActions : SRPActions {
                     if (event.authFlowType == AuthFlowType.USER_AUTH) {
                         authParams[KEY_PREFERRED_CHALLENGE] = KEY_PASSWORD_SRP
                     }
-                    val initiateAuthResponse = cognitoAuthService.cognitoIdentityProviderClient?.initiateAuth {
+                    val response = client.initiateAuth {
                         authFlow = event.authFlowType.toCognitoType()
                         clientId = configuration.userPool?.appClient
                         authParameters = authParams
@@ -118,21 +115,14 @@ internal object SRPCognitoActions : SRPActions {
                         pinpointEndpointId?.let { analyticsMetadata { analyticsEndpointId = it } }
                         encodedContextData?.let { userContextData { encodedData = it } }
                     }
-
                     val updatedDeviceMetadata = getDeviceMetadata(
-                        AuthHelper.getActiveUsername(
-                            username = event.username,
-                            alternateUsername = initiateAuthResponse?.challengeParameters?.get(KEY_USERNAME),
-                            userIDForSRP = initiateAuthResponse?.challengeParameters?.get(
-                                KEY_USERID_FOR_SRP
-                            )
-                        )
+                        AuthHelper.getActiveUsername(event.username, response)
                     )
 
                     parseResponseChallenge(
-                        challengeNameType = initiateAuthResponse?.challengeName,
-                        challengeParams = initiateAuthResponse?.challengeParameters,
-                        session = initiateAuthResponse?.session,
+                        challengeNameType = response.challengeName,
+                        challengeParams = response.challengeParameters,
+                        session = response.session,
                         updatedDeviceMetadata = updatedDeviceMetadata,
                         metadata = event.metadata
                     )

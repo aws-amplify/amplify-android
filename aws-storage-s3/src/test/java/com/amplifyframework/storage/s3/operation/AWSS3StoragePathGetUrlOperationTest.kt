@@ -20,6 +20,7 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.StoragePath
 import com.amplifyframework.storage.StoragePathValidationException
+import com.amplifyframework.storage.s3.StorageAccessMethod
 import com.amplifyframework.storage.s3.extensions.invalidStoragePathException
 import com.amplifyframework.storage.s3.extensions.unsupportedStoragePathException
 import com.amplifyframework.storage.s3.request.AWSS3StoragePathGetPresignedUrlRequest
@@ -54,7 +55,8 @@ class AWSS3StoragePathGetUrlOperationTest {
             path,
             expectedExpires,
             false,
-            validateObjectExistence = false
+            validateObjectExistence = false,
+            method = StorageAccessMethod.GET
         )
         val onError = mockk<Consumer<StorageException>>(relaxed = true)
         awsS3StorageGetPresignedUrlOperation = AWSS3StoragePathGetPresignedUrlOperation(
@@ -74,6 +76,7 @@ class AWSS3StoragePathGetUrlOperationTest {
         verify {
             storageService.getPresignedUrl(
                 expectedServiceKey,
+                StorageAccessMethod.GET,
                 expectedExpires,
                 false
             )
@@ -90,7 +93,8 @@ class AWSS3StoragePathGetUrlOperationTest {
             path,
             expectedExpires,
             false,
-            validateObjectExistence = false
+            validateObjectExistence = false,
+            method = StorageAccessMethod.GET
         )
         val onError = mockk<Consumer<StorageException>>(relaxed = true)
         awsS3StorageGetPresignedUrlOperation = AWSS3StoragePathGetPresignedUrlOperation(
@@ -110,6 +114,7 @@ class AWSS3StoragePathGetUrlOperationTest {
         verify {
             storageService.getPresignedUrl(
                 expectedServiceKey,
+                StorageAccessMethod.GET,
                 expectedExpires,
                 false
             )
@@ -125,7 +130,8 @@ class AWSS3StoragePathGetUrlOperationTest {
             path,
             expectedExpires,
             false,
-            validateObjectExistence = false
+            validateObjectExistence = false,
+            method = StorageAccessMethod.GET
         )
         val onError = mockk<Consumer<StorageException>>(relaxed = true)
         awsS3StorageGetPresignedUrlOperation = AWSS3StoragePathGetPresignedUrlOperation(
@@ -143,7 +149,7 @@ class AWSS3StoragePathGetUrlOperationTest {
         // THEN
         verify { onError.accept(StoragePathValidationException.invalidStoragePathException()) }
         verify(exactly = 0) {
-            storageService.getPresignedUrl(any(), any(), any())
+            storageService.getPresignedUrl(any(), any(), any(), any())
         }
     }
 
@@ -157,7 +163,8 @@ class AWSS3StoragePathGetUrlOperationTest {
             path,
             expectedExpires,
             false,
-            validateObjectExistence = false
+            validateObjectExistence = false,
+            method = StorageAccessMethod.GET
         )
         val onError = mockk<Consumer<StorageException>>(relaxed = true)
         awsS3StorageGetPresignedUrlOperation = AWSS3StoragePathGetPresignedUrlOperation(
@@ -183,7 +190,7 @@ class AWSS3StoragePathGetUrlOperationTest {
             )
         }
         verify(exactly = 0) {
-            storageService.getPresignedUrl(any(), any(), any())
+            storageService.getPresignedUrl(any(), any(), any(), any())
         }
     }
 
@@ -195,7 +202,8 @@ class AWSS3StoragePathGetUrlOperationTest {
             path,
             expectedExpires,
             false,
-            validateObjectExistence = false
+            validateObjectExistence = false,
+            method = StorageAccessMethod.GET
         )
         val onError = mockk<Consumer<StorageException>>(relaxed = true)
         awsS3StorageGetPresignedUrlOperation = AWSS3StoragePathGetPresignedUrlOperation(
@@ -213,7 +221,7 @@ class AWSS3StoragePathGetUrlOperationTest {
         // THEN
         verify { onError.accept(StoragePathValidationException.unsupportedStoragePathException()) }
         verify(exactly = 0) {
-            storageService.getPresignedUrl(any(), any(), any())
+            storageService.getPresignedUrl(any(), any(), any(), any())
         }
     }
 
@@ -227,7 +235,8 @@ class AWSS3StoragePathGetUrlOperationTest {
             path,
             expectedExpires,
             false,
-            validateObjectExistence = true
+            validateObjectExistence = true,
+            method = StorageAccessMethod.GET
         )
         val onError = mockk<Consumer<StorageException>>(relaxed = true)
         awsS3StorageGetPresignedUrlOperation = AWSS3StoragePathGetPresignedUrlOperation(
@@ -245,7 +254,7 @@ class AWSS3StoragePathGetUrlOperationTest {
         // THEN
         verify(exactly = 1) { onError.accept(expectedException) }
         verify(exactly = 0) {
-            storageService.getPresignedUrl(any(), any(), any())
+            storageService.getPresignedUrl(any(), any(), any(), any())
         }
     }
 
@@ -258,7 +267,8 @@ class AWSS3StoragePathGetUrlOperationTest {
             path,
             expectedExpires,
             false,
-            validateObjectExistence = true
+            validateObjectExistence = true,
+            method = StorageAccessMethod.GET
         )
         val onError = mockk<Consumer<StorageException>>(relaxed = true)
         awsS3StorageGetPresignedUrlOperation = AWSS3StoragePathGetPresignedUrlOperation(
@@ -278,6 +288,7 @@ class AWSS3StoragePathGetUrlOperationTest {
         verify {
             storageService.getPresignedUrl(
                 expectedServiceKey,
+                StorageAccessMethod.GET,
                 expectedExpires,
                 false
             )

@@ -18,20 +18,22 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
 }
 
-apply(from = rootProject.file("configuration/checkstyle.gradle"))
-
 android {
     namespace = "com.amplifyframework.testutils"
 }
 
 dependencies {
     implementation(project(":core"))
+    implementation(project(":foundation"))
+
     implementation(libs.test.junit)
     implementation(libs.test.mockito.core)
     implementation(libs.test.androidx.core)
+    implementation(libs.test.kotest.assertions)
     implementation(libs.rxjava)
 
     implementation(libs.kotlin.serializationJson)
+    implementation(platform(libs.aws.bom))
     implementation(libs.aws.cognitoidentity)
     implementation(libs.aws.cognitoidentityprovider)
 

@@ -30,6 +30,9 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.logging.Logger;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -106,7 +109,7 @@ public final class AppSyncGraphQLOperation<R> extends AWSGraphQLOperation<R> {
                 ongoingCall.cancel();
             }
 
-            onFailure.accept(new ApiException(
+            onFailure.accept(new AppSyncUnknownException(
                 "OkHttp client failed to make a successful request.",
                 error, AmplifyException.TODO_RECOVERY_SUGGESTION
             ));
@@ -135,16 +138,25 @@ public final class AppSyncGraphQLOperation<R> extends AWSGraphQLOperation<R> {
                     jsonResponse = responseBody.string();
                 } catch (IOException exception) {
                     LOG.warn("Error retrieving JSON from response.", exception);
-                    onFailure.accept(new ApiException(
+                    onFailure.accept(new AppSyncDeserializationException(
                         "Could not retrieve the response body from the returned JSON",
-                        exception, AmplifyException.TODO_RECOVERY_SUGGESTION
-                    ));
+                        exception,
+                        AmplifyException.TODO_RECOVERY_SUGGESTION));
                     return;
                 }
             }
             if (response.code() >= START_OF_CLIENT_ERROR_CODE && response.code() <= END_OF_CLIENT_ERROR_CODE) {
+                IOException cause;
+                try {
+                    JSONObject responseJson = new JSONObject(jsonResponse);
+                    cause = new GraphQLResponseException(responseJson);
+                } catch (JSONException jsonException) {
+                    // Fall back to IOException if response cannot be parsed
+                    String errorMessage = "HTTP error occurred: " + response.code() + " " + jsonResponse;
+                    cause = new IOException(errorMessage, jsonException);
+                }
                 onFailure.accept(new ApiException
-                        .NonRetryableException("OkHttp client request failed.", "Irrecoverable error")
+                        .NonRetryableException("OkHttp client request failed.", cause, "Irrecoverable error")
                 );
                 return;
             }
@@ -160,9 +172,10 @@ public final class AppSyncGraphQLOperation<R> extends AWSGraphQLOperation<R> {
         @Override
         public void onFailure(@NonNull Call call, @NonNull IOException exception) {
             if (!call.isCanceled()) {
-                onFailure.accept(new ApiException(
-                        "OkHttp client request failed.", exception, "See attached exception for more details."
-                ));
+                onFailure.accept(new AppSyncNetworkException(
+                    "OkHttp client request failed.",
+                    exception,
+                    "See attached exception for more details."));
             }
         }
     }

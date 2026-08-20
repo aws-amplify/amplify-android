@@ -25,6 +25,7 @@ import com.amplifyframework.testmodels.todo.AmplifyModelProvider;
 import com.amplifyframework.testmodels.todo.Todo;
 import com.amplifyframework.testmodels.todo.TodoOwner;
 import com.amplifyframework.testmodels.todo.TodoStatus;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 
 import org.junit.After;
 import org.junit.Before;
@@ -43,7 +44,7 @@ import static org.junit.Assert.assertNotNull;
  * for the {@link SQLiteStorageAdapter}, when this level of basic functionality was
  * in question. Now, the test may serve as a "smoke test."
  */
-public final class SQLiteStorageAdapterModelConverterTest {
+public final class SQLiteStorageAdapterModelConverterTest extends DeviceFarmTestBase {
     private static final Temporal.DateTime MAY_THE_FOURTH =
             new Temporal.DateTime("2020-05-04T14:20:00Z");
 

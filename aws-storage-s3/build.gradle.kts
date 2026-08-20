@@ -15,48 +15,35 @@
 
 plugins {
     alias(libs.plugins.amplify.android.library)
-    alias(libs.plugins.amplify.api)
+    alias(libs.plugins.amplify.publishing)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
-apply(from = rootProject.file("configuration/publishing.gradle"))
-
-group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.storage.s3"
 }
 
 dependencies {
-    implementation(project(":core"))
-    implementation(project(":aws-core"))
+    api(project(":core"))
+    api(project(":aws-core"))
 
     implementation(libs.androidx.appcompat)
-    implementation(libs.aws.s3)
+    api(platform(libs.aws.bom))
+    api(libs.aws.s3)
     implementation(libs.androidx.workmanager)
     implementation(libs.kotlin.futures)
     implementation(libs.gson)
 
+    testImplementation(libs.bundles.test.unit)
+    testImplementation(libs.bundles.test.unit.android)
+    testImplementation(libs.bundles.test.mockito)
     testImplementation(project(":testutils"))
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.mockito.core)
-    testImplementation(libs.test.mockito.inline)
-    testImplementation(libs.test.robolectric)
-    testImplementation(libs.test.androidx.core)
-    testImplementation(libs.test.mockk)
     testImplementation(libs.test.androidx.workmanager)
-    testImplementation(libs.test.kotlin.coroutines)
-    testImplementation(libs.test.kotest.assertions)
-    testImplementation(project(":aws-storage-s3"))
 
     androidTestImplementation(project(":testutils"))
     androidTestImplementation(project(":aws-auth-cognito"))
+    androidTestImplementation(libs.bundles.test.android)
     androidTestImplementation(libs.androidx.annotation)
-    androidTestImplementation(libs.test.androidx.runner)
-    androidTestImplementation(libs.test.androidx.junit)
     androidTestImplementation(libs.test.androidx.workmanager)
-    androidTestImplementation(libs.test.kotest.assertions)
-    androidTestImplementation(project(":aws-storage-s3"))
-
-    androidTestUtil(libs.test.androidx.orchestrator)
 }

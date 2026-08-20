@@ -16,16 +16,17 @@
 package com.amplifyframework.auth.cognito.usecases
 
 import com.amplifyframework.auth.cognito.AuthStateMachine
-import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions
 import com.amplifyframework.auth.cognito.throwIfNotConfigured
+import com.amplifyframework.auth.cognito.toAuthException
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.statemachine.codegen.data.SignUpData
 import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 import com.amplifyframework.statemachine.codegen.states.SignUpState
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.transformWhile
 
 internal class SignUpUseCase(private val stateMachine: AuthStateMachine) {
@@ -34,28 +35,28 @@ internal class SignUpUseCase(private val stateMachine: AuthStateMachine) {
 
         val awsOptions = options as? AWSCognitoAuthSignUpOptions
 
-        val result = stateMachine.stateTransitions.onStart {
+        val result = stateMachine.state.onSubscription {
             val validationData = awsOptions?.validationData
             val clientMetadata = awsOptions?.clientMetadata
             val signupData = SignUpData(username, validationData, clientMetadata)
             val event = SignUpEvent(SignUpEvent.EventType.InitiateSignUp(signupData, password, options.userAttributes))
             stateMachine.send(event)
-        }.transformWhile { authState ->
-            when (val signUpState = authState.authSignUpState) {
-                is SignUpState.AwaitingUserConfirmation -> {
-                    emit(signUpState.signUpResult)
-                    false
+        }
+            .drop(1)
+            .transformWhile { authState ->
+                when (val signUpState = authState.authSignUpState) {
+                    is SignUpState.AwaitingUserConfirmation -> {
+                        emit(signUpState.signUpResult)
+                        false
+                    }
+                    is SignUpState.SignedUp -> {
+                        emit(signUpState.signUpResult)
+                        false
+                    }
+                    is SignUpState.Error -> throw signUpState.exception.toAuthException("Sign up failed.")
+                    else -> true
                 }
-                is SignUpState.SignedUp -> {
-                    emit(signUpState.signUpResult)
-                    false
-                }
-                is SignUpState.Error -> {
-                    throw CognitoAuthExceptionConverter.lookup(signUpState.exception, "Sign up failed.")
-                }
-                else -> true
-            }
-        }.first()
+            }.first()
 
         return result
     }

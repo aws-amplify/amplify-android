@@ -15,28 +15,25 @@
 
 plugins {
     alias(libs.plugins.amplify.android.library)
-    alias(libs.plugins.amplify.api)
+    alias(libs.plugins.amplify.publishing)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
-apply(from = rootProject.file("configuration/publishing.gradle"))
-
-group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.appsync"
 }
 
 dependencies {
-    implementation(project(":core"))
+    api(project(":core"))
     implementation(project(":aws-core"))
 
-    implementation(libs.androidx.annotation)
+    api(libs.androidx.annotation)
     implementation(libs.androidx.core)
-    implementation(libs.gson)
+    api(libs.gson)
 
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.robolectric)
+    testImplementation(libs.bundles.test.unit)
+    testImplementation(libs.bundles.test.unit.android)
     testImplementation(libs.test.jsonassert)
     testImplementation(project(":testmodels"))
     testImplementation(project(":testutils"))

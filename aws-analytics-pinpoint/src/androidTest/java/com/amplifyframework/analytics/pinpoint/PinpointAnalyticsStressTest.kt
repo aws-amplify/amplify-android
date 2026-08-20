@@ -33,6 +33,7 @@ import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.hub.HubChannel
 import com.amplifyframework.hub.HubEvent
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.amplifyframework.testutils.HubAccumulator
 import com.amplifyframework.testutils.Resources
 import com.amplifyframework.testutils.Sleep
@@ -46,7 +47,7 @@ import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
 
-class PinpointAnalyticsStressTest {
+class PinpointAnalyticsStressTest : DeviceFarmTestBase() {
 
     companion object {
         private const val CREDENTIALS_RESOURCE_NAME = "credentials"
@@ -168,7 +169,8 @@ class PinpointAnalyticsStressTest {
     }
 
     /**
-     * Calls Analytics.recordEvent on an event with 40 attributes 50 times
+     * Calls Analytics.recordEvent on an event with 50 attributes 50 times.
+     * Timeout accounts for auto-flush interval (30s) needed to submit all events.
      */
     @Test
     fun testLargeMultipleRecordEvent() {
@@ -188,7 +190,7 @@ class PinpointAnalyticsStressTest {
         }
 
         Amplify.Analytics.flushEvents()
-        val hubEvents = hubAccumulator.await(10, TimeUnit.SECONDS)
+        val hubEvents = hubAccumulator.await(35, TimeUnit.SECONDS)
         val submittedEvents = combineAndFilterEvents(hubEvents)
         Assert.assertEquals(50, submittedEvents.size.toLong())
     }

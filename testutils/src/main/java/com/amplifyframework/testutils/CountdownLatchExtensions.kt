@@ -15,6 +15,8 @@
 
 package com.amplifyframework.testutils
 
+import io.kotest.assertions.withClue
+import io.kotest.matchers.booleans.shouldBeTrue
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
@@ -23,3 +25,12 @@ import kotlin.time.Duration
  * Await using a [Duration]
  */
 fun CountDownLatch.await(duration: Duration) = await(duration.inWholeMilliseconds, TimeUnit.MILLISECONDS)
+
+fun CountDownLatch.assertAwait(duration: Duration) =
+    withClue("Expected latch to be counted down within $duration but it was not") {
+        await(duration).shouldBeTrue()
+    }
+fun CountDownLatch.assertAwait(timeout: Long, timeUnit: TimeUnit) =
+    withClue("Expected latch to be counted down within $timeout $timeUnit but it was not") {
+        await(timeout, timeUnit).shouldBeTrue()
+    }

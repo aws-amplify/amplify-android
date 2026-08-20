@@ -41,6 +41,7 @@ import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.UserAgent;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -171,7 +172,7 @@ public final class Amplify {
             }
 
             for (Category<? extends Plugin<?>> category : CATEGORIES.values()) {
-                if (category.getPlugins().size() > 0) {
+                if (!category.getPlugins().isEmpty()) {
                     CategoryConfiguration categoryConfiguration =
                         configuration.forCategoryType(category.getCategoryType());
                     category.configure(categoryConfiguration, context);
@@ -199,6 +200,25 @@ public final class Amplify {
         @NonNull AmplifyOutputs amplifyOutputs,
         @NonNull Context context
     ) throws AmplifyException {
+        AmplifyOutputsData data = AmplifyOutputsData.deserialize(context, amplifyOutputs);
+        configure(data, context);
+    }
+
+    /**
+     * Configure Amplify using the AmplifyOutputsData class, for programmatic configuration.
+     * You must call one of the configure() methods before using any Amplify category.
+     * You must add plugins to the framework before calling configure().
+     * configure() may only be called once per application process, and there is
+     * currently no way to reconfigure Amplify once it has been called.
+     * Subsequent attempts to configure Amplify will generate an AmplifyException.
+     * @param amplifyOutputs An {@link AmplifyOutputs} instance representing the amplify_outputs data to use
+     * @param context An Android context
+     * @throws AmplifyException Indicates one of numerous possible failures to configure the Framework
+     */
+    public static void configure(
+        @NonNull AmplifyOutputsData amplifyOutputs,
+        @NonNull Context context
+    ) throws AmplifyException {
         Objects.requireNonNull(amplifyOutputs);
         Objects.requireNonNull(context);
 
@@ -207,11 +227,12 @@ public final class Amplify {
                 throw new AlreadyConfiguredException("Remove the duplicate call to `Amplify.configure()`.");
             }
 
-            AmplifyOutputsData configuration = AmplifyOutputsData.deserialize(context, amplifyOutputs);
+            // Configure User-Agent utility
+            UserAgent.configure(Collections.emptyMap());
 
             for (Category<? extends Plugin<?>> category : CATEGORIES.values()) {
-                if (category.getPlugins().size() > 0) {
-                    category.configure(configuration, context);
+                if (!category.getPlugins().isEmpty()) {
+                    category.configure(amplifyOutputs, context);
                     beginInitialization(category, context);
                 }
             }

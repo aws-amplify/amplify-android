@@ -97,11 +97,55 @@ public class APIOptionsContractTest {
                         .scopes(scopes).build();
         Assert.assertEquals(webUISignInOptions.getBrowserPackage(), "chrome");
         Assert.assertEquals(webUISignInOptions.getScopes(), scopes);
+        Assert.assertNull(webUISignInOptions.getPreferPrivateSession());
+
+        // Test preferPrivateSession option
+        AWSCognitoAuthWebUISignInOptions webUISignInOptionsWithPrivateSession =
+                AWSCognitoAuthWebUISignInOptions.builder()
+                        .browserPackage("chrome")
+                        .scopes(scopes)
+                        .preferPrivateSession(true)
+                        .build();
+        Assert.assertEquals("chrome", webUISignInOptionsWithPrivateSession.getBrowserPackage());
+        Assert.assertEquals(scopes, webUISignInOptionsWithPrivateSession.getScopes());
+        Assert.assertEquals(Boolean.TRUE, webUISignInOptionsWithPrivateSession.getPreferPrivateSession());
+
+        // Test preferPrivateSession set to false
+        AWSCognitoAuthWebUISignInOptions webUISignInOptionsWithoutPrivateSession =
+                AWSCognitoAuthWebUISignInOptions.builder()
+                        .browserPackage("firefox")
+                        .scopes(scopes)
+                        .preferPrivateSession(false)
+                        .build();
+        Assert.assertEquals("firefox", webUISignInOptionsWithoutPrivateSession.getBrowserPackage());
+        Assert.assertEquals(scopes, webUISignInOptionsWithoutPrivateSession.getScopes());
+        Assert.assertEquals(Boolean.FALSE, webUISignInOptionsWithoutPrivateSession.getPreferPrivateSession());
 
         FederateToIdentityPoolOptions federateToIdentityPoolOptions =
                 FederateToIdentityPoolOptions.builder().developerProvidedIdentityId("test-idp")
                         .build();
-        Assert.assertEquals(federateToIdentityPoolOptions
-                .getDeveloperProvidedIdentityId(), "test-idp");
+        Assert.assertEquals("test-idp", federateToIdentityPoolOptions
+                .getDeveloperProvidedIdentityId());
+    }
+
+    /**
+     * Test Java CognitoAuthWebUIOptions OIDC parameters builder methods.
+     */
+    @Test
+    public void testCognitoAuthWebUISignInOIDCParameters() {
+        List<AuthWebUIPrompt> prompt = Arrays.asList(AuthWebUIPrompt.LOGIN, AuthWebUIPrompt.CONSENT);
+        AWSCognitoAuthWebUISignInOptions webUISignInOptionsWithOIDCParameters =
+                AWSCognitoAuthWebUISignInOptions.builder()
+                        .nonce("nonce")
+                        .language("en")
+                        .loginHint("username")
+                        .prompt(AuthWebUIPrompt.LOGIN, AuthWebUIPrompt.CONSENT)
+                        .resource("myapp://")
+                        .build();
+        Assert.assertEquals("nonce", webUISignInOptionsWithOIDCParameters.getNonce());
+        Assert.assertEquals("en", webUISignInOptionsWithOIDCParameters.getLanguage());
+        Assert.assertEquals("username", webUISignInOptionsWithOIDCParameters.getLoginHint());
+        Assert.assertEquals(prompt, webUISignInOptionsWithOIDCParameters.getPrompt());
+        Assert.assertEquals("myapp://", webUISignInOptionsWithOIDCParameters.getResource());
     }
 }

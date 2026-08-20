@@ -18,6 +18,7 @@ package com.amplifyframework.auth.cognito.usecases
 import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.cognito.AuthStateMachine
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
+import com.amplifyframework.auth.cognito.mockSignedInState
 import com.amplifyframework.auth.cognito.testUtil.withAuthEvent
 import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.plugins.core.AuthHubEventEmitter
@@ -37,7 +38,6 @@ import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -49,7 +49,6 @@ class AutoSignInUseCaseTest {
     private val stateMachine: AuthStateMachine = mockk {
         justRun { send(any()) }
         every { state } returns stateFlow
-        every { stateTransitions } returns stateFlow.drop(1)
     }
     private val hubEmitter: AuthHubEventEmitter = mockk(relaxed = true)
 
@@ -128,10 +127,7 @@ class AutoSignInUseCaseTest {
         stateFlow.value = authState(AuthenticationState.SigningIn())
         runCurrent()
 
-        stateFlow.value = authState(
-            AuthenticationState.SignedIn(mockk(), mockk()),
-            AuthorizationState.SessionEstablished(mockk())
-        )
+        stateFlow.value = mockSignedInState()
 
         val result = deferred.await()
 
@@ -152,10 +148,7 @@ class AutoSignInUseCaseTest {
         stateFlow.value = authState(AuthenticationState.SigningIn())
         runCurrent()
 
-        stateFlow.value = authState(
-            AuthenticationState.SignedIn(mockk(), mockk()),
-            AuthorizationState.SessionEstablished(mockk())
-        )
+        stateFlow.value = mockSignedInState()
 
         deferred.await()
 

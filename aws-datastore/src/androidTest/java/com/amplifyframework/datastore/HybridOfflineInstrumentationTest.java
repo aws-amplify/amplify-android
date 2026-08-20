@@ -27,6 +27,7 @@ import com.amplifyframework.logging.LogLevel;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.Assets;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.sync.SynchronousDataStore;
 import com.amplifyframework.util.GsonFactory;
@@ -48,7 +49,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Tests support for Hybrid platforms (e.g., Flutter, React Native).
  */
-public final class HybridOfflineInstrumentationTest {
+public final class HybridOfflineInstrumentationTest extends DeviceFarmTestBase {
     private static final int TIMEOUT_SECONDS = 5;
 
     private SynchronousHybridBehaviors hybridBehaviors;

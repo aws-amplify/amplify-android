@@ -15,11 +15,8 @@
 
 plugins {
     alias(libs.plugins.amplify.android.library)
-    alias(libs.plugins.amplify.api)
+    alias(libs.plugins.amplify.publishing)
 }
-apply(from = rootProject.file("configuration/publishing.gradle"))
-
-group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.kotlin"
@@ -27,15 +24,11 @@ android {
 
 dependencies {
     implementation(libs.kotlin.stdlib)
-    implementation(libs.kotlin.coroutines)
+    api(libs.kotlin.coroutines)
     implementation(libs.androidx.core.ktx)
-    implementation(project(":core"))
-    implementation(project(":common-core"))
+    api(project(":core"))
+    api(project(":common-core"))
 
-    testImplementation(libs.test.androidx.core)
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.mockk)
-    testImplementation(libs.test.kotlin.coroutines)
+    testImplementation(libs.bundles.test.unit)
     testImplementation(project(":testmodels"))
-    testImplementation(libs.test.kotest.assertions)
 }

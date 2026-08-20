@@ -16,16 +16,18 @@
 package com.amplifyframework.auth.cognito.usecases
 
 import com.amplifyframework.auth.cognito.AuthStateMachine
-import com.amplifyframework.auth.cognito.CognitoAuthExceptionConverter
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthConfirmSignUpOptions
 import com.amplifyframework.auth.cognito.throwIfNotConfigured
+import com.amplifyframework.auth.cognito.toAuthException
 import com.amplifyframework.auth.options.AuthConfirmSignUpOptions
 import com.amplifyframework.auth.result.AuthSignUpResult
 import com.amplifyframework.statemachine.codegen.data.SignUpData
 import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 import com.amplifyframework.statemachine.codegen.states.SignUpState
+import com.amplifyframework.statemachine.codegen.states.getSignUpData
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.transformWhile
 
 internal class ConfirmSignUpUseCase(private val stateMachine: AuthStateMachine) {
@@ -36,27 +38,32 @@ internal class ConfirmSignUpUseCase(private val stateMachine: AuthStateMachine) 
     ): AuthSignUpResult {
         stateMachine.throwIfNotConfigured()
 
-        val startingState = stateMachine.getCurrentState().authSignUpState
+        val currentState = stateMachine.getCurrentState()
+        val existingSignUpData = currentState.authSignUpState?.getSignUpData()
 
-        val result = stateMachine.stateTransitions
-            .onStart {
-                var userId: String? = null
-                var session: String? = null
-                if (startingState is SignUpState.AwaitingUserConfirmation &&
-                    startingState.signUpData.username == username
-                ) {
-                    session = startingState.signUpData.session
-                    userId = startingState.signUpResult.userId
-                }
-                val clientMetadata = (options as? AWSCognitoAuthConfirmSignUpOptions)?.clientMetadata
-                val signupData = SignUpData(username, null, clientMetadata, session, userId)
-                val event = SignUpEvent(SignUpEvent.EventType.ConfirmSignUp(signupData, confirmationCode))
+        val clientMetadata = (options as? AWSCognitoAuthConfirmSignUpOptions)?.clientMetadata
+        val signUpData = if (existingSignUpData?.username == username) {
+            existingSignUpData.copy(clientMetadata = clientMetadata)
+        } else {
+            SignUpData(
+                username = username,
+                validationData = null,
+                clientMetadata = clientMetadata,
+                session = null,
+                userId = null
+            )
+        }
+
+        val result = stateMachine.state
+            .onSubscription {
+                val event = SignUpEvent(SignUpEvent.EventType.ConfirmSignUp(signUpData, confirmationCode))
                 stateMachine.send(event)
             }
+            .drop(1)
             .transformWhile { authState ->
                 when (val signUpState = authState.authSignUpState) {
                     is SignUpState.Error -> {
-                        throw CognitoAuthExceptionConverter.lookup(signUpState.exception, "Sign up failed.")
+                        throw signUpState.exception.toAuthException("Sign up failed.")
                     }
                     is SignUpState.SignedUp -> {
                         emit(signUpState.signUpResult)

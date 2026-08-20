@@ -15,13 +15,10 @@
 
 plugins {
     alias(libs.plugins.amplify.android.library)
-    alias(libs.plugins.amplify.api)
+    alias(libs.plugins.amplify.publishing)
 }
 
 apply(from = rootProject.file("configuration/checkstyle.gradle"))
-apply(from = rootProject.file("configuration/publishing.gradle"))
-
-group = properties["POM_GROUP"].toString()
 
 android {
     namespace = "com.amplifyframework.pushnotifications.pinpoint"
@@ -29,28 +26,27 @@ android {
 
 dependencies {
 
-    implementation(project(":core"))
+    api(project(":core"))
     implementation(project(":aws-core"))
-    implementation(project(":common-core"))
-    implementation(project(":aws-pinpoint-core"))
+    api(project(":common-core"))
+    api(project(":aws-pinpoint-core"))
 
     implementation(project(":aws-push-notifications-pinpoint-common"))
 
     api(platform(libs.firebase.bom))
     api(libs.firebase.messaging)
 
+    api(platform(libs.aws.bom))
     implementation(libs.aws.http)
-    implementation(libs.aws.pinpoint)
+    api(libs.aws.pinpoint)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.kotlin.serializationJson)
 
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.kotest.assertions)
+    testImplementation(libs.bundles.test.unit)
     testImplementation(project(":testutils"))
 
     androidTestImplementation(project(":aws-auth-cognito"))
-    androidTestImplementation(libs.test.androidx.runner)
-    androidTestImplementation(libs.test.androidx.junit)
+    androidTestImplementation(libs.bundles.test.android)
 }

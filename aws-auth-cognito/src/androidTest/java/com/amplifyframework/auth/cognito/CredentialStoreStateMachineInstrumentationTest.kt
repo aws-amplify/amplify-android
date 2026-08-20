@@ -21,6 +21,7 @@ import com.amplifyframework.auth.cognito.data.AWSCognitoAuthCredentialStore
 import com.amplifyframework.auth.cognito.testutils.AuthConfigurationProvider
 import com.amplifyframework.auth.cognito.testutils.CredentialStoreUtil
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
+import com.amplifyframework.testutils.DeviceFarmTestBase
 import com.google.gson.Gson
 import junit.framework.TestCase.assertEquals
 import org.json.JSONObject
@@ -30,7 +31,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class CredentialStoreStateMachineInstrumentationTest {
+class CredentialStoreStateMachineInstrumentationTest : DeviceFarmTestBase() {
     private val context = InstrumentationRegistry.getInstrumentation().context
     private val credentialStoreUtil = CredentialStoreUtil()
 

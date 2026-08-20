@@ -25,6 +25,7 @@ import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.testutils.Assets;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.testutils.sync.SynchronousApi;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 
@@ -58,7 +59,7 @@ import static org.junit.Assert.assertEquals;
  *
  * 3. Run the test. From the command line, you can do ./gradlew aws-amplify-api-aws:connectedAndroidTest
  */
-public final class GraphQLInstrumentationTest {
+public final class GraphQLInstrumentationTest extends DeviceFarmTestBase {
     private static final String API_WITH_API_KEY = "eventsApi";
     private static final String API_WITH_COGNITO_USER_POOLS = "eventsApiWithUserPools";
 

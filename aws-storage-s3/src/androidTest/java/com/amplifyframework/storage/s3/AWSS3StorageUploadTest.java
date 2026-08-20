@@ -37,6 +37,7 @@ import com.amplifyframework.storage.options.StorageUploadInputStreamOptions;
 import com.amplifyframework.storage.s3.options.AWSS3StorageUploadFileOptions;
 import com.amplifyframework.storage.s3.test.R;
 import com.amplifyframework.storage.s3.util.WorkmanagerTestUtils;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 import com.amplifyframework.testutils.random.RandomTempFile;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 import com.amplifyframework.testutils.sync.SynchronousStorage;
@@ -62,7 +63,7 @@ import static org.junit.Assert.assertTrue;
  * Instrumentation test for operational work on upload.
  */
 @SuppressWarnings("deprecation")
-public final class AWSS3StorageUploadTest {
+public final class AWSS3StorageUploadTest extends DeviceFarmTestBase {
     private static final long EXTENDED_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(60);
 
     private static final StorageAccessLevel TESTING_ACCESS_LEVEL = StorageAccessLevel.PUBLIC;

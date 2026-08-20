@@ -18,7 +18,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
-import org.gradle.kotlin.dsl.extra
 import org.gradle.kotlin.dsl.provideDelegate
 
 /**
@@ -50,15 +49,8 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
     }
 
     private fun Project.configureAndroid(extension: LibraryExtension) {
-        if (hasProperty("signingKeyId")) {
-            println("Getting signing info from protected source.")
-            extra["signing.keyId"] = findProperty("signingKeyId")
-            extra["signing.password"] = findProperty("signingPassword")
-            extra["signing.inMemoryKey"] = findProperty("signingInMemoryKey")
-        }
-
         extension.apply {
-            compileSdk = 34
+            compileSdk = 36
 
             buildFeatures {
                 buildConfig = true
@@ -103,15 +95,10 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                     listOf(
                         "META-INF/DEPENDENCIES",
                         "META-INF/LICENSE.md",
-                        "META-INF/LICENSE-notice.md"
+                        "META-INF/LICENSE-notice.md",
+                        "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
                     )
                 )
-            }
-
-            publishing {
-                singleVariant("release") {
-                    withSourcesJar()
-                }
             }
         }
 
@@ -122,6 +109,7 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                     because("Fixes a lint bug with RequiresOptIn")
                 }
             }
+            "androidTestUtil"(libs.findLibrary("test-androidx-orchestrator").get())
         }
     }
 }

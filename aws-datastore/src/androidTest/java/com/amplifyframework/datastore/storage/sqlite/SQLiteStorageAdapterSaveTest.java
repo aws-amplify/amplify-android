@@ -29,6 +29,7 @@ import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testutils.DeviceFarmTestBase;
 
 import org.junit.After;
 import org.junit.Before;
@@ -55,7 +56,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test the save functionality of {@link SQLiteStorageAdapter} operations.
  */
-public final class SQLiteStorageAdapterSaveTest {
+public final class SQLiteStorageAdapterSaveTest extends DeviceFarmTestBase {
     private SynchronousStorageAdapter adapter;
 
     /**

@@ -19,6 +19,7 @@ import com.amplifyframework.core.Consumer
 import com.amplifyframework.storage.StorageException
 import com.amplifyframework.storage.operation.StorageGetUrlOperation
 import com.amplifyframework.storage.result.StorageGetUrlResult
+import com.amplifyframework.storage.s3.StorageAccessMethod
 import com.amplifyframework.storage.s3.extensions.toS3ServiceKey
 import com.amplifyframework.storage.s3.request.AWSS3StoragePathGetPresignedUrlRequest
 import com.amplifyframework.storage.s3.service.StorageService
@@ -47,7 +48,7 @@ internal class AWSS3StoragePathGetPresignedUrlOperation(
                 return@submit
             }
 
-            if (request.validateObjectExistence) {
+            if (request.validateObjectExistence && request.method != StorageAccessMethod.PUT) {
                 try {
                     storageService.validateObjectExists(serviceKey)
                 } catch (se: StorageException) {
@@ -68,9 +69,11 @@ internal class AWSS3StoragePathGetPresignedUrlOperation(
             try {
                 val url = storageService.getPresignedUrl(
                     serviceKey,
+                    request.method,
                     request.expires,
                     request.useAccelerateEndpoint
                 )
+
                 onSuccess.accept(StorageGetUrlResult.fromUrl(url))
             } catch (exception: Exception) {
                 onError.accept(

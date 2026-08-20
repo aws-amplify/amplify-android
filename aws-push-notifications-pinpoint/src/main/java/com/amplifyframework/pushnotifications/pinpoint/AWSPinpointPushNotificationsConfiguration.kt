@@ -33,9 +33,18 @@ class AWSPinpointPushNotificationsConfiguration internal constructor(val appId: 
                 recoverySuggestion = "Ensure the notifications category is properly configured"
             )
 
+            val appId = notifications.amazonPinpointAppId ?: throw PushNotificationsException(
+                message = "Missing Amazon Pinpoint app id in notifications configuration",
+                recoverySuggestion = "Ensure the Amazon Pinpoint push notifications channel is configured"
+            )
+            val region = notifications.awsRegion ?: throw PushNotificationsException(
+                message = "Missing AWS region in notifications configuration",
+                recoverySuggestion = "Ensure the Amazon Pinpoint push notifications channel is configured"
+            )
+
             return AWSPinpointPushNotificationsConfiguration(
-                appId = notifications.amazonPinpointAppId,
-                region = notifications.awsRegion
+                appId = appId,
+                region = region
             )
         }
     }

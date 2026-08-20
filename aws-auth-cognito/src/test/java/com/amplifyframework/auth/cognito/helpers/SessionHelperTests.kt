@@ -19,7 +19,6 @@ import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
 import java.time.Instant
 import java.time.temporal.ChronoUnit
-import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import org.junit.Test
@@ -37,26 +36,13 @@ class SessionHelperTests {
     )
 
     @Test
-    fun testGetExpiration() {
-        val expiry = SessionHelper.getExpiration(dummyToken)
-        val expected = Instant.parse("2018-01-18T01:30:22Z")
-        assertEquals(expected, expiry)
-    }
-
-    @Test
-    fun testGetUsername() {
-        val username = dummyUserPoolTokens.accessToken?.let(SessionHelper::getUsername)
-        assertEquals("John Doe", username)
-    }
-
-    @Test
     fun testIsInvalid() {
         assertFalse(SessionHelper.isValidTokens(dummyUserPoolTokens))
     }
 
     @Test
     fun testIsInvalidNullTokens() {
-        assertFalse(SessionHelper.isValidTokens(CognitoUserPoolTokens(null, null, null, 0)))
+        assertFalse(SessionHelper.isValidTokens(CognitoUserPoolTokens(null as String?, null, null, 0)))
     }
 
     @Test

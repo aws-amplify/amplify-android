@@ -22,11 +22,19 @@ import android.content.Context
 import androidx.work.WorkerParameters
 import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.withConfig
+import com.amplifyframework.storage.ProgressStallTimeoutException
+import com.amplifyframework.storage.s3.transfer.ProgressListener
+import com.amplifyframework.storage.s3.transfer.StallDetectingProgressListener
 import com.amplifyframework.storage.s3.transfer.StorageTransferClientProvider
 import com.amplifyframework.storage.s3.transfer.TransferDB
 import com.amplifyframework.storage.s3.transfer.TransferStatusUpdater
 import com.amplifyframework.storage.s3.transfer.UploadProgressListener
 import com.amplifyframework.storage.s3.transfer.UploadProgressListenerInterceptor
+import com.amplifyframework.storage.s3.transfer.worker.BaseTransferWorker.Companion.PROGRESS_STALL_TIMEOUT_SECONDS
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
 
 internal class SinglePartUploadWorker(
     private val clientProvider: StorageTransferClientProvider,
@@ -40,13 +48,51 @@ internal class SinglePartUploadWorker(
 
     override suspend fun performWork(): Result {
         uploadProgressListener = UploadProgressListener(transferRecord, transferStatusUpdater)
-        val putObjectRequest = createPutObjectRequest(transferRecord, uploadProgressListener)
-        val s3: S3Client = clientProvider.getStorageTransferClient(transferRecord.region, transferRecord.bucketName)
-        return s3.withConfig {
-            interceptors += UploadProgressListenerInterceptor(uploadProgressListener)
-            enableAccelerate = transferRecord.useAccelerateEndpoint == 1
-        }.putObject(putObjectRequest).let {
-            Result.success(outputData)
+        val stallTimeoutSeconds = (inputData.keyValueMap[PROGRESS_STALL_TIMEOUT_SECONDS] as? Long) ?: 0L
+        val stallDetected = AtomicBoolean(false)
+
+        return try {
+            coroutineScope {
+                val uploadJob = coroutineContext[Job]
+                val stallDecorator: StallDetectingProgressListener? = if (stallTimeoutSeconds > 0L) {
+                    StallDetectingProgressListener(
+                        delegate = uploadProgressListener,
+                        stallTimeoutSeconds = stallTimeoutSeconds,
+                        onStall = {
+                            if (stallDetected.compareAndSet(false, true)) {
+                                uploadJob?.cancel(CancellationException("Progress stall timeout"))
+                            }
+                        }
+                    )
+                } else {
+                    null
+                }
+                val effectiveListener: ProgressListener = stallDecorator ?: uploadProgressListener
+                val putObjectRequest = createPutObjectRequest(transferRecord, effectiveListener)
+                val s3: S3Client = clientProvider.getStorageTransferClient(
+                    transferRecord.region,
+                    transferRecord.bucketName
+                )
+                try {
+                    stallDecorator?.start()
+                    s3.withConfig {
+                        interceptors += UploadProgressListenerInterceptor(effectiveListener)
+                        enableAccelerate = transferRecord.useAccelerateEndpoint == 1
+                    }.putObject(putObjectRequest)
+                } finally {
+                    stallDecorator?.close()
+                }
+                Result.success(outputData)
+            }
+        } catch (cancellation: CancellationException) {
+            if (stallDetected.get()) {
+                throw ProgressStallTimeoutException(
+                    "Upload cancelled due to progress stall timeout.",
+                    "Increase the configured progress stall timeout or verify the network conditions, " +
+                        "then retry the upload."
+                )
+            }
+            throw cancellation
         }
     }
 }
