@@ -19,9 +19,13 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.ConnectivityManager.NetworkCallback
 import android.net.Network
+import android.net.NetworkCapabilities
 import androidx.annotation.VisibleForTesting
 import com.amplifyframework.datastore.DataStoreException
+import com.amplifyframework.datastore.extensions.isInternetReachable
+import com.amplifyframework.datastore.extensions.isNetworkAvailable
 import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.core.ObservableEmitter
 import io.reactivex.rxjava3.subjects.BehaviorSubject
 import java.util.concurrent.TimeUnit
 
@@ -35,7 +39,7 @@ import java.util.concurrent.TimeUnit
  * The network changes are debounced with a 250 ms delay to allow some time for one network to connect after another
  * network has disconnected (for example, wifi is lost, then cellular connects) to reduce thrashing.
  */
-public interface ReachabilityMonitor {
+interface ReachabilityMonitor {
     fun configure(context: Context)
 
     @VisibleForTesting
@@ -61,15 +65,7 @@ private class ReachabilityMonitorImpl constructor(val schedulerProvider: Schedul
         val observable = Observable.create { emitter ->
             connectivityProvider.registerDefaultNetworkCallback(
                 context,
-                object : NetworkCallback() {
-                    override fun onAvailable(network: Network) {
-                        emitter.onNext(true)
-                    }
-
-                    override fun onLost(network: Network) {
-                        emitter.onNext(false)
-                    }
-                }
+                ConnectivityNetworkCallback(emitter)
             )
             emitter.onNext(connectivityProvider.hasActiveNetwork)
         }
@@ -87,6 +83,37 @@ private class ReachabilityMonitorImpl constructor(val schedulerProvider: Schedul
         }
         return subject.subscribeOn(schedulerProvider.io())
     }
+
+    private inner class ConnectivityNetworkCallback(private val emitter: ObservableEmitter<Boolean>) : NetworkCallback() {
+        private var currentNetworkCapabilities: NetworkCapabilities? = null
+
+        override fun onAvailable(network: Network) {
+            // in recent Android SDK version, onCapabilitiesChanged is triggered before onAvailable
+            // we should make use of network capabilities if it was updated before
+            currentNetworkCapabilities?.let {
+                emitter.onNext(it.isInternetReachable())
+            } ?: run {
+                connectivityProvider?.let {
+                    emitter.onNext(it.hasActiveNetwork)
+                }
+            }
+        }
+
+        override fun onLost(network: Network) {
+            currentNetworkCapabilities = null
+            emitter.onNext(false)
+        }
+
+        override fun onUnavailable() {
+            currentNetworkCapabilities = null
+            emitter.onNext(false)
+        }
+
+        override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
+            currentNetworkCapabilities = networkCapabilities
+            emitter.onNext(networkCapabilities.isInternetReachable())
+        }
+    }
 }
 
 /**
@@ -94,32 +121,26 @@ private class ReachabilityMonitorImpl constructor(val schedulerProvider: Schedul
  * is a concrete class created within context.getSystemService() it can't be overridden with a test
  * implementation, so this interface works around that issue.
  */
-public interface ConnectivityProvider {
+interface ConnectivityProvider {
     val hasActiveNetwork: Boolean
     fun registerDefaultNetworkCallback(context: Context, callback: NetworkCallback)
 }
 
 private class DefaultConnectivityProvider : ConnectivityProvider {
-
     private var connectivityManager: ConnectivityManager? = null
 
     override val hasActiveNetwork: Boolean
-        get() = connectivityManager?.let { it.activeNetwork != null }
-            ?: run {
-                throw DataStoreException(
-                    "ReachabilityMonitor has not been configured.",
-                    "Call ReachabilityMonitor.configure() before calling ReachabilityMonitor.getObservable()"
-                )
-            }
+        get() = connectivityManager?.isNetworkAvailable() ?: throw DataStoreException(
+            "ReachabilityMonitor has not been configured.",
+            "Call ReachabilityMonitor.configure() before calling ReachabilityMonitor.getObservable()"
+        )
 
     override fun registerDefaultNetworkCallback(context: Context, callback: NetworkCallback) {
         connectivityManager = context.getSystemService(ConnectivityManager::class.java)
-        connectivityManager?.let { it.registerDefaultNetworkCallback(callback) }
-            ?: run {
-                throw DataStoreException(
-                    "ConnectivityManager not available",
-                    "No recovery suggestion is available"
-                )
-            }
+        connectivityManager?.registerDefaultNetworkCallback(callback)
+            ?: throw DataStoreException(
+                "ConnectivityManager not available",
+                "No recovery suggestion is available"
+            )
     }
 }
