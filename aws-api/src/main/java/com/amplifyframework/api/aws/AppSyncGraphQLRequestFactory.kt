@@ -15,6 +15,7 @@
 package com.amplifyframework.api.aws
 
 import com.amplifyframework.AmplifyException
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.MutationType
 import com.amplifyframework.api.graphql.Operation
@@ -23,6 +24,7 @@ import com.amplifyframework.api.graphql.QueryType
 import com.amplifyframework.api.graphql.SubscriptionType
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelIdentifier
+import com.amplifyframework.core.model.ModelPage
 import com.amplifyframework.core.model.ModelPath
 import com.amplifyframework.core.model.ModelSchema
 import com.amplifyframework.core.model.PropertyContainerPath
@@ -189,7 +191,23 @@ object AppSyncGraphQLRequestFactory {
         }
     }
 
-    internal fun <R, T : Model, P : ModelPath<T>> buildQueryInternal(
+    /** Builds a get query for the model identified by [keyMap], resolving variable types from the model schema. */
+    @JvmStatic
+    @InternalAmplifyApi
+    fun <R, T : Model> buildQueryFromKeyMap(modelClass: Class<T>, keyMap: Map<String, Any>): GraphQLRequest<R> {
+        val modelSchema = ModelSchema.fromModelClass(modelClass)
+        val variables = modelSchema.primaryIndexFields.map { key ->
+            // Find target field to pull type info
+            val targetField = requireNotNull(modelSchema.fields[key])
+            val requiredSuffix = if (targetField.isRequired) "!" else ""
+            val targetTypeString = "${targetField.targetType}$requiredSuffix"
+            val value = requireNotNull(keyMap[key])
+            GraphQLRequestVariable(key, value, targetTypeString)
+        }
+        return buildQueryInternal(modelClass, null, *variables.toTypedArray())
+    }
+
+    private fun <R, T : Model, P : ModelPath<T>> buildQueryInternal(
         modelClass: Class<T>,
         includes: ((P) -> List<PropertyContainerPath>)?,
         vararg variables: GraphQLRequestVariable
@@ -231,14 +249,22 @@ object AppSyncGraphQLRequestFactory {
         return buildListQueryInternal(modelClass, predicate, DEFAULT_QUERY_LIMIT, dataType, null)
     }
 
-    internal fun <R, T : Model> buildModelPageQuery(
+    /** Builds a query for a single page of models, deserialized into [pageClass] parameterized with [modelClass]. */
+    @JvmStatic
+    @InternalAmplifyApi
+    fun <R, T : Model> buildModelPageQuery(
         modelClass: Class<T>,
         predicate: QueryPredicate,
+        pageClass: Class<out ModelPage<*>>,
         pageToken: String?
-    ): GraphQLRequest<R> {
-        val dataType = TypeMaker.getParameterizedType(ApiModelPage::class.java, modelClass)
-        return buildListQueryInternal(modelClass, predicate, DEFAULT_QUERY_LIMIT, dataType, null, pageToken)
-    }
+    ): GraphQLRequest<R> = buildListQueryInternal(
+        modelClass,
+        predicate,
+        DEFAULT_QUERY_LIMIT,
+        TypeMaker.getParameterizedType(pageClass, modelClass),
+        null,
+        pageToken
+    )
 
     /**
      * Creates a [GraphQLRequest] that represents a query that expects multiple values as a result. The request

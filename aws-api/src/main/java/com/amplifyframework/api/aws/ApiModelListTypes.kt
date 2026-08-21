@@ -90,6 +90,7 @@ internal class ApiLazyModelList<out M : Model> constructor(
         AppSyncGraphQLRequestFactory.buildModelPageQuery(
             clazz,
             queryPredicate,
+            ApiModelPage::class.java,
             (paginationToken as? ApiPaginationToken)?.nextToken
         )
 
