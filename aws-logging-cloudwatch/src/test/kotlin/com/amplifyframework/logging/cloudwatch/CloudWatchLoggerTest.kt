@@ -14,9 +14,10 @@
  */
 package com.amplifyframework.logging.cloudwatch
 
+import com.amplifyframework.annotations.InternalAmplifyApi
+import com.amplifyframework.cloudwatch.models.CloudWatchLogEvent
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.logging.LogLevel
-import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -30,7 +31,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, InternalAmplifyApi::class)
 internal class CloudWatchLoggerTest {
     private val awsCloudWatchLoggingPluginImplementation = mockk<AWSCloudWatchLoggingPluginImplementation>()
     private val loggingConstraintsResolver = mockk<LoggingConstraintsResolver>()

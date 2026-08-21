@@ -14,6 +14,8 @@
  */
 package com.amplifyframework.cloudwatch
 
+import aws.sdk.kotlin.services.cloudwatchlogs.model.CloudWatchLogsException
+import com.amplifyframework.annotations.ExperimentalAmplifyApi
 import com.amplifyframework.foundation.exceptions.AmplifyException
 
 /**
@@ -30,13 +32,32 @@ import com.amplifyframework.foundation.exceptions.AmplifyException
  * @param recoverySuggestion Suggested action to resolve the error
  * @param cause Underlying cause of the exception
  */
+@ExperimentalAmplifyApi
 sealed class AmplifyCloudWatchException(
     message: String,
     recoverySuggestion: String,
     cause: Throwable? = null
-) : AmplifyException(message, recoverySuggestion, cause)
+) : AmplifyException(message, recoverySuggestion, cause) {
+    companion object {
+        /** Maps an arbitrary [error] to the most appropriate [AmplifyCloudWatchException] subtype. */
+        internal fun from(error: Throwable): AmplifyCloudWatchException = when (error) {
+            is AmplifyCloudWatchException -> error
+            is CloudWatchLogsException -> AmplifyCloudWatchServiceException(
+                message = error.message ?: "A CloudWatch Logs API call failed.",
+                recoverySuggestion = "Verify the log group name, region, and credentials, then retry.",
+                cause = error
+            )
+            else -> AmplifyCloudWatchUnknownException(
+                message = error.message ?: "An unknown error occurred.",
+                recoverySuggestion = "See the attached exception for more details.",
+                cause = error
+            )
+        }
+    }
+}
 
 /** Local file I/O or log-rotation error. */
+@ExperimentalAmplifyApi
 class AmplifyCloudWatchStorageException(
     message: String,
     recoverySuggestion: String,
@@ -44,6 +65,7 @@ class AmplifyCloudWatchStorageException(
 ) : AmplifyCloudWatchException(message, recoverySuggestion, cause)
 
 /** A CloudWatch Logs API call failed. */
+@ExperimentalAmplifyApi
 class AmplifyCloudWatchServiceException(
     message: String,
     recoverySuggestion: String,
@@ -51,6 +73,7 @@ class AmplifyCloudWatchServiceException(
 ) : AmplifyCloudWatchException(message, recoverySuggestion, cause)
 
 /** The client is misconfigured. */
+@ExperimentalAmplifyApi
 class AmplifyCloudWatchConfigurationException(
     message: String,
     recoverySuggestion: String,
@@ -58,6 +81,7 @@ class AmplifyCloudWatchConfigurationException(
 ) : AmplifyCloudWatchException(message, recoverySuggestion, cause)
 
 /** Unexpected / uncategorized error. */
+@ExperimentalAmplifyApi
 class AmplifyCloudWatchUnknownException(
     message: String,
     recoverySuggestion: String,

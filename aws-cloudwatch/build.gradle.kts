@@ -31,8 +31,17 @@ dependencies {
     api(platform(libs.aws.bom))
     api(libs.aws.cloudwatchlogs)
     implementation(libs.aws.http)
+    implementation(libs.androidx.workmanager)
+    implementation(libs.kotlin.futures)
+    implementation(libs.kotlin.coroutines)
+    implementation(libs.sqlcipher)
+    implementation(libs.androidx.sqlite)
 
     testImplementation(libs.bundles.test.unit)
     testImplementation(libs.bundles.test.unit.android)
+    testImplementation(libs.test.androidx.workmanager)
     testImplementation(project(":testutils"))
+
+    androidTestImplementation(libs.bundles.test.android)
+    androidTestImplementation(project(":testutils"))
 }

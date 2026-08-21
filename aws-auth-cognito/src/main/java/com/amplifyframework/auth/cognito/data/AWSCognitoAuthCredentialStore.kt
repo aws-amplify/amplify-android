@@ -17,7 +17,7 @@ package com.amplifyframework.auth.cognito.data
 
 import android.content.Context
 import com.amplifyframework.auth.cognito.AuthConfiguration
-import com.amplifyframework.core.store.KeyValueRepository
+import com.amplifyframework.foundation.store.KeyValueRepository
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthCredentialStore
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
