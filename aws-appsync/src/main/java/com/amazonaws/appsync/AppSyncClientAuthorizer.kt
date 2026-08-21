@@ -22,8 +22,8 @@ import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
  * Each subtype encodes its [AppSyncAuthMode] and holds the provider needed to
  * produce authorization credentials for that mode.
  *
- * These are configuration objects — the actual header generation and request signing
- * is handled internally by the plugin infrastructure via [AuthProviderBridge].
+ * These are configuration objects — the client generates authorization headers and signs
+ * requests internally, and does not expose that machinery.
  */
 @ExperimentalAmplifyApi
 sealed class AppSyncClientAuthorizer(
