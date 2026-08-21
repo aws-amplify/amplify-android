@@ -27,7 +27,9 @@ dependencies {
     api(libs.okhttp)
     api(project(":foundation"))
 
-    implementation(project(":aws-api-appsync"))
+    // api, not implementation: the model helpers (ModelQuery, ModelMutation, ModelSubscription) live
+    // in this module, and consumers of the client need them to build requests.
+    api(project(":aws-api-appsync"))
     implementation(libs.gson)
     implementation(libs.kotlin.coroutines)
     implementation(project(":foundation-bridge"))
