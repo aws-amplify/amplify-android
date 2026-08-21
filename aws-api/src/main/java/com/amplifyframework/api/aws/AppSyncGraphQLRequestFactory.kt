@@ -24,6 +24,7 @@ import com.amplifyframework.api.graphql.QueryType
 import com.amplifyframework.api.graphql.SubscriptionType
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelIdentifier
+import com.amplifyframework.core.model.ModelPage
 import com.amplifyframework.core.model.ModelPath
 import com.amplifyframework.core.model.ModelSchema
 import com.amplifyframework.core.model.PropertyContainerPath
@@ -190,21 +191,7 @@ object AppSyncGraphQLRequestFactory {
         }
     }
 
-    /**
-     * Creates a [GraphQLRequest] that represents a query for a single value, identified by a map of
-     * primary/sort key field names to values.
-     *
-     * This is the entry point used by lazy loading, where the identifying fields are already known as a
-     * map rather than as a [ModelIdentifier]. The variable types are resolved from the model schema.
-     *
-     * @param modelClass the model class.
-     * @param keyMap the primary index field names mapped to their values.
-     * @param <R> the response type.
-     * @param <T> the concrete model type.
-     * @return a valid [GraphQLRequest] instance.
-     * @throws AmplifyException when a schema cannot be generated for [modelClass].
-     * @throws IllegalStateException when the model schema does not contain the expected information.
-     </T></R> */
+    /** Builds a get query for the model identified by [keyMap], resolving variable types from the model schema. */
     @JvmStatic
     @InternalAmplifyApi
     fun <R, T : Model> buildQueryFromKeyMap(modelClass: Class<T>, keyMap: Map<String, Any>): GraphQLRequest<R> {
@@ -262,29 +249,22 @@ object AppSyncGraphQLRequestFactory {
         return buildListQueryInternal(modelClass, predicate, DEFAULT_QUERY_LIMIT, dataType, null)
     }
 
-    /**
-     * Creates a [GraphQLRequest] that represents a query for a single page of models.
-     *
-     * The page type is supplied by the caller rather than resolved here, so that this factory does not
-     * depend on the plugin's lazy-loading types.
-     *
-     * @param modelClass the model class.
-     * @param predicate the model predicate.
-     * @param pageType the parameterized type the response should be deserialized into.
-     * @param pageToken the token identifying the page to fetch, or null for the first page.
-     * @param <R> the response type.
-     * @param <T> the concrete model type.
-     * @return a valid [GraphQLRequest] instance.
-     * @throws IllegalStateException when the model schema does not contain the expected information.
-     </T></R> */
+    /** Builds a query for a single page of models, deserialized into [pageClass] parameterized with [modelClass]. */
     @JvmStatic
     @InternalAmplifyApi
     fun <R, T : Model> buildModelPageQuery(
         modelClass: Class<T>,
         predicate: QueryPredicate,
-        pageType: Type,
+        pageClass: Class<out ModelPage<*>>,
         pageToken: String?
-    ): GraphQLRequest<R> = buildListQueryInternal(modelClass, predicate, DEFAULT_QUERY_LIMIT, pageType, null, pageToken)
+    ): GraphQLRequest<R> = buildListQueryInternal(
+        modelClass,
+        predicate,
+        DEFAULT_QUERY_LIMIT,
+        TypeMaker.getParameterizedType(pageClass, modelClass),
+        null,
+        pageToken
+    )
 
     /**
      * Creates a [GraphQLRequest] that represents a query that expects multiple values as a result. The request
