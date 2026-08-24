@@ -115,14 +115,10 @@ internal class AuthEnvironment internal constructor(
         username: String,
         legacyUsernames: List<String> = emptyList()
     ): DeviceMetadata.Metadata? {
-        for (key in listOf(username) + legacyUsernames.filter { it != username }) {
+        for (key in (listOf(username) + legacyUsernames).distinct()) {
             val deviceCredentials =
                 credentialStoreClient.loadCredentials(CredentialType.Device(key)) as? AmplifyCredential.DeviceData
-            if (deviceCredentials == null) {
-                logger.warn("loadCredentials returned unexpected AmplifyCredential Type.")
-                continue
-            }
-            val metadata = deviceCredentials.deviceMetadata as? DeviceMetadata.Metadata ?: continue
+            val metadata = deviceCredentials?.deviceMetadata as? DeviceMetadata.Metadata ?: continue
             if (key != username) {
                 logger.info("Migrating device metadata stored by an earlier SDK version.")
                 credentialStoreClient.storeCredentials(

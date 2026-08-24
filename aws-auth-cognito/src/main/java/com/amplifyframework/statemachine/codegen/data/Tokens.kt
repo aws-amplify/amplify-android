@@ -77,9 +77,9 @@ internal abstract class Jwt {
         Username("username"), // username claim in the access token
         TokenRevocationId("origin_jti"),
         CognitoUsername("cognito:username"), // username claim in the identity token
-        Email("email"),
-        PhoneNumber("phone_number"),
-        PreferredUsername("preferred_username")
+        Email("email"), // id token only
+        PhoneNumber("phone_number"), // id token only
+        PreferredUsername("preferred_username") // id token only
     }
 }
 

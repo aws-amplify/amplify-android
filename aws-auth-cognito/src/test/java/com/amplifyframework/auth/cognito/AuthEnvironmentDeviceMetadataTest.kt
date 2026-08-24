@@ -37,13 +37,13 @@ class AuthEnvironmentDeviceMetadataTest {
     private val metadata = DeviceMetadata.Metadata("device-key", "device-group-key", "device-secret")
 
     private val environment = AuthEnvironment(
-        mockk<Context>(relaxed = true),
-        mockk(relaxed = true),
-        mockk(relaxed = true),
-        credentialStoreClient,
-        null,
-        null,
-        logger
+        context = mockk<Context>(relaxed = true),
+        configuration = mockk(relaxed = true),
+        cognitoAuthService = mockk(relaxed = true),
+        credentialStoreClient = credentialStoreClient,
+        userContextDataProvider = null,
+        hostedUIClient = null,
+        logger = logger
     )
 
     private fun storeContains(vararg entries: Pair<String, DeviceMetadata>) {
@@ -107,6 +107,32 @@ class AuthEnvironmentDeviceMetadataTest {
         environment.getDeviceMetadata(username, listOf(username)) shouldBe null
 
         coVerify(exactly = 1) { credentialStoreClient.loadCredentials(CredentialType.Device(username)) }
+    }
+
+    @Test
+    fun `tries each legacy candidate in turn and stops at the first hit`() = runTest {
+        val phone = "+15551234567"
+        val preferred = "preferred-name"
+        storeContains(preferred to metadata)
+
+        environment.getDeviceMetadata(username, listOf(email, phone, preferred)) shouldBe metadata
+
+        coVerify {
+            credentialStoreClient.storeCredentials(
+                CredentialType.Device(username),
+                AmplifyCredential.DeviceData(metadata)
+            )
+            credentialStoreClient.clearCredentials(CredentialType.Device(preferred))
+        }
+    }
+
+    @Test
+    fun `duplicate legacy candidates are only looked up once`() = runTest {
+        storeContains()
+
+        environment.getDeviceMetadata(username, listOf(email, email)) shouldBe null
+
+        coVerify(exactly = 1) { credentialStoreClient.loadCredentials(CredentialType.Device(email)) }
     }
 
     @Test
