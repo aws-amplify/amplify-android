@@ -100,7 +100,7 @@ internal class IdToken(override val tokenValue: String) : Jwt() {
                 getClaim(Claim.Email),
                 getClaim(Claim.PhoneNumber),
                 getClaim(Claim.PreferredUsername)
-            )
+            ).filterNot { it == "null" } // getClaim stringifies an explicit JSON null
         }.getOrDefault(emptyList())
 
     val expiration: Instant? by lazy {

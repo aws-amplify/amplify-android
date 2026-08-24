@@ -35,6 +35,7 @@ import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 import java.util.Date
 import java.util.UUID
+import kotlin.coroutines.cancellation.CancellationException
 
 internal class AuthEnvironment internal constructor(
     val context: Context,
@@ -114,6 +115,11 @@ internal class AuthEnvironment internal constructor(
      * hits afterwards. The legacy entry is kept: the sign-in paths still read by the typed alias,
      * and deleting it would make the next sign-in register a duplicate device. The copy is
      * best-effort - the metadata is returned even if persisting it fails.
+     *
+     * Trade-off of keeping both entries: the device-not-found cleanups each clear a single key, so
+     * after such a clear the next refresh can re-copy a stale key from the surviving entry. This
+     * converges once a full sign-in refreshes both entries via ConfirmDevice. Resolving the key
+     * scheme (see aws-amplify/amplify-android#3288) removes the need for this fallback.
      */
     suspend fun getDeviceMetadata(
         username: String,
@@ -125,12 +131,16 @@ internal class AuthEnvironment internal constructor(
             val metadata = deviceCredentials?.deviceMetadata as? DeviceMetadata.Metadata ?: continue
             if (key != username) {
                 logger.info("Copying device metadata stored by an earlier SDK version.")
-                runCatching {
+                try {
                     credentialStoreClient.storeCredentials(
                         CredentialType.Device(username),
                         AmplifyCredential.DeviceData(metadata)
                     )
-                }.onFailure { logger.warn("Failed to copy device metadata; will retry on next refresh.", it) }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    logger.warn("Failed to copy device metadata; will retry on next refresh.", e)
+                }
             }
             return metadata
         }

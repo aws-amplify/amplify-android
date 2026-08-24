@@ -20,10 +20,13 @@ import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.mockk
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
@@ -126,11 +129,27 @@ class AuthEnvironmentDeviceMetadataTest {
 
         environment.getDeviceMetadata(username, listOf(email, phone, preferred)) shouldBe metadata
 
+        coVerifyOrder {
+            credentialStoreClient.loadCredentials(CredentialType.Device(username))
+            credentialStoreClient.loadCredentials(CredentialType.Device(email))
+            credentialStoreClient.loadCredentials(CredentialType.Device(phone))
+            credentialStoreClient.loadCredentials(CredentialType.Device(preferred))
+        }
         coVerify {
             credentialStoreClient.storeCredentials(
                 CredentialType.Device(username),
                 AmplifyCredential.DeviceData(metadata)
             )
+        }
+    }
+
+    @Test
+    fun `cancellation during the copy is not swallowed`() = runTest {
+        storeContains(email to metadata)
+        coEvery { credentialStoreClient.storeCredentials(any(), any()) } throws CancellationException("cancelled")
+
+        shouldThrow<CancellationException> {
+            environment.getDeviceMetadata(username, listOf(email))
         }
     }
 

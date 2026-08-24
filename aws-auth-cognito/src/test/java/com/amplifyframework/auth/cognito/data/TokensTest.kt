@@ -237,4 +237,12 @@ class TokensTest {
     fun `sign-in aliases are empty for an unparseable token instead of throwing`() {
         IdToken("not-a-jwt").signInAliases shouldBe emptyList()
     }
+
+    @Test
+    fun `sign-in aliases exclude an explicitly null claim`() {
+        val payload = Base64.getUrlEncoder().withoutPadding()
+            .encodeToString("""{"email":null,"phone_number":"+15550100"}""".toByteArray())
+
+        IdToken("header.$payload.signature").signInAliases shouldContainExactly listOf("+15550100")
+    }
 }
