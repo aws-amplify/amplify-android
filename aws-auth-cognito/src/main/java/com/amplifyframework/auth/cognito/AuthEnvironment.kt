@@ -107,41 +107,33 @@ internal class AuthEnvironment internal constructor(
     }
 
     /**
-     * Loads device metadata for [username].
-     *
-     * SDK versions <= 2.30.2 keyed device metadata by the value the user typed at sign-in (an alias
-     * such as an email) rather than by the Cognito username. On those installs the metadata is
-     * unreachable under the current key, so the DeviceKey is omitted from refresh and Cognito
-     * rejects it with "Invalid Refresh Token.". [legacyUsernames] are alias values taken from the
-     * user's own tokens; the first match is migrated to [username] so this happens at most once.
+     * Loads device metadata for [username], falling back to [legacyUsernames] because SDK versions
+     * <= 2.30.2 keyed the metadata by the typed sign-in alias. A legacy hit is re-keyed to
+     * [username], so the fallback runs at most once.
      */
     suspend fun getDeviceMetadata(
         username: String,
         legacyUsernames: List<String> = emptyList()
     ): DeviceMetadata.Metadata? {
-        loadDeviceMetadata(username)?.let { return it }
-
-        for (legacyUsername in legacyUsernames.filter { it != username }) {
-            val legacyMetadata = loadDeviceMetadata(legacyUsername) ?: continue
-            logger.info("Migrating device metadata stored by an earlier SDK version.")
-            credentialStoreClient.storeCredentials(
-                CredentialType.Device(username),
-                AmplifyCredential.DeviceData(legacyMetadata)
-            )
-            credentialStoreClient.clearCredentials(CredentialType.Device(legacyUsername))
-            return legacyMetadata
+        for (key in listOf(username) + legacyUsernames.filter { it != username }) {
+            val deviceCredentials =
+                credentialStoreClient.loadCredentials(CredentialType.Device(key)) as? AmplifyCredential.DeviceData
+            if (deviceCredentials == null) {
+                logger.warn("loadCredentials returned unexpected AmplifyCredential Type.")
+                continue
+            }
+            val metadata = deviceCredentials.deviceMetadata as? DeviceMetadata.Metadata ?: continue
+            if (key != username) {
+                logger.info("Migrating device metadata stored by an earlier SDK version.")
+                credentialStoreClient.storeCredentials(
+                    CredentialType.Device(username),
+                    AmplifyCredential.DeviceData(metadata)
+                )
+                credentialStoreClient.clearCredentials(CredentialType.Device(key))
+            }
+            return metadata
         }
         return null
-    }
-
-    private suspend fun loadDeviceMetadata(username: String): DeviceMetadata.Metadata? {
-        val deviceCredentials =
-            credentialStoreClient.loadCredentials(CredentialType.Device(username)) as? AmplifyCredential.DeviceData
-        if (deviceCredentials == null) {
-            logger.warn("loadCredentials returned unexpected AmplifyCredential Type.")
-            return null
-        }
-        return deviceCredentials.deviceMetadata as? DeviceMetadata.Metadata
     }
 }
 
