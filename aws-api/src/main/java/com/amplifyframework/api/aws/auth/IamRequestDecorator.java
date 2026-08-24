@@ -15,6 +15,8 @@
 
 package com.amplifyframework.api.aws.auth;
 
+import android.annotation.SuppressLint;
+
 import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.aws.AppSyncSigningException;
 import com.amplifyframework.api.aws.sigv4.AWS4Signer;
@@ -67,6 +69,8 @@ public class IamRequestDecorator implements RequestDecorator {
      * @return A new instance of the request containing the signature headers.
      * @throws ApiAuthException If the signing process fails.
      */
+    // Uses the smithy runtime's internal Headers builder API to construct the request to sign.
+    @SuppressLint("UnsafeOptInUsageError")
     public final okhttp3.Request decorate(okhttp3.Request req) throws ApiAuthException {
         //set the request body
         final byte[] bodyBytes = getBytes(req.body());

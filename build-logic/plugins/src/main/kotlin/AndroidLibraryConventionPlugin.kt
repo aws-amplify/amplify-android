@@ -72,6 +72,7 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
             }
 
             lint {
+                lintConfig = rootProject.file("lint.xml")
                 warningsAsErrors = true
                 abortOnError = true
                 enable += listOf("UnusedResources")
