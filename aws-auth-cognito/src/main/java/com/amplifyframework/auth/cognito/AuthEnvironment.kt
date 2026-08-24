@@ -133,31 +133,30 @@ internal class AuthEnvironment internal constructor(
         username: String,
         legacyUsernames: List<String> = emptyList()
     ): DeviceMetadata.Metadata? {
-        val candidates = if (username in fruitlessLegacyDeviceScans) {
-            listOf(username)
-        } else {
-            (listOf(username) + legacyUsernames).distinct()
-        }
-        for (key in candidates) {
-            val deviceCredentials =
+        val deviceCredentials =
+            credentialStoreClient.loadCredentials(CredentialType.Device(username)) as? AmplifyCredential.DeviceData
+        (deviceCredentials?.deviceMetadata as? DeviceMetadata.Metadata)?.let { return it }
+
+        // Primary key missed: scan the legacy alias keys, at most once per username.
+        if (username in fruitlessLegacyDeviceScans) return null
+        for (key in legacyUsernames.distinct().filter { it != username }) {
+            val legacyCredentials =
                 credentialStoreClient.loadCredentials(CredentialType.Device(key)) as? AmplifyCredential.DeviceData
-            val metadata = deviceCredentials?.deviceMetadata as? DeviceMetadata.Metadata ?: continue
-            if (key != username) {
-                logger.info("Copying device metadata stored by an earlier SDK version.")
-                try {
-                    credentialStoreClient.storeCredentials(
-                        CredentialType.Device(username),
-                        AmplifyCredential.DeviceData(metadata)
-                    )
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    logger.warn("Failed to copy device metadata; will retry on next refresh.", e)
-                }
+            val metadata = legacyCredentials?.deviceMetadata as? DeviceMetadata.Metadata ?: continue
+            logger.info("Copying device metadata stored by an earlier SDK version.")
+            try {
+                credentialStoreClient.storeCredentials(
+                    CredentialType.Device(username),
+                    AmplifyCredential.DeviceData(metadata)
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.warn("Failed to copy device metadata; will retry on next refresh.", e)
             }
             return metadata
         }
-        if (candidates.size > 1) fruitlessLegacyDeviceScans += username
+        if (legacyUsernames.isNotEmpty()) fruitlessLegacyDeviceScans += username
         return null
     }
 }
