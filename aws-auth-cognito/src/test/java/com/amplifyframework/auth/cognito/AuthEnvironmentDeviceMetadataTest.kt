@@ -163,6 +163,37 @@ class AuthEnvironmentDeviceMetadataTest {
     }
 
     @Test
+    fun `a fruitless alias scan is not repeated on the next lookup`() = runTest {
+        storeContains()
+
+        environment.getDeviceMetadata(username, listOf(email)) shouldBe null
+        environment.getDeviceMetadata(username, listOf(email)) shouldBe null
+
+        // Second lookup consults only the primary key; the alias scan ran once.
+        coVerify(exactly = 2) { credentialStoreClient.loadCredentials(CredentialType.Device(username)) }
+        coVerify(exactly = 1) { credentialStoreClient.loadCredentials(CredentialType.Device(email)) }
+    }
+
+    @Test
+    fun `a scan that found metadata but failed to copy is retried on the next lookup`() = runTest {
+        storeContains(email to metadata)
+        coEvery { credentialStoreClient.storeCredentials(any(), any()) } throws RuntimeException("store failed")
+
+        environment.getDeviceMetadata(username, listOf(email)) shouldBe metadata
+        environment.getDeviceMetadata(username, listOf(email)) shouldBe metadata
+
+        coVerify(exactly = 2) { credentialStoreClient.loadCredentials(CredentialType.Device(email)) }
+    }
+
+    @Test
+    fun `a fruitless scan for one username does not suppress the scan for another`() = runTest {
+        storeContains(email to metadata)
+
+        environment.getDeviceMetadata("other-user", listOf("other@example.com")) shouldBe null
+        environment.getDeviceMetadata(username, listOf(email)) shouldBe metadata
+    }
+
+    @Test
     fun `no legacy candidates behaves like a plain lookup`() = runTest {
         storeContains(email to metadata)
 

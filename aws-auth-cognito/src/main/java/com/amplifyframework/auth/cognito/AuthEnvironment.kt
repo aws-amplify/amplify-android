@@ -35,6 +35,7 @@ import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 import java.util.Date
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.cancellation.CancellationException
 
 internal class AuthEnvironment internal constructor(
@@ -60,6 +61,9 @@ internal class AuthEnvironment internal constructor(
 
     internal lateinit var srpHelper: SRPHelper
     private var cachedPinpointEndpointId: String? = null
+
+    // Usernames whose legacy device metadata scan came up empty; see getDeviceMetadata.
+    private val fruitlessLegacyDeviceScans = ConcurrentHashMap.newKeySet<String>()
 
         /*
         Auth plugin needs to read from Pinpoint shared preferences, but we don't currently have an architecture
@@ -120,31 +124,41 @@ internal class AuthEnvironment internal constructor(
      * after such a clear the next refresh can re-copy a stale key from the surviving entry. This
      * converges once a full sign-in refreshes both entries via ConfirmDevice. Resolving the key
      * scheme (see aws-amplify/amplify-android#3288) removes the need for this fallback.
+     *
+     * Each lookup is a round trip through the credential-store state machine, so a fruitless alias
+     * scan is remembered per username and not repeated. A scan that found metadata but failed to
+     * persist the copy is not remembered, so it retries on the next refresh.
      */
     suspend fun getDeviceMetadata(
         username: String,
         legacyUsernames: List<String> = emptyList()
     ): DeviceMetadata.Metadata? {
-        for (key in (listOf(username) + legacyUsernames).distinct()) {
-            val deviceCredentials =
-                credentialStoreClient.loadCredentials(CredentialType.Device(key)) as? AmplifyCredential.DeviceData
-            val metadata = deviceCredentials?.deviceMetadata as? DeviceMetadata.Metadata ?: continue
-            if (key != username) {
-                logger.info("Copying device metadata stored by an earlier SDK version.")
-                try {
-                    credentialStoreClient.storeCredentials(
-                        CredentialType.Device(username),
-                        AmplifyCredential.DeviceData(metadata)
-                    )
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    logger.warn("Failed to copy device metadata; will retry on next refresh.", e)
-                }
+        loadDeviceMetadata(username)?.let { return it }
+
+        if (username in fruitlessLegacyDeviceScans) return null
+        for (key in legacyUsernames.distinct().filter { it != username }) {
+            val metadata = loadDeviceMetadata(key) ?: continue
+            logger.info("Copying device metadata stored by an earlier SDK version.")
+            try {
+                credentialStoreClient.storeCredentials(
+                    CredentialType.Device(username),
+                    AmplifyCredential.DeviceData(metadata)
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.warn("Failed to copy device metadata; will retry on next refresh.", e)
             }
             return metadata
         }
+        if (legacyUsernames.isNotEmpty()) fruitlessLegacyDeviceScans += username
         return null
+    }
+
+    private suspend fun loadDeviceMetadata(key: String): DeviceMetadata.Metadata? {
+        val deviceCredentials =
+            credentialStoreClient.loadCredentials(CredentialType.Device(key)) as? AmplifyCredential.DeviceData
+        return deviceCredentials?.deviceMetadata as? DeviceMetadata.Metadata
     }
 }
 
