@@ -107,9 +107,13 @@ internal class AuthEnvironment internal constructor(
     }
 
     /**
-     * Loads device metadata for [username], falling back to [legacyUsernames] because SDK versions
-     * <= 2.30.2 keyed the metadata by the typed sign-in alias. A legacy hit is re-keyed to
-     * [username], so the fallback runs at most once.
+     * Loads device metadata for [username], falling back to [legacyUsernames]. SDK versions
+     * <= 2.30.2 keyed the metadata by the typed sign-in alias; under the current key the entry is
+     * unreachable, so DeviceKey is omitted from refresh and Cognito rejects the still-valid token
+     * with "Invalid Refresh Token.". A legacy hit is copied to [username] so the primary lookup
+     * hits afterwards. The legacy entry is kept: the sign-in paths still read by the typed alias,
+     * and deleting it would make the next sign-in register a duplicate device. The copy is
+     * best-effort - the metadata is returned even if persisting it fails.
      */
     suspend fun getDeviceMetadata(
         username: String,
@@ -120,12 +124,13 @@ internal class AuthEnvironment internal constructor(
                 credentialStoreClient.loadCredentials(CredentialType.Device(key)) as? AmplifyCredential.DeviceData
             val metadata = deviceCredentials?.deviceMetadata as? DeviceMetadata.Metadata ?: continue
             if (key != username) {
-                logger.info("Migrating device metadata stored by an earlier SDK version.")
-                credentialStoreClient.storeCredentials(
-                    CredentialType.Device(username),
-                    AmplifyCredential.DeviceData(metadata)
-                )
-                credentialStoreClient.clearCredentials(CredentialType.Device(key))
+                logger.info("Copying device metadata stored by an earlier SDK version.")
+                runCatching {
+                    credentialStoreClient.storeCredentials(
+                        CredentialType.Device(username),
+                        AmplifyCredential.DeviceData(metadata)
+                    )
+                }.onFailure { logger.warn("Failed to copy device metadata; will retry on next refresh.", it) }
             }
             return metadata
         }

@@ -295,7 +295,6 @@ class FetchAuthSessionCognitoActionsTest {
             }
         }
         coJustRun { credentialStoreClient.storeCredentials(any(), any()) }
-        coJustRun { credentialStoreClient.clearCredentials(any()) }
 
         val requestSlot =
             slot<aws.sdk.kotlin.services.cognitoidentityprovider.model.GetTokensFromRefreshTokenRequest>()

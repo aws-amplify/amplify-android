@@ -76,7 +76,7 @@ class AuthEnvironmentDeviceMetadataTest {
     }
 
     @Test
-    fun `migrates legacy metadata to the current username and clears the legacy entry`() = runTest {
+    fun `copies legacy metadata to the current username and keeps the legacy entry`() = runTest {
         storeContains(email to metadata)
 
         environment.getDeviceMetadata(username, listOf(email))
@@ -86,8 +86,17 @@ class AuthEnvironmentDeviceMetadataTest {
                 CredentialType.Device(username),
                 AmplifyCredential.DeviceData(metadata)
             )
-            credentialStoreClient.clearCredentials(CredentialType.Device(email))
         }
+        // Sign-in paths still read by the typed alias, so the legacy entry must survive.
+        coVerify(exactly = 0) { credentialStoreClient.clearCredentials(any()) }
+    }
+
+    @Test
+    fun `returns legacy metadata even when persisting the copy fails`() = runTest {
+        storeContains(email to metadata)
+        coEvery { credentialStoreClient.storeCredentials(any(), any()) } throws RuntimeException("store failed")
+
+        environment.getDeviceMetadata(username, listOf(email)) shouldBe metadata
     }
 
     @Test
@@ -122,7 +131,6 @@ class AuthEnvironmentDeviceMetadataTest {
                 CredentialType.Device(username),
                 AmplifyCredential.DeviceData(metadata)
             )
-            credentialStoreClient.clearCredentials(CredentialType.Device(preferred))
         }
     }
 
