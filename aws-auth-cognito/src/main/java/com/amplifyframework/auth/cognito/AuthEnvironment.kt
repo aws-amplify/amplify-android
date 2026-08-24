@@ -133,32 +133,32 @@ internal class AuthEnvironment internal constructor(
         username: String,
         legacyUsernames: List<String> = emptyList()
     ): DeviceMetadata.Metadata? {
-        loadDeviceMetadata(username)?.let { return it }
-
-        if (username in fruitlessLegacyDeviceScans) return null
-        for (key in legacyUsernames.distinct().filter { it != username }) {
-            val metadata = loadDeviceMetadata(key) ?: continue
-            logger.info("Copying device metadata stored by an earlier SDK version.")
-            try {
-                credentialStoreClient.storeCredentials(
-                    CredentialType.Device(username),
-                    AmplifyCredential.DeviceData(metadata)
-                )
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                logger.warn("Failed to copy device metadata; will retry on next refresh.", e)
+        val candidates = if (username in fruitlessLegacyDeviceScans) {
+            listOf(username)
+        } else {
+            (listOf(username) + legacyUsernames).distinct()
+        }
+        for (key in candidates) {
+            val deviceCredentials =
+                credentialStoreClient.loadCredentials(CredentialType.Device(key)) as? AmplifyCredential.DeviceData
+            val metadata = deviceCredentials?.deviceMetadata as? DeviceMetadata.Metadata ?: continue
+            if (key != username) {
+                logger.info("Copying device metadata stored by an earlier SDK version.")
+                try {
+                    credentialStoreClient.storeCredentials(
+                        CredentialType.Device(username),
+                        AmplifyCredential.DeviceData(metadata)
+                    )
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    logger.warn("Failed to copy device metadata; will retry on next refresh.", e)
+                }
             }
             return metadata
         }
-        if (legacyUsernames.isNotEmpty()) fruitlessLegacyDeviceScans += username
+        if (candidates.size > 1) fruitlessLegacyDeviceScans += username
         return null
-    }
-
-    private suspend fun loadDeviceMetadata(key: String): DeviceMetadata.Metadata? {
-        val deviceCredentials =
-            credentialStoreClient.loadCredentials(CredentialType.Device(key)) as? AmplifyCredential.DeviceData
-        return deviceCredentials?.deviceMetadata as? DeviceMetadata.Metadata
     }
 }
 
