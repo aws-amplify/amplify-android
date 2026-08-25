@@ -22,13 +22,6 @@ apply(from = rootProject.file("configuration/checkstyle.gradle"))
 
 android {
     namespace = "com.amplifyframework.cloudwatch"
-
-    // Persist app data across connected test methods so the client's integration tests keep a stable device
-    // id and write to a single CloudWatch stream (one per test otherwise). Overrides the shared convention's
-    // clearPackageData=true; the module's own DB instrumentation test self-cleans in @After.
-    defaultConfig {
-        testInstrumentationRunnerArguments["clearPackageData"] = "false"
-    }
 }
 
 dependencies {

@@ -23,8 +23,8 @@ import aws.sdk.kotlin.services.cloudwatchlogs.model.FilterLogEventsRequest
 import com.amplifyframework.annotations.ExperimentalAmplifyApi
 import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
-import com.amplifyframework.cloudwatch.test.R
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.Resources
 import com.amplifyframework.core.configuration.AmplifyOutputs
 import com.amplifyframework.foundation.credentials.AwsCredentials
 import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
@@ -32,15 +32,16 @@ import com.amplifyframework.foundation.credentials.toAwsCredentialsProvider
 import com.amplifyframework.foundation.logging.LogLevel
 import com.amplifyframework.foundation.logging.LogMessage
 import com.amplifyframework.testutils.DeviceFarmTestBase
+import com.amplifyframework.testutils.assertions.shouldBeSuccess
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldStartWith
 import java.util.UUID
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.json.JSONObject
+import org.junit.After
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
@@ -73,53 +74,35 @@ class AmplifyCloudWatchClientInstrumentationTest : DeviceFarmTestBase() {
         private lateinit var credentialsProvider: AwsCredentialsProvider<AwsCredentials>
         private lateinit var testRegion: String
         private lateinit var testLogGroupName: String
-        private var testLocalStoreMaxSizeInMB: Int = 1
-        private var testFlushIntervalInSeconds: Long = 60
-        private lateinit var testDefaultLogLevel: LogLevel
-        private var configured = false
 
         @BeforeClass
         @JvmStatic
         fun setUpClass() {
             val context = ApplicationProvider.getApplicationContext<Context>()
-            if (!configured) {
-                Amplify.Auth.addPlugin(AWSCognitoAuthPlugin())
-                Amplify.configure(AmplifyOutputs(R.raw.amplify_outputs), context)
-                configured = true
-            }
+            Amplify.Auth.addPlugin(AWSCognitoAuthPlugin())
+            Amplify.configure(
+                AmplifyOutputs(Resources.getRawResourceId(context, "amplify_outputs")),
+                context
+            )
             credentialsProvider = CognitoCredentialsProvider().toAwsCredentialsProvider()
 
-            val json = context.resources.openRawResource(R.raw.amplifyconfiguration_logging)
-                .bufferedReader().use { it.readText() }
-            val config = JSONObject(json).getJSONObject("cloudWatchClient")
+            val config = Resources.readJsonResource(context, "amplifyconfiguration_logging")
+                .getJSONObject("cloudWatchClient")
             testRegion = config.getString("region")
             testLogGroupName = config.getString("logGroupName")
-            testLocalStoreMaxSizeInMB = config.getInt("localStoreMaxSizeInMB")
-            testFlushIntervalInSeconds = config.getLong("flushIntervalInSeconds")
-            testDefaultLogLevel = logLevelOf(config.getJSONObject("loggingConstraints").getString("defaultLogLevel"))
         }
-
-        // Config stores levels as e.g. "VERBOSE"; map to the LogLevel enum ("Verbose", "Error", ...).
-        private fun logLevelOf(value: String): LogLevel =
-            LogLevel.valueOf(value.lowercase().replaceFirstChar { it.uppercase() })
     }
 
     private lateinit var client: AmplifyCloudWatchClient
 
     @Before
     fun setUp() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        client = AmplifyCloudWatchClient(
-            context = context,
-            region = testRegion,
-            credentialsProvider = credentialsProvider,
-            options = AmplifyCloudWatchClientOptions {
-                logGroupName = testLogGroupName
-                localStoreMaxSizeInMB = testLocalStoreMaxSizeInMB
-                flushStrategy = FlushStrategy.Interval(testFlushIntervalInSeconds.seconds)
-                loggingConstraints = LoggingConstraints(defaultLogLevel = testDefaultLogLevel)
-            }
-        )
+        client = newClient()
+    }
+
+    @After
+    fun tearDown() {
+        client.disable()
     }
 
     /** The escape hatch exposes the underlying AWS CloudWatch Logs client. */
@@ -128,23 +111,23 @@ class AmplifyCloudWatchClientInstrumentationTest : DeviceFarmTestBase() {
         client.getCloudWatchLogsClient().shouldNotBeNull()
     }
 
-    /** Emitted messages are flushed to CloudWatch and appear in the log group. */
+    /** Emitted messages at each level are flushed to CloudWatch and appear in the log group. */
     @Test
     fun testFlushLogWithMessages(): Unit = runBlocking {
         val namespace = UUID.randomUUID().toString()
-        val message = "this is an error message in the integration test ${System.currentTimeMillis()}"
-
-        client.emit(LogMessage(LogLevel.Error, namespace, message, null))
-        client.emit(LogMessage(LogLevel.Debug, namespace, message, null))
-        client.emit(LogMessage(LogLevel.Warn, namespace, message, null))
-        client.emit(LogMessage(LogLevel.Info, namespace, message, null))
+        val marker = "flush test ${System.currentTimeMillis()}"
+        // A distinct payload per level so filterLogEvents returns a stable set (not one message x4).
+        val levels = listOf(LogLevel.Error, LogLevel.Debug, LogLevel.Warn, LogLevel.Info)
+        levels.forEach { level ->
+            client.emit(LogMessage(level, namespace, "$marker/$level", null))
+        }
         delay(SAVE_WAIT_MS)
 
-        val events = awaitEvents(message, expectedCount = 4)
+        val events = awaitEvents(marker, expectedCount = levels.size)
 
-        events shouldHaveSize 4
+        events shouldHaveSize levels.size
         events.forEach { event ->
-            event shouldContain message
+            event shouldContain marker
             event shouldContain namespace
         }
     }
@@ -153,7 +136,7 @@ class AmplifyCloudWatchClientInstrumentationTest : DeviceFarmTestBase() {
     @Test
     fun testFlushLogWithVerboseMessageAfterEnabling(): Unit = runBlocking {
         val namespace = UUID.randomUUID().toString()
-        val message = "this is a verbose message after enabling ${System.currentTimeMillis()}"
+        val message = "verbose message after enabling ${System.currentTimeMillis()}"
 
         client.enable()
         client.emit(LogMessage(LogLevel.Verbose, namespace, message, null))
@@ -162,34 +145,67 @@ class AmplifyCloudWatchClientInstrumentationTest : DeviceFarmTestBase() {
         val events = awaitEvents(message, expectedCount = 1)
 
         events shouldHaveSize 1
-        events.first().lowercase() shouldContain "verbose"
+        // The emit format is "$level/$name: $content"; matching the prefix confirms we captured this
+        // exact level, not just any message that happened to include the word "verbose" in its body.
+        events.first() shouldStartWith "verbose/$namespace: "
         events.first() shouldContain message
-        events.first() shouldContain namespace
     }
 
-    /** A verbose message emitted while disabled is dropped and never reaches CloudWatch. */
+    /**
+     * A verbose message emitted while disabled is dropped and never reaches CloudWatch.
+     *
+     * Uses a positive control emitted on the same client BEFORE `disable()` — this proves the flush
+     * pipeline actually works, so the negative assertion below has teeth. Without the control, a
+     * broken client that never emitted anything would pass this test vacuously.
+     */
     @Test
     fun testFlushLogWithVerboseMessageAfterDisabling(): Unit = runBlocking {
         val namespace = UUID.randomUUID().toString()
-        val message = "this is a verbose message after disabling ${System.currentTimeMillis()}"
+        val timestamp = System.currentTimeMillis()
+        val controlMessage = "positive-control error before disable $timestamp"
+        val disabledMessage = "verbose message after disabling $timestamp"
 
-        client.disable()
-        client.emit(LogMessage(LogLevel.Verbose, namespace, message, null))
+        // Positive control: emitted while enabled, must land in CloudWatch.
+        client.emit(LogMessage(LogLevel.Error, namespace, controlMessage, null))
         delay(SAVE_WAIT_MS)
+        awaitEvents(controlMessage, expectedCount = 1) shouldHaveSize 1
 
-        awaitEvents(message, expectedCount = 0).shouldBeEmpty()
+        // Negative case: emit while disabled, flush, and confirm nothing lands.
+        client.disable()
+        client.emit(LogMessage(LogLevel.Verbose, namespace, disabledMessage, null))
+        delay(SAVE_WAIT_MS)
+        client.flushLogs().shouldBeSuccess()
+        delay(INGEST_WAIT_MS)
+
+        filterEvents(disabledMessage, windowMinutes = 3).shouldBeEmpty()
     }
 
     // region helpers
 
+    private fun newClient(): AmplifyCloudWatchClient = AmplifyCloudWatchClient(
+        context = ApplicationProvider.getApplicationContext<Context>(),
+        region = testRegion,
+        credentialsProvider = credentialsProvider,
+        options = AmplifyCloudWatchClientOptions {
+            logGroupName = testLogGroupName
+            // Manual flush only — matches the kinesis integration tests; avoids the interval auto-flush
+            // racing the explicit flushes below.
+            flushStrategy = FlushStrategy.None
+            // Test-only baseline: capture everything (config's default level is unrelated to what
+            // this suite exercises).
+            loggingConstraints = LoggingConstraints(defaultLogLevel = LogLevel.Verbose)
+        }
+    )
+
     /**
      * Flushes and polls CloudWatch until at least [expectedCount] events matching [message] are found
-     * (or attempts are exhausted). For [expectedCount] == 0 a single poll after one flush is enough.
+     * (or attempts are exhausted). Each flush result is asserted to be a success so a broken flush
+     * pipeline can't silently return an empty event list.
      */
     private suspend fun awaitEvents(message: String, expectedCount: Int): List<String> {
         var events = emptyList<String>()
         repeat(MAX_FLUSH_ATTEMPTS) { attempt ->
-            client.flushLogs()
+            client.flushLogs().shouldBeSuccess()
             delay(INGEST_WAIT_MS)
             events = filterEvents(message, windowMinutes = attempt + 2)
             if (events.size >= expectedCount) return events
