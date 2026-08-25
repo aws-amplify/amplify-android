@@ -39,6 +39,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.Runs
 import io.mockk.coEvery
+import io.mockk.coJustRun
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -280,6 +281,54 @@ class FetchAuthSessionCognitoActionsTest {
             .execute(dispatcher, authEnvironment)
 
         requestSlot.captured.deviceKey shouldBe "device_key"
+    }
+
+    @Test
+    fun `refreshUserPoolTokensAction recovers a device key stored under a legacy alias username`() = runTest {
+        // Device metadata is stored under the alias typed at sign-in (pre-2.30.3 keying),
+        // not under the current username.
+        val legacyMetadata = DeviceMetadata.Metadata(deviceKey = "legacy_device_key", deviceGroupKey = "legacy_group")
+        coEvery { credentialStoreClient.loadCredentials(any<CredentialType.Device>()) } answers {
+            when ((firstArg<CredentialType>() as CredentialType.Device).username) {
+                "user@example.com" -> AmplifyCredential.DeviceData(legacyMetadata)
+                else -> AmplifyCredential.DeviceData(DeviceMetadata.Empty)
+            }
+        }
+        coJustRun { credentialStoreClient.storeCredentials(any(), any()) }
+
+        val requestSlot =
+            slot<aws.sdk.kotlin.services.cognitoidentityprovider.model.GetTokensFromRefreshTokenRequest>()
+        coEvery {
+            cognitoIdentityProviderClientMock.getTokensFromRefreshToken(capture(requestSlot))
+        } returns GetTokensFromRefreshTokenResponse {
+            authenticationResult = AuthenticationResultType {
+                this.accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
+                    "eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ." +
+                    "XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o"
+                this.idToken = "id_token"
+                this.refreshToken = "new_refresh_token"
+                this.expiresIn = 3600
+            }
+        }
+
+        val signedInData = mockSignedInData(
+            username = "username",
+            cognitoUserPoolTokens = CognitoUserPoolTokens(
+                accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9." +
+                    "eyJzdWIiOiJ1c2VySWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwiZXhwIjoxNTE2MjM5MDIyfQ." +
+                    "XbPfbIHMI6arZ3Y922BhjWgQzWXcXNrz0ogtVhfEd2o",
+                // {"email":"user@example.com"}
+                idToken = "header.eyJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20ifQ.signature",
+                refreshToken = "refresh_token",
+                expiration = 0
+            )
+        )
+
+        FetchAuthSessionCognitoActions.refreshUserPoolTokensAction(signedInData)
+            .execute(dispatcher, authEnvironment)
+
+        // Pins the call-site wiring: the id token aliases must be forwarded to getDeviceMetadata.
+        requestSlot.captured.deviceKey shouldBe "legacy_device_key"
     }
 
     @Test

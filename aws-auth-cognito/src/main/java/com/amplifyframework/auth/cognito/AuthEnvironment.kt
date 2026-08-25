@@ -35,6 +35,8 @@ import com.amplifyframework.statemachine.codegen.events.SignOutEvent
 import com.amplifyframework.statemachine.codegen.events.SignUpEvent
 import java.util.Date
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.coroutines.cancellation.CancellationException
 
 internal class AuthEnvironment internal constructor(
     val context: Context,
@@ -59,6 +61,9 @@ internal class AuthEnvironment internal constructor(
 
     internal lateinit var srpHelper: SRPHelper
     private var cachedPinpointEndpointId: String? = null
+
+    // Usernames whose legacy device metadata scan came up empty; see getDeviceMetadata.
+    private val fruitlessLegacyDeviceScans = ConcurrentHashMap.newKeySet<String>()
 
         /*
         Auth plugin needs to read from Pinpoint shared preferences, but we don't currently have an architecture
@@ -106,14 +111,42 @@ internal class AuthEnvironment internal constructor(
         return userContextDataProvider?.getEncodedContextData(username, deviceId)
     }
 
-    suspend fun getDeviceMetadata(username: String): DeviceMetadata.Metadata? {
-        var deviceCredentials =
+    /**
+     * Loads device metadata for [username]. SDK versions <= 2.30.2 keyed it by the typed sign-in
+     * alias, so on a miss the [legacyUsernames] are tried and a hit is copied (best-effort) to
+     * [username]; without it, refresh omits DeviceKey and Cognito rejects the still-valid token
+     * with "Invalid Refresh Token.". The legacy entry is kept because sign-in still reads by the
+     * typed alias. A fruitless alias scan is remembered per username and not repeated.
+     */
+    suspend fun getDeviceMetadata(
+        username: String,
+        legacyUsernames: List<String> = emptyList()
+    ): DeviceMetadata.Metadata? {
+        val deviceCredentials =
             credentialStoreClient.loadCredentials(CredentialType.Device(username)) as? AmplifyCredential.DeviceData
-        if (deviceCredentials == null) {
-            logger.warn("loadCredentials returned unexpected AmplifyCredential Type.")
-            deviceCredentials = AmplifyCredential.DeviceData(DeviceMetadata.Empty)
+        (deviceCredentials?.deviceMetadata as? DeviceMetadata.Metadata)?.let { return it }
+
+        // Primary key missed: scan the legacy alias keys, at most once per username.
+        if (username in fruitlessLegacyDeviceScans) return null
+        for (key in legacyUsernames.distinct().filter { it != username }) {
+            val legacyCredentials =
+                credentialStoreClient.loadCredentials(CredentialType.Device(key)) as? AmplifyCredential.DeviceData
+            val metadata = legacyCredentials?.deviceMetadata as? DeviceMetadata.Metadata ?: continue
+            logger.info("Copying device metadata stored by an earlier SDK version.")
+            try {
+                credentialStoreClient.storeCredentials(
+                    CredentialType.Device(username),
+                    AmplifyCredential.DeviceData(metadata)
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.warn("Failed to copy device metadata; will retry on next refresh.", e)
+            }
+            return metadata
         }
-        return deviceCredentials.deviceMetadata as? DeviceMetadata.Metadata
+        if (legacyUsernames.isNotEmpty()) fruitlessLegacyDeviceScans += username
+        return null
     }
 }
 
