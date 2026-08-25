@@ -44,7 +44,10 @@ internal object FetchAuthSessionCognitoActions : FetchAuthSessionActions {
             val evt = try {
                 val username = signedInData.username
                 val tokens = signedInData.cognitoUserPoolTokens
-                // Alias candidates let us recover device metadata keyed by an older SDK version.
+                // SDK <= 2.30.2 keyed device metadata by the typed sign-in alias rather than the
+                // Cognito username, so pass the id token's aliases as recovery candidates. Without
+                // this, an in-place upgrade drops DeviceKey and a device-tracking pool rejects the
+                // still-valid refresh token. See #3145.
                 val deviceMetadata: DeviceMetadata.Metadata? =
                     getDeviceMetadata(username, tokens.idToken?.signInAliases ?: emptyList())
 
