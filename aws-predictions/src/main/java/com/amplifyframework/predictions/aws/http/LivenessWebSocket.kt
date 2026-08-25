@@ -29,6 +29,7 @@ import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.predictions.PredictionsException
 import com.amplifyframework.predictions.aws.BuildConfig
 import com.amplifyframework.predictions.aws.exceptions.AccessDeniedException
+import com.amplifyframework.predictions.aws.exceptions.FaceLivenessSessionInterruptedException
 import com.amplifyframework.predictions.aws.exceptions.FaceLivenessSessionNotFoundException
 import com.amplifyframework.predictions.aws.exceptions.FaceLivenessUnsupportedChallengeTypeException
 import com.amplifyframework.predictions.aws.models.liveness.BoundingBox
@@ -48,6 +49,8 @@ import com.amplifyframework.predictions.models.Challenge
 import com.amplifyframework.predictions.models.FaceLivenessChallengeType
 import com.amplifyframework.predictions.models.FaceLivenessSessionInformation
 import com.amplifyframework.util.UserAgent
+import java.io.IOException
+import java.net.ProtocolException
 import java.net.URI
 import java.net.URLDecoder
 import java.nio.ByteBuffer
@@ -247,14 +250,24 @@ internal class LivenessWebSocket(
             LOG.debug("WebSocket onFailure")
             super.onFailure(webSocket, t, response)
             if (!clientStoppedSession) {
-                val faceLivenessException = webSocketError ?: PredictionsException(
-                    "An unknown error occurred during the Liveness flow.",
-                    t,
-                    "See attached exception for more details."
-                )
-                onErrorReceived.accept(faceLivenessException)
+                onErrorReceived.accept(webSocketError ?: classifyConnectionFailure(t))
             }
         }
+    }
+
+    /*
+    A dead transport means the session ended for a reason the customer can act on - the app was backgrounded long
+    enough for the socket to close, or connectivity was lost - so it is reported as a distinct type rather than as an
+    unclassified failure. ProtocolException is excluded because it means the peer sent something malformed, which is
+    not an interruption. Anything else is not something we can attribute, so it keeps the generic message.
+     */
+    private fun classifyConnectionFailure(t: Throwable): PredictionsException = when {
+        t is IOException && t !is ProtocolException -> FaceLivenessSessionInterruptedException(cause = t)
+        else -> PredictionsException(
+            "An unknown error occurred during the Liveness flow.",
+            t,
+            "See attached exception for more details."
+        )
     }
 
     fun start() {
