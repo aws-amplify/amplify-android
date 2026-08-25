@@ -23,6 +23,8 @@ import com.amplifyframework.core.Action
 import com.amplifyframework.core.BuildConfig
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.predictions.PredictionsException
+import com.amplifyframework.predictions.aws.exceptions.FaceLivenessSessionInterruptedException
+import com.amplifyframework.predictions.aws.exceptions.FaceLivenessSessionNotFoundException
 import com.amplifyframework.predictions.aws.exceptions.FaceLivenessUnsupportedChallengeTypeException
 import com.amplifyframework.predictions.aws.models.liveness.ChallengeConfig
 import com.amplifyframework.predictions.aws.models.liveness.ChallengeEvent
@@ -41,17 +43,26 @@ import com.amplifyframework.predictions.aws.models.liveness.ValidationException
 import com.amplifyframework.predictions.models.Challenge
 import com.amplifyframework.predictions.models.FaceLivenessChallengeType
 import com.amplifyframework.predictions.models.FaceLivenessSessionInformation
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.verify
+import java.io.EOFException
+import java.net.ConnectException
+import java.net.ProtocolException
+import java.net.SocketException
+import java.net.SocketTimeoutException
 import java.net.URL
+import java.net.UnknownHostException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLException
 import kotlin.math.abs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -154,15 +165,8 @@ internal class LivenessWebSocketTest {
     @Test
     fun `onFailure calls onError`() {
         val livenessWebSocket = createLivenessWebSocket()
-        // Response does noted like to be mockk
-        val response = Response.Builder()
-            .code(200)
-            .request(Request.Builder().url(URL("https://amazon.com")).build())
-            .protocol(Protocol.HTTP_2)
-            .message("Response")
-            .build()
 
-        livenessWebSocket.webSocketListener.onFailure(mockk(), mockk(), response)
+        livenessWebSocket.webSocketListener.onFailure(mockk(), mockk(), webSocketResponse())
 
         verify { onErrorReceived.accept(any()) }
     }
@@ -171,17 +175,91 @@ internal class LivenessWebSocketTest {
     fun `onFailure does not call onError if client stopped`() {
         val livenessWebSocket = createLivenessWebSocket()
         livenessWebSocket.clientStoppedSession = true
-        // Response does noted like to be mockk
-        val response = Response.Builder()
-            .code(200)
-            .request(Request.Builder().url(URL("https://amazon.com")).build())
-            .protocol(Protocol.HTTP_2)
-            .message("Response")
-            .build()
 
-        livenessWebSocket.webSocketListener.onFailure(mockk(), mockk(), response)
+        livenessWebSocket.webSocketListener.onFailure(mockk(), mockk(), webSocketResponse())
 
         verify(exactly = 0) { onErrorReceived.accept(any()) }
+    }
+
+    @Test
+    fun `onFailure does not report an interrupted session if client stopped`() {
+        val livenessWebSocket = createOpenLivenessWebSocket()
+        livenessWebSocket.clientStoppedSession = true
+
+        livenessWebSocket.webSocketListener.onFailure(
+            mockk(),
+            SocketException("Software caused connection abort"),
+            webSocketResponse()
+        )
+
+        verify(exactly = 0) { onErrorReceived.accept(any()) }
+    }
+
+    @Test
+    fun `onFailure with a socket exception reports an interrupted session`() {
+        assertInterruptedSession(SocketException("Software caused connection abort"))
+    }
+
+    @Test
+    fun `onFailure with a read timeout reports an interrupted session`() {
+        assertInterruptedSession(SocketTimeoutException("Read timed out"))
+    }
+
+    @Test
+    fun `onFailure with an unresolvable host reports an interrupted session`() {
+        assertInterruptedSession(UnknownHostException("Unable to resolve host"))
+    }
+
+    @Test
+    fun `onFailure with a TLS failure reports an interrupted session`() {
+        assertInterruptedSession(SSLException("Connection closed by peer"))
+    }
+
+    @Test
+    fun `onFailure with a truncated stream reports an interrupted session`() {
+        assertInterruptedSession(EOFException("Peer closed without a close frame"))
+    }
+
+    @Test
+    fun `onFailure with a non-IO failure reports an unclassified error`() {
+        assertUnclassifiedError(IllegalStateException("Something else went wrong"))
+    }
+
+    @Test
+    fun `onFailure before the socket opens is not reported as an interrupted session`() {
+        val livenessWebSocket = createLivenessWebSocket()
+        val connectFailure = ConnectException("Failed to connect to rekognition endpoint")
+
+        livenessWebSocket.webSocketListener.onFailure(mockk(), connectFailure, webSocketResponse())
+
+        verify {
+            onErrorReceived.accept(
+                withArg {
+                    it::class shouldBe PredictionsException::class
+                    it.cause shouldBe connectFailure
+                }
+            )
+        }
+    }
+
+    @Test
+    fun `onFailure with a protocol exception reports an unclassified error`() {
+        assertUnclassifiedError(ProtocolException("Malformed websocket frame"))
+    }
+
+    @Test
+    fun `onFailure does not reclassify an error already reported by the server`() {
+        val livenessWebSocket = createOpenLivenessWebSocket()
+        val serverError = FaceLivenessSessionNotFoundException()
+        livenessWebSocket.webSocketError = serverError
+
+        livenessWebSocket.webSocketListener.onFailure(
+            mockk(),
+            SocketException("Software caused connection abort"),
+            webSocketResponse()
+        )
+
+        verify { onErrorReceived.accept(serverError) }
     }
 
     @Test
@@ -649,6 +727,44 @@ internal class LivenessWebSocketTest {
         assertEquals("AWS4-HMAC-SHA256", reconnectRequest.url.queryParameter("X-Amz-Algorithm"))
     }
 
+    private fun assertInterruptedSession(transportFailure: Throwable) {
+        val livenessWebSocket = createOpenLivenessWebSocket()
+
+        livenessWebSocket.webSocketListener.onFailure(mockk(), transportFailure, webSocketResponse())
+
+        verify {
+            onErrorReceived.accept(
+                withArg {
+                    it.shouldBeInstanceOf<FaceLivenessSessionInterruptedException>()
+                    it.cause shouldBe transportFailure
+                }
+            )
+        }
+    }
+
+    private fun assertUnclassifiedError(failure: Throwable) {
+        val livenessWebSocket = createOpenLivenessWebSocket()
+
+        livenessWebSocket.webSocketListener.onFailure(mockk(), failure, webSocketResponse())
+
+        verify {
+            onErrorReceived.accept(
+                withArg {
+                    it::class shouldBe PredictionsException::class
+                    it.cause shouldBe failure
+                }
+            )
+        }
+    }
+
+    // Response does not like to be mockk
+    private fun webSocketResponse() = Response.Builder()
+        .code(200)
+        .request(Request.Builder().url(URL("https://amazon.com")).build())
+        .protocol(Protocol.HTTP_2)
+        .message("Response")
+        .build()
+
     private fun createClientSessionInformation(challengeVersions: List<Challenge>) = FaceLivenessSessionInformation(
         videoWidth = 1f,
         videoHeight = 1f,
@@ -657,6 +773,14 @@ internal class LivenessWebSocketTest {
         attemptCount = 1,
         challengeVersions = challengeVersions
     )
+
+    /**
+     * A socket that has completed its upgrade, so a subsequent failure represents a session that was under way rather
+     * than one that never connected.
+     */
+    private fun createOpenLivenessWebSocket() = createLivenessWebSocket().apply {
+        webSocketListener.onOpen(mockk(relaxed = true), webSocketResponse())
+    }
 
     private fun createLivenessWebSocket(
         livenessVersion: String? = null,
