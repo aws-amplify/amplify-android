@@ -22,6 +22,7 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteQueryBuilder
 import android.net.Uri
+import androidx.core.net.toUri
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.pinpoint.core.models.PinpointEvent
 import kotlinx.coroutines.CoroutineDispatcher
@@ -48,7 +49,7 @@ class PinpointDatabase(
 
     init {
         val authority = context.applicationContext.packageName
-        contentUri = Uri.parse("content://$authority/$basePath")
+        contentUri = "content://$authority/$basePath".toUri()
         uriMatcher = UriMatcher(UriMatcher.NO_MATCH)
         // The Uri of EVENTS is for all records in the Event table.
         uriMatcher.addURI(authority, basePath, events)
@@ -98,7 +99,7 @@ class PinpointDatabase(
                 throw IllegalArgumentException("Unknown Uri: $uri")
             }
         }
-        return Uri.parse("$basePath/$id")
+        return "$basePath/$id".toUri()
     }
 
     /*@Synchronized

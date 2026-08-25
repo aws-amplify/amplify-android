@@ -15,6 +15,7 @@
 package com.amplifyframework.auth
 
 import android.net.Uri
+import androidx.core.net.toUri
 
 /**
  * Details of TOTP Setup that help launch into TOTP manager.
@@ -36,5 +37,5 @@ data class TOTPSetupDetails(
      */
     @JvmOverloads
     fun getSetupURI(appName: String, accountName: String = username): Uri =
-        Uri.parse("otpauth://totp/$appName:$accountName?secret=$sharedSecret&issuer=$appName")
+        "otpauth://totp/$appName:$accountName?secret=$sharedSecret&issuer=$appName".toUri()
 }

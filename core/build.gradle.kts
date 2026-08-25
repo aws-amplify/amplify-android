@@ -28,6 +28,7 @@ android {
 dependencies {
     api(project(":annotations"))
     implementation(libs.androidx.v4support)
+    implementation(libs.androidx.core.ktx)
     api(libs.androidx.annotation)
     implementation(libs.androidx.nav.fragment)
     implementation(libs.androidx.nav.ui)
