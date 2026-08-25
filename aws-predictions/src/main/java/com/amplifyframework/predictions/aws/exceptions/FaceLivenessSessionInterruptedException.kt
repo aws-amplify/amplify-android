@@ -19,8 +19,13 @@ import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.predictions.PredictionsException
 
 /**
- * Raised when the connection to the face liveness service is lost before the check completes, for example because the
- * host app was backgrounded long enough for the socket to close, or because the device lost network connectivity.
+ * Raised when an established connection to the face liveness service is lost before the check completes, for example
+ * because the host app was backgrounded long enough for the socket to close, or because the device lost network
+ * connectivity mid-check.
+ *
+ * Any transport-level [java.io.IOException] other than a protocol violation is reported as this type, so it also
+ * covers read timeouts, DNS failures and TLS teardown. A connection that never opened is not reported as this type,
+ * since that indicates an unreachable or misconfigured endpoint rather than an interruption.
  */
 @InternalAmplifyApi
 class FaceLivenessSessionInterruptedException internal constructor(

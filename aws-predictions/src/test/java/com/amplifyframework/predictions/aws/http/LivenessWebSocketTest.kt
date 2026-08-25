@@ -45,12 +45,12 @@ import com.amplifyframework.predictions.models.FaceLivenessChallengeType
 import com.amplifyframework.predictions.models.FaceLivenessSessionInformation
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.verify
 import java.io.EOFException
+import java.net.ConnectException
 import java.net.ProtocolException
 import java.net.SocketException
 import java.net.SocketTimeoutException
@@ -165,15 +165,8 @@ internal class LivenessWebSocketTest {
     @Test
     fun `onFailure calls onError`() {
         val livenessWebSocket = createLivenessWebSocket()
-        // Response does noted like to be mockk
-        val response = Response.Builder()
-            .code(200)
-            .request(Request.Builder().url(URL("https://amazon.com")).build())
-            .protocol(Protocol.HTTP_2)
-            .message("Response")
-            .build()
 
-        livenessWebSocket.webSocketListener.onFailure(mockk(), mockk(), response)
+        livenessWebSocket.webSocketListener.onFailure(mockk(), mockk(), webSocketResponse())
 
         verify { onErrorReceived.accept(any()) }
     }
@@ -182,107 +175,91 @@ internal class LivenessWebSocketTest {
     fun `onFailure does not call onError if client stopped`() {
         val livenessWebSocket = createLivenessWebSocket()
         livenessWebSocket.clientStoppedSession = true
-        // Response does noted like to be mockk
-        val response = Response.Builder()
-            .code(200)
-            .request(Request.Builder().url(URL("https://amazon.com")).build())
-            .protocol(Protocol.HTTP_2)
-            .message("Response")
-            .build()
 
-        livenessWebSocket.webSocketListener.onFailure(mockk(), mockk(), response)
+        livenessWebSocket.webSocketListener.onFailure(mockk(), mockk(), webSocketResponse())
+
+        verify(exactly = 0) { onErrorReceived.accept(any()) }
+    }
+
+    @Test
+    fun `onFailure does not report an interrupted session if client stopped`() {
+        val livenessWebSocket = createOpenLivenessWebSocket()
+        livenessWebSocket.clientStoppedSession = true
+
+        livenessWebSocket.webSocketListener.onFailure(
+            mockk(),
+            SocketException("Software caused connection abort"),
+            webSocketResponse()
+        )
 
         verify(exactly = 0) { onErrorReceived.accept(any()) }
     }
 
     @Test
     fun `onFailure with a socket exception reports an interrupted session`() {
-        val livenessWebSocket = createLivenessWebSocket()
-        val transportFailure = SocketException("Software caused connection abort")
-
-        livenessWebSocket.webSocketListener.onFailure(mockk(), transportFailure, failureResponse())
-
-        verify {
-            onErrorReceived.accept(
-                withArg {
-                    it.shouldBeInstanceOf<FaceLivenessSessionInterruptedException>()
-                    it.cause shouldBe transportFailure
-                }
-            )
-        }
+        assertInterruptedSession(SocketException("Software caused connection abort"))
     }
 
     @Test
-    fun `onFailure reports an interrupted session for any lost transport`() {
-        listOf(
-            SocketTimeoutException("Read timed out"),
-            UnknownHostException("Unable to resolve host"),
-            SSLException("Connection closed by peer"),
-            EOFException("Peer closed without a close frame")
-        ).forEach { transportFailure ->
-            clearMocks(onErrorReceived)
-            val livenessWebSocket = createLivenessWebSocket()
+    fun `onFailure with a read timeout reports an interrupted session`() {
+        assertInterruptedSession(SocketTimeoutException("Read timed out"))
+    }
 
-            livenessWebSocket.webSocketListener.onFailure(mockk(), transportFailure, failureResponse())
+    @Test
+    fun `onFailure with an unresolvable host reports an interrupted session`() {
+        assertInterruptedSession(UnknownHostException("Unable to resolve host"))
+    }
 
-            verify {
-                onErrorReceived.accept(
-                    withArg {
-                        it.shouldBeInstanceOf<FaceLivenessSessionInterruptedException>()
-                        it.cause shouldBe transportFailure
-                    }
-                )
-            }
-        }
+    @Test
+    fun `onFailure with a TLS failure reports an interrupted session`() {
+        assertInterruptedSession(SSLException("Connection closed by peer"))
+    }
+
+    @Test
+    fun `onFailure with a truncated stream reports an interrupted session`() {
+        assertInterruptedSession(EOFException("Peer closed without a close frame"))
     }
 
     @Test
     fun `onFailure with a non-IO failure reports an unclassified error`() {
-        val livenessWebSocket = createLivenessWebSocket()
-        val unexpectedFailure = IllegalStateException("Something else went wrong")
+        assertUnclassifiedError(IllegalStateException("Something else went wrong"))
+    }
 
-        livenessWebSocket.webSocketListener.onFailure(mockk(), unexpectedFailure, failureResponse())
+    @Test
+    fun `onFailure before the socket opens is not reported as an interrupted session`() {
+        val livenessWebSocket = createLivenessWebSocket()
+        val connectFailure = ConnectException("Failed to connect to rekognition endpoint")
+
+        livenessWebSocket.webSocketListener.onFailure(mockk(), connectFailure, webSocketResponse())
 
         verify {
             onErrorReceived.accept(
                 withArg {
                     it::class shouldBe PredictionsException::class
-                    it.cause shouldBe unexpectedFailure
+                    it.cause shouldBe connectFailure
                 }
             )
         }
     }
 
     @Test
+    fun `onFailure with a protocol exception reports an unclassified error`() {
+        assertUnclassifiedError(ProtocolException("Malformed websocket frame"))
+    }
+
+    @Test
     fun `onFailure does not reclassify an error already reported by the server`() {
-        val livenessWebSocket = createLivenessWebSocket()
+        val livenessWebSocket = createOpenLivenessWebSocket()
         val serverError = FaceLivenessSessionNotFoundException()
         livenessWebSocket.webSocketError = serverError
 
         livenessWebSocket.webSocketListener.onFailure(
             mockk(),
             SocketException("Software caused connection abort"),
-            failureResponse()
+            webSocketResponse()
         )
 
         verify { onErrorReceived.accept(serverError) }
-    }
-
-    @Test
-    fun `onFailure with a protocol exception reports an unclassified error`() {
-        val livenessWebSocket = createLivenessWebSocket()
-        val protocolFailure = ProtocolException("Malformed websocket frame")
-
-        livenessWebSocket.webSocketListener.onFailure(mockk(), protocolFailure, failureResponse())
-
-        verify {
-            onErrorReceived.accept(
-                withArg {
-                    it::class shouldBe PredictionsException::class
-                    it.cause shouldBe protocolFailure
-                }
-            )
-        }
     }
 
     @Test
@@ -750,8 +727,38 @@ internal class LivenessWebSocketTest {
         assertEquals("AWS4-HMAC-SHA256", reconnectRequest.url.queryParameter("X-Amz-Algorithm"))
     }
 
+    private fun assertInterruptedSession(transportFailure: Throwable) {
+        val livenessWebSocket = createOpenLivenessWebSocket()
+
+        livenessWebSocket.webSocketListener.onFailure(mockk(), transportFailure, webSocketResponse())
+
+        verify {
+            onErrorReceived.accept(
+                withArg {
+                    it.shouldBeInstanceOf<FaceLivenessSessionInterruptedException>()
+                    it.cause shouldBe transportFailure
+                }
+            )
+        }
+    }
+
+    private fun assertUnclassifiedError(failure: Throwable) {
+        val livenessWebSocket = createOpenLivenessWebSocket()
+
+        livenessWebSocket.webSocketListener.onFailure(mockk(), failure, webSocketResponse())
+
+        verify {
+            onErrorReceived.accept(
+                withArg {
+                    it::class shouldBe PredictionsException::class
+                    it.cause shouldBe failure
+                }
+            )
+        }
+    }
+
     // Response does not like to be mockk
-    private fun failureResponse() = Response.Builder()
+    private fun webSocketResponse() = Response.Builder()
         .code(200)
         .request(Request.Builder().url(URL("https://amazon.com")).build())
         .protocol(Protocol.HTTP_2)
@@ -766,6 +773,14 @@ internal class LivenessWebSocketTest {
         attemptCount = 1,
         challengeVersions = challengeVersions
     )
+
+    /**
+     * A socket that has completed its upgrade, so a subsequent failure represents a session that was under way rather
+     * than one that never connected.
+     */
+    private fun createOpenLivenessWebSocket() = createLivenessWebSocket().apply {
+        webSocketListener.onOpen(mockk(relaxed = true), webSocketResponse())
+    }
 
     private fun createLivenessWebSocket(
         livenessVersion: String? = null,

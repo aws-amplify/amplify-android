@@ -113,6 +113,16 @@ internal class LivenessWebSocket(
 
     @VisibleForTesting internal var webSocketError: PredictionsException? = null
     internal var clientStoppedSession = false
+
+    /*
+    Whether the socket ever completed its upgrade. A failure before that point is a connection that was never
+    established - an unreachable or misconfigured endpoint, or no network at launch - rather than a session that was
+    interrupted, and the two want different advice.
+
+    Deliberately not cleared when reconnecting, because a reconnect only ever follows a socket that did open and a
+    server that did respond, so a failure on the retry really did interrupt a session that was under way.
+     */
+    private var socketOpened = false
     val json = Json { ignoreUnknownKeys = true }
 
     // Sending events to the websocket requires processing synchronously because we rely on proper ordered
@@ -141,6 +151,7 @@ internal class LivenessWebSocket(
             super.onOpen(webSocket, response)
 
             this@LivenessWebSocket.webSocket = webSocket
+            socketOpened = true
 
             // If offset is > 4 minutes, server may reject the request
             // The real allowed diff from serer is < 5 but we check for 4 to add a buffer
@@ -256,13 +267,15 @@ internal class LivenessWebSocket(
     }
 
     /*
-    A dead transport means the session ended for a reason the customer can act on - the app was backgrounded long
-    enough for the socket to close, or connectivity was lost - so it is reported as a distinct type rather than as an
-    unclassified failure. ProtocolException is excluded because it means the peer sent something malformed, which is
-    not an interruption. Anything else is not something we can attribute, so it keeps the generic message.
+    Losing an established transport means the session ended for a reason the customer can act on - the app was
+    backgrounded long enough for the socket to close, or connectivity was lost - so it is reported as a distinct type
+    rather than as an unclassified failure. ProtocolException is excluded because it means the peer sent something
+    malformed, including a rejected upgrade handshake, which is not an interruption. Anything else is not something we
+    can attribute, so it keeps the generic message.
      */
     private fun classifyConnectionFailure(t: Throwable): PredictionsException = when {
-        t is IOException && t !is ProtocolException -> FaceLivenessSessionInterruptedException(cause = t)
+        socketOpened && t is IOException && t !is ProtocolException ->
+            FaceLivenessSessionInterruptedException(cause = t)
         else -> PredictionsException(
             "An unknown error occurred during the Liveness flow.",
             t,
