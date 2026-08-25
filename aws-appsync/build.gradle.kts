@@ -27,7 +27,7 @@ dependencies {
     api(libs.okhttp)
     api(project(":foundation"))
 
-    implementation(project(":aws-api-appsync"))
+    api(project(":aws-api-appsync"))
     implementation(libs.gson)
     implementation(libs.kotlin.coroutines)
     implementation(project(":foundation-bridge"))
