@@ -112,22 +112,11 @@ internal class AuthEnvironment internal constructor(
     }
 
     /**
-     * Loads device metadata for [username], falling back to [legacyUsernames]. SDK versions
-     * <= 2.30.2 keyed the metadata by the typed sign-in alias; under the current key the entry is
-     * unreachable, so DeviceKey is omitted from refresh and Cognito rejects the still-valid token
-     * with "Invalid Refresh Token.". A legacy hit is copied to [username] so the primary lookup
-     * hits afterwards. The legacy entry is kept: the sign-in paths still read by the typed alias,
-     * and deleting it would make the next sign-in register a duplicate device. The copy is
-     * best-effort - the metadata is returned even if persisting it fails.
-     *
-     * Trade-off of keeping both entries: the device-not-found cleanups each clear a single key, so
-     * after such a clear the next refresh can re-copy a stale key from the surviving entry. This
-     * converges once a full sign-in refreshes both entries via ConfirmDevice. Resolving the key
-     * scheme (see aws-amplify/amplify-android#3288) removes the need for this fallback.
-     *
-     * Each lookup is a round trip through the credential-store state machine, so a fruitless alias
-     * scan is remembered per username and not repeated. A scan that found metadata but failed to
-     * persist the copy is not remembered, so it retries on the next refresh.
+     * Loads device metadata for [username]. SDK versions <= 2.30.2 keyed it by the typed sign-in
+     * alias, so on a miss the [legacyUsernames] are tried and a hit is copied (best-effort) to
+     * [username]; without it, refresh omits DeviceKey and Cognito rejects the still-valid token
+     * with "Invalid Refresh Token.". The legacy entry is kept because sign-in still reads by the
+     * typed alias. A fruitless alias scan is remembered per username and not repeated.
      */
     suspend fun getDeviceMetadata(
         username: String,
