@@ -1,3 +1,15 @@
+## [Release 2.41.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.41.0)
+
+### Features
+- **predictions:** report a distinct exception when a liveness session is interrupted ([#3396](https://github.com/aws-amplify/amplify-android/issues/3396))
+
+### Bug Fixes
+- **api:** percent-encode semicolons in REST query parameter values ([#3387](https://github.com/aws-amplify/amplify-android/issues/3387))
+- **all:** resolve UnsafeOptInUsage and UseKtx errors from newer androidx lint ([#3395](https://github.com/aws-amplify/amplify-android/issues/3395))
+- **auth:** Recover device metadata keyed by a pre-2.30.3 username ([#3393](https://github.com/aws-amplify/amplify-android/issues/3393))
+
+[See all changes between 2.40.0 and 2.41.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.40.0...release_v2.41.0)
+
 ## [Release 2.40.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.40.0)
 
 ### Features
