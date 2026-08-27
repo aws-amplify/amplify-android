@@ -38,6 +38,7 @@ dependencies {
     implementation(libs.firebase.messaging)
 
     testImplementation(libs.bundles.test.unit)
+    testImplementation(libs.bundles.test.unit.android)
 
     androidTestImplementation(libs.bundles.test.android)
 }
