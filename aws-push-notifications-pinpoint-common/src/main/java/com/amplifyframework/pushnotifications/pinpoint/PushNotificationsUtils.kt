@@ -31,6 +31,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.amplifyframework.pushnotifications.pinpoint.common.R
+import com.amplifyframework.pushnotifications.pinpoint.permissions.PushNotificationPermission
 import java.net.URL
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -107,6 +108,8 @@ class PushNotificationsUtils(
     @Suppress("DEPRECATION")
     @SuppressLint("NewApi")
     fun showNotification(notificationId: Int, payload: PinpointNotificationPayload, targetClass: Class<*>?) {
+        if (!PushNotificationPermission(context).hasRequiredPermission) return
+
         CoroutineScope(Dispatchers.IO).launch {
             val largeImageIcon = payload.imageUrl?.let { downloadImage(it) }
             val notificationIntent = Intent(context, payload.targetClass ?: targetClass)
@@ -136,8 +139,12 @@ class PushNotificationsUtils(
                 setStyle(NotificationCompat.BigTextStyle().bigText(payload.body))
             }
 
-            with(NotificationManagerCompat.from(context)) {
-                notify(notificationId, builder.build())
+            try {
+                with(NotificationManagerCompat.from(context)) {
+                    notify(notificationId, builder.build())
+                }
+            } catch (_: SecurityException) {
+                // The notification permission can be revoked after the pre-launch check.
             }
         }
     }
