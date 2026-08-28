@@ -410,4 +410,20 @@ class FetchAuthSessionUseCaseTest {
             useCase.execute()
         }
     }
+
+    @Test
+    fun `returns signed-out session without refreshing when resting in SignedOut error`() = runTest {
+        stateFlow.value = authState(
+            authNState = AuthenticationState.SignedOut(SignedOutData()),
+            authZState = AuthorizationState.Error(
+                SessionError(SignedOutException(), AmplifyCredential.Empty)
+            )
+        )
+
+        val result = useCase.execute()
+
+        result.isSignedIn shouldBe false
+        result.identityIdResult.error.shouldBeInstanceOf<SignedOutException>()
+        verify(exactly = 0) { stateMachine.send(any()) }
+    }
 }
