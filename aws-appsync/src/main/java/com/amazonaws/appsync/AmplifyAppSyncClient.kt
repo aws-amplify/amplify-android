@@ -15,7 +15,6 @@
 package com.amazonaws.appsync
 
 import com.amplifyframework.annotations.ExperimentalAmplifyApi
-import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.foundation.result.Result
@@ -59,18 +58,18 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
      * Execute a GraphQL query.
      *
      * @param request The GraphQL request. Use model helpers or construct manually.
-     * @return [Result.Success] with the typed GraphQL response, or [Result.Failure] with an [ApiException].
+     * @return [Result.Success] with the typed GraphQL response, or [Result.Failure] with an [AppSyncException].
      */
-    suspend fun <T> query(request: GraphQLRequest<T>): Result<GraphQLResponse<T>, ApiException> =
+    suspend fun <T> query(request: GraphQLRequest<T>): Result<GraphQLResponse<T>, AppSyncException> =
         TODO("Query implementation will be added in a follow-up PR")
 
     /**
      * Execute a GraphQL mutation.
      *
      * @param request The GraphQL request. Use model helpers or construct manually.
-     * @return [Result.Success] with the typed GraphQL response, or [Result.Failure] with an [ApiException].
+     * @return [Result.Success] with the typed GraphQL response, or [Result.Failure] with an [AppSyncException].
      */
-    suspend fun <T> mutate(request: GraphQLRequest<T>): Result<GraphQLResponse<T>, ApiException> =
+    suspend fun <T> mutate(request: GraphQLRequest<T>): Result<GraphQLResponse<T>, AppSyncException> =
         TODO("Mutation implementation will be added in a follow-up PR")
 
     /**
@@ -165,12 +164,10 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
 
             /**
              * Infer the AWS region from an AppSync endpoint URL.
-             * Expected format: `https://{id}.appsync-api.{region}.amazonaws.com/graphql`
+             * Expected format: `https://{id}.appsync-api.{region}.{dnsSuffix}/graphql`, across the
+             * commercial, China and GovCloud partitions.
              */
-            internal fun inferRegion(endpoint: String): String? {
-                val regex = Regex("""\.appsync-api\.([a-z0-9-]+)\.amazonaws\.com""")
-                return regex.find(endpoint)?.groupValues?.get(1)
-            }
+            internal fun inferRegion(endpoint: String): String? = AppSyncEndpointParser.regionOrNull(endpoint)
         }
     }
 }

@@ -20,9 +20,12 @@ import com.amplifyframework.api.graphql.GraphQLResponse
 /**
  * Events emitted by a GraphQL subscription flow.
  *
- * Lifecycle: the flow emits [Connection.Connecting] → [Connection.Connected] → [Data]*
- * and then either completes normally (user cancel, server complete, client close) or
- * throws an [ApiException] (network, auth, timeout, etc.).
+ * Lifecycle: the flow emits [Connecting] → [Connected] → [Data]* and then either completes normally
+ * (consumer cancellation, server complete, client close) or throws an [AppSyncException] (network,
+ * auth, timeout). All errors are terminal — the stream ends and the consumer must re-subscribe.
+ *
+ * There is deliberately no `Disconnected` event: a stream ends by completing or throwing, so a
+ * disconnect event would be redundant with termination.
  *
  * For client-wide WebSocket connection state, observe [AmplifyAppSyncClient.events].
  */
@@ -35,14 +38,9 @@ sealed class SubscriptionEvent<out T> {
      */
     data class Data<T>(val response: GraphQLResponse<T>) : SubscriptionEvent<T>()
 
-    /**
-     * Subscription establishment lifecycle events.
-     */
-    sealed class Connection : SubscriptionEvent<Nothing>() {
-        /** The subscription is being established (WebSocket connecting + registration in progress). */
-        data object Connecting : Connection()
+    /** The subscription is being established (WebSocket connecting + registration in progress). */
+    data object Connecting : SubscriptionEvent<Nothing>()
 
-        /** The subscription is established and receiving data. */
-        data object Connected : Connection()
-    }
+    /** The subscription is established and receiving data. */
+    data object Connected : SubscriptionEvent<Nothing>()
 }
