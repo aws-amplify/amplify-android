@@ -45,6 +45,25 @@ internal class CloudWatchLoggingFilter(initialConstraints: LoggingConstraints) {
         return constraints.defaultLogLevel allows level
     }
 
+    /**
+     * Returns true if [level] could pass under *any* configured threshold (default, per-namespace, or
+     * per-user). Namespace-agnostic and deliberately permissive — [canLog] stays authoritative per
+     * message. Used by [AmplifyCloudWatchClient.isEnabledFor] so callers can skip materializing lazy
+     * log messages that no threshold would ever emit.
+     */
+    fun couldLog(level: LogLevel): Boolean {
+        val constraints = loggingConstraints
+        val thresholds = buildList {
+            add(constraints.defaultLogLevel)
+            addAll(constraints.namespaceLogLevel.values)
+            constraints.userLogLevel.values.forEach { userLevel ->
+                add(userLevel.defaultLogLevel)
+                addAll(userLevel.namespaceLogLevel.values)
+            }
+        }
+        return thresholds.any { it allows level }
+    }
+
     private fun Map<String, LogLevel>.matching(namespace: String): LogLevel? =
         entries.firstOrNull { it.key.equals(namespace, ignoreCase = true) }?.value
 }

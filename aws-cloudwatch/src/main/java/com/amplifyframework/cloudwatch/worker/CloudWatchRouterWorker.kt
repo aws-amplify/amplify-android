@@ -21,6 +21,7 @@ import androidx.work.ListenableWorker
 import androidx.work.WorkerParameters
 import com.google.common.util.concurrent.ListenableFuture
 import java.lang.IllegalStateException
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * A [ListenableWorker] that WorkManager can instantiate with its default factory. It routes to a
@@ -40,15 +41,21 @@ internal class CloudWatchRouterWorker(appContext: Context, private val parameter
         internal const val WORKER_CLASS_NAME = "WORKER_CLASS_NAME"
         internal const val WORKER_ID = "WORKER_ID"
         internal const val WORKER_FACTORY_KEY = "AmplifyCloudWatchFactory"
+
+        // Registrations are written on whatever thread constructs a CloudWatchLogManager and read on a
+        // WorkManager background thread, so the map is concurrent and the flag is @Volatile.
+        @Volatile
         private var isWorkerFactoriesInitialized: Boolean = false
         val workerFactories = object : AbstractMutableMap<String, CloudWatchWorkerFactory>() {
 
-            private val backingWorkerMap = mutableMapOf<String, CloudWatchWorkerFactory>()
+            private val backingWorkerMap = ConcurrentHashMap<String, CloudWatchWorkerFactory>()
 
             override fun put(key: String, value: CloudWatchWorkerFactory): CloudWatchWorkerFactory? {
                 isWorkerFactoriesInitialized = true
                 return backingWorkerMap.put(key, value)
             }
+
+            override fun remove(key: String): CloudWatchWorkerFactory? = backingWorkerMap.remove(key)
 
             override val entries: MutableSet<MutableMap.MutableEntry<String, CloudWatchWorkerFactory>>
                 get() = backingWorkerMap.entries
@@ -70,8 +77,9 @@ internal class CloudWatchRouterWorker(appContext: Context, private val parameter
         } ?: run {
             // this is to prevent a race condition where workManager starts work before worker factory is initialized
             if (!isWorkerFactoriesInitialized) {
-                return CallbackToFutureAdapter.getFuture {
-                    Result.retry()
+                return CallbackToFutureAdapter.getFuture { completer ->
+                    completer.set(Result.retry())
+                    "CloudWatchRouterWorker.retry"
                 }
             } else {
                 throw IllegalStateException("Failed to find delegate for $workerClassName")

@@ -91,6 +91,7 @@ public final class com/amplifyframework/cloudwatch/BuildConfig {
 }
 
 public final class com/amplifyframework/cloudwatch/FlushData {
+	public final fun getFlushed ()Z
 }
 
 public abstract class com/amplifyframework/cloudwatch/FlushStrategy {

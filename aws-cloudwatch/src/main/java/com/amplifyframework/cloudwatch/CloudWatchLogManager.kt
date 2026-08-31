@@ -48,6 +48,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -94,6 +95,10 @@ internal class CloudWatchLogManager(
     private val isSyncInProgress = AtomicBoolean(false)
     private val logger = AmplifyLogging.logger<CloudWatchLogManager>()
 
+    // Log streams already confirmed to exist this process, so a multi-batch flush issues at most one
+    // describeLogStreams per stream instead of one per batch. Only touched while the sync guard is held.
+    private val ensuredStreams = mutableSetOf<String>()
+
     // Key the worker-factory registration and the WorkManager unique work by log group so that two clients
     // targeting different log groups don't hijack each other's delegate factory or scheduled auto-flush (both
     // the factory map and unique-work names are app-global).
@@ -109,14 +114,24 @@ internal class CloudWatchLogManager(
     suspend fun saveLogEvent(event: CloudWatchLogEvent) = withContext(coroutineDispatcher) {
         try {
             cloudWatchLoggingDatabase.saveLogEvent(event)
-            if (isCacheFull()) {
-                syncLogEventsWithCloudwatch()
-            }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             logger.error(e) { "Failed to save event" }
             onWriteLogFailure(event.message, e)
+            return@withContext
+        }
+        // A cache-full flush reports its own failures via onFlushLogFailure and rethrows; swallow that
+        // here so an upload problem isn't also surfaced as a WriteLogFailure for an event that was in
+        // fact persisted successfully.
+        if (isCacheFull()) {
+            try {
+                syncLogEventsWithCloudwatch()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.warn(e) { "Cache-full flush failed" }
+            }
         }
     }
 
@@ -138,7 +153,7 @@ internal class CloudWatchLogManager(
         }
     }
 
-    suspend fun startSync() {
+    fun startSync() {
         stopSync = false
         enqueueSync()
     }
@@ -149,11 +164,22 @@ internal class CloudWatchLogManager(
         logger.debug { "Stopping sync" }
     }
 
-    suspend fun syncLogEventsWithCloudwatch() {
+    /** Cancels the scope and drops the worker-factory registration. */
+    fun close() {
+        stopSync()
+        CloudWatchRouterWorker.workerFactories.remove(workerFactoryKey)
+        coroutineScope.cancel()
+    }
+
+    /**
+     * Attempts to flush all buffered events to CloudWatch. Returns `true` if this call performed the
+     * flush, or `false` if it was skipped because another flush was already in progress.
+     */
+    suspend fun syncLogEventsWithCloudwatch(): Boolean {
         // Atomic guard so overlapping triggers (manual flush, cache-full write, WorkManager) can't
         // run concurrently and delete each other's rows.
         if (!isSyncInProgress.compareAndSet(false, true)) {
-            return
+            return false
         }
         withContext(coroutineDispatcher) {
             var lastAttemptedIds: List<Long> = emptyList()
@@ -176,6 +202,9 @@ internal class CloudWatchLogManager(
                         if (batch.events.isEmpty()) continue
 
                         createLogStreamIfNotCreated(streamName, logGroupName, client)
+                        // Record the ids we're about to send *before* the call, so the cache-full
+                        // recovery valve in the catch block drops this batch if putLogEvents throws.
+                        lastAttemptedIds = batch.sendableIds
                         val response = client.putLogEvents(
                             PutLogEventsRequest {
                                 logEvents = batch.events
@@ -188,7 +217,6 @@ internal class CloudWatchLogManager(
                         response.rejectedLogEventsInfo?.tooNewLogEventStartIndex?.let {
                             acceptedIds = acceptedIds.slice(IntRange(0, it - 1))
                         }
-                        lastAttemptedIds = acceptedIds
                         // Nothing accepted (all too new): re-querying would return the same rows forever.
                         if (acceptedIds.isEmpty()) return@withContext
                         cloudWatchLoggingDatabase.bulkDelete(acceptedIds)
@@ -206,6 +234,7 @@ internal class CloudWatchLogManager(
                 isSyncInProgress.set(false)
             }
         }
+        return true
     }
 
     private suspend fun createLogStreamIfNotCreated(
@@ -213,13 +242,16 @@ internal class CloudWatchLogManager(
         groupName: String,
         client: CloudWatchLogsClient
     ) {
-        client.describeLogStreams(
-            DescribeLogStreamsRequest {
-                logGroupName = groupName
-                logStreamNamePrefix = logStream
-            }
-        ).apply {
-            if (this.logStreams == null || this.logStreams?.isEmpty() == true) {
+        // add() returns false if we've already ensured this stream this process; skip the describe call.
+        if (!ensuredStreams.add(logStream)) return
+        try {
+            val existing = client.describeLogStreams(
+                DescribeLogStreamsRequest {
+                    logGroupName = groupName
+                    logStreamNamePrefix = logStream
+                }
+            )
+            if (existing.logStreams.isNullOrEmpty()) {
                 client.createLogStream(
                     CreateLogStreamRequest {
                         logGroupName = groupName
@@ -227,6 +259,10 @@ internal class CloudWatchLogManager(
                     }
                 )
             }
+        } catch (e: Exception) {
+            // Don't cache a failed attempt — let a later batch retry the stream creation.
+            ensuredStreams.remove(logStream)
+            throw e
         }
     }
 
