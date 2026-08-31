@@ -25,6 +25,7 @@ import com.amplifyframework.auth.cognito.AuthConfiguration
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.cognito.StoreClientBehavior
 import com.amplifyframework.auth.cognito.mockSignedInData
+import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.logging.Logger
 import com.amplifyframework.statemachine.EventDispatcher
 import com.amplifyframework.statemachine.StateMachineEvent
@@ -34,6 +35,7 @@ import com.amplifyframework.statemachine.codegen.data.CredentialType
 import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
 import com.amplifyframework.statemachine.codegen.events.AuthorizationEvent
+import com.amplifyframework.statemachine.codegen.events.FetchAuthSessionEvent
 import com.amplifyframework.statemachine.codegen.events.RefreshSessionEvent
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -461,5 +463,26 @@ class FetchAuthSessionCognitoActionsTest {
 
         requestSlot.captured.clientSecret shouldBe "secret"
         capturedEvent.captured.shouldBeInstanceOf<RefreshSessionEvent>()
+    }
+
+    @Test
+    fun `initializeFetchUnAuthSession throws SignedOutException when no Identity Pool is configured`() = runTest {
+        AuthorizationCognitoActions.initializeFetchUnAuthSession().execute(dispatcher, authEnvironment)
+
+        val event = capturedEvent.captured.shouldBeInstanceOf<AuthorizationEvent>()
+        val throwError = event.eventType.shouldBeInstanceOf<AuthorizationEvent.EventType.ThrowError>()
+        throwError.exception.shouldBeInstanceOf<SignedOutException>()
+    }
+
+    @Test
+    fun `initializeFetchUnAuthSession fetches identity when Identity Pool is configured`() = runTest {
+        every { configuration.identityPool } returns mockk {
+            every { poolId } returns "identity_pool_id"
+        }
+
+        AuthorizationCognitoActions.initializeFetchUnAuthSession().execute(dispatcher, authEnvironment)
+
+        val event = capturedEvent.captured.shouldBeInstanceOf<FetchAuthSessionEvent>()
+        event.eventType.shouldBeInstanceOf<FetchAuthSessionEvent.EventType.FetchIdentity>()
     }
 }
