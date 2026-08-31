@@ -18,19 +18,25 @@ package com.amplifyframework.foundation.result
 import com.amplifyframework.annotations.InternalAmplifyApi
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
- * Runs the supplied block and returns the return value as a Result.Success. If an exception is thrown it returns
+ * Runs the supplied block and returns the return value as a Result.Success. If an [Exception] is thrown it returns
  * it as a Result.Failure.
+ *
+ * [CancellationException] is re-thrown so that coroutine cancellation is not swallowed, and [Error]s are not caught
+ * at all as they indicate unrecoverable conditions.
  */
 @InternalAmplifyApi
-inline fun <T> resultCatching(block: () -> T): Result<T, Throwable> {
+inline fun <T> resultCatching(block: () -> T): Result<T, Exception> {
     contract {
         callsInPlace(block, InvocationKind.AT_MOST_ONCE)
     }
     return try {
         Result.Success(block())
-    } catch (e: Throwable) {
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
         Result.Failure(e)
     }
 }

@@ -17,6 +17,9 @@ package com.amplifyframework.foundation.result
 
 import com.amplifyframework.testutils.assertions.shouldBeFailure
 import com.amplifyframework.testutils.assertions.shouldBeSuccess
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
+import kotlin.coroutines.cancellation.CancellationException
 import org.junit.Test
 
 class ResultCatchingTest {
@@ -37,5 +40,31 @@ class ResultCatchingTest {
         }
 
         result shouldBeFailure exception
+    }
+
+    @Test
+    fun `resultCatching rethrows CancellationException`() {
+        val exception = CancellationException("cancelled")
+
+        val thrown = shouldThrow<CancellationException> {
+            resultCatching {
+                throw exception
+            }
+        }
+
+        thrown shouldBe exception
+    }
+
+    @Test
+    fun `resultCatching does not catch Errors`() {
+        val error = OutOfMemoryError("no memory")
+
+        val thrown = shouldThrow<OutOfMemoryError> {
+            resultCatching {
+                throw error
+            }
+        }
+
+        thrown shouldBe error
     }
 }
