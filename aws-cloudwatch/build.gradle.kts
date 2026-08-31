@@ -44,4 +44,8 @@ dependencies {
 
     androidTestImplementation(libs.bundles.test.android)
     androidTestImplementation(project(":testutils"))
+    // Integration tests obtain guest AWS credentials via Cognito (identity pool) and Amplify.configure.
+    androidTestImplementation(project(":core"))
+    androidTestImplementation(project(":aws-core"))
+    androidTestImplementation(project(":aws-auth-cognito"))
 }
