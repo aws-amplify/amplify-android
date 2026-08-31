@@ -19,8 +19,12 @@ import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.foundation.result.Result
 import com.amplifyframework.foundation.result.getOrThrow
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 
 /**
@@ -48,6 +52,23 @@ import okhttp3.OkHttpClient
 @ExperimentalAmplifyApi
 class AmplifyAppSyncClient(val configuration: Configuration) {
 
+    private val closed = AtomicBoolean(false)
+
+    private val httpClient: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .apply { configuration.httpClientConfigurator?.invoke(this) }
+            .build()
+    }
+
+    private val transport: AppSyncHttpTransport by lazy {
+        AppSyncHttpTransport(
+            endpoint = configuration.endpoint,
+            client = httpClient,
+            authorization = configuration.authorization,
+            decorator = AppSyncRequestDecorator(configuration.region)
+        )
+    }
+
     /**
      * Per-client connection state flow.
      * Emits [ConnectionState] changes for the shared WebSocket connection.
@@ -61,8 +82,7 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
      * @param request The GraphQL request. Use model helpers or construct manually.
      * @return [Result.Success] with the typed GraphQL response, or [Result.Failure] with an [AppSyncException].
      */
-    suspend fun <T> query(request: GraphQLRequest<T>): Result<GraphQLResponse<T>, AppSyncException> =
-        TODO("Query implementation will be added in a follow-up PR")
+    suspend fun <T> query(request: GraphQLRequest<T>): Result<GraphQLResponse<T>, AppSyncException> = send(request)
 
     /**
      * Execute a GraphQL mutation.
@@ -70,8 +90,35 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
      * @param request The GraphQL request. Use model helpers or construct manually.
      * @return [Result.Success] with the typed GraphQL response, or [Result.Failure] with an [AppSyncException].
      */
-    suspend fun <T> mutate(request: GraphQLRequest<T>): Result<GraphQLResponse<T>, AppSyncException> =
-        TODO("Mutation implementation will be added in a follow-up PR")
+    suspend fun <T> mutate(request: GraphQLRequest<T>): Result<GraphQLResponse<T>, AppSyncException> = send(request)
+
+    /**
+     * Queries and mutations are the same HTTP exchange — AppSync distinguishes them by the operation
+     * in the document, not by transport. They are separate public functions for call-site clarity and
+     * for parity with Swift and Flutter.
+     *
+     * Failures arrive as [Result.Failure] rather than being thrown, so a caller never needs a
+     * try/catch. Coroutine cancellation is deliberately not caught: it must propagate for structured
+     * concurrency to work.
+     */
+    private suspend fun <T> send(request: GraphQLRequest<T>): Result<GraphQLResponse<T>, AppSyncException> {
+        if (closed.get()) {
+            return Result.Failure(
+                AppSyncValidationException(
+                    message = "This client has been closed and cannot be reused.",
+                    recoverySuggestion = "Create a new AmplifyAppSyncClient."
+                )
+            )
+        }
+
+        return try {
+            Result.Success(withContext(Dispatchers.IO) { transport.execute(request) })
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (error: Throwable) {
+            Result.Failure(AppSyncException.from(error))
+        }
+    }
 
     /**
      * Subscribe to a GraphQL subscription. Returns a [Flow] of [SubscriptionEvent].
@@ -91,7 +138,9 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
      * The client cannot be reused after closing.
      */
     fun close() {
-        TODO("Close implementation will be added in a follow-up PR")
+        if (!closed.compareAndSet(false, true)) return
+        httpClient.dispatcher.cancelAll()
+        httpClient.connectionPool.evictAll()
     }
 
     // ── Configuration ───────────────────────────────────────────────────

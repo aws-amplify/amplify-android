@@ -31,6 +31,11 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.kotlin.coroutines)
     implementation(project(":foundation-bridge"))
+    implementation(libs.aws.signing)
+    implementation(libs.aws.smithy.http)
 
     testImplementation(libs.bundles.test.unit)
+    testImplementation(libs.bundles.test.unit.android)
+    testImplementation(libs.test.mockwebserver)
+    testImplementation(project(":testutils"))
 }
