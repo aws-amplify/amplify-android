@@ -131,6 +131,23 @@ class AppSyncAuthorizationClaimException(
     cause: Throwable? = null
 ) : AppSyncAuthException(message, recoverySuggestion, cause)
 
+/**
+ * Every auth mode the request was eligible for was tried and all of them failed.
+ *
+ * Only raised in multi-auth: with a single candidate mode the underlying failure is surfaced
+ * directly, since wrapping one failure in an "exhausted" exception hides it for no benefit.
+ *
+ * @param attemptedAuthModes The modes that were tried, in the order they were tried.
+ */
+@ExperimentalAmplifyApi
+class AppSyncAuthExhaustedException(
+    message: String,
+    val attemptedAuthModes: List<AppSyncAuthMode>,
+    recoverySuggestion: String = "Check that one of the model's @auth rules matches a configured authorizer, " +
+        "and inspect the cause for the last failure.",
+    cause: Throwable? = null
+) : AppSyncAuthException(message, recoverySuggestion, cause)
+
 // ── Configuration ───────────────────────────────────────────────────────
 
 /**

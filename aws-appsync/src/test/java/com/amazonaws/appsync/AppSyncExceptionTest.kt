@@ -47,10 +47,20 @@ class AppSyncExceptionTest {
             AppSyncProviderNotConfiguredException("c"),
             AppSyncSigningException("d"),
             AppSyncTokenParsingException("e"),
-            AppSyncAuthorizationClaimException("f")
+            AppSyncAuthorizationClaimException("f"),
+            AppSyncAuthExhaustedException("g", emptyList())
         )
 
         leaves.forEach { it.shouldBeInstanceOf<AppSyncAuthException>() }
+    }
+
+    @Test
+    fun `the exhaustion exception reports the modes that were attempted`() {
+        val attempted = listOf(AppSyncAuthMode.USER_POOLS, AppSyncAuthMode.API_KEY)
+
+        val exception = AppSyncAuthExhaustedException("all failed", attempted)
+
+        exception.attemptedAuthModes shouldBe attempted
     }
 
     @Test
@@ -106,6 +116,7 @@ class AppSyncExceptionTest {
             AppSyncSigningException("a"),
             AppSyncTokenParsingException("a"),
             AppSyncAuthorizationClaimException("a"),
+            AppSyncAuthExhaustedException("a", emptyList()),
             AppSyncInvalidConfigException("a"),
             AppSyncEndpointResolutionException("a"),
             AppSyncDeserializationException("a"),
@@ -119,7 +130,7 @@ class AppSyncExceptionTest {
             AppSyncUnknownException("a")
         )
 
-        leaves.size shouldBe 17
+        leaves.size shouldBe 18
         leaves.forEach { it.recoverySuggestion.shouldNotBeBlank() }
     }
 
