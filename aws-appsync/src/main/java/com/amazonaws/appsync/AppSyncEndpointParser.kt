@@ -55,6 +55,7 @@ internal object AppSyncEndpointParser {
 
     private const val API_LABEL = "appsync-api"
     private const val REALTIME_LABEL = "appsync-realtime-api"
+    private val REGION_REGEX = """^[a-z]{2,}(-[a-z]+)+-\d+$""".toRegex()
 
     /**
      * Parses [endpoint].
@@ -126,7 +127,7 @@ internal object AppSyncEndpointParser {
     // Region labels are of the form {partition}-{area}-{number}, e.g. us-east-1, cn-north-1,
     // us-gov-west-1, ap-southeast-4. Deliberately structural rather than an allowlist, so a region
     // launched after this ships still parses.
-    private fun isRegionLike(candidate: String): Boolean = Regex("""^[a-z]{2,}(-[a-z]+)+-\d+$""").matches(candidate)
+    private fun isRegionLike(candidate: String): Boolean = REGION_REGEX.matches(candidate)
 
     private fun failure(message: String) = Result.Failure(AppSyncEndpointResolutionException(message))
 }
