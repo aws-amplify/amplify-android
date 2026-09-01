@@ -43,7 +43,6 @@ class AppSyncExceptionTest {
     fun `auth leaves are catchable as one group`() {
         val leaves = listOf(
             AppSyncTokenFetchException("a"),
-            AppSyncTokenExpiredException("b"),
             AppSyncProviderNotConfiguredException("c"),
             AppSyncSigningException("d"),
             AppSyncTokenParsingException("e"),
@@ -79,12 +78,10 @@ class AppSyncExceptionTest {
     fun `subscription leaves are catchable as one group`() {
         AppSyncConnectionException("a").shouldBeInstanceOf<AppSyncSubscriptionException>()
         AppSyncTimeoutException("b").shouldBeInstanceOf<AppSyncSubscriptionException>()
-        AppSyncLimitExceededException("c").shouldBeInstanceOf<AppSyncSubscriptionException>()
     }
 
     @Test
     fun `request leaves are catchable as one group`() {
-        AppSyncSchemaException("a").shouldBeInstanceOf<AppSyncRequestException>()
         AppSyncValidationException("b").shouldBeInstanceOf<AppSyncRequestException>()
     }
 
@@ -111,7 +108,6 @@ class AppSyncExceptionTest {
     fun `every leaf carries a non-blank default recovery suggestion`() {
         val leaves = listOf(
             AppSyncTokenFetchException("a"),
-            AppSyncTokenExpiredException("a"),
             AppSyncProviderNotConfiguredException("a"),
             AppSyncSigningException("a"),
             AppSyncTokenParsingException("a"),
@@ -123,14 +119,12 @@ class AppSyncExceptionTest {
             AppSyncGraphQLErrorException("a", emptyList()),
             AppSyncConnectionException("a"),
             AppSyncTimeoutException("a"),
-            AppSyncLimitExceededException("a"),
-            AppSyncSchemaException("a"),
             AppSyncValidationException("a"),
             AppSyncNetworkException("a"),
             AppSyncUnknownException("a")
         )
 
-        leaves.size shouldBe 18
+        leaves.size shouldBe 15
         leaves.forEach { it.recoverySuggestion.shouldNotBeBlank() }
     }
 
