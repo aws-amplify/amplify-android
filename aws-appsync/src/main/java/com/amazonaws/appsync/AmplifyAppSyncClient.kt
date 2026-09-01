@@ -18,6 +18,7 @@ import com.amplifyframework.annotations.ExperimentalAmplifyApi
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.foundation.result.Result
+import com.amplifyframework.foundation.result.getOrThrow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 import okhttp3.OkHttpClient
@@ -143,9 +144,6 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
                 require(::endpoint.isInitialized) { "endpoint is required" }
                 require(::authorization.isInitialized) { "authorization is required" }
                 val resolvedRegion = region ?: inferRegion(endpoint)
-                requireNotNull(resolvedRegion) {
-                    "region is required. Either set it explicitly or use a standard AppSync endpoint URL."
-                }
                 return Configuration(
                     endpoint = endpoint,
                     authorization = authorization,
@@ -167,7 +165,8 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
              * Expected format: `https://{id}.appsync-api.{region}.{dnsSuffix}/graphql`, across the
              * commercial, China and GovCloud partitions.
              */
-            internal fun inferRegion(endpoint: String): String? = AppSyncEndpointParser.regionOrNull(endpoint)
+            internal fun inferRegion(endpoint: String): String =
+                AppSyncEndpointParser.parse(endpoint).getOrThrow().region
         }
     }
 }

@@ -14,6 +14,7 @@
  */
 package com.amazonaws.appsync
 
+import com.amazonaws.appsync.AppSyncEndpointParser.parse
 import com.amplifyframework.foundation.result.Result
 
 /**
@@ -104,13 +105,6 @@ internal object AppSyncEndpointParser {
             )
         )
     }
-
-    /**
-     * Resolves just the region from [endpoint], for callers that only need that.
-     *
-     * @return the region, or null if the endpoint is not a standard AppSync URL.
-     */
-    fun regionOrNull(endpoint: String): String? = (parse(endpoint) as? Result.Success)?.data?.region
 
     private fun hostOf(endpoint: String): String? {
         val withoutScheme = endpoint.substringAfter("://", missingDelimiterValue = endpoint)

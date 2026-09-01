@@ -130,18 +130,4 @@ class AppSyncEndpointParserTest {
         AppSyncEndpointParser.parse("")
             .shouldBeInstanceOf<Result.Failure<AppSyncEndpointResolutionException>>()
     }
-
-    // ── regionOrNull, used by Configuration ─────────────────────────────
-
-    @Test
-    fun `regionOrNull returns the region for a standard endpoint`() {
-        AppSyncEndpointParser.regionOrNull(
-            "https://abc123.appsync-api.ap-south-1.amazonaws.com/graphql"
-        ) shouldBe "ap-south-1"
-    }
-
-    @Test
-    fun `regionOrNull returns null for a custom domain, so Configuration can require region`() {
-        AppSyncEndpointParser.regionOrNull("https://api.example.com/graphql") shouldBe null
-    }
 }
