@@ -40,7 +40,7 @@ class CloudWatchDatabase(
     private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private val passphraseKey = "passphrase"
-    private val mb = 1024 * 1024
+    private val mb = 1024L * 1024
     private val amplifyKeyValueRepository: AmplifyKeyValueRepository by lazy {
         AmplifyKeyValueRepository(
             context,
@@ -88,7 +88,7 @@ class CloudWatchDatabase(
     fun isCacheFull(cacheSizeInMB: Int): Boolean {
         val path = context.getDatabasePath(databaseName)
         return if (path.exists()) {
-            path.length() >= cacheSizeInMB * mb
+            path.length() >= cacheSizeInMB.toLong() * mb
         } else {
             false
         }

@@ -18,12 +18,15 @@ import com.amplifyframework.annotations.ExperimentalAmplifyApi
 import com.amplifyframework.foundation.result.Result
 
 /**
- * Data returned by a successful [AmplifyCloudWatchClient.flushLogs] call. It
- * currently carries no fields and exists so the operation can grow its result
- * shape without a breaking change.
+ * Data returned by a successful [AmplifyCloudWatchClient.flushLogs] call.
+ *
+ * @param flushed `true` if this call performed the flush; `false` if it was skipped because another
+ *   flush (an interval worker or a cache-full write) was already in progress. A caller that awaits
+ *   [AmplifyCloudWatchClient.flushLogs] before reading CloudWatch can use this to tell "flushed" from
+ *   "skipped".
  */
 @ExperimentalAmplifyApi
-class FlushData internal constructor()
+class FlushData internal constructor(val flushed: Boolean)
 
 /** Result of [AmplifyCloudWatchClient.flushLogs]. */
 @ExperimentalAmplifyApi

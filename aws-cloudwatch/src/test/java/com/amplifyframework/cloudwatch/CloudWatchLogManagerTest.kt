@@ -30,6 +30,7 @@ import aws.sdk.kotlin.services.cloudwatchlogs.model.LogStream
 import aws.sdk.kotlin.services.cloudwatchlogs.model.PutLogEventsRequest
 import aws.sdk.kotlin.services.cloudwatchlogs.model.PutLogEventsResponse
 import aws.sdk.kotlin.services.cloudwatchlogs.model.RejectedLogEventsInfo
+import aws.sdk.kotlin.services.cloudwatchlogs.model.ResourceNotFoundException
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.cloudwatch.db.CloudWatchDatabase
 import com.amplifyframework.cloudwatch.db.LogEvent
@@ -277,6 +278,90 @@ internal class CloudWatchLogManagerTest {
         shouldThrow<RuntimeException> { manager.syncLogEventsWithCloudwatch() }
 
         flushFailures shouldBe listOf(error)
+    }
+
+    @Test
+    fun `flush failure while cache is full drops the failed batch so the buffer can drain`() = runTest {
+        // The cache is full and CloudWatch rejects the batch. The recovery valve must drop the batch
+        // that failed; otherwise getNextBatch keeps re-picking the same rows and the buffer never drains.
+        every { database.isCacheFull(any()) } returns true
+        coEvery { database.queryAllEvents() } returns listOf(LogEvent(1L, "a", 1L), LogEvent(2L, "b", 2L))
+        coEvery { cloudWatchLogsClient.describeLogStreams(any()) } returns
+            DescribeLogStreamsResponse.invoke { logStreams = listOf(LogStream.invoke { logStreamName = "existing" }) }
+        coEvery { cloudWatchLogsClient.putLogEvents(any()) } throws RuntimeException("put failed")
+        coJustRun { database.bulkDelete(any()) }
+
+        shouldThrow<RuntimeException> { manager.syncLogEventsWithCloudwatch() }
+
+        coVerify(exactly = 1) { database.bulkDelete(listOf(1L, 2L)) }
+    }
+
+    @Test
+    fun `flush failure while cache is not full keeps the batch for retry`() = runTest {
+        every { database.isCacheFull(any()) } returns false
+        coEvery { database.queryAllEvents() } returns listOf(LogEvent(1L, "a", 1L))
+        coEvery { cloudWatchLogsClient.describeLogStreams(any()) } returns
+            DescribeLogStreamsResponse.invoke { logStreams = listOf(LogStream.invoke { logStreamName = "existing" }) }
+        coEvery { cloudWatchLogsClient.putLogEvents(any()) } throws RuntimeException("put failed")
+        coJustRun { database.bulkDelete(any()) }
+
+        shouldThrow<RuntimeException> { manager.syncLogEventsWithCloudwatch() }
+
+        // Nothing dropped: the entries stay buffered for the next flush.
+        coVerify(exactly = 0) { database.bulkDelete(any()) }
+    }
+
+    @Test
+    fun `a cache-full flush failure is reported only as a flush failure, not a write failure`() = runTest {
+        val event = CloudWatchLogEvent(1_000L, "Sample log")
+        every { database.isCacheFull(any()) } returns true
+        coEvery { database.saveLogEvent(event) } returns 1L
+        coEvery { database.queryAllEvents() } returns listOf(LogEvent(event.timestamp, event.message, 1L))
+        coEvery { cloudWatchLogsClient.describeLogStreams(any()) } returns
+            DescribeLogStreamsResponse.invoke { logStreams = listOf(LogStream.invoke { logStreamName = "existing" }) }
+        val error = RuntimeException("put failed")
+        coEvery { cloudWatchLogsClient.putLogEvents(any()) } throws error
+        coJustRun { database.bulkDelete(any()) }
+
+        manager.saveLogEvent(event)
+
+        // The event was persisted successfully, so the upload failure must not surface as a write failure.
+        writeFailures.shouldBeEmpty()
+        flushFailures shouldBe listOf(error)
+    }
+
+    @Test
+    fun `a multi-batch flush ensures each log stream only once`() = runTest {
+        val events = (1..10_001L).map { LogEvent(timestamp = it, message = "m", id = it) }
+        coEvery { database.queryAllEvents() } returns events andThen emptyList()
+        stubBatchCapture()
+
+        manager.syncLogEventsWithCloudwatch()
+
+        // Two batches share one stream name, so describeLogStreams is issued once, not per batch.
+        coVerify(exactly = 1) { cloudWatchLogsClient.describeLogStreams(any()) }
+        putRequests shouldHaveSize 2
+    }
+
+    @Test
+    fun `a ResourceNotFoundException clears the ensured-stream cache so the next flush re-describes`() = runTest {
+        coEvery { cloudWatchLogsClient.describeLogStreams(any()) } returns
+            DescribeLogStreamsResponse.invoke { logStreams = listOf(LogStream.invoke { logStreamName = "existing" }) }
+        coEvery { cloudWatchLogsClient.createLogStream(any()) } returns CreateLogStreamResponse.invoke { }
+        coJustRun { database.bulkDelete(any()) }
+
+        // First flush: the stream is deleted server-side, so putLogEvents fails with ResourceNotFound.
+        coEvery { database.queryAllEvents() } returns listOf(LogEvent(1L, "a", 1L))
+        coEvery { cloudWatchLogsClient.putLogEvents(any()) } throws
+            ResourceNotFoundException { message = "stream gone" }
+        shouldThrow<ResourceNotFoundException> { manager.syncLogEventsWithCloudwatch() }
+
+        // Second flush succeeds: because the cache was cleared, describeLogStreams runs again (self-heal).
+        coEvery { database.queryAllEvents() } returns listOf(LogEvent(2L, "b", 2L)) andThen emptyList()
+        coEvery { cloudWatchLogsClient.putLogEvents(any()) } returns PutLogEventsResponse.invoke { }
+        manager.syncLogEventsWithCloudwatch()
+
+        coVerify(exactly = 2) { cloudWatchLogsClient.describeLogStreams(any()) }
     }
 
     @Test

@@ -29,10 +29,12 @@ import com.amplifyframework.foundation.logging.LogSink
 import com.amplifyframework.foundation.logging.Logger
 import com.amplifyframework.foundation.result.Result
 import com.amplifyframework.foundation.useragent.AmplifyUserAgentInterceptor
+import java.security.MessageDigest
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -54,8 +56,15 @@ private const val EVENTS_BUFFER_CAPACITY = 64
 private const val CLIENT_DATABASE_NAME_PREFIX = "amplify.cloudwatch.client"
 private const val CLIENT_PASSPHRASE_PREFERENCES_PREFIX = "awscloudwatchclientdb"
 
-/** A filesystem-safe, stable token derived from the log group, used to name the client's on-device store. */
-private fun storeToken(logGroupName: String): String = logGroupName.hashCode().toUInt().toString(16)
+/**
+ * A filesystem-safe, stable token derived from the log group, used to name the client's on-device store.
+ * A truncated SHA-256 is used (rather than [String.hashCode], which is 32-bit and trivially collidable)
+ * so distinct log groups get distinct stores and never mix events.
+ */
+private fun storeToken(logGroupName: String): String = MessageDigest.getInstance("SHA-256")
+    .digest(logGroupName.toByteArray(Charsets.UTF_8))
+    .take(8)
+    .joinToString("") { "%02x".format(it) }
 
 /**
  * A standalone client for sending log events to Amazon CloudWatch Logs.
@@ -157,13 +166,18 @@ class AmplifyCloudWatchClient internal constructor(
     private val logManager = logManagerFactory(cloudWatchLogsClient, eventsFlow)
 
     init {
-        scope.launch { logManager.startSync() }
+        logManager.startSync()
     }
 
     // region LogSink
 
-    /** Returns true if the client is enabled. */
-    override fun isEnabledFor(level: LogLevel): Boolean = isEnabled
+    /**
+     * Returns true if the client is enabled and some configured [LoggingConstraints] threshold could
+     * emit at [level]. This is namespace-agnostic and deliberately permissive (never under-reporting),
+     * so per-namespace filtering in [emit] stays authoritative while lazy messages that no threshold
+     * would ever emit are skipped.
+     */
+    override fun isEnabledFor(level: LogLevel): Boolean = isEnabled && filter.couldLog(level)
 
     /**
      * Receives a log message, filters it against the current [LoggingConstraints], and forwards it
@@ -186,7 +200,7 @@ class AmplifyCloudWatchClient internal constructor(
     fun enable() {
         logger.info { "Enabling CloudWatch logging and automatic flushing" }
         isEnabled = true
-        scope.launch { logManager.startSync() }
+        logManager.startSync()
     }
 
     /**
@@ -202,12 +216,26 @@ class AmplifyCloudWatchClient internal constructor(
 
     /** Flush all pending log entries to CloudWatch. */
     suspend fun flushLogs(): FlushResult = try {
-        logManager.syncLogEventsWithCloudwatch()
-        Result.Success(FlushData())
+        val flushed = logManager.syncLogEventsWithCloudwatch()
+        Result.Success(FlushData(flushed = flushed))
     } catch (error: CancellationException) {
         throw error
     } catch (error: Exception) {
         Result.Failure(AmplifyCloudWatchException.from(error))
+    }
+
+    /**
+     * Releases the resources held by this client: stops automatic flushing, drops the worker-factory
+     * registration, cancels the internal coroutine scope, and closes the underlying SDK client. Any
+     * log entries still buffered locally are preserved on disk. The client must not be used after this.
+     */
+    @InternalAmplifyApi
+    fun close() {
+        logger.info { "Closing CloudWatch client" }
+        isEnabled = false
+        logManager.close()
+        scope.cancel()
+        cloudWatchLogsClient.close()
     }
 
     /** Returns the underlying AWS CloudWatch Logs SDK client. */

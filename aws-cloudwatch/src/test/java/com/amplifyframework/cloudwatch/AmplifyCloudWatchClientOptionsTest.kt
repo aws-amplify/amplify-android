@@ -60,6 +60,18 @@ class AmplifyCloudWatchClientOptionsTest {
     }
 
     @Test
+    fun `build throws when localStoreMaxSizeInMB is not positive`() {
+        // A zero or negative value would make cacheSizeInMB * mb <= 0, so isCacheFull is always true
+        // and every write triggers a flush.
+        shouldThrow<IllegalArgumentException> {
+            AmplifyCloudWatchClientOptions.builder().logGroupName("/g").localStoreMaxSizeInMB(0).build()
+        }
+        shouldThrow<IllegalArgumentException> {
+            AmplifyCloudWatchClientOptions.builder().logGroupName("/g").localStoreMaxSizeInMB(-1).build()
+        }
+    }
+
+    @Test
     fun `dsl supports a custom flush strategy`() {
         val options = AmplifyCloudWatchClientOptions {
             logGroupName = "/g"

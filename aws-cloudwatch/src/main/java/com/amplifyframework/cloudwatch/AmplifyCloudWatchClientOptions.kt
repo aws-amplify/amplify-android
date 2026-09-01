@@ -107,12 +107,17 @@ data class AmplifyCloudWatchClientOptions internal constructor(
          * @return Configured options instance
          * @throws IllegalArgumentException if [logGroupName] was not set
          */
-        fun build() = AmplifyCloudWatchClientOptions(
-            requireNotNull(logGroupName) { "logGroupName is required" },
-            localStoreMaxSizeInMB,
-            flushStrategy,
-            loggingConstraints,
-            configureClient
-        )
+        fun build(): AmplifyCloudWatchClientOptions {
+            require(localStoreMaxSizeInMB > 0) {
+                "localStoreMaxSizeInMB must be greater than 0, was $localStoreMaxSizeInMB"
+            }
+            return AmplifyCloudWatchClientOptions(
+                requireNotNull(logGroupName) { "logGroupName is required" },
+                localStoreMaxSizeInMB,
+                flushStrategy,
+                loggingConstraints,
+                configureClient
+            )
+        }
     }
 }

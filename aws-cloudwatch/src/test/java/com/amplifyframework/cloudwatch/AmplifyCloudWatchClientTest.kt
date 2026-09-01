@@ -28,6 +28,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
@@ -65,6 +66,57 @@ class AmplifyCloudWatchClientTest {
         client.isEnabledFor(LogLevel.Info) shouldBe false
         client.enable()
         client.isEnabledFor(LogLevel.Info) shouldBe true
+    }
+
+    @Test
+    fun `isEnabledFor is false for a level no configured threshold could emit`() = runTest {
+        // Default threshold Error: verbose/debug/info can never be emitted, so isEnabledFor must return
+        // false to spare the framework materializing lazy messages that would only be discarded.
+        val client = createClient(LoggingConstraints(defaultLogLevel = LogLevel.Error))
+
+        client.isEnabledFor(LogLevel.Verbose) shouldBe false
+        client.isEnabledFor(LogLevel.Info) shouldBe false
+        client.isEnabledFor(LogLevel.Error) shouldBe true
+    }
+
+    @Test
+    fun `isEnabledFor reflects the most permissive threshold across namespaces and users`() = runTest {
+        // A single verbose namespace override means verbose could be emitted somewhere.
+        val client = createClient(
+            LoggingConstraints(
+                defaultLogLevel = LogLevel.Error,
+                namespaceLogLevel = mapOf("Storage" to LogLevel.Verbose)
+            )
+        )
+
+        client.isEnabledFor(LogLevel.Verbose) shouldBe true
+    }
+
+    @Test
+    fun `disable applied after enable leaves the sync stopped`() = runTest {
+        val client = createClient()
+
+        client.enable()
+        client.disable()
+
+        // enable() applies synchronously (no deferred coroutine), so stopSync is the final effect and
+        // a quick enable to disable can't leave auto-flush running.
+        verifyOrder {
+            logManager.startSync() // construction
+            logManager.startSync() // enable()
+            logManager.stopSync() // disable()
+        }
+    }
+
+    @Test
+    fun `close tears down the manager, scope, and sdk client`() = runTest {
+        val client = createClient()
+
+        client.close()
+
+        verify(exactly = 1) { logManager.close() }
+        verify(exactly = 1) { sdkClient.close() }
+        client.isEnabledFor(LogLevel.Error) shouldBe false
     }
 
     @Test
