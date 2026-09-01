@@ -30,6 +30,7 @@ import aws.sdk.kotlin.services.cloudwatchlogs.model.LogStream
 import aws.sdk.kotlin.services.cloudwatchlogs.model.PutLogEventsRequest
 import aws.sdk.kotlin.services.cloudwatchlogs.model.PutLogEventsResponse
 import aws.sdk.kotlin.services.cloudwatchlogs.model.RejectedLogEventsInfo
+import aws.sdk.kotlin.services.cloudwatchlogs.model.ResourceNotFoundException
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.cloudwatch.db.CloudWatchDatabase
 import com.amplifyframework.cloudwatch.db.LogEvent
@@ -340,6 +341,27 @@ internal class CloudWatchLogManagerTest {
         // Two batches share one stream name, so describeLogStreams is issued once, not per batch.
         coVerify(exactly = 1) { cloudWatchLogsClient.describeLogStreams(any()) }
         putRequests shouldHaveSize 2
+    }
+
+    @Test
+    fun `a ResourceNotFoundException clears the ensured-stream cache so the next flush re-describes`() = runTest {
+        coEvery { cloudWatchLogsClient.describeLogStreams(any()) } returns
+            DescribeLogStreamsResponse.invoke { logStreams = listOf(LogStream.invoke { logStreamName = "existing" }) }
+        coEvery { cloudWatchLogsClient.createLogStream(any()) } returns CreateLogStreamResponse.invoke { }
+        coJustRun { database.bulkDelete(any()) }
+
+        // First flush: the stream is deleted server-side, so putLogEvents fails with ResourceNotFound.
+        coEvery { database.queryAllEvents() } returns listOf(LogEvent(1L, "a", 1L))
+        coEvery { cloudWatchLogsClient.putLogEvents(any()) } throws
+            ResourceNotFoundException { message = "stream gone" }
+        shouldThrow<ResourceNotFoundException> { manager.syncLogEventsWithCloudwatch() }
+
+        // Second flush succeeds: because the cache was cleared, describeLogStreams runs again (self-heal).
+        coEvery { database.queryAllEvents() } returns listOf(LogEvent(2L, "b", 2L)) andThen emptyList()
+        coEvery { cloudWatchLogsClient.putLogEvents(any()) } returns PutLogEventsResponse.invoke { }
+        manager.syncLogEventsWithCloudwatch()
+
+        coVerify(exactly = 2) { cloudWatchLogsClient.describeLogStreams(any()) }
     }
 
     @Test

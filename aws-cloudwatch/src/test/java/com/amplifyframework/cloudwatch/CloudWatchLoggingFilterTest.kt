@@ -144,4 +144,40 @@ class CloudWatchLoggingFilterTest {
 
         filter.canLog("Any", LogLevel.Info, null) shouldBe true
     }
+
+    @Test
+    fun `couldLog reflects the most permissive threshold across default, namespace, and user`() {
+        val filter = filter(
+            LoggingConstraints(
+                defaultLogLevel = LogLevel.Error,
+                namespaceLogLevel = mapOf("Storage" to LogLevel.Info),
+                userLogLevel = mapOf("user1" to UserLogLevel(namespaceLogLevel = mapOf("Auth" to LogLevel.Verbose)))
+            )
+        )
+
+        // Verbose is possible somewhere (user1/Auth), so it could log at every level down to Verbose.
+        filter.couldLog(LogLevel.Verbose) shouldBe true
+        filter.couldLog(LogLevel.Error) shouldBe true
+        // None is never a valid message level.
+        filter.couldLog(LogLevel.None) shouldBe false
+    }
+
+    @Test
+    fun `couldLog is false for levels below every threshold`() {
+        val filter = filter(LoggingConstraints(defaultLogLevel = LogLevel.Error))
+
+        filter.couldLog(LogLevel.Verbose) shouldBe false
+        filter.couldLog(LogLevel.Info) shouldBe false
+        filter.couldLog(LogLevel.Error) shouldBe true
+    }
+
+    @Test
+    fun `couldLog recomputes when loggingConstraints change`() {
+        val filter = filter(LoggingConstraints(defaultLogLevel = LogLevel.Error))
+        filter.couldLog(LogLevel.Info) shouldBe false
+
+        filter.loggingConstraints = LoggingConstraints(defaultLogLevel = LogLevel.Verbose)
+
+        filter.couldLog(LogLevel.Info) shouldBe true
+    }
 }

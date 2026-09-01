@@ -30,6 +30,15 @@ internal class CloudWatchLoggingFilter(initialConstraints: LoggingConstraints) {
 
     @Volatile
     var loggingConstraints: LoggingConstraints = initialConstraints
+        set(value) {
+            field = value
+            mostPermissiveThreshold = value.mostPermissive()
+        }
+
+    // Precomputed on every constraints change so couldLog (a hot path — called per sink per log
+    // statement) stays O(1) instead of rescanning every threshold on each call.
+    @Volatile
+    private var mostPermissiveThreshold: LogLevel = initialConstraints.mostPermissive()
 
     fun canLog(namespace: String, level: LogLevel, userIdentifier: String?): Boolean {
         val constraints = loggingConstraints
@@ -51,19 +60,19 @@ internal class CloudWatchLoggingFilter(initialConstraints: LoggingConstraints) {
      * message. Used by [AmplifyCloudWatchClient.isEnabledFor] so callers can skip materializing lazy
      * log messages that no threshold would ever emit.
      */
-    fun couldLog(level: LogLevel): Boolean {
-        val constraints = loggingConstraints
-        val thresholds = buildList {
-            add(constraints.defaultLogLevel)
-            addAll(constraints.namespaceLogLevel.values)
-            constraints.userLogLevel.values.forEach { userLevel ->
-                add(userLevel.defaultLogLevel)
-                addAll(userLevel.namespaceLogLevel.values)
-            }
-        }
-        return thresholds.any { it allows level }
-    }
+    fun couldLog(level: LogLevel): Boolean = mostPermissiveThreshold allows level
 
     private fun Map<String, LogLevel>.matching(namespace: String): LogLevel? =
         entries.firstOrNull { it.key.equals(namespace, ignoreCase = true) }?.value
+
+    // "any configured threshold allows level" == "the lowest (most permissive) threshold allows level",
+    // since allows is `this <= level`. LogLevel enum order runs Verbose (most permissive) .. None.
+    private fun LoggingConstraints.mostPermissive(): LogLevel = sequence {
+        yield(defaultLogLevel)
+        yieldAll(namespaceLogLevel.values)
+        userLogLevel.values.forEach {
+            yield(it.defaultLogLevel)
+            yieldAll(it.namespaceLogLevel.values)
+        }
+    }.min()
 }

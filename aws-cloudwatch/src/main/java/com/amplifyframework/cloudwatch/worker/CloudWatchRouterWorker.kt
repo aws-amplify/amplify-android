@@ -20,7 +20,6 @@ import androidx.work.CoroutineWorker
 import androidx.work.ListenableWorker
 import androidx.work.WorkerParameters
 import com.google.common.util.concurrent.ListenableFuture
-import java.lang.IllegalStateException
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -82,7 +81,14 @@ internal class CloudWatchRouterWorker(appContext: Context, private val parameter
                     "CloudWatchRouterWorker.retry"
                 }
             } else {
-                throw IllegalStateException("Failed to find delegate for $workerClassName")
+                // No factory registered even though initialization has happened — the owning client was
+                // closed (dropping its registration) after WorkManager dequeued this job, or two clients
+                // shared a log group. Report a clean terminal failure rather than throwing an uncaught
+                // exception out of startWork().
+                return CallbackToFutureAdapter.getFuture { completer ->
+                    completer.set(Result.failure())
+                    "CloudWatchRouterWorker.noDelegate"
+                }
             }
         }
     }

@@ -28,6 +28,7 @@ import aws.sdk.kotlin.services.cloudwatchlogs.model.CreateLogStreamRequest
 import aws.sdk.kotlin.services.cloudwatchlogs.model.DescribeLogStreamsRequest
 import aws.sdk.kotlin.services.cloudwatchlogs.model.InputLogEvent
 import aws.sdk.kotlin.services.cloudwatchlogs.model.PutLogEventsRequest
+import aws.sdk.kotlin.services.cloudwatchlogs.model.ResourceNotFoundException
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.cloudwatch.db.CloudWatchDatabase
 import com.amplifyframework.cloudwatch.db.LogEvent
@@ -225,6 +226,12 @@ internal class CloudWatchLogManager(
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: Exception) {
+                // The stream (or the whole group) may have been deleted server-side after we cached it.
+                // Drop the cache so the next flush re-runs describe/create and self-heals; clear() rather
+                // than one name since the group itself may have been recreated.
+                if (exception is ResourceNotFoundException) {
+                    ensuredStreams.clear()
+                }
                 onFlushLogFailure(null, exception)
                 if (isCacheFull()) {
                     cloudWatchLoggingDatabase.bulkDelete(lastAttemptedIds)
