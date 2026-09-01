@@ -16,6 +16,7 @@ package com.amazonaws.appsync
 
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
+import com.amplifyframework.datastore.appsync.AppSyncExtensions
 import com.amplifyframework.util.UserAgent
 import java.io.IOException
 import kotlin.coroutines.resume
@@ -44,16 +45,64 @@ internal class AppSyncHttpTransport(
     private val endpoint: String,
     private val client: OkHttpClient,
     private val authorization: AppSyncAuthorization,
-    private val decorator: AppSyncRequestDecorator
+    private val decorator: AppSyncRequestDecorator,
+    private val authModeResolver: AppSyncAuthModeResolver = AppSyncAuthModeResolver(authorization)
 ) {
 
     /**
-     * Sends [request] and deserializes the response.
+     * Sends [request], retrying with the next eligible auth mode when one fails for an auth reason.
      *
-     * Always uses the default authorizer. TODO: honour per-request auth overrides and `@auth`-rule
-     * resolution.
+     * The candidate modes and their order come from [AppSyncAuthModeResolver]. With a single candidate
+     * this behaves exactly as the single-auth path did: the underlying failure is surfaced directly
+     * rather than wrapped, because wrapping one failure in "auth exhausted" hides it for no benefit.
      */
     suspend fun <T> execute(request: GraphQLRequest<T>): GraphQLResponse<T> {
+        val authModes = authModeResolver.resolve(request)
+        // With one candidate there is nothing to fall back to, so auth failures are reported as they
+        // were before multi-auth existed: the real error, or a response carrying its own errors.
+        val canFallBack = authModes.size > 1
+        var lastAuthFailure: AppSyncException? = null
+
+        authModes.forEachIndexed { index, authMode ->
+            val isLastAttempt = index == authModes.lastIndex
+
+            val authorizer = authorization.authorizerFor(authMode)
+                ?: throw AppSyncProviderNotConfiguredException(
+                    message = "No authorizer is configured for auth mode $authMode."
+                )
+
+            val decorated = try {
+                decorate(request, authorizer)
+            } catch (error: AppSyncAuthException) {
+                // Credentials for this mode could not be obtained. Another mode may still work, so
+                // this is only terminal once the candidates run out.
+                if (isLastAttempt) throw exhausted(authModes, error)
+                lastAuthFailure = error
+                return@forEachIndexed
+            }
+
+            val response = client.newCall(decorated).await().use { deserialize(request, it) }
+
+            // An unauthorized response is the other retryable signal: AppSync accepted the request but
+            // rejected the identity, which a different mode may satisfy.
+            if (canFallBack && response.isUnauthorized()) {
+                lastAuthFailure = AppSyncGraphQLErrorException(
+                    message = "Authorization failed with $authMode.",
+                    errors = response.errors
+                )
+                if (isLastAttempt) throw exhausted(authModes, lastAuthFailure)
+                return@forEachIndexed
+            }
+
+            return response
+        }
+
+        // Unreachable in practice: the loop either returns or throws on its last iteration. Kept so
+        // the function is total rather than relying on that reasoning holding after an edit.
+        throw exhausted(authModes, lastAuthFailure)
+    }
+
+    private suspend fun <T> decorate(request: GraphQLRequest<T>, authorizer: AppSyncClientAuthorizer): Request {
         val httpRequest = Request.Builder()
             .url(endpoint)
             .header(ACCEPT_HEADER, CONTENT_TYPE)
@@ -61,10 +110,30 @@ internal class AppSyncHttpTransport(
             .post(request.content.toRequestBody(CONTENT_TYPE.toMediaType()))
             .build()
 
-        val decorated = decorator.decorate(httpRequest, authorization.defaultAuthorizer)
-        val response = client.newCall(decorated).await()
+        return decorator.decorate(httpRequest, authorizer)
+    }
 
-        return response.use { deserialize(request, it) }
+    /**
+     * Whether the response carries an AppSync `Unauthorized` error. Reuses [AppSyncExtensions] so the
+     * client agrees with the plugin on which error types count as unauthorized.
+     */
+    private fun GraphQLResponse<*>.isUnauthorized(): Boolean = errors.any { error ->
+        val extensions = error.extensions
+        !extensions.isNullOrEmpty() && AppSyncExtensions(extensions).isUnauthorizedErrorType
+    }
+
+    private fun exhausted(attempted: List<AppSyncAuthMode>, cause: AppSyncException?): AppSyncException {
+        // With one candidate there is nothing to be exhausted, so the real failure is more useful.
+        if (attempted.size <= 1) {
+            return cause ?: AppSyncProviderNotConfiguredException(
+                message = "No auth mode was available to authorize the request."
+            )
+        }
+        return AppSyncAuthExhaustedException(
+            message = "The request failed with every eligible auth mode: ${attempted.joinToString()}.",
+            attemptedAuthModes = attempted,
+            cause = cause
+        )
     }
 
     private fun <T> deserialize(request: GraphQLRequest<T>, response: Response): GraphQLResponse<T> {

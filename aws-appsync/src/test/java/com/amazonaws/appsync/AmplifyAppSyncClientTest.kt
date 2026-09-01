@@ -14,8 +14,14 @@
  */
 package com.amazonaws.appsync
 
+import com.amplifyframework.api.aws.AppSyncGraphQLRequest
+import com.amplifyframework.api.aws.AuthorizationType
 import com.amplifyframework.api.aws.GsonVariablesSerializer
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest
+import com.amplifyframework.core.model.AuthRule
+import com.amplifyframework.core.model.AuthStrategy
+import com.amplifyframework.core.model.ModelOperation
+import com.amplifyframework.core.model.ModelSchema
 import com.amplifyframework.testutils.assertions.shouldBeFailure
 import com.amplifyframework.testutils.assertions.shouldBeSuccess
 import io.kotest.matchers.collections.shouldHaveSize
@@ -24,6 +30,8 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.mockk.every
+import io.mockk.mockk
 import java.net.HttpURLConnection
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
@@ -316,6 +324,108 @@ class AmplifyAppSyncClientTest {
             .region shouldBe "cn-north-1"
     }
 
+    // ── Multi-auth retry (Phase 4) ──────────────────────────────────────
+
+    @Test
+    fun `an unauthorized response retries with the next auth mode and succeeds`() = runTest {
+        server.enqueue(unauthorizedResponse())
+        server.enqueue(jsonResponse("""{"data":"hello"}"""))
+
+        val response = multiAuthClient().query(modelRequest()).shouldBeSuccess().data
+
+        response.data shouldBe "hello"
+        server.requestCount shouldBe 2
+    }
+
+    @Test
+    fun `the retry actually switches identity, it does not resend the same credentials`() = runTest {
+        server.enqueue(unauthorizedResponse())
+        server.enqueue(jsonResponse("""{"data":"hello"}"""))
+
+        multiAuthClient().query(modelRequest()).shouldBeSuccess()
+
+        // Owner rules order User Pools first, then the public API key rule.
+        val first = server.awaitRequest()
+        val second = server.awaitRequest()
+        first.getHeader("authorization") shouldBe "user-pools-token"
+        first.getHeader("x-api-key").shouldBeNull()
+        second.getHeader("x-api-key") shouldBe "da2-fakekey"
+        second.getHeader("authorization").shouldBeNull()
+    }
+
+    @Test
+    fun `exhausting every auth mode reports which were attempted`() = runTest {
+        server.enqueue(unauthorizedResponse())
+        server.enqueue(unauthorizedResponse())
+
+        val error = multiAuthClient().query(modelRequest()).shouldBeFailure().error
+            .shouldBeInstanceOf<AppSyncAuthExhaustedException>()
+
+        error.attemptedAuthModes shouldBe listOf(AppSyncAuthMode.USER_POOLS, AppSyncAuthMode.API_KEY)
+        server.requestCount shouldBe 2
+    }
+
+    @Test
+    fun `a failing token supplier retries with the next auth mode instead of failing`() = runTest {
+        server.enqueue(jsonResponse("""{"data":"hello"}"""))
+
+        val client = AmplifyAppSyncClient(
+            configuration(server.url("/graphql").toString()) {
+                region = "us-east-1"
+                authorization = AppSyncAuthorization.Multi(
+                    defaultAuthMode = AppSyncAuthMode.API_KEY,
+                    authorizers = listOf(
+                        AppSyncClientAuthorizer.UserPools { error("session expired") },
+                        AppSyncClientAuthorizer.ApiKey("da2-fakekey")
+                    )
+                )
+            }
+        )
+
+        client.query(modelRequest()).shouldBeSuccess().data.data shouldBe "hello"
+        // Only one HTTP call: the first mode failed before anything was sent.
+        server.requestCount shouldBe 1
+        server.awaitRequest().getHeader("x-api-key") shouldBe "da2-fakekey"
+    }
+
+    @Test
+    fun `a non-auth graphql error does not trigger a retry`() = runTest {
+        // Only Unauthorized error types are retryable. Retrying a validation error would just fail
+        // again with a different identity and hide the real problem behind an exhaustion error.
+        server.enqueue(jsonResponse("""{"errors":[{"message":"Validation failed"}]}"""))
+
+        val response = multiAuthClient().query(modelRequest()).shouldBeSuccess().data
+
+        response.errors shouldHaveSize 1
+        server.requestCount shouldBe 1
+    }
+
+    @Test
+    fun `a per-request override is not retried against other modes`() = runTest {
+        server.enqueue(unauthorizedResponse())
+
+        val response = multiAuthClient()
+            .query(modelRequest(authorizationType = AuthorizationType.API_KEY))
+            .shouldBeSuccess().data
+
+        // The caller named a mode. Falling back would authorize as a different identity than asked.
+        response.errors shouldHaveSize 1
+        server.requestCount shouldBe 1
+        server.awaitRequest().getHeader("x-api-key") shouldBe "da2-fakekey"
+    }
+
+    @Test
+    fun `single auth does not retry, and surfaces the unauthorized response unchanged`() = runTest {
+        // Regression guard for the Phase 3 contract: with one candidate mode there is nothing to
+        // exhaust, so a 200-with-errors stays a Success rather than becoming an exhaustion failure.
+        server.enqueue(unauthorizedResponse())
+
+        val response = client().query(modelRequest()).shouldBeSuccess().data
+
+        response.errors shouldHaveSize 1
+        server.requestCount shouldBe 1
+    }
+
     // ── Helpers ─────────────────────────────────────────────────────────
 
     private fun client(configure: AmplifyAppSyncClient.Configuration.Builder.() -> Unit = {}) = AmplifyAppSyncClient(
@@ -344,6 +454,58 @@ class AmplifyAppSyncClientTest {
         .setResponseCode(code)
         .setHeader("content-type", "application/json")
         .setBody(body)
+
+    /** A 200 carrying AppSync's Unauthorized error type — the signal that triggers an auth retry. */
+    private fun unauthorizedResponse() = jsonResponse(
+        """{"errors":[{"message":"Not Authorized to access getTodo on type Query",
+           "extensions":{"errorType":"Unauthorized"}}]}
+        """.trimIndent()
+    )
+
+    /** A client whose auth rules make User Pools the first candidate and the API key the second. */
+    private fun multiAuthClient() = AmplifyAppSyncClient(
+        configuration(server.url("/graphql").toString()) {
+            region = "us-east-1"
+            authorization = AppSyncAuthorization.Multi(
+                defaultAuthMode = AppSyncAuthMode.API_KEY,
+                authorizers = listOf(
+                    AppSyncClientAuthorizer.ApiKey("da2-fakekey"),
+                    AppSyncClientAuthorizer.UserPools { "user-pools-token" }
+                )
+            )
+        }
+    )
+
+    /**
+     * A request carrying model metadata, so auth-rule resolution has something to inspect. Mocked
+     * rather than built, because a real [AppSyncGraphQLRequest] also runs selection-set generation,
+     * which needs a code-generated model class and is irrelevant here.
+     */
+    private fun modelRequest(authorizationType: AuthorizationType? = null): AppSyncGraphQLRequest<String> {
+        val ownerRule = AuthRule.builder()
+            .authStrategy(AuthStrategy.OWNER)
+            .authProvider(AuthStrategy.OWNER.defaultAuthProvider)
+            .identityClaim("cognito:username")
+            .ownerField("owner")
+            .operations(listOf(ModelOperation.READ))
+            .build()
+        val publicRule = AuthRule.builder()
+            .authStrategy(AuthStrategy.PUBLIC)
+            .authProvider(AuthStrategy.Provider.API_KEY)
+            .operations(listOf(ModelOperation.READ))
+            .build()
+
+        return mockk {
+            every { content } returns """{"query":"query { getTodo(id: \"1\") { id name } }"}"""
+            every { responseType } returns String::class.java
+            every { modelSchema } returns ModelSchema.builder()
+                .name("Todo")
+                .authRules(listOf(ownerRule, publicRule))
+                .build()
+            every { authRuleOperation } returns ModelOperation.READ
+            every { this@mockk.authorizationType } returns authorizationType
+        }
+    }
 
     /**
      * Takes the next recorded request, failing if none arrives. The bare `takeRequest()` blocks the
