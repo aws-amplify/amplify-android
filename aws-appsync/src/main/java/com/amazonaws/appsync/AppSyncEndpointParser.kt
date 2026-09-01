@@ -69,10 +69,16 @@ internal object AppSyncEndpointParser {
         val labels = host.split('.')
         val apiLabelIndex = labels.indexOf(API_LABEL)
 
-        if (apiLabelIndex < 1) {
+        if (apiLabelIndex < 0) {
             return failure(
                 "The endpoint host '$host' is not a standard AppSync endpoint: expected a " +
-                    "'$API_LABEL' label, as in {apiId}.$API_LABEL.{region}.amazonaws.com."
+                    "'$API_LABEL' label, as in {apiId}.$API_LABEL.{region}.{dnsSuffix}."
+            )
+        }
+
+        if (apiLabelIndex == 0) {
+            return failure(
+                "The endpoint host '$host' has no API id label before '$API_LABEL'."
             )
         }
 
