@@ -13,7 +13,8 @@
                     "parameters": {
                         "CODE_DELIVERY_DELIVERY_MEDIUM": "SMS",
                         "CODE_DELIVERY_DESTINATION": "+12345678900"
-                    }
+                    },
+                    "inputUsername": "username"
                 },
                 "signInMethod": {
                     "type": "SignInMethod.ApiBased",

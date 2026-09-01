@@ -68,7 +68,8 @@ object AuthStateJsonGenerator : SerializableProvider {
             accessToken = DUMMY_TOKEN,
             refreshToken = DUMMY_TOKEN,
             expiration = 300
-        )
+        ),
+        inputUsername = USERNAME
     )
 
     internal val signedInAmplifyCredential = AmplifyCredential.UserAndIdentityPool(
@@ -105,7 +106,8 @@ object AuthStateJsonGenerator : SerializableProvider {
                         parameters = mapOf(
                             "CODE_DELIVERY_DELIVERY_MEDIUM" to "SMS",
                             "CODE_DELIVERY_DESTINATION" to "+12345678900"
-                        )
+                        ),
+                        inputUsername = USERNAME
                     ),
                     SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_SRP_AUTH)
                 )
@@ -205,7 +207,8 @@ object AuthStateJsonGenerator : SerializableProvider {
                             "SECRET_BLOCK" to "secretBlock",
                             "SRP_B" to "def",
                             "USERNAME" to "username"
-                        )
+                        ),
+                        inputUsername = USERNAME
                     ),
                     SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.CUSTOM_AUTH)
                 )
