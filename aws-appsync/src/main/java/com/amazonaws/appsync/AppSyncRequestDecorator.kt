@@ -78,8 +78,8 @@ internal class AppSyncRequestDecorator(private val region: String) {
      * @param authorizer The authorizer to draw credentials from.
      * @param httpEndpoint The API's HTTP endpoint. SigV4 signs against this, not the `wss://` URL.
      * @param body The request document for a subscription, or null for the connection handshake.
-     *   Signing scope follows the plugin: a null body signs `{}` against `{endpoint}/connect`, and a
-     *   present body signs it against `{endpoint}`.
+     *   A null body signs `{}` against `{endpoint}/connect`; a present body is signed against
+     *   `{endpoint}` itself.
      */
     suspend fun authorizationHeaders(
         authorizer: AppSyncClientAuthorizer,
@@ -211,8 +211,8 @@ internal class AppSyncRequestDecorator(private val region: String) {
         const val DEFAULT_CONTENT_TYPE = "application/json"
         const val APPSYNC_SERVICE_NAME = "appsync"
 
-        // The WebSocket handshake and start messages are signed with these exact values, matching the
-        // plugin. The signature covers them, so they are not cosmetic.
+        // The WebSocket handshake and start messages are signed with these exact values. The signature
+        // covers them, so altering either would invalidate it.
         const val WEBSOCKET_ACCEPT = "application/json, text/javascript"
         const val WEBSOCKET_CONTENT_TYPE = "application/json; charset=UTF-8"
         const val CONNECT_PATH_SUFFIX = "/connect"

@@ -20,9 +20,8 @@ import com.google.gson.JsonParser
 /**
  * Messages of AppSync's `graphql-ws` subscription protocol.
  *
- * A private reimplementation of the plugin's `SubscriptionMessageType` plus its ad-hoc `JSONObject`
- * construction, modelled as a sealed hierarchy so the receive side is exhaustive and an unrecognised
- * message cannot be silently mistaken for a known one.
+ * Modelled as a sealed hierarchy so the receive side is exhaustive and an unrecognised message cannot
+ * be silently mistaken for a known one.
  *
  * Only the wire shapes the client actually uses are modelled. `connection_terminate` is absent
  * because the client closes the socket rather than negotiating termination.

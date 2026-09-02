@@ -48,9 +48,8 @@ import okhttp3.WebSocketListener
 /**
  * One AppSync realtime WebSocket connection, shared by every subscription on a client.
  *
- * A private reimplementation of the plugin's `SubscriptionEndpoint`, which is 720 lines of Java built
- * around locks, latches and callbacks. This exposes a single [messages] flow instead and lets callers
- * filter it, which is what makes per-subscription multiplexing a `filter` rather than a registry.
+ * Exposes a single [messages] flow rather than a callback registry, which is what lets every
+ * subscription multiplex over one connection by filtering that flow.
  *
  * Deliberately has no reconnection logic: a dead connection surfaces as a terminal error and the
  * consumer re-subscribes.
@@ -302,7 +301,8 @@ internal class AppSyncWebSocket(
         const val USER_AGENT_HEADER = "User-Agent"
         const val NORMAL_CLOSURE = 1000
 
-        // Matches the plugin's connection acknowledgement bound.
+        // An upgraded socket carries no read timeout of its own, so a server that accepts the upgrade
+        // and then says nothing would leave connect() suspended indefinitely.
         val DEFAULT_HANDSHAKE_TIMEOUT = 30.seconds
     }
 }

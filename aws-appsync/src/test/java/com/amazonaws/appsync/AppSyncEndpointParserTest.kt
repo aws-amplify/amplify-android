@@ -183,9 +183,8 @@ class AppSyncEndpointParserTest {
 
     @Test
     fun `a standard host with a trailing slash still swaps the label`() {
-        // The plugin classifies this as a custom domain, because its standard-endpoint pattern requires
-        // a path of exactly "/graphql" — so it would append /realtime to the standard host instead.
-        // Recognising it as standard is the intended behaviour here.
+        // A trailing slash must not defeat standard-host recognition: the label swap is decided by the
+        // host, so the path plays no part in the classification.
         realtimeUrl("https://abc123.appsync-api.us-east-1.amazonaws.com/graphql/") shouldBe
             "wss://abc123.appsync-realtime-api.us-east-1.amazonaws.com/graphql"
     }
