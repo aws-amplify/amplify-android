@@ -50,3 +50,17 @@ internal fun List<AppSyncWebSocketMessage.WireError>.hasSubscriptionLimitError()
     any { it.errorType == MAX_SUBSCRIPTIONS_REACHED }
 
 private const val MAX_SUBSCRIPTIONS_REACHED = "MaxSubscriptionsReachedError"
+
+/**
+ * Converts wire errors into the response type callers already handle, so an exception carrying them can
+ * be inspected the same way a query's errors are. The classification is preserved under `extensions`,
+ * which is where a GraphQL response carries it.
+ */
+internal fun List<AppSyncWebSocketMessage.WireError>.toGraphQLErrors(): List<GraphQLResponse.Error> = map {
+    GraphQLResponse.Error(
+        it.message,
+        null,
+        null,
+        it.errorType?.let { type -> mapOf("errorType" to type) } ?: emptyMap()
+    )
+}

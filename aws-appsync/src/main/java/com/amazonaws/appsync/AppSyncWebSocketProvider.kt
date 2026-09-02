@@ -14,9 +14,13 @@
  */
 package com.amazonaws.appsync
 
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -38,11 +42,18 @@ import kotlinx.coroutines.sync.withLock
  * @param connectionFactory Creates a socket. Injectable so tests need no real endpoint.
  */
 internal class AppSyncWebSocketProvider(
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val connectionFactory: () -> AppSyncWebSocket
 ) {
     private val mutex = Mutex()
     private var connected: AppSyncWebSocket? = null
     private var inProgress: Deferred<Result<AppSyncWebSocket>>? = null
+
+    // The attempt is launched here rather than in the calling coroutine. Scoping it to the caller would
+    // make the shared Deferred a child of whichever caller happened to arrive first, so that caller
+    // being cancelled — a screen closing, a take(1) completing — would cancel the connection out from
+    // under everyone who joined it.
+    private val scope = CoroutineScope(ioDispatcher + SupervisorJob())
 
     /** The live socket, or null if none has been established. Never opens one. */
     val existing: AppSyncWebSocket?
@@ -53,22 +64,22 @@ internal class AppSyncWebSocketProvider(
      *
      * @throws AppSyncException if the connection attempt fails. The failure is not cached.
      */
-    suspend fun connection(): AppSyncWebSocket = coroutineScope {
+    suspend fun connection(): AppSyncWebSocket {
         // Fast path: a live connection needs no lock contention.
-        existing?.let { return@coroutineScope it }
+        existing?.let { return it }
 
         // Join an attempt already running, without holding the lock while it completes — otherwise a
         // slow connect would serialize every waiting subscriber behind the mutex.
         inProgress?.takeUnless { it.isCompleted }?.let {
-            return@coroutineScope it.await().getOrElse { error -> throw error }
+            return it.await().getOrElse { error -> throw error }
         }
 
         val attempt = mutex.withLock {
             // Re-check under the lock: another coroutine may have finished between the checks above
             // and acquiring it. Without this, both would start an attempt.
-            existing?.let { return@coroutineScope it }
+            existing?.let { return it }
             inProgress?.takeUnless { it.isCompleted }
-                ?: async { attemptConnection() }.also { inProgress = it }
+                ?: scope.async { attemptConnection() }.also { inProgress = it }
         }
 
         val result = attempt.await()
@@ -78,7 +89,7 @@ internal class AppSyncWebSocketProvider(
             result.getOrNull()?.let { connected = it }
         }
 
-        result.getOrElse { error -> throw error }
+        return result.getOrElse { error -> throw error }
     }
 
     /**
@@ -94,6 +105,7 @@ internal class AppSyncWebSocketProvider(
             }
         }
         socket?.disconnect(cause)
+        scope.cancel()
     }
 
     private suspend fun attemptConnection(): Result<AppSyncWebSocket> = try {

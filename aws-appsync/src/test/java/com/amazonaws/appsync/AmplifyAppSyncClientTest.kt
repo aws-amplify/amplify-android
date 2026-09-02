@@ -37,6 +37,7 @@ import java.net.HttpURLConnection
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
@@ -334,6 +335,34 @@ class AmplifyAppSyncClientTest {
         inFlight.isCancelled shouldBe true
         // Cancellation must not be mistaken for a failure worth attempting under another auth mode.
         server.requestCount shouldBe 1
+    }
+
+    // ── Subscriptions ───────────────────────────────────────────────────
+
+    @Test
+    fun `subscribe on a closed client fails the collector`() = runTest {
+        // Deliberately a different mechanism from query/mutate: subscribe returns a cold flow, so the
+        // check belongs at collection rather than at the call that merely builds it.
+        val client = client()
+        client.close()
+
+        val error = runCatching { client.subscribe(request()).first() }.exceptionOrNull()
+
+        error.shouldBeInstanceOf<AppSyncValidationException>()
+        error.message shouldContain "closed"
+    }
+
+    @Test
+    fun `the websocket client configurator is applied`() = runTest {
+        // This PR makes the WebSocket configurator live for the first time; without a test, passing
+        // httpClientConfigurator here by mistake would go unnoticed.
+        var configured = false
+        val client = client { webSocketClientConfigurator = { configured = true } }
+
+        // The connection attempt fails against a server that will not upgrade; touching it is enough.
+        runCatching { client.subscribe(request()).first() }
+
+        configured shouldBe true
     }
 
     // ── Configuration ───────────────────────────────────────────────────

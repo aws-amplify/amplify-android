@@ -23,6 +23,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.test.runTest
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -129,6 +130,23 @@ class AppSyncWebSocketTest {
         scriptServer(KEEP_ALIVE, ACK)
 
         webSocket().connect()
+    }
+
+    @Test
+    fun `a silent server times the handshake out rather than hanging`() = runTest {
+        // OkHttp leaves an upgraded WebSocket with no read timeout, so without this bound a server that
+        // completes the 101 and then says nothing would suspend connect() forever — and every later
+        // subscriber would join the same hung attempt.
+        every { client.newWebSocket(any(), any()) } answers {
+            secondArg<WebSocketListener>().onOpen(rawSocket, mockk(relaxed = true))
+            rawSocket
+        }
+
+        val error = shouldThrow<AppSyncTimeoutException> {
+            webSocket().connect(handshakeTimeout = 5.seconds)
+        }
+
+        error.message shouldContain "5s"
     }
 
     // ── Handshake failures ──────────────────────────────────────────────

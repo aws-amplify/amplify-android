@@ -31,6 +31,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -60,19 +61,26 @@ class AppSyncSubscriberTest {
     private val messages = MutableSharedFlow<AppSyncWebSocketMessage.Inbound>(extraBufferCapacity = 64)
     private val sentSlot = slot<AppSyncWebSocketMessage.Outbound>()
 
+    /** The socket's settled terminal state. Completing it is how these tests simulate the socket dying. */
+    private val terminated = CompletableDeferred<AppSyncException?>()
+
     private val socket: AppSyncWebSocket = mockk(relaxed = true) {
         every { this@mockk.messages } returns this@AppSyncSubscriberTest.messages
         every { isClosed } returns false
         every { send(capture(sentSlot)) } returns true
+        every { closure } returns terminated
     }
 
     private fun subscriber(
         authorization: AppSyncAuthorization = AppSyncAuthorization.Single(
             AppSyncClientAuthorizer.ApiKey("da2-fakekey")
         ),
+        // Deliberately NOT linked to runTest's scheduler: leaving it unadvanced keeps the subscriber's
+        // disconnect watcher from running, which is what lets the tests below assert expectNoEvents().
+        // The disconnect test opts into a linked dispatcher precisely to make the watcher run.
         ioDispatcher: CoroutineDispatcher = StandardTestDispatcher()
     ) = AppSyncSubscriber(
-        provider = AppSyncWebSocketProvider { socket },
+        provider = AppSyncWebSocketProvider(UnconfinedTestDispatcher()) { socket },
         authorization = authorization,
         decorator = AppSyncRequestDecorator("us-east-1"),
         httpEndpoint = "https://abc123.appsync-api.us-east-1.amazonaws.com/graphql",
@@ -281,8 +289,11 @@ class AppSyncSubscriberTest {
 
             messages.emit(AppSyncWebSocketMessage.Error(id, listOf(wireError("Validation failed"))))
 
-            awaitError().shouldBeInstanceOf<AppSyncGraphQLErrorException>()
-                .message shouldContain "Validation failed"
+            val error = awaitError().shouldBeInstanceOf<AppSyncGraphQLErrorException>()
+            error.message shouldContain "Validation failed"
+            // The parsed errors are carried on the exception, so its own recovery suggestion —
+            // "inspect the errors list" — is actually actionable.
+            error.errors.single().message shouldBe "Validation failed"
         }
     }
 
@@ -554,7 +565,9 @@ class AppSyncSubscriberTest {
     @Test
     fun `events reports a Disconnected with the cause when connecting fails`() = runTest {
         val failing = AppSyncSubscriber(
-            provider = AppSyncWebSocketProvider { throw AppSyncConnectionException("refused") },
+            provider = AppSyncWebSocketProvider(UnconfinedTestDispatcher()) {
+                throw AppSyncConnectionException("refused")
+            },
             authorization = AppSyncAuthorization.Single(AppSyncClientAuthorizer.ApiKey("da2-fakekey")),
             decorator = AppSyncRequestDecorator("us-east-1"),
             httpEndpoint = "https://abc123.appsync-api.us-east-1.amazonaws.com/graphql"
@@ -580,6 +593,7 @@ class AppSyncSubscriberTest {
         subscriber.events.test {
             subscriber.subscribe(request()).test {
                 awaitItem() shouldBe SubscriptionEvent.Connecting
+                terminated.complete(AppSyncTimeoutException("idle"))
                 messages.emit(AppSyncWebSocketMessage.Closed(AppSyncTimeoutException("idle")))
                 awaitError()
             }

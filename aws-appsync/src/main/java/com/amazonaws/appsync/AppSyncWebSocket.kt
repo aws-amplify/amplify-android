@@ -16,12 +16,16 @@ package com.amazonaws.appsync
 
 import com.amplifyframework.util.UserAgent
 import java.io.IOException
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
@@ -31,7 +35,10 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -73,8 +80,15 @@ internal class AppSyncWebSocket(
     val messages = messageFlow.asSharedFlow()
 
     private val scope = CoroutineScope(ioDispatcher + SupervisorJob())
+
+    @Volatile
     private var socket: WebSocket? = null
+
+    @Volatile
     private var watchdog: Job? = null
+
+    @Volatile
+    private var watchdogTimeoutMs: Long = 0
 
     @Volatile
     var isClosed = false
@@ -85,12 +99,28 @@ internal class AppSyncWebSocket(
     private var pendingCloseCause: AppSyncException? = null
 
     /**
+     * Completes when the socket dies, carrying the reason or null for a clean close.
+     *
+     * Waiting on this rather than on a [AppSyncWebSocketMessage.Closed] message removes a race: the
+     * message flow has no replay, so anyone who subscribes after closure has already been emitted would
+     * wait forever. This is settled state, so it can be awaited at any point and still be observed.
+     */
+    private val terminated = CompletableDeferred<AppSyncException?>()
+    private val disconnectMutex = Mutex()
+
+    /** Completes when the socket dies. See [terminated]. */
+    val closure: Deferred<AppSyncException?> get() = terminated
+
+    /**
      * Opens the socket and completes the AppSync handshake.
      *
+     * @param handshakeTimeout How long to wait for the service to acknowledge. Bounding this matters
+     *   because OkHttp leaves an upgraded WebSocket with no read timeout, so a server that completes
+     *   the upgrade and then goes silent would otherwise suspend this call indefinitely.
      * @throws AppSyncConnectionException if the connection is refused or closes during the handshake.
-     * @throws AppSyncTimeoutException if no acknowledgement arrives.
+     * @throws AppSyncTimeoutException if the service does not acknowledge within [handshakeTimeout].
      */
-    suspend fun connect(): Unit = coroutineScope {
+    suspend fun connect(handshakeTimeout: Duration = DEFAULT_HANDSHAKE_TIMEOUT): Unit = coroutineScope {
         // Collection has to be running before the socket opens, or a fast connection_ack lands before
         // anyone is listening and the await below waits forever. The shared flow has no replay.
         val listening = CompletableDeferred<Unit>()
@@ -106,13 +136,24 @@ internal class AppSyncWebSocket(
 
         socket = client.newWebSocket(request, this@AppSyncWebSocket)
 
-        when (val result = handshake.await()) {
+        val result = try {
+            withTimeout(handshakeTimeout) { handshake.await() }
+        } catch (timeout: TimeoutCancellationException) {
+            teardown()
+            throw AppSyncTimeoutException(
+                message = "AppSync did not acknowledge the subscription connection within " +
+                    "${handshakeTimeout.inWholeSeconds}s.",
+                cause = timeout
+            )
+        }
+
+        when (result) {
             is AppSyncWebSocketMessage.ConnectionAck -> resetWatchdog(result.connectionTimeoutMs)
             is AppSyncWebSocketMessage.ConnectionError -> {
                 teardown()
                 throw AppSyncConnectionException(
                     message = "AppSync refused the subscription connection: " +
-                        result.errors.joinToString("; ").ifEmpty { "no reason given" }
+                        result.errors.joinToString("; ") { it.message }.ifEmpty { "no reason given" }
                 )
             }
             is AppSyncWebSocketMessage.Closed -> {
@@ -137,23 +178,23 @@ internal class AppSyncWebSocket(
 
     /**
      * Closes the socket and waits for closure to be observed, so a caller can rely on the connection
-     * being gone once this returns. Idempotent.
+     * being gone once this returns. Idempotent, including under concurrent callers.
      *
      * @param cause Why it is being closed, or null for a clean shutdown.
      */
     suspend fun disconnect(cause: AppSyncException? = null): Unit = withContext(ioDispatcher) {
-        if (isClosed) return@withContext
-        pendingCloseCause = cause
-
-        val listening = CompletableDeferred<Unit>()
-        val closed = async { awaitClosed { listening.complete(Unit) } }
-        listening.await()
-
-        socket?.close(NORMAL_CLOSURE, "Client closed the connection") ?: run {
-            // Never opened, so no close frame will come back — synthesize one.
-            handleClosed()
+        // Serialized so two concurrent callers cannot both pass the isClosed check, leaving the second
+        // awaiting a closure notification that has already been delivered.
+        disconnectMutex.withLock {
+            if (!isClosed) {
+                pendingCloseCause = cause
+                socket?.close(NORMAL_CLOSURE, "Client closed the connection")
+                    // Never opened, so no close frame will come back — synthesize one.
+                    ?: handleClosed()
+            }
         }
-        closed.await()
+        // Settled state rather than a message, so this is safe however late it is awaited.
+        terminated.await()
         scope.cancel()
     }
 
@@ -209,10 +250,6 @@ internal class AppSyncWebSocket(
                 it is AppSyncWebSocketMessage.Closed
         }
 
-    private suspend fun awaitClosed(onListening: () -> Unit) = messages
-        .onStart { onListening() }
-        .first { it is AppSyncWebSocketMessage.Closed }
-
     /**
      * AppSync closes an idle connection without warning, so the absence of traffic for longer than the
      * timeout it advertised is treated as a dead connection rather than waiting on a socket that will
@@ -238,20 +275,25 @@ internal class AppSyncWebSocket(
         }
     }
 
-    @Volatile
-    private var watchdogTimeoutMs: Long = 0
-
+    /**
+     * Every closure path funnels through here, so this is where the socket's resources are released and
+     * its terminal state is published.
+     */
     private fun handleClosed() {
         if (isClosed) return
         isClosed = true
         watchdog?.cancel()
-        messageFlow.tryEmit(AppSyncWebSocketMessage.Closed(pendingCloseCause))
+        val cause = pendingCloseCause
+        messageFlow.tryEmit(AppSyncWebSocketMessage.Closed(cause))
+        terminated.complete(cause)
+        // The scope's lifetime is the socket's. Cancelling here rather than only in disconnect() covers
+        // a socket that dies on its own, which is the common case.
+        scope.cancel()
     }
 
     private fun teardown() {
         socket?.cancel()
         handleClosed()
-        scope.cancel()
     }
 
     private companion object {
@@ -259,5 +301,8 @@ internal class AppSyncWebSocket(
         const val GRAPHQL_WS_SUBPROTOCOL = "graphql-ws"
         const val USER_AGENT_HEADER = "User-Agent"
         const val NORMAL_CLOSURE = 1000
+
+        // Matches the plugin's connection acknowledgement bound.
+        val DEFAULT_HANDSHAKE_TIMEOUT = 30.seconds
     }
 }
