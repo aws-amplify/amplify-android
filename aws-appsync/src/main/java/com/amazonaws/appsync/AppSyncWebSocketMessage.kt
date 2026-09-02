@@ -71,7 +71,11 @@ internal sealed interface AppSyncWebSocketMessage {
 
     /** Unregisters one subscription. Sent on flow cancellation. */
     data class Stop(val id: String) : Outbound {
-        override fun toJson() = """{"id":"$id","type":"$TYPE_STOP"}"""
+        // Built rather than interpolated, so an id containing a quote cannot produce invalid JSON.
+        override fun toJson() = JsonObject().apply {
+            addProperty("id", id)
+            addProperty("type", TYPE_STOP)
+        }.toString()
     }
 
     /** Messages the service sends. */
@@ -114,8 +118,11 @@ internal sealed interface AppSyncWebSocketMessage {
     data class Complete(val id: String) : Inbound
 
     /**
-     * A message this client does not model. Kept rather than dropped so an unexpected wire change is
-     * visible in logs instead of looking like silence.
+     * A message this client does not model. Modelled explicitly rather than discarded during parsing so
+     * that an unexpected wire change is a value a caller can match on.
+     *
+     * TODO: log these — nothing in this module logs today, so an unknown frame currently passes
+     *  unnoticed.
      */
     data class Unknown(val type: String?, val raw: String) : Inbound
 

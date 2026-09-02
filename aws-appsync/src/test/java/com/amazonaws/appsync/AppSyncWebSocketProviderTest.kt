@@ -23,9 +23,13 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import java.util.concurrent.atomic.AtomicInteger
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
@@ -43,7 +47,7 @@ class AppSyncWebSocketProviderTest {
 
     private fun liveSocket(): AppSyncWebSocket = mockk(relaxed = true) {
         every { isClosed } returns false
-        coEvery { connect() } returns Unit
+        coEvery { connect(any()) } returns Unit
     }
 
     private fun provider(factory: () -> AppSyncWebSocket = { liveSocket() }) = AppSyncWebSocketProvider {
@@ -95,7 +99,7 @@ class AppSyncWebSocketProviderTest {
         val provider = provider {
             mockk(relaxed = true) {
                 every { isClosed } returns false
-                coEvery { connect() } coAnswers { delay(50) }
+                coEvery { connect(any()) } coAnswers { delay(50) }
             }
         }
 
@@ -105,12 +109,37 @@ class AppSyncWebSocketProviderTest {
         sockets.distinct().size shouldBe 1
     }
 
+    @Test
+    fun `cancelling the first caller does not cancel the attempt others joined`() = runTest {
+        // The attempt belongs to the provider, not to whichever caller happened to arrive first. If it
+        // were scoped to the caller, that caller going away — a screen closing, a take(1) completing —
+        // would cancel the connection out from under everyone waiting on it.
+        val gate = CompletableDeferred<Unit>()
+        val provider = provider {
+            mockk(relaxed = true) {
+                every { isClosed } returns false
+                coEvery { connect(any()) } coAnswers { gate.await() }
+            }
+        }
+
+        val first = launch { provider.connection() }
+        val second = async { provider.connection() }
+        runCurrent()
+
+        first.cancel()
+        gate.complete(Unit)
+
+        // The joiner still gets its connection.
+        second.await()
+        connectionsOpened.get() shouldBe 1
+    }
+
     // ── Failure is not cached ───────────────────────────────────────────
 
     @Test
     fun `a failed attempt is not cached, so the next caller retries`() = runTest {
         var attempts = 0
-        val provider = AppSyncWebSocketProvider {
+        val provider = AppSyncWebSocketProvider(UnconfinedTestDispatcher()) {
             attempts++
             if (attempts == 1) throw AppSyncConnectionException("refused") else liveSocket()
         }
@@ -123,7 +152,7 @@ class AppSyncWebSocketProviderTest {
 
     @Test
     fun `a connection failure surfaces as a typed AppSyncException`() = runTest {
-        val provider = AppSyncWebSocketProvider { throw IllegalStateException("boom") }
+        val provider = AppSyncWebSocketProvider(UnconfinedTestDispatcher()) { throw IllegalStateException("boom") }
 
         shouldThrow<AppSyncException> { provider.connection() }
             .shouldBeInstanceOf<AppSyncUnknownException>()
@@ -131,7 +160,7 @@ class AppSyncWebSocketProviderTest {
 
     @Test
     fun `every caller joined to a failed attempt sees the failure`() = runTest {
-        val provider = AppSyncWebSocketProvider {
+        val provider = AppSyncWebSocketProvider(UnconfinedTestDispatcher()) {
             throw AppSyncConnectionException("refused")
         }
 
@@ -148,7 +177,7 @@ class AppSyncWebSocketProviderTest {
     fun `a closed connection is replaced rather than handed out`() = runTest {
         val closed: AppSyncWebSocket = mockk(relaxed = true) { every { isClosed } returns true }
         var handedOut = 0
-        val provider = AppSyncWebSocketProvider {
+        val provider = AppSyncWebSocketProvider(UnconfinedTestDispatcher()) {
             handedOut++
             if (handedOut == 1) closed else liveSocket()
         }
@@ -165,7 +194,7 @@ class AppSyncWebSocketProviderTest {
     @Test
     fun `existing reports null once the connection has closed`() = runTest {
         val socket: AppSyncWebSocket = mockk(relaxed = true) { every { isClosed } returns true }
-        val provider = AppSyncWebSocketProvider { socket }
+        val provider = AppSyncWebSocketProvider(UnconfinedTestDispatcher()) { socket }
 
         provider.connection()
 
@@ -177,7 +206,7 @@ class AppSyncWebSocketProviderTest {
     @Test
     fun `close disconnects the shared socket`() = runTest {
         val socket = liveSocket()
-        val provider = AppSyncWebSocketProvider { socket }
+        val provider = AppSyncWebSocketProvider(UnconfinedTestDispatcher()) { socket }
         provider.connection()
 
         provider.close()
@@ -189,7 +218,7 @@ class AppSyncWebSocketProviderTest {
     fun `close passes the cause through`() = runTest {
         val socket = liveSocket()
         val cause = AppSyncTimeoutException("idle")
-        val provider = AppSyncWebSocketProvider { socket }
+        val provider = AppSyncWebSocketProvider(UnconfinedTestDispatcher()) { socket }
         provider.connection()
 
         provider.close(cause)
@@ -205,13 +234,15 @@ class AppSyncWebSocketProviderTest {
     }
 
     @Test
-    fun `a request after close opens a fresh connection`() = runTest {
+    fun `close ends the provider, since the client that owns it cannot be reused`() = runTest {
+        // close() cancels the scope the shared attempt runs in, so the provider is single-use. That
+        // matches the client's own contract, which states it cannot be reused after closing.
         val provider = provider()
         provider.connection()
 
         provider.close()
-        provider.connection()
 
-        connectionsOpened.get() shouldBe 2
+        shouldThrow<Exception> { provider.connection() }
+        connectionsOpened.get() shouldBe 1
     }
 }
