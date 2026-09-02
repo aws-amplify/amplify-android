@@ -21,9 +21,14 @@ import com.amplifyframework.foundation.result.Result
 import com.amplifyframework.foundation.result.getOrThrow
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 
@@ -54,6 +59,10 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
 
     private val closed = AtomicBoolean(false)
 
+    // close() is not suspend but the WebSocket teardown is, so it needs somewhere to run. Deliberately
+    // not cancelled: cancelling it would abort the very teardown it was created to perform.
+    private val teardownScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
     private val lazyHttpClient = lazy {
         OkHttpClient.Builder()
             .apply { configuration.httpClientConfigurator?.invoke(this) }
@@ -71,12 +80,38 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
         )
     }
 
+    private val webSocketClient: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .apply { configuration.webSocketClientConfigurator?.invoke(this) }
+            .build()
+    }
+
+    private val subscriber: AppSyncSubscriber by lazy {
+        val decorator = AppSyncRequestDecorator(configuration.region)
+        val realtimeUrl = AppSyncEndpointParser.realtimeUrl(configuration.endpoint).getOrThrow()
+
+        AppSyncSubscriber(
+            provider = AppSyncWebSocketProvider {
+                AppSyncWebSocket(
+                    realtimeUrl = realtimeUrl,
+                    httpEndpoint = configuration.endpoint,
+                    authorizer = configuration.authorization.defaultAuthorizer,
+                    decorator = decorator,
+                    client = webSocketClient
+                )
+            },
+            authorization = configuration.authorization,
+            decorator = decorator,
+            httpEndpoint = configuration.endpoint
+        )
+    }
+
     /**
      * Per-client connection state flow.
      * Emits [ConnectionState] changes for the shared WebSocket connection.
      */
     val events: SharedFlow<ConnectionState>
-        get() = TODO("Connection state will be implemented with subscriptions")
+        get() = subscriber.events
 
     /**
      * Execute a GraphQL query.
@@ -134,26 +169,40 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
      * @param request The GraphQL subscription request. Use model helpers or construct manually.
      * @return A cold [Flow] of [SubscriptionEvent].
      */
-    fun <T> subscribe(request: GraphQLRequest<T>): Flow<SubscriptionEvent<T>> =
-        TODO("Subscription implementation will be added in a follow-up PR")
+    fun <T> subscribe(request: GraphQLRequest<T>): Flow<SubscriptionEvent<T>> = flow {
+        // Checked at collection rather than call time, so a closed client fails the collector rather
+        // than throwing from a function that only builds a cold flow.
+        if (closed.get()) {
+            throw AppSyncValidationException(
+                message = "This client has been closed and cannot be reused.",
+                recoverySuggestion = "Create a new AmplifyAppSyncClient."
+            )
+        }
+        emitAll(subscriber.subscribe(request))
+    }
 
     /**
-     * Close the client, cancelling enqueued requests and releasing pooled connections.
-     * The client cannot be reused after closing.
+     * Close the client, cancelling enqueued requests, terminating active subscriptions and releasing
+     * pooled connections. The client cannot be reused after closing.
+     *
+     * Subscription teardown is asynchronous: this returns before the WebSocket has finished closing.
      *
      * A request that has already passed its own closed check can still be dispatched after this
      * returns, because closing does not lock the send path. Such a request completes normally rather
      * than being cancelled.
-     *
-     * TODO: terminate active subscriptions once subscriptions are supported.
      */
     fun close() {
         if (!closed.compareAndSet(false, true)) return
         // Nothing to release if no request was ever issued, and touching the client here would build
         // one — running the caller's configurator — purely to cancel an empty dispatcher.
-        if (!lazyHttpClient.isInitialized()) return
-        httpClient.dispatcher.cancelAll()
-        httpClient.connectionPool.evictAll()
+        if (lazyHttpClient.isInitialized()) {
+            httpClient.dispatcher.cancelAll()
+            httpClient.connectionPool.evictAll()
+        }
+        // The WebSocket teardown is suspending — it waits for closure to be observed so subscription
+        // flows complete normally rather than being cut off. close() is not suspend, so it is launched
+        // on a scope that deliberately outlives this call.
+        teardownScope.launch { subscriber.close() }
     }
 
     // ── Configuration ───────────────────────────────────────────────────
