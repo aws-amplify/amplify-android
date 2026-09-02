@@ -22,8 +22,7 @@ import com.amplifyframework.datastore.appsync.AppSyncExtensions
  * with any identity. Only the former is worth retrying with a different auth mode.
  *
  * Both the HTTP and WebSocket paths need this, and both defer the classification to
- * [AppSyncExtensions] so the client agrees with the API plugin on which error types count rather than
- * maintaining its own list of magic strings.
+ * [AppSyncExtensions] rather than maintaining a list of error-type strings here.
  */
 
 /** Whether any error on this response is an authorization failure. */

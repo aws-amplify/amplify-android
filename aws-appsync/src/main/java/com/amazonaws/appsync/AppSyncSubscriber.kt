@@ -42,9 +42,8 @@ import kotlinx.coroutines.withTimeout
  * Turns a GraphQL subscription request into a [Flow] of [SubscriptionEvent], multiplexed over the
  * client's shared WebSocket.
  *
- * A private reimplementation of the plugin's `SubscriptionOperation` and the registry inside
- * `SubscriptionEndpoint`. Because the socket exposes one flow of messages, a subscription is a
- * *filter* over it keyed by subscription id rather than an entry in a callback registry.
+ * Because the socket exposes one flow of messages, a subscription is a *filter* over that flow keyed by
+ * subscription id rather than an entry in a callback registry.
  *
  * @param provider Supplies the shared connection, opening it on first subscribe.
  * @param authorization The client's authorizer configuration.
@@ -356,7 +355,7 @@ internal class AppSyncSubscriber(
     }
 
     private companion object {
-        // Matches the plugin's subscription acknowledgement bound.
+        // Without a bound, a subscription the service never acknowledges sits on Connecting forever.
         val DEFAULT_REGISTRATION_TIMEOUT = 10.seconds
     }
 

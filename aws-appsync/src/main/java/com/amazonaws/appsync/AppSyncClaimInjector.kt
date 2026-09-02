@@ -30,9 +30,8 @@ import com.amplifyframework.core.model.ModelOperation
  * Applies to subscriptions only. AppSync resolves the owner server-side for queries and mutations, so
  * they need nothing added.
  *
- * A private reimplementation of the plugin's `AuthRuleRequestDecorator`. It differs in one way worth
- * knowing: the plugin looks up a token from a registry of auth providers, whereas here the authorizer
- * already carries the token supplier, so the token is simply requested from it.
+ * The token is requested from the authorizer already in play for the attempt, so the claim always comes
+ * from the identity the subscription will actually be registered under.
  */
 internal class AppSyncClaimInjector {
 
@@ -66,7 +65,7 @@ internal class AppSyncClaimInjector {
                 rule.isOwnerReadRule() -> {
                     if (ownerRule != null) {
                         // AppSync generates a separate variable per owner rule, so there is no single
-                        // value to send. The plugin refuses this case too.
+                        // value to send.
                         throw AppSyncAuthorizationClaimException(
                             message = "The model has more than one owner @auth rule restricting reads, " +
                                 "so there is no single owner to send.",

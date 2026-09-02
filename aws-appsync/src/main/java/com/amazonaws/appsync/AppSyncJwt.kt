@@ -25,9 +25,8 @@ import okio.ByteString.Companion.decodeBase64
  * the service then authorizes for itself, so the token is being read for its content rather than
  * trusted — AppSync validates it independently.
  *
- * A private reimplementation of the plugin's `CognitoJWTParser`, which decodes with
- * `android.util.Base64`. This uses okio instead, which arrives with OkHttp and works on a plain JVM,
- * so nothing here needs an Android runtime to be exercised.
+ * Decodes with okio, which arrives alongside OkHttp and handles base64url and absent padding. Nothing
+ * here needs an Android runtime, so it can be exercised on a plain JVM.
  */
 internal object AppSyncJwt {
 
