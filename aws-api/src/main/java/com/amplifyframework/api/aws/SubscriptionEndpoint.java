@@ -18,6 +18,7 @@ package com.amplifyframework.api.aws;
 import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
@@ -40,7 +41,6 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
@@ -86,14 +86,28 @@ final class SubscriptionEndpoint {
             @NonNull SubscriptionAuthorizer authorizer,
             @Nullable String apiName
     ) {
+        this(apiConfiguration, responseFactory, authorizer, apiName, buildOkHttpClient(configurator));
+    }
+
+    @VisibleForTesting
+    SubscriptionEndpoint(
+            @NonNull ApiConfiguration apiConfiguration,
+            @NonNull GraphQLResponse.Factory responseFactory,
+            @NonNull SubscriptionAuthorizer authorizer,
+            @Nullable String apiName,
+            @NonNull OkHttpClient okHttpClient
+    ) {
         this.apiConfiguration = Objects.requireNonNull(apiConfiguration);
         this.subscriptions = new ConcurrentHashMap<>();
         this.responseFactory = Objects.requireNonNull(responseFactory);
         this.authorizer = Objects.requireNonNull(authorizer);
         this.timeoutWatchdog = new TimeoutWatchdog();
-        this.pendingSubscriptionIds = Collections.synchronizedSet(new HashSet<>());
+        this.pendingSubscriptionIds = ConcurrentHashMap.newKeySet();
         this.apiName = apiName;
+        this.okHttpClient = Objects.requireNonNull(okHttpClient);
+    }
 
+    private static OkHttpClient buildOkHttpClient(@Nullable OkHttpConfigurator configurator) {
         OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder()
                 .retryOnConnectionFailure(true);
 
@@ -101,7 +115,7 @@ final class SubscriptionEndpoint {
             configurator.applyConfiguration(okHttpClientBuilder);
         }
 
-        this.okHttpClient = okHttpClientBuilder.build();
+        return okHttpClientBuilder.build();
     }
 
     <T> void requestSubscription(
@@ -160,6 +174,16 @@ final class SubscriptionEndpoint {
             }
         }
 
+        // Register the subscription before sending "start" so that a connection failure arriving
+        // mid-setup (for example during IAM/Cognito auth header creation below) can fail it fast via
+        // failAllPendingSubscriptions() instead of leaving this thread blocked for the full
+        // acknowledgement timeout waiting for a start_ack that will never arrive.
+        Subscription<T> subscription = new Subscription<>(
+            onNextItem, onSubscriptionError, onSubscriptionComplete,
+            responseFactory, request.getResponseType(), request, apiName
+        );
+        subscriptions.put(subscriptionId, subscription);
+
         try {
             String jsonMessage = new JSONObject()
                 .put("id", subscriptionId)
@@ -170,9 +194,23 @@ final class SubscriptionEndpoint {
                 .put("authorization", authorizer.createHeadersForSubscription(request, authType))))
                 .toString();
 
-            socket.send(jsonMessage);
+            if (!socket.send(jsonMessage)) {
+                // The WebSocket rejected the message because it is closed or closing (for example,
+                // the connection dropped during a network change). Fail fast instead of waiting the
+                // full acknowledgement timeout for a start_ack that will never arrive.
+                LOG.warn("Failed to send subscription registration message; the connection is closed or closing.");
+                subscriptions.remove(subscriptionId);
+                if (pendingSubscriptionIds.remove(subscriptionId)) {
+                    onSubscriptionError.accept(new AppSyncSubscriptionConnectionException(
+                        "Failed to send subscription registration message; the connection is closed or closing.",
+                        null,
+                        "Check your Internet connection. Is your device online?"));
+                }
+                return;
+            }
         } catch (JSONException | ApiException exception) {
             // If the subscriptionId was still pending, then we can call the onSubscriptionError
+            subscriptions.remove(subscriptionId);
             if (pendingSubscriptionIds.remove(subscriptionId)) {
                 if (exception instanceof ApiAuthException) {
                     // Don't wrap it if it's an ApiAuthException.
@@ -189,11 +227,6 @@ final class SubscriptionEndpoint {
             return;
         }
 
-        Subscription<T> subscription = new Subscription<>(
-            onNextItem, onSubscriptionError, onSubscriptionComplete,
-            responseFactory, request.getResponseType(), request, apiName
-        );
-        subscriptions.put(subscriptionId, subscription);
         if (subscription.awaitSubscriptionReady()) {
             pendingSubscriptionIds.remove(subscriptionId);
             onSubscriptionStarted.accept(subscriptionId);
@@ -217,6 +250,18 @@ final class SubscriptionEndpoint {
         Subscription<?> subscription = subscriptions.get(subscriptionId);
         if (subscription != null && pendingSubscriptionIds.remove(subscriptionId)) {
             subscription.acknowledgeSubscriptionFailure();
+        }
+    }
+
+    // Release every subscription still awaiting a start_ack so they fail fast rather than blocking
+    // for the full acknowledgement timeout. Used when the underlying connection fails, since a
+    // transport-level failure means no start_ack will ever be delivered for pending subscriptions.
+    private void failAllPendingSubscriptions() {
+        for (String subscriptionId : new HashSet<>(pendingSubscriptionIds)) {
+            Subscription<?> subscription = subscriptions.get(subscriptionId);
+            if (subscription != null && pendingSubscriptionIds.remove(subscriptionId)) {
+                subscription.acknowledgeSubscriptionFailure();
+            }
         }
     }
 
@@ -564,6 +609,9 @@ final class SubscriptionEndpoint {
             connectionResponse.countDown();
             // This will broadcast the error to all subscriptions
             notifyError(failure);
+            // Release any subscriptions still awaiting a start_ack so they fail fast instead of
+            // blocking for the full acknowledgement timeout now that the connection has failed.
+            failAllPendingSubscriptions();
         }
 
         @Override
@@ -587,7 +635,9 @@ final class SubscriptionEndpoint {
                 return new Connection("Thread interrupted waiting for connection acknowledgement", exception);
             }
             LOG.debug("Current endpoint status: " + endpointStatus.get());
-            if (EndpointStatus.CONNECTION_FAILED.equals(endpointStatus.get())) {
+            // Check connectionFailureCause in addition to the status: a late onClosed() can flip the
+            // status to DISCONNECTED after a failure set the cause, and we must still report failure.
+            if (EndpointStatus.CONNECTION_FAILED.equals(endpointStatus.get()) || connectionFailureCause != null) {
                 return new Connection("Connection failed.", connectionFailureCause);
             }
             return new Connection();
@@ -599,7 +649,17 @@ final class SubscriptionEndpoint {
                     .put("type", "connection_init")
                     .toString();
 
-                webSocket.send(jsonMessage);
+                if (!webSocket.send(jsonMessage)) {
+                    // The socket is closed or closing, so the connection can never be acknowledged.
+                    // Mark the connection failed and release waiters instead of letting them block
+                    // for the full connection acknowledgement timeout.
+                    LOG.warn("Failed to send connection_init message; the connection is closed or closing.");
+                    endpointStatus.set(EndpointStatus.CONNECTION_FAILED);
+                    connectionFailureCause = new IOException(
+                        "Failed to send connection_init message; the connection is closed or closing.");
+                    webSocket.cancel();
+                    connectionResponse.countDown();
+                }
             } catch (JSONException jsonException) {
                 notifyError(jsonException);
             }
@@ -645,6 +705,12 @@ final class SubscriptionEndpoint {
                         }
                         
                         connectionResponse.countDown();
+                        // Broadcast the error before releasing pending subscriptions. Once
+                        // failAllPendingSubscriptions() marks them failed, awaitSubscriptionReady()
+                        // returns without dispatching, so an established or in-flight subscription
+                        // would otherwise receive neither a started nor an error callback.
+                        notifyError(connectionFailureCause);
+                        failAllPendingSubscriptions();
                         break;
                     case SUBSCRIPTION_ACK:
                         notifySubscriptionAcknowledged(jsonMessage.getString("id"));
