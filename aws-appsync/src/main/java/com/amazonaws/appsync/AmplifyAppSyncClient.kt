@@ -138,8 +138,12 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
         TODO("Subscription implementation will be added in a follow-up PR")
 
     /**
-     * Close the client, cancelling in-flight requests and releasing pooled connections.
+     * Close the client, cancelling enqueued requests and releasing pooled connections.
      * The client cannot be reused after closing.
+     *
+     * A request that has already passed its own closed check can still be dispatched after this
+     * returns, because closing does not lock the send path. Such a request completes normally rather
+     * than being cancelled.
      *
      * TODO: terminate active subscriptions once subscriptions are supported.
      */

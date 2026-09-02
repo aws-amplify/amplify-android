@@ -117,6 +117,8 @@ internal class AppSyncRequestDecorator(private val region: String) {
                 region = this@AppSyncRequestDecorator.region
                 service = APPSYNC_SERVICE_NAME
                 credentials = authorizer.credentialsProvider.toSmithyProvider().resolve()
+                // AppSync expects the path to be URI-encoded twice, as most services do. S3 is the
+                // notable exception, and getting this wrong fails signing with no useful diagnostic.
                 useDoubleUriEncode = true
                 signedBodyHeader = AwsSignedBodyHeader.X_AMZ_CONTENT_SHA256
             }
@@ -130,19 +132,18 @@ internal class AppSyncRequestDecorator(private val region: String) {
             )
         }
 
-        // Rebuild the OkHttp request from the signed one. The signed Content-Type is read back out of
-        // the headers and reapplied through the body's MediaType, because OkHttp takes Content-Type
-        // from the body rather than from a header set on the builder.
+        // Rebuild the OkHttp request from the signed one, reapplying the content type through the body
+        // because OkHttp takes it from the body's MediaType rather than from a header on the builder.
+        //
+        // The content type is not carried on `headers` — OkHttp derives it from the body when the call
+        // is made — so it is neither signed nor recoverable from the signed request, and the value the
+        // caller posted has to be restated here.
         val builder = Request.Builder().url(url)
-        var contentType = DEFAULT_CONTENT_TYPE
         signed.headers.entries().forEach { (name, values) ->
             values.forEach { value -> builder.addHeader(name, value) }
-            if (name.equals(CONTENT_TYPE_HEADER, ignoreCase = true)) {
-                values.firstOrNull()?.let { contentType = it }
-            }
         }
 
-        val mediaType = contentType.toMediaTypeOrDefault()
+        val mediaType = body?.contentType() ?: DEFAULT_CONTENT_TYPE.toMediaType()
         return builder.method(method, body?.let { bodyBytes.toRequestBody(mediaType) }).build()
     }
 
@@ -158,14 +159,10 @@ internal class AppSyncRequestDecorator(private val region: String) {
         }
     }
 
-    private fun String.toMediaTypeOrDefault() = runCatching { toMediaType() }
-        .getOrElse { DEFAULT_CONTENT_TYPE.toMediaType() }
-
     private companion object {
         const val API_KEY_HEADER = "x-api-key"
         const val AUTHORIZATION_HEADER = "authorization"
         const val HOST_HEADER = "Host"
-        const val CONTENT_TYPE_HEADER = "content-type"
         const val DEFAULT_CONTENT_TYPE = "application/json"
         const val APPSYNC_SERVICE_NAME = "appsync"
     }

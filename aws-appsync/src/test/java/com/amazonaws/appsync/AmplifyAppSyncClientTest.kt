@@ -26,10 +26,14 @@ import io.kotest.matchers.string.shouldNotContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import java.net.HttpURLConnection
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
-import okhttp3.mockwebserver.RecordedRequest
+import mockwebserver3.MockResponse
+import mockwebserver3.MockWebServer
+import mockwebserver3.RecordedRequest
 import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -264,6 +268,29 @@ class AmplifyAppSyncClientTest {
         client.close()
 
         client.query(request()).shouldBeFailure()
+    }
+
+    // ── Cancellation ────────────────────────────────────────────────────
+
+    @Test
+    fun `cancelling a request in flight stops it without a retry`() = runBlocking<Unit> {
+        // Real socket I/O, so this cannot use runTest: its virtual clock would skip straight past the
+        // body delay the cancellation has to land inside.
+        //
+        // Asserts only what is deterministic. Issuing a second request here to show the client still
+        // works reads well but is not sound: whether it reuses the connection the cancelled call left
+        // mid-response is a timing question, and the assertion fails intermittently. Nor can this force
+        // the narrower ordering the resume callback in AppSyncHttpTransport guards, where a response
+        // arrives after the continuation is already cancelled — that race cannot be provoked on demand.
+        server.enqueue(jsonResponse("""{"data":"slow"}""").setBodyDelay(5, TimeUnit.SECONDS))
+
+        val inFlight = launch(Dispatchers.IO) { client().query(request()) }
+        server.awaitRequest()
+        inFlight.cancelAndJoin()
+
+        inFlight.isCancelled shouldBe true
+        // Cancellation must not be mistaken for a failure worth attempting under another auth mode.
+        server.requestCount shouldBe 1
     }
 
     // ── Configuration ───────────────────────────────────────────────────

@@ -84,9 +84,17 @@ internal class AppSyncHttpTransport(
         }
 
         if (response.code >= SERVER_ERROR_MIN) {
+            // Only some 5xx statuses describe a condition that can clear on its own. Advising a retry
+            // for the rest — 501 and 505, say — sends a caller round a loop that cannot succeed.
+            val transient = response.code in TRANSIENT_SERVER_ERROR_CODES
             throw AppSyncNetworkException(
                 message = "The request failed with HTTP status ${response.code}.",
-                recoverySuggestion = "This is usually transient. Retry the request."
+                recoverySuggestion = if (transient) {
+                    "This is usually transient. Retry the request."
+                } else {
+                    "Verify that the endpoint URL addresses an AppSync API and that the request is a " +
+                        "POST of a GraphQL document."
+                }
             )
         }
 
@@ -132,7 +140,11 @@ internal class AppSyncHttpTransport(
     private suspend fun Call.await(): Response = suspendCancellableCoroutine { continuation ->
         enqueue(
             object : Callback {
-                override fun onResponse(call: Call, response: Response) = continuation.resume(response)
+                // The response is closed by the resume callback when the continuation has already been
+                // cancelled. A resume into a cancelled continuation is discarded, so the caller never
+                // reaches the `use` block that would otherwise close the body, and the connection leaks.
+                override fun onResponse(call: Call, response: Response) =
+                    continuation.resume(response) { _, closed, _ -> closed.close() }
 
                 override fun onFailure(call: Call, e: IOException) {
                     if (continuation.isCancelled) return
@@ -154,5 +166,9 @@ internal class AppSyncHttpTransport(
         const val USER_AGENT_HEADER = "User-Agent"
         val CLIENT_ERROR_CODES = 400..499
         const val SERVER_ERROR_MIN = 500
+
+        // Internal error, bad gateway, service unavailable and gateway timeout. Each can clear without
+        // the request changing, so a retry is worth suggesting.
+        val TRANSIENT_SERVER_ERROR_CODES = setOf(500, 502, 503, 504)
     }
 }
