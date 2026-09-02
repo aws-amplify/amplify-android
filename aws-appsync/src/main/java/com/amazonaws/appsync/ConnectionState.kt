@@ -15,10 +15,9 @@
 package com.amazonaws.appsync
 
 import com.amplifyframework.annotations.ExperimentalAmplifyApi
-import com.amplifyframework.api.ApiException
 
 /**
- * The connection state of the client's shared WebSocket. Replaces Hub events from V2.
+ * The connection state of the client's shared WebSocket.
  * Exposed via [AmplifyAppSyncClient.events].
  */
 @ExperimentalAmplifyApi
@@ -34,5 +33,5 @@ sealed class ConnectionState {
      * @param cause The reason for disconnection, or null if this is a clean shutdown
      *   (no subscriptions, client closed, or not yet connected).
      */
-    data class Disconnected(val cause: ApiException? = null) : ConnectionState()
+    data class Disconnected(val cause: AppSyncException? = null) : ConnectionState()
 }
