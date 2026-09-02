@@ -25,15 +25,12 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 
 /**
- * The client's own Gson instance, deliberately private to this module rather than shared with the API
- * plugin's `GsonFactory`: this module does not depend on `aws-api`, and reimplements what it needs
- * instead.
+ * The Gson instance the client serializes requests and deserializes responses with.
  *
- * It registers the same adapters as the plugin except the two lazy-loading deserializers
- * (`ModelListDeserializer`, `ModelPageDeserializer`), which live in `aws-api` and are therefore out of
- * reach. TODO: register equivalents once lazy model loading is supported.
+ * Private to the client rather than shared, so neither the adapter set nor the null handling below can
+ * be altered from outside.
  *
- * Every adapter used here is in `aws-api-appsync`, which this module already exposes as `api`.
+ * TODO: register deserializers for lazily-loaded model lists and pages, which this set does not cover.
  */
 internal object AppSyncGson {
 
@@ -48,8 +45,8 @@ internal object AppSyncGson {
                 SerializedModelAdapter.register(it)
                 SerializedCustomTypeAdapter.register(it)
             }
-            // Matches the plugin's factories: a mutation that clears a field needs an explicit
-            // `"field": null` in the payload, since AppSync reads an absent field as "leave unchanged".
+            // A mutation that clears a field needs an explicit `"field": null` in the payload, because
+            // AppSync reads an absent field as "leave unchanged" rather than "set to null".
             .serializeNulls()
             .create()
     }

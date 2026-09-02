@@ -36,10 +36,8 @@ import okio.Buffer
 /**
  * Applies an [AppSyncClientAuthorizer]'s credentials to an outbound HTTP request.
  *
- * A private reimplementation of the plugin's `RequestDecorator` family, collapsed into one suspend
- * function. The plugin needs a decorator hierarchy because its call sites are synchronous and its
- * token suppliers block; here every credential source is already a suspend function, so the whole
- * job is one `when`.
+ * Every credential source is itself a suspend function, so all five auth modes are covered by a single
+ * `when` rather than one class per mode.
  *
  * @param region The signing region, resolved by [AppSyncEndpointParser] or set explicitly.
  */
@@ -90,12 +88,11 @@ internal class AppSyncRequestDecorator(private val region: String) {
     /**
      * Signs the request with SigV4.
      *
-     * Uses the suspending smithy signer directly. The plugin's `IamRequestDecorator` wraps the same
-     * signer in `runBlocking`, which it needs because it is called from a synchronous decorator; this
-     * client is suspend all the way down and does not.
+     * Calls the suspending smithy signer directly. This path suspends all the way down, so the signer
+     * needs no blocking wrapper.
      *
-     * `DefaultAwsSigner` is `@InternalApi` in smithy-kotlin. Opting in matches what the plugin's
-     * `AWS4Signer` already does — there is no public signer entry point.
+     * `DefaultAwsSigner` is `@InternalApi` in smithy-kotlin, so the opt-in is unavoidable: smithy
+     * exposes no public signer entry point.
      */
     @OptIn(InternalApi::class)
     private suspend fun Request.signed(authorizer: AppSyncClientAuthorizer.Iam): Request {

@@ -32,9 +32,8 @@ import okhttp3.Response
 /**
  * Executes GraphQL queries and mutations over HTTP.
  *
- * A private reimplementation of the plugin's `AppSyncGraphQLOperation`, differing in three ways: it
- * suspends rather than taking callbacks, it is cancellable through the calling coroutine, and its
- * failures are typed [AppSyncException]s rather than `ApiException`.
+ * Suspends rather than taking callbacks, cancels along with the calling coroutine, and reports every
+ * failure as a typed [AppSyncException].
  *
  * @param endpoint The AppSync GraphQL endpoint URL.
  * @param client The OkHttp client to issue requests with.
@@ -78,9 +77,8 @@ internal class AppSyncHttpTransport(
             )
         }
 
-        // AppSync reports GraphQL-level problems with a 4xx and a GraphQL error body. Deserializing it
-        // yields the errors themselves, which is far more useful than the status code alone. This is
-        // where the plugin collapses everything into a generic ApiException.
+        // AppSync reports GraphQL-level problems with a 4xx carrying a GraphQL error body. Deserializing
+        // it yields the errors themselves, which say far more than the status code alone.
         if (response.code in CLIENT_ERROR_CODES) {
             throw clientError(request, response, body)
         }

@@ -138,8 +138,7 @@ class AmplifyAppSyncClientTest {
 
         error.errors shouldHaveSize 1
         error.errors[0].message shouldContain "unknown field"
-        // The message surfaces the service's reason, not just the status code — this is the detail the
-        // plugin loses by collapsing every 4xx into one generic exception.
+        // The message surfaces the service's own reason, not merely the status code.
         error.message shouldContain "unknown field"
     }
 

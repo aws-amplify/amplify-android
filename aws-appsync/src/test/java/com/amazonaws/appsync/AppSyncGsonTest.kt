@@ -19,8 +19,8 @@ import io.kotest.matchers.shouldBe
 import org.junit.Test
 
 /**
- * Tests the client's Gson instance, which is configured to match the plugin's factories rather than
- * shared with them.
+ * Tests the client's Gson instance: the adapter registrations and the null handling that requests and
+ * responses depend on.
  */
 class AppSyncGsonTest {
 
