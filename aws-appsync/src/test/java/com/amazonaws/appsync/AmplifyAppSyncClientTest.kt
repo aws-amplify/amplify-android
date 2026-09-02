@@ -324,7 +324,7 @@ class AmplifyAppSyncClientTest {
             .region shouldBe "cn-north-1"
     }
 
-    // ── Multi-auth retry (Phase 4) ──────────────────────────────────────
+    // ── Multi-auth retry ────────────────────────────────────────────────
 
     @Test
     fun `an unauthorized response retries with the next auth mode and succeeds`() = runTest {
@@ -416,7 +416,7 @@ class AmplifyAppSyncClientTest {
 
     @Test
     fun `single auth does not retry, and surfaces the unauthorized response unchanged`() = runTest {
-        // Regression guard for the Phase 3 contract: with one candidate mode there is nothing to
+        // Regression guard for the single-auth contract: with one candidate mode there is nothing to
         // exhaust, so a 200-with-errors stays a Success rather than becoming an exhaustion failure.
         server.enqueue(unauthorizedResponse())
 
