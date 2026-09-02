@@ -55,6 +55,9 @@ internal object AppSyncEndpointParser {
 
     private const val API_LABEL = "appsync-api"
     private const val REALTIME_LABEL = "appsync-realtime-api"
+    private const val WSS_SCHEME = "wss://"
+    private const val DEFAULT_PATH = "/graphql"
+    private const val REALTIME_PATH_SUFFIX = "/realtime"
     private val REGION_REGEX = """^[a-z]{2,}(-[a-z]+)+-\d+$""".toRegex()
 
     /**
@@ -113,6 +116,38 @@ internal object AppSyncEndpointParser {
         )
     }
 
+    /**
+     * Derives the WebSocket URL that subscriptions connect to.
+     *
+     * Unlike [parse] this does **not** require a region, so it works for a custom domain — which
+     * carries no region in its host and therefore cannot be parsed at all. That matters because a
+     * custom-domain API is configured with an explicit region and must still be able to subscribe.
+     *
+     * The two domain shapes derive differently, which is why this cannot be one string substitution:
+     * - **Standard** (`{apiId}.appsync-api.{region}.{dnsSuffix}`) swaps the `appsync-api` label for
+     *   `appsync-realtime-api` and keeps the path.
+     * - **Custom** (anything else) keeps the host and appends `/realtime` to the path.
+     *
+     * @return the `wss://` URL, or a failure if no host could be read.
+     */
+    fun realtimeUrl(endpoint: String): Result<String, AppSyncEndpointResolutionException> {
+        val host = hostOf(endpoint)
+            ?: return failure("Could not read a host from the endpoint URL '$endpoint'.")
+        val path = pathOf(endpoint)
+
+        val labels = host.split('.')
+        val apiLabelIndex = labels.indexOf(API_LABEL)
+
+        // apiLabelIndex > 0 rather than >= 0: a bare `appsync-api.…` host with no API id is not a
+        // standard endpoint, and is treated as custom rather than silently mangled.
+        return if (apiLabelIndex > 0) {
+            val realtimeLabels = labels.toMutableList().also { it[apiLabelIndex] = REALTIME_LABEL }
+            Result.Success("$WSS_SCHEME${realtimeLabels.joinToString(".")}$path")
+        } else {
+            Result.Success("$WSS_SCHEME$host$path$REALTIME_PATH_SUFFIX")
+        }
+    }
+
     private fun hostOf(endpoint: String): String? {
         val withoutScheme = endpoint.substringAfter("://", missingDelimiterValue = endpoint)
         val host = withoutScheme
@@ -122,6 +157,17 @@ internal object AppSyncEndpointParser {
             .substringBefore(':') // strip any port
             .lowercase()
         return host.ifEmpty { null }
+    }
+
+    /**
+     * The path portion of the endpoint, defaulting to `/graphql`. Query and fragment are dropped —
+     * neither is meaningful on a WebSocket handshake URL.
+     */
+    private fun pathOf(endpoint: String): String {
+        val withoutScheme = endpoint.substringAfter("://", missingDelimiterValue = endpoint)
+        val authorityAndPath = withoutScheme.substringBefore('?').substringBefore('#')
+        val path = authorityAndPath.substringAfter('/', missingDelimiterValue = "")
+        return if (path.isEmpty()) DEFAULT_PATH else "/${path.trimEnd('/')}"
     }
 
     // Region labels are of the form {partition}-{area}-{number}, e.g. us-east-1, cn-north-1,
