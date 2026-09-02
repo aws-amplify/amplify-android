@@ -53,6 +53,7 @@ internal class AppSyncSubscriber(
     private val decorator: AppSyncRequestDecorator,
     private val httpEndpoint: String,
     private val authModeResolver: AppSyncAuthModeResolver = AppSyncAuthModeResolver(authorization),
+    private val claimInjector: AppSyncClaimInjector = AppSyncClaimInjector(),
     ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     private val connectionEvents = MutableSharedFlow<ConnectionState>(replay = 1)
@@ -140,20 +141,23 @@ internal class AppSyncSubscriber(
                 // spent, and reusing it would conflate the two attempts' replies.
                 id = UUID.randomUUID().toString()
                 try {
+                    // Owner-restricted models need the owner sent as a variable, and which rules apply
+                    // depends on the mode, so this is resolved per attempt rather than once.
+                    val decorated = claimInjector.inject(request, mode, authorizer)
                     socket.send(
                         AppSyncWebSocketMessage.Start(
                             id = id,
-                            query = request.content,
+                            query = decorated.content,
                             authorizationHeaders = decorator.authorizationHeaders(
                                 authorizer,
                                 httpEndpoint,
-                                request.content
+                                decorated.content
                             )
                         )
                     )
                     return
                 } catch (error: AppSyncAuthException) {
-                    // Credentials for this mode could not be obtained; another may still work.
+                    // Credentials or claims for this mode could not be obtained; another may still work.
                     failures += error
                 }
             }

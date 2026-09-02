@@ -36,6 +36,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
+import okio.ByteString.Companion.encodeUtf8
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -92,7 +93,7 @@ class AppSyncSubscriberTest {
     private fun multiAuth() = AppSyncAuthorization.Multi(
         defaultAuthMode = AppSyncAuthMode.USER_POOLS,
         authorizers = listOf(
-            AppSyncClientAuthorizer.UserPools { "user-pools-token" },
+            AppSyncClientAuthorizer.UserPools { OWNER_JWT },
             AppSyncClientAuthorizer.ApiKey("da2-fakekey")
         )
     )
@@ -128,6 +129,15 @@ class AppSyncSubscriberTest {
                 .build()
             every { authRuleOperation } returns ModelOperation.READ
             every { authorizationType } returns null
+            // The owner rule means claim injection rebuilds the request; the rebuilt one only needs to
+            // answer content.
+            every { newBuilder() } returns mockk(relaxed = true) {
+                every { variable(any(), any(), any()) } returns this
+                every { build<String>() } returns mockk(relaxed = true) {
+                    every { content } returns
+                        """{"query":"subscription { onCreateTodo { id name } }","variables":{"owner":"alice"}}"""
+                }
+            }
         }
     }
 
@@ -374,7 +384,7 @@ class AppSyncSubscriberTest {
             awaitItem() shouldBe SubscriptionEvent.Connecting
             val firstId = startedId
             (sentSlot.captured as AppSyncWebSocketMessage.Start)
-                .authorizationHeaders["authorization"] shouldBe "user-pools-token"
+                .authorizationHeaders["authorization"] shouldBe OWNER_JWT
 
             messages.emit(AppSyncWebSocketMessage.Error(firstId, listOf(unauthorized())))
 
@@ -565,5 +575,15 @@ class AppSyncSubscriberTest {
             awaitItem() shouldBe ConnectionState.Disconnected(null)
             cancelAndIgnoreRemainingEvents()
         }
+    }
+
+    private companion object {
+        /**
+         * Unsigned JWT carrying `username`, which is what an owner rule's identity claim resolves to.
+         * The model request below carries an owner rule, so claim injection reads this token; a token
+         * that is not a JWT would make the mode be skipped rather than tried.
+         */
+        val OWNER_JWT = "header." +
+            """{"username":"alice"}""".encodeUtf8().base64Url().trimEnd('=') + ".signature"
     }
 }
