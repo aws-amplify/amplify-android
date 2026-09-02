@@ -22,11 +22,10 @@ import com.amplifyframework.api.graphql.GraphQLRequest
 /**
  * Decides which auth modes a request may be attempted with, and in what order.
  *
- * The `@auth` rule inspection and priority ordering are not reimplemented here:
- * [MultiAuthModeStrategy] and `MultiAuthorizationTypeIterator` already live in `aws-api-appsync`,
- * which this module exposes as `api`. They sort by auth strategy then provider precedence and
- * de-duplicate, so this class only has to bridge their [AuthorizationType] output to the client's
- * [AppSyncAuthMode] and drop modes with no configured authorizer.
+ * Rule inspection and priority ordering are delegated to [MultiAuthModeStrategy] and its
+ * `MultiAuthorizationTypeIterator`, which sort by auth strategy then provider precedence and
+ * de-duplicate. This class bridges their [AuthorizationType] output to [AppSyncAuthMode] and drops any
+ * mode with no configured authorizer.
  *
  * Precedence, highest first:
  * 1. A per-request override on the request.
@@ -81,7 +80,7 @@ internal class AppSyncAuthModeResolver(private val authorization: AppSyncAuthori
 }
 
 /**
- * Bridges the plugin's [AuthorizationType] to the client's [AppSyncAuthMode].
+ * Bridges [AuthorizationType] to the client's [AppSyncAuthMode].
  *
  * Returns null for [AuthorizationType.NONE], which has no client equivalent: the client always
  * authorizes a request, so an unauthenticated mode is not a candidate it can attempt.

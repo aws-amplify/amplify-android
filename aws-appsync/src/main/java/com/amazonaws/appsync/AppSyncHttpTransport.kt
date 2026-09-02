@@ -114,8 +114,8 @@ internal class AppSyncHttpTransport(
     }
 
     /**
-     * Whether the response carries an AppSync `Unauthorized` error. Reuses [AppSyncExtensions] so the
-     * client agrees with the plugin on which error types count as unauthorized.
+     * Whether the response carries an AppSync `Unauthorized` error. Defers to [AppSyncExtensions] for
+     * the classification rather than matching error-type strings here.
      */
     private fun GraphQLResponse<*>.isUnauthorized(): Boolean = errors.any { error ->
         val extensions = error.extensions

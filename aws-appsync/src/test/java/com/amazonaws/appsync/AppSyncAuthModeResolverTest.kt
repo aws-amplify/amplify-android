@@ -35,8 +35,8 @@ import org.junit.Test
 /**
  * Tests [AppSyncAuthModeResolver] — which auth modes a request is eligible for, and in what order.
  *
- * Ordering itself belongs to `MultiAuthorizationTypeIterator` in `aws-api-appsync` and is tested
- * there. What these tests pin is the part this class owns: precedence between a per-request override,
+ * Ordering itself belongs to `MultiAuthorizationTypeIterator` and is tested with it. What these tests
+ * pin is the part this class owns: precedence between a per-request override,
  * the model's `@auth` rules and the configured default, and that a mode with no configured authorizer
  * is never proposed.
  */
