@@ -494,6 +494,45 @@ class AppSyncSubscriberTest {
         }
     }
 
+    @Test
+    fun `a subscription limit error is terminal and is not retried`() = runTest {
+        // The limit belongs to the API, not the identity, so another auth mode would fail the same way.
+        val subscriber = subscriber(multiAuth())
+
+        subscriber.subscribe(modelRequest()).test {
+            awaitItem() shouldBe SubscriptionEvent.Connecting
+            val firstId = startedId
+
+            messages.emit(
+                AppSyncWebSocketMessage.Error(
+                    firstId,
+                    listOf(wireError("Max number of 100 subscriptions reached", "MaxSubscriptionsReachedError"))
+                )
+            )
+
+            awaitError().shouldBeInstanceOf<AppSyncLimitExceededException>()
+                .message shouldContain "100 subscriptions"
+        }
+    }
+
+    @Test
+    fun `a subscription limit error wins over an unauthorized error in the same frame`() = runTest {
+        val subscriber = subscriber(multiAuth())
+
+        subscriber.subscribe(modelRequest()).test {
+            awaitItem() shouldBe SubscriptionEvent.Connecting
+
+            messages.emit(
+                AppSyncWebSocketMessage.Error(
+                    startedId,
+                    listOf(unauthorized(), wireError("limit", "MaxSubscriptionsReachedError"))
+                )
+            )
+
+            awaitError().shouldBeInstanceOf<AppSyncLimitExceededException>()
+        }
+    }
+
     // ── Connection state ────────────────────────────────────────────────
 
     @Test
