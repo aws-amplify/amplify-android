@@ -138,7 +138,7 @@ class AppSyncWebSocketMessageTest {
         )
 
         message.shouldBeInstanceOf<AppSyncWebSocketMessage.ConnectionError>()
-        message.errors shouldContainExactly listOf("Unauthorized")
+        message.errors.map { it.message } shouldContainExactly listOf("Unauthorized")
     }
 
     @Test
@@ -150,7 +150,7 @@ class AppSyncWebSocketMessageTest {
 
         message.shouldBeInstanceOf<AppSyncWebSocketMessage.Error>()
         message.id shouldBe "sub-1"
-        message.errors shouldContainExactly listOf("MaxSubscriptionsReachedError")
+        message.errors.map { it.message } shouldContainExactly listOf("MaxSubscriptionsReachedError")
     }
 
     @Test
@@ -160,7 +160,9 @@ class AppSyncWebSocketMessageTest {
         )
 
         message.shouldBeInstanceOf<AppSyncWebSocketMessage.Error>()
-        message.errors shouldContainExactly listOf("something broke")
+        message.errors.map { it.message } shouldContainExactly listOf("something broke")
+        // A bare string carries no classification, so the error type is unknown rather than assumed.
+        message.errors.single().errorType shouldBe null
     }
 
     @Test

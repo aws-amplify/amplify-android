@@ -78,34 +78,103 @@ internal class AppSyncSubscriber(
         emit(SubscriptionEvent.Connecting)
 
         val socket = connectedSocket()
-        val id = UUID.randomUUID().toString()
-        val start = startMessage(id, request)
+        val registration = Registration(request, authModeResolver.resolve(request))
 
         emitAll(
             socket.messages
                 // onStart runs once this collector is subscribed. Sending `start` any earlier would
                 // race the reply: the socket's flow has no replay, so a fast start_ack would be lost
                 // and the subscription would appear to hang.
-                .onStart { socket.send(start) }
-                .onCompletion { socket.send(AppSyncWebSocketMessage.Stop(id)) }
-                .transformWhile { message -> handle(message, id, request) }
+                .onStart { registration.register(socket) }
+                .onCompletion { socket.send(AppSyncWebSocketMessage.Stop(registration.id)) }
+                .transformWhile { message -> handle(message, registration, socket, request) }
         )
     }
 
-    private suspend fun <T> startMessage(id: String, request: GraphQLRequest<T>): AppSyncWebSocketMessage.Start {
-        val authMode = authModeResolver.resolve(request).first()
-        val authorizer = authorization.authorizerFor(authMode)
-            ?: throw AppSyncProviderNotConfiguredException(
-                message = "No authorizer is configured for auth mode $authMode."
-            )
+    /**
+     * Tracks which auth mode a subscription is currently registered under, and moves to the next one
+     * when the service rejects the identity.
+     *
+     * Registration is retried rather than the whole subscription because the connection is shared and
+     * already established — only the `start` message needs replaying, under a fresh id.
+     */
+    private inner class Registration(
+        private val request: GraphQLRequest<*>,
+        private val authModes: List<AppSyncAuthMode>
+    ) {
+        private var index = -1
+        private val failures = mutableListOf<AppSyncException>()
 
-        return AppSyncWebSocketMessage.Start(
-            id = id,
-            query = request.content,
-            // A non-null body signs against the plain endpoint, which is what AppSync expects for an
-            // individual subscription as opposed to the connection.
-            authorizationHeaders = decorator.authorizationHeaders(authorizer, httpEndpoint, request.content)
-        )
+        /** The id of the current attempt. Changes on every retry. */
+        var id: String = UUID.randomUUID().toString()
+            private set
+
+        /** The mode the current attempt used, for reporting. */
+        val attemptedModes: List<AppSyncAuthMode>
+            get() = authModes.take(index + 1)
+
+        val canRetry: Boolean
+            get() = index < authModes.lastIndex
+
+        /** Whether there was ever more than one mode to try. */
+        val hasFallback: Boolean
+            get() = authModes.size > 1
+
+        /**
+         * Sends `start` under the next auth mode, skipping modes whose credentials cannot be obtained.
+         *
+         * @throws AppSyncException if no remaining mode can produce a usable `start` message.
+         */
+        suspend fun register(socket: AppSyncWebSocket) {
+            while (index < authModes.lastIndex) {
+                index++
+                val mode = authModes[index]
+                val authorizer = authorization.authorizerFor(mode)
+                if (authorizer == null) {
+                    failures += AppSyncProviderNotConfiguredException(
+                        message = "No authorizer is configured for auth mode $mode."
+                    )
+                    continue
+                }
+                // A fresh id per attempt: the previous one was rejected, so the service considers it
+                // spent, and reusing it would conflate the two attempts' replies.
+                id = UUID.randomUUID().toString()
+                try {
+                    socket.send(
+                        AppSyncWebSocketMessage.Start(
+                            id = id,
+                            query = request.content,
+                            authorizationHeaders = decorator.authorizationHeaders(
+                                authorizer,
+                                httpEndpoint,
+                                request.content
+                            )
+                        )
+                    )
+                    return
+                } catch (error: AppSyncAuthException) {
+                    // Credentials for this mode could not be obtained; another may still work.
+                    failures += error
+                }
+            }
+            throw exhausted()
+        }
+
+        /** The failure to report once no mode is left to try. */
+        fun exhausted(): AppSyncException {
+            // With a single candidate there is nothing to exhaust, so the real failure is more useful.
+            if (authModes.size <= 1) {
+                return failures.lastOrNull() ?: AppSyncProviderNotConfiguredException(
+                    message = "No auth mode was available to authorize the subscription."
+                )
+            }
+            return AppSyncAuthExhaustedException(
+                message = "The subscription failed with every eligible auth mode: " +
+                    authModes.joinToString() + ".",
+                attemptedAuthModes = authModes,
+                cause = failures.lastOrNull()
+            )
+        }
     }
 
     /**
@@ -115,42 +184,71 @@ internal class AppSyncSubscriber(
      */
     private suspend fun <T> kotlinx.coroutines.flow.FlowCollector<SubscriptionEvent<T>>.handle(
         message: AppSyncWebSocketMessage.Inbound,
-        id: String,
+        registration: Registration,
+        socket: AppSyncWebSocket,
         request: GraphQLRequest<T>
     ): Boolean = when (message) {
         is AppSyncWebSocketMessage.StartAck -> {
-            if (message.id == id) emit(SubscriptionEvent.Connected)
+            if (message.id == registration.id) emit(SubscriptionEvent.Connected)
             true
         }
 
         is AppSyncWebSocketMessage.Data -> {
-            if (message.id == id) {
+            if (message.id == registration.id) {
                 // Deserialization failure is deliberately swallowed: it is non-terminal, so one
                 // unreadable message must not end a healthy subscription.
-                runCatching { AppSyncResponseDeserializer.deserialize(request, message.payload) }
-                    .getOrNull()
-                    ?.let { emit(SubscriptionEvent.Data(it)) }
+                val response = runCatching {
+                    AppSyncResponseDeserializer.deserialize(request, message.payload)
+                }.getOrNull()
+
+                when {
+                    response == null -> true
+                    // AppSync can reject the identity in a data message rather than an error frame, so
+                    // this is a retry trigger too, not just something to hand to the consumer.
+                    response.hasUnauthorizedError() && registration.canRetry -> {
+                        registration.register(socket)
+                        true
+                    }
+                    else -> {
+                        emit(SubscriptionEvent.Data(response))
+                        true
+                    }
+                }
+            } else {
+                true
             }
-            true
         }
 
-        is AppSyncWebSocketMessage.Complete -> message.id != id
+        is AppSyncWebSocketMessage.Complete -> message.id != registration.id
 
         is AppSyncWebSocketMessage.Error -> {
-            // A null id is a connection-level error, which is terminal for every subscription on it.
-            if (message.id == id || message.id == null) {
-                throw AppSyncGraphQLErrorException(
-                    message = "The subscription failed: " +
-                        message.errors.joinToString("; ").ifEmpty { "no reason given" },
-                    errors = emptyList()
-                )
+            // A null id is a connection-level error, which applies to every subscription on it.
+            if (message.id == registration.id || message.id == null) {
+                val rejectedIdentity = message.errors.hasUnauthorizedError()
+                when {
+                    // The identity was rejected; a different auth mode may be accepted.
+                    rejectedIdentity && registration.canRetry -> {
+                        registration.register(socket)
+                        true
+                    }
+                    // Every eligible mode has now been rejected.
+                    rejectedIdentity && registration.hasFallback -> throw registration.exhausted()
+                    // Either there was never a fallback, or the failure is not about identity at all —
+                    // retrying would fail the same way and hide the reason. Report what the service said.
+                    else -> throw AppSyncGraphQLErrorException(
+                        message = "The subscription failed: " +
+                            message.errors.joinToString("; ") { it.message }.ifEmpty { "no reason given" },
+                        errors = emptyList()
+                    )
+                }
+            } else {
+                true
             }
-            true
         }
 
         is AppSyncWebSocketMessage.ConnectionError -> throw AppSyncConnectionException(
             message = "The subscription connection failed: " +
-                message.errors.joinToString("; ").ifEmpty { "no reason given" }
+                message.errors.joinToString("; ") { it.message }.ifEmpty { "no reason given" }
         )
 
         // A cause means the connection died; no cause means close() was called, which ends
