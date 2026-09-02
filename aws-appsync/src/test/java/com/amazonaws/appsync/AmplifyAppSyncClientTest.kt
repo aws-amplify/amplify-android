@@ -36,7 +36,7 @@ import org.robolectric.RobolectricTestRunner
 
 /**
  * End-to-end tests for [AmplifyAppSyncClient.query] and [AmplifyAppSyncClient.mutate] over a
- * [MockWebServer]. These cover the whole Phase 3 path — request construction, auth decoration, HTTP
+ * [MockWebServer]. These cover the whole HTTP path — request construction, auth decoration, transport
  * and deserialization — and are the only place the error mapping is exercised the way a caller sees
  * it, as a `Result.Failure` carrying a specific [AppSyncException] subtype.
  *

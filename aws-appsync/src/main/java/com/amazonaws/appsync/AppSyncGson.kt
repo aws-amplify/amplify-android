@@ -25,12 +25,14 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 
 /**
- * The client's own Gson instance, deliberately private to this module rather than shared with the
- * API plugin's `GsonFactory` — per #3377 the client reimplements what it needs instead of depending
- * on `aws-api`.
+ * The client's own Gson instance, deliberately private to this module rather than shared with the API
+ * plugin's `GsonFactory`: this module does not depend on `aws-api`, and reimplements what it needs
+ * instead.
  *
  * It registers the same adapters as the plugin except the two lazy-loading deserializers
- * (`ModelListDeserializer`, `ModelPageDeserializer`), which live in `aws-api` and are Phase 7 work.
+ * (`ModelListDeserializer`, `ModelPageDeserializer`), which live in `aws-api` and are therefore out of
+ * reach. TODO: register equivalents once lazy model loading is supported.
+ *
  * Every adapter used here is in `aws-api-appsync`, which this module already exposes as `api`.
  */
 internal object AppSyncGson {

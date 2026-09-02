@@ -31,7 +31,7 @@ import java.lang.reflect.Type
  * Turns an AppSync JSON response body into a typed [GraphQLResponse].
  *
  * A private reimplementation of the plugin's `GsonGraphQLResponseFactory`, minus the lazy-model
- * deserializers, which are Phase 7. Unlike the plugin's version this reports failure through
+ * deserializers. Unlike the plugin's version this reports failure through
  * [AppSyncDeserializationException] rather than `ApiException`.
  */
 internal object AppSyncResponseDeserializer {

@@ -51,8 +51,8 @@ internal class AppSyncHttpTransport(
     /**
      * Sends [request] and deserializes the response.
      *
-     * Phase 3 is the single-auth path, so this always uses the default authorizer. Per-request
-     * overrides and `@auth`-rule resolution are Phase 4.
+     * Always uses the default authorizer. TODO: honour per-request auth overrides and `@auth`-rule
+     * resolution.
      */
     suspend fun <T> execute(request: GraphQLRequest<T>): GraphQLResponse<T> {
         val httpRequest = Request.Builder()
