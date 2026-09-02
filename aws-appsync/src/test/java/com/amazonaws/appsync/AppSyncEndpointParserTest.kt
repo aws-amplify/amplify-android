@@ -31,7 +31,7 @@ class AppSyncEndpointParserTest {
 
     private fun parsed(endpoint: String) = (AppSyncEndpointParser.parse(endpoint) as Result.Success).data
 
-    // ── Partition matrix (§5.4) ─────────────────────────────────────────
+    // ── Partition matrix ────────────────────────────────────────────────
 
     @Test
     fun `commercial partition`() {

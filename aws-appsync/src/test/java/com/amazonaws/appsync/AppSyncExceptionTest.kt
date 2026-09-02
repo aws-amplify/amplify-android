@@ -24,7 +24,7 @@ import java.net.SocketTimeoutException
 import org.junit.Test
 
 /**
- * Tests [AppSyncException]: that the hierarchy has the shape §3.5 specifies, and that
+ * Tests [AppSyncException]: that the hierarchy has the intended shape, and that
  * [AppSyncException.from] maps throwables into it rather than letting anything escape untyped.
  */
 class AppSyncExceptionTest {
@@ -80,7 +80,8 @@ class AppSyncExceptionTest {
 
     @Test
     fun `network and unknown are leaves directly under the base, in no group`() {
-        // Guards the §3.5 shape: these two deliberately have no intermediate group, so a `when` over
+        // Guards the hierarchy shape: these two deliberately have no intermediate group, so a `when`
+        // over
         // the groups must still handle them.
         val network: AppSyncException = AppSyncNetworkException("a")
         val unknown: AppSyncException = AppSyncUnknownException("b")

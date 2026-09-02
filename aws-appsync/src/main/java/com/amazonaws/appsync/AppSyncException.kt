@@ -226,8 +226,8 @@ class AppSyncTimeoutException(
 /**
  * The API's maximum number of concurrent subscriptions was reached.
  *
- * Nothing raises this yet — recognising AppSync's `MaxSubscriptionsReachedError` is Phase 5 work.
- * The type is declared now so the sealed hierarchy is complete and callers can match on it.
+ * The type is declared so the sealed hierarchy is complete and callers can match on it.
+ * TODO: nothing raises this yet — recognise AppSync's `MaxSubscriptionsReachedError`.
  */
 @ExperimentalAmplifyApi
 class AppSyncLimitExceededException(
