@@ -86,7 +86,7 @@ internal sealed interface AppSyncWebSocketMessage {
     data class ConnectionAck(val connectionTimeoutMs: Long) : Inbound
 
     /** The connection was rejected. Terminal for every subscription on it. */
-    data class ConnectionError(val errors: List<String>) : Inbound
+    data class ConnectionError(val errors: List<WireError>) : Inbound
 
     /** Keep-alive. Carries no data; its only purpose is resetting the watchdog. */
     data object KeepAlive : Inbound
@@ -98,7 +98,17 @@ internal sealed interface AppSyncWebSocketMessage {
     data class Data(val id: String, val payload: String) : Inbound
 
     /** One subscription failed. Terminal for that subscription only. */
-    data class Error(val id: String?, val errors: List<String>) : Inbound
+    data class Error(val id: String?, val errors: List<WireError>) : Inbound
+
+    /**
+     * One error from the service.
+     *
+     * @param message The human-readable reason.
+     * @param errorType The service's error classification, from the error's `extensions.errorType`.
+     *   Null when the service did not supply one. This is what distinguishes an authorization failure
+     *   — which another auth mode might satisfy — from a failure that would recur regardless.
+     */
+    data class WireError(val message: String, val errorType: String?)
 
     /** One subscription ended normally, at the service's initiative. */
     data class Complete(val id: String) : Inbound
@@ -168,18 +178,23 @@ internal sealed interface AppSyncWebSocketMessage {
          * AppSync puts errors in `payload.errors` on a connection error and in `payload.errors` or a
          * top-level `errors` on a subscription error, so both shapes are read.
          */
-        private fun JsonObject.errorMessages(): List<String> {
+        private fun JsonObject.errorMessages(): List<WireError> {
             val errors = getAsJsonObject("payload")?.getAsJsonArray("errors")
                 ?: getAsJsonArray("errors")
                 ?: return emptyList()
 
             return errors.mapNotNull { element ->
                 when {
-                    element.isJsonPrimitive -> element.asString
-                    element.isJsonObject ->
-                        element.asJsonObject
-                            .get("message")?.takeIf { it.isJsonPrimitive }?.asString
-                            ?: element.toString()
+                    element.isJsonPrimitive -> WireError(element.asString, errorType = null)
+                    element.isJsonObject -> {
+                        val obj = element.asJsonObject
+                        WireError(
+                            message = obj.get("message")?.takeIf { it.isJsonPrimitive }?.asString
+                                ?: obj.toString(),
+                            errorType = obj.getAsJsonObject("extensions")
+                                ?.get("errorType")?.takeIf { it.isJsonPrimitive }?.asString
+                        )
+                    }
                     else -> null
                 }
             }
