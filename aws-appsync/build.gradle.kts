@@ -31,6 +31,7 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.kotlin.coroutines)
     implementation(project(":foundation-bridge"))
+    implementation(platform(libs.aws.bom))
     implementation(libs.aws.signing)
     implementation(libs.aws.smithy.http)
 

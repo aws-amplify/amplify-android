@@ -54,11 +54,13 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
 
     private val closed = AtomicBoolean(false)
 
-    private val httpClient: OkHttpClient by lazy {
+    private val lazyHttpClient = lazy {
         OkHttpClient.Builder()
             .apply { configuration.httpClientConfigurator?.invoke(this) }
             .build()
     }
+
+    private val httpClient: OkHttpClient by lazyHttpClient
 
     private val transport: AppSyncHttpTransport by lazy {
         AppSyncHttpTransport(
@@ -103,8 +105,10 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
      */
     private suspend fun <T> send(request: GraphQLRequest<T>): Result<GraphQLResponse<T>, AppSyncException> {
         if (closed.get()) {
+            // A lifecycle misuse, not a bad request: AppSyncRequestException would tell the caller to
+            // correct a request that was fine.
             return Result.Failure(
-                AppSyncValidationException(
+                AppSyncInvalidConfigException(
                     message = "This client has been closed and cannot be reused.",
                     recoverySuggestion = "Create a new AmplifyAppSyncClient."
                 )
@@ -115,7 +119,7 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
             Result.Success(withContext(Dispatchers.IO) { transport.execute(request) })
         } catch (cancellation: CancellationException) {
             throw cancellation
-        } catch (error: Throwable) {
+        } catch (error: Exception) {
             Result.Failure(AppSyncException.from(error))
         }
     }
@@ -134,11 +138,16 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
         TODO("Subscription implementation will be added in a follow-up PR")
 
     /**
-     * Close the client. Terminates all active subscriptions and releases resources.
+     * Close the client, cancelling in-flight requests and releasing pooled connections.
      * The client cannot be reused after closing.
+     *
+     * TODO: terminate active subscriptions once subscriptions are supported.
      */
     fun close() {
         if (!closed.compareAndSet(false, true)) return
+        // Nothing to release if no request was ever issued, and touching the client here would build
+        // one — running the caller's configurator — purely to cancel an empty dispatcher.
+        if (!lazyHttpClient.isInitialized()) return
         httpClient.dispatcher.cancelAll()
         httpClient.connectionPool.evictAll()
     }

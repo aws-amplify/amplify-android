@@ -85,10 +85,20 @@ internal class AppSyncHttpTransport(
             throw clientError(request, response, body)
         }
 
-        if (!response.isSuccessful) {
+        if (response.code >= SERVER_ERROR_MIN) {
             throw AppSyncNetworkException(
                 message = "The request failed with HTTP status ${response.code}.",
                 recoverySuggestion = "This is usually transient. Retry the request."
+            )
+        }
+
+        if (!response.isSuccessful) {
+            // A 3xx reaches here when redirects are disabled on the OkHttp client, or on a redirect
+            // OkHttp will not follow. Retrying produces the same response, so it is not suggested.
+            throw AppSyncNetworkException(
+                message = "The request returned an unexpected HTTP status ${response.code}.",
+                recoverySuggestion = "Verify the endpoint URL and any redirect handling configured on " +
+                    "the OkHttp client."
             )
         }
 
@@ -96,6 +106,9 @@ internal class AppSyncHttpTransport(
     }
 
     private fun <T> clientError(request: GraphQLRequest<T>, response: Response, body: String?): AppSyncException {
+        // TODO: classify authorization failures as an AppSyncAuthException. A 401, or an error whose
+        //  extensions carry an Unauthorized errorType, currently arrives as a response or request
+        //  error, so a caller cannot match the whole auth category to re-authenticate.
         val errors = runCatching { AppSyncResponseDeserializer.deserialize(request, body).errors }
             .getOrNull()
             ?.takeIf { it.isNotEmpty() }
@@ -142,5 +155,6 @@ internal class AppSyncHttpTransport(
         const val ACCEPT_HEADER = "accept"
         const val USER_AGENT_HEADER = "User-Agent"
         val CLIENT_ERROR_CODES = 400..499
+        const val SERVER_ERROR_MIN = 500
     }
 }

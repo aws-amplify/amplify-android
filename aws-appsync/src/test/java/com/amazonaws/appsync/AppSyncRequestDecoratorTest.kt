@@ -24,7 +24,10 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldStartWith
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withTimeout
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -138,6 +141,21 @@ class AppSyncRequestDecoratorTest {
     }
 
     @Test
+    fun `iam signing preserves every value of a repeated header`() = runTest {
+        val repeated = Request.Builder()
+            .url("https://abc123.appsync-api.us-east-1.amazonaws.com/graphql")
+            .addHeader("x-trace", "first")
+            .addHeader("x-trace", "second")
+            .post("{}".toRequestBody(JSON))
+            .build()
+
+        val decorated = decorator.decorate(repeated, iamAuthorizer())
+
+        // Reading one value per name on the way in or out would silently drop the other.
+        decorated.headers("x-trace") shouldBe listOf("first", "second")
+    }
+
+    @Test
     fun `iam signing preserves the request body`() = runTest {
         val original = request()
 
@@ -207,6 +225,36 @@ class AppSyncRequestDecoratorTest {
         error.message shouldContain "SigV4"
     }
 
+    // ── Cancellation is not mistaken for a credential failure ───────────
+    @Test
+    fun `cancelling while a token supplier suspends propagates the cancellation`() = runTest {
+        // A supplier that never completes, so the only way out is cancellation. If the decorator
+        // translated it the way it translates a supplier failure, this would be a token fetch
+        // exception instead.
+        shouldThrow<TimeoutCancellationException> {
+            withTimeout(CANCELLATION_TIMEOUT_MILLIS) {
+                decorator.decorate(
+                    request(),
+                    AppSyncClientAuthorizer.UserPools { suspendCancellableCoroutine { } }
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `cancelling while credentials resolve propagates the cancellation`() = runTest {
+        shouldThrow<TimeoutCancellationException> {
+            withTimeout(CANCELLATION_TIMEOUT_MILLIS) {
+                decorator.decorate(
+                    request(),
+                    AppSyncClientAuthorizer.Iam(
+                        AwsCredentialsProvider<AwsCredentials> { suspendCancellableCoroutine { } }
+                    )
+                )
+            }
+        }
+    }
+
     // ── Helpers ─────────────────────────────────────────────────────────
 
     private fun iamAuthorizer() = AppSyncClientAuthorizer.Iam(
@@ -223,5 +271,6 @@ class AppSyncRequestDecoratorTest {
 
     private companion object {
         val JSON = "application/json".toMediaType()
+        const val CANCELLATION_TIMEOUT_MILLIS = 1_000L
     }
 }

@@ -22,6 +22,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import java.net.HttpURLConnection
 import java.util.concurrent.TimeUnit
@@ -165,6 +166,22 @@ class AmplifyAppSyncClientTest {
     }
 
     @Test
+    fun `an unfollowed redirect is not reported as transient`() = runTest {
+        server.enqueue(
+            jsonResponse("", code = HttpURLConnection.HTTP_MOVED_PERM)
+                .setHeader("Location", "https://example.invalid/graphql")
+        )
+
+        val error = client { httpClientConfigurator = { it.followRedirects(false) } }
+            .query(request()).shouldBeFailure().error
+
+        error.shouldBeInstanceOf<AppSyncNetworkException>()
+        error.message shouldContain "301"
+        // Retrying a redirect the client will not follow produces the same response every time.
+        error.recoverySuggestion shouldNotContain "Retry"
+    }
+
+    @Test
     fun `an unreachable endpoint becomes a network exception`() = runTest {
         // Port 1 is reserved, so nothing is listening.
         val unreachable = AmplifyAppSyncClient(
@@ -225,9 +242,19 @@ class AmplifyAppSyncClientTest {
 
         val error = client.query(request()).shouldBeFailure().error
 
-        error.shouldBeInstanceOf<AppSyncValidationException>()
+        error.shouldBeInstanceOf<AppSyncInvalidConfigException>()
         error.message shouldContain "closed"
         server.requestCount shouldBe 0
+    }
+
+    @Test
+    fun `close on a client that never issued a request does not build the http client`() = runTest {
+        var configured = false
+        val client = client { httpClientConfigurator = { configured = true } }
+
+        client.close()
+
+        configured shouldBe false
     }
 
     @Test

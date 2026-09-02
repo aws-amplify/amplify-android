@@ -48,6 +48,9 @@ internal object AppSyncGson {
                 SerializedModelAdapter.register(it)
                 SerializedCustomTypeAdapter.register(it)
             }
+            // Matches the plugin's factories: a mutation that clears a field needs an explicit
+            // `"field": null` in the payload, since AppSync reads an absent field as "leave unchanged".
+            .serializeNulls()
             .create()
     }
 }

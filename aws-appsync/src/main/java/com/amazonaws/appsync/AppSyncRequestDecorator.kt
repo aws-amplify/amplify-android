@@ -26,6 +26,7 @@ import aws.smithy.kotlin.runtime.http.request.HttpRequest
 import aws.smithy.kotlin.runtime.net.url.Url
 import aws.smithy.kotlin.runtime.net.url.UrlEncoding
 import com.amplifyframework.foundation.credentials.toSmithyProvider
+import kotlinx.coroutines.CancellationException
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -71,9 +72,14 @@ internal class AppSyncRequestDecorator(private val region: String) {
     /**
      * Invokes a credential supplier, translating any failure into a typed exception. A supplier is
      * customer code, so it can throw anything.
+     *
+     * Cancellation is rethrown rather than translated: on the JVM `CancellationException` is an
+     * `Exception`, so without this a cancelled caller would be reported as a failed token fetch.
      */
     private suspend fun (suspend () -> String).fetch(description: String): String = try {
         this()
+    } catch (cancellation: CancellationException) {
+        throw cancellation
     } catch (error: Exception) {
         throw AppSyncTokenFetchException(
             message = "Fetching the $description failed.",
@@ -99,7 +105,9 @@ internal class AppSyncRequestDecorator(private val region: String) {
             method = HttpMethod.parse(method),
             url = Url.parse(url.toUri().toString(), UrlEncoding.All),
             headers = Headers {
-                this@signed.headers.names().forEach { name -> set(name, this@signed.header(name) ?: "") }
+                this@signed.headers.names().forEach { name ->
+                    appendAll(name, this@signed.headers.values(name))
+                }
                 // The signature covers Host, so it must be present before signing.
                 set(HOST_HEADER, this@signed.url.host)
             },
@@ -116,6 +124,8 @@ internal class AppSyncRequestDecorator(private val region: String) {
                 signedBodyHeader = AwsSignedBodyHeader.X_AMZ_CONTENT_SHA256
             }
             DefaultAwsSigner.sign(signable, config).output
+        } catch (cancellation: CancellationException) {
+            throw cancellation
         } catch (error: Exception) {
             throw AppSyncSigningException(
                 message = "Signing the request with SigV4 failed.",
@@ -123,16 +133,15 @@ internal class AppSyncRequestDecorator(private val region: String) {
             )
         }
 
-        // Rebuild the OkHttp request from the signed one. The content type has to be read back out of
-        // the signed headers and reapplied to the body, because OkHttp derives the Content-Type header
-        // from the body's MediaType and would otherwise overwrite it.
+        // Rebuild the OkHttp request from the signed one. The signed Content-Type is read back out of
+        // the headers and reapplied through the body's MediaType, because OkHttp takes Content-Type
+        // from the body rather than from a header set on the builder.
         val builder = Request.Builder().url(url)
         var contentType = DEFAULT_CONTENT_TYPE
         signed.headers.entries().forEach { (name, values) ->
-            val value = values.firstOrNull() ?: return@forEach
-            builder.addHeader(name, value)
+            values.forEach { value -> builder.addHeader(name, value) }
             if (name.equals(CONTENT_TYPE_HEADER, ignoreCase = true)) {
-                contentType = value
+                values.firstOrNull()?.let { contentType = it }
             }
         }
 
