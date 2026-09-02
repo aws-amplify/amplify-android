@@ -1,3 +1,12 @@
+## [Release 2.41.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.41.1)
+
+### Bug Fixes
+- **auth:** Return signed-out session for User Pool-only apps ([#3403](https://github.com/aws-amplify/amplify-android/issues/3403))
+- **foundation:** re-throw CancellationException from resultCatching ([#3408](https://github.com/aws-amplify/amplify-android/issues/3408))
+- **api:** fail fast on AppSync subscription connection failure ([#3411](https://github.com/aws-amplify/amplify-android/issues/3411))
+
+[See all changes between 2.41.0 and 2.41.1](https://github.com/aws-amplify/amplify-android/compare/release_v2.41.0...release_v2.41.1)
+
 ## [Release 2.41.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.41.0)
 
 ### Features
