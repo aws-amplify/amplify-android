@@ -191,8 +191,12 @@ internal sealed interface AppSyncWebSocketMessage {
                         WireError(
                             message = obj.get("message")?.takeIf { it.isJsonPrimitive }?.asString
                                 ?: obj.toString(),
-                            errorType = obj.getAsJsonObject("extensions")
-                                ?.get("errorType")?.takeIf { it.isJsonPrimitive }?.asString
+                            // Read both locations. A subscription error frame carries a GraphQL response
+                            // shape, which nests the classification under extensions; connection-level
+                            // frames put it directly on the error object.
+                            errorType = obj.get("errorType")?.takeIf { it.isJsonPrimitive }?.asString
+                                ?: obj.getAsJsonObject("extensions")
+                                    ?.get("errorType")?.takeIf { it.isJsonPrimitive }?.asString
                         )
                     }
                     else -> null

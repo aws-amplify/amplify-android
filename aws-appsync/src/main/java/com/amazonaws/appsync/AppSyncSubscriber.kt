@@ -230,6 +230,12 @@ internal class AppSyncSubscriber(
             if (message.id == registration.id || message.id == null) {
                 val rejectedIdentity = message.errors.hasUnauthorizedError()
                 when {
+                    // Checked before the auth retry: the limit belongs to the API, not the identity, so
+                    // trying another auth mode would consume attempts and fail the same way.
+                    message.errors.hasSubscriptionLimitError() -> throw AppSyncLimitExceededException(
+                        message = "The API's concurrent subscription limit was reached: " +
+                            message.errors.joinToString("; ") { it.message }.ifEmpty { "no reason given" }
+                    )
                     // The identity was rejected; a different auth mode may be accepted.
                     rejectedIdentity && registration.canRetry -> {
                         registration.register(socket)

@@ -36,3 +36,17 @@ internal fun GraphQLResponse<*>.hasUnauthorizedError(): Boolean = errors.any { e
 internal fun List<AppSyncWebSocketMessage.WireError>.hasUnauthorizedError(): Boolean = any { error ->
     error.errorType?.let { AppSyncExtensions(it, null, null).isUnauthorizedErrorType } == true
 }
+
+/**
+ * Whether any of these errors says the API's concurrent-subscription limit was reached.
+ *
+ * Checked against the wire string directly rather than through [AppSyncExtensions], whose error-type
+ * enum does not model this case.
+ *
+ * TODO: `LimitExceededError` is a sibling meaning a request-rate limit rather than a subscription
+ *  count. It needs different recovery advice, so it is not folded in here.
+ */
+internal fun List<AppSyncWebSocketMessage.WireError>.hasSubscriptionLimitError(): Boolean =
+    any { it.errorType == MAX_SUBSCRIPTIONS_REACHED }
+
+private const val MAX_SUBSCRIPTIONS_REACHED = "MaxSubscriptionsReachedError"

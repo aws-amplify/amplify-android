@@ -173,6 +173,29 @@ class AppSyncWebSocketMessageTest {
         message.id shouldBe null
     }
 
+    @Test
+    fun `an errorType on the error object itself is read`() {
+        // The realtime protocol puts the classification directly on the error, not under extensions.
+        val message = AppSyncWebSocketMessage.parse(
+            """{"type":"error","id":"sub-1","payload":{"errors":[
+               {"errorType":"MaxSubscriptionsReachedError","message":"limit reached"}]}}"""
+        )
+
+        message.shouldBeInstanceOf<AppSyncWebSocketMessage.Error>()
+        message.errors.single().errorType shouldBe "MaxSubscriptionsReachedError"
+    }
+
+    @Test
+    fun `an errorType under extensions is still read`() {
+        val message = AppSyncWebSocketMessage.parse(
+            """{"type":"error","id":"sub-1","payload":{"errors":[
+               {"message":"nope","extensions":{"errorType":"Unauthorized"}}]}}"""
+        )
+
+        message.shouldBeInstanceOf<AppSyncWebSocketMessage.Error>()
+        message.errors.single().errorType shouldBe "Unauthorized"
+    }
+
     // ── Robustness: nothing may throw ───────────────────────────────────
 
     @Test
