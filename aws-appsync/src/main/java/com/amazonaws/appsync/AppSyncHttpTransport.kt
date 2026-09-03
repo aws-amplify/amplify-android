@@ -16,7 +16,6 @@ package com.amazonaws.appsync
 
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
-import com.amplifyframework.datastore.appsync.AppSyncExtensions
 import com.amplifyframework.util.UserAgent
 import java.io.IOException
 import kotlin.coroutines.resume
@@ -95,7 +94,7 @@ internal class AppSyncHttpTransport(
 
             // An unauthorized response is the other retryable signal: AppSync accepted the request but
             // rejected the identity, which a different mode may satisfy.
-            if (canFallBack && response.isUnauthorized()) {
+            if (canFallBack && response.hasUnauthorizedError()) {
                 lastAuthFailure = AppSyncGraphQLErrorException(
                     message = "Authorization failed with $authMode.",
                     errors = response.errors
@@ -121,15 +120,6 @@ internal class AppSyncHttpTransport(
             .build()
 
         return decorator.decorate(httpRequest, authorizer)
-    }
-
-    /**
-     * Whether the response carries an AppSync `Unauthorized` error. Defers to [AppSyncExtensions] for
-     * the classification rather than matching error-type strings here.
-     */
-    private fun GraphQLResponse<*>.isUnauthorized(): Boolean = errors.any { error ->
-        val extensions = error.extensions
-        !extensions.isNullOrEmpty() && AppSyncExtensions(extensions).isUnauthorizedErrorType
     }
 
     private fun exhausted(attempted: List<AppSyncAuthMode>, cause: AppSyncException?): AppSyncException {
@@ -198,7 +188,7 @@ internal class AppSyncHttpTransport(
         // rather than having to recognise a status code or an error string. Either signal is enough:
         // AppSync answers a rejected identity with a 401, and a rejected operation with an
         // Unauthorized error type that can arrive under any 4xx.
-        if (response.code == HTTP_UNAUTHORIZED || parsed?.isUnauthorized() == true) {
+        if (response.code == HTTP_UNAUTHORIZED || parsed?.hasUnauthorizedError() == true) {
             return AppSyncUnauthorizedException(
                 message = "The request was not authorized (HTTP status ${response.code})" +
                     (errors?.joinToString("; ") { it.message }?.let { ": $it" } ?: "."),

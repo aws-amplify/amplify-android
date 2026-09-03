@@ -68,6 +68,49 @@ internal class AppSyncRequestDecorator(private val region: String) {
     private fun Request.withHeader(name: String, value: String) = newBuilder().header(name, value).build()
 
     /**
+     * Produces authorization as a **header map** rather than a decorated request.
+     *
+     * The WebSocket protocol needs this shape twice, and neither is an HTTP request the client sends:
+     * the handshake carries these headers on the upgrade request, and every `start` message embeds
+     * them in `payload.extensions.authorization`. AppSync authorizes each subscription separately from
+     * the connection, so the two differ in what gets signed.
+     *
+     * @param authorizer The authorizer to draw credentials from.
+     * @param httpEndpoint The API's HTTP endpoint. SigV4 signs against this, not the `wss://` URL.
+     * @param body The request document for a subscription, or null for the connection handshake.
+     *   A null body signs `{}` against `{endpoint}/connect`; a present body is signed against
+     *   `{endpoint}` itself.
+     */
+    suspend fun authorizationHeaders(
+        authorizer: AppSyncClientAuthorizer,
+        httpEndpoint: String,
+        body: String? = null
+    ): Map<String, String> = when (authorizer) {
+        is AppSyncClientAuthorizer.ApiKey ->
+            mapOf(API_KEY_HEADER to authorizer.fetchApiKey.fetch("API key"))
+
+        is AppSyncClientAuthorizer.UserPools ->
+            mapOf(AUTHORIZATION_HEADER to authorizer.fetchToken.fetch("User Pools token"))
+
+        is AppSyncClientAuthorizer.Oidc ->
+            mapOf(AUTHORIZATION_HEADER to authorizer.fetchToken.fetch("OIDC token"))
+
+        is AppSyncClientAuthorizer.Lambda ->
+            mapOf(AUTHORIZATION_HEADER to authorizer.fetchToken.fetch("Lambda authorization token"))
+
+        is AppSyncClientAuthorizer.Iam -> {
+            val url = if (body == null) "$httpEndpoint$CONNECT_PATH_SUFFIX" else httpEndpoint
+            val signable = Request.Builder()
+                .url(url)
+                .header(ACCEPT_HEADER, WEBSOCKET_ACCEPT)
+                .header(CONTENT_TYPE_HEADER, WEBSOCKET_CONTENT_TYPE)
+                .post((body ?: EMPTY_BODY).toRequestBody(WEBSOCKET_CONTENT_TYPE.toMediaType()))
+                .build()
+            signable.signed(authorizer).headers.toMap()
+        }
+    }
+
+    /**
      * Invokes a credential supplier, translating any failure into a typed exception. A supplier is
      * customer code, so it can throw anything.
      *
@@ -163,7 +206,16 @@ internal class AppSyncRequestDecorator(private val region: String) {
         const val API_KEY_HEADER = "x-api-key"
         const val AUTHORIZATION_HEADER = "authorization"
         const val HOST_HEADER = "Host"
+        const val CONTENT_TYPE_HEADER = "content-type"
+        const val ACCEPT_HEADER = "accept"
         const val DEFAULT_CONTENT_TYPE = "application/json"
         const val APPSYNC_SERVICE_NAME = "appsync"
+
+        // The WebSocket handshake and start messages are signed with these exact values. The signature
+        // covers them, so altering either would invalidate it.
+        const val WEBSOCKET_ACCEPT = "application/json, text/javascript"
+        const val WEBSOCKET_CONTENT_TYPE = "application/json; charset=UTF-8"
+        const val CONNECT_PATH_SUFFIX = "/connect"
+        const val EMPTY_BODY = "{}"
     }
 }

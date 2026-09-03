@@ -130,4 +130,73 @@ class AppSyncEndpointParserTest {
         AppSyncEndpointParser.parse("")
             .shouldBeInstanceOf<Result.Failure<AppSyncEndpointResolutionException>>()
     }
+
+    // ── Realtime URL derivation ─────────────────────────────────────────
+
+    private fun realtimeUrl(endpoint: String) = (AppSyncEndpointParser.realtimeUrl(endpoint) as Result.Success).data
+
+    @Test
+    fun `a standard endpoint swaps the api label and keeps the path`() {
+        realtimeUrl("https://abc123.appsync-api.us-east-1.amazonaws.com/graphql") shouldBe
+            "wss://abc123.appsync-realtime-api.us-east-1.amazonaws.com/graphql"
+    }
+
+    @Test
+    fun `a china endpoint keeps its com-cn suffix in the realtime url`() {
+        // The reason this is a parser and not a string replace: a swap that assumed .amazonaws.com
+        // produces a realtime host that does not resolve here.
+        realtimeUrl("https://abc123.appsync-api.cn-north-1.amazonaws.com.cn/graphql") shouldBe
+            "wss://abc123.appsync-realtime-api.cn-north-1.amazonaws.com.cn/graphql"
+    }
+
+    @Test
+    fun `a govcloud endpoint derives its realtime url`() {
+        realtimeUrl("https://abc123.appsync-api.us-gov-west-1.amazonaws.com/graphql") shouldBe
+            "wss://abc123.appsync-realtime-api.us-gov-west-1.amazonaws.com/graphql"
+    }
+
+    @Test
+    fun `a custom domain appends realtime to the path instead of swapping a label`() {
+        // A custom domain has no appsync-api label to swap, so its realtime endpoint is a subpath.
+        // This is why realtimeUrl is separate from parse: parse cannot handle a custom domain at all,
+        // having no region to find, but subscriptions still have to work on one.
+        realtimeUrl("https://api.example.com/graphql") shouldBe "wss://api.example.com/graphql/realtime"
+    }
+
+    @Test
+    fun `a custom domain with a nested path preserves it`() {
+        realtimeUrl("https://api.example.com/v2/graphql") shouldBe
+            "wss://api.example.com/v2/graphql/realtime"
+    }
+
+    @Test
+    fun `an endpoint with no path defaults to graphql`() {
+        realtimeUrl("https://abc123.appsync-api.us-east-1.amazonaws.com") shouldBe
+            "wss://abc123.appsync-realtime-api.us-east-1.amazonaws.com/graphql"
+    }
+
+    @Test
+    fun `a query string and fragment are dropped from the realtime url`() {
+        realtimeUrl("https://abc123.appsync-api.eu-west-2.amazonaws.com/graphql?trace=1#frag") shouldBe
+            "wss://abc123.appsync-realtime-api.eu-west-2.amazonaws.com/graphql"
+    }
+
+    @Test
+    fun `a standard host with a trailing slash still swaps the label`() {
+        // A trailing slash must not defeat standard-host recognition: the label swap is decided by the
+        // host, so the path plays no part in the classification.
+        realtimeUrl("https://abc123.appsync-api.us-east-1.amazonaws.com/graphql/") shouldBe
+            "wss://abc123.appsync-realtime-api.us-east-1.amazonaws.com/graphql"
+    }
+
+    @Test
+    fun `a trailing slash does not produce a doubled separator`() {
+        realtimeUrl("https://api.example.com/graphql/") shouldBe "wss://api.example.com/graphql/realtime"
+    }
+
+    @Test
+    fun `an empty endpoint has no realtime url`() {
+        AppSyncEndpointParser.realtimeUrl("")
+            .shouldBeInstanceOf<Result.Failure<AppSyncEndpointResolutionException>>()
+    }
 }
