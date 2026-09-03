@@ -14,6 +14,7 @@
  */
 package com.amazonaws.appsync
 
+import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.util.UserAgent
 import java.io.IOException
 import kotlin.time.Duration
@@ -79,6 +80,8 @@ internal class AppSyncWebSocket(
     val messages = messageFlow.asSharedFlow()
 
     private val scope = CoroutineScope(ioDispatcher + SupervisorJob())
+
+    private val logger = AmplifyLogging.logger<AppSyncWebSocket>()
 
     @Volatile
     private var socket: WebSocket? = null
@@ -207,12 +210,23 @@ internal class AppSyncWebSocket(
     override fun onMessage(webSocket: WebSocket, text: String) {
         // Any frame proves the connection is alive, including a keep-alive.
         restartWatchdog()
-        messageFlow.tryEmit(AppSyncWebSocketMessage.parse(text))
+        val message = AppSyncWebSocketMessage.parse(text)
+        // Logged here rather than where the message is handled, because this is the one place each frame
+        // arrives exactly once. A subscriber sees every frame on the shared flow, so logging downstream
+        // would repeat the same unmodelled frame once per open subscription.
+        if (message is AppSyncWebSocketMessage.Unknown) {
+            logger.debug { "Ignoring an unrecognized message: $text" }
+        }
+        messageFlow.tryEmit(message)
     }
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
         // onClosed is not called after a failure, so this has to close things out itself.
         if (pendingCloseCause == null) {
+            // Logged inside this branch, not above it: a deliberate teardown cancels the socket, which
+            // OkHttp reports here too. A cause is already set in that case, and it names the real reason
+            // — warning unconditionally would contradict it with the cancellation we caused ourselves.
+            logger.warn(t) { "The subscription connection failed." }
             pendingCloseCause = when (t) {
                 is IOException -> AppSyncConnectionException(
                     message = t.message ?: "The subscription connection failed.",
@@ -265,6 +279,9 @@ internal class AppSyncWebSocket(
         watchdog?.cancel()
         watchdog = scope.launch {
             delay(timeout)
+            logger.warn {
+                "Closing the subscription connection: no traffic for ${timeout}ms."
+            }
             pendingCloseCause = AppSyncTimeoutException(
                 message = "No traffic on the subscription connection for ${timeout}ms."
             )

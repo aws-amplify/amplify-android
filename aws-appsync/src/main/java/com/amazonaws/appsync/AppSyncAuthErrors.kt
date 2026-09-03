@@ -21,8 +21,9 @@ import com.amplifyframework.datastore.appsync.AppSyncExtensions
  * Recognises the errors that mean "this identity was rejected", as opposed to errors that would recur
  * with any identity. Only the former is worth retrying with a different auth mode.
  *
- * Both the HTTP and WebSocket paths need this, and both defer the classification to
- * [AppSyncExtensions] rather than maintaining a list of error-type strings here.
+ * Both the HTTP and WebSocket paths need this. Authorization failures defer to [AppSyncExtensions],
+ * which already knows which types mean "rejected identity". The two limit checks below cannot: its
+ * error-type enum does not model either of them, so they match the wire string directly.
  */
 
 /** Whether any error on this response is an authorization failure. */
@@ -42,13 +43,31 @@ internal fun List<AppSyncWebSocketMessage.WireError>.hasUnauthorizedError(): Boo
  * Checked against the wire string directly rather than through [AppSyncExtensions], whose error-type
  * enum does not model this case.
  *
- * TODO: `LimitExceededError` is a sibling meaning a request-rate limit rather than a subscription
- *  count. It needs different recovery advice, so it is not folded in here.
+ * Deliberately narrower than [hasRateLimitError]: the two limits are released by different actions, so
+ * they must not be folded together.
  */
 internal fun List<AppSyncWebSocketMessage.WireError>.hasSubscriptionLimitError(): Boolean =
     any { it.errorType == MAX_SUBSCRIPTIONS_REACHED }
 
+/**
+ * Whether any of these errors says the API's request rate limit was exceeded.
+ *
+ * A cap on how fast requests may arrive, not on how many subscriptions may be open, so the remedy is to
+ * back off rather than to release anything.
+ *
+ * Matched against the wire string for the same reason as [hasSubscriptionLimitError]: [AppSyncExtensions]
+ * does not model this error type either.
+ */
+internal fun List<AppSyncWebSocketMessage.WireError>.hasRateLimitError(): Boolean =
+    any { it.errorType == LIMIT_EXCEEDED }
+
+/** Whether any error on this response says the API's request rate limit was exceeded. */
+internal fun GraphQLResponse<*>.hasRateLimitError(): Boolean =
+    errors.any { it.extensions?.get(ERROR_TYPE_KEY) == LIMIT_EXCEEDED }
+
 private const val MAX_SUBSCRIPTIONS_REACHED = "MaxSubscriptionsReachedError"
+private const val LIMIT_EXCEEDED = "LimitExceededError"
+private const val ERROR_TYPE_KEY = "errorType"
 
 /**
  * Converts wire errors into the response type callers already handle, so an exception carrying them can
@@ -60,6 +79,6 @@ internal fun List<AppSyncWebSocketMessage.WireError>.toGraphQLErrors(): List<Gra
         it.message,
         null,
         null,
-        it.errorType?.let { type -> mapOf("errorType" to type) } ?: emptyMap()
+        it.errorType?.let { type -> mapOf(ERROR_TYPE_KEY to type) } ?: emptyMap()
     )
 }

@@ -187,6 +187,33 @@ class AmplifyAppSyncClientTest {
     }
 
     @Test
+    fun `a 429 is a rate limit, not a request problem`() = runTest {
+        // A throttle used to arrive as a validation failure, whose advice is to correct the request —
+        // misleading, because the request is fine and only its timing is not.
+        server.enqueue(jsonResponse("Too Many Requests", code = 429))
+
+        val error = client().query(request()).shouldBeFailure().error
+
+        error.shouldBeInstanceOf<AppSyncRateLimitExceededException>()
+        error.recoverySuggestion shouldContain "backoff"
+    }
+
+    @Test
+    fun `a LimitExceededError type under another status is still a rate limit`() = runTest {
+        server.enqueue(
+            jsonResponse(
+                """{"errors":[{"message":"Rate exceeded","extensions":{"errorType":"LimitExceededError"}}]}""",
+                code = HttpURLConnection.HTTP_BAD_REQUEST
+            )
+        )
+
+        client().query(request()).shouldBeFailure().error
+            .shouldBeInstanceOf<AppSyncRateLimitExceededException>()
+            // The service's own reason reaches the message; the 429 case above has no body to carry one.
+            .message shouldContain "Rate exceeded"
+    }
+
+    @Test
     fun `an Unauthorized error type under a non-401 status is still an auth failure`() = runTest {
         // The error type is the authoritative signal; AppSync does not always pair it with a 401.
         server.enqueue(

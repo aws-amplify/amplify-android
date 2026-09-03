@@ -15,6 +15,7 @@
 package com.amazonaws.appsync
 
 import com.amplifyframework.api.graphql.GraphQLRequest
+import com.amplifyframework.foundation.logging.AmplifyLogging
 import java.util.UUID
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -61,6 +62,8 @@ internal class AppSyncSubscriber(
     private val registrationTimeout: Duration = DEFAULT_REGISTRATION_TIMEOUT,
     ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
+
+    private val logger = AmplifyLogging.logger<AppSyncSubscriber>()
     private val connectionEvents = MutableSharedFlow<ConnectionState>(replay = 1)
     private val scope = CoroutineScope(ioDispatcher + SupervisorJob())
 
@@ -240,12 +243,21 @@ internal class AppSyncSubscriber(
             if (message.id == registration.id) {
                 // Deserialization failure is deliberately swallowed: it is non-terminal, so one
                 // unreadable message must not end a healthy subscription.
-                val response = runCatching {
+                val deserialization = runCatching {
                     AppSyncResponseDeserializer.deserialize(request, message.payload)
-                }.getOrNull()
+                }
+                val response = deserialization.getOrNull()
 
                 when {
-                    response == null -> true
+                    response == null -> {
+                        // Logged because it is the only trace this message existed: the subscription
+                        // continues and the consumer is told nothing, so without this a message lost to
+                        // a schema mismatch looks exactly like one the service never sent.
+                        logger.warn(deserialization.exceptionOrNull()) {
+                            "Dropping a subscription message that could not be deserialized."
+                        }
+                        true
+                    }
                     // AppSync can reject the identity in a data message rather than an error frame, so
                     // this is a retry trigger too, not just something to hand to the consumer.
                     response.hasUnauthorizedError() && registration.canRetry -> {
@@ -271,8 +283,14 @@ internal class AppSyncSubscriber(
                 when {
                     // Checked before the auth retry: the limit belongs to the API, not the identity, so
                     // trying another auth mode would consume attempts and fail the same way.
-                    message.errors.hasSubscriptionLimitError() -> throw AppSyncLimitExceededException(
+                    message.errors.hasSubscriptionLimitError() -> throw AppSyncSubscriptionLimitExceededException(
                         message = "The API's concurrent subscription limit was reached: " +
+                            message.errors.joinToString("; ") { it.message }.ifEmpty { "no reason given" }
+                    )
+                    // Also checked before the auth retry, and for the same reason: a rate limit belongs
+                    // to the API rather than to the identity.
+                    message.errors.hasRateLimitError() -> throw AppSyncRateLimitExceededException(
+                        message = "The API's request rate limit was exceeded: " +
                             message.errors.joinToString("; ") { it.message }.ifEmpty { "no reason given" }
                     )
                     // The identity was rejected; a different auth mode may be accepted.
@@ -310,7 +328,8 @@ internal class AppSyncSubscriber(
         // subscription streams normally rather than throwing.
         is AppSyncWebSocketMessage.Closed -> message.cause?.let { throw it } ?: false
 
-        // Keep-alives, unknown frames, and anything addressed to another subscription.
+        // Expected traffic that this subscription has nothing to do with. An unrecognized frame is
+        // logged by the socket, which sees it once, rather than here, which sees it per subscription.
         is AppSyncWebSocketMessage.ConnectionAck,
         is AppSyncWebSocketMessage.KeepAlive,
         is AppSyncWebSocketMessage.Unknown -> true
