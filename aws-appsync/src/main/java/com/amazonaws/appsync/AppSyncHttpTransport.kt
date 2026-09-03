@@ -184,10 +184,6 @@ internal class AppSyncHttpTransport(
         val parsed = runCatching { AppSyncResponseDeserializer.deserialize(request, body) }.getOrNull()
         val errors = parsed?.errors?.takeIf { it.isNotEmpty() }
 
-        // Reported as an auth failure so a caller can match the whole category to re-authenticate,
-        // rather than having to recognise a status code or an error string. Either signal is enough:
-        // AppSync answers a rejected identity with a 401, and a rejected operation with an
-        // Unauthorized error type that can arrive under any 4xx.
         // A throttle is not a defect in the request, so it must not arrive as one — the advice to check
         // the document and variables would send a caller to correct something that is already correct.
         if (response.code == HTTP_TOO_MANY_REQUESTS || parsed?.hasRateLimitError() == true) {
@@ -197,6 +193,10 @@ internal class AppSyncHttpTransport(
             )
         }
 
+        // Reported as an auth failure so a caller can match the whole category to re-authenticate,
+        // rather than having to recognise a status code or an error string. Either signal is enough:
+        // AppSync answers a rejected identity with a 401, and a rejected operation with an
+        // Unauthorized error type that can arrive under any 4xx.
         if (response.code == HTTP_UNAUTHORIZED || parsed?.hasUnauthorizedError() == true) {
             return AppSyncUnauthorizedException(
                 message = "The request was not authorized (HTTP status ${response.code})" +

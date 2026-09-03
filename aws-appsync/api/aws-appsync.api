@@ -164,11 +164,6 @@ public final class com/amazonaws/appsync/AppSyncInvalidConfigException : com/ama
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
-public final class com/amazonaws/appsync/AppSyncLimitExceededException : com/amazonaws/appsync/AppSyncSubscriptionException {
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-}
-
 public final class com/amazonaws/appsync/AppSyncNetworkException : com/amazonaws/appsync/AppSyncException {
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -202,6 +197,11 @@ public final class com/amazonaws/appsync/AppSyncSigningException : com/amazonaws
 public abstract class com/amazonaws/appsync/AppSyncSubscriptionException : com/amazonaws/appsync/AppSyncException {
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/amazonaws/appsync/AppSyncSubscriptionLimitExceededException : com/amazonaws/appsync/AppSyncSubscriptionException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
 public final class com/amazonaws/appsync/AppSyncTimeoutException : com/amazonaws/appsync/AppSyncSubscriptionException {

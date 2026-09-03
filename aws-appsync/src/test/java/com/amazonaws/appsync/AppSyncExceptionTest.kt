@@ -21,6 +21,7 @@ import io.kotest.matchers.string.shouldNotBeBlank
 import io.kotest.matchers.types.shouldBeInstanceOf
 import java.io.IOException
 import java.net.SocketTimeoutException
+import kotlin.reflect.KClass
 import org.junit.Test
 
 /**
@@ -78,7 +79,7 @@ class AppSyncExceptionTest {
     fun `subscription leaves are catchable as one group`() {
         AppSyncConnectionException("a").shouldBeInstanceOf<AppSyncSubscriptionException>()
         AppSyncTimeoutException("b").shouldBeInstanceOf<AppSyncSubscriptionException>()
-        AppSyncLimitExceededException("c").shouldBeInstanceOf<AppSyncSubscriptionException>()
+        AppSyncSubscriptionLimitExceededException("c").shouldBeInstanceOf<AppSyncSubscriptionException>()
     }
 
     @Test
@@ -87,14 +88,14 @@ class AppSyncExceptionTest {
     }
 
     @Test
-    fun `network and unknown are leaves directly under the base, in no group`() {
-        // Guards the hierarchy shape: these two deliberately have no intermediate group, so a `when`
-        // over
+    fun `network, rate limit and unknown are leaves directly under the base, in no group`() {
+        // Guards the hierarchy shape: these deliberately have no intermediate group, so a `when` over
         // the groups must still handle them.
         val network: AppSyncException = AppSyncNetworkException("a")
-        val unknown: AppSyncException = AppSyncUnknownException("b")
+        val rateLimit: AppSyncException = AppSyncRateLimitExceededException("b")
+        val unknown: AppSyncException = AppSyncUnknownException("c")
 
-        listOf(network, unknown).forEach {
+        listOf(network, rateLimit, unknown).forEach {
             (it is AppSyncAuthException) shouldBe false
             (it is AppSyncConfigurationException) shouldBe false
             (it is AppSyncResponseException) shouldBe false
@@ -113,6 +114,7 @@ class AppSyncExceptionTest {
             AppSyncSigningException("a"),
             AppSyncTokenParsingException("a"),
             AppSyncAuthorizationClaimException("a"),
+            AppSyncUnauthorizedException("a"),
             AppSyncAuthExhaustedException("a", emptyList()),
             AppSyncInvalidConfigException("a"),
             AppSyncEndpointResolutionException("a"),
@@ -120,14 +122,25 @@ class AppSyncExceptionTest {
             AppSyncGraphQLErrorException("a", emptyList()),
             AppSyncConnectionException("a"),
             AppSyncTimeoutException("a"),
-            AppSyncLimitExceededException("a"),
+            AppSyncSubscriptionLimitExceededException("a"),
             AppSyncValidationException("a"),
             AppSyncNetworkException("a"),
+            AppSyncRateLimitExceededException("a"),
             AppSyncUnknownException("a")
         )
 
-        leaves.size shouldBe 16
+        // Compared against the hierarchy rather than against a count. A `size shouldBe n` assertion
+        // counts the list directly below it, so it can never fail when a leaf is added — which is the
+        // one thing it exists to catch, and it did not: AppSyncUnauthorizedException was absent from
+        // this list while the count still passed.
+        leaves.map { it::class.simpleName }.toSet() shouldBe AppSyncException::class.leafNames()
         leaves.forEach { it.recoverySuggestion.shouldNotBeBlank() }
+    }
+
+    /** Every concrete type reachable through the sealed hierarchy, by simple name. */
+    private fun KClass<*>.leafNames(): Set<String> = when {
+        sealedSubclasses.isEmpty() -> setOfNotNull(simpleName)
+        else -> sealedSubclasses.flatMap { it.leafNames() }.toSet()
     }
 
     @Test

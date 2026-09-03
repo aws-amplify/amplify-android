@@ -243,17 +243,17 @@ internal class AppSyncSubscriber(
             if (message.id == registration.id) {
                 // Deserialization failure is deliberately swallowed: it is non-terminal, so one
                 // unreadable message must not end a healthy subscription.
-                val failure = runCatching {
+                val deserialization = runCatching {
                     AppSyncResponseDeserializer.deserialize(request, message.payload)
                 }
-                val response = failure.getOrNull()
+                val response = deserialization.getOrNull()
 
                 when {
                     response == null -> {
                         // Logged because it is the only trace this message existed: the subscription
                         // continues and the consumer is told nothing, so without this a message lost to
                         // a schema mismatch looks exactly like one the service never sent.
-                        logger.warn(failure.exceptionOrNull()) {
+                        logger.warn(deserialization.exceptionOrNull()) {
                             "Dropping a subscription message that could not be deserialized."
                         }
                         true
@@ -283,7 +283,7 @@ internal class AppSyncSubscriber(
                 when {
                     // Checked before the auth retry: the limit belongs to the API, not the identity, so
                     // trying another auth mode would consume attempts and fail the same way.
-                    message.errors.hasSubscriptionLimitError() -> throw AppSyncLimitExceededException(
+                    message.errors.hasSubscriptionLimitError() -> throw AppSyncSubscriptionLimitExceededException(
                         message = "The API's concurrent subscription limit was reached: " +
                             message.errors.joinToString("; ") { it.message }.ifEmpty { "no reason given" }
                     )
@@ -328,16 +328,11 @@ internal class AppSyncSubscriber(
         // subscription streams normally rather than throwing.
         is AppSyncWebSocketMessage.Closed -> message.cause?.let { throw it } ?: false
 
-        // Expected traffic that this subscription has nothing to do.
+        // Expected traffic that this subscription has nothing to do with. An unrecognized frame is
+        // logged by the socket, which sees it once, rather than here, which sees it per subscription.
         is AppSyncWebSocketMessage.ConnectionAck,
-        is AppSyncWebSocketMessage.KeepAlive -> true
-
-        // Logged, unlike the two above, because an unmodelled frame means the wire carried something
-        // this client does not understand — worth a trace, where a keep-alive would only be noise.
-        is AppSyncWebSocketMessage.Unknown -> {
-            logger.debug { "Ignoring an unrecognized message of type ${message.type}." }
-            true
-        }
+        is AppSyncWebSocketMessage.KeepAlive,
+        is AppSyncWebSocketMessage.Unknown -> true
     }
 
     /**

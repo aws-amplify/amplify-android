@@ -21,8 +21,9 @@ import com.amplifyframework.datastore.appsync.AppSyncExtensions
  * Recognises the errors that mean "this identity was rejected", as opposed to errors that would recur
  * with any identity. Only the former is worth retrying with a different auth mode.
  *
- * Both the HTTP and WebSocket paths need this, and both defer the classification to
- * [AppSyncExtensions] rather than maintaining a list of error-type strings here.
+ * Both the HTTP and WebSocket paths need this. Authorization failures defer to [AppSyncExtensions],
+ * which already knows which types mean "rejected identity". The two limit checks below cannot: its
+ * error-type enum does not model either of them, so they match the wire string directly.
  */
 
 /** Whether any error on this response is an authorization failure. */
@@ -53,6 +54,9 @@ internal fun List<AppSyncWebSocketMessage.WireError>.hasSubscriptionLimitError()
  *
  * A cap on how fast requests may arrive, not on how many subscriptions may be open, so the remedy is to
  * back off rather than to release anything.
+ *
+ * Matched against the wire string for the same reason as [hasSubscriptionLimitError]: [AppSyncExtensions]
+ * does not model this error type either.
  */
 internal fun List<AppSyncWebSocketMessage.WireError>.hasRateLimitError(): Boolean =
     any { it.errorType == LIMIT_EXCEEDED }
@@ -75,6 +79,6 @@ internal fun List<AppSyncWebSocketMessage.WireError>.toGraphQLErrors(): List<Gra
         it.message,
         null,
         null,
-        it.errorType?.let { type -> mapOf("errorType" to type) } ?: emptyMap()
+        it.errorType?.let { type -> mapOf(ERROR_TYPE_KEY to type) } ?: emptyMap()
     )
 }

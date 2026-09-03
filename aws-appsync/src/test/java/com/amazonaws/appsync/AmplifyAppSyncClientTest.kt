@@ -209,6 +209,8 @@ class AmplifyAppSyncClientTest {
 
         client().query(request()).shouldBeFailure().error
             .shouldBeInstanceOf<AppSyncRateLimitExceededException>()
+            // The service's own reason reaches the message; the 429 case above has no body to carry one.
+            .message shouldContain "Rate exceeded"
     }
 
     @Test

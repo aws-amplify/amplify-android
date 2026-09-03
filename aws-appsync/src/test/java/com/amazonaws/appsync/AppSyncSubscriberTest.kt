@@ -521,30 +521,53 @@ class AppSyncSubscriberTest {
                 )
             )
 
-            awaitError().shouldBeInstanceOf<AppSyncLimitExceededException>()
+            awaitError().shouldBeInstanceOf<AppSyncSubscriptionLimitExceededException>()
                 .message shouldContain "100 subscriptions"
         }
     }
 
     @Test
-    fun `a rate limit error is terminal and distinct from the subscription limit`() = runTest {
-        // Both are "limit" errors, but they are released by different actions — backing off versus
-        // closing a subscription — so they must not collapse into one type.
+    fun `a rate limit error wins over an unauthorized error in the same frame`() = runTest {
+        // Carries both so the precedence is actually exercised: with a rate-limit error alone the
+        // auth-retry branch is not a candidate at all, and this would pass wherever the check sat.
+        // A rate limit belongs to the API, so retrying under another identity only wastes an attempt.
         val subscriber = subscriber(multiAuth())
 
         subscriber.subscribe(modelRequest()).test {
             awaitItem() shouldBe SubscriptionEvent.Connecting
-            val firstId = startedId
 
             messages.emit(
                 AppSyncWebSocketMessage.Error(
-                    firstId,
-                    listOf(wireError("Rate exceeded", "LimitExceededError"))
+                    startedId,
+                    listOf(unauthorized(), wireError("Rate exceeded", "LimitExceededError"))
                 )
             )
 
             awaitError().shouldBeInstanceOf<AppSyncRateLimitExceededException>()
                 .message shouldContain "Rate exceeded"
+        }
+    }
+
+    @Test
+    fun `the subscription limit wins over a rate limit in the same frame`() = runTest {
+        // The two are separate types precisely because the remedies differ, so which one a frame
+        // carrying both resolves to is a decision worth pinning rather than leaving to branch order.
+        val subscriber = subscriber(multiAuth())
+
+        subscriber.subscribe(modelRequest()).test {
+            awaitItem() shouldBe SubscriptionEvent.Connecting
+
+            messages.emit(
+                AppSyncWebSocketMessage.Error(
+                    startedId,
+                    listOf(
+                        wireError("Rate exceeded", "LimitExceededError"),
+                        wireError("limit", "MaxSubscriptionsReachedError")
+                    )
+                )
+            )
+
+            awaitError().shouldBeInstanceOf<AppSyncSubscriptionLimitExceededException>()
         }
     }
 
@@ -562,7 +585,7 @@ class AppSyncSubscriberTest {
                 )
             )
 
-            awaitError().shouldBeInstanceOf<AppSyncLimitExceededException>()
+            awaitError().shouldBeInstanceOf<AppSyncSubscriptionLimitExceededException>()
         }
     }
 
