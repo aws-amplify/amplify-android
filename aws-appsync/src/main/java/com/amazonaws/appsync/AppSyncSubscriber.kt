@@ -15,6 +15,7 @@
 package com.amazonaws.appsync
 
 import com.amplifyframework.api.graphql.GraphQLRequest
+import com.amplifyframework.foundation.logging.AmplifyLogging
 import java.util.UUID
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -61,6 +62,8 @@ internal class AppSyncSubscriber(
     private val registrationTimeout: Duration = DEFAULT_REGISTRATION_TIMEOUT,
     ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
+
+    private val logger = AmplifyLogging.logger<AppSyncSubscriber>()
     private val connectionEvents = MutableSharedFlow<ConnectionState>(replay = 1)
     private val scope = CoroutineScope(ioDispatcher + SupervisorJob())
 
@@ -240,12 +243,21 @@ internal class AppSyncSubscriber(
             if (message.id == registration.id) {
                 // Deserialization failure is deliberately swallowed: it is non-terminal, so one
                 // unreadable message must not end a healthy subscription.
-                val response = runCatching {
+                val failure = runCatching {
                     AppSyncResponseDeserializer.deserialize(request, message.payload)
-                }.getOrNull()
+                }
+                val response = failure.getOrNull()
 
                 when {
-                    response == null -> true
+                    response == null -> {
+                        // Logged because it is the only trace this message existed: the subscription
+                        // continues and the consumer is told nothing, so without this a message lost to
+                        // a schema mismatch looks exactly like one the service never sent.
+                        logger.warn(failure.exceptionOrNull()) {
+                            "Dropping a subscription message that could not be deserialized."
+                        }
+                        true
+                    }
                     // AppSync can reject the identity in a data message rather than an error frame, so
                     // this is a retry trigger too, not just something to hand to the consumer.
                     response.hasUnauthorizedError() && registration.canRetry -> {
@@ -316,10 +328,16 @@ internal class AppSyncSubscriber(
         // subscription streams normally rather than throwing.
         is AppSyncWebSocketMessage.Closed -> message.cause?.let { throw it } ?: false
 
-        // Keep-alives, unknown frames, and anything addressed to another subscription.
+        // Expected traffic that this subscription has nothing to do.
         is AppSyncWebSocketMessage.ConnectionAck,
-        is AppSyncWebSocketMessage.KeepAlive,
-        is AppSyncWebSocketMessage.Unknown -> true
+        is AppSyncWebSocketMessage.KeepAlive -> true
+
+        // Logged, unlike the two above, because an unmodelled frame means the wire carried something
+        // this client does not understand — worth a trace, where a keep-alive would only be noise.
+        is AppSyncWebSocketMessage.Unknown -> {
+            logger.debug { "Ignoring an unrecognized message of type ${message.type}." }
+            true
+        }
     }
 
     /**
