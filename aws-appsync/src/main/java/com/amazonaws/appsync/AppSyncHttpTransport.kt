@@ -81,7 +81,17 @@ internal class AppSyncHttpTransport(
                 return@forEachIndexed
             }
 
-            val response = client.newCall(decorated).await().use { deserialize(request, it) }
+            // A rejection can arrive either as a thrown 4xx or as a 200 carrying Unauthorized errors,
+            // and both mean the same thing: this identity was refused. Only the second was considered
+            // before, so a plain 401 propagated straight out and no fallback was ever attempted.
+            val response = try {
+                client.newCall(decorated).await().use { deserialize(request, it) }
+            } catch (rejected: AppSyncUnauthorizedException) {
+                if (!canFallBack) throw rejected
+                if (isLastAttempt) throw exhausted(authModes, rejected)
+                lastAuthFailure = rejected
+                return@forEachIndexed
+            }
 
             // An unauthorized response is the other retryable signal: AppSync accepted the request but
             // rejected the identity, which a different mode may satisfy.
@@ -181,12 +191,20 @@ internal class AppSyncHttpTransport(
     }
 
     private fun <T> clientError(request: GraphQLRequest<T>, response: Response, body: String?): AppSyncException {
-        // TODO: classify authorization failures as an AppSyncAuthException. A 401, or an error whose
-        //  extensions carry an Unauthorized errorType, currently arrives as a response or request
-        //  error, so a caller cannot match the whole auth category to re-authenticate.
-        val errors = runCatching { AppSyncResponseDeserializer.deserialize(request, body).errors }
-            .getOrNull()
-            ?.takeIf { it.isNotEmpty() }
+        val parsed = runCatching { AppSyncResponseDeserializer.deserialize(request, body) }.getOrNull()
+        val errors = parsed?.errors?.takeIf { it.isNotEmpty() }
+
+        // Reported as an auth failure so a caller can match the whole category to re-authenticate,
+        // rather than having to recognise a status code or an error string. Either signal is enough:
+        // AppSync answers a rejected identity with a 401, and a rejected operation with an
+        // Unauthorized error type that can arrive under any 4xx.
+        if (response.code == HTTP_UNAUTHORIZED || parsed?.isUnauthorized() == true) {
+            return AppSyncUnauthorizedException(
+                message = "The request was not authorized (HTTP status ${response.code})" +
+                    (errors?.joinToString("; ") { it.message }?.let { ": $it" } ?: "."),
+                errors = errors ?: emptyList()
+            )
+        }
 
         return if (errors != null) {
             AppSyncGraphQLErrorException(
@@ -234,6 +252,7 @@ internal class AppSyncHttpTransport(
         const val ACCEPT_HEADER = "accept"
         const val USER_AGENT_HEADER = "User-Agent"
         val CLIENT_ERROR_CODES = 400..499
+        const val HTTP_UNAUTHORIZED = 401
         const val SERVER_ERROR_MIN = 500
 
         // Internal error, bad gateway, service unavailable and gateway timeout. Each can clear without
