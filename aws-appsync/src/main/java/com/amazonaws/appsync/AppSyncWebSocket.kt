@@ -14,6 +14,7 @@
  */
 package com.amazonaws.appsync
 
+import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.util.UserAgent
 import java.io.IOException
 import kotlin.time.Duration
@@ -88,6 +89,8 @@ internal class AppSyncWebSocket(
 
     @Volatile
     private var watchdogTimeoutMs: Long = 0
+
+    private val logger = AmplifyLogging.logger<AppSyncWebSocket>()
 
     @Volatile
     var isClosed = false
@@ -211,6 +214,7 @@ internal class AppSyncWebSocket(
     }
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+        logger.warn(t) { "The subscription connection failed." }
         // onClosed is not called after a failure, so this has to close things out itself.
         if (pendingCloseCause == null) {
             pendingCloseCause = when (t) {
@@ -265,6 +269,9 @@ internal class AppSyncWebSocket(
         watchdog?.cancel()
         watchdog = scope.launch {
             delay(timeout)
+            logger.warn {
+                "Closing the subscription connection: no traffic for ${timeout}ms."
+            }
             pendingCloseCause = AppSyncTimeoutException(
                 message = "No traffic on the subscription connection for ${timeout}ms."
             )
