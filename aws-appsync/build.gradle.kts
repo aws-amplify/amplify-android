@@ -37,6 +37,7 @@ dependencies {
 
     testImplementation(libs.bundles.test.unit)
     testImplementation(libs.bundles.test.unit.android)
+    testImplementation(libs.test.kotlin.reflection)
     testImplementation(libs.test.mockwebserver)
     testImplementation(project(":testutils"))
 }
