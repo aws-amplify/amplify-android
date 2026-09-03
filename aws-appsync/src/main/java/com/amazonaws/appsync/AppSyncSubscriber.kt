@@ -275,6 +275,12 @@ internal class AppSyncSubscriber(
                         message = "The API's concurrent subscription limit was reached: " +
                             message.errors.joinToString("; ") { it.message }.ifEmpty { "no reason given" }
                     )
+                    // Also checked before the auth retry, and for the same reason: a rate limit belongs
+                    // to the API rather than to the identity.
+                    message.errors.hasRateLimitError() -> throw AppSyncRateLimitExceededException(
+                        message = "The API's request rate limit was exceeded: " +
+                            message.errors.joinToString("; ") { it.message }.ifEmpty { "no reason given" }
+                    )
                     // The identity was rejected; a different auth mode may be accepted.
                     rejectedIdentity && registration.canRetry -> {
                         registration.register(socket)

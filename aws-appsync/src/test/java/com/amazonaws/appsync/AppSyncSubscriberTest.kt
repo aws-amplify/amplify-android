@@ -527,6 +527,28 @@ class AppSyncSubscriberTest {
     }
 
     @Test
+    fun `a rate limit error is terminal and distinct from the subscription limit`() = runTest {
+        // Both are "limit" errors, but they are released by different actions — backing off versus
+        // closing a subscription — so they must not collapse into one type.
+        val subscriber = subscriber(multiAuth())
+
+        subscriber.subscribe(modelRequest()).test {
+            awaitItem() shouldBe SubscriptionEvent.Connecting
+            val firstId = startedId
+
+            messages.emit(
+                AppSyncWebSocketMessage.Error(
+                    firstId,
+                    listOf(wireError("Rate exceeded", "LimitExceededError"))
+                )
+            )
+
+            awaitError().shouldBeInstanceOf<AppSyncRateLimitExceededException>()
+                .message shouldContain "Rate exceeded"
+        }
+    }
+
+    @Test
     fun `a subscription limit error wins over an unauthorized error in the same frame`() = runTest {
         val subscriber = subscriber(multiAuth())
 

@@ -188,6 +188,15 @@ internal class AppSyncHttpTransport(
         // rather than having to recognise a status code or an error string. Either signal is enough:
         // AppSync answers a rejected identity with a 401, and a rejected operation with an
         // Unauthorized error type that can arrive under any 4xx.
+        // A throttle is not a defect in the request, so it must not arrive as one — the advice to check
+        // the document and variables would send a caller to correct something that is already correct.
+        if (response.code == HTTP_TOO_MANY_REQUESTS || parsed?.hasRateLimitError() == true) {
+            return AppSyncRateLimitExceededException(
+                message = "The request was throttled (HTTP status ${response.code})" +
+                    (errors?.joinToString("; ") { it.message }?.let { ": $it" } ?: ".")
+            )
+        }
+
         if (response.code == HTTP_UNAUTHORIZED || parsed?.hasUnauthorizedError() == true) {
             return AppSyncUnauthorizedException(
                 message = "The request was not authorized (HTTP status ${response.code})" +
@@ -243,6 +252,7 @@ internal class AppSyncHttpTransport(
         const val USER_AGENT_HEADER = "User-Agent"
         val CLIENT_ERROR_CODES = 400..499
         const val HTTP_UNAUTHORIZED = 401
+        const val HTTP_TOO_MANY_REQUESTS = 429
         const val SERVER_ERROR_MIN = 500
 
         // Internal error, bad gateway, service unavailable and gateway timeout. Each can clear without

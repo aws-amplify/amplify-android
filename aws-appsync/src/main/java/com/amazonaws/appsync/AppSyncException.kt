@@ -283,6 +283,22 @@ class AppSyncValidationException(
 
 // ── Ungrouped leaves ────────────────────────────────────────────────────
 
+/**
+ * The API's request rate limit was exceeded.
+ *
+ * Ungrouped for the same reason [AppSyncNetworkException] is: nothing about the request is wrong and
+ * no credential will change the outcome. The same request is likely to succeed once the rate falls.
+ *
+ * Distinct from [AppSyncLimitExceededException], which is the cap on how many subscriptions may be
+ * open at once — that one is released by closing a subscription, this one by slowing down.
+ */
+@ExperimentalAmplifyApi
+class AppSyncRateLimitExceededException(
+    message: String,
+    recoverySuggestion: String = "Retry with exponential backoff, and reduce the rate of requests.",
+    cause: Throwable? = null
+) : AppSyncException(message, recoverySuggestion, cause)
+
 /** The request could not reach the service. */
 @ExperimentalAmplifyApi
 class AppSyncNetworkException(
