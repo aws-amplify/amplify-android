@@ -14,16 +14,25 @@
  */
 package com.amazonaws.appsync
 
+import com.amplifyframework.api.aws.AppSyncGraphQLRequest
+import com.amplifyframework.api.aws.AuthorizationType
 import com.amplifyframework.api.aws.GsonVariablesSerializer
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest
+import com.amplifyframework.core.model.AuthRule
+import com.amplifyframework.core.model.AuthStrategy
+import com.amplifyframework.core.model.ModelOperation
+import com.amplifyframework.core.model.ModelSchema
 import com.amplifyframework.testutils.assertions.shouldBeFailure
 import com.amplifyframework.testutils.assertions.shouldBeSuccess
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.mockk.every
+import io.mockk.mockk
 import java.net.HttpURLConnection
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
@@ -147,13 +156,47 @@ class AmplifyAppSyncClientTest {
     }
 
     @Test
-    fun `a 401 with no parseable body becomes a validation exception`() = runTest {
+    fun `a 401 with no parseable body is an auth failure`() = runTest {
+        // Reported in the auth category rather than as a request-shape problem, so a caller can catch
+        // AppSyncAuthException to re-authenticate without inspecting status codes.
         server.enqueue(jsonResponse("Unauthorized", code = HttpURLConnection.HTTP_UNAUTHORIZED))
 
         val error = client().query(request()).shouldBeFailure().error
 
-        error.shouldBeInstanceOf<AppSyncValidationException>()
+        error.shouldBeInstanceOf<AppSyncUnauthorizedException>()
+        error.shouldBeInstanceOf<AppSyncAuthException>()
         error.message shouldContain "401"
+        error.errors.shouldBeEmpty()
+    }
+
+    @Test
+    fun `a 401 carrying errors keeps them on the exception`() = runTest {
+        server.enqueue(
+            jsonResponse(
+                """{"errors":[{"message":"Valid authorization header not provided"}]}""",
+                code = HttpURLConnection.HTTP_UNAUTHORIZED
+            )
+        )
+
+        val error = client().query(request()).shouldBeFailure().error
+            .shouldBeInstanceOf<AppSyncUnauthorizedException>()
+
+        error.errors.single().message shouldBe "Valid authorization header not provided"
+        error.message shouldContain "Valid authorization header not provided"
+    }
+
+    @Test
+    fun `an Unauthorized error type under a non-401 status is still an auth failure`() = runTest {
+        // The error type is the authoritative signal; AppSync does not always pair it with a 401.
+        server.enqueue(
+            jsonResponse(
+                """{"errors":[{"message":"Not Authorized to access getTodo","extensions":{"errorType":"Unauthorized"}}]}""",
+                code = HttpURLConnection.HTTP_BAD_REQUEST
+            )
+        )
+
+        client().query(request()).shouldBeFailure().error
+            .shouldBeInstanceOf<AppSyncUnauthorizedException>()
     }
 
     // ── Transport failures ──────────────────────────────────────────────
@@ -316,6 +359,146 @@ class AmplifyAppSyncClientTest {
             .region shouldBe "cn-north-1"
     }
 
+    // ── Multi-auth retry ────────────────────────────────────────────────
+
+    @Test
+    fun `an unauthorized response retries with the next auth mode and succeeds`() = runTest {
+        server.enqueue(unauthorizedResponse())
+        server.enqueue(jsonResponse("""{"data":"hello"}"""))
+
+        val response = multiAuthClient().query(modelRequest()).shouldBeSuccess().data
+
+        response.data shouldBe "hello"
+        server.requestCount shouldBe 2
+    }
+
+    @Test
+    fun `the retry actually switches identity, it does not resend the same credentials`() = runTest {
+        server.enqueue(unauthorizedResponse())
+        server.enqueue(jsonResponse("""{"data":"hello"}"""))
+
+        multiAuthClient().query(modelRequest()).shouldBeSuccess()
+
+        // Owner rules order User Pools first, then the public API key rule.
+        val first = server.awaitRequest()
+        val second = server.awaitRequest()
+        first.getHeader("authorization") shouldBe "user-pools-token"
+        first.getHeader("x-api-key").shouldBeNull()
+        second.getHeader("x-api-key") shouldBe "da2-fakekey"
+        second.getHeader("authorization").shouldBeNull()
+    }
+
+    @Test
+    fun `a 401 retries with the next auth mode and succeeds`() = runTest {
+        // The retryable signal used to be recognised only on a 200 carrying Unauthorized errors, so a
+        // plain 401 — the response AppSync gives when it refuses the credentials outright — threw
+        // straight out of the attempt and no fallback was tried.
+        server.enqueue(jsonResponse("Unauthorized", code = HttpURLConnection.HTTP_UNAUTHORIZED))
+        server.enqueue(jsonResponse("""{"data":"hello"}"""))
+
+        val response = multiAuthClient().query(modelRequest()).shouldBeSuccess().data
+
+        response.data shouldBe "hello"
+        server.requestCount shouldBe 2
+    }
+
+    @Test
+    fun `a 401 on every mode reports exhaustion`() = runTest {
+        server.enqueue(jsonResponse("Unauthorized", code = HttpURLConnection.HTTP_UNAUTHORIZED))
+        server.enqueue(jsonResponse("Unauthorized", code = HttpURLConnection.HTTP_UNAUTHORIZED))
+
+        val error = multiAuthClient().query(modelRequest()).shouldBeFailure().error
+            .shouldBeInstanceOf<AppSyncAuthExhaustedException>()
+
+        error.attemptedAuthModes shouldBe listOf(AppSyncAuthMode.USER_POOLS, AppSyncAuthMode.API_KEY)
+        server.requestCount shouldBe 2
+    }
+
+    @Test
+    fun `single auth does not retry a 401, and reports the rejection directly`() = runTest {
+        // The single-candidate contract: with nothing to fall back to the caller must see the service's
+        // own reason, never an exhaustion failure that implies modes were tried and ruled out.
+        server.enqueue(jsonResponse("Unauthorized", code = HttpURLConnection.HTTP_UNAUTHORIZED))
+
+        val error = client().query(modelRequest()).shouldBeFailure().error
+
+        error.shouldBeInstanceOf<AppSyncUnauthorizedException>()
+        server.requestCount shouldBe 1
+    }
+
+    @Test
+    fun `exhausting every auth mode reports which were attempted`() = runTest {
+        server.enqueue(unauthorizedResponse())
+        server.enqueue(unauthorizedResponse())
+
+        val error = multiAuthClient().query(modelRequest()).shouldBeFailure().error
+            .shouldBeInstanceOf<AppSyncAuthExhaustedException>()
+
+        error.attemptedAuthModes shouldBe listOf(AppSyncAuthMode.USER_POOLS, AppSyncAuthMode.API_KEY)
+        server.requestCount shouldBe 2
+    }
+
+    @Test
+    fun `a failing token supplier retries with the next auth mode instead of failing`() = runTest {
+        server.enqueue(jsonResponse("""{"data":"hello"}"""))
+
+        val client = AmplifyAppSyncClient(
+            configuration(server.url("/graphql").toString()) {
+                region = "us-east-1"
+                authorization = AppSyncAuthorization.Multi(
+                    defaultAuthMode = AppSyncAuthMode.API_KEY,
+                    authorizers = listOf(
+                        AppSyncClientAuthorizer.UserPools { error("session expired") },
+                        AppSyncClientAuthorizer.ApiKey("da2-fakekey")
+                    )
+                )
+            }
+        )
+
+        client.query(modelRequest()).shouldBeSuccess().data.data shouldBe "hello"
+        // Only one HTTP call: the first mode failed before anything was sent.
+        server.requestCount shouldBe 1
+        server.awaitRequest().getHeader("x-api-key") shouldBe "da2-fakekey"
+    }
+
+    @Test
+    fun `a non-auth graphql error does not trigger a retry`() = runTest {
+        // Only Unauthorized error types are retryable. Retrying a validation error would just fail
+        // again with a different identity and hide the real problem behind an exhaustion error.
+        server.enqueue(jsonResponse("""{"errors":[{"message":"Validation failed"}]}"""))
+
+        val response = multiAuthClient().query(modelRequest()).shouldBeSuccess().data
+
+        response.errors shouldHaveSize 1
+        server.requestCount shouldBe 1
+    }
+
+    @Test
+    fun `a per-request override is not retried against other modes`() = runTest {
+        server.enqueue(unauthorizedResponse())
+
+        val response = multiAuthClient()
+            .query(modelRequest(authorizationType = AuthorizationType.API_KEY))
+            .shouldBeSuccess().data
+
+        // The caller named a mode. Falling back would authorize as a different identity than asked.
+        response.errors shouldHaveSize 1
+        server.requestCount shouldBe 1
+        server.awaitRequest().getHeader("x-api-key") shouldBe "da2-fakekey"
+    }
+
+    @Test
+    fun `single auth does not retry, and surfaces the unauthorized response unchanged`() = runTest {
+        // Regression guard for the single-auth contract: with one candidate mode there is nothing to
+        // exhaust, so a 200-with-errors stays a Success rather than becoming an exhaustion failure.
+        server.enqueue(unauthorizedResponse())
+
+        val response = client().query(modelRequest()).shouldBeSuccess().data
+
+        response.errors shouldHaveSize 1
+        server.requestCount shouldBe 1
+    }
+
     // ── Helpers ─────────────────────────────────────────────────────────
 
     private fun client(configure: AmplifyAppSyncClient.Configuration.Builder.() -> Unit = {}) = AmplifyAppSyncClient(
@@ -344,6 +527,58 @@ class AmplifyAppSyncClientTest {
         .setResponseCode(code)
         .setHeader("content-type", "application/json")
         .setBody(body)
+
+    /** A 200 carrying AppSync's Unauthorized error type — the signal that triggers an auth retry. */
+    private fun unauthorizedResponse() = jsonResponse(
+        """{"errors":[{"message":"Not Authorized to access getTodo on type Query",
+           "extensions":{"errorType":"Unauthorized"}}]}
+        """.trimIndent()
+    )
+
+    /** A client whose auth rules make User Pools the first candidate and the API key the second. */
+    private fun multiAuthClient() = AmplifyAppSyncClient(
+        configuration(server.url("/graphql").toString()) {
+            region = "us-east-1"
+            authorization = AppSyncAuthorization.Multi(
+                defaultAuthMode = AppSyncAuthMode.API_KEY,
+                authorizers = listOf(
+                    AppSyncClientAuthorizer.ApiKey("da2-fakekey"),
+                    AppSyncClientAuthorizer.UserPools { "user-pools-token" }
+                )
+            )
+        }
+    )
+
+    /**
+     * A request carrying model metadata, so auth-rule resolution has something to inspect. Mocked
+     * rather than built, because a real [AppSyncGraphQLRequest] also runs selection-set generation,
+     * which needs a code-generated model class and is irrelevant here.
+     */
+    private fun modelRequest(authorizationType: AuthorizationType? = null): AppSyncGraphQLRequest<String> {
+        val ownerRule = AuthRule.builder()
+            .authStrategy(AuthStrategy.OWNER)
+            .authProvider(AuthStrategy.OWNER.defaultAuthProvider)
+            .identityClaim("cognito:username")
+            .ownerField("owner")
+            .operations(listOf(ModelOperation.READ))
+            .build()
+        val publicRule = AuthRule.builder()
+            .authStrategy(AuthStrategy.PUBLIC)
+            .authProvider(AuthStrategy.Provider.API_KEY)
+            .operations(listOf(ModelOperation.READ))
+            .build()
+
+        return mockk {
+            every { content } returns """{"query":"query { getTodo(id: \"1\") { id name } }"}"""
+            every { responseType } returns String::class.java
+            every { modelSchema } returns ModelSchema.builder()
+                .name("Todo")
+                .authRules(listOf(ownerRule, publicRule))
+                .build()
+            every { authRuleOperation } returns ModelOperation.READ
+            every { this@mockk.authorizationType } returns authorizationType
+        }
+    }
 
     /**
      * Takes the next recorded request, failing if none arrives. The bare `takeRequest()` blocks the

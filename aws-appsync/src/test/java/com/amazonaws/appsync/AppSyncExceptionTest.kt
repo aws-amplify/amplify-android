@@ -43,14 +43,23 @@ class AppSyncExceptionTest {
     fun `auth leaves are catchable as one group`() {
         val leaves = listOf(
             AppSyncTokenFetchException("a"),
-            AppSyncTokenExpiredException("b"),
             AppSyncProviderNotConfiguredException("c"),
             AppSyncSigningException("d"),
             AppSyncTokenParsingException("e"),
-            AppSyncAuthorizationClaimException("f")
+            AppSyncAuthorizationClaimException("f"),
+            AppSyncAuthExhaustedException("g", emptyList())
         )
 
         leaves.forEach { it.shouldBeInstanceOf<AppSyncAuthException>() }
+    }
+
+    @Test
+    fun `the exhaustion exception reports the modes that were attempted`() {
+        val attempted = listOf(AppSyncAuthMode.USER_POOLS, AppSyncAuthMode.API_KEY)
+
+        val exception = AppSyncAuthExhaustedException("all failed", attempted)
+
+        exception.attemptedAuthModes shouldBe attempted
     }
 
     @Test
@@ -69,12 +78,10 @@ class AppSyncExceptionTest {
     fun `subscription leaves are catchable as one group`() {
         AppSyncConnectionException("a").shouldBeInstanceOf<AppSyncSubscriptionException>()
         AppSyncTimeoutException("b").shouldBeInstanceOf<AppSyncSubscriptionException>()
-        AppSyncLimitExceededException("c").shouldBeInstanceOf<AppSyncSubscriptionException>()
     }
 
     @Test
     fun `request leaves are catchable as one group`() {
-        AppSyncSchemaException("a").shouldBeInstanceOf<AppSyncRequestException>()
         AppSyncValidationException("b").shouldBeInstanceOf<AppSyncRequestException>()
     }
 
@@ -101,25 +108,23 @@ class AppSyncExceptionTest {
     fun `every leaf carries a non-blank default recovery suggestion`() {
         val leaves = listOf(
             AppSyncTokenFetchException("a"),
-            AppSyncTokenExpiredException("a"),
             AppSyncProviderNotConfiguredException("a"),
             AppSyncSigningException("a"),
             AppSyncTokenParsingException("a"),
             AppSyncAuthorizationClaimException("a"),
+            AppSyncAuthExhaustedException("a", emptyList()),
             AppSyncInvalidConfigException("a"),
             AppSyncEndpointResolutionException("a"),
             AppSyncDeserializationException("a"),
             AppSyncGraphQLErrorException("a", emptyList()),
             AppSyncConnectionException("a"),
             AppSyncTimeoutException("a"),
-            AppSyncLimitExceededException("a"),
-            AppSyncSchemaException("a"),
             AppSyncValidationException("a"),
             AppSyncNetworkException("a"),
             AppSyncUnknownException("a")
         )
 
-        leaves.size shouldBe 17
+        leaves.size shouldBe 15
         leaves.forEach { it.recoverySuggestion.shouldNotBeBlank() }
     }
 

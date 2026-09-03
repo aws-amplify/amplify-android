@@ -49,6 +49,12 @@ public abstract class com/amazonaws/appsync/AppSyncAuthException : com/amazonaws
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
+public final class com/amazonaws/appsync/AppSyncAuthExhaustedException : com/amazonaws/appsync/AppSyncAuthException {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getAttemptedAuthModes ()Ljava/util/List;
+}
+
 public final class com/amazonaws/appsync/AppSyncAuthMode : java/lang/Enum {
 	public static final field API_KEY Lcom/amazonaws/appsync/AppSyncAuthMode;
 	public static final field IAM Lcom/amazonaws/appsync/AppSyncAuthMode;
@@ -158,11 +164,6 @@ public final class com/amazonaws/appsync/AppSyncInvalidConfigException : com/ama
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
-public final class com/amazonaws/appsync/AppSyncLimitExceededException : com/amazonaws/appsync/AppSyncSubscriptionException {
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-}
-
 public final class com/amazonaws/appsync/AppSyncNetworkException : com/amazonaws/appsync/AppSyncException {
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -183,11 +184,6 @@ public abstract class com/amazonaws/appsync/AppSyncResponseException : com/amazo
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
-public final class com/amazonaws/appsync/AppSyncSchemaException : com/amazonaws/appsync/AppSyncRequestException {
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-}
-
 public final class com/amazonaws/appsync/AppSyncSigningException : com/amazonaws/appsync/AppSyncAuthException {
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -203,11 +199,6 @@ public final class com/amazonaws/appsync/AppSyncTimeoutException : com/amazonaws
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
-public final class com/amazonaws/appsync/AppSyncTokenExpiredException : com/amazonaws/appsync/AppSyncAuthException {
-	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-}
-
 public final class com/amazonaws/appsync/AppSyncTokenFetchException : com/amazonaws/appsync/AppSyncAuthException {
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -216,6 +207,12 @@ public final class com/amazonaws/appsync/AppSyncTokenFetchException : com/amazon
 public final class com/amazonaws/appsync/AppSyncTokenParsingException : com/amazonaws/appsync/AppSyncAuthException {
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class com/amazonaws/appsync/AppSyncUnauthorizedException : com/amazonaws/appsync/AppSyncAuthException {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getErrors ()Ljava/util/List;
 }
 
 public final class com/amazonaws/appsync/AppSyncUnknownException : com/amazonaws/appsync/AppSyncException {
