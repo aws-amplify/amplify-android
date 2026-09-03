@@ -124,6 +124,24 @@ class AppSyncAuthorizationClaimException(
 ) : AppSyncAuthException(message, recoverySuggestion, cause)
 
 /**
+ * The service rejected the credentials the request was made with.
+ *
+ * Distinct from the other members of this group, which all describe a failure to *produce*
+ * credentials. Here credentials were produced and sent, and AppSync declined them — so the remedy is
+ * a different or refreshed identity rather than a fix to the authorizer.
+ *
+ * @param errors The GraphQL errors AppSync returned, empty when the response carried none.
+ */
+@ExperimentalAmplifyApi
+class AppSyncUnauthorizedException(
+    message: String,
+    val errors: List<GraphQLResponse.Error> = emptyList(),
+    recoverySuggestion: String = "Verify the credentials are valid and unexpired, and that the API " +
+        "authorizes this auth mode for the operation.",
+    cause: Throwable? = null
+) : AppSyncAuthException(message, recoverySuggestion, cause)
+
+/**
  * Every auth mode the request was eligible for was tried and all of them failed.
  *
  * Only raised in multi-auth: with a single candidate mode the underlying failure is surfaced

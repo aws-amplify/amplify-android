@@ -24,6 +24,7 @@ import com.amplifyframework.core.model.ModelOperation
 import com.amplifyframework.core.model.ModelSchema
 import com.amplifyframework.testutils.assertions.shouldBeFailure
 import com.amplifyframework.testutils.assertions.shouldBeSuccess
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -155,13 +156,47 @@ class AmplifyAppSyncClientTest {
     }
 
     @Test
-    fun `a 401 with no parseable body becomes a validation exception`() = runTest {
+    fun `a 401 with no parseable body is an auth failure`() = runTest {
+        // Reported in the auth category rather than as a request-shape problem, so a caller can catch
+        // AppSyncAuthException to re-authenticate without inspecting status codes.
         server.enqueue(jsonResponse("Unauthorized", code = HttpURLConnection.HTTP_UNAUTHORIZED))
 
         val error = client().query(request()).shouldBeFailure().error
 
-        error.shouldBeInstanceOf<AppSyncValidationException>()
+        error.shouldBeInstanceOf<AppSyncUnauthorizedException>()
+        error.shouldBeInstanceOf<AppSyncAuthException>()
         error.message shouldContain "401"
+        error.errors.shouldBeEmpty()
+    }
+
+    @Test
+    fun `a 401 carrying errors keeps them on the exception`() = runTest {
+        server.enqueue(
+            jsonResponse(
+                """{"errors":[{"message":"Valid authorization header not provided"}]}""",
+                code = HttpURLConnection.HTTP_UNAUTHORIZED
+            )
+        )
+
+        val error = client().query(request()).shouldBeFailure().error
+            .shouldBeInstanceOf<AppSyncUnauthorizedException>()
+
+        error.errors.single().message shouldBe "Valid authorization header not provided"
+        error.message shouldContain "Valid authorization header not provided"
+    }
+
+    @Test
+    fun `an Unauthorized error type under a non-401 status is still an auth failure`() = runTest {
+        // The error type is the authoritative signal; AppSync does not always pair it with a 401.
+        server.enqueue(
+            jsonResponse(
+                """{"errors":[{"message":"Not Authorized to access getTodo","extensions":{"errorType":"Unauthorized"}}]}""",
+                code = HttpURLConnection.HTTP_BAD_REQUEST
+            )
+        )
+
+        client().query(request()).shouldBeFailure().error
+            .shouldBeInstanceOf<AppSyncUnauthorizedException>()
     }
 
     // ── Transport failures ──────────────────────────────────────────────
@@ -351,6 +386,44 @@ class AmplifyAppSyncClientTest {
         first.getHeader("x-api-key").shouldBeNull()
         second.getHeader("x-api-key") shouldBe "da2-fakekey"
         second.getHeader("authorization").shouldBeNull()
+    }
+
+    @Test
+    fun `a 401 retries with the next auth mode and succeeds`() = runTest {
+        // The retryable signal used to be recognised only on a 200 carrying Unauthorized errors, so a
+        // plain 401 — the response AppSync gives when it refuses the credentials outright — threw
+        // straight out of the attempt and no fallback was tried.
+        server.enqueue(jsonResponse("Unauthorized", code = HttpURLConnection.HTTP_UNAUTHORIZED))
+        server.enqueue(jsonResponse("""{"data":"hello"}"""))
+
+        val response = multiAuthClient().query(modelRequest()).shouldBeSuccess().data
+
+        response.data shouldBe "hello"
+        server.requestCount shouldBe 2
+    }
+
+    @Test
+    fun `a 401 on every mode reports exhaustion`() = runTest {
+        server.enqueue(jsonResponse("Unauthorized", code = HttpURLConnection.HTTP_UNAUTHORIZED))
+        server.enqueue(jsonResponse("Unauthorized", code = HttpURLConnection.HTTP_UNAUTHORIZED))
+
+        val error = multiAuthClient().query(modelRequest()).shouldBeFailure().error
+            .shouldBeInstanceOf<AppSyncAuthExhaustedException>()
+
+        error.attemptedAuthModes shouldBe listOf(AppSyncAuthMode.USER_POOLS, AppSyncAuthMode.API_KEY)
+        server.requestCount shouldBe 2
+    }
+
+    @Test
+    fun `single auth does not retry a 401, and reports the rejection directly`() = runTest {
+        // The single-candidate contract: with nothing to fall back to the caller must see the service's
+        // own reason, never an exhaustion failure that implies modes were tried and ruled out.
+        server.enqueue(jsonResponse("Unauthorized", code = HttpURLConnection.HTTP_UNAUTHORIZED))
+
+        val error = client().query(modelRequest()).shouldBeFailure().error
+
+        error.shouldBeInstanceOf<AppSyncUnauthorizedException>()
+        server.requestCount shouldBe 1
     }
 
     @Test
