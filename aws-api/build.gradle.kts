@@ -22,6 +22,9 @@ apply(from = rootProject.file("configuration/checkstyle.gradle"))
 
 android {
     namespace = "com.amplifyframework.api.aws"
+    defaultConfig {
+        consumerProguardFiles += file("consumer-rules.pro")
+    }
 }
 
 dependencies {
