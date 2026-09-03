@@ -88,12 +88,14 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                 isCoreLibraryDesugaringEnabled = true
             }
 
-            // Needed when running integration tests. The oauth2 library uses relies on two
-            // dependencies (Apache's httpcore and httpclient), both of which include
-            // META-INF/DEPENDENCIES. Tried a couple other options to no avail.
+            // These metadata files are shipped by more than one dependency, and merging them into a
+            // single APK or AAR fails unless they are dropped. AGP already drops the most common
+            // ones (META-INF/LICENSE, META-INF/NOTICE) by default, so only the variants it does not
+            // know about are listed here.
             packaging {
                 resources.excludes.addAll(
                     listOf(
+                        "META-INF/COPYRIGHT",
                         "META-INF/DEPENDENCIES",
                         "META-INF/LICENSE.md",
                         "META-INF/LICENSE-notice.md",
