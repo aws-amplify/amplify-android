@@ -49,6 +49,13 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        with:
+          # MEASUREMENT ONLY - REVERT BEFORE OPENING A PR.
+          # setup-gradle defaults this to `true` on any non-default branch, which
+          # would leave this branch unable to seed the build cache. Every run
+          # would then look cold and the caching experiment would appear to do
+          # nothing. Overridden so this branch seeds its own cache.
+          cache-read-only: false
 
       # `koverXmlReport` runs the unit-test suite once and emits the coverage
       # report as a byproduct. Note: Kover only aggregates modules that apply the
@@ -59,7 +66,30 @@ jobs:
       # would silently drop out of this gate (see design doc; follow-up: a CI
       # guard that fails if a module has test sources but no Kover plugin).
       - name: Run tests and generate Kover report
-        run: ./gradlew koverXmlReport
+        run: ./gradlew koverXmlReport --profile
+
+      # MEASUREMENT ONLY - REVERT BEFORE OPENING A PR.
+      # `--profile` writes exact per-task timings to build/reports/profile. This
+      # replaces estimates derived from differencing log timestamps, which in a
+      # --parallel build only approximate the critical path.
+      - name: Upload Gradle profile
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ !cancelled() }}
+        with:
+          name: gradle-profile-unit-tests-${{ github.run_attempt }}
+          path: build/reports/profile/
+          retention-days: 7
+
+      # MEASUREMENT ONLY - REVERT BEFORE OPENING A PR.
+      # The Kover XML is the check that disabling the release variant did not
+      # change what is counted as covered. Compare counter totals across runs.
+      - name: Upload Kover XML report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ !cancelled() }}
+        with:
+          name: kover-xml-${{ github.run_attempt }}
+          path: build/reports/kover/report.xml
+          retention-days: 7
 
       # Surfaces failing tests as inline annotations on this job's check (no
       # separate check run — annotate_only). Runs even when the test step failed
@@ -110,9 +140,23 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        with:
+          # MEASUREMENT ONLY - REVERT BEFORE OPENING A PR. See unit-tests.
+          cache-read-only: false
 
       - name: Run static analysis
-        run: ./gradlew ktlintCheck checkstyle apiCheck lint
+        run: ./gradlew ktlintCheck checkstyle apiCheck lint --profile
+
+      # MEASUREMENT ONLY - REVERT BEFORE OPENING A PR.
+      # This job becomes the critical path once unit-tests shrinks, so it needs
+      # the same timing data.
+      - name: Upload Gradle profile
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ !cancelled() }}
+        with:
+          name: gradle-profile-static-analysis-${{ github.run_attempt }}
+          path: build/reports/profile/
+          retention-days: 7
 
   # REQUIRED. Verifies that every external type in each published module's public
   # API surface is resolvable on the compile classpath a downstream consumer
