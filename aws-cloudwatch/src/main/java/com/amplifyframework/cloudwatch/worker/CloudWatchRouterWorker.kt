@@ -1,0 +1,100 @@
+/*
+ * Copyright 2026 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+package com.amplifyframework.cloudwatch.worker
+
+import android.content.Context
+import androidx.concurrent.futures.CallbackToFutureAdapter
+import androidx.work.CoroutineWorker
+import androidx.work.ListenableWorker
+import androidx.work.WorkerParameters
+import com.google.common.util.concurrent.ListenableFuture
+import java.util.concurrent.ConcurrentHashMap
+
+/**
+ * A [ListenableWorker] that WorkManager can instantiate with its default factory. It routes to a
+ * delegate worker created by a [CloudWatchWorkerFactory] registered in [workerFactories], letting
+ * the delegate be constructed with dependencies (the [com.amplifyframework.cloudwatch.CloudWatchLogManager])
+ * that the default WorkManager factory cannot provide.
+ */
+internal class CloudWatchRouterWorker(appContext: Context, private val parameter: WorkerParameters) :
+    ListenableWorker(appContext, parameter) {
+
+    private val workerClassName =
+        parameter.inputData.getString(WORKER_CLASS_NAME)
+            ?: throw IllegalArgumentException("Worker class name is missing")
+    private var delegateWorker: CoroutineWorker? = null
+
+    companion object {
+        internal const val WORKER_CLASS_NAME = "WORKER_CLASS_NAME"
+        internal const val WORKER_ID = "WORKER_ID"
+        internal const val WORKER_FACTORY_KEY = "AmplifyCloudWatchFactory"
+
+        // Registrations are written on whatever thread constructs a CloudWatchLogManager and read on a
+        // WorkManager background thread, so the map is concurrent and the flag is @Volatile.
+        @Volatile
+        private var isWorkerFactoriesInitialized: Boolean = false
+        val workerFactories = object : AbstractMutableMap<String, CloudWatchWorkerFactory>() {
+
+            private val backingWorkerMap = ConcurrentHashMap<String, CloudWatchWorkerFactory>()
+
+            override fun put(key: String, value: CloudWatchWorkerFactory): CloudWatchWorkerFactory? {
+                isWorkerFactoriesInitialized = true
+                return backingWorkerMap.put(key, value)
+            }
+
+            override fun remove(key: String): CloudWatchWorkerFactory? = backingWorkerMap.remove(key)
+
+            override val entries: MutableSet<MutableMap.MutableEntry<String, CloudWatchWorkerFactory>>
+                get() = backingWorkerMap.entries
+        }
+    }
+
+    override fun startWork(): ListenableFuture<Result> {
+        // Route to the factory registered for this work's log group (see CloudWatchLogManager), so multiple
+        // clients don't hijack each other. Falls back to the shared key if no id was provided.
+        val factoryKey = parameter.inputData.getString(WORKER_ID) ?: WORKER_FACTORY_KEY
+        val delegateWorkerFactory: CloudWatchWorkerFactory? = workerFactories[factoryKey]
+        delegateWorker = delegateWorkerFactory?.createWorker(
+            applicationContext,
+            workerClassName,
+            parameter
+        )
+        delegateWorker?.let {
+            return it.startWork()
+        } ?: run {
+            // this is to prevent a race condition where workManager starts work before worker factory is initialized
+            if (!isWorkerFactoriesInitialized) {
+                return CallbackToFutureAdapter.getFuture { completer ->
+                    completer.set(Result.retry())
+                    "CloudWatchRouterWorker.retry"
+                }
+            } else {
+                // No factory registered even though initialization has happened — the owning client was
+                // closed (dropping its registration) after WorkManager dequeued this job, or two clients
+                // shared a log group. Report a clean terminal failure rather than throwing an uncaught
+                // exception out of startWork().
+                return CallbackToFutureAdapter.getFuture { completer ->
+                    completer.set(Result.failure())
+                    "CloudWatchRouterWorker.noDelegate"
+                }
+            }
+        }
+    }
+
+    override fun onStopped() {
+        super.onStopped()
+        delegateWorker?.onStopped()
+    }
+}

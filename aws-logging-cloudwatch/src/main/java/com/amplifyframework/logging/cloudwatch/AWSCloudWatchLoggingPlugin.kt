@@ -57,7 +57,6 @@ class AWSCloudWatchLoggingPlugin @JvmOverloads constructor(
     private val logger = Amplify.Logging.logger(CategoryType.LOGGING, this::class.java.simpleName)
 
     companion object {
-        internal const val SHARED_PREFERENCE_FILENAME = "com.amplify.logging.a3fa4188-0ac5-11ee-be56-0242ac120002"
         private const val PLUGIN_NAME = "awsCloudWatchLoggingPlugin"
     }
 

@@ -32,8 +32,8 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
 import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.core.configuration.AmplifyOutputsData
-import com.amplifyframework.core.store.AmplifyKeyValueRepository
-import com.amplifyframework.core.store.KeyValueRepository
+import com.amplifyframework.foundation.store.AmplifyKeyValueRepository
+import com.amplifyframework.foundation.store.KeyValueRepository
 import com.amplifyframework.notifications.pushnotifications.NotificationPayload
 import com.amplifyframework.notifications.pushnotifications.PushNotificationResult
 import com.amplifyframework.notifications.pushnotifications.PushNotificationsException

@@ -28,6 +28,7 @@ android {
 dependencies {
     api(project(":core"))
     implementation(project(":aws-core"))
+    implementation(project(":aws-cloudwatch"))
 
     implementation(libs.androidx.security)
     api(platform(libs.aws.bom))
@@ -48,7 +49,4 @@ dependencies {
     testImplementation(libs.bundles.test.unit)
     testImplementation(libs.bundles.test.unit.android)
     testImplementation(libs.test.androidx.workmanager)
-
-    androidTestImplementation(libs.bundles.test.android)
-    androidTestImplementation(project(":testutils"))
 }

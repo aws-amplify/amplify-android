@@ -15,6 +15,8 @@
 
 package com.amplifyframework.foundation.logging
 
+import com.amplifyframework.annotations.InternalAmplifyApi
+
 /**
  * An enumeration of the different levels of logging.
  * The levels are progressive, with lower-value items being lower priority
@@ -66,4 +68,10 @@ enum class LogLevel {
     None
 }
 
-internal infix fun LogLevel.allows(level: LogLevel) = this <= level
+/**
+ * Returns true if a message at [level] should be emitted given this threshold. A message is emitted
+ * when its [level] is at or above the threshold. [LogLevel.None] is not a valid message level and is
+ * never emitted; used as a threshold it blocks everything, since it is the highest level.
+ */
+@InternalAmplifyApi
+infix fun LogLevel.allows(level: LogLevel) = level != LogLevel.None && this <= level

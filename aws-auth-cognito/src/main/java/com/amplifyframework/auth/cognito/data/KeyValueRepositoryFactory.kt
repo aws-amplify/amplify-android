@@ -21,9 +21,9 @@ import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore.Co
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore.Companion.APP_TOKENS_INFO_CACHE
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore.Companion.AWS_KEY_VALUE_STORE_NAMESPACE_IDENTIFIER
 import com.amplifyframework.auth.cognito.data.AWSCognitoLegacyCredentialStore.Companion.AWS_MOBILE_CLIENT_PROVIDER
-import com.amplifyframework.core.store.AmplifyKeyValueRepository
-import com.amplifyframework.core.store.InMemoryKeyValueRepository
-import com.amplifyframework.core.store.KeyValueRepository
+import com.amplifyframework.foundation.store.AmplifyKeyValueRepository
+import com.amplifyframework.foundation.store.InMemoryKeyValueRepository
+import com.amplifyframework.foundation.store.KeyValueRepository
 
 internal class KeyValueRepositoryFactory {
     fun create(context: Context, keyValueRepoID: String): KeyValueRepository = when {
