@@ -20,10 +20,17 @@ import aws.smithy.kotlin.runtime.collections.Attributes
 import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.ApiException.ApiAuthException
 import com.amplifyframework.api.aws.ApiAuthProviders
+import com.amplifyframework.api.aws.AppSyncGraphQLRequest
 import com.amplifyframework.api.aws.AppSyncProviderNotConfiguredException
 import com.amplifyframework.api.aws.AuthorizationType
 import com.amplifyframework.api.aws.EndpointType
+import com.amplifyframework.api.aws.RawAppSyncGraphQLRequest
 import com.amplifyframework.api.aws.sigv4.FunctionAuthProvider
+import com.amplifyframework.api.graphql.GraphQLRequest
+import com.amplifyframework.api.graphql.SimpleGraphQLRequest
+import com.amplifyframework.api.graphql.model.ModelQuery
+import com.amplifyframework.testmodels.commentsblog.Post
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Request
@@ -305,8 +312,128 @@ class ApiRequestDecoratorFactoryTest {
         assertEquals(expectedContentType.toMediaType(), decoratedRequest.body!!.contentType())
     }
 
+    @Test
+    fun `fromGraphQLRequest honors an authorization type declared by the request`() {
+        val customToken = "CUSTOM_TOKEN"
+        val providers = ApiAuthProviders.builder()
+            .functionAuthProvider { customToken }
+            .build()
+        val factory = ApiRequestDecoratorFactory(
+            providers,
+            AuthorizationType.API_KEY,
+            "",
+            EndpointType.GRAPHQL,
+            "CONFIG_API_KEY"
+        )
+        val graphQLRequest = RawAppSyncGraphQLRequest<String>(
+            "query GetByUser { getByUser }",
+            String::class.java,
+            serializer,
+            AuthorizationType.AWS_LAMBDA
+        )
+
+        val decoratedRequest = factory.fromGraphQLRequest(graphQLRequest)
+            .decorate(Builder().url("https://localhost/").build())
+
+        // The request's AWS_LAMBDA override wins over the API's API_KEY default.
+        decoratedRequest.header(AUTHORIZATION) shouldBe customToken
+        decoratedRequest.header(X_API_KEY) shouldBe null
+    }
+
+    @Test
+    fun `fromGraphQLRequest uses the API default when the request declares no authorization type`() {
+        val providers = ApiAuthProviders.noProviderOverrides()
+        val factory = ApiRequestDecoratorFactory(
+            providers,
+            AuthorizationType.API_KEY,
+            "",
+            EndpointType.GRAPHQL,
+            "CONFIG_API_KEY"
+        )
+        val graphQLRequest = RawAppSyncGraphQLRequest<String>(
+            "query GetByUser { getByUser }",
+            String::class.java,
+            serializer,
+            null
+        )
+
+        val decoratedRequest = factory.fromGraphQLRequest(graphQLRequest)
+            .decorate(Builder().url("https://localhost/").build())
+
+        decoratedRequest.header(X_API_KEY) shouldBe "CONFIG_API_KEY"
+    }
+
+    @Test
+    fun `fromGraphQLRequest uses the API default for a request that cannot declare one`() {
+        val providers = ApiAuthProviders.noProviderOverrides()
+        val factory = ApiRequestDecoratorFactory(
+            providers,
+            AuthorizationType.API_KEY,
+            "",
+            EndpointType.GRAPHQL,
+            "CONFIG_API_KEY"
+        )
+        // SimpleGraphQLRequest is not an AuthorizedGraphQLRequest — existing behavior must be unchanged.
+        val graphQLRequest = SimpleGraphQLRequest<String>(
+            "query GetByUser { getByUser }",
+            String::class.java,
+            serializer
+        )
+
+        val decoratedRequest = factory.fromGraphQLRequest(graphQLRequest)
+            .decorate(Builder().url("https://localhost/").build())
+
+        decoratedRequest.header(X_API_KEY) shouldBe "CONFIG_API_KEY"
+    }
+
+    @Test
+    fun `fromGraphQLRequest honors an authorization type on a model-helper-built request`() {
+        val customToken = "CUSTOM_TOKEN"
+        val providers = ApiAuthProviders.builder()
+            .functionAuthProvider { customToken }
+            .build()
+        val factory = ApiRequestDecoratorFactory(
+            providers,
+            AuthorizationType.API_KEY,
+            "",
+            EndpointType.GRAPHQL,
+            "CONFIG_API_KEY"
+        )
+        // An AppSyncGraphQLRequest, the pre-existing type the two converted call sites used to test
+        // for by concrete class. It must keep resolving exactly as it did before the interface change.
+        val graphQLRequest = (ModelQuery.get(Post::class.java, "id-123") as AppSyncGraphQLRequest<Post>)
+            .newBuilder()
+            .authorizationType(AuthorizationType.AWS_LAMBDA)
+            .build<Post>()
+
+        val decoratedRequest = factory.fromGraphQLRequest(graphQLRequest)
+            .decorate(Builder().url("https://localhost/").build())
+
+        decoratedRequest.header(AUTHORIZATION) shouldBe customToken
+        decoratedRequest.header(X_API_KEY) shouldBe null
+    }
+
+    @Test
+    fun `fromGraphQLRequest uses the API default for a model-helper-built request with no override`() {
+        val providers = ApiAuthProviders.noProviderOverrides()
+        val factory = ApiRequestDecoratorFactory(
+            providers,
+            AuthorizationType.API_KEY,
+            "",
+            EndpointType.GRAPHQL,
+            "CONFIG_API_KEY"
+        )
+        val graphQLRequest = ModelQuery.get(Post::class.java, "id-123")
+
+        val decoratedRequest = factory.fromGraphQLRequest(graphQLRequest)
+            .decorate(Builder().url("https://localhost/").build())
+
+        decoratedRequest.header(X_API_KEY) shouldBe "CONFIG_API_KEY"
+    }
+
     companion object {
         private const val X_API_KEY = "x-api-key"
         private const val AUTHORIZATION = "authorization"
+        private val serializer = GraphQLRequest.VariablesSerializer { it.toString() }
     }
 }
