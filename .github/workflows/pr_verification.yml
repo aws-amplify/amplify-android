@@ -69,6 +69,15 @@ jobs:
         run: ./gradlew koverXmlReport --profile
 
       # MEASUREMENT ONLY - REVERT BEFORE OPENING A PR.
+      # A cache-hit Test task must still restore its JUnit XML, or the annotator
+      # below silently has nothing to read.
+      - name: Count restored JUnit XML files
+        if: ${{ !cancelled() }}
+        run: |
+          echo "junit xml files: $(find . -path '*/build/test-results/*' -name '*.xml' | wc -l)"
+          echo "testcase elements: $(grep -ho '<testcase ' -r --include='*.xml' */build/test-results 2>/dev/null | wc -l)"
+
+      # MEASUREMENT ONLY - REVERT BEFORE OPENING A PR.
       # `--profile` writes exact per-task timings to build/reports/profile. This
       # replaces estimates derived from differencing log timestamps, which in a
       # --parallel build only approximate the critical path.
