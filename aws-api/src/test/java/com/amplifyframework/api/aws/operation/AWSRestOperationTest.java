@@ -34,10 +34,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
 
 import static java.util.Collections.emptyMap;
 import static org.junit.Assert.assertEquals;
@@ -65,15 +65,16 @@ public final class AWSRestOperationTest {
         server.start(8080);
         baseUrl = server.url("/");
 
-        MockResponse response = new MockResponse()
-            .setResponseCode(200)
-            .setBody(new JSONObject()
+        MockResponse response = new MockResponse.Builder()
+            .code(200)
+            .body(new JSONObject()
                 .put("message", "thanks!")
                 .toString()
             )
             .addHeader("foo", "bar")
             .addHeader("foo", "baz")
-            .addHeader("qux", "quux");
+            .addHeader("qux", "quux")
+            .build();
         server.enqueue(response);
 
         client = new OkHttpClient();
@@ -81,11 +82,11 @@ public final class AWSRestOperationTest {
 
     /**
      * Stop the {@link MockWebServer} that was started in {@link #setup()}.
-     * @throws IOException On failure to shutdown the MockWebServer
+     * @throws IOException On failure to close the MockWebServer
      */
     @After
     public void cleanup() throws IOException {
-        server.shutdown();
+        server.close();
     }
 
     /**

@@ -59,54 +59,54 @@ class ConnectServiceTest {
 
     @After
     fun teardown() {
-        server.shutdown()
+        server.close()
     }
 
     @Test
     fun `identifyUser sends POST to identify-user with SigV4`() = runTest {
-        server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
+        server.enqueue(MockResponse.Builder().code(200).body("{}").build())
 
         service.identifyUser(testCredentials, """{"userProfile":{"name":"Alice"}}""")
 
         val request = server.takeRequest()
         request.method shouldBe "POST"
-        request.path shouldBe "/identify-user"
-        request.getHeader("Authorization")!! shouldContain "AWS4-HMAC-SHA256"
-        request.getHeader("X-Amz-Security-Token") shouldBe "session"
-        request.body.readUtf8() shouldBe """{"userProfile":{"name":"Alice"}}"""
+        request.target shouldBe "/identify-user"
+        request.headers["Authorization"]!! shouldContain "AWS4-HMAC-SHA256"
+        request.headers["X-Amz-Security-Token"] shouldBe "session"
+        request.body!!.utf8() shouldBe """{"userProfile":{"name":"Alice"}}"""
     }
 
     @Test
     fun `registerDevice sends POST to register-device with SigV4`() = runTest {
-        server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
+        server.enqueue(MockResponse.Builder().code(200).body("{}").build())
 
         service.registerDevice(testCredentials, """{"device":{"token":"t","deviceId":"d"}}""")
 
         val request = server.takeRequest()
         request.method shouldBe "POST"
-        request.path shouldBe "/register-device"
-        request.getHeader("Authorization")!! shouldContain "AWS4-HMAC-SHA256"
+        request.target shouldBe "/register-device"
+        request.headers["Authorization"]!! shouldContain "AWS4-HMAC-SHA256"
     }
 
     @Test
     fun `removeDevice sends POST to remove-device with SigV4`() = runTest {
-        server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
+        server.enqueue(MockResponse.Builder().code(200).body("{}").build())
 
         service.removeDevice(testCredentials, """{"deviceId":"d"}""")
 
         val request = server.takeRequest()
         request.method shouldBe "POST"
-        request.path shouldBe "/remove-device"
-        request.getHeader("Authorization")!! shouldContain "AWS4-HMAC-SHA256"
+        request.target shouldBe "/remove-device"
+        request.headers["Authorization"]!! shouldContain "AWS4-HMAC-SHA256"
     }
 
     @Test
     fun `requests carry the Amplify connect user agent`() = runTest {
-        server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
+        server.enqueue(MockResponse.Builder().code(200).body("{}").build())
 
         service.identifyUser(testCredentials, "{}")
 
-        val userAgent = server.takeRequest().getHeader("User-Agent")!!
+        val userAgent = server.takeRequest().headers["User-Agent"]!!
         userAgent shouldContain "md/amplify-connect#"
         userAgent shouldContain "lib/amplify-android#"
     }
@@ -142,7 +142,7 @@ class ConnectServiceTest {
 
     @Test
     fun `maps 429 to ThrottlingException`() = runTest {
-        server.enqueue(MockResponse().setResponseCode(429).setBody("{}"))
+        server.enqueue(MockResponse.Builder().code(429).body("{}").build())
 
         shouldThrow<ConnectThrottlingException> {
             service.identifyUser(testCredentials, "{}")
@@ -151,7 +151,7 @@ class ConnectServiceTest {
 
     @Test
     fun `maps 401 to AccessDeniedException`() = runTest {
-        server.enqueue(MockResponse().setResponseCode(401).setBody("{}"))
+        server.enqueue(MockResponse.Builder().code(401).body("{}").build())
 
         shouldThrow<ConnectAccessDeniedException> {
             service.identifyUser(testCredentials, "{}")
@@ -160,7 +160,7 @@ class ConnectServiceTest {
 
     @Test
     fun `maps 403 to AccessDeniedException`() = runTest {
-        server.enqueue(MockResponse().setResponseCode(403).setBody("{}"))
+        server.enqueue(MockResponse.Builder().code(403).body("{}").build())
 
         shouldThrow<ConnectAccessDeniedException> {
             service.identifyUser(testCredentials, "{}")
@@ -170,7 +170,7 @@ class ConnectServiceTest {
     @Test
     fun `maps 400 to ValidationException with detail`() = runTest {
         server.enqueue(
-            MockResponse().setResponseCode(400).setBody("""{"error":"Bad input"}""")
+            MockResponse.Builder().code(400).body("""{"error":"Bad input"}""").build()
         )
 
         val ex = shouldThrow<ConnectValidationException> {
@@ -182,7 +182,7 @@ class ConnectServiceTest {
     @Test
     fun `maps 500 to ServiceException`() = runTest {
         server.enqueue(
-            MockResponse().setResponseCode(500).setBody("""{"message":"Internal"}""")
+            MockResponse.Builder().code(500).body("""{"message":"Internal"}""").build()
         )
 
         val ex = shouldThrow<ConnectServiceException> {
@@ -193,7 +193,7 @@ class ConnectServiceTest {
 
     @Test
     fun `network failure throws ConnectNetworkException`() = runTest {
-        server.shutdown()
+        server.close()
         val brokenService = ConnectService(
             endpoint = "http://localhost:1",
             region = "us-east-1"

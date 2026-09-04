@@ -33,8 +33,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
+import mockwebserver3.MockWebServer;
+import mockwebserver3.RecordedRequest;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
@@ -85,7 +85,7 @@ public final class AWSApiPluginUserAgentTest {
      */
     @After
     public void tearDown() throws IOException {
-        server.shutdown();
+        server.close();
     }
 
     /**
@@ -115,7 +115,7 @@ public final class AWSApiPluginUserAgentTest {
         // Wait for server to receive the request and return user agent
         RecordedRequest request = server.takeRequest(REQUEST_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         assertNotNull(request);
-        return request.getHeader("User-Agent");
+        return request.getHeaders().get("User-Agent");
     }
 
     private String getEndpoint() {

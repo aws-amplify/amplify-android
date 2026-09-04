@@ -53,14 +53,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.StreamSupport;
 
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import mockwebserver3.RecordedRequest;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -129,11 +129,11 @@ public final class AWSApiPluginTest {
 
     /**
      * Stop the {@link MockWebServer} that was started in {@link #setup()}.
-     * @throws IOException On failure to shutdown the MockWebServer
+     * @throws IOException On failure to close the MockWebServer
      */
     @After
     public void cleanup() throws IOException {
-        webServer.shutdown();
+        webServer.close();
     }
 
     /**
@@ -163,7 +163,7 @@ public final class AWSApiPluginTest {
         String expectedBody = new JSONObject()
             .put("key", "value")
             .toString();
-        webServer.enqueue(new MockResponse().setBody(expectedBody));
+        webServer.enqueue(new MockResponse.Builder().body(expectedBody).build());
 
         // Make a request using the client from the escape hatch
         Request request = new Request.Builder().url(baseUrl).build();
@@ -183,8 +183,9 @@ public final class AWSApiPluginTest {
      */
     @Test
     public void graphQlQueryRendersValidResponse() throws ApiException {
-        webServer.enqueue(new MockResponse()
-            .setBody(Resources.readAsString("blog-owners-query-results.json")));
+        webServer.enqueue(new MockResponse.Builder()
+            .body(Resources.readAsString("blog-owners-query-results.json"))
+            .build());
 
         GraphQLResponse<PaginatedResult<BlogOwner>> actualResponse =
             Await.<GraphQLResponse<PaginatedResult<BlogOwner>>, ApiException>result(((onResult, onError) ->
@@ -207,8 +208,9 @@ public final class AWSApiPluginTest {
      */
     @Test
     public void graphQlPaginatedQueryRendersExpectedResponse() throws ApiException {
-        webServer.enqueue(new MockResponse()
-                .setBody(Resources.readAsString("blog-owners-query-results.json")));
+        webServer.enqueue(new MockResponse.Builder()
+                .body(Resources.readAsString("blog-owners-query-results.json"))
+                .build());
 
         GraphQLResponse<PaginatedResult<BlogOwner>> actualResponse =
                 Await.<GraphQLResponse<PaginatedResult<BlogOwner>>, ApiException>result(((onResult, onError) ->
@@ -235,7 +237,7 @@ public final class AWSApiPluginTest {
     @Test
     public void graphQlMutationWithClientErrorResponseCodeShouldNotCallOnResponse() throws InterruptedException {
         final int CLIENT_ERROR_CODE = 400;
-        webServer.enqueue(new MockResponse().setResponseCode(CLIENT_ERROR_CODE));
+        webServer.enqueue(new MockResponse.Builder().code(CLIENT_ERROR_CODE).build());
 
         final CountDownLatch latch = new CountDownLatch(2);
         final AtomicReference<Throwable> unexpectedErrorContainer = new AtomicReference<>();
@@ -315,8 +317,9 @@ public final class AWSApiPluginTest {
     public void headerInterceptorsAreConfigured() throws ApiException, InterruptedException {
         // Arrange some response. This isn't the point of the test,
         // but it keeps the mock web server from freezing up.
-        webServer.enqueue(new MockResponse()
-            .setBody(Resources.readAsString("blog-owners-query-results.json")));
+        webServer.enqueue(new MockResponse.Builder()
+            .body(Resources.readAsString("blog-owners-query-results.json"))
+            .build());
 
         // Fire off a request
         Await.<GraphQLResponse<PaginatedResult<BlogOwner>>, ApiException>result((onResult, onError) ->
@@ -325,7 +328,7 @@ public final class AWSApiPluginTest {
 
         RecordedRequest recordedRequest = webServer.takeRequest(5, TimeUnit.MILLISECONDS);
         assertNotNull(recordedRequest);
-        assertEquals("specialValue", recordedRequest.getHeader("specialKey"));
+        assertEquals("specialValue", recordedRequest.getHeaders().get("specialKey"));
     }
 
     /**
@@ -336,8 +339,9 @@ public final class AWSApiPluginTest {
      */
     @Test
     public void requestUsesCognitoForAuth() throws AmplifyException, InterruptedException {
-        webServer.enqueue(new MockResponse()
-                              .setBody(Resources.readAsString("blog-owners-query-results.json")));
+        webServer.enqueue(new MockResponse.Builder()
+                              .body(Resources.readAsString("blog-owners-query-results.json"))
+                              .build());
 
         AppSyncGraphQLRequest<PaginatedResult<BlogOwner>> appSyncGraphQLRequest =
             createQueryRequestWithAuthMode(BlogOwner.class, AuthorizationType.AMAZON_COGNITO_USER_POOLS);
@@ -348,9 +352,9 @@ public final class AWSApiPluginTest {
             );
 
         RecordedRequest recordedRequest = webServer.takeRequest();
-        assertNull(recordedRequest.getHeader("x-api-key"));
-        assertNotNull(recordedRequest.getHeader("authorization"));
-        assertEquals("FAKE_TOKEN", recordedRequest.getHeader("authorization"));
+        assertNull(recordedRequest.getHeaders().get("x-api-key"));
+        assertNotNull(recordedRequest.getHeaders().get("authorization"));
+        assertEquals("FAKE_TOKEN", recordedRequest.getHeaders().get("authorization"));
         assertEquals(
             Arrays.asList("Curly", "Moe", "Larry"),
             StreamSupport.stream(actualResponse.getData().spliterator(), false)
@@ -366,8 +370,9 @@ public final class AWSApiPluginTest {
      */
     @Test
     public void requestUsesIamForAuth() throws AmplifyException, InterruptedException {
-        webServer.enqueue(new MockResponse()
-                              .setBody(Resources.readAsString("blog-owners-query-results.json")));
+        webServer.enqueue(new MockResponse.Builder()
+                              .body(Resources.readAsString("blog-owners-query-results.json"))
+                              .build());
 
         AppSyncGraphQLRequest<PaginatedResult<BlogOwner>> appSyncGraphQLRequest =
             createQueryRequestWithAuthMode(BlogOwner.class, AuthorizationType.AWS_IAM);
@@ -378,9 +383,9 @@ public final class AWSApiPluginTest {
             );
 
         RecordedRequest recordedRequest = webServer.takeRequest();
-        assertNull(recordedRequest.getHeader("x-api-key"));
-        assertNotNull(recordedRequest.getHeader("authorization"));
-        assertTrue(recordedRequest.getHeader("authorization").startsWith("AWS4-HMAC-SHA256"));
+        assertNull(recordedRequest.getHeaders().get("x-api-key"));
+        assertNotNull(recordedRequest.getHeaders().get("authorization"));
+        assertTrue(recordedRequest.getHeaders().get("authorization").startsWith("AWS4-HMAC-SHA256"));
         assertEquals(
             Arrays.asList("Curly", "Moe", "Larry"),
             StreamSupport.stream(actualResponse.getData().spliterator(), false)

@@ -23,10 +23,10 @@ import com.amplifyframework.api.rest.RestResponse
 import com.amplifyframework.testutils.Await
 import io.kotest.matchers.shouldBe
 import java.io.IOException
+import mockwebserver3.MockResponse
+import mockwebserver3.MockWebServer
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -53,18 +53,18 @@ class RestQuerySemicolonEncodingTest {
         server = MockWebServer()
         server.start()
         baseUrl = server.url("/")
-        server.enqueue(MockResponse().setResponseCode(200).setBody("{}"))
+        server.enqueue(MockResponse.Builder().code(200).body("{}").build())
         client = OkHttpClient()
     }
 
     /**
-     * Shuts down the mock web server.
-     * @throws IOException On failure to shut down the server
+     * Closes the mock web server.
+     * @throws IOException On failure to close the server
      */
     @After
     @Throws(IOException::class)
     fun cleanup() {
-        server.shutdown()
+        server.close()
     }
 
     @Test
@@ -93,6 +93,6 @@ class RestQuerySemicolonEncodingTest {
         Await.result<RestResponse, ApiException> { onResult, onError ->
             AWSRestOperation(request, baseUrl.toUrl().toString(), client, onResult, onError).start()
         }
-        server.takeRequest().path shouldBe "/path?filter=X%3BY"
+        server.takeRequest().target shouldBe "/path?filter=X%3BY"
     }
 }
