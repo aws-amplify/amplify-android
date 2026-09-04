@@ -14,6 +14,7 @@
  */
 
 import com.android.build.api.dsl.LibraryExtension
+import com.android.build.api.variant.LibraryAndroidComponentsExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
@@ -44,6 +45,14 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                     val sdkVersionName = findProperty("VERSION_NAME") ?: rootProject.findProperty("VERSION_NAME")
                     this@configure.defaultConfig.buildConfigField("String", "VERSION_NAME", "\"$sdkVersionName\"")
                 }
+            }
+
+            // Unit tests only run against the debug variant. No module declares a
+            // release-specific source set, build type, or BuildConfig field, and R8 does
+            // not apply to JVM unit tests, so the release variant compiled and ran an
+            // identical test suite against identical library code for no added signal.
+            extensions.configure<LibraryAndroidComponentsExtension> {
+                beforeVariants(selector().withBuildType("release")) { it.enableUnitTest = false }
             }
         }
     }
