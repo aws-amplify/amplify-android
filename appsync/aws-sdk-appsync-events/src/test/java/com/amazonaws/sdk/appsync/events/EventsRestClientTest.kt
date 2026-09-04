@@ -29,14 +29,14 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonPrimitive
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
-import mockwebserver3.SocketPolicy
+import mockwebserver3.SocketEffect
 import okio.Buffer
 import org.junit.After
-import org.junit.Before
 import org.junit.Test
 
 class EventsRestClientTest {
-    private val mockWebServer = MockWebServer()
+    // Server must be started before url() is called in the interceptor initializer below
+    private val mockWebServer = MockWebServer().apply { start() }
     private val expectedEndpoint = "https://abc.appsync-api.us-east-1.amazonaws.com/event"
     private val expectedHost = "abc.appsync-api.us-east-1.amazonaws.com"
     private val expectedStandardHeaders = mapOf(
@@ -58,14 +58,9 @@ class EventsRestClientTest {
         )
     )
 
-    @Before
-    fun setUp() {
-        mockWebServer.start()
-    }
-
     @After
     fun tearDown() {
-        mockWebServer.shutdown()
+        mockWebServer.close()
     }
 
     @Test
@@ -78,9 +73,10 @@ class EventsRestClientTest {
             .bufferedReader()
             .readText()
         mockWebServer.enqueue(
-            MockResponse()
-                .setResponseCode(200)
-                .setBody(responseBody)
+            MockResponse.Builder()
+                .code(200)
+                .body(responseBody)
+                .build()
         )
 
         // WHEN
@@ -122,10 +118,11 @@ class EventsRestClientTest {
             .readText()
 
         mockWebServer.enqueue(
-            MockResponse()
-                .setSocketPolicy(SocketPolicy.DISCONNECT_AT_START)
-                .setResponseCode(200)
-                .setBody(responseBody)
+            MockResponse.Builder()
+                .onRequestStart(SocketEffect.CloseSocket())
+                .code(200)
+                .body(responseBody)
+                .build()
         )
 
         val response = client.publish(expectedChannel, JsonPrimitive(1))
@@ -160,9 +157,10 @@ class EventsRestClientTest {
             .readText()
 
         mockWebServer.enqueue(
-            MockResponse()
-                .setResponseCode(400)
-                .setBody(responseBody)
+            MockResponse.Builder()
+                .code(400)
+                .body(responseBody)
+                .build()
         )
 
         val response = client.publish(expectedChannel, JsonPrimitive(1))
@@ -199,9 +197,10 @@ class EventsRestClientTest {
         val responseBody = "uh-oh"
 
         mockWebServer.enqueue(
-            MockResponse()
-                .setResponseCode(400)
-                .setBody(responseBody)
+            MockResponse.Builder()
+                .code(400)
+                .body(responseBody)
+                .build()
         )
 
         val response = client.publish(expectedChannel, JsonPrimitive(1))
@@ -241,9 +240,10 @@ class EventsRestClientTest {
             .bufferedReader()
             .readText()
         mockWebServer.enqueue(
-            MockResponse()
-                .setResponseCode(200)
-                .setBody(responseBody)
+            MockResponse.Builder()
+                .code(200)
+                .body(responseBody)
+                .build()
         )
 
         // WHEN
@@ -284,9 +284,10 @@ class EventsRestClientTest {
             .bufferedReader()
             .readText()
         mockWebServer.enqueue(
-            MockResponse()
-                .setResponseCode(200)
-                .setBody(responseBody)
+            MockResponse.Builder()
+                .code(200)
+                .body(responseBody)
+                .build()
         )
 
         // WHEN
@@ -327,9 +328,10 @@ class EventsRestClientTest {
             .bufferedReader()
             .readText()
         mockWebServer.enqueue(
-            MockResponse()
-                .setResponseCode(200)
-                .setBody(responseBody)
+            MockResponse.Builder()
+                .code(200)
+                .body(responseBody)
+                .build()
         )
 
         // WHEN
@@ -368,9 +370,10 @@ class EventsRestClientTest {
             .bufferedReader()
             .readText()
         mockWebServer.enqueue(
-            MockResponse()
-                .setResponseCode(200)
-                .setBody(responseBody)
+            MockResponse.Builder()
+                .code(200)
+                .body(responseBody)
+                .build()
         )
 
         // WHEN
@@ -411,9 +414,10 @@ class EventsRestClientTest {
             .bufferedReader()
             .readText()
         mockWebServer.enqueue(
-            MockResponse()
-                .setResponseCode(200)
-                .setBody(responseBody)
+            MockResponse.Builder()
+                .code(200)
+                .body(responseBody)
+                .build()
         )
 
         // WHEN

@@ -117,11 +117,13 @@ internal class LivenessWebSocketTest {
     fun setUp() {
         Dispatchers.setMain(Dispatchers.Unconfined)
         server = MockWebServer()
+        // url() no longer starts the server implicitly, so it must be started before it can be addressed
+        server.start()
     }
 
     @After
     fun shutDown() {
-        server.shutdown()
+        server.close()
         Dispatchers.resetMain()
     }
 
@@ -272,8 +274,7 @@ internal class LivenessWebSocketTest {
         )
         livenessWebSocket.webSocketListener = latchingListener
 
-        server.enqueue(MockResponse().withWebSocketUpgrade(ServerWebSocketListener()))
-        server.start()
+        server.enqueue(MockResponse.Builder().webSocketUpgrade(ServerWebSocketListener()).build())
         livenessWebSocket.start()
 
         openLatch.await(3, TimeUnit.SECONDS)
@@ -696,8 +697,7 @@ internal class LivenessWebSocketTest {
         )
         livenessWebSocket.webSocketListener = latchingListener
 
-        server.enqueue(MockResponse().withWebSocketUpgrade(ServerWebSocketListener()))
-        server.start()
+        server.enqueue(MockResponse.Builder().webSocketUpgrade(ServerWebSocketListener()).build())
 
         livenessWebSocket.webSocketError = PredictionsException(
             "invalid signature",

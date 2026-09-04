@@ -51,8 +51,8 @@ import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.io.IOException;
 
+import mockwebserver3.MockWebServer;
 import okhttp3.HttpUrl;
-import okhttp3.mockwebserver.MockWebServer;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -92,11 +92,11 @@ public final class OwnerBasedAuthTest {
 
     /**
      * Stop the {@link MockWebServer} that was started in {@link #setup()}.
-     * @throws IOException On failure to shutdown the MockWebServer
+     * @throws IOException On failure to close the MockWebServer
      */
     @After
     public void cleanup() throws IOException {
-        webServer.shutdown();
+        webServer.close();
     }
 
     private void configurePlugin() throws ApiException {
