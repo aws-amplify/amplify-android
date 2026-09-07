@@ -22,6 +22,7 @@ import com.amplifyframework.core.Action
 import com.amplifyframework.core.Consumer
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.mockk
@@ -59,13 +60,16 @@ class SubscriptionEndpointFastFailTest {
     private val okHttpClient = mockk<OkHttpClient>()
     private val authorizer = mockk<SubscriptionAuthorizer>()
     private val apiConfiguration = mockk<ApiConfiguration>()
-    private val responseFactory = mockk<GraphQLResponse.Factory>(relaxed = true)
+    private val responseFactory: GraphQLResponse.Factory = GsonGraphQLResponseFactory()
     private val request = mockk<GraphQLRequest<String>>(relaxed = true)
 
     // Explicit ordering signals (no sleeps): the listener is captured when newWebSocket is called,
     // and startSent fires the moment the request thread sends the "start" frame.
     private val listenerReady = CompletableDeferred<WebSocketListener>()
     private val startSent = CompletableDeferred<Unit>()
+
+    // The subscription id carried on the "start" frame, so a test can reply with a matching "start_ack".
+    private val startId = CompletableDeferred<String>()
 
     private lateinit var endpoint: SubscriptionEndpoint
 
@@ -80,6 +84,9 @@ class SubscriptionEndpointFastFailTest {
             val message = firstArg<String>()
             if (message.contains("\"type\":\"start\"")) {
                 startSent.complete(Unit)
+                if (!startId.isCompleted) {
+                    startId.complete(JSONObject(message).getString("id"))
+                }
             }
             sendBehavior(message)
         }
@@ -93,6 +100,7 @@ class SubscriptionEndpointFastFailTest {
     private class Callbacks {
         val started = CompletableDeferred<String>()
         val errored = CompletableDeferred<ApiException>()
+        val nextItem = CompletableDeferred<Unit>()
     }
 
     /** Launches the blocking [SubscriptionEndpoint.requestSubscription] on a background dispatcher. */
@@ -103,7 +111,7 @@ class SubscriptionEndpointFastFailTest {
                 request,
                 AuthorizationType.API_KEY,
                 Consumer { id -> callbacks.started.complete(id) },
-                Consumer { /* onNextItem */ },
+                Consumer { callbacks.nextItem.complete(Unit) },
                 Consumer { error -> callbacks.errored.complete(error) },
                 Action { /* onComplete */ }
             )
@@ -118,9 +126,95 @@ class SubscriptionEndpointFastFailTest {
             webSocket,
             JSONObject()
                 .put("type", "connection_ack")
-                .put("payload", JSONObject().put("connectionTimeoutMs", "300000"))
+                .put("payload", JSONObject().put("connectionTimeoutMs", 300000))
                 .toString()
         )
+    }
+
+    @Test
+    fun `subscription data frame with an object payload is delivered`() = runTest {
+        // A SUBSCRIPTION_DATA frame carries "payload" as a JSON object; the endpoint must extract it
+        // without getString, which throws on an object under the reference org.json.
+        setup()
+        val callbacks = launchRequest()
+
+        withContext(Dispatchers.IO) {
+            val listener = withTimeout(5.seconds) { listenerReady.await() }
+            driveConnected(listener)
+            withTimeout(5.seconds) { startSent.await() }
+            val id = withTimeout(5.seconds) { startId.await() }
+            listener.onMessage(webSocket, JSONObject().put("type", "start_ack").put("id", id).toString())
+            withTimeout(5.seconds) { callbacks.started.await() }
+
+            // A data frame whose payload is an object (the real AppSync shape).
+            listener.onMessage(
+                webSocket,
+                JSONObject()
+                    .put("type", "data")
+                    .put("id", id)
+                    .put(
+                        "payload",
+                        JSONObject().put("data", JSONObject().put("onCreateTodo", JSONObject().put("id", "1")))
+                    )
+                    .toString()
+            )
+
+            withTimeout(5.seconds) { callbacks.nextItem.await() }.shouldNotBeNull()
+        }
+        callbacks.errored.isCompleted.shouldBeFalse()
+    }
+
+    @Test
+    fun `subscription error frame with an object payload is delivered`() = runTest {
+        // A SUBSCRIPTION_ERROR frame also carries "payload" as a JSON object and takes the same
+        // getJSONObject path as a data frame.
+        setup()
+        val callbacks = launchRequest()
+
+        withContext(Dispatchers.IO) {
+            val listener = withTimeout(5.seconds) { listenerReady.await() }
+            driveConnected(listener)
+            withTimeout(5.seconds) { startSent.await() }
+            val id = withTimeout(5.seconds) { startId.await() }
+            listener.onMessage(webSocket, JSONObject().put("type", "start_ack").put("id", id).toString())
+            withTimeout(5.seconds) { callbacks.started.await() }
+
+            listener.onMessage(
+                webSocket,
+                JSONObject()
+                    .put("type", "error")
+                    .put("id", id)
+                    .put("payload", JSONObject().put("errors", JSONArray().put(JSONObject().put("message", "boom"))))
+                    .toString()
+            )
+
+            withTimeout(5.seconds) { callbacks.nextItem.await() }.shouldNotBeNull()
+        }
+    }
+
+    @Test
+    fun `subscription starts when connection_ack carries a numeric connectionTimeoutMs`() = runTest {
+        // Real AppSync sends connectionTimeoutMs as a JSON number (see websocket-connection_ack.json).
+        // The endpoint must parse it (getInt) and reach CONNECTED so the subscription can start; a
+        // getString-based parse throws on a number under the reference org.json.
+        setup()
+        val callbacks = launchRequest()
+
+        withContext(Dispatchers.IO) {
+            val listener = withTimeout(5.seconds) { listenerReady.await() }
+            driveConnected(listener)
+            withTimeout(5.seconds) { startSent.await() }
+            val id = withTimeout(5.seconds) { startId.await() }
+
+            // Server acknowledges the subscription start; this only happens if the ack parsed cleanly.
+            listener.onMessage(
+                webSocket,
+                JSONObject().put("type", "start_ack").put("id", id).toString()
+            )
+
+            withTimeout(5.seconds) { callbacks.started.await() } shouldBe id
+        }
+        callbacks.errored.isCompleted.shouldBeFalse()
     }
 
     @Test
