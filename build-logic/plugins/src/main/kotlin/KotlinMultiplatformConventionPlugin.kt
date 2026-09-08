@@ -41,12 +41,19 @@ class KotlinMultiplatformConventionPlugin : Plugin<Project> {
 
     private fun Project.configureKotlinMultiplatform(extension: KotlinMultiplatformExtension) {
         extension.apply {
+            // Match the rest of the repo (see KotlinConventionPlugin). Also keeps host-test execution on JDK 17,
+            // which the pinned Robolectric version requires (it cannot instrument JDK 21 bytecode).
+            jvmToolchain(17)
+
             androidLibrary {
                 namespace = "com.amplifyframework.${project.name.replace("-", ".")}"
                 compileSdk = 36
                 minSdk = 24
 
                 withHostTestBuilder {
+                }.configure {
+                    // Allow Robolectric-based unit tests to access merged Android resources/manifest.
+                    isIncludeAndroidResources = true
                 }
 
                 withDeviceTestBuilder {

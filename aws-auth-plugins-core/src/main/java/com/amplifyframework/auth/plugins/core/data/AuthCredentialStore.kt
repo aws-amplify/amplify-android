@@ -16,8 +16,8 @@
 package com.amplifyframework.auth.plugins.core.data
 
 import android.content.Context
-import com.amplifyframework.core.store.AmplifyKeyValueRepository
-import com.amplifyframework.core.store.KeyValueRepository
+import com.amplifyframework.foundation.store.AmplifyKeyValueRepository
+import com.amplifyframework.foundation.store.KeyValueRepository
 
 internal class AuthCredentialStore(context: Context, keyValueStoreIdentifierSuffix: String) {
     private val keyValueStoreIdentifier = "com.amplify.credentialStore.$keyValueStoreIdentifierSuffix"

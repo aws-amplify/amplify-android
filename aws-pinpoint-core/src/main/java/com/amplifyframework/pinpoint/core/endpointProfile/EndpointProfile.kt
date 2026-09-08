@@ -20,7 +20,7 @@ import aws.sdk.kotlin.services.pinpoint.model.ChannelType
 import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.category.CategoryType
-import com.amplifyframework.core.store.KeyValueRepository
+import com.amplifyframework.foundation.store.KeyValueRepository
 import com.amplifyframework.pinpoint.core.TargetingClient
 import com.amplifyframework.pinpoint.core.data.AndroidAppDetails
 import com.amplifyframework.pinpoint.core.data.AndroidDeviceDetails

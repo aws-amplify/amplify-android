@@ -31,6 +31,7 @@ android {
 dependencies {
     api(project(":core"))
     api(project(":aws-core"))
+    api(project(":foundation"))
     implementation(project(":aws-auth-plugins-core"))
     implementation(libs.kotlin.coroutines)
     implementation(libs.kotlin.serializationJson)

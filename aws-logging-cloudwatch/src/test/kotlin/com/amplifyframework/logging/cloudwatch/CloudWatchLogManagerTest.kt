@@ -15,7 +15,6 @@
 package com.amplifyframework.logging.cloudwatch
 
 import android.content.Context
-import android.net.Uri
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.work.Configuration
@@ -28,11 +27,13 @@ import aws.sdk.kotlin.services.cloudwatchlogs.model.InputLogEvent
 import aws.sdk.kotlin.services.cloudwatchlogs.model.PutLogEventsRequest
 import aws.sdk.kotlin.services.cloudwatchlogs.model.PutLogEventsResponse
 import aws.sdk.kotlin.services.cloudwatchlogs.model.RejectedLogEventsInfo
+import com.amplifyframework.annotations.InternalAmplifyApi
 import com.amplifyframework.auth.AuthUser
-import com.amplifyframework.logging.cloudwatch.db.CloudWatchLoggingDatabase
-import com.amplifyframework.logging.cloudwatch.db.LogEvent
+import com.amplifyframework.cloudwatch.CloudWatchPreferences
+import com.amplifyframework.cloudwatch.db.CloudWatchDatabase
+import com.amplifyframework.cloudwatch.db.LogEvent
+import com.amplifyframework.cloudwatch.models.CloudWatchLogEvent
 import com.amplifyframework.logging.cloudwatch.models.AWSCloudWatchLoggingPluginConfiguration
-import com.amplifyframework.logging.cloudwatch.models.CloudWatchLogEvent
 import io.mockk.CapturingSlot
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -50,14 +51,14 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, InternalAmplifyApi::class)
 @RunWith(RobolectricTestRunner::class)
 internal class CloudWatchLogManagerTest {
     private val pluginConfiguration = mockk<AWSCloudWatchLoggingPluginConfiguration>()
     private val loggingConstraintsResolver = mockk<LoggingConstraintsResolver>()
     private val customCognitoCredentialsProvider = mockk<CustomCognitoCredentialsProvider>()
     private val cloudWatchLogsClient = mockk<CloudWatchLogsClient>()
-    private val cloudWatchLoggingDatabase = mockk<CloudWatchLoggingDatabase>()
+    private val cloudWatchLoggingDatabase = mockk<CloudWatchDatabase>()
     private lateinit var cloudWatchLogManager: CloudWatchLogManager
     private var context: Context = ApplicationProvider.getApplicationContext()
     private lateinit var userIdSlot: CapturingSlot<String>
@@ -112,7 +113,7 @@ internal class CloudWatchLogManagerTest {
         val cloudwatchEvent = CloudWatchLogEvent(System.currentTimeMillis(), "Sample log")
         val logEvent = LogEvent(cloudwatchEvent.timestamp, cloudwatchEvent.message, 1L)
         every { cloudWatchLoggingDatabase.isCacheFull(any()) }.answers { true }
-        coEvery { cloudWatchLoggingDatabase.saveLogEvent(any()) }.answers { Uri.parse("something/1") }
+        coEvery { cloudWatchLoggingDatabase.saveLogEvent(any()) }.answers { 1L }
         coEvery {
             cloudWatchLoggingDatabase.queryAllEvents()
         } returns listOf(logEvent) andThen emptyList()
@@ -145,14 +146,17 @@ internal class CloudWatchLogManagerTest {
 
     @Test
     fun `test onStopSync`() = runTest {
-        context.getSharedPreferences(AWSCloudWatchLoggingPlugin.SHARED_PREFERENCE_FILENAME, Context.MODE_PRIVATE).edit()
+        context.getSharedPreferences(
+            CloudWatchPreferences.SHARED_PREFERENCE_FILENAME,
+            Context.MODE_PRIVATE
+        ).edit()
             .putString(LoggingConstraintsResolver.REMOTE_LOGGING_CONSTRAINTS_KEY, "{}").apply()
         coEvery { cloudWatchLoggingDatabase.clearDatabase() }.answers { 1 }
         cloudWatchLogManager.stopSync()
         coVerify(exactly = 1) { cloudWatchLoggingDatabase.clearDatabase() }
         assertFalse(
             context.getSharedPreferences(
-                AWSCloudWatchLoggingPlugin.SHARED_PREFERENCE_FILENAME,
+                CloudWatchPreferences.SHARED_PREFERENCE_FILENAME,
                 Context.MODE_PRIVATE
             ).contains(LoggingConstraintsResolver.REMOTE_LOGGING_CONSTRAINTS_KEY)
         )
