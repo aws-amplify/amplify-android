@@ -681,9 +681,9 @@ final class SubscriptionEndpoint {
                                     "WebSocket closed due to timeout."
                             );
                         },
-                            Integer.parseInt(
-                                jsonMessage.getJSONObject("payload").getString("connectionTimeoutMs")
-                            )
+                            // getInt coerces in both the platform and reference org.json; getString throws
+                            // on a JSON number under the reference impl a dependency may bundle.
+                            jsonMessage.getJSONObject("payload").getInt("connectionTimeoutMs")
                         );
                         endpointStatus.set(EndpointStatus.CONNECTED);
                         connectionResponse.countDown();
@@ -723,10 +723,16 @@ final class SubscriptionEndpoint {
                         break;
                     case SUBSCRIPTION_ERROR:
                         notifySubscriptionFailure(jsonMessage.getString("id"));
-                        notifySubscriptionData(jsonMessage.getString("id"), jsonMessage.getString("payload"));
+                        notifySubscriptionData(
+                            jsonMessage.getString("id"),
+                            jsonMessage.getJSONObject("payload").toString()
+                        );
                         break;
                     case SUBSCRIPTION_DATA:
-                        notifySubscriptionData(jsonMessage.getString("id"), jsonMessage.getString("payload"));
+                        notifySubscriptionData(
+                            jsonMessage.getString("id"),
+                            jsonMessage.getJSONObject("payload").toString()
+                        );
                         break;
                     default:
                         notifyError(new AppSyncUnknownException(
