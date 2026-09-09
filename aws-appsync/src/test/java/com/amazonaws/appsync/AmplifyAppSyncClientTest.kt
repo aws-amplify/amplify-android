@@ -35,12 +35,14 @@ import io.mockk.every
 import io.mockk.mockk
 import java.net.HttpURLConnection
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withTimeout
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import mockwebserver3.RecordedRequest
@@ -371,6 +373,32 @@ class AmplifyAppSyncClientTest {
         configured shouldBe true
     }
 
+    @Test
+    fun `close tears down the shared connection through the subscriber`() = runBlocking<Unit> {
+        // The one link in the teardown chain nothing else pins. What subscriber.close() does is covered
+        // in AppSyncSubscriberTest; that close() actually reaches it is not, and the call is launched on
+        // a scope that outlives close() rather than awaited — so dropping the launch would leak the
+        // WebSocket with every other test still green.
+        //
+        // Observed through events rather than through a live subscription: server-to-client frames do not
+        // arrive over MockWebServer (see AppSyncWebSocketTest), so a real subscription could not reach
+        // Connected here to be torn down. The clean Disconnected only exists because subscriber.close() ran.
+        //
+        // Real dispatchers, so this cannot be runTest: the teardown runs on Dispatchers.IO and a virtual
+        // clock would not wait for it.
+        val client = client()
+        // Read before closing so the subscriber already exists, making this a teardown of a live one
+        // rather than one built for the sole purpose of closing it.
+        val events = client.events
+
+        client.close()
+
+        val state = withTimeout(TEARDOWN_TIMEOUT) { events.first { it is ConnectionState.Disconnected } }
+
+        // A null cause is the client closing deliberately, not the connection dying under it.
+        (state as ConnectionState.Disconnected).cause.shouldBeNull()
+    }
+
     // ── Configuration ───────────────────────────────────────────────────
 
     @Test
@@ -668,5 +696,8 @@ class AmplifyAppSyncClientTest {
 
     private companion object {
         const val REQUEST_TIMEOUT_SECONDS = 5L
+
+        // Bounds the wait for close()'s asynchronous teardown, so a broken chain fails rather than hangs.
+        val TEARDOWN_TIMEOUT = 5.seconds
     }
 }
