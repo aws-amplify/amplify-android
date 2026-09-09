@@ -14,16 +14,90 @@
  */
 package com.amazonaws.appsync
 
+import com.amplifyframework.core.model.LoadedModelReferenceImpl
 import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelList
 import com.amplifyframework.core.model.ModelPage
+import com.amplifyframework.core.model.ModelReference
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
+import com.google.gson.JsonPrimitive
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
+
+/**
+ * Deserializes a related model, which may or may not have arrived with the response.
+ *
+ * A selection set that requested the related model's fields yields a
+ * [com.amplifyframework.core.model.LoadedModelReference] holding it. One that requested only its
+ * primary key yields a reference that fetches the model when it is first accessed.
+ *
+ * A relationship the parent does not have is never seen here: a JSON null becomes a null field before
+ * a deserializer is consulted.
+ */
+internal class AppSyncModelReferenceDeserializer<M : Model>(
+    private val loader: AppSyncModelLoader,
+    private val schemaRegistry: AppSyncSchemaRegistry
+) : JsonDeserializer<ModelReference<M>> {
+
+    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): ModelReference<M> {
+        val parameterized = typeOfT as? ParameterizedType
+            ?: throw AppSyncDeserializationException(
+                message = "A related model was requested as ${typeOfT.typeName}, which carries no model type.",
+                recoverySuggestion = "Request the relationship as ModelReference<T> so the model type is known."
+            )
+
+        @Suppress("UNCHECKED_CAST")
+        val modelClass = parameterized.actualTypeArguments.first() as Class<M>
+        val jsonObject = json.asJsonObjectOrThrow()
+        val keyFields = schemaRegistry.schemaFor(modelClass).primaryIndexFields
+
+        // More fields than the key means the selection set asked for the model itself, so it is already
+        // here and there is nothing to defer. A failure to read it is not fatal: the key is still
+        // present, so the model can be fetched instead.
+        if (jsonObject.size() > keyFields.size) {
+            runCatching { context.deserialize<M>(json, modelClass) }
+                .onSuccess { return LoadedModelReferenceImpl(it) }
+        }
+
+        return AppSyncLazyModelReference(modelClass, jsonObject.keyValues(keyFields), loader)
+    }
+
+    /**
+     * Reads the primary key values, which are what identify the model in the follow-up query.
+     *
+     * A key that is incomplete identifies nothing, so it is reported as no key at all — the reference
+     * then resolves to null rather than issuing a request that cannot succeed.
+     */
+    private fun JsonObject.keyValues(keyFields: List<String>): Map<String, Any> {
+        val values = keyFields.mapNotNull { field ->
+            (get(field) as? JsonPrimitive)?.let { field to it.keyValue() }
+        }.toMap()
+        return if (values.size == keyFields.size) values else emptyMap()
+    }
+
+    /**
+     * Unwraps a key so it travels as the type the model declares. The value becomes a query variable,
+     * and the JSON wrapper would not serialize as the scalar the variable's type requires.
+     */
+    private fun JsonPrimitive.keyValue(): Any = when {
+        isBoolean -> asBoolean
+        isNumber -> asNumber
+        else -> asString
+    }
+
+    companion object {
+        fun register(builder: GsonBuilder, loader: AppSyncModelLoader, schemaRegistry: AppSyncSchemaRegistry) {
+            builder.registerTypeAdapter(
+                ModelReference::class.java,
+                AppSyncModelReferenceDeserializer<Model>(loader, schemaRegistry)
+            )
+        }
+    }
+}
 
 /**
  * Deserializes a related list that arrived in full, as `{"items": [...]}`.
@@ -96,7 +170,7 @@ private fun deserializeNextToken(json: JsonElement): AppSyncPaginationToken? =
 
 private fun JsonElement.asJsonObjectOrThrow(): JsonObject = this as? JsonObject
     ?: throw AppSyncDeserializationException(
-        message = "A related list was expected to be a JSON object, but was ${this::class.simpleName}."
+        message = "A relationship was expected to be a JSON object, but was ${this::class.simpleName}."
     )
 
 private const val ITEMS_KEY = "items"

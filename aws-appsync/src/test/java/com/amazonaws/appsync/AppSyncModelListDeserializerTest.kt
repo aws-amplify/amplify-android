@@ -34,7 +34,7 @@ import org.junit.Test
  */
 class AppSyncModelListDeserializerTest {
 
-    private val gson = AppSyncGson.instance
+    private val gson = AppSyncGson(RecordingModelLoader()).gson
 
     // ── Loaded lists ────────────────────────────────────────────────────
 

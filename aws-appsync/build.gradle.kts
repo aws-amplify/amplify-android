@@ -40,4 +40,5 @@ dependencies {
     testImplementation(libs.test.kotlin.reflection)
     testImplementation(libs.test.mockwebserver)
     testImplementation(project(":testutils"))
+    testImplementation(project(":testmodels"))
 }

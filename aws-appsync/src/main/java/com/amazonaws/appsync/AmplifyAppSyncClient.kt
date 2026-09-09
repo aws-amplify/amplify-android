@@ -71,12 +71,39 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
 
     private val httpClient: OkHttpClient by lazyHttpClient
 
+    /**
+     * Issues the follow-up request a lazily-loaded relationship needs, by going back through this
+     * client's own send path so the request is authorized and retried exactly as any other is.
+     *
+     * Handed to [appSyncGson] during construction but only invoked once a relationship is loaded, which
+     * is what allows the two to reference each other.
+     */
+    private val modelLoader = object : AppSyncModelLoader {
+        override suspend fun <M> load(request: GraphQLRequest<M>): M? {
+            val response = send(request).getOrThrow()
+            // Errors with no data mean the relationship could not be read, so they must not reach the
+            // caller as an absent relationship.
+            if (response.data == null && response.hasErrors()) {
+                throw AppSyncGraphQLErrorException(
+                    message = "Loading a relationship failed with GraphQL errors.",
+                    errors = response.errors
+                )
+            }
+            return response.data
+        }
+    }
+
+    private val appSyncGson by lazy { AppSyncGson(modelLoader) }
+
+    private val deserializer: AppSyncResponseDeserializer by lazy { AppSyncResponseDeserializer(appSyncGson.gson) }
+
     private val transport: AppSyncHttpTransport by lazy {
         AppSyncHttpTransport(
             endpoint = configuration.endpoint,
             client = httpClient,
             authorization = configuration.authorization,
-            decorator = AppSyncRequestDecorator(configuration.region)
+            decorator = AppSyncRequestDecorator(configuration.region),
+            deserializer = deserializer
         )
     }
 
@@ -102,7 +129,8 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
             },
             authorization = configuration.authorization,
             decorator = decorator,
-            httpEndpoint = configuration.endpoint
+            httpEndpoint = configuration.endpoint,
+            deserializer = deserializer
         )
     }
 
