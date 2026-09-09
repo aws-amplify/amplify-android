@@ -57,26 +57,22 @@ internal class AppSyncHttpTransport(
      * rather than wrapped, because wrapping one failure in "auth exhausted" hides it for no benefit.
      */
     suspend fun <T> execute(request: GraphQLRequest<T>): GraphQLResponse<T> {
-        val authModes = authModeResolver.resolve(request)
+        val candidates = authModeResolver.resolve(request)
+        val attempted = candidates.map { it.authMode }
         // With one candidate there is nothing to fall back to, so auth failures are reported as they
         // were before multi-auth existed: the real error, or a response carrying its own errors.
-        val canFallBack = authModes.size > 1
+        val canFallBack = candidates.size > 1
         var lastAuthFailure: AppSyncException? = null
 
-        authModes.forEachIndexed { index, authMode ->
-            val isLastAttempt = index == authModes.lastIndex
-
-            val authorizer = authorization.authorizerFor(authMode)
-                ?: throw AppSyncProviderNotConfiguredException(
-                    message = "No authorizer is configured for auth mode $authMode."
-                )
+        candidates.forEachIndexed { index, candidate ->
+            val isLastAttempt = index == candidates.lastIndex
 
             val decorated = try {
-                decorate(request, authorizer)
+                decorate(request, candidate.authorizer)
             } catch (error: AppSyncAuthException) {
                 // Credentials for this mode could not be obtained. Another mode may still work, so
                 // this is only terminal once the candidates run out.
-                if (isLastAttempt) throw exhausted(authModes, error)
+                if (isLastAttempt) throw exhausted(attempted, error)
                 lastAuthFailure = error
                 return@forEachIndexed
             }
@@ -88,19 +84,24 @@ internal class AppSyncHttpTransport(
                 client.newCall(decorated).await().use { deserialize(request, it) }
             } catch (rejected: AppSyncUnauthorizedException) {
                 if (!canFallBack) throw rejected
-                if (isLastAttempt) throw exhausted(authModes, rejected)
+                if (isLastAttempt) throw exhausted(attempted, rejected)
                 lastAuthFailure = rejected
                 return@forEachIndexed
             }
 
             // An unauthorized response is the other retryable signal: AppSync accepted the request but
             // rejected the identity, which a different mode may satisfy.
-            if (canFallBack && response.isUnauthorized()) {
+            //
+            // Only when it rejected the whole request, though. AppSync answers a field the identity may
+            // not read with data for the rest of the selection set alongside an Unauthorized error, and
+            // by then the operation has run — retrying would send a mutation a second time and apply it
+            // twice. A response carrying data is therefore returned as it stands, errors included.
+            if (canFallBack && !response.hasData() && response.isUnauthorized()) {
                 lastAuthFailure = AppSyncGraphQLErrorException(
-                    message = "Authorization failed with $authMode.",
+                    message = "Authorization failed with ${candidate.authMode}.",
                     errors = response.errors
                 )
-                if (isLastAttempt) throw exhausted(authModes, lastAuthFailure)
+                if (isLastAttempt) throw exhausted(attempted, lastAuthFailure)
                 return@forEachIndexed
             }
 
@@ -109,7 +110,7 @@ internal class AppSyncHttpTransport(
 
         // Unreachable in practice: the loop either returns or throws on its last iteration. Kept so
         // the function is total rather than relying on that reasoning holding after an edit.
-        throw exhausted(authModes, lastAuthFailure)
+        throw exhausted(attempted, lastAuthFailure)
     }
 
     private suspend fun <T> decorate(request: GraphQLRequest<T>, authorizer: AppSyncClientAuthorizer): Request {
@@ -126,10 +127,16 @@ internal class AppSyncHttpTransport(
     /**
      * Whether the response carries an AppSync `Unauthorized` error. Defers to [AppSyncExtensions] for
      * the classification rather than matching error-type strings here.
+     *
+     * [AppSyncExtensions] reads `errorType` as a `String` without checking, so extensions whose
+     * `errorType` arrives as a JSON number make its constructor throw. That is server-controlled input,
+     * and one error object nobody can classify must not cost the caller the whole response, so a failure
+     * to classify counts as "not unauthorized" and the response is delivered with its errors intact.
      */
     private fun GraphQLResponse<*>.isUnauthorized(): Boolean = errors.any { error ->
         val extensions = error.extensions
-        !extensions.isNullOrEmpty() && AppSyncExtensions(extensions).isUnauthorizedErrorType
+        !extensions.isNullOrEmpty() &&
+            runCatching { AppSyncExtensions(extensions).isUnauthorizedErrorType }.getOrDefault(false)
     }
 
     private fun exhausted(attempted: List<AppSyncAuthMode>, cause: AppSyncException?): AppSyncException {

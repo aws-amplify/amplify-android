@@ -21,6 +21,7 @@ import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.SimpleGraphQLRequest
 import com.amplifyframework.core.model.AuthRule
 import com.amplifyframework.core.model.AuthStrategy
+import com.amplifyframework.core.model.ModelField
 import com.amplifyframework.core.model.ModelOperation
 import com.amplifyframework.core.model.ModelSchema
 import com.amplifyframework.foundation.credentials.AwsCredentials
@@ -36,9 +37,9 @@ import org.junit.Test
  * Tests [AppSyncAuthModeResolver] — which auth modes a request is eligible for, and in what order.
  *
  * Ordering itself belongs to `MultiAuthorizationTypeIterator` and is tested with it. What these tests
- * pin is the part this class owns: precedence between a per-request override,
- * the model's `@auth` rules and the configured default, and that a mode with no configured authorizer
- * is never proposed.
+ * pin is the part this class owns: precedence between a per-request override, the model's `@auth` rules
+ * and the configured default; that a mode with no configured authorizer is never proposed; and that each
+ * mode arrives paired with the authorizer that will sign for it.
  */
 class AppSyncAuthModeResolverTest {
 
@@ -50,7 +51,7 @@ class AppSyncAuthModeResolverTest {
             AppSyncAuthorization.Single(AppSyncClientAuthorizer.ApiKey("da2-fakekey"))
         )
 
-        resolver.resolve(rawRequest()) shouldContainExactly listOf(AppSyncAuthMode.API_KEY)
+        resolver.modesFor(rawRequest()) shouldContainExactly listOf(AppSyncAuthMode.API_KEY)
     }
 
     @Test
@@ -59,7 +60,7 @@ class AppSyncAuthModeResolverTest {
             AppSyncAuthorization.Single(AppSyncClientAuthorizer.ApiKey("da2-fakekey"))
         )
 
-        resolver.resolve(modelRequest(ownerRule(), publicRule())) shouldContainExactly
+        resolver.modesFor(modelRequest(ownerRule(), publicRule())) shouldContainExactly
             listOf(AppSyncAuthMode.API_KEY)
     }
 
@@ -70,7 +71,7 @@ class AppSyncAuthModeResolverTest {
         // OWNER(2) before PRIVATE(4) before PUBLIC(5), per AuthStrategy priorities.
         val resolver = AppSyncAuthModeResolver(multi())
 
-        resolver.resolve(modelRequest(publicRule(), privateRule(), ownerRule())) shouldContainExactly
+        resolver.modesFor(modelRequest(publicRule(), privateRule(), ownerRule())) shouldContainExactly
             listOf(AppSyncAuthMode.USER_POOLS, AppSyncAuthMode.IAM, AppSyncAuthMode.API_KEY)
     }
 
@@ -84,7 +85,7 @@ class AppSyncAuthModeResolverTest {
             )
         )
 
-        val modes = resolver.resolve(modelRequest(privateRule(), publicRule()))
+        val modes = resolver.modesFor(modelRequest(privateRule(), publicRule()))
 
         modes shouldNotContain AppSyncAuthMode.IAM
         modes shouldContainExactly listOf(AppSyncAuthMode.API_KEY)
@@ -99,23 +100,77 @@ class AppSyncAuthModeResolverTest {
             )
         )
 
-        resolver.resolve(modelRequest(ownerRule())) shouldContainExactly listOf(AppSyncAuthMode.LAMBDA)
+        resolver.modesFor(modelRequest(ownerRule())) shouldContainExactly listOf(AppSyncAuthMode.LAMBDA)
     }
 
     @Test
-    fun `a raw request has no schema, so multi auth falls back to the default`() {
+    fun `a raw request carries no auth rules, so multi auth falls back to the default`() {
         val resolver = AppSyncAuthModeResolver(multi())
 
-        resolver.resolve(rawRequest()) shouldContainExactly listOf(AppSyncAuthMode.API_KEY)
+        resolver.modesFor(rawRequest()) shouldContainExactly listOf(AppSyncAuthMode.API_KEY)
     }
 
     @Test
-    fun `duplicate providers across rules yield one mode each`() {
-        // Two owner rules both resolve to User Pools; retrying the same mode twice is pointless.
+    fun `rules that differ only in their owner field yield one mode`() {
+        // Both owner rules resolve to User Pools. MultiAuthorizationTypeIterator sorts rules by strategy
+        // then provider, so these two compare equal and it discards one before yielding anything.
         val resolver = AppSyncAuthModeResolver(multi())
 
-        resolver.resolve(modelRequest(ownerRule(), ownerRule(ownerField = "editor"))) shouldContainExactly
+        resolver.modesFor(modelRequest(ownerRule(), ownerRule(ownerField = "editor"))) shouldContainExactly
             listOf(AppSyncAuthMode.USER_POOLS)
+    }
+
+    @Test
+    fun `rules with different strategies but the same provider yield one mode`() {
+        // OWNER and PRIVATE hold different strategy priorities, so the iterator keeps both rules and
+        // yields their shared User Pools provider twice. Nothing is gained by sending the same identity
+        // again, so the resolver has to collapse the repeat itself.
+        val resolver = AppSyncAuthModeResolver(multi())
+
+        val privateUserPools = AuthRule.builder()
+            .authStrategy(AuthStrategy.PRIVATE)
+            .authProvider(AuthStrategy.PRIVATE.defaultAuthProvider)
+            .operations(ALL_OPERATIONS)
+            .build()
+
+        resolver.modesFor(modelRequest(ownerRule(), privateUserPools)) shouldContainExactly
+            listOf(AppSyncAuthMode.USER_POOLS)
+    }
+
+    @Test
+    fun `a field-level auth rule makes its mode eligible`() {
+        // Rules can sit on a field as well as on the model, and a field rule can allow a mode the model
+        // rules do not — which changes both the candidate list and the order the modes are tried in.
+        val resolver = AppSyncAuthModeResolver(multi())
+
+        val modes = resolver.modesFor(
+            modelRequest(
+                publicRule(),
+                fields = mapOf(
+                    "title" to ModelField.builder()
+                        .name("title")
+                        .authRules(listOf(ownerRule()))
+                        .build()
+                )
+            )
+        )
+
+        modes shouldContainExactly listOf(AppSyncAuthMode.USER_POOLS, AppSyncAuthMode.API_KEY)
+    }
+
+    @Test
+    fun `each mode is paired with the authorizer that will sign for it`() {
+        // The pairing is the point: resolving them together is what stops a caller being handed a mode
+        // it has no authorizer for.
+        val authorization = multi()
+        val resolver = AppSyncAuthModeResolver(authorization)
+
+        val candidates = resolver.resolve(modelRequest(ownerRule(), publicRule()))
+
+        candidates.map { it.authorizer } shouldContainExactly listOf(
+            authorization.authorizers.first { it.authMode == AppSyncAuthMode.USER_POOLS },
+            authorization.authorizers.first { it.authMode == AppSyncAuthMode.API_KEY }
+        )
     }
 
     @Test
@@ -123,7 +178,7 @@ class AppSyncAuthModeResolverTest {
         // A rule restricted to CREATE must not make its mode eligible for a READ.
         val resolver = AppSyncAuthModeResolver(multi())
 
-        val modes = resolver.resolve(
+        val modes = resolver.modesFor(
             modelRequest(
                 privateRule(operations = listOf(ModelOperation.CREATE)),
                 publicRule(),
@@ -141,7 +196,7 @@ class AppSyncAuthModeResolverTest {
     fun `a per-request override wins over the auth rules`() {
         val resolver = AppSyncAuthModeResolver(multi())
 
-        val modes = resolver.resolve(
+        val modes = resolver.modesFor(
             modelRequest(ownerRule(), publicRule(), authorizationType = AuthorizationType.AWS_IAM)
         )
 
@@ -162,7 +217,7 @@ class AppSyncAuthModeResolverTest {
             )
         )
 
-        resolver.resolve(
+        resolver.modesFor(
             modelRequest(authorizationType = AuthorizationType.AMAZON_COGNITO_USER_POOLS)
         ) shouldContainExactly listOf(AppSyncAuthMode.USER_POOLS)
     }
@@ -177,7 +232,7 @@ class AppSyncAuthModeResolverTest {
             )
         )
 
-        resolver.resolve(
+        resolver.modesFor(
             modelRequest(authorizationType = AuthorizationType.AWS_LAMBDA)
         ) shouldContainExactly listOf(AppSyncAuthMode.API_KEY)
     }
@@ -223,15 +278,20 @@ class AppSyncAuthModeResolverTest {
     private fun modelRequest(
         vararg authRules: AuthRule,
         authorizationType: AuthorizationType? = null,
-        operation: ModelOperation = ModelOperation.READ
+        operation: ModelOperation = ModelOperation.READ,
+        fields: Map<String, ModelField> = emptyMap()
     ): AppSyncGraphQLRequest<String> = mockk {
         every { modelSchema } returns ModelSchema.builder()
             .name("Todo")
             .authRules(authRules.toList())
+            .fields(fields)
             .build()
         every { authRuleOperation } returns operation
         every { this@mockk.authorizationType } returns authorizationType
     }
+
+    /** Most of these tests care only about the modes and their order, not the paired authorizers. */
+    private fun AppSyncAuthModeResolver.modesFor(request: GraphQLRequest<*>) = resolve(request).map { it.authMode }
 
     private fun ownerRule(ownerField: String = "owner") = AuthRule.builder()
         .authStrategy(AuthStrategy.OWNER)

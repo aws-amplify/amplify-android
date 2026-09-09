@@ -480,6 +480,43 @@ class AmplifyAppSyncClientTest {
     }
 
     @Test
+    fun `a response carrying data is not replayed, even when it also reports Unauthorized`() = runTest {
+        // AppSync answers a field the identity may not read with data for the rest of the selection set
+        // plus an Unauthorized error. The operation has already run by then, so retrying would send a
+        // mutation a second time and apply it twice.
+        server.enqueue(
+            jsonResponse(
+                """{"data":"partial","errors":[{"message":"Not Authorized to access secret on type Todo",
+                   "extensions":{"errorType":"Unauthorized"}}]}
+                """.trimIndent()
+            )
+        )
+        server.enqueue(jsonResponse("""{"data":"replayed"}"""))
+
+        val response = multiAuthClient()
+            .mutate(modelRequest(operation = ModelOperation.UPDATE))
+            .shouldBeSuccess().data
+
+        response.data shouldBe "partial"
+        response.errors shouldHaveSize 1
+        server.requestCount shouldBe 1
+    }
+
+    @Test
+    fun `an errorType that is not a string leaves the rest of the response intact`() = runTest {
+        // errorType is server-controlled and read as a String without checking, so a JSON number there
+        // throws while the response is being classified. One unclassifiable error must not cost the
+        // caller everything else the response said.
+        server.enqueue(jsonResponse("""{"errors":[{"message":"boom","extensions":{"errorType":1}}]}"""))
+
+        val response = multiAuthClient().query(modelRequest()).shouldBeSuccess().data
+
+        response.errors shouldHaveSize 1
+        response.errors[0].message shouldBe "boom"
+        server.requestCount shouldBe 1
+    }
+
+    @Test
     fun `a per-request override is not retried against other modes`() = runTest {
         server.enqueue(unauthorizedResponse())
 
@@ -561,18 +598,21 @@ class AmplifyAppSyncClientTest {
      * rather than built, because a real [AppSyncGraphQLRequest] also runs selection-set generation,
      * which needs a code-generated model class and is irrelevant here.
      */
-    private fun modelRequest(authorizationType: AuthorizationType? = null): AppSyncGraphQLRequest<String> {
+    private fun modelRequest(
+        authorizationType: AuthorizationType? = null,
+        operation: ModelOperation = ModelOperation.READ
+    ): AppSyncGraphQLRequest<String> {
         val ownerRule = AuthRule.builder()
             .authStrategy(AuthStrategy.OWNER)
             .authProvider(AuthStrategy.OWNER.defaultAuthProvider)
             .identityClaim("cognito:username")
             .ownerField("owner")
-            .operations(listOf(ModelOperation.READ))
+            .operations(listOf(operation))
             .build()
         val publicRule = AuthRule.builder()
             .authStrategy(AuthStrategy.PUBLIC)
             .authProvider(AuthStrategy.Provider.API_KEY)
-            .operations(listOf(ModelOperation.READ))
+            .operations(listOf(operation))
             .build()
 
         return mockk {
@@ -582,7 +622,7 @@ class AmplifyAppSyncClientTest {
                 .name("Todo")
                 .authRules(listOf(ownerRule, publicRule))
                 .build()
-            every { authRuleOperation } returns ModelOperation.READ
+            every { authRuleOperation } returns operation
             every { this@mockk.authorizationType } returns authorizationType
         }
     }

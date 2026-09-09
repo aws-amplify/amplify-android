@@ -35,11 +35,11 @@ import com.amplifyframework.api.graphql.GraphQLRequest
 internal class AppSyncAuthModeResolver(private val authorization: AppSyncAuthorization) {
 
     /**
-     * Returns the auth modes to try, in order. Never empty: it falls back to the configured default,
+     * Returns the candidates to try, in order. Never empty: it falls back to the configured default,
      * so a caller always has something to attempt.
      */
-    fun resolve(request: GraphQLRequest<*>): List<AppSyncAuthMode> {
-        val default = authorization.resolveDefaultAuthMode()
+    fun resolve(request: GraphQLRequest<*>): List<AppSyncAuthCandidate> {
+        val default = authorization.defaultAuthorizer.let { AppSyncAuthCandidate(it.authMode, it) }
 
         // A per-request override wins outright — the caller has been explicit, so falling back to
         // other modes would contradict them.
@@ -48,36 +48,50 @@ internal class AppSyncAuthModeResolver(private val authorization: AppSyncAuthori
         // Single-auth has exactly one authorizer, so there is nothing to order.
         if (authorization is AppSyncAuthorization.Single) return listOf(default)
 
-        val fromAuthRules = authRuleModes(request).filter { authorization.authorizerFor(it) != null }
-
-        return fromAuthRules.ifEmpty { listOf(default) }
+        return authRuleCandidates(request).ifEmpty { listOf(default) }
     }
 
-    private fun requestOverride(request: GraphQLRequest<*>): AppSyncAuthMode? {
+    private fun requestOverride(request: GraphQLRequest<*>): AppSyncAuthCandidate? {
         val override = (request as? AppSyncGraphQLRequest<*>)?.authorizationType?.toAuthMode() ?: return null
         // An override naming a mode with no authorizer is a configuration error, not a reason to
         // silently use a different identity than the caller asked for.
-        return override.takeIf { authorization.authorizerFor(it) != null }
+        return candidateFor(override)
     }
 
     /**
-     * The modes the model's `@auth` rules allow, in priority order. Empty when the request carries no
-     * schema — a raw request has no rules to inspect.
+     * The candidates the model's `@auth` rules allow, in priority order. Empty when [request] is not an
+     * [AppSyncGraphQLRequest] — a raw request carries no rules to inspect.
      */
-    private fun authRuleModes(request: GraphQLRequest<*>): List<AppSyncAuthMode> {
+    private fun authRuleCandidates(request: GraphQLRequest<*>): List<AppSyncAuthCandidate> {
         val appSyncRequest = request as? AppSyncGraphQLRequest<*> ?: return emptyList()
-        val schema = appSyncRequest.modelSchema ?: return emptyList()
-        val operation = appSyncRequest.authRuleOperation ?: return emptyList()
 
-        val iterator = MultiAuthModeStrategy.getInstance().authTypesFor(schema, operation)
+        val iterator = MultiAuthModeStrategy.getInstance()
+            .authTypesFor(appSyncRequest.modelSchema, appSyncRequest.authRuleOperation)
 
         return buildList {
             while (iterator.hasNext()) {
                 iterator.next().toAuthMode()?.let(::add)
             }
-        }.distinct()
+        }
+            // The iterator de-duplicates rules, not providers, so several strategies that share one
+            // provider each yield it again: `owner` and `private` both default to User Pools. Retrying
+            // the same identity cannot change the answer, so the repeats are dropped here.
+            .distinct()
+            .mapNotNull(::candidateFor)
     }
+
+    private fun candidateFor(mode: AppSyncAuthMode): AppSyncAuthCandidate? =
+        authorization.authorizerFor(mode)?.let { AppSyncAuthCandidate(mode, it) }
 }
+
+/**
+ * An auth mode to attempt, together with the authorizer that supplies its credentials. Pairing the two
+ * at resolution time means a caller cannot be handed a mode it has no way to authorize.
+ */
+internal data class AppSyncAuthCandidate(
+    val authMode: AppSyncAuthMode,
+    val authorizer: AppSyncClientAuthorizer
+)
 
 /**
  * Bridges [AuthorizationType] to the client's [AppSyncAuthMode].
