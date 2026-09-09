@@ -57,6 +57,7 @@ internal class AppSyncSubscriber(
     private val authorization: AppSyncAuthorization,
     private val decorator: AppSyncRequestDecorator,
     private val httpEndpoint: String,
+    private val deserializer: AppSyncResponseDeserializer,
     private val authModeResolver: AppSyncAuthModeResolver = AppSyncAuthModeResolver(authorization),
     private val claimInjector: AppSyncClaimInjector = AppSyncClaimInjector(),
     private val registrationTimeout: Duration = DEFAULT_REGISTRATION_TIMEOUT,
@@ -238,7 +239,7 @@ internal class AppSyncSubscriber(
                 // Deserialization failure is deliberately swallowed: it is non-terminal, so one
                 // unreadable message must not end a healthy subscription.
                 val deserialization = runCatching {
-                    AppSyncResponseDeserializer.deserialize(request, message.payload)
+                    deserializer.deserialize(request, message.payload)
                 }
                 val response = deserialization.getOrNull()
 

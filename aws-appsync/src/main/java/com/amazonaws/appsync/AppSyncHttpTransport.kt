@@ -45,6 +45,7 @@ internal class AppSyncHttpTransport(
     private val client: OkHttpClient,
     private val authorization: AppSyncAuthorization,
     private val decorator: AppSyncRequestDecorator,
+    private val deserializer: AppSyncResponseDeserializer,
     private val authModeResolver: AppSyncAuthModeResolver = AppSyncAuthModeResolver(authorization)
 ) {
 
@@ -178,11 +179,11 @@ internal class AppSyncHttpTransport(
             )
         }
 
-        return AppSyncResponseDeserializer.deserialize(request, body)
+        return deserializer.deserialize(request, body)
     }
 
     private fun <T> clientError(request: GraphQLRequest<T>, response: Response, body: String?): AppSyncException {
-        val parsed = runCatching { AppSyncResponseDeserializer.deserialize(request, body) }.getOrNull()
+        val parsed = runCatching { deserializer.deserialize(request, body) }.getOrNull()
         val errors = parsed?.errors?.takeIf { it.isNotEmpty() }
 
         // A throttle is not a defect in the request, so it must not arrive as one — the advice to check

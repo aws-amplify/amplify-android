@@ -36,11 +36,13 @@ import org.junit.Test
  */
 class AppSyncResponseDeserializerTest {
 
+    private val deserializer = AppSyncResponseDeserializer(AppSyncGson(RecordingModelLoader()).gson)
+
     // ── Scalars and errors ──────────────────────────────────────────────
 
     @Test
     fun `deserializes data`() {
-        val response = AppSyncResponseDeserializer.deserialize(stringRequest(), """{"data":"hello"}""")
+        val response = deserializer.deserialize(stringRequest(), """{"data":"hello"}""")
 
         response.data shouldBe "hello"
         response.hasErrors() shouldBe false
@@ -48,7 +50,7 @@ class AppSyncResponseDeserializerTest {
 
     @Test
     fun `deserializes errors`() {
-        val response = AppSyncResponseDeserializer.deserialize(
+        val response = deserializer.deserialize(
             stringRequest(),
             """{"errors":[{"message":"first"},{"message":"second"}]}"""
         )
@@ -60,7 +62,7 @@ class AppSyncResponseDeserializerTest {
 
     @Test
     fun `deserializes data and errors together`() {
-        val response = AppSyncResponseDeserializer.deserialize(
+        val response = deserializer.deserialize(
             stringRequest(),
             """{"data":"partial","errors":[{"message":"a field failed"}]}"""
         )
@@ -71,7 +73,7 @@ class AppSyncResponseDeserializerTest {
 
     @Test
     fun `preserves error locations and extensions`() {
-        val response = AppSyncResponseDeserializer.deserialize(
+        val response = deserializer.deserialize(
             stringRequest(),
             """
             {"errors":[{
@@ -96,21 +98,21 @@ class AppSyncResponseDeserializerTest {
         // Gson returns null instead of throwing for an empty string, so this is guarded explicitly.
         // See https://github.com/google/gson/issues/457
         shouldThrow<AppSyncDeserializationException> {
-            AppSyncResponseDeserializer.deserialize(stringRequest(), "")
+            deserializer.deserialize(stringRequest(), "")
         }.message shouldContain "empty"
     }
 
     @Test
     fun `a null body fails`() {
         shouldThrow<AppSyncDeserializationException> {
-            AppSyncResponseDeserializer.deserialize(stringRequest(), null)
+            deserializer.deserialize(stringRequest(), null)
         }
     }
 
     @Test
     fun `a malformed body fails with the response type in the message`() {
         shouldThrow<AppSyncDeserializationException> {
-            AppSyncResponseDeserializer.deserialize(stringRequest(), "{not json")
+            deserializer.deserialize(stringRequest(), "{not json")
         }.message shouldContain "String"
     }
 
@@ -123,7 +125,7 @@ class AppSyncResponseDeserializerTest {
 
     @Test
     fun `deserializes a list from the items wrapper`() {
-        val response = AppSyncResponseDeserializer.deserialize(
+        val response = deserializer.deserialize(
             listRequest(),
             """{"data":{"listTodos":{"items":["a","b","c"]}}}"""
         )
@@ -134,7 +136,7 @@ class AppSyncResponseDeserializerTest {
 
     @Test
     fun `deserializes a bare json array under the query field`() {
-        val response = AppSyncResponseDeserializer.deserialize(
+        val response = deserializer.deserialize(
             listRequest(),
             """{"data":{"listTodos":["a","b"]}}"""
         )
@@ -144,7 +146,7 @@ class AppSyncResponseDeserializerTest {
 
     @Test
     fun `a nextToken below the root is ignored, because codegen models the field as a plain List`() {
-        val response = AppSyncResponseDeserializer.deserialize(
+        val response = deserializer.deserialize(
             listRequest(),
             """{"data":{"listTodos":{"items":["a"],"nextToken":"tok"}}}"""
         )
@@ -155,7 +157,7 @@ class AppSyncResponseDeserializerTest {
     @Test
     fun `an object that is neither an array nor an items wrapper fails`() {
         shouldThrow<AppSyncDeserializationException> {
-            AppSyncResponseDeserializer.deserialize(
+            deserializer.deserialize(
                 listRequest(),
                 """{"data":{"listTodos":{"unexpected":"shape"}}}"""
             )
@@ -165,7 +167,7 @@ class AppSyncResponseDeserializerTest {
     @Test
     fun `a query with more than one top level field fails`() {
         shouldThrow<AppSyncDeserializationException> {
-            AppSyncResponseDeserializer.deserialize(
+            deserializer.deserialize(
                 listRequest(),
                 """{"data":{"listTodos":["a"],"listOther":["b"]}}"""
             )
@@ -176,7 +178,7 @@ class AppSyncResponseDeserializerTest {
 
     @Test
     fun `deserializes a PaginatedResult and its items`() {
-        val response = AppSyncResponseDeserializer.deserialize(
+        val response = deserializer.deserialize(
             paginatedRequest(),
             """{"data":{"listTodos":{"items":["a","b"],"nextToken":"tok"}}}"""
         )
@@ -188,7 +190,7 @@ class AppSyncResponseDeserializerTest {
     fun `a PaginatedResult has no next page when the request is not an AppSyncGraphQLRequest`() {
         // Only an AppSyncGraphQLRequest can be rebuilt with a nextToken variable, so a raw request
         // yields items without a follow-up request rather than failing.
-        val response = AppSyncResponseDeserializer.deserialize(
+        val response = deserializer.deserialize(
             paginatedRequest(),
             """{"data":{"listTodos":{"items":["a"],"nextToken":"tok"}}}"""
         )
@@ -198,7 +200,7 @@ class AppSyncResponseDeserializerTest {
 
     @Test
     fun `a PaginatedResult with no nextToken has no next page`() {
-        val response = AppSyncResponseDeserializer.deserialize(
+        val response = deserializer.deserialize(
             paginatedRequest(),
             """{"data":{"listTodos":{"items":["a"]}}}"""
         )
