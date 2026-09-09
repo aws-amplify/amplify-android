@@ -258,11 +258,11 @@ class PushNotificationChannelsTest {
 
     //region helpers
     private fun assertCreatedGroup(assertionBlock: MockKAssertScope.(NotificationChannelGroupCompat) -> Unit) = verify {
-        manager.createNotificationChannelGroup(withArg(assertionBlock))
+        manager.createNotificationChannelGroup(withArg(captureBlock = assertionBlock))
     }
 
     private fun assertCreatedChannel(assertionBlock: MockKAssertScope.(NotificationChannelCompat) -> Unit) = verify {
-        manager.createNotificationChannel(withArg(assertionBlock))
+        manager.createNotificationChannel(withArg(captureBlock = assertionBlock))
     }
     //endregion
 }

@@ -76,7 +76,10 @@ internal abstract class Jwt {
         UserSub("sub"),
         Username("username"), // username claim in the access token
         TokenRevocationId("origin_jti"),
-        CognitoUsername("cognito:username") // username claim in the identity token
+        CognitoUsername("cognito:username"), // username claim in the identity token
+        Email("email"), // id token only
+        PhoneNumber("phone_number"), // id token only
+        PreferredUsername("preferred_username") // id token only
     }
 }
 
@@ -87,6 +90,19 @@ internal class IdToken(override val tokenValue: String) : Jwt() {
         get() = getClaim(Claim.UserSub)
     val username: String?
         get() = getClaim(Claim.CognitoUsername)
+
+    // Sign-in aliases. Used to locate device metadata written by older SDK versions, which keyed it
+    // by the value the user typed at sign-in rather than by the Cognito username. Never throws: a
+    // token we cannot parse simply yields no candidates.
+    val signInAliases: List<String>
+        get() = runCatching {
+            listOfNotNull(
+                getClaim(Claim.Email),
+                getClaim(Claim.PhoneNumber),
+                getClaim(Claim.PreferredUsername)
+            ).filterNot { it == "null" } // getClaim stringifies an explicit JSON null
+        }.getOrDefault(emptyList())
+
     val expiration: Instant? by lazy {
         getClaim(Claim.Expiration)?.let { Instant.ofEpochSecond(it.toLong()) }
     }

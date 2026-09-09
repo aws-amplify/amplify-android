@@ -20,6 +20,7 @@ import com.amplifyframework.auth.AWSCognitoUserPoolTokens
 import com.amplifyframework.auth.AWSCredentials
 import com.amplifyframework.auth.AuthException
 import com.amplifyframework.auth.cognito.exceptions.configuration.InvalidUserPoolConfigurationException
+import com.amplifyframework.auth.cognito.exceptions.service.InvalidAccountTypeException
 import com.amplifyframework.auth.cognito.helpers.SessionHelper
 import com.amplifyframework.auth.exceptions.ConfigurationException
 import com.amplifyframework.auth.exceptions.InvalidStateException
@@ -164,12 +165,26 @@ internal fun AmplifyCredential.getCognitoSession(exception: AuthException? = nul
                 userPoolTokensResult = AuthSessionResult.failure(userPoolException)
             )
         }
-        else -> AWSCognitoAuthSession(
-            false,
-            identityIdResult = AuthSessionResult.failure(exception),
-            awsCredentialsResult = AuthSessionResult.failure(exception),
-            userSubResult = AuthSessionResult.failure(exception),
-            userPoolTokensResult = AuthSessionResult.failure(exception)
-        )
+        else -> {
+            // Signed-out with no Identity Pool: User Pool results are signed-out, while
+            // identity/credentials report the unsupported account type as elsewhere.
+            val identityException = if (this is AmplifyCredential.Empty && exception is SignedOutException) {
+                InvalidAccountTypeException(
+                    ConfigurationException(
+                        "Identity Pool not configured.",
+                        "Please check amplifyconfiguration.json file."
+                    )
+                )
+            } else {
+                exception
+            }
+            AWSCognitoAuthSession(
+                false,
+                identityIdResult = AuthSessionResult.failure(identityException),
+                awsCredentialsResult = AuthSessionResult.failure(identityException),
+                userSubResult = AuthSessionResult.failure(exception),
+                userPoolTokensResult = AuthSessionResult.failure(exception)
+            )
+        }
     }
 }

@@ -31,6 +31,7 @@ dependencies {
     implementation(project(":foundation-bridge"))
 
     implementation(libs.androidx.annotation)
+    implementation(libs.androidx.core.ktx)
     implementation(libs.kotlin.coroutines)
     implementation(libs.okhttp)
     implementation(libs.kotlin.serializationJson)

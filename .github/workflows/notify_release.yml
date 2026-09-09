@@ -8,9 +8,9 @@ on:
   release:
     types: [created, published]
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
-permissions:
-  contents: read
+# This workflow only posts to an external webhook — it makes no GitHub API
+# calls and checks out no code, so the GITHUB_TOKEN needs no scopes.
+permissions: {}
 
 jobs:
   # This workflow contains a single job called "notify"
@@ -28,5 +28,13 @@ jobs:
           REPO_URL: ${{github.event.repository.html_url}}
           ACTION_NAME: ${{github.event.action}}
         shell: bash
-        run: echo $VERSION | xargs -I {} curl -s POST "$WEBHOOK_URL" -H "Content-Type:application/json" --data '{"action":"'$ACTION_NAME'", "repo":"'$REPO_URL'", "version":"{}"}'
+        run: |
+          payload="$(jq -n \
+            --arg action "$ACTION_NAME" \
+            --arg repo "$REPO_URL" \
+            --arg version "$VERSION" \
+            '{action: $action, repo: $repo, version: $version}')"
+          curl -sSf --max-time 30 -X POST "$WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            --data "$payload"
 

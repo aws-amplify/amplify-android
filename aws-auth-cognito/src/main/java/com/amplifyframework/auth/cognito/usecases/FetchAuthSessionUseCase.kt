@@ -65,7 +65,11 @@ internal class FetchAuthSessionUseCase(
             }
             is AuthorizationState.Error -> {
                 when (val error = authZState.exception) {
-                    is SessionError -> waitForSession(getRefreshSessionEvent(error.amplifyCredential))
+                    is SessionError -> when (val exception = error.exception) {
+                        // A signed-out session has no credentials to refresh; return it directly.
+                        is SignedOutException -> error.amplifyCredential.getCognitoSession(exception)
+                        else -> waitForSession(getRefreshSessionEvent(error.amplifyCredential))
+                    }
                     else -> throw InvalidStateException()
                 }
             }

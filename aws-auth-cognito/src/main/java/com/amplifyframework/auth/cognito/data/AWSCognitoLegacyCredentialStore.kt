@@ -20,7 +20,7 @@ import androidx.core.content.edit
 import com.amplifyframework.auth.AuthProvider
 import com.amplifyframework.auth.cognito.AuthConfiguration
 import com.amplifyframework.auth.cognito.helpers.identityProviderName
-import com.amplifyframework.core.store.KeyValueRepository
+import com.amplifyframework.foundation.store.KeyValueRepository
 import com.amplifyframework.statemachine.codegen.data.AWSCredentials
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthCredentialStore

@@ -29,6 +29,7 @@ dependencies {
     api(project(":foundation"))
 
     implementation(libs.androidx.annotation)
+    implementation(libs.androidx.core.ktx)
     implementation(libs.kotlin.coroutines)
     implementation(libs.kotlin.datetime)
     implementation(libs.kotlin.serializationJson)

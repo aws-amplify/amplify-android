@@ -23,13 +23,16 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       issues: write
+    # These triage labels only apply to issues. The GITHUB_TOKEN also lacks
+    # pull-requests: write, so labeling a PR would fail.
+    if: ${{ !github.event.issue.pull_request }}
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       ISSUE_NUMBER: ${{ github.event.issue.number }}
       REPOSITORY_NAME: ${{ github.event.repository.full_name }}
     steps:
       - name: remove pending-community-response when new comment received
-        if: ${{ !contains(fromJSON('["MEMBER", "OWNER"]'), github.event.comment.author_association) && !github.event.issue.pull_request }}
+        if: ${{ !contains(fromJSON('["MEMBER", "OWNER"]'), github.event.comment.author_association) }}
         shell: bash
         run: |
           gh issue edit $ISSUE_NUMBER --repo $REPOSITORY_NAME --remove-label "pending-community-response"

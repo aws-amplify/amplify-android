@@ -16,11 +16,14 @@
 package com.amplifyframework.auth.cognito.data
 
 import com.amplifyframework.statemachine.codegen.data.CognitoUserPoolTokens
+import com.amplifyframework.statemachine.codegen.data.IdToken
 import com.amplifyframework.statemachine.codegen.data.asAccessToken
 import com.amplifyframework.statemachine.codegen.data.asIdToken
 import com.amplifyframework.statemachine.codegen.data.asRefreshToken
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import java.time.Instant
+import java.util.Base64
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.junit.Test
@@ -201,5 +204,45 @@ class TokensTest {
         val serializedFlat = Json.encodeToString(tokensFromFlat)
         val serializedNested = Json.encodeToString(tokensFromNested)
         serializedFlat shouldBe serializedNested
+    }
+
+    private fun idTokenWith(vararg claims: Pair<String, String>): IdToken {
+        val json = claims.joinToString(",", "{", "}") { (k, v) -> "\"$k\":\"$v\"" }
+        val payload = Base64.getUrlEncoder().withoutPadding().encodeToString(json.toByteArray())
+        return IdToken("header.$payload.signature")
+    }
+
+    @Test
+    fun `identity token returns email phone and preferred username as sign-in aliases`() {
+        val token = idTokenWith(
+            "email" to "user@example.com",
+            "phone_number" to "+15550100",
+            "preferred_username" to "alias-name"
+        )
+
+        token.signInAliases shouldContainExactly listOf("user@example.com", "+15550100", "alias-name")
+    }
+
+    @Test
+    fun `sign-in aliases omit absent claims`() {
+        idTokenWith("email" to "user@example.com").signInAliases shouldContainExactly listOf("user@example.com")
+    }
+
+    @Test
+    fun `sign-in aliases are empty when no alias claims are present`() {
+        idTokenWith("sub" to "abc").signInAliases shouldBe emptyList()
+    }
+
+    @Test
+    fun `sign-in aliases are empty for an unparseable token instead of throwing`() {
+        IdToken("not-a-jwt").signInAliases shouldBe emptyList()
+    }
+
+    @Test
+    fun `sign-in aliases exclude an explicitly null claim`() {
+        val payload = Base64.getUrlEncoder().withoutPadding()
+            .encodeToString("""{"email":null,"phone_number":"+15550100"}""".toByteArray())
+
+        IdToken("header.$payload.signature").signInAliases shouldContainExactly listOf("+15550100")
     }
 }

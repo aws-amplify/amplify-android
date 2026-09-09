@@ -29,6 +29,7 @@ import com.amplifyframework.core.category.CategoryType
 import com.amplifyframework.predictions.PredictionsException
 import com.amplifyframework.predictions.aws.BuildConfig
 import com.amplifyframework.predictions.aws.exceptions.AccessDeniedException
+import com.amplifyframework.predictions.aws.exceptions.FaceLivenessSessionInterruptedException
 import com.amplifyframework.predictions.aws.exceptions.FaceLivenessSessionNotFoundException
 import com.amplifyframework.predictions.aws.exceptions.FaceLivenessUnsupportedChallengeTypeException
 import com.amplifyframework.predictions.aws.models.liveness.BoundingBox
@@ -48,6 +49,8 @@ import com.amplifyframework.predictions.models.Challenge
 import com.amplifyframework.predictions.models.FaceLivenessChallengeType
 import com.amplifyframework.predictions.models.FaceLivenessSessionInformation
 import com.amplifyframework.util.UserAgent
+import java.io.IOException
+import java.net.ProtocolException
 import java.net.URI
 import java.net.URLDecoder
 import java.nio.ByteBuffer
@@ -110,6 +113,16 @@ internal class LivenessWebSocket(
 
     @VisibleForTesting internal var webSocketError: PredictionsException? = null
     internal var clientStoppedSession = false
+
+    /*
+    Whether the socket ever completed its upgrade. A failure before that point is a connection that was never
+    established - an unreachable or misconfigured endpoint, or no network at launch - rather than a session that was
+    interrupted, and the two want different advice.
+
+    Deliberately not cleared when reconnecting, because a reconnect only ever follows a socket that did open and a
+    server that did respond, so a failure on the retry really did interrupt a session that was under way.
+     */
+    private var socketOpened = false
     val json = Json { ignoreUnknownKeys = true }
 
     // Sending events to the websocket requires processing synchronously because we rely on proper ordered
@@ -138,6 +151,7 @@ internal class LivenessWebSocket(
             super.onOpen(webSocket, response)
 
             this@LivenessWebSocket.webSocket = webSocket
+            socketOpened = true
 
             // If offset is > 4 minutes, server may reject the request
             // The real allowed diff from serer is < 5 but we check for 4 to add a buffer
@@ -247,14 +261,26 @@ internal class LivenessWebSocket(
             LOG.debug("WebSocket onFailure")
             super.onFailure(webSocket, t, response)
             if (!clientStoppedSession) {
-                val faceLivenessException = webSocketError ?: PredictionsException(
-                    "An unknown error occurred during the Liveness flow.",
-                    t,
-                    "See attached exception for more details."
-                )
-                onErrorReceived.accept(faceLivenessException)
+                onErrorReceived.accept(webSocketError ?: classifyConnectionFailure(t))
             }
         }
+    }
+
+    /*
+    Losing an established transport means the session ended for a reason the customer can act on - the app was
+    backgrounded long enough for the socket to close, or connectivity was lost - so it is reported as a distinct type
+    rather than as an unclassified failure. ProtocolException is excluded because it means the peer sent something
+    malformed, including a rejected upgrade handshake, which is not an interruption. Anything else is not something we
+    can attribute, so it keeps the generic message.
+     */
+    private fun classifyConnectionFailure(t: Throwable): PredictionsException = when {
+        socketOpened && t is IOException && t !is ProtocolException ->
+            FaceLivenessSessionInterruptedException(cause = t)
+        else -> PredictionsException(
+            "An unknown error occurred during the Liveness flow.",
+            t,
+            "See attached exception for more details."
+        )
     }
 
     fun start() {

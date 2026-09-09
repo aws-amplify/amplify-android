@@ -18,6 +18,7 @@ package com.amplifyframework.auth.cognito.usecases
 import com.amplifyframework.auth.AuthChannelEventName
 import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
 import com.amplifyframework.auth.cognito.AuthStateMachine
+import com.amplifyframework.auth.cognito.exceptions.service.InvalidAccountTypeException
 import com.amplifyframework.auth.cognito.isValid
 import com.amplifyframework.auth.cognito.testUtil.authState
 import com.amplifyframework.auth.exceptions.ConfigurationException
@@ -264,7 +265,7 @@ class FetchAuthSessionUseCaseTest {
     }
 
     @Test
-    fun `embeds SignedOutException in session result`() = runTest {
+    fun `first fetch returns User Pool-only signed-out session with aligned typed results`() = runTest {
         stateFlow.value = authState(
             authNState = AuthenticationState.SignedOut(SignedOutData()),
             authZState = AuthorizationState.Configured()
@@ -282,7 +283,11 @@ class FetchAuthSessionUseCaseTest {
 
         val result = deferred.await()
         result.shouldBeInstanceOf<AWSCognitoAuthSession>()
-        result.identityIdResult.error.shouldBeInstanceOf<SignedOutException>()
+        result.isSignedIn shouldBe false
+        result.userSubResult.error.shouldBeInstanceOf<SignedOutException>()
+        result.userPoolTokensResult.error.shouldBeInstanceOf<SignedOutException>()
+        result.identityIdResult.error.shouldBeInstanceOf<InvalidAccountTypeException>()
+        result.awsCredentialsResult.error.shouldBeInstanceOf<InvalidAccountTypeException>()
     }
 
     @Test
@@ -397,6 +402,8 @@ class FetchAuthSessionUseCaseTest {
         val result = deferred.await()
         result.shouldBeInstanceOf<AWSCognitoAuthSession>()
         result.isSignedIn shouldBe false
+        result.identityIdResult.error.shouldBeInstanceOf<InvalidAccountTypeException>()
+        result.userSubResult.error.shouldBeInstanceOf<InvalidAccountTypeException>()
     }
 
     @Test
@@ -409,5 +416,41 @@ class FetchAuthSessionUseCaseTest {
         shouldThrow<InvalidStateException> {
             useCase.execute()
         }
+    }
+
+    @Test
+    fun `repeated fetch returns aligned signed-out results without refreshing`() = runTest {
+        stateFlow.value = authState(
+            authNState = AuthenticationState.SignedOut(SignedOutData()),
+            authZState = AuthorizationState.Error(
+                SessionError(SignedOutException(), AmplifyCredential.Empty)
+            )
+        )
+
+        val result = useCase.execute()
+
+        result.isSignedIn shouldBe false
+        result.userSubResult.error.shouldBeInstanceOf<SignedOutException>()
+        result.userPoolTokensResult.error.shouldBeInstanceOf<SignedOutException>()
+        result.identityIdResult.error.shouldBeInstanceOf<InvalidAccountTypeException>()
+        result.awsCredentialsResult.error.shouldBeInstanceOf<InvalidAccountTypeException>()
+        verify(exactly = 0) { stateMachine.send(any()) }
+    }
+
+    @Test
+    fun `forceRefresh fetch returns aligned signed-out results without refreshing`() = runTest {
+        stateFlow.value = authState(
+            authNState = AuthenticationState.SignedOut(SignedOutData()),
+            authZState = AuthorizationState.Error(
+                SessionError(SignedOutException(), AmplifyCredential.Empty)
+            )
+        )
+
+        val result = useCase.execute(AuthFetchSessionOptions.builder().forceRefresh(true).build())
+
+        result.isSignedIn shouldBe false
+        result.userSubResult.error.shouldBeInstanceOf<SignedOutException>()
+        result.identityIdResult.error.shouldBeInstanceOf<InvalidAccountTypeException>()
+        verify(exactly = 0) { stateMachine.send(any()) }
     }
 }

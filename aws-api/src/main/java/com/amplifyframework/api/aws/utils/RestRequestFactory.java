@@ -74,8 +74,19 @@ public final class RestRequestFactory {
         }
 
         try {
-            String encodedUrl = builder.build().url().toString();
-            return new URL(Uri.decode(encodedUrl));
+            String decodedUrl = Uri.decode(builder.build().url().toString());
+            // API Gateway treats an unencoded ';' in the query as a parameter delimiter
+            // and drops everything after it, so encode it explicitly (query only).
+            // https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-known-issues.html
+            int queryStart = decodedUrl.indexOf('?');
+            if (queryStart >= 0) {
+                int fragmentStart = decodedUrl.indexOf('#', queryStart);
+                int queryEnd = fragmentStart < 0 ? decodedUrl.length() : fragmentStart;
+                decodedUrl = decodedUrl.substring(0, queryStart + 1)
+                    + decodedUrl.substring(queryStart + 1, queryEnd).replace(";", "%3B")
+                    + decodedUrl.substring(queryEnd);
+            }
+            return new URL(decodedUrl);
         } catch (MalformedURLException error) {
             throw new MalformedURLException(error.getMessage());
         }

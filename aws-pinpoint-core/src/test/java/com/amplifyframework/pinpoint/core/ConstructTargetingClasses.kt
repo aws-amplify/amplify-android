@@ -20,7 +20,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import aws.sdk.kotlin.services.pinpoint.PinpointClient
-import com.amplifyframework.core.store.KeyValueRepository
+import com.amplifyframework.foundation.store.KeyValueRepository
 import com.amplifyframework.pinpoint.core.data.AndroidAppDetails
 import com.amplifyframework.pinpoint.core.data.AndroidDeviceDetails
 import com.amplifyframework.pinpoint.core.endpointProfile.EndpointProfile

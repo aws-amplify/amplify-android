@@ -569,7 +569,7 @@ do **not** create a public GitHub issue.
 ## Licensing
 
 See the
-[LICENSE](https://github.com/awslabs/amplify-android/blob/master/LICENSE)
+[LICENSE](LICENSE)
 for more information. We will ask you to confirm the licensing of your
 contribution.
 

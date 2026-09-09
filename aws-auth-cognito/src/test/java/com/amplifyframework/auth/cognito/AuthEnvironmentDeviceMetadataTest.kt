@@ -1,0 +1,202 @@
+/*
+ * Copyright 2026 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+package com.amplifyframework.auth.cognito
+
+import android.content.Context
+import com.amplifyframework.logging.Logger
+import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
+import com.amplifyframework.statemachine.codegen.data.CredentialType
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.coVerifyOrder
+import io.mockk.mockk
+import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.test.runTest
+import org.junit.Test
+
+class AuthEnvironmentDeviceMetadataTest {
+
+    private val credentialStoreClient = mockk<StoreClientBehavior>(relaxed = true)
+    private val logger = mockk<Logger>(relaxed = true)
+
+    private val username = "0f9a6b1c-uuid"
+    private val email = "user@example.com"
+    private val metadata = DeviceMetadata.Metadata("device-key", "device-group-key", "device-secret")
+
+    private val environment = AuthEnvironment(
+        context = mockk<Context>(relaxed = true),
+        configuration = mockk(relaxed = true),
+        cognitoAuthService = mockk(relaxed = true),
+        credentialStoreClient = credentialStoreClient,
+        userContextDataProvider = null,
+        hostedUIClient = null,
+        logger = logger
+    )
+
+    private fun storeContains(vararg entries: Pair<String, DeviceMetadata>) {
+        val byUsername = entries.toMap()
+        coEvery { credentialStoreClient.loadCredentials(any()) } answers {
+            val requested = (firstArg<CredentialType>() as CredentialType.Device).username
+            AmplifyCredential.DeviceData(byUsername[requested] ?: DeviceMetadata.Empty)
+        }
+    }
+
+    @Test
+    fun `returns metadata stored under the current username`() = runTest {
+        storeContains(username to metadata)
+
+        environment.getDeviceMetadata(username, listOf(email)) shouldBe metadata
+    }
+
+    @Test
+    fun `returns null when no metadata is stored under any key`() = runTest {
+        storeContains()
+
+        environment.getDeviceMetadata(username, listOf(email)) shouldBe null
+    }
+
+    @Test
+    fun `falls back to metadata stored under a legacy alias key`() = runTest {
+        storeContains(email to metadata)
+
+        environment.getDeviceMetadata(username, listOf(email)) shouldBe metadata
+    }
+
+    @Test
+    fun `copies legacy metadata to the current username and keeps the legacy entry`() = runTest {
+        storeContains(email to metadata)
+
+        environment.getDeviceMetadata(username, listOf(email))
+
+        coVerify {
+            credentialStoreClient.storeCredentials(
+                CredentialType.Device(username),
+                AmplifyCredential.DeviceData(metadata)
+            )
+        }
+        // Sign-in paths still read by the typed alias, so the legacy entry must survive.
+        coVerify(exactly = 0) { credentialStoreClient.clearCredentials(any()) }
+    }
+
+    @Test
+    fun `returns legacy metadata even when persisting the copy fails`() = runTest {
+        storeContains(email to metadata)
+        coEvery { credentialStoreClient.storeCredentials(any(), any()) } throws RuntimeException("store failed")
+
+        environment.getDeviceMetadata(username, listOf(email)) shouldBe metadata
+    }
+
+    @Test
+    fun `does not migrate when metadata already exists under the current username`() = runTest {
+        storeContains(username to metadata, email to metadata)
+
+        environment.getDeviceMetadata(username, listOf(email))
+
+        coVerify(exactly = 0) { credentialStoreClient.storeCredentials(any(), any()) }
+        coVerify(exactly = 0) { credentialStoreClient.clearCredentials(any()) }
+    }
+
+    @Test
+    fun `does not consult the store twice when the alias equals the current username`() = runTest {
+        storeContains()
+
+        environment.getDeviceMetadata(username, listOf(username)) shouldBe null
+
+        coVerify(exactly = 1) { credentialStoreClient.loadCredentials(CredentialType.Device(username)) }
+    }
+
+    @Test
+    fun `tries each legacy candidate in turn and stops at the first hit`() = runTest {
+        val phone = "+15551234567"
+        val preferred = "preferred-name"
+        storeContains(preferred to metadata)
+
+        environment.getDeviceMetadata(username, listOf(email, phone, preferred)) shouldBe metadata
+
+        coVerifyOrder {
+            credentialStoreClient.loadCredentials(CredentialType.Device(username))
+            credentialStoreClient.loadCredentials(CredentialType.Device(email))
+            credentialStoreClient.loadCredentials(CredentialType.Device(phone))
+            credentialStoreClient.loadCredentials(CredentialType.Device(preferred))
+        }
+        coVerify {
+            credentialStoreClient.storeCredentials(
+                CredentialType.Device(username),
+                AmplifyCredential.DeviceData(metadata)
+            )
+        }
+    }
+
+    @Test
+    fun `cancellation during the copy is not swallowed`() = runTest {
+        storeContains(email to metadata)
+        coEvery { credentialStoreClient.storeCredentials(any(), any()) } throws CancellationException("cancelled")
+
+        shouldThrow<CancellationException> {
+            environment.getDeviceMetadata(username, listOf(email))
+        }
+    }
+
+    @Test
+    fun `duplicate legacy candidates are only looked up once`() = runTest {
+        storeContains()
+
+        environment.getDeviceMetadata(username, listOf(email, email)) shouldBe null
+
+        coVerify(exactly = 1) { credentialStoreClient.loadCredentials(CredentialType.Device(email)) }
+    }
+
+    @Test
+    fun `a fruitless alias scan is not repeated on the next lookup`() = runTest {
+        storeContains()
+
+        environment.getDeviceMetadata(username, listOf(email)) shouldBe null
+        environment.getDeviceMetadata(username, listOf(email)) shouldBe null
+
+        // Second lookup consults only the primary key; the alias scan ran once.
+        coVerify(exactly = 2) { credentialStoreClient.loadCredentials(CredentialType.Device(username)) }
+        coVerify(exactly = 1) { credentialStoreClient.loadCredentials(CredentialType.Device(email)) }
+    }
+
+    @Test
+    fun `a scan that found metadata but failed to copy is retried on the next lookup`() = runTest {
+        storeContains(email to metadata)
+        coEvery { credentialStoreClient.storeCredentials(any(), any()) } throws RuntimeException("store failed")
+
+        environment.getDeviceMetadata(username, listOf(email)) shouldBe metadata
+        environment.getDeviceMetadata(username, listOf(email)) shouldBe metadata
+
+        coVerify(exactly = 2) { credentialStoreClient.loadCredentials(CredentialType.Device(email)) }
+    }
+
+    @Test
+    fun `a fruitless scan for one username does not suppress the scan for another`() = runTest {
+        storeContains(email to metadata)
+
+        environment.getDeviceMetadata("other-user", listOf("other@example.com")) shouldBe null
+        environment.getDeviceMetadata(username, listOf(email)) shouldBe metadata
+    }
+
+    @Test
+    fun `no legacy candidates behaves like a plain lookup`() = runTest {
+        storeContains(email to metadata)
+
+        environment.getDeviceMetadata(username) shouldBe null
+    }
+}

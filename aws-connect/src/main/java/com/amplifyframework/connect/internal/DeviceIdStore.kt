@@ -16,6 +16,7 @@ package com.amplifyframework.connect.internal
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import java.util.UUID
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -58,7 +59,7 @@ internal class DeviceIdStore(
             existing
         } else {
             val newId = UUID.randomUUID().toString()
-            prefs.edit().putString(DEVICE_ID_KEY, newId).apply()
+            prefs.edit { putString(DEVICE_ID_KEY, newId) }
             newId
         }
     }
@@ -75,7 +76,7 @@ internal class DeviceIdStore(
      * Clears the persisted device ID.
      */
     suspend fun clear() = withContext(dispatcher) {
-        prefs.edit().remove(DEVICE_ID_KEY).apply()
+        prefs.edit { remove(DEVICE_ID_KEY) }
     }
 
     internal companion object {

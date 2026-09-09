@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2026 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License").
+  ~ You may not use this file except in compliance with the License.
+  ~ A copy of the License is located at
+  ~
+  ~  http://aws.amazon.com/apache2.0
+  ~
+  ~ or in the "license" file accompanying this file. This file is distributed
+  ~ on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+  ~ express or implied. See the License for the specific language governing
+  ~ permissions and limitations under the License.
+  -->
+<lint>
+    <!--
+      Amplify's own @RequiresOptIn marker annotations are opted into project-wide, so that
+      first-party code may use first-party internal APIs without a per-call-site @OptIn. This
+      mirrors the Kotlin compiler's global opt-in configured via `-opt-in=` in the convention
+      plugins (see optInAnnotations in build-logic/plugins/src/main/kotlin/Util.kt). Android Lint's
+      UnsafeOptInUsage check is a separate mechanism that does not read the Kotlin compiler flag and
+      also applies to Java sources, so it must be configured here as well. The published
+      @RequiresOptIn markers still enforce opt-in for third-party consumers of the library. Keep
+      this list in sync with optInAnnotations.
+    -->
+    <issue id="UnsafeOptInUsageError">
+        <option
+            name="opt-in"
+            value="com.amplifyframework.annotations.InternalApiWarning,com.amplifyframework.annotations.InternalAmplifyApi,com.amplifyframework.annotations.AmplifyFlutterApi,com.amplifyframework.annotations.ExperimentalAmplifyApi" />
+    </issue>
+    <issue id="UnsafeOptInUsageWarning">
+        <option
+            name="opt-in"
+            value="com.amplifyframework.annotations.InternalApiWarning,com.amplifyframework.annotations.InternalAmplifyApi,com.amplifyframework.annotations.AmplifyFlutterApi,com.amplifyframework.annotations.ExperimentalAmplifyApi" />
+    </issue>
+</lint>

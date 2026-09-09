@@ -24,9 +24,9 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import java.io.IOException
+import mockwebserver3.MockResponse
+import mockwebserver3.MockWebServer
 import okhttp3.HttpUrl
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
 import org.json.JSONException
 import org.json.JSONObject
 import org.junit.After
@@ -75,12 +75,12 @@ class AppSyncErrorPropagationTest {
 
     /**
      * Stop the [MockWebServer] that was started in [setup].
-     * @throws IOException On failure to shutdown the MockWebServer
+     * @throws IOException On failure to close the MockWebServer
      */
     @After
     @Throws(IOException::class)
     fun cleanup() {
-        webServer.shutdown()
+        webServer.close()
     }
 
     /**
@@ -100,9 +100,10 @@ class AppSyncErrorPropagationTest {
         """.trimIndent()
 
         webServer.enqueue(
-            MockResponse()
-                .setResponseCode(401)
-                .setBody(errorResponse)
+            MockResponse.Builder()
+                .code(401)
+                .body(errorResponse)
+                .build()
         )
 
         // Act - execute query and capture error
@@ -134,9 +135,10 @@ class AppSyncErrorPropagationTest {
         val invalidJson = "not valid json at all"
 
         webServer.enqueue(
-            MockResponse()
-                .setResponseCode(400)
-                .setBody(invalidJson)
+            MockResponse.Builder()
+                .code(400)
+                .body(invalidJson)
+                .build()
         )
 
         // Act

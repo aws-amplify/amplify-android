@@ -15,6 +15,7 @@
 package com.amplifyframework.eventenrichment.clientid
 
 import android.content.Context
+import androidx.core.content.edit
 import com.amplifyframework.annotations.ExperimentalAmplifyApi
 import java.util.UUID
 
@@ -53,7 +54,7 @@ internal class SharedPreferencesClientIdProvider(context: Context) : ClientIdPro
         val existing = preferences.getString(CLIENT_ID_STORAGE_KEY, null)
         if (!existing.isNullOrEmpty()) return existing
         val id = UUID.randomUUID().toString()
-        preferences.edit().putString(CLIENT_ID_STORAGE_KEY, id).apply()
+        preferences.edit { putString(CLIENT_ID_STORAGE_KEY, id) }
         return id
     }
 

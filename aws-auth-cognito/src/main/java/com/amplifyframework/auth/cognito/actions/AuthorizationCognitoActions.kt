@@ -18,6 +18,7 @@ package com.amplifyframework.auth.cognito.actions
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.AuthEnvironment
 import com.amplifyframework.auth.exceptions.ConfigurationException
+import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.statemachine.Action
 import com.amplifyframework.statemachine.codegen.actions.AuthorizationActions
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
@@ -41,15 +42,11 @@ internal object AuthorizationCognitoActions : AuthorizationActions {
 
     override fun initializeFetchUnAuthSession() = Action<AuthEnvironment>("InitFetchUnAuthSession") { id, dispatcher ->
         logger.verbose("$id Starting execution")
+        // No Identity Pool means no guest credentials to fetch: a valid signed-out state.
         val evt = configuration.identityPool?.poolId?.let {
             FetchAuthSessionEvent(FetchAuthSessionEvent.EventType.FetchIdentity(LoginsMapProvider.UnAuthLogins()))
         } ?: AuthorizationEvent(
-            AuthorizationEvent.EventType.ThrowError(
-                ConfigurationException(
-                    "Identity Pool not configured.",
-                    "Please check amplifyconfiguration.json file."
-                )
-            )
+            AuthorizationEvent.EventType.ThrowError(SignedOutException())
         )
         logger.verbose("$id Sending event ${evt.type}")
         dispatcher.send(evt)
