@@ -30,7 +30,8 @@ import com.google.gson.GsonBuilder
  * Private to the client rather than shared, so neither the adapter set nor the null handling below can
  * be altered from outside.
  *
- * TODO: register deserializers for lazily-loaded model lists and pages, which this set does not cover.
+ * Related lists and pages that arrive in full are covered. TODO: a lazily-loaded ModelReference still
+ * is not — it needs a way to issue the follow-up query, which this instance has no handle on.
  */
 internal object AppSyncGson {
 
@@ -44,6 +45,8 @@ internal object AppSyncGson {
                 ModelWithMetadataAdapter.register(it)
                 SerializedModelAdapter.register(it)
                 SerializedCustomTypeAdapter.register(it)
+                AppSyncModelListDeserializer.register(it)
+                AppSyncModelPageDeserializer.register(it)
             }
             // A mutation that clears a field needs an explicit `"field": null` in the payload, because
             // AppSync reads an absent field as "leave unchanged" rather than "set to null".
