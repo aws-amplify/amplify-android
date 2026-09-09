@@ -353,9 +353,11 @@ final class SyncProcessor {
                                                     .collect(Collectors.toList());
                     String errors = String.join(",\n", errorStrings);
 
-                    emitter.onError(new DataStoreException.IrRecoverableException(
-                            "Received errors from AppSync: " + errors, "Report to AWS team."
-                    ));
+                    DataStoreException syncError = new DataStoreException.IrRecoverableException(
+                            "Received errors from AppSync: " + errors, "Report to AWS team.");
+                    if (!emitter.tryOnError(syncError)) {
+                        LOG.warn("Sync error emitted after the subscriber was disposed.", syncError);
+                    }
                 } else {
                     if (result.hasErrors()) {
                         LOG.warn(String.format("Both data and errors received on model sync: %s", result.getErrors()));
@@ -363,7 +365,11 @@ final class SyncProcessor {
 
                     emitter.onSuccess(result);
                 }
-            }, emitter::onError);
+            }, failure -> {
+                    if (!emitter.tryOnError(failure)) {
+                        LOG.warn("Sync failure emitted after the subscriber was disposed.", failure);
+                    }
+                });
             emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
         });
     }
