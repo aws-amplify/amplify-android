@@ -51,11 +51,13 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class AmplifyAppSyncClientTest {
 
-    private val server = MockWebServer()
+    // Started here rather than lazily: url() no longer starts the server on first use, and the client
+    // helpers below need its address at construction time.
+    private val server = MockWebServer().apply { start() }
 
     @After
     fun tearDown() {
-        server.shutdown()
+        server.close()
     }
 
     // ── Success ─────────────────────────────────────────────────────────
@@ -85,11 +87,11 @@ class AmplifyAppSyncClientTest {
 
         val recorded = server.awaitRequest()
         recorded.method shouldBe "POST"
-        recorded.path shouldBe "/graphql"
-        recorded.getHeader("x-api-key") shouldBe "da2-fakekey"
-        recorded.getHeader("accept") shouldBe "application/json"
-        recorded.getHeader("content-type") shouldContain "application/json"
-        recorded.body.readUtf8() shouldContain "getTodo"
+        recorded.target shouldBe "/graphql"
+        recorded.headers["x-api-key"] shouldBe "da2-fakekey"
+        recorded.headers["accept"] shouldBe "application/json"
+        recorded.headers["content-type"] shouldContain "application/json"
+        recorded.body!!.utf8() shouldContain "getTodo"
     }
 
     @Test
@@ -98,7 +100,7 @@ class AmplifyAppSyncClientTest {
 
         client().query(request()).shouldBeSuccess()
 
-        server.awaitRequest().getHeader("User-Agent").isNullOrBlank() shouldBe false
+        server.awaitRequest().headers["User-Agent"].isNullOrBlank() shouldBe false
     }
 
     @Test
@@ -172,7 +174,9 @@ class AmplifyAppSyncClientTest {
     fun `an unfollowed redirect is not reported as transient`() = runTest {
         server.enqueue(
             jsonResponse("", code = HttpURLConnection.HTTP_MOVED_PERM)
+                .newBuilder()
                 .setHeader("Location", "https://example.invalid/graphql")
+                .build()
         )
 
         val error = client { httpClientConfigurator = { it.followRedirects(false) } }
@@ -282,7 +286,9 @@ class AmplifyAppSyncClientTest {
         // mid-response is a timing question, and the assertion fails intermittently. Nor can this force
         // the narrower ordering the resume callback in AppSyncHttpTransport guards, where a response
         // arrives after the continuation is already cancelled — that race cannot be provoked on demand.
-        server.enqueue(jsonResponse("""{"data":"slow"}""").setBodyDelay(5, TimeUnit.SECONDS))
+        server.enqueue(
+            jsonResponse("""{"data":"slow"}""").newBuilder().bodyDelay(5, TimeUnit.SECONDS).build()
+        )
 
         val inFlight = launch(Dispatchers.IO) { client().query(request()) }
         server.awaitRequest()
@@ -340,10 +346,11 @@ class AmplifyAppSyncClientTest {
         GsonVariablesSerializer()
     )
 
-    private fun jsonResponse(body: String, code: Int = HttpURLConnection.HTTP_OK) = MockResponse()
-        .setResponseCode(code)
+    private fun jsonResponse(body: String, code: Int = HttpURLConnection.HTTP_OK) = MockResponse.Builder()
+        .code(code)
         .setHeader("content-type", "application/json")
-        .setBody(body)
+        .body(body)
+        .build()
 
     /**
      * Takes the next recorded request, failing if none arrives. The bare `takeRequest()` blocks the
