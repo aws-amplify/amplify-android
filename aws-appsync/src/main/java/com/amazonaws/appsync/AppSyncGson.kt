@@ -53,6 +53,9 @@ internal class AppSyncGson(
                 AppSyncModelListDeserializer.register(it)
                 AppSyncModelPageDeserializer.register(it)
                 AppSyncModelReferenceDeserializer.register(it, loader, schemaRegistry)
+                // Registered after the adapters above so that it wraps whichever of them reads a model:
+                // they do the reading, and this fills in the relationship fields they left null.
+                AppSyncRelationshipTypeAdapterFactory.register(it, loader, schemaRegistry)
             }
             // A mutation that clears a field needs an explicit `"field": null` in the payload, because
             // AppSync reads an absent field as "leave unchanged" rather than "set to null".
