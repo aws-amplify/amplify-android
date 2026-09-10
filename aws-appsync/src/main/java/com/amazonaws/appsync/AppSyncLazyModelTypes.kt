@@ -133,9 +133,6 @@ internal class AppSyncLazyModelReference<M : Model>(
  * Every `fetchPage` overload reports failure as [AmplifyException] whose `cause` is always an
  * [AppSyncException], so a caller that wants the typed error can match on it.
  */
-// TODO: nothing constructs this yet. A response leaves a lazy list field null, so filling it in
-//  needs a post-deserialization pass that derives the foreign-key map from the child schema's
-//  associations. Until that exists this type is reachable only from tests.
 internal class AppSyncLazyModelList<out M : Model>(
     private val modelClass: Class<M>,
     keyMap: Map<String, Any>,
