@@ -29,6 +29,9 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import java.util.Locale
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 
 internal fun constructSharedPreferences(): SharedPreferences =
     ApplicationProvider.getApplicationContext<Context>().getSharedPreferences(
@@ -80,7 +83,13 @@ internal fun constructPinpointClient(): PinpointClient {
     return pinpointClient
 }
 
-internal fun constructTargetingClient(): TargetingClient {
+// TargetingClient dispatches its updateEndpoint call with coroutineScope.launch, so a caller that
+// verifies the call has to supply a dispatcher the test controls. UnconfinedTestDispatcher runs the
+// launched coroutine eagerly, so the call has happened by the time the client method returns.
+@OptIn(ExperimentalCoroutinesApi::class)
+internal fun constructTargetingClient(
+    coroutineDispatcher: CoroutineDispatcher = UnconfinedTestDispatcher()
+): TargetingClient {
     setup()
     val prefs = constructSharedPreferences()
     return TargetingClient(
@@ -89,6 +98,7 @@ internal fun constructTargetingClient(): TargetingClient {
         store,
         prefs,
         appDetails,
-        deviceDetails
+        deviceDetails,
+        coroutineDispatcher
     )
 }
