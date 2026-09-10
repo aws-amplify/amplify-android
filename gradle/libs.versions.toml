@@ -38,9 +38,8 @@ kotlin-serialization = "1.6.0"
 kover = "0.9.9"
 ktlint = "14.2.0"
 licensee = "1.14.1"
-# Lint ships from the same source tree as AGP with a major version 23 higher, so AGP 8.11.1 pairs
-# with Lint 31.11.1. Bump this in lockstep with `agp` — a mismatch fails the build with a Lint API
-# version error.
+# The Lint tooling artifacts share AGP's release train with a major version 23 higher, so AGP 8.11.1
+# pairs with Lint 31.11.1. Enforced by a check in lint-rules/build.gradle.kts.
 lint = "31.11.1"
 litert = "1.4.0"
 maplibre = "11.12.1"
@@ -127,7 +126,7 @@ slf4j = { module = "org.slf4j:slf4j-api", version.ref = "slf4j"}
 sqlcipher= { module = "net.zetetic:sqlcipher-android", version.ref = "sqlcipher" }
 uuidgen = { module = "com.fasterxml.uuid:java-uuid-generator", version.ref="uuid" }
 
-# Custom Lint checks, used by the :lint-rules module
+# Android Lint check authoring and testing APIs
 lint-api = { module = "com.android.tools.lint:lint-api", version.ref = "lint" }
 lint-tests = { module = "com.android.tools.lint:lint-tests", version.ref = "lint" }
 

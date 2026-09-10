@@ -13,16 +13,28 @@
  * permissions and limitations under the License.
  */
 
-// This module holds the project's custom Android Lint checks. It is intentionally not published,
-// and so does not apply amplify.publishing, amplify.api, or amplify.kover.
+// Custom Android Lint checks. Not published — Lint loads this jar from the build, so it never
+// reaches consumers.
 plugins {
     alias(libs.plugins.amplify.kotlin)
+}
+
+// The runtime copy of the Lint API comes from AGP, not from this module's classpath, so a version
+// that has drifted from AGP compiles cleanly here and then loads against a different runtime —
+// which Lint reports as "usually fine" rather than as an error. Fail configuration instead.
+val agpVersion = libs.versions.agp.get()
+val expectedLintVersion = "${agpVersion.substringBefore('.').toInt() + 23}.${agpVersion.substringAfter('.')}"
+check(libs.versions.lint.get() == expectedLintVersion) {
+    "lint ${libs.versions.lint.get()} does not match agp $agpVersion (expected $expectedLintVersion)"
 }
 
 dependencies {
     // Lint provides this API to checks at runtime. Bundling a second copy breaks check loading.
     compileOnly(libs.lint.api)
 
+    // lint-tests declares its own dependencies at runtime scope only, so the API has to be
+    // requested again to compile tests against it.
+    testImplementation(libs.lint.api)
     testImplementation(libs.lint.tests)
     testImplementation(libs.test.junit)
 }
