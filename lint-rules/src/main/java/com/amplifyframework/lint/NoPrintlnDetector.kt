@@ -34,6 +34,9 @@ class NoPrintlnDetector : Detector(), SourceCodeScanner {
     override fun getApplicableMethodNames() = listOf("print", "println")
 
     override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
+        // Tests may print freely; this rule is about library code.
+        if (context.isTestSource) return
+
         val evaluator = context.evaluator
         val printsToConsole = evaluator.isMemberInClass(method, KOTLIN_CONSOLE_CLASS) ||
             evaluator.isMemberInSubClassOf(method, PRINT_STREAM_CLASS, false)
@@ -54,9 +57,11 @@ class NoPrintlnDetector : Detector(), SourceCodeScanner {
         val ISSUE: Issue = Issue.create(
             id = "AmplifyPrintln",
             briefDescription = "Console printing in library code",
+            // The trailing backslashes are Lint markup meaning "join with the next line". Without
+            // them Lint treats each source newline as a hard break and wraps the text mid-sentence.
             explanation = """
-                Writing to stdout or stderr bypasses the logging configuration, so consumers of
-                the SDK cannot filter, redirect, or disable the output. Emit the message through a
+                Writing to stdout or stderr bypasses the logging configuration, so consumers of \
+                the SDK cannot filter, redirect, or disable the output. Emit the message through a \
                 `Logger` instead, which routes it to the configured logging plugin.
             """,
             category = Category.CORRECTNESS,

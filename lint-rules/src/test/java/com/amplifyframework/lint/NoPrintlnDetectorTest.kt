@@ -19,6 +19,7 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import com.android.tools.lint.checks.infrastructure.TestLintResult
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class NoPrintlnDetectorTest {
@@ -41,7 +42,16 @@ class NoPrintlnDetectorTest {
                 }
                 """
             ).indented()
-        ).expectErrorCount(1).expectContains("AmplifyPrintln")
+        ).expect(
+            // The one golden assertion, locking the message and the reported location. The other
+            // tests use expectErrorCount because exact report text is brittle across Lint versions.
+            """
+            src/com/amplifyframework/test/test.kt:4: Error: Do not print to the console in library code. Use a Logger instead. [AmplifyPrintln]
+                println("hello")
+                ~~~~~~~~~~~~~~~~
+            1 error
+            """
+        )
     }
 
     @Test
@@ -53,6 +63,21 @@ class NoPrintlnDetectorTest {
 
                 fun doWork() {
                     print("hello")
+                }
+                """
+            ).indented()
+        ).expectErrorCount(1)
+    }
+
+    @Test
+    fun `flags System out println from kotlin`() {
+        check(
+            kotlin(
+                """
+                package com.amplifyframework.test
+
+                fun doWork() {
+                    System.out.println("hello")
                 }
                 """
             ).indented()
@@ -112,6 +137,29 @@ class NoPrintlnDetectorTest {
                 """
             ).indented()
         ).expectClean()
+    }
+
+    @Test
+    fun `honors kotlin Suppress`() {
+        check(
+            kotlin(
+                """
+                package com.amplifyframework.test
+
+                @Suppress("AmplifyPrintln")
+                fun doWork() {
+                    println("hello")
+                }
+                """
+            ).indented()
+        ).expectClean()
+    }
+
+    // Catches the issue being dropped from the registry. It cannot catch a future detector being
+    // left unregistered, since it only checks the issue it names.
+    @Test
+    fun `registry exposes the issue`() {
+        assertTrue(AmplifyIssueRegistry().issues.contains(NoPrintlnDetector.ISSUE))
     }
 
     private companion object {

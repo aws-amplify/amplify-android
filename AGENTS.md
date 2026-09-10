@@ -43,11 +43,13 @@ including the non-Android ones. To add one:
    nothing.
 3. Test it in `lint-rules/src/test/java/com/amplifyframework/lint/` with `TestLintTask.lint()`.
    Include a case that must NOT be flagged, so the test proves the detector resolves types rather
-   than matching names.
+   than matching names. Also assert the new `ISSUE` is in `AmplifyIssueRegistry().issues`, so step 2
+   can't be silently skipped.
 
 Run `./gradlew :lint-rules:test` for the rule's own tests, and `./gradlew lint` to run it against
-the repo. Suppress a genuine exception at the call site with `@SuppressLint("<IssueId>")` and a
-comment explaining why.
+the repo. Suppress a genuine exception at the call site with `@SuppressLint("<IssueId>")` in Android
+modules, or a `//noinspection <IssueId>` comment in the non-Android ones where `@SuppressLint` (from
+`android.annotation`) is not on the classpath. Either way, add a comment explaining why.
 
 Two dependency declarations in `lint-rules/build.gradle.kts` are load-bearing, so do not "simplify"
 them: `lint-api` is declared for both `compileOnly` and `testImplementation` because `lint-tests`
