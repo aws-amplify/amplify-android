@@ -51,6 +51,11 @@ the repo. Suppress a genuine exception at the call site with `@SuppressLint("<Is
 modules, or a `//noinspection <IssueId>` comment in the non-Android ones where `@SuppressLint` (from
 `android.annotation`) is not on the classpath. Either way, add a comment explaining why.
 
+Lint warnings are errors in every module, so an AGP bump that adds a new built-in check can break
+the build in modules that were previously clean — including findings against the shared
+`gradle/libs.versions.toml`. Fix it with a per-issue severity override in the root `lint.xml`, or a
+lint baseline; do not turn `warningsAsErrors` off, which would drop the gate for every module.
+
 Two dependency declarations in `lint-rules/build.gradle.kts` are load-bearing, so do not "simplify"
 them: `lint-api` is declared for both `compileOnly` and `testImplementation` because `lint-tests`
 exposes its own dependencies at runtime scope only, and `test-junit` is declared individually rather

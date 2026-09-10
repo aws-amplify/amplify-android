@@ -1,4 +1,3 @@
-import com.android.build.api.dsl.Lint
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalog
 import org.gradle.api.artifacts.VersionCatalogsExtension
@@ -31,20 +30,3 @@ internal val optInAnnotations = amplifyInternalMarkers + listOf(
 
 internal val Project.libs
     get(): VersionCatalog = extensions.getByType<VersionCatalogsExtension>().named("libs")
-
-/**
- * The Lint settings shared by every module. Both the Android plugins and the standalone
- * `com.android.lint` plugin expose this same [Lint] interface, so one helper serves all of them.
- */
-internal fun Project.configureLint(lint: Lint) = lint.apply {
-    lintConfig = rootProject.file("lint.xml")
-    warningsAsErrors = true
-    abortOnError = true
-    enable += listOf("UnusedResources")
-    disable += listOf(
-        "GradleDependency",
-        "NewerVersionAvailable",
-        "AndroidGradlePluginVersion",
-        "CredentialDependency"
-    )
-}

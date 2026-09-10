@@ -13,13 +13,14 @@
  * permissions and limitations under the License.
  */
 
-import com.android.build.api.dsl.LibraryExtension
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.Lint
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
+import org.gradle.kotlin.dsl.project
 import org.gradle.kotlin.dsl.withType
 
 /**
@@ -32,27 +33,47 @@ import org.gradle.kotlin.dsl.withType
 class LintConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
-            if (pluginManager.hasPlugin("com.android.base")) {
-                extensions.configure<LibraryExtension> { configureLint(lint) }
+            // AGP nests the Lint DSL in the `android` extension, whatever the Android module type.
+            // Everything else needs the standalone plugin, which registers `lint` at the top level.
+            val android = extensions.findByName("android")
+            if (android is CommonExtension<*, *, *, *, *, *>) {
+                configureLint(android.lint)
             } else {
                 pluginManager.apply("com.android.lint")
                 extensions.configure<Lint> { configureLint(this) }
             }
 
-            // The standalone plugin creates `lintChecks` only once a JVM plugin is present, so react
-            // to that rather than depending on an apply order. The checks module is skipped because
-            // it cannot depend on itself.
-            if (path != CHECKS_PROJECT) {
+            // Android modules get `lintChecks` eagerly from AGP, but the standalone plugin only
+            // creates it once a JVM plugin is present — so react to that rather than assume an
+            // apply order. The checks module is skipped because it cannot depend on itself.
+            if (path != LINT_RULES_PATH) {
                 plugins.withType<JavaBasePlugin> {
                     dependencies {
-                        add("lintChecks", project(CHECKS_PROJECT))
+                        add("lintChecks", project(LINT_RULES_PATH))
                     }
                 }
             }
         }
     }
 
+    // The Lint settings shared by every module. Both the Android plugins and the standalone
+    // `com.android.lint` plugin expose this same Lint interface, so one helper serves all of them.
+    private fun Project.configureLint(lint: Lint) {
+        lint.lintConfig = rootProject.file("lint.xml")
+        lint.warningsAsErrors = true
+        lint.abortOnError = true
+        // UnusedResources is a no-op in modules without resources, but keeping one shared list is
+        // the point of this plugin.
+        lint.enable += listOf("UnusedResources")
+        lint.disable += listOf(
+            "GradleDependency",
+            "NewerVersionAvailable",
+            "AndroidGradlePluginVersion",
+            "CredentialDependency"
+        )
+    }
+
     private companion object {
-        const val CHECKS_PROJECT = ":lint-rules"
+        const val LINT_RULES_PATH = ":lint-rules"
     }
 }
