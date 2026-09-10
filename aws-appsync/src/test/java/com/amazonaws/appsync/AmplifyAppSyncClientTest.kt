@@ -36,6 +36,7 @@ import io.mockk.mockk
 import java.net.HttpURLConnection
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
@@ -43,6 +44,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import mockwebserver3.RecordedRequest
@@ -374,6 +376,37 @@ class AmplifyAppSyncClientTest {
     }
 
     @Test
+    fun `close on a client that never subscribed does not build the subscriber`() = runBlocking<Unit> {
+        // Mirrors the http client guard. Building the subscriber resolves a realtime URL, and an endpoint
+        // with no host cannot produce one — so if close() touches it, getOrThrow fails on the teardown
+        // scope: a different thread, no handler, nothing watching. Caught here through the default
+        // uncaught-exception handler, which is where such a failure actually lands.
+        val uncaught = CompletableDeferred<Throwable>()
+        val previous = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { _, error -> uncaught.complete(error) }
+
+        try {
+            val client = AmplifyAppSyncClient(
+                AmplifyAppSyncClient.Configuration {
+                    // An explicit region means build() never parses the endpoint, so an unusable one
+                    // reaches the client intact.
+                    endpoint = ""
+                    region = "us-east-1"
+                    authorization = AppSyncAuthorization.Single(AppSyncClientAuthorizer.ApiKey("da2-fakekey"))
+                }
+            )
+
+            client.close()
+
+            // A launch on Dispatchers.IO runs in milliseconds, so this is generous. Kept short because
+            // it is the wait for something that must never arrive, and every run pays it in full.
+            withTimeoutOrNull(NOTHING_LAUNCHED_TIMEOUT) { uncaught.await() }.shouldBeNull()
+        } finally {
+            Thread.setDefaultUncaughtExceptionHandler(previous)
+        }
+    }
+
+    @Test
     fun `close tears down the shared connection through the subscriber`() = runBlocking<Unit> {
         // The one link in the teardown chain nothing else pins. What subscriber.close() does is covered
         // in AppSyncSubscriberTest; that close() actually reaches it is not, and the call is launched on
@@ -699,5 +732,8 @@ class AmplifyAppSyncClientTest {
 
         // Bounds the wait for close()'s asynchronous teardown, so a broken chain fails rather than hangs.
         val TEARDOWN_TIMEOUT = 5.seconds
+
+        // Bounds a wait for work that must never be launched at all.
+        val NOTHING_LAUNCHED_TIMEOUT = 1.seconds
     }
 }

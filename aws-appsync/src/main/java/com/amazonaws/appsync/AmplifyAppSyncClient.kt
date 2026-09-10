@@ -86,7 +86,7 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
             .build()
     }
 
-    private val subscriber: AppSyncSubscriber by lazy {
+    private val lazySubscriber = lazy {
         val decorator = AppSyncRequestDecorator(configuration.region)
         val realtimeUrl = AppSyncEndpointParser.realtimeUrl(configuration.endpoint).getOrThrow()
 
@@ -105,6 +105,8 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
             httpEndpoint = configuration.endpoint
         )
     }
+
+    private val subscriber: AppSyncSubscriber by lazySubscriber
 
     /**
      * Per-client connection state flow.
@@ -199,10 +201,16 @@ class AmplifyAppSyncClient(val configuration: Configuration) {
             httpClient.dispatcher.cancelAll()
             httpClient.connectionPool.evictAll()
         }
-        // The WebSocket teardown is suspending — it waits for closure to be observed so subscription
-        // flows complete normally rather than being cut off. close() is not suspend, so it is launched
-        // on a scope that deliberately outlives this call.
-        teardownScope.launch { subscriber.close() }
+        // Same reasoning as the HTTP client: nothing to tear down if nothing ever subscribed, and
+        // touching the subscriber here would build it — resolving a realtime URL and standing up two
+        // scopes — only to cancel them. Resolving that URL can also fail, and it would fail on the
+        // teardown scope below, off the caller's thread, where nothing is watching.
+        if (lazySubscriber.isInitialized()) {
+            // The WebSocket teardown is suspending — it waits for closure to be observed so subscription
+            // flows complete normally rather than being cut off. close() is not suspend, so it is launched
+            // on a scope that deliberately outlives this call.
+            teardownScope.launch { subscriber.close() }
+        }
     }
 
     // ── Configuration ───────────────────────────────────────────────────
