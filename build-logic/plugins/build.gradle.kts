@@ -62,6 +62,10 @@ gradlePlugin {
             id = libs.plugins.amplify.licenses.get().pluginId
             implementationClass = "LicensesConventionPlugin"
         }
+        register("lint") {
+            id = libs.plugins.amplify.lint.get().pluginId
+            implementationClass = "LintConventionPlugin"
+        }
         register("publishing") {
             id = libs.plugins.amplify.publishing.get().pluginId
             implementationClass = "PublishingConventionPlugin"

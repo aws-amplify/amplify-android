@@ -33,8 +33,10 @@ class KotlinConventionPlugin : Plugin<Project> {
                 apply("org.jetbrains.kotlin.jvm")
             }
 
-            // Apply other convention plugins
+            // Apply other convention plugins. amplify.lint must come after the Java/Kotlin plugin
+            // above, because the standalone Lint plugin only registers its tasks once one is present.
             apply("amplify.ktlint")
+            apply("amplify.lint")
         }
 
         with(target) {
