@@ -112,7 +112,9 @@ jobs:
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
 
       - name: Run static analysis
-        run: ./gradlew ktlintCheck checkstyle apiCheck lint
+        # `:lint-rules:test` is named explicitly because the Kover-based test gate only covers
+        # published modules, and this module is not published.
+        run: ./gradlew ktlintCheck checkstyle apiCheck lint :lint-rules:test
 
   # REQUIRED. Verifies that every external type in each published module's public
   # API surface is resolvable on the compile classpath a downstream consumer
