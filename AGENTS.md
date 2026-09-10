@@ -115,13 +115,21 @@ Options options = Options.builder().foo("something").build();
 - SHOULD NOT use `GlobalScope` or `runBlocking` (except bridging legacy blocking APIs on background threads)
 - Every `CoroutineScope` MUST have a defined lifetime and be canceled when done
 
-### 8. Custom Annotations
+### 8. JSON Serialization
+- New code MUST use `kotlinx.serialization` (`libs.kotlin.serializationJson`). It is the default for any module that owns its own wire format
+- Gson is REQUIRED where code touches Amplify's model serialization: `aws-api-appsync` exposes Gson in its public API and owns the only adapters for `Temporal.*`, `SerializedModel`, `SerializedCustomType`, `QueryPredicate`, `ModelWithMetadata` and `GraphQLResponse`. This is a dependency constraint, not a preference — porting those adapters is what would remove it
+- Modules on Gson for that reason: `aws-api`, `aws-api-appsync`, `aws-appsync`, `aws-datastore`, `aws-storage-s3`
+- A module SHOULD NOT declare both libraries. Use whichever its dependencies already force, in preference to consistency within a single file
+- Both libraries have tree APIs (`buildJsonObject`, `JsonObject`) and neither requires `@Serializable`. Prefer the tree API for a format that is polymorphic on a type discriminator and must not throw on an unrecognised one — sealed polymorphic decoding fails on an unknown discriminator, so modelling "unknown" as a value needs a custom serializer either way
+- Published modules that map JSON reflectively MUST keep the mapped types under R8, or minification renames the fields (see `aws-api/consumer-rules.pro`)
+
+### 9. Custom Annotations
 - `@InternalAmplifyApi` — ERROR-level opt-in; internal API not for external use
 - `@InternalApiWarning` — WARNING-level opt-in; same intent, softer enforcement
 - `@AmplifyFlutterApi` — ERROR-level opt-in; visible only for Amplify Flutter bridge
 - All three are excluded from the public API surface by the binary compatibility validator
 
-### 9. Testing Patterns
+### 10. Testing Patterns
 - New tests MUST be written in Kotlin
 - Unit tests use backtick names: `` `flush should handle mixed record states correctly` ``
 - Connected Android tests MUST NOT use backticks (unsupported pre-API 30)
@@ -134,14 +142,14 @@ Options options = Options.builder().foo("something").build();
 - Custom test assertions in `testutils` module (e.g., `shouldBeSuccess`, `shouldBeFailure`)
 - Connected Android tests MUST extend `DeviceFarmTestBase` to get automatic retries on network errors
 
-### 10. Gradle Build System
+### 11. Gradle Build System
 - New Gradle files MUST use Kotlin DSL (`.gradle.kts`)
 - Build logic shared via convention plugins in `build-logic/plugins/` — NOT via `subprojects`/`allprojects`
 - Convention plugins are hierarchical: `amplify.android.library` applies `amplify.kotlin` which applies `amplify.ktlint`
 - All dependencies declared in `gradle/libs.versions.toml` using type-safe accessors
 - Convention plugins included via `includeBuild("build-logic")` in `settings.gradle.kts`
 
-### 11. Module Structure
+### 12. Module Structure
 Key modules:
 - `core` — Framework categories, plugin interfaces, `AmplifyException` (Java)
 - `core-kotlin` — Kotlin coroutine facades (`suspend fun` wrappers around callback APIs)
