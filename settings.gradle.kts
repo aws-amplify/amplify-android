@@ -55,6 +55,9 @@ include(":aws-push-notifications-pinpoint")
 include(":aws-storage-s3")
 include(":aws-logging-cloudwatch")
 
+// Build tooling
+include(":lint-rules")
+
 // Test Utilities and assets
 include(":testutils")
 include(":testmodels")

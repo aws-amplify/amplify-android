@@ -38,6 +38,10 @@ kotlin-serialization = "1.6.0"
 kover = "0.9.9"
 ktlint = "14.2.0"
 licensee = "1.14.1"
+# Lint ships from the same source tree as AGP with a major version 23 higher, so AGP 8.11.1 pairs
+# with Lint 31.11.1. Bump this in lockstep with `agp` — a mismatch fails the build with a Lint API
+# version error.
+lint = "31.11.1"
 litert = "1.4.0"
 maplibre = "11.12.1"
 maplibre-annotations = "3.0.2"
@@ -123,6 +127,10 @@ slf4j = { module = "org.slf4j:slf4j-api", version.ref = "slf4j"}
 sqlcipher= { module = "net.zetetic:sqlcipher-android", version.ref = "sqlcipher" }
 uuidgen = { module = "com.fasterxml.uuid:java-uuid-generator", version.ref="uuid" }
 
+# Custom Lint checks, used by the :lint-rules module
+lint-api = { module = "com.android.tools.lint:lint-api", version.ref = "lint" }
+lint-tests = { module = "com.android.tools.lint:lint-tests", version.ref = "lint" }
+
 # Testing libraries
 test-androidx-core = { module = "androidx.test:core", version.ref="androidx-test-core" }
 test-androidx-core-ktx = { module = "androidx.test:core-ktx", version.ref="androidx-test-core" }
@@ -188,6 +196,7 @@ amplify-kmp = { id = "amplify.kotlin.multiplatform" }
 amplify-kotlin = { id = "amplify.kotlin" }
 amplify-kover = { id = "amplify.kover" }
 amplify-ktlint = { id = "amplify.ktlint" }
+amplify-lint = { id = "amplify.lint" }
 amplify-android-library = { id = "amplify.android.library" }
 amplify-licenses = { id = "amplify.licenses" }
 amplify-publishing = { id = "amplify.publishing" }
