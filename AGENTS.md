@@ -28,11 +28,34 @@
 ### 2. Code Style & Lint Rules
 ```bash
 # Check
-./gradlew ktlintCheck checkstyle apiCheck
+./gradlew ktlintCheck checkstyle apiCheck lint
 
 # Fix
 ./gradlew ktlintFormat apiDump
 ```
+
+Custom Android Lint rules live in the `lint-rules` module and apply to every module in the build,
+including the non-Android ones. To add one:
+
+1. Write a `Detector` in `lint-rules/src/main/java/com/amplifyframework/lint/`, exposing its `Issue`
+   as `ISSUE` in a companion object.
+2. Add that `ISSUE` to the `issues` list in `AmplifyIssueRegistry` — a rule not listed there does
+   nothing.
+3. Test it in `lint-rules/src/test/java/com/amplifyframework/lint/` with `TestLintTask.lint()`.
+   Include a case that must NOT be flagged, so the test proves the detector resolves types rather
+   than matching names.
+
+Run `./gradlew :lint-rules:test` for the rule's own tests, and `./gradlew lint` to run it against
+the repo. Suppress a genuine exception at the call site with `@SuppressLint("<IssueId>")` and a
+comment explaining why.
+
+Two dependency declarations in `lint-rules/build.gradle.kts` are load-bearing, so do not "simplify"
+them: `lint-api` is declared for both `compileOnly` and `testImplementation` because `lint-tests`
+exposes its own dependencies at runtime scope only, and `test-junit` is declared individually rather
+than via the `test-unit` bundle because that bundle also pulls in MockK, coroutines-test, Kotest
+assertions, and Turbine — none of which a `TestLintTask`-based test needs. The `lint` version tracks
+`agp` with a major version 23 higher; a check in that build script enforces it, so bump both together
+in `gradle/libs.versions.toml`.
 
 ### 3. Architecture Patterns
 
