@@ -25,10 +25,6 @@ import org.gradle.kotlin.dsl.withType
 
 /**
  * Runs Android Lint, with the project's custom checks, against a module.
- *
- * Android library modules get Lint from the Android plugin, which nests its configuration under the
- * `android` extension. Every other module type needs the standalone `com.android.lint` plugin,
- * which registers `lint` as a top-level extension instead.
  */
 class LintConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
