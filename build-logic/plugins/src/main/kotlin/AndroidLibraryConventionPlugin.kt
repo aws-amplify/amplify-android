@@ -83,19 +83,6 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                 execution = "ANDROIDX_TEST_ORCHESTRATOR"
             }
 
-            lint {
-                lintConfig = rootProject.file("lint.xml")
-                warningsAsErrors = true
-                abortOnError = true
-                enable += listOf("UnusedResources")
-                disable += listOf(
-                    "GradleDependency",
-                    "NewerVersionAvailable",
-                    "AndroidGradlePluginVersion",
-                    "CredentialDependency"
-                )
-            }
-
             compileOptions {
                 isCoreLibraryDesugaringEnabled = true
             }

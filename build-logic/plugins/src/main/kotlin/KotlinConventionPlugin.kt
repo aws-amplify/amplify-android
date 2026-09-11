@@ -35,6 +35,7 @@ class KotlinConventionPlugin : Plugin<Project> {
 
             // Apply other convention plugins
             apply("amplify.ktlint")
+            apply("amplify.lint")
         }
 
         with(target) {

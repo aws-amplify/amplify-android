@@ -28,8 +28,8 @@ class KotlinMultiplatformConventionPlugin : Plugin<Project> {
         with(target.pluginManager) {
             apply("org.jetbrains.kotlin.multiplatform")
             apply("com.android.kotlin.multiplatform.library")
-            apply("com.android.lint")
             apply("amplify.ktlint")
+            apply("amplify.lint")
         }
 
         with(target) {

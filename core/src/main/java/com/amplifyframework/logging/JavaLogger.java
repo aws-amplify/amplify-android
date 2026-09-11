@@ -15,6 +15,7 @@
 
 package com.amplifyframework.logging;
 
+import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -107,6 +108,7 @@ final class JavaLogger implements Logger {
         log(level, message, null);
     }
 
+    @SuppressLint("AmplifyPrintln") // Writing to stdout is this Logger implementation's purpose.
     private void log(@NonNull LogLevel level, @Nullable String message, @Nullable Throwable throwable) {
         StringBuilder lineBuilder = new StringBuilder()
                 .append(level)
