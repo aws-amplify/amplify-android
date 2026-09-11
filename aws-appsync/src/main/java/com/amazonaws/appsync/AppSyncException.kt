@@ -39,7 +39,8 @@ import java.io.IOException
  *
  * The groups are [AppSyncAuthException], [AppSyncConfigurationException],
  * [AppSyncResponseException], [AppSyncSubscriptionException] and [AppSyncRequestException].
- * [AppSyncNetworkException] and [AppSyncUnknownException] are leaves directly under this base.
+ * [AppSyncNetworkException], [AppSyncRateLimitExceededException] and [AppSyncUnknownException] are
+ * leaves directly under this base.
  *
  * @param message Error message describing what went wrong
  * @param recoverySuggestion Suggested action to resolve the error
@@ -257,7 +258,7 @@ class AppSyncTimeoutException(
  * something already open has to be released first.
  */
 @ExperimentalAmplifyApi
-class AppSyncLimitExceededException(
+class AppSyncSubscriptionLimitExceededException(
     message: String,
     recoverySuggestion: String = "Close subscriptions that are no longer needed before opening more.",
     cause: Throwable? = null
@@ -282,6 +283,22 @@ class AppSyncValidationException(
 ) : AppSyncRequestException(message, recoverySuggestion, cause)
 
 // ── Ungrouped leaves ────────────────────────────────────────────────────
+
+/**
+ * The API's request rate limit was exceeded.
+ *
+ * Ungrouped for the same reason [AppSyncNetworkException] is: nothing about the request is wrong and
+ * no credential will change the outcome. The same request is likely to succeed once the rate falls.
+ *
+ * Only raised for a rejected request. A throttle reported on a successful response is delivered as an
+ * error on that response, as any other GraphQL error is.
+ */
+@ExperimentalAmplifyApi
+class AppSyncRateLimitExceededException(
+    message: String,
+    recoverySuggestion: String = "Retry with exponential backoff, and reduce the rate of requests.",
+    cause: Throwable? = null
+) : AppSyncException(message, recoverySuggestion, cause)
 
 /** The request could not reach the service. */
 @ExperimentalAmplifyApi
