@@ -395,7 +395,7 @@ class AppSyncSubscriberTest {
             awaitItem() shouldBe SubscriptionEvent.Connecting
             val firstId = startedId
             (sentSlot.captured as AppSyncWebSocketMessage.Start)
-                .authorizationHeaders["authorization"] shouldBe OWNER_JWT
+                .authorizationHeaders["Authorization"] shouldBe OWNER_JWT
 
             messages.emit(AppSyncWebSocketMessage.Error(firstId, listOf(unauthorized())))
 

@@ -148,7 +148,12 @@ internal object AppSyncEndpointParser {
         }
     }
 
-    private fun hostOf(endpoint: String): String? {
+    /**
+     * The host portion of [endpoint], lowercased, or null if there is none.
+     *
+     * String surgery rather than a URL type, so it runs on a plain JVM as well as on a device.
+     */
+    fun hostOf(endpoint: String): String? {
         val withoutScheme = endpoint.substringAfter("://", missingDelimiterValue = endpoint)
         val host = withoutScheme
             .substringBefore('/')
