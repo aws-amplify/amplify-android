@@ -69,6 +69,10 @@ readonly config_files=(
     "aws-kinesis/src/androidTest/res/raw/amplify_outputs.json"
     "aws-kinesis/src/androidTest/res/raw/credentials.json"
 
+    # CloudWatch
+    "aws-cloudwatch/src/androidTest/res/raw/amplify_outputs.json"
+    "aws-cloudwatch/src/androidTest/res/raw/amplifyconfiguration_logging.json"
+
     # Events
     "appsync/aws-sdk-appsync-events/src/androidTest/res/raw/amplify_outputs.json"
     "appsync/aws-sdk-appsync-events/src/androidTest/res/raw/credentials.json"
