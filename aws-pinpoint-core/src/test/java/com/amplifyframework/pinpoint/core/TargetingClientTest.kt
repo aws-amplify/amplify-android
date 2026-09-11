@@ -26,6 +26,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -60,7 +61,7 @@ class TargetingClientTest {
     @Test
     fun testUpdateEndpointProfile() = runTest {
         setup()
-        targetingClient = constructTargetingClient()
+        targetingClient = constructTargetingClient(UnconfinedTestDispatcher(testScheduler))
 
         val expectedToken = "token123"
         every { store.get(TargetingClient.AWS_PINPOINT_PUSHNOTIFICATIONS_DEVICE_TOKEN_KEY) } returns expectedToken
@@ -87,7 +88,7 @@ class TargetingClientTest {
     @Test
     fun testUpdateEndpointProfileOptsIn() = runTest {
         setup()
-        targetingClient = constructTargetingClient()
+        targetingClient = constructTargetingClient(UnconfinedTestDispatcher(testScheduler))
         targetingClient.currentEndpoint().channelType = ChannelType.Gcm
 
         val expectedToken = "token123"
@@ -113,7 +114,7 @@ class TargetingClientTest {
     @Test
     fun testUpdateEndpointProfileOptOutNotTouched() = runTest {
         setup()
-        targetingClient = constructTargetingClient()
+        targetingClient = constructTargetingClient(UnconfinedTestDispatcher(testScheduler))
         targetingClient.currentEndpoint().channelType = null
 
         val expectedToken = ""
