@@ -35,11 +35,16 @@ import io.mockk.every
 import io.mockk.mockk
 import java.net.HttpURLConnection
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import mockwebserver3.RecordedRequest
@@ -342,6 +347,91 @@ class AmplifyAppSyncClientTest {
         server.requestCount shouldBe 1
     }
 
+    // ── Subscriptions ───────────────────────────────────────────────────
+
+    @Test
+    fun `subscribe on a closed client fails the collector`() = runTest {
+        // Deliberately a different mechanism from query/mutate: subscribe returns a cold flow, so the
+        // check belongs at collection rather than at the call that merely builds it.
+        val client = client()
+        client.close()
+
+        val error = runCatching { client.subscribe(request()).first() }.exceptionOrNull()
+
+        error.shouldBeInstanceOf<AppSyncValidationException>()
+        error.message shouldContain "closed"
+    }
+
+    @Test
+    fun `the websocket client configurator is applied`() = runTest {
+        // This PR makes the WebSocket configurator live for the first time; without a test, passing
+        // httpClientConfigurator here by mistake would go unnoticed.
+        var configured = false
+        val client = client { webSocketClientConfigurator = { configured = true } }
+
+        // The connection attempt fails against a server that will not upgrade; touching it is enough.
+        runCatching { client.subscribe(request()).first() }
+
+        configured shouldBe true
+    }
+
+    @Test
+    fun `close on a client that never subscribed does not build the subscriber`() = runBlocking<Unit> {
+        // Mirrors the http client guard. Building the subscriber resolves a realtime URL, and an endpoint
+        // with no host cannot produce one — so if close() touches it, getOrThrow fails on the teardown
+        // scope: a different thread, no handler, nothing watching. Caught here through the default
+        // uncaught-exception handler, which is where such a failure actually lands.
+        val uncaught = CompletableDeferred<Throwable>()
+        val previous = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { _, error -> uncaught.complete(error) }
+
+        try {
+            val client = AmplifyAppSyncClient(
+                AmplifyAppSyncClient.Configuration {
+                    // An explicit region means build() never parses the endpoint, so an unusable one
+                    // reaches the client intact.
+                    endpoint = ""
+                    region = "us-east-1"
+                    authorization = AppSyncAuthorization.Single(AppSyncClientAuthorizer.ApiKey("da2-fakekey"))
+                }
+            )
+
+            client.close()
+
+            // A launch on Dispatchers.IO runs in milliseconds, so this is generous. Kept short because
+            // it is the wait for something that must never arrive, and every run pays it in full.
+            withTimeoutOrNull(NOTHING_LAUNCHED_TIMEOUT) { uncaught.await() }.shouldBeNull()
+        } finally {
+            Thread.setDefaultUncaughtExceptionHandler(previous)
+        }
+    }
+
+    @Test
+    fun `close tears down the shared connection through the subscriber`() = runBlocking<Unit> {
+        // The one link in the teardown chain nothing else pins. What subscriber.close() does is covered
+        // in AppSyncSubscriberTest; that close() actually reaches it is not, and the call is launched on
+        // a scope that outlives close() rather than awaited — so dropping the launch would leak the
+        // WebSocket with every other test still green.
+        //
+        // Observed through events rather than through a live subscription: server-to-client frames do not
+        // arrive over MockWebServer (see AppSyncWebSocketTest), so a real subscription could not reach
+        // Connected here to be torn down. The clean Disconnected only exists because subscriber.close() ran.
+        //
+        // Real dispatchers, so this cannot be runTest: the teardown runs on Dispatchers.IO and a virtual
+        // clock would not wait for it.
+        val client = client()
+        // Read before closing so the subscriber already exists, making this a teardown of a live one
+        // rather than one built for the sole purpose of closing it.
+        val events = client.events
+
+        client.close()
+
+        val state = withTimeout(TEARDOWN_TIMEOUT) { events.first { it is ConnectionState.Disconnected } }
+
+        // A null cause is the client closing deliberately, not the connection dying under it.
+        (state as ConnectionState.Disconnected).cause.shouldBeNull()
+    }
+
     // ── Configuration ───────────────────────────────────────────────────
 
     @Test
@@ -639,5 +729,11 @@ class AmplifyAppSyncClientTest {
 
     private companion object {
         const val REQUEST_TIMEOUT_SECONDS = 5L
+
+        // Bounds the wait for close()'s asynchronous teardown, so a broken chain fails rather than hangs.
+        val TEARDOWN_TIMEOUT = 5.seconds
+
+        // Bounds a wait for work that must never be launched at all.
+        val NOTHING_LAUNCHED_TIMEOUT = 1.seconds
     }
 }

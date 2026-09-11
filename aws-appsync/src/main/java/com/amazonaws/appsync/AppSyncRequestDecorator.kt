@@ -26,6 +26,10 @@ import aws.smithy.kotlin.runtime.http.request.HttpRequest
 import aws.smithy.kotlin.runtime.net.url.Url
 import aws.smithy.kotlin.runtime.net.url.UrlEncoding
 import com.amplifyframework.foundation.credentials.toSmithyProvider
+import java.time.Instant
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlinx.coroutines.CancellationException
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Request
@@ -66,6 +70,74 @@ internal class AppSyncRequestDecorator(private val region: String) {
     }
 
     private fun Request.withHeader(name: String, value: String) = newBuilder().header(name, value).build()
+
+    /**
+     * Produces authorization as a **header map** rather than a decorated request.
+     *
+     * The WebSocket protocol needs this shape twice, and neither is an HTTP request the client sends:
+     * the handshake carries these headers on the upgrade request, and every `start` message embeds
+     * them in `payload.extensions.authorization`. AppSync authorizes each subscription separately from
+     * the connection, so the two differ in what gets signed.
+     *
+     * Every mode must carry `host`, and API key must additionally carry `x-amz-date`; AppSync rejects
+     * a connection whose authorization object omits them with a routing error rather than an auth
+     * error. The SigV4 path already covers `host`, because the signature is computed over it.
+     *
+     * @param authorizer The authorizer to draw credentials from.
+     * @param httpEndpoint The API's HTTP endpoint. SigV4 signs against this, not the `wss://` URL, and
+     *   `host` is this endpoint's host rather than the realtime one's.
+     * @param body The request document for a subscription, or null for the connection handshake.
+     *   A null body signs `{}` against `{endpoint}/connect`; a present body is signed against
+     *   `{endpoint}` itself.
+     * @throws AppSyncTokenFetchException if a token or API key supplier fails.
+     * @throws AppSyncSigningException if SigV4 signing fails.
+     * @throws AppSyncEndpointResolutionException if no host can be read from [httpEndpoint].
+     */
+    suspend fun authorizationHeaders(
+        authorizer: AppSyncClientAuthorizer,
+        httpEndpoint: String,
+        body: String? = null
+    ): Map<String, String> = when (authorizer) {
+        is AppSyncClientAuthorizer.ApiKey -> mapOf(
+            HOST_KEY to httpEndpoint.host(),
+            AMZ_DATE_KEY to iso8601Now(),
+            API_KEY_HEADER to authorizer.fetchApiKey.fetch("API key")
+        )
+
+        is AppSyncClientAuthorizer.UserPools -> mapOf(
+            HOST_KEY to httpEndpoint.host(),
+            AUTHORIZATION_KEY to authorizer.fetchToken.fetch("User Pools token")
+        )
+
+        is AppSyncClientAuthorizer.Oidc -> mapOf(
+            HOST_KEY to httpEndpoint.host(),
+            AUTHORIZATION_KEY to authorizer.fetchToken.fetch("OIDC token")
+        )
+
+        is AppSyncClientAuthorizer.Lambda -> mapOf(
+            HOST_KEY to httpEndpoint.host(),
+            AUTHORIZATION_KEY to authorizer.fetchToken.fetch("Lambda authorization token")
+        )
+
+        is AppSyncClientAuthorizer.Iam -> {
+            val url = if (body == null) "$httpEndpoint$CONNECT_PATH_SUFFIX" else httpEndpoint
+            val signable = Request.Builder()
+                .url(url)
+                .header(ACCEPT_HEADER, WEBSOCKET_ACCEPT)
+                .header(CONTENT_TYPE_HEADER, WEBSOCKET_CONTENT_TYPE)
+                .post((body ?: EMPTY_BODY).toRequestBody(WEBSOCKET_CONTENT_TYPE.toMediaType()))
+                .build()
+            signable.signed(authorizer).headers.toMap()
+        }
+    }
+
+    private fun String.host(): String = AppSyncEndpointParser.hostOf(this)
+        ?: throw AppSyncEndpointResolutionException(
+            message = "Could not read a host from the endpoint URL '$this'."
+        )
+
+    /** An ISO8601 basic-format UTC timestamp, the form AppSync expects for `x-amz-date`. */
+    private fun iso8601Now(): String = AMZ_DATE_FORMAT.format(Instant.now())
 
     /**
      * Invokes a credential supplier, translating any failure into a typed exception. A supplier is
@@ -163,7 +235,27 @@ internal class AppSyncRequestDecorator(private val region: String) {
         const val API_KEY_HEADER = "x-api-key"
         const val AUTHORIZATION_HEADER = "authorization"
         const val HOST_HEADER = "Host"
+        const val CONTENT_TYPE_HEADER = "content-type"
+        const val ACCEPT_HEADER = "accept"
         const val DEFAULT_CONTENT_TYPE = "application/json"
         const val APPSYNC_SERVICE_NAME = "appsync"
+
+        // Keys of the connection authorization object, not header names. That object reaches AppSync as
+        // JSON, where `Authorization` and `authorization` are two different keys — so this spelling is
+        // load-bearing, and cannot be shared with AUTHORIZATION_HEADER above, which names an HTTP
+        // header and is matched case-insensitively.
+        const val AUTHORIZATION_KEY = "Authorization"
+        const val HOST_KEY = "host"
+        const val AMZ_DATE_KEY = "x-amz-date"
+
+        val AMZ_DATE_FORMAT: DateTimeFormatter =
+            DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'", Locale.US).withZone(ZoneOffset.UTC)
+
+        // The WebSocket handshake and start messages are signed with these exact values. The signature
+        // covers them, so altering either would invalidate it.
+        const val WEBSOCKET_ACCEPT = "application/json, text/javascript"
+        const val WEBSOCKET_CONTENT_TYPE = "application/json; charset=UTF-8"
+        const val CONNECT_PATH_SUFFIX = "/connect"
+        const val EMPTY_BODY = "{}"
     }
 }
