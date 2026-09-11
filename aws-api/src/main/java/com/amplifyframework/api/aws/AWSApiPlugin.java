@@ -645,9 +645,9 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         // Not a multiauth request.
         AuthorizationType authType = clientDetails.getApiConfiguration().getAuthorizationType();
 
-        if (graphQLRequest instanceof AppSyncGraphQLRequest<?> &&
-            ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType() != null) {
-            authType = ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType();
+        if (graphQLRequest instanceof AuthorizedGraphQLRequest &&
+            ((AuthorizedGraphQLRequest) graphQLRequest).getAuthorizationType() != null) {
+            authType = ((AuthorizedGraphQLRequest) graphQLRequest).getAuthorizationType();
         }
         // Since it's not multiauth, we can try to decorate the request with the owner if necessary.
         // This allows us to keep the logic in SubscriptionOperation (non-multiauth) pretty much untouched, rather

@@ -7,7 +7,7 @@ public final class com/amplifyframework/api/aws/ApiGraphQLRequestOptions : com/a
 	public fun paginationFields ()Ljava/util/List;
 }
 
-public final class com/amplifyframework/api/aws/AppSyncGraphQLRequest : com/amplifyframework/api/graphql/GraphQLRequest {
+public final class com/amplifyframework/api/aws/AppSyncGraphQLRequest : com/amplifyframework/api/graphql/GraphQLRequest, com/amplifyframework/api/aws/AuthorizedGraphQLRequest {
 	public static fun builder ()Lcom/amplifyframework/api/aws/AppSyncGraphQLRequest$Builder;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getAuthModeStrategyType ()Lcom/amplifyframework/api/aws/AuthModeStrategyType;
@@ -57,6 +57,10 @@ public final class com/amplifyframework/api/aws/AuthorizationType : java/lang/En
 	public static fun values ()[Lcom/amplifyframework/api/aws/AuthorizationType;
 }
 
+public abstract interface class com/amplifyframework/api/aws/AuthorizedGraphQLRequest {
+	public abstract fun getAuthorizationType ()Lcom/amplifyframework/api/aws/AuthorizationType;
+}
+
 public abstract interface class com/amplifyframework/api/aws/GraphQLRequestOptions {
 	public abstract fun leafSerializationBehavior ()Lcom/amplifyframework/api/aws/LeafSerializationBehavior;
 	public abstract fun listField ()Ljava/lang/String;
@@ -83,6 +87,17 @@ public final class com/amplifyframework/api/aws/LeafSerializationBehavior : java
 public final class com/amplifyframework/api/aws/MultiAuthModeStrategy : com/amplifyframework/api/aws/AuthModeStrategy {
 	public fun authTypesFor (Lcom/amplifyframework/core/model/ModelSchema;Lcom/amplifyframework/core/model/ModelOperation;)Lcom/amplifyframework/core/model/auth/AuthorizationTypeIterator;
 	public static fun getInstance ()Lcom/amplifyframework/api/aws/MultiAuthModeStrategy;
+}
+
+public final class com/amplifyframework/api/aws/RawAppSyncGraphQLRequest : com/amplifyframework/api/graphql/GraphQLRequest, com/amplifyframework/api/aws/AuthorizedGraphQLRequest {
+	public fun <init> (Ljava/lang/String;Ljava/lang/reflect/Type;Lcom/amplifyframework/api/graphql/GraphQLRequest$VariablesSerializer;Lcom/amplifyframework/api/aws/AuthorizationType;)V
+	public fun <init> (Ljava/lang/String;Ljava/util/Map;Ljava/lang/reflect/Type;Lcom/amplifyframework/api/graphql/GraphQLRequest$VariablesSerializer;Lcom/amplifyframework/api/aws/AuthorizationType;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAuthorizationType ()Lcom/amplifyframework/api/aws/AuthorizationType;
+	public fun getQuery ()Ljava/lang/String;
+	public fun getVariables ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class com/amplifyframework/api/aws/SelectionSet {
