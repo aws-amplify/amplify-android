@@ -83,9 +83,7 @@ internal fun constructPinpointClient(): PinpointClient {
     return pinpointClient
 }
 
-// TargetingClient dispatches its updateEndpoint call with coroutineScope.launch, so a caller that
-// verifies the call has to supply a dispatcher the test controls. UnconfinedTestDispatcher runs the
-// launched coroutine eagerly, so the call has happened by the time the client method returns.
+// Run launched updateEndpoint calls eagerly so they complete before verification.
 @OptIn(ExperimentalCoroutinesApi::class)
 internal fun constructTargetingClient(
     coroutineDispatcher: CoroutineDispatcher = UnconfinedTestDispatcher()
