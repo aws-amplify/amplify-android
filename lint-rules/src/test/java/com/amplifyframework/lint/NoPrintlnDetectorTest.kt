@@ -155,6 +155,37 @@ class NoPrintlnDetectorTest {
         ).expectClean()
     }
 
+    // This case cannot use the check() helper: reaching the detector's isTestSource guard needs the
+    // driver configured, because otherwise Lint only hands test sources to detectors that declare
+    // Scope.TEST_SOURCES, and this one declares JAVA_FILE_SCOPE. The build sets checkTestSources
+    // false, so the guard is a safety net for the day that changes.
+    @Test
+    fun `allows println in test sources`() {
+        lint()
+            .files(
+                // TestLintTask treats the project's top-level `test` directory as a unit test
+                // source folder, which is what makes isTestSource true for this file. Java rather
+                // than Kotlin because kotlin.io.println does not resolve outside src/.
+                java(
+                    "test/com/amplifyframework/test/WorkerTest.java",
+                    """
+                    package com.amplifyframework.test;
+
+                    class WorkerTest {
+                        void testDoWork() {
+                            System.out.println("hello");
+                        }
+                    }
+                    """
+                ).indented()
+            )
+            .issues(NoPrintlnDetector.ISSUE)
+            .allowMissingSdk()
+            .configureDriver { driver -> driver.checkTestSources = true }
+            .run()
+            .expectClean()
+    }
+
     // Catches the issue being dropped from the registry. It cannot catch a future detector being
     // left unregistered, since it only checks the issue it names.
     @Test

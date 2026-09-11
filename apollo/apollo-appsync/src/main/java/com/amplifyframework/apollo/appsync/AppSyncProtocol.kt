@@ -130,7 +130,7 @@ class AppSyncProtocol internal constructor(
                 withTimeout(subscriptionAckTimeout.inWholeMilliseconds) {
                     subscriptionAck.join()
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 listener.operationError(subscriptionId, null)
             } finally {
                 pendingSubscriptions.remove(subscriptionId)

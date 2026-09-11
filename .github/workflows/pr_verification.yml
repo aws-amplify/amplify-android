@@ -113,8 +113,9 @@ jobs:
 
       - name: Run static analysis
         # `:lint-rules:test` is named explicitly because the Kover-based test gate only covers
-        # published modules, and this module is not published.
-        run: ./gradlew ktlintCheck checkstyle apiCheck lint :lint-rules:test
+        # published modules, and this module is not published. `--continue` keeps a lint finding
+        # anywhere in the repo from aborting the run before the detector tests execute.
+        run: ./gradlew ktlintCheck checkstyle apiCheck lint :lint-rules:test --continue
 
   # REQUIRED. Verifies that every external type in each published module's public
   # API surface is resolvable on the compile classpath a downstream consumer

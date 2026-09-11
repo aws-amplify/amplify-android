@@ -28,14 +28,15 @@
 ### 2. Code Style & Lint Rules
 ```bash
 # Check
-./gradlew ktlintCheck checkstyle apiCheck lint
+./gradlew ktlintCheck checkstyle apiCheck lint :lint-rules:test
 
 # Fix
 ./gradlew ktlintFormat apiDump
 ```
 
 Custom Android Lint rules live in the `lint-rules` module and apply to every module in the build,
-including the non-Android ones. To add one:
+including the non-Android ones (`build-logic` is a separate included build, so it is not covered).
+To add one:
 
 1. Write a `Detector` in `lint-rules/src/main/java/com/amplifyframework/lint/`, exposing its `Issue`
    as `ISSUE` in a companion object.
@@ -46,10 +47,17 @@ including the non-Android ones. To add one:
    than matching names. Also assert the new `ISSUE` is in `AmplifyIssueRegistry().issues`, so step 2
    can't be silently skipped.
 
+Lint also checks the detectors themselves when `./gradlew lint` reaches `:lint-rules:lint`, and two
+of those meta-checks fail the build easily: every line but the last of a multi-line `explanation`
+must end with a `\` line-join marker (`LintImplTextFormat`), and the string must not be
+`.trimIndent()`ed, because Lint trims it lazily (`LintImplTrimIndent`).
+
 Run `./gradlew :lint-rules:test` for the rule's own tests, and `./gradlew lint` to run it against
-the repo. Suppress a genuine exception at the call site with `@SuppressLint("<IssueId>")` in Android
-modules, or a `//noinspection <IssueId>` comment in the non-Android ones where `@SuppressLint` (from
-`android.annotation`) is not on the classpath. Either way, add a comment explaining why.
+the repo. Suppress a genuine exception at the call site: in Kotlin, in any module, use
+`@Suppress("<IssueId>")` — it needs no import, and it is the form the detector tests verify. In
+Java use `@SuppressLint("<IssueId>")`, which needs `android.annotation` on the classpath and so
+works only in Android modules, or a `//noinspection <IssueId>` comment where it is not. Either
+way, add a comment explaining why.
 
 Lint warnings are errors in every module, so an AGP bump that adds a new built-in check can break
 the build in modules that were previously clean — including findings against the shared
