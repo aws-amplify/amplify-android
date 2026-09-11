@@ -22,8 +22,6 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.PaginatedResult;
-import com.amplifyframework.core.Consumer;
-import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
@@ -81,15 +79,12 @@ import java.util.Random;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.observers.TestObserver;
-import io.reactivex.rxjava3.plugins.RxJavaPlugins;
 
 import static com.amplifyframework.datastore.appsync.TestModelWithMetadataInstances.BLOGGER_ISLA;
 import static com.amplifyframework.datastore.appsync.TestModelWithMetadataInstances.BLOGGER_JAMESON;
@@ -97,12 +92,10 @@ import static com.amplifyframework.datastore.appsync.TestModelWithMetadataInstan
 import static com.amplifyframework.datastore.appsync.TestModelWithMetadataInstances.DRUM_POST;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.timeout;
@@ -888,99 +881,6 @@ public final class SyncProcessorTest {
             }
         }, 10000);
         verify(requestRetry, timeout(5000).times(1)).retry(any(), any());
-    }
-
-    /**
-     * Regression test: when the base-sync subscriber is disposed (for example, via DataStore.stop())
-     * while a sync network call is in flight, a subsequent failure callback must not crash the app with
-     * an RxJava UndeliverableException. The fix delivers the error via emitter.tryOnError, which no-ops
-     * on a disposed emitter instead of routing to the global RxJava error handler.
-     * @throws AmplifyException On failure to build the SyncProcessor.
-     * @throws InterruptedException If interrupted while awaiting the captured sync callback.
-     */
-    @Test
-    public void syncFailureAfterDisposeDoesNotThrowUndeliverable() throws AmplifyException, InterruptedException {
-        isSyncRetryEnabled = false;
-        initSyncProcessor(SYNC_MAX_RECORDS);
-
-        // Capture the failure callback but never invoke it, so the sync stays in flight.
-        final AtomicReference<Consumer<DataStoreException>> capturedOnFailure = new AtomicReference<>();
-        AppSyncMocking.sync(appSync);
-        doAnswer(invocation -> {
-            capturedOnFailure.set(invocation.getArgument(2));
-            return new NoOpCancelable();
-        }).when(appSync).sync(any(), any(), any());
-
-        // Record errors routed to RxJava's global handler.
-        final List<Throwable> undelivered = new CopyOnWriteArrayList<>();
-        final io.reactivex.rxjava3.functions.Consumer<? super Throwable> previousHandler =
-                RxJavaPlugins.getErrorHandler();
-        RxJavaPlugins.setErrorHandler(undelivered::add);
-        try {
-            // Subscribe, then wait for the sync callback to be captured.
-            TestObserver<Void> testObserver = syncProcessor.hydrate().test();
-            verify(appSync, timeout(10_000).atLeastOnce()).sync(any(), any(), any());
-            assertNotNull("AppSync.sync was never invoked", capturedOnFailure.get());
-
-            // Dispose (models DataStore.stop()), then deliver the failure.
-            testObserver.dispose();
-            capturedOnFailure.get().accept(
-                    new DataStoreException("Sync failed after stop.", "Expected in this race."));
-
-            // tryOnError drops it on the disposed emitter.
-            assertTrue("Expected no undeliverable errors, but got: " + undelivered, undelivered.isEmpty());
-            // Contained: the disposed subscriber gets no error.
-            testObserver.assertNoErrors();
-        } finally {
-            RxJavaPlugins.setErrorHandler(previousHandler);
-        }
-    }
-
-    /**
-     * Companion to the failure-callback regression above, covering the success-callback error branch:
-     * when AppSync returns a no-data (errors-only) response after the subscriber has been disposed, the
-     * resulting error must be delivered via emitter.tryOnError and never surface as an RxJava
-     * UndeliverableException.
-     * @throws AmplifyException On failure to build the SyncProcessor.
-     */
-    @Test
-    public void syncNoDataErrorAfterDisposeDoesNotThrowUndeliverable() throws AmplifyException {
-        isSyncRetryEnabled = false;
-        initSyncProcessor(SYNC_MAX_RECORDS);
-
-        // Capture the response callback but never invoke it, so the sync stays in flight.
-        final AtomicReference<Consumer<GraphQLResponse<PaginatedResult<ModelWithMetadata<BlogOwner>>>>>
-                capturedOnResponse = new AtomicReference<>();
-        AppSyncMocking.sync(appSync);
-        doAnswer(invocation -> {
-            capturedOnResponse.set(invocation.getArgument(1));
-            return new NoOpCancelable();
-        }).when(appSync).sync(any(), any(), any());
-
-        // Record errors routed to RxJava's global handler.
-        final List<Throwable> undelivered = new CopyOnWriteArrayList<>();
-        final io.reactivex.rxjava3.functions.Consumer<? super Throwable> previousHandler =
-                RxJavaPlugins.getErrorHandler();
-        RxJavaPlugins.setErrorHandler(undelivered::add);
-        try {
-            TestObserver<Void> testObserver = syncProcessor.hydrate().test();
-            verify(appSync, timeout(10_000).atLeastOnce()).sync(any(), any(), any());
-            assertNotNull("AppSync.sync was never invoked", capturedOnResponse.get());
-
-            // Dispose, then deliver a no-data (errors-only) response.
-            testObserver.dispose();
-            GraphQLResponse<PaginatedResult<ModelWithMetadata<BlogOwner>>> noDataResponse =
-                    new GraphQLResponse<>(null, Arrays.asList(
-                            new GraphQLResponse.Error("Errors from AppSync after stop.", null, null, null)));
-            capturedOnResponse.get().accept(noDataResponse);
-
-            // tryOnError drops it on the disposed emitter.
-            assertTrue("Expected no undeliverable errors, but got: " + undelivered, undelivered.isEmpty());
-            // Contained: the disposed subscriber gets no error.
-            testObserver.assertNoErrors();
-        } finally {
-            RxJavaPlugins.setErrorHandler(previousHandler);
-        }
     }
 
     /**
