@@ -131,7 +131,6 @@ class AppSyncProtocol internal constructor(
                     subscriptionAck.join()
                 }
             } catch (e: Exception) {
-                println("Error waiting for subscription to be acknowledged: $e")
                 listener.operationError(subscriptionId, null)
             } finally {
                 pendingSubscriptions.remove(subscriptionId)
