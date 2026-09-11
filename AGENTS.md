@@ -28,7 +28,7 @@
 ### 2. Code Style & Lint Rules
 ```bash
 # Check
-./gradlew ktlintCheck checkstyle apiCheck lint :lint-rules:test
+./gradlew ktlintCheck checkstyle apiCheck lint
 
 # Fix
 ./gradlew ktlintFormat apiDump

@@ -20,6 +20,10 @@ including the non-Android ones. (`build-logic` is a separate included build and 
 ./gradlew :core:lint          # or against one module
 ```
 
+These tests are part of the repo-wide `koverXmlReport` gate. That aggregates only modules applying the
+Kover plugin, which most get from `amplify.publishing` — so this module applies `amplify.kover`
+directly, since it is not published. A future unpublished module with tests needs the same.
+
 Lint warnings are errors in every module, so a new built-in check arriving with an AGP bump can break
 the build. The escape hatch is a per-issue severity override in the root `lint.xml`, or a Lint
 baseline — not disabling `warningsAsErrors`.

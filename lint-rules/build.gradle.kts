@@ -17,6 +17,9 @@
 // reaches consumers.
 plugins {
     alias(libs.plugins.amplify.kotlin)
+    // Kover is normally applied by amplify.publishing, which this module deliberately does not use.
+    // Applied directly so these tests run in the koverXmlReport gate alongside every other module's.
+    alias(libs.plugins.amplify.kover)
 }
 
 // The runtime copy of the Lint API comes from AGP, not from this module's classpath, so a version
