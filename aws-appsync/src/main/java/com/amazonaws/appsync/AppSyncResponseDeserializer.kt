@@ -19,6 +19,7 @@ import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
 import com.amplifyframework.api.graphql.PaginatedResult
 import com.amplifyframework.util.TypeMaker
+import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
@@ -30,13 +31,12 @@ import java.lang.reflect.Type
 /**
  * Turns an AppSync JSON response body into a typed [GraphQLResponse].
  *
- * Reports failure as an [AppSyncDeserializationException]. Lazily-loaded model lists and pages are not
- * covered.
+ * Reports failure as an [AppSyncDeserializationException].
+ *
+ * Holds the client's [Gson] rather than a shared one, because the adapters that deserialize a lazily
+ * loaded relationship have to be able to issue a request through that client.
  */
-internal object AppSyncResponseDeserializer {
-
-    private const val ITEMS_KEY = "items"
-    private const val NEXT_TOKEN_KEY = "nextToken"
+internal class AppSyncResponseDeserializer(private val gson: Gson) {
 
     /**
      * Deserializes [responseJson] into a [GraphQLResponse] of the request's response type.
@@ -56,7 +56,7 @@ internal object AppSyncResponseDeserializer {
         val responseType = TypeMaker.getParameterizedType(GraphQLResponse::class.java, request.responseType)
 
         return try {
-            AppSyncGson.instance.newBuilder()
+            gson.newBuilder()
                 .registerTypeHierarchyAdapter(Iterable::class.java, IterableDeserializer(request))
                 .create()
                 .fromJson(responseJson, responseType)
@@ -130,3 +130,6 @@ internal object AppSyncResponseDeserializer {
         }
     }
 }
+
+private const val ITEMS_KEY = "items"
+private const val NEXT_TOKEN_KEY = "nextToken"

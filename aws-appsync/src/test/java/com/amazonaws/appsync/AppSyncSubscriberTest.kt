@@ -60,6 +60,7 @@ class AppSyncSubscriberTest {
 
     private val messages = MutableSharedFlow<AppSyncWebSocketMessage.Inbound>(extraBufferCapacity = 64)
     private val sentSlot = slot<AppSyncWebSocketMessage.Outbound>()
+    private val deserializer = AppSyncResponseDeserializer(AppSyncGson(RecordingModelLoader()).gson)
 
     /** The socket's settled terminal state. Completing it is how these tests simulate the socket dying. */
     private val terminated = CompletableDeferred<AppSyncException?>()
@@ -84,6 +85,7 @@ class AppSyncSubscriberTest {
         authorization = authorization,
         decorator = AppSyncRequestDecorator("us-east-1"),
         httpEndpoint = "https://abc123.appsync-api.us-east-1.amazonaws.com/graphql",
+        deserializer = deserializer,
         ioDispatcher = ioDispatcher
     )
 
@@ -615,7 +617,8 @@ class AppSyncSubscriberTest {
             },
             authorization = AppSyncAuthorization.Single(AppSyncClientAuthorizer.ApiKey("da2-fakekey")),
             decorator = AppSyncRequestDecorator("us-east-1"),
-            httpEndpoint = "https://abc123.appsync-api.us-east-1.amazonaws.com/graphql"
+            httpEndpoint = "https://abc123.appsync-api.us-east-1.amazonaws.com/graphql",
+            deserializer = deserializer
         )
 
         failing.events.test {

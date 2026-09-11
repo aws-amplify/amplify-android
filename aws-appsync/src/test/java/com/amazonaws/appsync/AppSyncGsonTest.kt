@@ -24,9 +24,11 @@ import org.junit.Test
  */
 class AppSyncGsonTest {
 
+    private val gson = AppSyncGson(RecordingModelLoader()).gson
+
     @Test
     fun `nulls are serialized rather than omitted`() {
-        val json = AppSyncGson.instance.toJson(mapOf("name" to null, "id" to "1"))
+        val json = gson.toJson(mapOf("name" to null, "id" to "1"))
 
         // A mutation that clears a field needs the explicit null: an absent field means "leave
         // unchanged" to AppSync, which is a different request.
@@ -37,6 +39,6 @@ class AppSyncGsonTest {
     fun `temporal adapters are registered`() {
         val date = Temporal.Date("2026-01-02")
 
-        AppSyncGson.instance.toJson(date) shouldBe """"2026-01-02""""
+        gson.toJson(date) shouldBe """"2026-01-02""""
     }
 }
