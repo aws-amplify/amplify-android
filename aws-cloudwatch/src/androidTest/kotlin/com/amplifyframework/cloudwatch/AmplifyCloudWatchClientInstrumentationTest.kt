@@ -23,6 +23,7 @@ import aws.sdk.kotlin.services.cloudwatchlogs.model.FilterLogEventsRequest
 import com.amplifyframework.annotations.ExperimentalAmplifyApi
 import com.amplifyframework.auth.CognitoCredentialsProvider
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
+import com.amplifyframework.cloudwatch.test.R
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Resources
 import com.amplifyframework.core.configuration.AmplifyOutputs
@@ -81,12 +82,12 @@ class AmplifyCloudWatchClientInstrumentationTest : DeviceFarmTestBase() {
             val context = ApplicationProvider.getApplicationContext<Context>()
             Amplify.Auth.addPlugin(AWSCognitoAuthPlugin())
             Amplify.configure(
-                AmplifyOutputs(Resources.getRawResourceId(context, "amplify_outputs")),
+                AmplifyOutputs(R.raw.amplify_outputs),
                 context
             )
             credentialsProvider = CognitoCredentialsProvider().toAwsCredentialsProvider()
 
-            val config = Resources.readJsonResource(context, "amplifyconfiguration_logging")
+            val config = Resources.readJsonResourceFromId(context, R.raw.amplifyconfiguration_logging)
                 .getJSONObject("cloudWatchClient")
             testRegion = config.getString("region")
             testLogGroupName = config.getString("logGroupName")

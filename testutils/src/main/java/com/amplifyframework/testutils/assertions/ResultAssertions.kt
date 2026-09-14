@@ -35,14 +35,6 @@ private fun <T, E> beFailure() = Matcher<Result<T, E>> { value ->
     )
 }
 
-private fun <T, E> beSuccess() = Matcher<Result<T, E>> { value ->
-    MatcherResult(
-        value is Result.Success,
-        { "result expected to be success but was failure with error: ${value.errorOrNull()}" },
-        { "result expected to not be success but was success with data: ${value.getOrNull()}" }
-    )
-}
-
 fun <T, E> Result<T, E>.shouldBeFailure(): Result.Failure<E> {
     contract {
         returns() implies (this@shouldBeFailure is Result.Failure<E>)
@@ -55,7 +47,16 @@ fun <T, E> Result<T, E>.shouldBeSuccess(): Result.Success<T> {
     contract {
         returns() implies (this@shouldBeSuccess is Result.Success)
     }
-    this should beSuccess()
+    // Throw directly (rather than via a kotest matcher) so the failure's error is attached as the
+    // AssertionError cause when it is a Throwable. This preserves the exception chain — e.g. a
+    // transient UnknownHostException from a network call — so RepeatKnownFailuresRule can detect
+    // known flakes and retry, instead of only seeing an assertion message with no cause.
+    if (this is Result.Failure) {
+        throw AssertionError(
+            "result expected to be success but was failure with error: $error",
+            error as? Throwable
+        )
+    }
     return this as Result.Success
 }
 
