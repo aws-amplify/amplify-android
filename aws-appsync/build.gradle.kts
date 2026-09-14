@@ -41,4 +41,9 @@ dependencies {
     testImplementation(libs.test.mockwebserver)
     testImplementation(project(":testutils"))
     testImplementation(project(":testmodels"))
+
+    androidTestImplementation(libs.bundles.test.android)
+    androidTestImplementation(project(":testutils"))
+    androidTestImplementation(project(":aws-auth-cognito"))
+    androidTestImplementation(project(":core-kotlin"))
 }
