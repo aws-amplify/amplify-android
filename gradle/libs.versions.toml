@@ -38,6 +38,9 @@ kotlin-serialization = "1.6.0"
 kover = "0.9.9"
 ktlint = "14.2.0"
 licensee = "1.14.1"
+# The Lint tooling artifacts share AGP's release train with a major version 23 higher, so this must
+# be bumped alongside `agp`. Enforced by a check in lint-rules/build.gradle.kts.
+lint = "31.11.1"
 litert = "1.4.0"
 maplibre = "11.12.1"
 maplibre-annotations = "3.0.2"
@@ -113,6 +116,8 @@ kotlin-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.r
 kotlin-futures = { module = "androidx.concurrent:concurrent-futures-ktx", version.ref = "androidx-concurrent" }
 kotlin-serializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlin-serialization" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref="kotlin" }
+lint-api = { module = "com.android.tools.lint:lint-api", version.ref = "lint" }
+lint-tests = { module = "com.android.tools.lint:lint-tests", version.ref = "lint" }
 litert = { module = "com.google.ai.edge.litert:litert", version.ref = "litert" }
 maplibre-annotations = { module = "org.maplibre.gl:android-plugin-annotation-v9", version.ref = "maplibre-annotations" }
 maplibre-sdk = { module = "org.maplibre.gl:android-sdk", version.ref = "maplibre" }
@@ -188,6 +193,7 @@ amplify-kmp = { id = "amplify.kotlin.multiplatform" }
 amplify-kotlin = { id = "amplify.kotlin" }
 amplify-kover = { id = "amplify.kover" }
 amplify-ktlint = { id = "amplify.ktlint" }
+amplify-lint = { id = "amplify.lint" }
 amplify-android-library = { id = "amplify.android.library" }
 amplify-licenses = { id = "amplify.licenses" }
 amplify-publishing = { id = "amplify.publishing" }

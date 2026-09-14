@@ -130,8 +130,7 @@ class AppSyncProtocol internal constructor(
                 withTimeout(subscriptionAckTimeout.inWholeMilliseconds) {
                     subscriptionAck.join()
                 }
-            } catch (e: Exception) {
-                println("Error waiting for subscription to be acknowledged: $e")
+            } catch (_: Exception) {
                 listener.operationError(subscriptionId, null)
             } finally {
                 pendingSubscriptions.remove(subscriptionId)

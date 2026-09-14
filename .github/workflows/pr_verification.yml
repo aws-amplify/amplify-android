@@ -52,12 +52,10 @@ jobs:
 
       # `koverXmlReport` runs the unit-test suite once and emits the coverage
       # report as a byproduct. Note: Kover only aggregates modules that apply the
-      # Kover plugin, which is applied via PublishingConventionPlugin — so only
-      # *published* modules have their tests run here. Every module with test
-      # sources is currently also published, so this is at parity with the old
-      # `./gradlew build` gate. A future non-published module with unit tests
-      # would silently drop out of this gate (see design doc; follow-up: a CI
-      # guard that fails if a module has test sources but no Kover plugin).
+      # Kover plugin. Most get it via PublishingConventionPlugin, so a module that
+      # is not published has to apply `amplify.kover` itself or its tests never run
+      # here — `:lint-rules` does exactly that. Follow-up: a CI guard that fails if
+      # a module has test sources but no Kover plugin, so this can't be forgotten.
       - name: Run tests and generate Kover report
         run: ./gradlew koverXmlReport
 
@@ -112,7 +110,8 @@ jobs:
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
 
       - name: Run static analysis
-        run: ./gradlew ktlintCheck checkstyle apiCheck lint
+        # `--continue` reports findings from every check rather than stopping at the first.
+        run: ./gradlew ktlintCheck checkstyle apiCheck lint --continue
 
   # REQUIRED. Verifies that every external type in each published module's public
   # API surface is resolvable on the compile classpath a downstream consumer

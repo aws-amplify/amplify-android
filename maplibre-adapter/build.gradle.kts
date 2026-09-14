@@ -22,9 +22,6 @@ apply(from = rootProject.file("configuration/checkstyle.gradle"))
 
 android {
     namespace = "com.amplifyframework.geo.maplibre"
-    lint {
-        disable += "GradleDependency"
-    }
 }
 
 dependencies {

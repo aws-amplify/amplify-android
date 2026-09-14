@@ -28,11 +28,21 @@
 ### 2. Code Style & Lint Rules
 ```bash
 # Check
-./gradlew ktlintCheck checkstyle apiCheck
+./gradlew ktlintCheck checkstyle apiCheck lint
 
 # Fix
 ./gradlew ktlintFormat apiDump
 ```
+
+Custom Android Lint rules live in the `lint-rules` module and apply to every module of the main build,
+including the non-Android ones. See [lint-rules/README.md](lint-rules/README.md) for how to add a
+rule, how to suppress a finding, and the gotchas — several of them fail the build in
+non-obvious ways.
+
+Two things to know before touching lint: warnings are errors in every module, so an AGP bump adding a
+new built-in check can break previously clean modules (fix with a per-issue override in the root
+`lint.xml` or a baseline, never by disabling `warningsAsErrors`); and the seemingly redundant
+dependency declarations in `lint-rules/build.gradle.kts` are load-bearing — the README says why.
 
 ### 3. Architecture Patterns
 
