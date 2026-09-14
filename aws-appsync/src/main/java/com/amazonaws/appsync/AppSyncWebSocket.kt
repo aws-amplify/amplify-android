@@ -238,6 +238,14 @@ internal class AppSyncWebSocket(
         handleClosed()
     }
 
+    override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+        // OkHttp does not answer a peer's close frame on its own. Without echoing it the socket stays
+        // half-open, onClosed never arrives, and closure is only noticed when the keep-alive watchdog
+        // fires — leaving every subscription on this connection waiting minutes for a close the service
+        // already sent.
+        webSocket.close(NORMAL_CLOSURE, null)
+    }
+
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) = handleClosed()
 
     // ── Internals ───────────────────────────────────────────────────────
