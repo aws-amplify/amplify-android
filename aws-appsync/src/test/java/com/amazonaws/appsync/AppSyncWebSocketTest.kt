@@ -37,12 +37,10 @@ import org.robolectric.RobolectricTestRunner
  * Tests [AppSyncWebSocket] by driving its [WebSocketListener] callbacks directly against a mocked
  * OkHttp socket.
  *
- * This is the pattern the rest of the repo uses for WebSocket unit tests — `EventsWebSocketTest` mocks
- * `OkHttpClient` and `WebSocket` outright, and `LivenessWebSocketTest`'s server-side listener is
- * entirely empty because it invokes the client listener itself. Neither relies on MockWebServer
- * delivering server-to-client frames; I tried that first and the frames never arrive (the upgrade
- * succeeds with a 101, then the connection resets). Real-socket behaviour is covered by instrumented
- * tests instead.
+ * No socket is opened here, which is what lets these tests script exact callback orderings a real
+ * server would not reliably produce. It also means they cannot see the upgrade request the client
+ * actually sends, or whether a server-pushed frame arrives at all — [AppSyncWebSocketConnectionTest]
+ * covers those over a real connection.
  *
  * The handshake ordering is what these mostly pin. `connection_ack` is delivered *synchronously* from
  * inside `newWebSocket`, i.e. before the caller reaches its `await` — a harsher ordering than a real
