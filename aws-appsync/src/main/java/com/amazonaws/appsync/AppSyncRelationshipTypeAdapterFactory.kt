@@ -16,6 +16,7 @@ package com.amazonaws.appsync
 
 import com.amplifyframework.core.model.LoadedModelReferenceImpl
 import com.amplifyframework.core.model.Model
+import com.amplifyframework.core.model.ModelAssociation
 import com.amplifyframework.core.model.ModelField
 import com.amplifyframework.core.model.ModelIdentifier
 import com.amplifyframework.core.model.ModelSchema
@@ -76,7 +77,9 @@ internal class AppSyncRelationshipTypeAdapterFactory(
         schema.fields.values.forEach { field ->
             when {
                 field.isModelReference -> parent.fillIfAbsent(field.name) { LoadedModelReferenceImpl<Model>() }
-                field.isModelList -> parent.fillIfAbsent(field.name) { lazyListFor(parent, field) }
+                field.isModelList -> parent.fillIfAbsent(field.name) {
+                    lazyListFor(parent, field, schema.associations[field.name])
+                }
             }
         }
     }
@@ -91,17 +94,13 @@ internal class AppSyncRelationshipTypeAdapterFactory(
      *
      * Null when the list cannot be identified, which leaves the field null.
      */
-    private fun lazyListFor(parent: Model, field: ModelField): AppSyncLazyModelList<Model>? {
+    private fun lazyListFor(
+        parent: Model,
+        field: ModelField,
+        parentAssociation: ModelAssociation?
+    ): AppSyncLazyModelList<Model>? {
         val childSchema = schemaRegistry.schemaFor(field.targetType)
-        val targetNames = childSchema.associations.values
-            // TODO: this picks arbitrarily when a child declares two associations back to the same parent
-            //  type, so one of the two lists would be keyed wrongly. The parent field's own association
-            //  names the child field via associatedName, which resolves it exactly; needs a fixture with
-            //  two such associations to test.
-            .firstOrNull { it.associatedType == parent.modelName }
-            ?.targetNames
-            ?.toList()
-            .orEmpty()
+        val targetNames = childSchema.foreignKeysBackTo(parent.modelName, parentAssociation)
 
         if (targetNames.isEmpty()) {
             throw AppSyncInvalidConfigException(
@@ -142,6 +141,29 @@ internal class AppSyncRelationshipTypeAdapterFactory(
             builder.registerTypeAdapterFactory(AppSyncRelationshipTypeAdapterFactory(loader, schemaRegistry))
         }
     }
+}
+
+/**
+ * The names of the fields on this child schema that hold the foreign key back to the parent.
+ *
+ * Found by the child field [parentAssociation] names, rather than by looking for a child association whose
+ * type is the parent's: a child that points back at the same parent from two fields answers a search by
+ * type twice, and one answer is as good as the other, so a parent with two lists of that child would key
+ * one of them by the other's foreign key. Searching by type is what is left when the child names no field
+ * back, which is the shape of a relationship only the parent declares.
+ */
+private fun ModelSchema.foreignKeysBackTo(parentModelName: String, parentAssociation: ModelAssociation?): List<String> {
+    val named = parentAssociation?.associatedName
+        ?.let { associations[it] }
+        ?.targetNames
+        ?.toList()
+    if (!named.isNullOrEmpty()) return named
+
+    return associations.values
+        .firstOrNull { it.associatedType == parentModelName }
+        ?.targetNames
+        ?.toList()
+        .orEmpty()
 }
 
 /** Writes [newValue] to the named field when it is null, and leaves it alone when it is not. */

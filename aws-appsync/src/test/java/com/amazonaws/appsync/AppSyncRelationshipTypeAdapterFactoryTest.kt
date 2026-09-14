@@ -28,6 +28,7 @@ import io.kotest.matchers.maps.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -101,6 +102,24 @@ class AppSyncRelationshipTypeAdapterFactoryTest {
         val filter = gson.toJson(loader.requests.single().variables["filter"])
         filter shouldContain """"orderCustomerId":{"eq":"c1"}"""
         filter shouldContain """"orderOrderNumber":{"eq":"o9"}"""
+    }
+
+    @Test
+    fun `each of two lists of the same child type is keyed by its own foreign key`() = runTest {
+        val gson = gsonFor(FixtureModelProvider(setOf(Author::class.java, Book::class.java)))
+
+        val author: Author = gson.fromJson("""{"id":"a1"}""", Author::class.java)
+
+        author.writtenBooks.shouldBeInstanceOf<AppSyncLazyModelList<Book>>().fetchPage()
+        author.editedBooks.shouldBeInstanceOf<AppSyncLazyModelList<Book>>().fetchPage()
+
+        val (written, edited) = loader.requests.map { gson.toJson(it.variables["filter"]) }
+        // Each list is found by the child field its own association names, so neither carries the other's
+        // key: a list keyed by the wrong one would answer with books related the wrong way round.
+        written shouldContain """"authorWrittenBooksId":{"eq":"a1"}"""
+        written shouldNotContain "authorEditedBooksId"
+        edited shouldContain """"authorEditedBooksId":{"eq":"a1"}"""
+        edited shouldNotContain "authorWrittenBooksId"
     }
 
     @Test

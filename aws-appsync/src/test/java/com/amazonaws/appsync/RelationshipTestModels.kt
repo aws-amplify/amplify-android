@@ -27,7 +27,8 @@ import java.io.Serializable
 
 /**
  * Models for the relationships the code-generated test models do not cover: a parent identified by a
- * composite key, and a pair whose relationship only one side declares.
+ * composite key, a parent with two relationships to the same child type, and a pair whose relationship
+ * only one side declares.
  *
  * Shaped the way generated models are — annotated fields left null, a `resolveIdentifier` that returns a
  * [ModelIdentifier] for a composite key — because the field-filling pass reads exactly that shape.
@@ -61,6 +62,44 @@ internal class OrderItem : Model {
     @field:ModelField(targetType = "Order", isRequired = true)
     @field:BelongsTo(targetNames = ["orderCustomerId", "orderOrderNumber"], type = Order::class)
     val order: ModelReference<Order>? = null
+
+    override fun resolveIdentifier(): Serializable = id!!
+}
+
+/**
+ * A parent with two relationships to the same child type, each naming the child field it is found by.
+ *
+ * The two lists cannot be told apart by the child's type, since both hold the same one.
+ */
+@ModelConfig(pluralName = "Authors", hasLazySupport = true)
+internal class Author : Model {
+    @field:ModelField(targetType = "ID", isRequired = true)
+    val id: String? = null
+
+    @field:ModelField(targetType = "Book")
+    @field:HasMany(associatedWith = "writtenBy", type = Book::class)
+    val writtenBooks: ModelList<Book>? = null
+
+    @field:ModelField(targetType = "Book")
+    @field:HasMany(associatedWith = "editedBy", type = Book::class)
+    val editedBooks: ModelList<Book>? = null
+
+    override fun resolveIdentifier(): Serializable = id!!
+}
+
+/** The child of [Author], pointing back at it twice, through a foreign key of its own each time. */
+@ModelConfig(pluralName = "Books", hasLazySupport = true)
+internal class Book : Model {
+    @field:ModelField(targetType = "ID", isRequired = true)
+    val id: String? = null
+
+    @field:ModelField(targetType = "Author", isRequired = true)
+    @field:BelongsTo(targetNames = ["authorWrittenBooksId"], type = Author::class)
+    val writtenBy: ModelReference<Author>? = null
+
+    @field:ModelField(targetType = "Author", isRequired = true)
+    @field:BelongsTo(targetNames = ["authorEditedBooksId"], type = Author::class)
+    val editedBy: ModelReference<Author>? = null
 
     override fun resolveIdentifier(): Serializable = id!!
 }
