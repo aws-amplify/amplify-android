@@ -19,26 +19,13 @@ import com.amplifyframework.core.model.Model
 import com.amplifyframework.core.model.ModelPage
 import com.amplifyframework.core.model.PaginationToken
 
-/**
- * A list of models that arrived complete in a response, so there is nothing left to fetch.
- */
 internal class AppSyncLoadedModelList<out M : Model>(override val items: List<M>) : LoadedModelList<M>
 
-/**
- * One page of models, and the token for the next page when the service reported one.
- *
- * [ModelPage.hasNextPage] is derived from [nextToken], so a null token is what tells a caller the
- * pagination is finished.
- */
+/** A null [nextToken] is what makes [ModelPage.hasNextPage] false. */
 internal class AppSyncModelPage<out M : Model>(
     override val items: List<M>,
     override val nextToken: AppSyncPaginationToken?
 ) : ModelPage<M>
 
-/**
- * An opaque cursor into a paginated result.
- *
- * [PaginationToken] carries no members: the value is meaningful only to AppSync, and a caller is
- * expected to hand it back rather than interpret it.
- */
+/** An opaque AppSync cursor, meaningful only to the service, that a caller hands back unchanged. */
 internal class AppSyncPaginationToken(val nextToken: String) : PaginationToken

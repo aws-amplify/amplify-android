@@ -28,9 +28,8 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import org.junit.Test
 
 /**
- * Tests the related-list and page deserializers, through [AppSyncGson] rather than in isolation, so the
- * registration is covered too — an adapter that is written correctly but never registered would pass any
- * test that instantiated it directly.
+ * Tests the related-list and page deserializers through [AppSyncGson] rather than in isolation, so that
+ * a correct but unregistered adapter fails here rather than passing.
  */
 class AppSyncModelListDeserializerTest {
 
@@ -82,7 +81,6 @@ class AppSyncModelListDeserializerTest {
         )
 
         page.nextToken.shouldBeNull()
-        // hasNextPage is derived, so a caller looping on it terminates without inspecting the token.
         page.hasNextPage shouldBe false
     }
 
@@ -113,8 +111,7 @@ class AppSyncModelListDeserializerTest {
 
     @Test
     fun `a list requested without an element type is reported rather than silently empty`() {
-        // The element type is what tells the deserializer how to read each item, so a raw ModelList
-        // cannot be honoured — failing loudly beats returning items deserialized as the wrong type.
+        // A raw ModelList carries no element type, so there is nothing to read each item as.
         val error = shouldThrow<AppSyncDeserializationException> {
             gson.fromJson<ModelList<*>>("""{"items":[]}""", ModelList::class.java)
         }
@@ -122,6 +119,20 @@ class AppSyncModelListDeserializerTest {
         error.message shouldContain "element type"
     }
 
-    /** A minimal model: these tests exercise the list wrapper, not model deserialization. */
+    @Test
+    fun `a non-object item is reported as a deserialization failure, not an unknown one`() {
+        // asJsonObject would raise IllegalStateException here, which is not a JsonParseException and so
+        // escapes the deserializer's error mapping to reach the caller as an unknown failure. AppSync
+        // sends a null item for an element the identity may not read.
+        val error = shouldThrow<AppSyncDeserializationException> {
+            gson.fromJson<ModelList<Todo>>(
+                """{"items":[{"id":"1","name":"first"},null]}""",
+                object : TypeToken<ModelList<Todo>>() {}.type
+            )
+        }
+
+        error.message shouldContain "index 1"
+    }
+
     private data class Todo(val id: String, val name: String) : Model
 }

@@ -102,8 +102,7 @@ internal class AppSyncModelReferenceDeserializer<M : Model>(
 /**
  * Deserializes a related list that arrived in full, as `{"items": [...]}`.
  *
- * Produces a [com.amplifyframework.core.model.LoadedModelList], never a lazy one: everything the
- * caller asked for is already in the payload, so there is nothing to defer.
+ * Always produces a loaded list, never a lazy one — unlike a related model, which may arrive as either.
  */
 internal class AppSyncModelListDeserializer<M : Model> : JsonDeserializer<ModelList<M>> {
     override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext) =
@@ -127,19 +126,14 @@ internal class AppSyncModelPageDeserializer<M : Model> : JsonDeserializer<ModelP
 
     companion object {
         fun register(builder: GsonBuilder) {
-            // A hierarchy adapter, unlike the list above: a response type may be a subtype of ModelPage,
-            // and an exact-type adapter would not be consulted for one.
+            // A hierarchy adapter because a response type may be a subtype of ModelPage, which an
+            // exact-type adapter would not be consulted for.
             builder.registerTypeHierarchyAdapter(ModelPage::class.java, AppSyncModelPageDeserializer<Model>())
         }
     }
 }
 
-/**
- * Reads the `items` array, deserializing each entry as the list's element type.
- *
- * The element type comes from the requested type's parameter, so the caller's `ModelList<Todo>` is what
- * decides how each item is read.
- */
+/** Reads the `items` array, deserializing each entry as the requested list's element type. */
 private fun <M : Model> deserializeItems(
     json: JsonElement,
     typeOfT: Type,
@@ -159,7 +153,18 @@ private fun <M : Model> deserializeItems(
             recoverySuggestion = "Verify the selection set requests the list's items."
         )
 
-    return items.asJsonArray.map { context.deserialize(it.asJsonObject, elementType) }
+    // Checked rather than cast: asJsonObject raises IllegalStateException, which is not a
+    // JsonParseException and so escapes the deserializer's own error mapping to arrive as an unknown
+    // failure. AppSync sends a null item for an element the identity may not read, so this is reachable.
+    return items.asJsonArray.mapIndexed { index, item ->
+        if (item !is JsonObject) {
+            throw AppSyncDeserializationException(
+                message = "A related list item at index $index was expected to be a JSON object, " +
+                    "but was ${item::class.simpleName}."
+            )
+        }
+        context.deserialize(item, elementType)
+    }
 }
 
 /** Reads `nextToken`, absent when the page is the last one. */
