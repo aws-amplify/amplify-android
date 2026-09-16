@@ -1,3 +1,15 @@
+## [Release 2.42.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.42.0)
+
+### Features
+- **all:** add CloudWatch client ([#3406](https://github.com/aws-amplify/amplify-android/issues/3406))
+
+### Bug Fixes
+- **api:** keep org.json under R8 to prevent subscription connection acknowledgement timeout ([#3423](https://github.com/aws-amplify/amplify-android/issues/3423))
+- **api:** Parse subscription connection_ack and data payloads independent of org.json impl ([#3428](https://github.com/aws-amplify/amplify-android/issues/3428))
+- **datastore:** Use tryOnError in base sync to prevent UndeliverableException crash
+
+[See all changes between 2.41.1 and 2.42.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.41.1...release_v2.42.0)
+
 ## [Release 2.41.1](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.41.1)
 
 ### Bug Fixes
