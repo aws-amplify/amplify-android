@@ -14,7 +14,8 @@
                         "SALT": "abc",
                         "SECRET_BLOCK": "secretBlock",
                         "SRP_B": "def"
-                    }
+                    },
+                    "inputUsername": "username"
                 },
                 "signInMethod": {
                     "type": "SignInMethod.ApiBased",

@@ -137,8 +137,9 @@ internal object SignInCognitoActions : SignInActions {
                 ) ?: throw ServiceException("Sign in failed", AmplifyException.TODO_RECOVERY_SUGGESTION)
 
                 val updatedDeviceMetadata = deviceMetadata.copy(deviceSecret = deviceVerifierMap["secret"])
+                val deviceMetadataUsername = event.signedInData.inputUsername ?: event.signedInData.username
                 credentialStoreClient.storeCredentials(
-                    CredentialType.Device(event.signedInData.username),
+                    CredentialType.Device(deviceMetadataUsername),
                     AmplifyCredential.DeviceData(updatedDeviceMetadata)
                 )
 
@@ -230,7 +231,8 @@ internal object SignInCognitoActions : SignInActions {
                         challengeParameters = response.challengeParameters,
                         authenticationResult = response.authenticationResult,
                         availableChallenges = response.availableChallenges?.map { it.value },
-                        signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_AUTH)
+                        signInMethod = SignInMethod.ApiBased(SignInMethod.ApiBased.AuthType.USER_AUTH),
+                        inputUsername = event.signInData.username
                     )
                 } else {
                     throw ServiceException(

@@ -15,7 +15,8 @@
                         "PASSWORD",
                         "WEB_AUTHN",
                         "EMAIL_OTP"
-                    ]
+                    ],
+                    "inputUsername": "username"
                 },
                 "signInMethod": {
                     "type": "SignInMethod.ApiBased",

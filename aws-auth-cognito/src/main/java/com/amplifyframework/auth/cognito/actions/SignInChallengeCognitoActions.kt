@@ -59,7 +59,8 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
                     session = challenge.session,
                     challengeParameters = mapOf("MFAS_CAN_SETUP" to answer),
                     authenticationResult = null,
-                    signInMethod = signInMethod
+                    signInMethod = signInMethod,
+                    inputUsername = challenge.inputUsername
                 )
                 logger.verbose("$id Sending event ${event.type}")
                 dispatcher.send(event)
@@ -111,7 +112,8 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
                     session = response.session,
                     challengeParameters = response.challengeParameters,
                     authenticationResult = response.authenticationResult,
-                    signInMethod = signInMethod
+                    signInMethod = signInMethod,
+                    inputUsername = challenge.inputUsername
                 )
             } ?: CustomSignInEvent(
                 CustomSignInEvent.EventType.ThrowAuthError(
