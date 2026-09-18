@@ -118,10 +118,8 @@ internal sealed interface AppSyncWebSocketMessage {
 
     /**
      * A message this client does not model. Modelled explicitly rather than discarded during parsing so
-     * that an unexpected wire change is a value a caller can match on.
-     *
-     * TODO: log these — nothing in this module logs today, so an unknown frame currently passes
-     *  unnoticed.
+     * that an unexpected wire change is a value a caller can match on, and is logged by whichever
+     * component receives it — parsing stays a pure function.
      */
     data class Unknown(val type: String?, val raw: String) : Inbound
 
