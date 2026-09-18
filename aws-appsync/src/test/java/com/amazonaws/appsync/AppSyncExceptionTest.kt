@@ -78,6 +78,7 @@ class AppSyncExceptionTest {
     fun `subscription leaves are catchable as one group`() {
         AppSyncConnectionException("a").shouldBeInstanceOf<AppSyncSubscriptionException>()
         AppSyncTimeoutException("b").shouldBeInstanceOf<AppSyncSubscriptionException>()
+        AppSyncLimitExceededException("c").shouldBeInstanceOf<AppSyncSubscriptionException>()
     }
 
     @Test
@@ -119,12 +120,13 @@ class AppSyncExceptionTest {
             AppSyncGraphQLErrorException("a", emptyList()),
             AppSyncConnectionException("a"),
             AppSyncTimeoutException("a"),
+            AppSyncLimitExceededException("a"),
             AppSyncValidationException("a"),
             AppSyncNetworkException("a"),
             AppSyncUnknownException("a")
         )
 
-        leaves.size shouldBe 15
+        leaves.size shouldBe 16
         leaves.forEach { it.recoverySuggestion.shouldNotBeBlank() }
     }
 

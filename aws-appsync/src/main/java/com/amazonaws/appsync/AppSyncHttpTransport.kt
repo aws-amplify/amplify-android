@@ -16,7 +16,6 @@ package com.amazonaws.appsync
 
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.api.graphql.GraphQLResponse
-import com.amplifyframework.datastore.appsync.AppSyncExtensions
 import com.amplifyframework.util.UserAgent
 import java.io.IOException
 import kotlin.coroutines.resume
@@ -96,7 +95,7 @@ internal class AppSyncHttpTransport(
             // not read with data for the rest of the selection set alongside an Unauthorized error, and
             // by then the operation has run — retrying would send a mutation a second time and apply it
             // twice. A response carrying data is therefore returned as it stands, errors included.
-            if (canFallBack && !response.hasData() && response.isUnauthorized()) {
+            if (canFallBack && !response.hasData() && response.hasUnauthorizedError()) {
                 lastAuthFailure = AppSyncGraphQLErrorException(
                     message = "Authorization failed with ${candidate.authMode}.",
                     errors = response.errors
@@ -122,21 +121,6 @@ internal class AppSyncHttpTransport(
             .build()
 
         return decorator.decorate(httpRequest, authorizer)
-    }
-
-    /**
-     * Whether the response carries an AppSync `Unauthorized` error. Defers to [AppSyncExtensions] for
-     * the classification rather than matching error-type strings here.
-     *
-     * [AppSyncExtensions] reads `errorType` as a `String` without checking, so extensions whose
-     * `errorType` arrives as a JSON number make its constructor throw. That is server-controlled input,
-     * and one error object nobody can classify must not cost the caller the whole response, so a failure
-     * to classify counts as "not unauthorized" and the response is delivered with its errors intact.
-     */
-    private fun GraphQLResponse<*>.isUnauthorized(): Boolean = errors.any { error ->
-        val extensions = error.extensions
-        !extensions.isNullOrEmpty() &&
-            runCatching { AppSyncExtensions(extensions).isUnauthorizedErrorType }.getOrDefault(false)
     }
 
     private fun exhausted(attempted: List<AppSyncAuthMode>, cause: AppSyncException?): AppSyncException {
@@ -205,7 +189,7 @@ internal class AppSyncHttpTransport(
         // rather than having to recognise a status code or an error string. Either signal is enough:
         // AppSync answers a rejected identity with a 401, and a rejected operation with an
         // Unauthorized error type that can arrive under any 4xx.
-        if (response.code == HTTP_UNAUTHORIZED || parsed?.isUnauthorized() == true) {
+        if (response.code == HTTP_UNAUTHORIZED || parsed?.hasUnauthorizedError() == true) {
             return AppSyncUnauthorizedException(
                 message = "The request was not authorized (HTTP status ${response.code})" +
                     (errors?.joinToString("; ") { it.message }?.let { ": $it" } ?: "."),

@@ -250,6 +250,19 @@ class AppSyncTimeoutException(
     cause: Throwable? = null
 ) : AppSyncSubscriptionException(message, recoverySuggestion, cause)
 
+/**
+ * The API's maximum number of concurrent subscriptions was reached.
+ *
+ * Not resolved by re-subscribing or by using different credentials: the limit applies to the API, so
+ * something already open has to be released first.
+ */
+@ExperimentalAmplifyApi
+class AppSyncLimitExceededException(
+    message: String,
+    recoverySuggestion: String = "Close subscriptions that are no longer needed before opening more.",
+    cause: Throwable? = null
+) : AppSyncSubscriptionException(message, recoverySuggestion, cause)
+
 // ── Request ─────────────────────────────────────────────────────────────
 
 /** The request could not be built or was rejected before being sent. */
