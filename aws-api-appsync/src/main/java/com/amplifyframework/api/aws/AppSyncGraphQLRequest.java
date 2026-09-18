@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws;
 
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
@@ -43,7 +44,7 @@ import java.util.Objects;
  * A request against an AppSync GraphQL endpoint.
  * @param <R> The type of data contained in the GraphQLResponse expected from this request.
  */
-public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
+public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> implements AuthorizedGraphQLRequest {
     private final ModelSchema modelSchema;
     private final Operation operation;
     private final SelectionSet selectionSet;
@@ -91,6 +92,8 @@ public final class AppSyncGraphQLRequest<R> extends GraphQLRequest<R> {
      * Returns the {@link AuthorizationType} for this request.
      * @return the {@link AuthorizationType} for this request.
      */
+    @Override
+    @Nullable
     public AuthorizationType getAuthorizationType() {
         return authorizationType;
     }
