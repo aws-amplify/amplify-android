@@ -28,13 +28,19 @@ import com.google.gson.GsonBuilder
  * The Gson instance the client serializes requests and deserializes responses with.
  *
  * Private to the client rather than shared, so neither the adapter set nor the null handling below can
- * be altered from outside.
+ * be altered from outside. One instance per client, because a lazily-loaded relationship needs to issue
+ * its own request and so the adapters have to carry that client's [AppSyncModelLoader].
  *
- * TODO: register deserializers for lazily-loaded model lists and pages, which this set does not cover.
+ * [gson] is built on first use, which is what lets a client hand in a loader that routes back through
+ * the client itself: the loader is captured while the client is still being constructed, but is not
+ * invoked until a relationship is actually loaded.
  */
-internal object AppSyncGson {
+internal class AppSyncGson(
+    private val loader: AppSyncModelLoader,
+    private val schemaRegistry: AppSyncSchemaRegistry = AppSyncSchemaRegistry()
+) {
 
-    val instance: Gson by lazy {
+    val gson: Gson by lazy {
         GsonBuilder()
             .also {
                 GsonTemporalAdapters.register(it)
@@ -44,6 +50,12 @@ internal object AppSyncGson {
                 ModelWithMetadataAdapter.register(it)
                 SerializedModelAdapter.register(it)
                 SerializedCustomTypeAdapter.register(it)
+                AppSyncModelListDeserializer.register(it)
+                AppSyncModelPageDeserializer.register(it)
+                AppSyncModelReferenceDeserializer.register(it, loader, schemaRegistry)
+                // Registered after the adapters above so that it wraps whichever of them reads a model:
+                // they do the reading, and this fills in the relationship fields they left null.
+                AppSyncRelationshipTypeAdapterFactory.register(it, loader, schemaRegistry)
             }
             // A mutation that clears a field needs an explicit `"field": null` in the payload, because
             // AppSync reads an absent field as "leave unchanged" rather than "set to null".
