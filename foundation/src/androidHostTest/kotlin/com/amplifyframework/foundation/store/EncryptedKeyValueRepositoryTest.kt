@@ -169,7 +169,7 @@ class EncryptedKeyValueRepositoryTest {
         // Verify encrypted preferences are using the amplify key
         verify {
             EncryptedSharedPreferences.create(
-                match { it.startsWith("test.$AMPLIFY_IDENTIFIER_PREFIX") },
+                match<String> { it.startsWith("test.$AMPLIFY_IDENTIFIER_PREFIX") },
                 "amplifyKey",
                 any(),
                 any(),
