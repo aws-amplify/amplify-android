@@ -40,7 +40,7 @@ echo "== Discovering published coordinates =="
 # One authoritative coordinate list, straight from the publications. Format: group:artifact:version
 # Map each artifactId back to its .api file via a second query pairing project path + api dir.
 COORDS_FILE="$WORK/coords.txt"
-: > "$COORDS_FILE"
+RAW_COORDS="$WORK/coords-raw.txt"
 
 # Collect (projectPath -> coordinate) by running the task across all projects at once.
 # Must pass the SAME -PVERSION_NAME override used when publishing above: otherwise this reports
@@ -49,11 +49,20 @@ COORDS_FILE="$WORK/coords.txt"
 # validating the wrong bits for released modules and producing a false failure for any module not
 # yet released at that version. Modules that hard-override their version (apollo/appsync) still
 # report their own coordinate, since the override wins over the property.
-(cd "$REPO" && ./gradlew -q printPublishedCoordinates -PVERSION_NAME="$VER" 2>/dev/null) \
-  | grep -E '^[a-z0-9.]+:[a-z0-9-]+:' | sort -u > "$COORDS_FILE" || true
+#
+# Gradle's stderr and exit status are both propagated. Discarding either turns an explicit build
+# failure into the unexplained "no coordinates" error below, which says nothing about the cause.
+if ! (cd "$REPO" && ./gradlew -q printPublishedCoordinates -PVERSION_NAME="$VER") > "$RAW_COORDS"; then
+  echo "ERROR: printPublishedCoordinates failed; see the Gradle output above" >&2
+  exit 2
+fi
+
+# grep exits 1 when nothing matches, which the emptiness check below reports with more context.
+grep -E '^[a-z0-9.]+:[a-z0-9-]+:' "$RAW_COORDS" | sort -u > "$COORDS_FILE" || true
 
 if [ ! -s "$COORDS_FILE" ]; then
-  echo "ERROR: no published coordinates discovered" >&2
+  echo "ERROR: printPublishedCoordinates succeeded but emitted no coordinates. Raw output:" >&2
+  cat "$RAW_COORDS" >&2
   exit 2
 fi
 
@@ -84,7 +93,11 @@ while IFS= read -r coord; do
   if ! "$REPO/gradlew" -p "$CONSUMER" dumpCompileClasspath \
         -PmoduleCoords="$coord" -Pagp="$AGP" -Pkgp="$KGP" \
         --rerun-tasks --quiet > "$WORK/resolve-$artifact.log" 2>&1; then
-    echo "SKIP [$coord]: consumer failed to resolve (see $WORK/resolve-$artifact.log)"
+    # Dump the captured output rather than pointing at the log: $WORK is a temp dir the EXIT trap
+    # deletes, so the file is gone by the time anyone reads this. A skip quietly drops a module
+    # from the check, so the reason has to survive the run.
+    echo "SKIP [$coord]: consumer failed to resolve:"
+    sed 's/^/    /' "$WORK/resolve-$artifact.log"
     SKIP=$((SKIP+1)); continue
   fi
 
