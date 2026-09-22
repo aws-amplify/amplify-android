@@ -57,7 +57,7 @@ slf4j = "2.0.18"
 sqlcipher = "4.17.0"
 uuid = "5.2.0"
 totp = "1.0.1"
-turbine = "1.1.0"
+turbine = "1.2.1"
 
 [libraries]
 android-desugartools = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar" }
