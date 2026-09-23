@@ -21,10 +21,10 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiException.ApiAuthException;
 import com.amplifyframework.api.aws.ApiAuthProviders;
-import com.amplifyframework.api.aws.AppSyncGraphQLRequest;
 import com.amplifyframework.api.aws.AppSyncProviderNotConfiguredException;
 import com.amplifyframework.api.aws.AppSyncTokenFetchException;
 import com.amplifyframework.api.aws.AuthorizationType;
+import com.amplifyframework.api.aws.AuthorizedGraphQLRequest;
 import com.amplifyframework.api.aws.EndpointType;
 import com.amplifyframework.api.aws.sigv4.AWS4Signer;
 import com.amplifyframework.api.aws.sigv4.ApiGatewayIamSigner;
@@ -93,11 +93,10 @@ public final class ApiRequestDecoratorFactory {
     public RequestDecorator fromGraphQLRequest(GraphQLRequest<?> graphQLRequest) throws ApiException {
         // Start with the default auth type.
         AuthorizationType authType = defaultAuthorizationType;
-        // If it is an instance of AppSyncGraphQLRequest AND
-        // the request's authorization type is not null
-        if (graphQLRequest instanceof AppSyncGraphQLRequest<?>
-            && ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType() != null) {
-            authType = ((AppSyncGraphQLRequest<?>) graphQLRequest).getAuthorizationType();
+        // If the request declares an authorization type, it overrides the default.
+        if (graphQLRequest instanceof AuthorizedGraphQLRequest
+            && ((AuthorizedGraphQLRequest) graphQLRequest).getAuthorizationType() != null) {
+            authType = ((AuthorizedGraphQLRequest) graphQLRequest).getAuthorizationType();
         }
         return forAuthType(authType);
     }
