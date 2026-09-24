@@ -101,7 +101,8 @@ internal object SRPCognitoActions : SRPActions {
                         challengeParams = response.challengeParameters,
                         session = response.session,
                         updatedDeviceMetadata = updatedDeviceMetadata,
-                        metadata = event.metadata
+                        metadata = event.metadata,
+                        inputUsername = event.username
                     )
                 } else {
                     if (event.authFlowType == AuthFlowType.USER_AUTH) {
@@ -124,7 +125,8 @@ internal object SRPCognitoActions : SRPActions {
                         challengeParams = response.challengeParameters,
                         session = response.session,
                         updatedDeviceMetadata = updatedDeviceMetadata,
-                        metadata = event.metadata
+                        metadata = event.metadata,
+                        inputUsername = event.username
                     )
                 }
             } catch (e: Exception) {
@@ -143,7 +145,8 @@ internal object SRPCognitoActions : SRPActions {
         challengeParams: Map<String, String>?,
         session: String?,
         updatedDeviceMetadata: DeviceMetadata.Metadata?,
-        metadata: Map<String, String>
+        metadata: Map<String, String>,
+        inputUsername: String? = null
     ): SRPEvent = when (challengeNameType) {
         ChallengeNameType.PasswordVerifier -> {
             challengeParams?.let { params ->
@@ -155,7 +158,8 @@ internal object SRPCognitoActions : SRPActions {
                     SRPEvent.EventType.RespondPasswordVerifier(
                         updatedChallengeParams,
                         metadata,
-                        session
+                        session,
+                        inputUsername = inputUsername
                     )
                 )
             } ?: throw ServiceException(
@@ -209,7 +213,8 @@ internal object SRPCognitoActions : SRPActions {
                                 SRPEvent.EventType.RespondPasswordVerifier(
                                     challengeParams,
                                     event.metadata,
-                                    initiateAuthResponse.session
+                                    initiateAuthResponse.session,
+                                    inputUsername = event.username
                                 )
                             )
                         } ?: throw ServiceException(
@@ -235,7 +240,8 @@ internal object SRPCognitoActions : SRPActions {
         challengeParameters: Map<String, String>,
         metadata: Map<String, String>,
         session: String?,
-        signInMethod: SignInMethod
+        signInMethod: SignInMethod,
+        inputUsername: String?
     ) = Action<AuthEnvironment>("VerifyPasswordSRP") { id, dispatcher ->
         logger.verbose("$id Starting execution")
         val evt = try {
@@ -282,7 +288,8 @@ internal object SRPCognitoActions : SRPActions {
                     session = response.session,
                     challengeParameters = response.challengeParameters,
                     authenticationResult = response.authenticationResult,
-                    signInMethod = signInMethod
+                    signInMethod = signInMethod,
+                    inputUsername = inputUsername
                 )
             } else {
                 throw ServiceException(
@@ -306,7 +313,8 @@ internal object SRPCognitoActions : SRPActions {
                         challengeParams,
                         metadata,
                         session,
-                        signInMethod
+                        signInMethod,
+                        inputUsername = inputUsername
                     )
                 )
             } else {
