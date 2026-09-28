@@ -25,15 +25,11 @@ import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.foundation.logging.Logger
 import com.amplifyframework.foundation.result.Result
 import com.amplifyframework.foundation.result.mapFailure
+import com.amplifyframework.foundation.result.mapSuccess
 import com.amplifyframework.foundation.useragent.AmplifyUserAgentInterceptor
 import com.amplifyframework.recordcache.AutoFlushScheduler
-import com.amplifyframework.recordcache.ClearCacheResult
-import com.amplifyframework.recordcache.FlushResult
-import com.amplifyframework.recordcache.FlushStrategy
 import com.amplifyframework.recordcache.RecordClient
-import com.amplifyframework.recordcache.RecordData
 import com.amplifyframework.recordcache.RecordInput
-import com.amplifyframework.recordcache.RecordResult
 import com.amplifyframework.recordcache.SQLiteRecordStorage
 import com.amplifyframework.recordcache.logOp
 
@@ -136,7 +132,7 @@ class AmplifyKinesisClient(
     init {
         scheduler = when (options.flushStrategy) {
             is FlushStrategy.Interval -> AutoFlushScheduler(
-                options.flushStrategy,
+                interval = options.flushStrategy.interval,
                 client = recordClient
             )
             is FlushStrategy.None -> null
@@ -163,7 +159,9 @@ class AmplifyKinesisClient(
         }
         logger.verbose { "Recording to stream: $streamName" }
         return logOp(
-            operation = { recordClient.record(RecordInput(streamName, partitionKey, data)).wrapError() },
+            operation = {
+                recordClient.record(RecordInput(streamName, partitionKey, data)).wrapError() mapSuccess { RecordData() }
+            },
             logSuccess = { _, timeMs ->
                 logger.debug { "Record completed successfully in ${timeMs}ms" }
             },
@@ -198,7 +196,7 @@ class AmplifyKinesisClient(
     suspend fun flush(): FlushResult {
         logger.verbose { "Starting flush" }
         return logOp(
-            operation = { recordClient.flush().wrapError() },
+            operation = { recordClient.flush().wrapError() mapSuccess { it.toFlushData() } },
             logSuccess = { data, timeMs ->
                 logger.debug {
                     "Flush completed successfully in ${timeMs}ms - ${data.recordsFlushed} records flushed"
@@ -219,7 +217,7 @@ class AmplifyKinesisClient(
     suspend fun clearCache(): ClearCacheResult {
         logger.verbose { "Clearing cache" }
         return logOp(
-            operation = { recordClient.clearCache().wrapError() },
+            operation = { recordClient.clearCache().wrapError() mapSuccess { it.toClearCacheData() } },
             logSuccess = { data, timeMs ->
                 logger.debug {
                     "Clear cache completed successfully in ${timeMs}ms - ${data.recordsCleared} records cleared"
