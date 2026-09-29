@@ -66,8 +66,10 @@ internal class ApiLazyModelReference<M : Model> internal constructor(
     override fun fetchModel(onSuccess: NullableConsumer<M?>, onError: Consumer<AmplifyException>) {
         val cached = cachedValue.get()
         if (cached != null) {
-            // Quick return if value is already present
+            // Quick return if value is already present; without this return the coroutine below
+            // would deliver onSuccess a second time from the same cache.
             onSuccess.accept(cached.value)
+            return
         }
 
         callbackScope.launch {
