@@ -11,6 +11,7 @@ import org.gradle.kotlin.dsl.extra
 import org.gradle.kotlin.dsl.findByType
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.provideDelegate
+import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.withType
 import org.gradle.plugins.signing.SigningExtension
 
@@ -59,12 +60,14 @@ class PublishingConventionPlugin : Plugin<Project> {
     // that publish multiple coordinates.
     private fun Project.registerPrintPublishedCoordinates() {
         val publishing = extensions.findByType<PublishingExtension>() ?: return
-        tasks.register("printPublishedCoordinates") {
-            doLast {
-                publishing.publications.withType<MavenPublication>().forEach {
-                    println("${it.groupId}:${it.artifactId}:${it.version}")
+        tasks.register<PrintPublishedCoordinatesTask>("printPublishedCoordinates") {
+            coordinates.set(
+                provider {
+                    publishing.publications.withType<MavenPublication>().map {
+                        "${it.groupId}:${it.artifactId}:${it.version}"
+                    }
                 }
-            }
+            )
         }
     }
 
