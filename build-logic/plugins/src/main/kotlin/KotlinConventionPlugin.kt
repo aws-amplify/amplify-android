@@ -25,10 +25,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 class KotlinConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target.pluginManager) {
-            // Apply the proper kotlin plugin
-            if (hasPlugin("com.android.base")) {
-                apply("org.jetbrains.kotlin.android")
-            } else {
+            // Android modules get Kotlin from AGP's built-in Kotlin support, so they need no
+            // Kotlin plugin of their own. Everything else still needs the JVM one.
+            if (!hasPlugin("com.android.base")) {
                 apply("java-library")
                 apply("org.jetbrains.kotlin.jvm")
             }

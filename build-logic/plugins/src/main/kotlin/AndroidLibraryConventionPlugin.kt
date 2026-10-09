@@ -35,11 +35,8 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
             apply("amplify.kotlin")
         }
 
-        @Suppress("ktlint:standard:property-naming")
-        val POM_GROUP: String by target
-
         with(target) {
-            group = POM_GROUP
+            group = property("POM_GROUP").toString()
             extensions.configure<LibraryExtension> {
                 configureAndroid(this)
                 afterEvaluate {
@@ -62,7 +59,7 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
 
     private fun Project.configureAndroid(extension: LibraryExtension) {
         extension.apply {
-            compileSdk = 36
+            compileSdk = 37
 
             buildFeatures {
                 buildConfig = true
@@ -81,6 +78,13 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                     isIncludeAndroidResources = true
                 }
                 execution = "ANDROIDX_TEST_ORCHESTRATOR"
+
+                // From AGP 9 an unset targetSdk defaults to compileSdk rather than minSdk, which
+                // puts the generated test manifest above the newest SDK the pinned Robolectric
+                // knows ("targetSdkVersion=37 > maxSdkVersion=31"). Pinning it to minSdk keeps
+                // tests on the SDK they already ran against. Raising it means upgrading
+                // Robolectric first.
+                targetSdk = 24
             }
 
             compileOptions {
@@ -106,6 +110,11 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
 
         dependencies {
             "coreLibraryDesugaring"(libs.findLibrary("android-desugartools").get())
+
+            // Robolectric's shadow classes carry Error Prone annotations but do not bring the
+            // annotation jar with them. Java unit tests compile with -Werror, and javac warns on
+            // an annotation it cannot resolve, so the jar has to be on the compile classpath.
+            "testCompileOnly"(libs.findLibrary("errorprone-annotations").get())
             constraints {
                 add("implementation", libs.findLibrary("androidx-annotation-experimental").get()) {
                     because("Fixes a lint bug with RequiresOptIn")
