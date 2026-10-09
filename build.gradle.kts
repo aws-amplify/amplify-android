@@ -13,21 +13,6 @@
  * permissions and limitations under the License.
  */
 
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
-        maven(url = "https://plugins.gradle.org/m2/")
-    }
-
-    dependencies {
-        // Keep in sync with the `kotlin` version in gradle/libs.versions.toml. The version catalog
-        // is not available in a buildscript block, which is resolved before it is created.
-        classpath(kotlin("gradle-plugin", version = "2.2.21"))
-        classpath("com.google.gms:google-services:4.3.15")
-    }
-}
-
 plugins {
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.apollo) apply false
