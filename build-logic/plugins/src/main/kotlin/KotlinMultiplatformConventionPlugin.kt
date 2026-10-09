@@ -13,9 +13,10 @@
  * permissions and limitations under the License.
  */
 
-import com.android.build.api.dsl.androidLibrary
+import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.plugins.ExtensionAware
 import org.gradle.kotlin.dsl.configure
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
@@ -45,9 +46,12 @@ class KotlinMultiplatformConventionPlugin : Plugin<Project> {
             // which the pinned Robolectric version requires (it cannot instrument JDK 21 bytecode).
             jvmToolchain(17)
 
-            androidLibrary {
+            // AGP registers the Android target's DSL on the `kotlin` extension under the name
+            // "android". Build scripts get a generated accessor for it; a precompiled plugin like
+            // this one has to reach for the nested extension by type.
+            (this as ExtensionAware).extensions.configure<KotlinMultiplatformAndroidLibraryExtension> {
                 namespace = "com.amplifyframework.${project.name.replace("-", ".")}"
-                compileSdk = 36
+                compileSdk = 37
                 minSdk = 24
 
                 withHostTestBuilder {

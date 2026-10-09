@@ -1,5 +1,5 @@
 [versions]
-agp = "8.11.1"
+agp = "9.4.1"
 androidx-activity = "1.2.0"
 androidx-annotation = "1.9.1"
 androidx-annotation-experimental = "1.6.0"
@@ -19,12 +19,13 @@ androidx-test-junit = "1.1.5"
 androidx-test-orchestrator = "1.4.2"
 androidx-test-runner = "1.5.2"
 androidx-workmanager = "2.11.2"
-apollo = "4.3.1"
+apollo = "4.4.3"
 aws-kotlin = "1.5.123"
 aws-sdk = "2.81.1"
-binary-compatibility-validator = "0.18.1"
+binary-compatibility-validator = "0.18.2"
 coroutines = "1.11.0"
 desugar = "1.2.0"
+errorprone-annotations = "2.50.0"
 firebase-bom = "33.16.0"
 gson = "2.8.9"
 jetbrains-annotations = "26.0.2"
@@ -32,7 +33,7 @@ json = "20210307"
 jsonassert = "1.5.0"
 junit = "4.13.2"
 kotest = "6.2.4"
-kotlin = "2.2.0"
+kotlin = "2.2.21"
 kotlin-datetime = "0.8.0"
 kotlin-serialization = "1.6.0"
 kover = "0.9.9"
@@ -40,7 +41,7 @@ ktlint = "14.2.0"
 licensee = "1.14.1"
 # The Lint tooling artifacts share AGP's release train with a major version 23 higher, so this must
 # be bumped alongside `agp`. Enforced by a check in lint-rules/build.gradle.kts.
-lint = "31.11.1"
+lint = "32.4.1"
 litert = "1.4.0"
 maplibre = "11.12.1"
 maplibre-annotations = "3.0.2"
@@ -64,6 +65,7 @@ android-desugartools = { module = "com.android.tools:desugar_jdk_libs", version.
 androidx-activity = { module = "androidx.activity:activity", version.ref = "androidx-activity" }
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidx-annotation" }
 androidx-annotation-experimental = { module = "androidx.annotation:annotation-experimental", version.ref = "androidx-annotation-experimental" }
+errorprone-annotations = { module = "com.google.errorprone:error_prone_annotations", version.ref = "errorprone-annotations" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref="androidx-appcompat" }
 androidx-browser = { module = "androidx.browser:browser", version.ref = "androidx-browser" }
 androidx-coordinatorlayout = { module = "androidx.coordinatorlayout:coordinatorlayout", version.ref = "androidx-coordinatorlayout" }
@@ -178,7 +180,6 @@ android-library = { id = "com.android.library", version.ref = "agp" }
 android-lint = { id = "com.android.lint", version.ref = "agp" }
 apollo = { id = "com.apollographql.apollo", version.ref = "apollo" }
 binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binary-compatibility-validator" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }

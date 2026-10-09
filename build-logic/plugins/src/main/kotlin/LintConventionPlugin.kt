@@ -32,7 +32,7 @@ class LintConventionPlugin : Plugin<Project> {
             // AGP nests the Lint DSL in the `android` extension, whatever the Android module type.
             // Everything else needs the standalone plugin, which registers `lint` at the top level.
             val android = extensions.findByName("android")
-            if (android is CommonExtension<*, *, *, *, *, *>) {
+            if (android is CommonExtension) {
                 configureLint(android.lint)
             } else {
                 pluginManager.apply("com.android.lint")
