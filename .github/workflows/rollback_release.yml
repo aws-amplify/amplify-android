@@ -25,6 +25,7 @@ env:
 jobs:
   create-rollback-branch:
     runs-on: ubuntu-latest
+    environment: publish-release
     permissions:
       id-token: write
       contents: write
