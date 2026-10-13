@@ -73,6 +73,12 @@ internal class SessionManager(
     private var sessionStart: Instant? = null
     private var pauseTimeout: TimeoutHandle? = null
 
+    // Bumped on every pause so a timeout that outlived its pause is ignored.
+    private var pauseGeneration = 0
+
+    // Set by an explicit stop so a foreground return does not undo it.
+    private var stoppedExplicitly = false
+
     /**
      * Returns the current session, starting a fresh one if none is active. A
      * stopped session is still exposed for inspection, so a fresh one starts
@@ -87,9 +93,8 @@ internal class SessionManager(
     /** Starts a new session. If one is active, stops it first. */
     fun startSession() {
         lock.withLock {
-            if (state != SessionState.STOPPED) {
-                stopSession()
-            }
+            endSession()
+            stoppedExplicitly = false
             val start = now()
             sessionStart = start
             session = Session(
@@ -100,10 +105,22 @@ internal class SessionManager(
         }
     }
 
-    /** Stops the current session, recording stop time and duration. */
+    /**
+     * Stops the current session, recording stop time and duration. No-op if
+     * already stopped. [handleAppResumed] does not start a new session after
+     * this; [startSession] or [ensureActiveSession] does.
+     */
     fun stopSession() {
         lock.withLock {
+            stoppedExplicitly = true
+            endSession()
+        }
+    }
+
+    private fun endSession() {
+        lock.withLock {
             cancelTimeout()
+            if (state == SessionState.STOPPED) return
             val current = session ?: return
             val start = sessionStart
             val stop = now()
@@ -129,6 +146,7 @@ internal class SessionManager(
             session = null
             sessionStart = null
             state = SessionState.STOPPED
+            stoppedExplicitly = true
         }
     }
 
@@ -137,11 +155,15 @@ internal class SessionManager(
         lock.withLock {
             if (state != SessionState.ACTIVE) return
             state = SessionState.PAUSED
-            pauseTimeout = scheduler.schedule(sessionTimeout) { onTimeoutExpired() }
+            val generation = ++pauseGeneration
+            pauseTimeout = scheduler.schedule(sessionTimeout) { onTimeoutExpired(generation) }
         }
     }
 
-    /** Called when the app returns to the foreground. */
+    /**
+     * Called when the app returns to the foreground. Does not restart a session
+     * that was stopped explicitly.
+     */
     fun handleAppResumed() {
         lock.withLock {
             when (state) {
@@ -149,14 +171,18 @@ internal class SessionManager(
                     cancelTimeout()
                     state = SessionState.ACTIVE
                 }
-                SessionState.STOPPED -> startSession()
+                SessionState.STOPPED -> if (!stoppedExplicitly) startSession()
                 SessionState.ACTIVE -> Unit
             }
         }
     }
 
-    private fun onTimeoutExpired() {
-        stopSession()
+    private fun onTimeoutExpired(generation: Int) {
+        lock.withLock {
+            // A timeout that fired after its pause ended must not stop the session.
+            if (state != SessionState.PAUSED || generation != pauseGeneration) return
+            endSession()
+        }
     }
 
     private fun cancelTimeout() {

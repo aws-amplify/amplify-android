@@ -246,17 +246,21 @@ class EventEnrichmentClient @VisibleForTesting internal constructor(
         return Result.Success(event)
     }
 
-    /** Starts a new session manually. */
-    fun startSession() = sessionManager.startSession()
+    /** Starts a new session manually. No-op once the client is closed. */
+    fun startSession() = ifOpen { sessionManager.startSession() }
 
-    /** Stops the current session. */
-    fun stopSession() = sessionManager.stopSession()
+    /**
+     * Stops the current session. No-op if already stopped or once the client is
+     * closed. Returning to the foreground does not start a new session after
+     * this; [record] or [startSession] does.
+     */
+    fun stopSession() = ifOpen { sessionManager.stopSession() }
 
-    /** Called when the app moves to the background. */
-    fun handleAppPaused() = sessionManager.handleAppPaused()
+    /** Called when the app moves to the background. No-op once the client is closed. */
+    fun handleAppPaused() = ifOpen { sessionManager.handleAppPaused() }
 
-    /** Called when the app returns to the foreground. */
-    fun handleAppResumed() = sessionManager.handleAppResumed()
+    /** Called when the app returns to the foreground. No-op once the client is closed. */
+    fun handleAppResumed() = ifOpen { sessionManager.handleAppResumed() }
 
     /** Sets the user identifier stamped on subsequent events. */
     fun setUserId(userId: String?) {
@@ -293,6 +297,11 @@ class EventEnrichmentClient @VisibleForTesting internal constructor(
             scope.cancel()
         }
         logger.info { "Client closed" }
+    }
+
+    // Held under the shared lock so a session call cannot run after close().
+    private inline fun ifOpen(block: () -> Unit) {
+        lock.withLock { if (!closed) block() }
     }
 
     private companion object {
