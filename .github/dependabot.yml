@@ -1,24 +1,76 @@
 version: 2
 updates:
-  # Check for updates to gradle dependencies
+  # Check for updates to gradle dependencies. build-logic and scripts/scope-check-consumer are
+  # separate Gradle builds but take their versions from gradle/libs.versions.toml, so a single
+  # entry at the repository root covers the whole project.
   - package-ecosystem: "gradle"
     directory: "/"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 10
     commit-message:
       prefix: "chore"
+      include: "scope"
+    # Dependabot already opens one pull request per version catalog entry, so these groups exist to
+    # batch families that are reviewed together into a single pull request. androidx.* includes the
+    # androidx.test artifacts.
+    groups:
+      androidx:
+        patterns:
+          - "androidx.*"
+      aws-sdk:
+        patterns:
+          - "aws.sdk.kotlin:*"
+          - "aws.smithy.kotlin:*"
+      build-plugins:
+        patterns:
+          - "org.jetbrains.kotlinx:binary-compatibility-validator"
+          - "org.jetbrains.kotlinx.binary-compatibility-validator"
+          - "org.jetbrains.kotlinx:kover-gradle-plugin"
+          - "org.jetbrains.kotlinx.kover"
+          - "org.jlleitschuh.gradle*"
+          - "app.cash.licensee*"
+      test:
+        patterns:
+          - "junit:*"
+          - "io.kotest:*"
+          - "io.mockk:*"
+          - "org.mockito:*"
+          - "org.robolectric:*"
+          - "app.cash.turbine:*"
+          - "org.skyscreamer:*"
+          - "org.json:*"
+          - "dev.robinohs:*"
+          - "org.jetbrains:annotations"
     ignore:
-      # AGP upgrades can be tricky and shouldn't be done by dependabot.
-      # Covers the AGP artifact (com.android.tools.build:gradle) and the
-      # com.android.* Gradle plugin ids, which all share the `agp` version.
-      - dependency-name: "com.android.tools.build:*"
+      # AGP upgrades can be tricky and shouldn't be done by dependabot. The pattern covers the AGP
+      # artifact (com.android.tools.build:gradle) and the com.android.* Gradle plugin ids, which
+      # all share the `agp` version. It also covers com.android.tools.lint:*, which must be bumped
+      # in lockstep with `agp` (see the `lint` comment in gradle/libs.versions.toml) — a lone lint
+      # bump fails the exact-match check in lint-rules/build.gradle.kts, so no update type here is
+      # safe to automate. com.android.tools:desugar_jdk_libs matches as well, so desugaring is
+      # held back too.
       - dependency-name: "com.android.*"
       # Kotlin language version upgrades are potentially costly to customers and shouldn't be done
-      # without careful consideration. Covers the compiler/stdlib/reflect/test artifacts
-      # (org.jetbrains.kotlin:*) and the org.jetbrains.kotlin.* plugin ids,
-      # which all share the `kotlin` version.
+      # without careful consideration, so only patch releases are taken automatically. Covers the
+      # compiler/stdlib/reflect/test artifacts (org.jetbrains.kotlin:*) and the
+      # org.jetbrains.kotlin.* plugin ids, which all share the `kotlin` version.
       - dependency-name: "org.jetbrains.kotlin:*"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
       - dependency-name: "org.jetbrains.kotlin.*"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+  # Check for updates to the fastlane gems used by the release scripts
+  - package-ecosystem: "bundler"
+    directory: "/scripts"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
   # Check for updates to GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -26,3 +78,4 @@ updates:
       interval: "weekly"
     commit-message:
       prefix: "chore"
+      include: "scope"
