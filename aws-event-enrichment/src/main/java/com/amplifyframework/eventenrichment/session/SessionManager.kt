@@ -37,7 +37,11 @@ private const val SESSION_ID_UNIQUE_LENGTH = 8
  * When the app backgrounds, the session enters [SessionState.PAUSED]. If the
  * app returns to the foreground within the configured [sessionTimeout], the
  * same session resumes. If the timeout expires, the session stops and a new one
- * starts on the next foreground.
+ * starts on the next foreground. Expiry is decided from the pause time, not only
+ * from the timer, and a session that ends while paused is stamped at the pause.
+ *
+ * Every start and stop is reported to [boundaryListener] inside the lock, in
+ * transition order.
  *
  * All session mutations acquire [lock] so that concurrent `record`/lifecycle
  * calls cannot observe or produce a torn session. The client shares the same
@@ -70,8 +74,12 @@ internal class SessionManager(
     var session: Session? = null
         private set
 
+    /** Receives every session start and stop. Set by the client before first use. */
+    var boundaryListener: SessionBoundaryListener? = null
+
     private var sessionStart: Instant? = null
     private var pauseTimeout: TimeoutHandle? = null
+    private var pausedAt: Instant? = null
 
     // Bumped on every pause so a timeout that outlived its pause is ignored.
     private var pauseGeneration = 0
@@ -86,7 +94,9 @@ internal class SessionManager(
      * onto a new event.
      */
     fun ensureActiveSession(): Session = lock.withLock {
-        if (session == null || state == SessionState.STOPPED) startSession() // startSession also takes lock (reentrant)
+        if (session == null || state == SessionState.STOPPED || pauseExpired()) {
+            startSession() // startSession also takes lock (reentrant)
+        }
         session!! // safe: we hold the lock, startSession just set it
     }
 
@@ -97,11 +107,13 @@ internal class SessionManager(
             stoppedExplicitly = false
             val start = now()
             sessionStart = start
-            session = Session(
+            val started = Session(
                 id = generateSessionId(start),
                 startTimestamp = start.toIsoUtc()
             )
+            session = started
             state = SessionState.ACTIVE
+            boundaryListener?.onBoundary(SessionBoundary.START, started)
         }
     }
 
@@ -120,15 +132,19 @@ internal class SessionManager(
     private fun endSession() {
         lock.withLock {
             cancelTimeout()
+            val paused = pausedAt
+            pausedAt = null
             if (state == SessionState.STOPPED) return
             val current = session ?: return
             val start = sessionStart
-            val stop = now()
-            session = current.copy(
+            val stop = paused ?: now()
+            val stopped = current.copy(
                 stopTimestamp = stop.toIsoUtc(),
                 duration = if (start != null) (stop - start).inWholeMilliseconds else null
             )
+            session = stopped
             state = SessionState.STOPPED
+            boundaryListener?.onBoundary(SessionBoundary.STOP, stopped)
         }
     }
 
@@ -145,6 +161,7 @@ internal class SessionManager(
             cancelTimeout()
             session = null
             sessionStart = null
+            pausedAt = null
             state = SessionState.STOPPED
             stoppedExplicitly = true
         }
@@ -155,6 +172,7 @@ internal class SessionManager(
         lock.withLock {
             if (state != SessionState.ACTIVE) return
             state = SessionState.PAUSED
+            pausedAt = now()
             val generation = ++pauseGeneration
             pauseTimeout = scheduler.schedule(sessionTimeout) { onTimeoutExpired(generation) }
         }
@@ -167,8 +185,11 @@ internal class SessionManager(
     fun handleAppResumed() {
         lock.withLock {
             when (state) {
-                SessionState.PAUSED -> {
+                SessionState.PAUSED -> if (pauseExpired()) {
+                    startSession()
+                } else {
                     cancelTimeout()
+                    pausedAt = null
                     state = SessionState.ACTIVE
                 }
                 SessionState.STOPPED -> if (!stoppedExplicitly) startSession()
@@ -183,6 +204,12 @@ internal class SessionManager(
             if (state != SessionState.PAUSED || generation != pauseGeneration) return
             endSession()
         }
+    }
+
+    // The pause time is authoritative because a backgrounded timer can be delayed.
+    private fun pauseExpired(): Boolean {
+        val paused = pausedAt ?: return false
+        return state == SessionState.PAUSED && now() - paused >= sessionTimeout
     }
 
     private fun cancelTimeout() {

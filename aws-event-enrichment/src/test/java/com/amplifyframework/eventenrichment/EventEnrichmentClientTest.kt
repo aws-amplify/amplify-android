@@ -26,7 +26,6 @@ import com.amplifyframework.eventenrichment.session.TimeoutHandle
 import com.amplifyframework.eventenrichment.session.TimeoutScheduler
 import com.amplifyframework.foundation.result.Result
 import com.amplifyframework.foundation.result.get
-import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -86,8 +85,7 @@ class EventEnrichmentClientTest {
         result.shouldBeInstanceOf<Result.Success<EnrichedEvent>>()
         result.data.eventType shouldBe "button_clicked"
         result.data.clientId shouldBe "device-uuid"
-        sink.events shouldHaveSize 1
-        sink.events.first().eventType shouldBe "button_clicked"
+        sink.events.map { it.eventType } shouldBe listOf("_session.start", "button_clicked")
     }
 
     @Test

@@ -32,6 +32,9 @@ import com.amplifyframework.eventenrichment.metadata.DeviceMetadata
 import com.amplifyframework.eventenrichment.metadata.DeviceMetadataProvider
 import com.amplifyframework.eventenrichment.metadata.SdkMetadata
 import com.amplifyframework.eventenrichment.session.CoroutineTimeoutScheduler
+import com.amplifyframework.eventenrichment.session.Session
+import com.amplifyframework.eventenrichment.session.SessionBoundary
+import com.amplifyframework.eventenrichment.session.SessionBoundaryListener
 import com.amplifyframework.eventenrichment.session.SessionManager
 import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.foundation.logging.Logger
@@ -46,6 +49,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 
 /**
@@ -54,8 +58,11 @@ import kotlinx.coroutines.launch
  * Collects device, app, session, and SDK metadata and produces [EnrichedEvent]
  * instances that serialize to a structured analytics JSON envelope. The client
  * is transport-agnostic; provide an [EventSink] to forward events to Kinesis,
- * Firehose, or any custom destination. The sink is invoked asynchronously on a
- * background dispatcher; exceptions it throws are caught and logged.
+ * Firehose, or any custom destination. Session starts and stops are sent to
+ * the sink as `_session.start` and `_session.stop` events. Every event goes
+ * through one queue, so the sink receives them one at a time, in the order they
+ * happened, on a background dispatcher; exceptions it throws are caught and
+ * logged.
  *
  * The client auto-resolves the device metadata and the persistent client id
  * (using a key shared across Amplify packages) from the supplied [Context].
@@ -180,11 +187,20 @@ class EventEnrichmentClient @VisibleForTesting internal constructor(
     @Volatile
     private var closed = false
 
+    // Single ordered queue for every sink send. Producers enqueue under the lock.
+    private val sendQueue = Channel<EnrichedEvent>(Channel.UNLIMITED)
+
     /** Whether the client has been closed. */
     val isClosed: Boolean
         get() = closed
 
     init {
+        this.sessionManager.boundaryListener = SessionBoundaryListener(::onSessionBoundary)
+        scope.launch(sinkDispatcher) {
+            for (event in sendQueue) deliver(event)
+            // close() closed the queue and everything queued has been sent.
+            scope.cancel()
+        }
         if (autoSessionTracking) {
             this.sessionManager.startSession()
             application?.let {
@@ -200,9 +216,10 @@ class EventEnrichmentClient @VisibleForTesting internal constructor(
      * client has been closed. Attributes are String-valued and metrics are
      * Double-valued; no length or count caps are applied.
      *
-     * When a [sink] is configured, the event is forwarded to it asynchronously
-     * on [sinkDispatcher]; any exception the sink throws is caught and logged
-     * as a warning.
+     * When a [sink] is configured, the event is queued behind earlier events,
+     * including the start of a session this call begins, and sent
+     * asynchronously on [sinkDispatcher]; any exception the sink throws is
+     * caught and logged as a warning.
      *
      * @param eventType Type of the event.
      * @param attributes Per-event attributes merged over the global attributes.
@@ -214,33 +231,11 @@ class EventEnrichmentClient @VisibleForTesting internal constructor(
         attributes: Map<String, String> = emptyMap(),
         metrics: Map<String, Double> = emptyMap()
     ): Result<EnrichedEvent, EventEnrichmentException> {
-        // Serialized against close() and session mutations via the shared lock.
-        // The sink callback is deliberately invoked outside the lock.
+        // Serialized against close() and session mutations via the shared lock,
+        // so the queue order matches the call order. The sink runs off the lock.
         val event = lock.withLock {
             if (closed) return Result.Failure(EventEnrichmentClosedException())
-            EnrichedEvent(
-                eventId = generateEventId(),
-                eventType = eventType,
-                eventTimestamp = clock().toEpochMilliseconds(),
-                session = sessionManager.ensureActiveSession(),
-                attributes = globalFields.attributes + attributes,
-                metrics = globalFields.metrics + metrics,
-                device = deviceMetadata,
-                app = appMetadata,
-                sdk = sdkMetadata,
-                clientId = clientId,
-                userId = userId
-            )
-        }
-
-        sink?.let { sink ->
-            scope.launch(sinkDispatcher) {
-                try {
-                    sink.send(event)
-                } catch (e: Exception) {
-                    logger.warn(e) { "Event sink failed for event: $eventType" }
-                }
-            }
+            buildEvent(eventType, sessionManager.ensureActiveSession(), attributes, metrics).also(::enqueue)
         }
         logger.verbose { "Recorded event: $eventType" }
         return Result.Success(event)
@@ -280,8 +275,10 @@ class EventEnrichmentClient @VisibleForTesting internal constructor(
     fun removeGlobalMetric(key: String) = globalFields.removeMetric(key)
 
     /**
-     * Releases resources, stops session tracking, and cancels the client's
-     * coroutine scope. The client cannot be reused after closing.
+     * Releases resources and stops session tracking. The final `_session.stop`
+     * is queued behind every event already queued, and nothing is sent after
+     * it. Returns without waiting for those sends; the client's coroutine scope
+     * is cancelled once they finish. The client cannot be reused after closing.
      */
     fun close() {
         // Serialized against record() via the shared lock so a concurrent
@@ -294,9 +291,47 @@ class EventEnrichmentClient @VisibleForTesting internal constructor(
             // session is readable after close.
             sessionManager.stopSession()
             sessionManager.clearSession()
-            scope.cancel()
+            // The consumer sends what is queued, then cancels the scope.
+            sendQueue.close()
         }
         logger.info { "Client closed" }
+    }
+
+    // Called inside the session lock, so boundaries queue in transition order.
+    private fun onSessionBoundary(boundary: SessionBoundary, session: Session) {
+        enqueue(buildEvent(boundary.eventType, session))
+    }
+
+    private fun buildEvent(
+        eventType: String,
+        session: Session,
+        attributes: Map<String, String> = emptyMap(),
+        metrics: Map<String, Double> = emptyMap()
+    ) = EnrichedEvent(
+        eventId = generateEventId(),
+        eventType = eventType,
+        eventTimestamp = clock().toEpochMilliseconds(),
+        session = session,
+        attributes = globalFields.attributes + attributes,
+        metrics = globalFields.metrics + metrics,
+        device = deviceMetadata,
+        app = appMetadata,
+        sdk = sdkMetadata,
+        clientId = clientId,
+        userId = userId
+    )
+
+    // Must be called under the lock. Fails silently once close() closed the queue.
+    private fun enqueue(event: EnrichedEvent) {
+        if (sink != null) sendQueue.trySend(event)
+    }
+
+    private fun deliver(event: EnrichedEvent) {
+        try {
+            sink?.send(event)
+        } catch (e: Exception) {
+            logger.warn(e) { "Event sink failed for event: ${event.eventType}" }
+        }
     }
 
     // Held under the shared lock so a session call cannot run after close().
