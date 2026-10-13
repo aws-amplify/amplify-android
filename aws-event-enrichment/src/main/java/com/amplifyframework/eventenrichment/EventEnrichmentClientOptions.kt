@@ -32,6 +32,9 @@ private val DEFAULT_SESSION_TIMEOUT = 5.seconds
  *   starting a session up front.
  * @param sessionTimeout Duration the app can remain backgrounded before a new
  *   session starts. Defaults to 5 seconds.
+ * @param emitSessionEvents Whether session starts and stops are sent to the
+ *   sink as `_session.start` and `_session.stop` events. Sessions are tracked
+ *   and stamped on every event either way. Defaults to `true`.
  * @param initialUserId User id stamped on events from construction, including
  *   the launch `_session.start`. Defaults to null.
  * @param initialGlobalAttributes Global attributes applied at construction,
@@ -43,6 +46,7 @@ private val DEFAULT_SESSION_TIMEOUT = 5.seconds
 data class EventEnrichmentClientOptions internal constructor(
     val autoSessionTracking: Boolean,
     val sessionTimeout: Duration,
+    val emitSessionEvents: Boolean,
     val initialUserId: String?,
     val initialGlobalAttributes: Map<String, String>,
     val initialGlobalMetrics: Map<String, Double>
@@ -68,6 +72,9 @@ data class EventEnrichmentClientOptions internal constructor(
         var sessionTimeout: Duration = DEFAULT_SESSION_TIMEOUT
             @JvmSynthetic set
 
+        var emitSessionEvents: Boolean = true
+            @JvmSynthetic set
+
         var initialUserId: String? = null
             @JvmSynthetic set
 
@@ -83,6 +90,9 @@ data class EventEnrichmentClientOptions internal constructor(
         /** Sets the background timeout before a new session starts. */
         fun sessionTimeout(value: Duration) = apply { sessionTimeout = value }
 
+        /** Sets whether session starts and stops are sent to the sink. */
+        fun emitSessionEvents(value: Boolean) = apply { emitSessionEvents = value }
+
         /** Sets the user id stamped on events from construction. */
         fun initialUserId(value: String?) = apply { initialUserId = value }
 
@@ -96,6 +106,7 @@ data class EventEnrichmentClientOptions internal constructor(
         fun build() = EventEnrichmentClientOptions(
             autoSessionTracking = autoSessionTracking,
             sessionTimeout = sessionTimeout,
+            emitSessionEvents = emitSessionEvents,
             initialUserId = initialUserId,
             initialGlobalAttributes = initialGlobalAttributes,
             initialGlobalMetrics = initialGlobalMetrics

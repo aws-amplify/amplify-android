@@ -83,6 +83,7 @@ class EventEnrichmentClientSessionEventsTest {
     private fun client(
         sink: EventSink = this.sink,
         autoSessionTracking: Boolean = true,
+        emitSessionEvents: Boolean = true,
         sinkDispatcher: CoroutineDispatcher = Dispatchers.Unconfined,
         scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     ) = EventEnrichmentClient(
@@ -96,6 +97,7 @@ class EventEnrichmentClientSessionEventsTest {
         application = null,
         clock = { clock },
         generateEventId = { "event${idSequence++}" },
+        emitSessionEvents = emitSessionEvents,
         scope = scope,
         sinkDispatcher = sinkDispatcher
     )
@@ -115,6 +117,18 @@ class EventEnrichmentClientSessionEventsTest {
         start.session.stopTimestamp shouldBe null
         start.session.duration shouldBe null
         start.attributes shouldBe emptyMap()
+    }
+
+    @Test
+    fun `turning off session events sends only records but still tracks the session`() {
+        val client = client(emitSessionEvents = false)
+        val first = client.record("a").get()
+        client.stopSession()
+        val second = client.record("b").get()
+        client.close()
+
+        types() shouldBe listOf("a", "b")
+        first.session.id shouldNotBe second.session.id
     }
 
     @Test

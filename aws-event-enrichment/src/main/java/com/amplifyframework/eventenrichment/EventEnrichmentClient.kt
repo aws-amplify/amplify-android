@@ -103,6 +103,7 @@ class EventEnrichmentClient @VisibleForTesting internal constructor(
     private val application: Application?,
     private val clock: () -> Instant,
     private val generateEventId: () -> String,
+    private val emitSessionEvents: Boolean = true,
     initialUserId: String? = null,
     initialGlobalAttributes: Map<String, String> = emptyMap(),
     initialGlobalMetrics: Map<String, Double> = emptyMap(),
@@ -168,6 +169,7 @@ class EventEnrichmentClient @VisibleForTesting internal constructor(
         application = context.applicationContext as? Application,
         clock = Clock.System::now,
         generateEventId = { UUID.randomUUID().toString() },
+        emitSessionEvents = options.emitSessionEvents,
         initialUserId = options.initialUserId,
         initialGlobalAttributes = options.initialGlobalAttributes,
         initialGlobalMetrics = options.initialGlobalMetrics,
@@ -312,6 +314,7 @@ class EventEnrichmentClient @VisibleForTesting internal constructor(
 
     // Called inside the session lock, so boundaries queue in transition order.
     private fun onSessionBoundary(boundary: SessionBoundary, session: Session) {
+        if (!emitSessionEvents) return
         enqueue(buildEvent(boundary.eventType, session))
     }
 
