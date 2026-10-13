@@ -61,7 +61,8 @@ internal sealed class SRPSignInState : State {
                             srpEvent.challengeParameters,
                             srpEvent.metadata,
                             srpEvent.session,
-                            oldState.signInMethod
+                            oldState.signInMethod,
+                            inputUsername = srpEvent.inputUsername
                         )
                         StateResolution(RespondingPasswordVerifier(), listOf(action))
                     }
@@ -75,7 +76,8 @@ internal sealed class SRPSignInState : State {
                             srpEvent.challengeParameters,
                             srpEvent.metadata,
                             srpEvent.session,
-                            srpEvent.signInMethod
+                            srpEvent.signInMethod,
+                            inputUsername = srpEvent.inputUsername
                         )
                         StateResolution(RespondingPasswordVerifier(), listOf(action))
                     }

@@ -34,6 +34,7 @@ import com.amplifyframework.statemachine.StateMachineEvent
 import com.amplifyframework.statemachine.codegen.data.AmplifyCredential
 import com.amplifyframework.statemachine.codegen.data.AuthChallenge
 import com.amplifyframework.statemachine.codegen.data.CredentialType
+import com.amplifyframework.statemachine.codegen.data.DeviceMetadata
 import com.amplifyframework.statemachine.codegen.data.SignInMethod
 import com.amplifyframework.statemachine.codegen.data.UserPoolConfiguration
 import com.amplifyframework.statemachine.codegen.events.AuthenticationEvent
@@ -65,6 +66,8 @@ class MigrateAuthCognitoActionsTest {
     private val cognitoAuthService = mockk<AWSCognitoAuthService>()
     private val credentialStoreClient = mockk<StoreClientBehavior> {
         coEvery { loadCredentials(CredentialType.ASF) } returns AmplifyCredential.ASFDevice("asf_id")
+        coEvery { loadCredentials(match { it is CredentialType.Device }) } returns
+            AmplifyCredential.DeviceData(DeviceMetadata.Empty)
     }
     private val logger = mockk<Logger>(relaxed = true)
     private val cognitoIdentityProviderClientMock = mockk<CognitoIdentityProviderClient>()
