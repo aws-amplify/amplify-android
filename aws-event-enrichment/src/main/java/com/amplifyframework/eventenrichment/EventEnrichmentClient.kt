@@ -103,6 +103,9 @@ class EventEnrichmentClient @VisibleForTesting internal constructor(
     private val application: Application?,
     private val clock: () -> Instant,
     private val generateEventId: () -> String,
+    initialUserId: String? = null,
+    initialGlobalAttributes: Map<String, String> = emptyMap(),
+    initialGlobalMetrics: Map<String, Double> = emptyMap(),
     private val lock: ReentrantLock = ReentrantLock(),
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
     private val sinkDispatcher: CoroutineDispatcher = Dispatchers.IO
@@ -165,6 +168,9 @@ class EventEnrichmentClient @VisibleForTesting internal constructor(
         application = context.applicationContext as? Application,
         clock = Clock.System::now,
         generateEventId = { UUID.randomUUID().toString() },
+        initialUserId = options.initialUserId,
+        initialGlobalAttributes = options.initialGlobalAttributes,
+        initialGlobalMetrics = options.initialGlobalMetrics,
         lock = lock,
         scope = scope
     )
@@ -180,9 +186,12 @@ class EventEnrichmentClient @VisibleForTesting internal constructor(
     private var lifecycleObserver: LifecycleObserver? = null
 
     @Volatile
-    private var userId: String? = null
+    private var userId: String? = initialUserId
 
-    private val globalFields = GlobalFieldsManager()
+    private val globalFields = GlobalFieldsManager().apply {
+        initialGlobalAttributes.forEach(::addAttribute)
+        initialGlobalMetrics.forEach(::addMetric)
+    }
 
     @Volatile
     private var closed = false
@@ -257,7 +266,11 @@ class EventEnrichmentClient @VisibleForTesting internal constructor(
     /** Called when the app returns to the foreground. No-op once the client is closed. */
     fun handleAppResumed() = ifOpen { sessionManager.handleAppResumed() }
 
-    /** Sets the user identifier stamped on subsequent events. */
+    /**
+     * Sets the user identifier stamped on subsequent events. Use
+     * [EventEnrichmentClientOptions.initialUserId] to have the launch session
+     * event carry it.
+     */
     fun setUserId(userId: String?) {
         this.userId = userId
     }

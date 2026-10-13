@@ -22,6 +22,8 @@ import com.amplifyframework.eventenrichment.metadata.SdkMetadata
 import com.amplifyframework.foundation.result.get
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -91,5 +93,33 @@ class EventEnrichmentClientAutoResolveTest {
 
         val event = client.record("x").get()
         event.app.title shouldBe "My App"
+    }
+
+    @Test
+    fun `launch session start carries the initial user id and global fields`() {
+        val received = CountDownLatch(1)
+        var start: EnrichedEvent? = null
+        val client = EventEnrichmentClient(
+            context = context,
+            appId = "my-app",
+            sdkMetadata = sdkMetadata,
+            options = EventEnrichmentClientOptions {
+                initialUserId = "user-1"
+                initialGlobalAttributes = mapOf("theme" to "dark")
+                initialGlobalMetrics = mapOf("battery" to 0.5)
+            },
+            sink = EventSink { event ->
+                if (start == null) start = event
+                received.countDown()
+            }
+        )
+
+        received.await(5, TimeUnit.SECONDS) shouldBe true
+        val event = start!!
+        event.eventType shouldBe "_session.start"
+        event.userId shouldBe "user-1"
+        event.attributes shouldBe mapOf("theme" to "dark")
+        event.metrics shouldBe mapOf("battery" to 0.5)
+        client.close()
     }
 }
