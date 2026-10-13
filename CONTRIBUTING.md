@@ -419,10 +419,17 @@ Copy-paste this, and complete the workflow in the UI. It will invite you to
       - all
       - analytics
       - api
+      - apollo
       - auth
+      - connect
       - core
       - datastore
+      - events
+      - foundation
       - geo
+      - kinesis
+      - logging
+      - notifications
       - predictions
       - storage
     - Eg. `fix(auth): throw correct auth exception for code mismatch`. Refer https://github.com/aws-amplify/amplify-android/pull/1370
