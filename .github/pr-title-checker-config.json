@@ -4,7 +4,7 @@
     "color": "FF5733"
   },
   "CHECKS": {
-    "prefixes": ["chore: ", "refactor: ", "perf: ", "test: ", "docs: ", "release: "],
+    "prefixes": ["chore: ", "chore(deps): ", "chore(deps-dev): ", "refactor: ", "perf: ", "test: ", "docs: ", "release: "],
     "regexp": "(fix|feat)\\((all|analytics|api|apollo|auth|connect|core|datastore|events|foundation|geo|kinesis|logging|notifications|predictions|storage)\\): ",
     "regexpFlags": "",
     "ignoreLabels" : ["ignore-pr-title"]
