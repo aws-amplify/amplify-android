@@ -27,9 +27,8 @@ VER="0.0.0-scopecheck"           # isolated version so nothing shadows via proje
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
-# Plugin versions for the standalone consumer, sourced from the catalog so they never drift.
+# The plugin version for the standalone consumer, sourced from the catalog so it never drifts.
 AGP=$(grep -E '^agp = ' "$REPO/gradle/libs.versions.toml" | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
-KGP=$(grep -E '^kotlin = ' "$REPO/gradle/libs.versions.toml" | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
 
 echo "== Publishing all modules to mavenLocal (version $VER) =="
 # Note: modules that override VERSION_NAME (apollo/appsync) publish under their own version;
@@ -91,7 +90,7 @@ while IFS= read -r coord; do
   # Drive the standalone consumer build with the repo's Gradle wrapper via -p (the consumer dir
   # has no wrapper of its own, and this guarantees the same Gradle version as the main build).
   if ! "$REPO/gradlew" -p "$CONSUMER" dumpCompileClasspath \
-        -PmoduleCoords="$coord" -Pagp="$AGP" -Pkgp="$KGP" \
+        -PmoduleCoords="$coord" -Pagp="$AGP" \
         --rerun-tasks --quiet > "$WORK/resolve-$artifact.log" 2>&1; then
     # Dump the captured output rather than pointing at the log: $WORK is a temp dir the EXIT trap
     # deletes, so the file is gone by the time anyone reads this. A skip quietly drops a module

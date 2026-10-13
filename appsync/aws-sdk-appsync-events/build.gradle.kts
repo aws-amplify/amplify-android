@@ -45,7 +45,7 @@ dependencies {
     testImplementation(libs.test.kotest.assertions.json)
     testImplementation(libs.test.mockwebserver)
 
-    androidTestApi(project(":aws-sdk-appsync-amplify"))
+    androidTestImplementation(project(":aws-sdk-appsync-amplify"))
     androidTestImplementation(project(":aws-auth-cognito"))
     androidTestImplementation(project(":core-kotlin"))
     androidTestImplementation(project(":testutils"))

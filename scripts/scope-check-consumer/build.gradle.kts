@@ -8,11 +8,10 @@
 // Android variant attributes are required to resolve aar artifacts and to apply api/implementation
 // scope filtering the way a real consumer does — which is why this must be a Gradle/AGP build and
 // cannot be replicated by reading POMs alone.
-// Plugin versions are resolved in settings.gradle.kts from -Pagp/-Pkgp (injected by the CI
-// driver, sourced from the root gradle/libs.versions.toml so they never drift).
+// The AGP version is resolved in settings.gradle.kts from -Pagp (injected by the CI driver,
+// sourced from the root gradle/libs.versions.toml so it never drifts).
 plugins {
     id("com.android.library")
-    kotlin("android")
 }
 
 android {

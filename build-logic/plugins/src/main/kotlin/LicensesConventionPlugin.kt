@@ -29,6 +29,7 @@ class LicensesConventionPlugin : Plugin<Project> {
             extensions.configure<app.cash.licensee.LicenseeExtension> {
                 allow("Apache-2.0")
                 allow("MIT")
+                allow("MIT-0")
                 allow("BSD-2-Clause")
                 allow("CC0-1.0")
                 allowUrl("https://developer.android.com/studio/terms.html")

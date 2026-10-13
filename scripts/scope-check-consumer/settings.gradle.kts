@@ -14,14 +14,13 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
     }
-    // Plugin versions are injected via -Pagp/-Pkgp by scripts/verify_api_scopes.sh, sourced from
-    // the root gradle/libs.versions.toml so they never drift from the versions the libraries build
-    // with. settings.gradle.kts (unlike a build script's plugins{} block) can resolve providers.
+    // The AGP version is injected via -Pagp by scripts/verify_api_scopes.sh, sourced from the root
+    // gradle/libs.versions.toml so it never drifts from the version the libraries build with.
+    // settings.gradle.kts (unlike a build script's plugins{} block) can resolve providers.
+    // No Kotlin plugin is declared: AGP compiles Kotlin itself from version 9.
     val agp = providers.gradleProperty("agp").get()
-    val kgp = providers.gradleProperty("kgp").get()
     plugins {
         id("com.android.library") version agp
-        id("org.jetbrains.kotlin.android") version kgp
     }
 }
 dependencyResolutionManagement {

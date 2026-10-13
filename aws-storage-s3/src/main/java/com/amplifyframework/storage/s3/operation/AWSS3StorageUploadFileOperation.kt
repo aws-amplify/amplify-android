@@ -41,7 +41,7 @@ import java.util.concurrent.ExecutorService
  * An operation to upload a file from AWS S3.
  */
 @Deprecated(
-    "Class should not be public and explicitly cast to. Cast to StorageUploadFileOperation" +
+    "Class should not be public and explicitly cast to. Cast to StorageUploadFileOperation. " +
         "Internal usages are moving to AWSS3StoragePathUploadFileOperation"
 )
 class AWSS3StorageUploadFileOperation @JvmOverloads internal constructor(

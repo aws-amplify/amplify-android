@@ -1,5 +1,5 @@
 
-import com.android.build.gradle.LibraryExtension
+import com.android.build.api.dsl.LibraryExtension
 import java.net.URI
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -10,7 +10,6 @@ import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.extra
 import org.gradle.kotlin.dsl.findByType
 import org.gradle.kotlin.dsl.get
-import org.gradle.kotlin.dsl.provideDelegate
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.withType
 import org.gradle.plugins.signing.SigningExtension
@@ -91,14 +90,9 @@ class PublishingConventionPlugin : Plugin<Project> {
     }
 
     // Configure the publishing extension in the project
-    @Suppress("LocalVariableName", "ktlint:standard:property-naming")
     private fun Project.configureMavenPublishing() {
-        val POM_GROUP: String by project
-        val POM_ARTIFACT_ID: String by project
-        val VERSION_NAME: String by project
-
-        group = POM_GROUP
-        version = VERSION_NAME
+        group = requiredProperty("POM_GROUP")
+        version = requiredProperty("VERSION_NAME")
 
         configure<PublishingExtension> {
             // For KMP projects, publications are created automatically by the KMP plugin
@@ -113,7 +107,9 @@ class PublishingConventionPlugin : Plugin<Project> {
             if (!isKotlinMultiplatform) {
                 publications {
                     create("maven", MavenPublication::class.java) {
-                        artifactId = POM_ARTIFACT_ID
+                        // Only the non-KMP modules declare this; KMP publications take their
+                        // artifact ids from the Kotlin plugin.
+                        artifactId = requiredProperty("POM_ARTIFACT_ID")
 
                         pluginManager.withPlugin("com.android.library") {
                             from(components["release"])
@@ -141,44 +137,31 @@ class PublishingConventionPlugin : Plugin<Project> {
     }
 
     // Configure POM metadata for a publication
-    @Suppress("LocalVariableName", "ktlint:standard:property-naming")
     private fun MavenPublication.configurePom(project: Project) {
         pom {
-            val POM_NAME: String? by project
-            val POM_PACKAGING: String? by project
-            val POM_DESCRIPTION: String? by project
-            val POM_URL: String? by project
-            name.set(POM_NAME)
-            packaging = POM_PACKAGING
-            description.set(POM_DESCRIPTION)
-            url.set(POM_URL)
+            name.set(project.optionalProperty("POM_NAME"))
+            packaging = project.optionalProperty("POM_PACKAGING")
+            description.set(project.optionalProperty("POM_DESCRIPTION"))
+            url.set(project.optionalProperty("POM_URL"))
 
             scm {
-                val POM_SCM_URL: String? by project
-                val POM_SCM_CONNECTION: String? by project
-                val POM_SCM_DEV_CONNECTION: String? by project
-                url.set(POM_SCM_URL)
-                connection.set(POM_SCM_CONNECTION)
-                developerConnection.set(POM_SCM_DEV_CONNECTION)
+                url.set(project.optionalProperty("POM_SCM_URL"))
+                connection.set(project.optionalProperty("POM_SCM_CONNECTION"))
+                developerConnection.set(project.optionalProperty("POM_SCM_DEV_CONNECTION"))
             }
 
             licenses {
                 license {
-                    val POM_LICENSE_NAME: String? by project
-                    val POM_LICENSE_URL: String? by project
-                    val POM_LICENSE_DIST: String? by project
-                    name.set(POM_LICENSE_NAME)
-                    url.set(POM_LICENSE_URL)
-                    distribution.set(POM_LICENSE_DIST)
+                    name.set(project.optionalProperty("POM_LICENSE_NAME"))
+                    url.set(project.optionalProperty("POM_LICENSE_URL"))
+                    distribution.set(project.optionalProperty("POM_LICENSE_DIST"))
                 }
             }
 
             developers {
                 developer {
-                    val POM_DEVELOPER_ID: String? by project
-                    val POM_DEVELOPER_ORGANIZATION_URL: String? by project
-                    id.set(POM_DEVELOPER_ID)
-                    organizationUrl.set(POM_DEVELOPER_ORGANIZATION_URL)
+                    id.set(project.optionalProperty("POM_DEVELOPER_ID"))
+                    organizationUrl.set(project.optionalProperty("POM_DEVELOPER_ORGANIZATION_URL"))
                     roles.set(listOf("developer"))
                 }
             }
@@ -214,7 +197,7 @@ class PublishingConventionPlugin : Plugin<Project> {
     }
 
     private val Project.versionName: String
-        get() = properties["VERSION_NAME"]!!.toString()
+        get() = requiredProperty("VERSION_NAME")
 
     private val Project.isReleaseBuild: Boolean
         get() = !versionName.contains("SNAPSHOT")
@@ -243,7 +226,11 @@ class PublishingConventionPlugin : Plugin<Project> {
 
     private fun Project.getPropertyOrDefault(property: String, default: String) = propertyString(property) ?: default
 
-    private fun Project.propertyString(property: String) = properties[property]?.toString()
+    private fun Project.propertyString(property: String) = findProperty(property)?.toString()
+
+    private fun Project.requiredProperty(name: String) = property(name).toString()
+
+    private fun Project.optionalProperty(name: String) = findProperty(name)?.toString()
 
     private val Project.isKotlinMultiplatform: Boolean
         get() = pluginManager.hasPlugin("org.jetbrains.kotlin.multiplatform")

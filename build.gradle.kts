@@ -13,24 +13,10 @@
  * permissions and limitations under the License.
  */
 
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
-        maven(url = "https://plugins.gradle.org/m2/")
-    }
-
-    dependencies {
-        classpath(kotlin("gradle-plugin", version = "2.2.0"))
-        classpath("com.google.gms:google-services:4.3.15")
-    }
-}
-
 plugins {
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.apollo) apply false
     alias(libs.plugins.binary.compatibility.validator) apply false
-    alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.parcelize) apply false
     alias(libs.plugins.kotlin.serialization) apply false

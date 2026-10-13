@@ -27,7 +27,7 @@ fun readVersion() = Properties().run {
 
 project.setProperty("VERSION_NAME", readVersion())
 
-val packageInfoGenerator by tasks.registering {
+val packageInfoGenerator = tasks.register("packageInfoGenerator") {
     val constantsDir = project.layout.buildDirectory.dir("generated/sources/constants/java")
     val outputFile = constantsDir.get().file("com/amplifyframework/apollo/appsync/util/PackageInfo.kt").asFile
     inputs.property("version", version)
