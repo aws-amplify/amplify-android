@@ -36,7 +36,7 @@ kotest = "6.2.5"
 kotlin = "2.2.21"
 kotlin-datetime = "0.8.0"
 kotlin-serialization = "1.6.0"
-kover = "0.9.9"
+kover = "0.9.11"
 ktlint = "14.2.0"
 licensee = "1.14.1"
 # The Lint tooling artifacts share AGP's release train with a major version 23 higher, so this must
