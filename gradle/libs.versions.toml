@@ -42,7 +42,7 @@ licensee = "1.14.1"
 # The Lint tooling artifacts share AGP's release train with a major version 23 higher, so this must
 # be bumped alongside `agp`. Enforced by a check in lint-rules/build.gradle.kts.
 lint = "32.4.1"
-litert = "1.4.0"
+litert = "2.3.0"
 maplibre = "11.12.1"
 maplibre-annotations = "3.0.2"
 material = "1.14.0"
