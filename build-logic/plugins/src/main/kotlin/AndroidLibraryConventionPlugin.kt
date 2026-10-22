@@ -59,7 +59,11 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
 
     private fun Project.configureAndroid(extension: LibraryExtension) {
         extension.apply {
-            compileSdk = 37
+            // From AGP 9 a library publishes `minCompileSdk` equal to its own compileSdk, so this
+            // value is the compileSdk every consumer is forced onto. 37 would require consumers to
+            // move to AGP 9 as well, so it stays at 36 until that migration is something we want to
+            // ask of them. Raising it means checking what the published AARs then demand.
+            compileSdk = 36
 
             buildFeatures {
                 buildConfig = true
@@ -81,7 +85,7 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
 
                 // From AGP 9 an unset targetSdk defaults to compileSdk rather than minSdk, which
                 // puts the generated test manifest above the newest SDK the pinned Robolectric
-                // knows ("targetSdkVersion=37 > maxSdkVersion=31"). Pinning it to minSdk keeps
+                // knows ("targetSdkVersion=36 > maxSdkVersion=31"). Pinning it to minSdk keeps
                 // tests on the SDK they already ran against. Raising it means upgrading
                 // Robolectric first.
                 targetSdk = 24
