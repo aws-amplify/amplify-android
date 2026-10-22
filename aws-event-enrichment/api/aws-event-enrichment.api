@@ -69,9 +69,17 @@ public final class com/amplifyframework/eventenrichment/EventEnrichmentClientOpt
 	public static final fun builder ()Lcom/amplifyframework/eventenrichment/EventEnrichmentClientOptions$Builder;
 	public final fun component1 ()Z
 	public final fun component2-UwyO8pc ()J
+	public final fun component3 ()Z
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/util/Map;
+	public final fun component6 ()Ljava/util/Map;
 	public static final fun defaults ()Lcom/amplifyframework/eventenrichment/EventEnrichmentClientOptions;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAutoSessionTracking ()Z
+	public final fun getEmitSessionEvents ()Z
+	public final fun getInitialGlobalAttributes ()Ljava/util/Map;
+	public final fun getInitialGlobalMetrics ()Ljava/util/Map;
+	public final fun getInitialUserId ()Ljava/lang/String;
 	public final fun getSessionTimeout-UwyO8pc ()J
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -80,10 +88,22 @@ public final class com/amplifyframework/eventenrichment/EventEnrichmentClientOpt
 public final class com/amplifyframework/eventenrichment/EventEnrichmentClientOptions$Builder {
 	public final fun autoSessionTracking (Z)Lcom/amplifyframework/eventenrichment/EventEnrichmentClientOptions$Builder;
 	public final fun build ()Lcom/amplifyframework/eventenrichment/EventEnrichmentClientOptions;
+	public final fun emitSessionEvents (Z)Lcom/amplifyframework/eventenrichment/EventEnrichmentClientOptions$Builder;
 	public final fun getAutoSessionTracking ()Z
+	public final fun getEmitSessionEvents ()Z
+	public final fun getInitialGlobalAttributes ()Ljava/util/Map;
+	public final fun getInitialGlobalMetrics ()Ljava/util/Map;
+	public final fun getInitialUserId ()Ljava/lang/String;
 	public final fun getSessionTimeout-UwyO8pc ()J
+	public final fun initialGlobalAttributes (Ljava/util/Map;)Lcom/amplifyframework/eventenrichment/EventEnrichmentClientOptions$Builder;
+	public final fun initialGlobalMetrics (Ljava/util/Map;)Lcom/amplifyframework/eventenrichment/EventEnrichmentClientOptions$Builder;
+	public final fun initialUserId (Ljava/lang/String;)Lcom/amplifyframework/eventenrichment/EventEnrichmentClientOptions$Builder;
 	public final fun sessionTimeout-LRDsOJo (J)Lcom/amplifyframework/eventenrichment/EventEnrichmentClientOptions$Builder;
 	public final synthetic fun setAutoSessionTracking (Z)V
+	public final synthetic fun setEmitSessionEvents (Z)V
+	public final synthetic fun setInitialGlobalAttributes (Ljava/util/Map;)V
+	public final synthetic fun setInitialGlobalMetrics (Ljava/util/Map;)V
+	public final synthetic fun setInitialUserId (Ljava/lang/String;)V
 	public final synthetic fun setSessionTimeout-LRDsOJo (J)V
 }
 
