@@ -44,6 +44,7 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.time.Clock
 import kotlin.time.Instant
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -345,7 +346,10 @@ class EventEnrichmentClient @VisibleForTesting internal constructor(
     private fun deliver(event: EnrichedEvent) {
         try {
             sink?.send(event)
-        } catch (e: Exception) {
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            // Caught broadly so one failing send cannot stop the queue.
             logger.warn(e) { "Event sink failed for event: ${event.eventType}" }
         }
     }

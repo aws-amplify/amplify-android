@@ -53,6 +53,15 @@ class EventEnrichmentClientSessionEventsTest {
         }
     }
 
+    /** Records every event type, then throws on the first one. */
+    private class FailingSink(private val failure: () -> Throwable) : EventSink {
+        val seen = CopyOnWriteArrayList<String>()
+        override fun send(event: EnrichedEvent) {
+            seen += event.eventType
+            if (seen.size == 1) throw failure()
+        }
+    }
+
     /** Dispatcher that queues every block until [drain] is called. */
     private class QueueingDispatcher : CoroutineDispatcher() {
         private val queue = ArrayDeque<Runnable>()
@@ -133,6 +142,27 @@ class EventEnrichmentClientSessionEventsTest {
 
         types() shouldBe listOf("a", "b")
         first.session.id shouldNotBe second.session.id
+    }
+
+    @Test
+    fun `a sink that throws an Error does not stop later sends`() {
+        val failing = FailingSink { AssertionError("boom") }
+        val client = client(sink = failing)
+        client.record("a")
+        client.record("b")
+        client.close()
+
+        failing.seen shouldBe listOf(START, "a", "b", STOP)
+    }
+
+    @Test
+    fun `a sink that throws an Exception does not stop later sends`() {
+        val failing = FailingSink { IllegalStateException("boom") }
+        val client = client(sink = failing)
+        client.record("a")
+        client.close()
+
+        failing.seen shouldBe listOf(START, "a", STOP)
     }
 
     @Test
