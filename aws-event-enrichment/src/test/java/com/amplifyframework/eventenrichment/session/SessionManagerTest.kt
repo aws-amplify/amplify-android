@@ -233,6 +233,34 @@ class SessionManagerTest {
     }
 
     @Test
+    fun `ensureActiveSession in the background after a stop starts a paused session`() {
+        val manager = manager()
+        manager.startSession()
+        manager.stopSession()
+        manager.handleAppPaused()
+
+        val started = manager.ensureActiveSession()
+
+        manager.state shouldBe SessionState.PAUSED
+        fakeScheduler.fireTimeout()
+        manager.state shouldBe SessionState.STOPPED
+        manager.session.shouldNotBeNull().stopTimestamp shouldBe started.startTimestamp
+    }
+
+    @Test
+    fun `ensureActiveSession after a resume starts an active session`() {
+        val manager = manager()
+        manager.startSession()
+        manager.stopSession()
+        manager.handleAppPaused()
+        manager.handleAppResumed()
+
+        manager.ensureActiveSession()
+
+        manager.state shouldBe SessionState.ACTIVE
+    }
+
+    @Test
     fun `handleAppResumed after clearSession does not start a session`() {
         val manager = manager()
         manager.startSession()

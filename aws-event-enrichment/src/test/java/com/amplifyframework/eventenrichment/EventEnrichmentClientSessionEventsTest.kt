@@ -20,6 +20,7 @@ import com.amplifyframework.eventenrichment.metadata.AppMetadata
 import com.amplifyframework.eventenrichment.metadata.DeviceMetadata
 import com.amplifyframework.eventenrichment.metadata.SdkMetadata
 import com.amplifyframework.eventenrichment.session.SessionManager
+import com.amplifyframework.eventenrichment.session.SessionState
 import com.amplifyframework.eventenrichment.session.TimeoutHandle
 import com.amplifyframework.eventenrichment.session.TimeoutScheduler
 import com.amplifyframework.foundation.result.get
@@ -32,6 +33,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.CoroutineContext
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
@@ -68,13 +70,15 @@ class EventEnrichmentClientSessionEventsTest {
 
     // Captured so a test can fire the pause timeout by hand.
     private var scheduledTimeout: (() -> Unit)? = null
+    private var scheduledDelay: Duration? = null
 
     private fun sessionManager() = SessionManager(
         appId = "my-app",
         sessionTimeout = 5.seconds,
         now = { clock },
         generateId = { "session${idSequence++}0-1111-2222-3333-444455556666" },
-        scheduler = TimeoutScheduler { _, action ->
+        scheduler = TimeoutScheduler { delay, action ->
+            scheduledDelay = delay
             scheduledTimeout = action
             TimeoutHandle { }
         }
@@ -226,6 +230,59 @@ class EventEnrichmentClientSessionEventsTest {
 
         types() shouldBe listOf(START, STOP, START, "late")
         event.session.id shouldBe sink.events[2].session.id
+    }
+
+    @Test
+    fun `record in the background after a timeout starts a paused session that times out`() {
+        val client = client()
+        client.handleAppPaused()
+        scheduledTimeout.shouldNotBeNull().invoke()
+        clock += 60_000.milliseconds
+        scheduledTimeout = null
+
+        val event = client.record("bg").get()
+
+        client.sessionManager.state shouldBe SessionState.PAUSED
+        scheduledDelay shouldBe 5.seconds
+        clock += 5_000.milliseconds
+        scheduledTimeout.shouldNotBeNull().invoke()
+        types() shouldBe listOf(START, STOP, START, "bg", STOP)
+        val stop = sink.events[4].session
+        stop.id shouldBe event.session.id
+        stop.stopTimestamp shouldBe event.session.startTimestamp
+        stop.duration shouldBe 0L
+    }
+
+    @Test
+    fun `startSession in the background after a stop starts a paused session that times out`() {
+        val client = client()
+        client.stopSession()
+        client.handleAppPaused()
+        clock += 1_000.milliseconds
+
+        client.startSession()
+
+        client.sessionManager.state shouldBe SessionState.PAUSED
+        scheduledDelay shouldBe 5.seconds
+        clock += 5_000.milliseconds
+        scheduledTimeout.shouldNotBeNull().invoke()
+        types() shouldBe listOf(START, STOP, START, STOP)
+        val (start, stop) = sink.events.drop(2)
+        stop.session.id shouldBe start.session.id
+        stop.session.stopTimestamp shouldBe start.session.startTimestamp
+        stop.session.duration shouldBe 0L
+    }
+
+    @Test
+    fun `startSession after a resume starts an active session`() {
+        val client = client()
+        client.handleAppPaused()
+        client.handleAppResumed()
+
+        client.startSession()
+
+        client.sessionManager.state shouldBe SessionState.ACTIVE
+        types() shouldBe listOf(START, STOP, START)
     }
 
     @Test

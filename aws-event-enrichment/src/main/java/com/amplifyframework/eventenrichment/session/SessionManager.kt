@@ -87,6 +87,9 @@ internal class SessionManager(
     // Set by an explicit stop so a foreground return does not undo it.
     private var stoppedExplicitly = false
 
+    // Tracks observed lifecycle callbacks, whether or not a session is active.
+    private var backgrounded = false
+
     /**
      * Returns the current session, starting a fresh one if none is active. A
      * stopped session is still exposed for inspection, so a fresh one starts
@@ -114,6 +117,8 @@ internal class SessionManager(
             session = started
             state = SessionState.ACTIVE
             boundaryListener?.onBoundary(SessionBoundary.START, started)
+            // A session started while backgrounded pauses immediately so it can still time out.
+            if (backgrounded) handleAppPaused()
         }
     }
 
@@ -170,6 +175,7 @@ internal class SessionManager(
     /** Called when the app moves to the background. */
     fun handleAppPaused() {
         lock.withLock {
+            backgrounded = true
             if (state != SessionState.ACTIVE) return
             state = SessionState.PAUSED
             pausedAt = now()
@@ -184,6 +190,7 @@ internal class SessionManager(
      */
     fun handleAppResumed() {
         lock.withLock {
+            backgrounded = false
             when (state) {
                 SessionState.PAUSED -> if (pauseExpired()) {
                     startSession()
