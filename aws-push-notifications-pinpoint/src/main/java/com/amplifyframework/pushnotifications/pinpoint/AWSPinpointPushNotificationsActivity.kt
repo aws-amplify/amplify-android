@@ -43,7 +43,9 @@ internal class AWSPinpointPushNotificationsActivity : Activity() {
                     LOG.error("Record notification opened event failed.", it)
                 })
             }
-            startActivity(intent)
+            if (intent != null) {
+                startActivity(intent)
+            }
         } catch (e: ActivityNotFoundException) {
             LOG.error("Couldn't launch PushNotifications Activity.", e)
         }
