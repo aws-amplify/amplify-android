@@ -1,3 +1,15 @@
+## [Release 2.43.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.43.0)
+
+### Features
+- **analytics:** send session start and stop events ([#3496](https://github.com/aws-amplify/amplify-android/issues/3496))
+
+### Bug Fixes
+- **api:** Deliver cached lazy reference callback once ([#3459](https://github.com/aws-amplify/amplify-android/issues/3459))
+- **notifications:** skip absent notification tap targets ([#3486](https://github.com/aws-amplify/amplify-android/issues/3486))
+- **analytics:** pause the launch session when the client is created in the background ([#3500](https://github.com/aws-amplify/amplify-android/issues/3500))
+
+[See all changes between 2.42.0 and 2.43.0](https://github.com/aws-amplify/amplify-android/compare/release_v2.42.0...release_v2.43.0)
+
 ## [Release 2.42.0](https://github.com/aws-amplify/amplify-android/releases/tag/release_v2.42.0)
 
 ### Features
