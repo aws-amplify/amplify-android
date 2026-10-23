@@ -20,8 +20,10 @@ import com.amplifyframework.foundation.credentials.AwsCredentials
 import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
 import com.amplifyframework.foundation.result.Result
 import com.amplifyframework.foundation.result.get
+import com.amplifyframework.foundation.result.mapSuccess
 import com.amplifyframework.recordcache.BaseStreamClientInstrumentationTest
-import com.amplifyframework.recordcache.FlushStrategy
+import com.amplifyframework.recordcache.TestClearCacheData
+import com.amplifyframework.recordcache.TestFlushData
 import com.amplifyframework.recordcache.TestableStreamClient
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -220,9 +222,13 @@ class KinesisDataStreamsInstrumentationTest : BaseStreamClientInstrumentationTes
 private fun AmplifyKinesisClient.asTestable(defaultPartitionKey: String = "test-partition"): TestableStreamClient =
     object : TestableStreamClient {
         override suspend fun record(data: ByteArray, streamName: String) =
-            this@asTestable.record(data, defaultPartitionKey, streamName)
-        override suspend fun flush() = this@asTestable.flush()
-        override suspend fun clearCache() = this@asTestable.clearCache()
+            this@asTestable.record(data, defaultPartitionKey, streamName).mapSuccess { }
+        override suspend fun flush() = this@asTestable.flush().mapSuccess {
+            TestFlushData(recordsFlushed = it.recordsFlushed, flushInProgress = it.flushInProgress)
+        }
+        override suspend fun clearCache() = this@asTestable.clearCache().mapSuccess {
+            TestClearCacheData(recordsCleared = it.recordsCleared)
+        }
         override fun enable() = this@asTestable.enable()
         override fun disable() = this@asTestable.disable()
     }
