@@ -16,6 +16,7 @@
 
 package com.amplifyframework.eventenrichment
 
+import android.app.ActivityManager
 import android.app.Application
 import android.content.Context
 import androidx.annotation.VisibleForTesting
@@ -110,7 +111,8 @@ class EventEnrichmentClient @VisibleForTesting internal constructor(
     initialGlobalMetrics: Map<String, Double> = emptyMap(),
     private val lock: ReentrantLock = ReentrantLock(),
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
-    private val sinkDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val sinkDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    isAppInForeground: () -> Boolean = ::isProcessInForeground
 ) {
     /**
      * Creates a client that auto-resolves device metadata and the client id
@@ -217,6 +219,10 @@ class EventEnrichmentClient @VisibleForTesting internal constructor(
             this.sessionManager.startSession()
             application?.let {
                 lifecycleObserver = AndroidLifecycleObserver(it, this.sessionManager)
+                // Checked after the observer is registered, so an activity that starts in
+                // between still resumes the session. Created in the background: pause the
+                // launch session so it can time out.
+                if (!isAppInForeground()) this.sessionManager.handleAppPaused()
             }
         }
     }
@@ -373,6 +379,15 @@ class EventEnrichmentClient @VisibleForTesting internal constructor(
                 return appMetadata
             }
             return AppMetadata(appId = appId)
+        }
+
+        // Safe on any thread. Only a visible activity counts as foreground, matching the
+        // lifecycle observer, so a foreground service alone does not.
+        fun isProcessInForeground(): Boolean {
+            val info = ActivityManager.RunningAppProcessInfo()
+            ActivityManager.getMyMemoryState(info)
+            return info.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND ||
+                info.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE
         }
     }
 }
