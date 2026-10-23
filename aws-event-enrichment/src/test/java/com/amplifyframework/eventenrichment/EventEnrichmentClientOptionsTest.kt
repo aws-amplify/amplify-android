@@ -25,6 +25,10 @@ class EventEnrichmentClientOptionsTest {
         val options = EventEnrichmentClientOptions.defaults()
         options.autoSessionTracking shouldBe true
         options.sessionTimeout shouldBe 5.seconds
+        options.emitSessionEvents shouldBe true
+        options.initialUserId shouldBe null
+        options.initialGlobalAttributes shouldBe emptyMap()
+        options.initialGlobalMetrics shouldBe emptyMap()
     }
 
     @Test
@@ -32,10 +36,18 @@ class EventEnrichmentClientOptionsTest {
         val options = EventEnrichmentClientOptions.builder()
             .autoSessionTracking(false)
             .sessionTimeout(30.seconds)
+            .emitSessionEvents(false)
+            .initialUserId("user-1")
+            .initialGlobalAttributes(mapOf("theme" to "dark"))
+            .initialGlobalMetrics(mapOf("battery" to 0.5))
             .build()
 
         options.autoSessionTracking shouldBe false
         options.sessionTimeout shouldBe 30.seconds
+        options.emitSessionEvents shouldBe false
+        options.initialUserId shouldBe "user-1"
+        options.initialGlobalAttributes shouldBe mapOf("theme" to "dark")
+        options.initialGlobalMetrics shouldBe mapOf("battery" to 0.5)
     }
 
     @Test
@@ -43,9 +55,15 @@ class EventEnrichmentClientOptionsTest {
         val options = EventEnrichmentClientOptions {
             autoSessionTracking = false
             sessionTimeout = 10.seconds
+            initialUserId = "user-1"
+            initialGlobalAttributes = mapOf("theme" to "dark")
+            initialGlobalMetrics = mapOf("battery" to 0.5)
         }
 
         options.autoSessionTracking shouldBe false
         options.sessionTimeout shouldBe 10.seconds
+        options.initialUserId shouldBe "user-1"
+        options.initialGlobalAttributes shouldBe mapOf("theme" to "dark")
+        options.initialGlobalMetrics shouldBe mapOf("battery" to 0.5)
     }
 }

@@ -26,7 +26,6 @@ import com.amplifyframework.eventenrichment.session.TimeoutHandle
 import com.amplifyframework.eventenrichment.session.TimeoutScheduler
 import com.amplifyframework.foundation.result.Result
 import com.amplifyframework.foundation.result.get
-import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -86,8 +85,7 @@ class EventEnrichmentClientTest {
         result.shouldBeInstanceOf<Result.Success<EnrichedEvent>>()
         result.data.eventType shouldBe "button_clicked"
         result.data.clientId shouldBe "device-uuid"
-        sink.events shouldHaveSize 1
-        sink.events.first().eventType shouldBe "button_clicked"
+        sink.events.map { it.eventType } shouldBe listOf("_session.start", "button_clicked")
     }
 
     @Test
@@ -199,5 +197,62 @@ class EventEnrichmentClientTest {
         client.isClosed shouldBe true
         manager.state shouldBe SessionState.STOPPED
         manager.session shouldBe null
+    }
+
+    @Test
+    fun `handleAppResumed after stopSession does not start a session but record does`() {
+        val manager = sessionManager()
+        val client = client(manager = manager)
+        client.stopSession()
+
+        client.handleAppResumed()
+        manager.state shouldBe SessionState.STOPPED
+
+        client.record("x")
+        manager.state shouldBe SessionState.ACTIVE
+    }
+
+    @Test
+    fun `session calls are no-ops after close`() {
+        val manager = sessionManager()
+        val client = client(manager = manager)
+        client.close()
+
+        client.startSession()
+        client.handleAppResumed()
+        manager.state shouldBe SessionState.STOPPED
+        manager.session shouldBe null
+
+        // Paused and stop on a cleared manager must not resurrect anything either.
+        client.handleAppPaused()
+        client.stopSession()
+        manager.state shouldBe SessionState.STOPPED
+        manager.session shouldBe null
+    }
+
+    @Test
+    fun `startSession after close does not start a session`() {
+        val manager = sessionManager()
+        val client = client(manager = manager)
+        client.close()
+
+        client.startSession()
+
+        manager.session shouldBe null
+    }
+
+    @Test
+    fun `stopSession twice keeps the first stop metadata`() {
+        val manager = sessionManager()
+        val client = client(manager = manager)
+        clock += 1_000.milliseconds
+        client.stopSession()
+        val stopped = manager.session.shouldNotBeNull()
+
+        clock += 1_000.milliseconds
+        client.stopSession()
+
+        manager.session shouldBe stopped
+        stopped.duration shouldBe 1_000L
     }
 }

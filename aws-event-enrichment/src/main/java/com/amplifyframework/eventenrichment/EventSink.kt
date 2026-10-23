@@ -22,6 +22,11 @@ import com.amplifyframework.annotations.ExperimentalAmplifyApi
  * Implement this to pipe events to Kinesis, Firehose, or any custom transport.
  * No default implementation is provided, keeping this module free of transport
  * dependencies.
+ *
+ * The client calls [send] on a background thread, one event at a time, in the
+ * order events happened. There is no timeout or queue limit, so [send] must
+ * return promptly, for example by writing to a local cache. Exceptions it
+ * throws are logged and do not stop later sends.
  */
 @ExperimentalAmplifyApi
 fun interface EventSink {

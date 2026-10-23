@@ -177,4 +177,130 @@ class SessionManagerTest {
         session.stopTimestamp shouldBe null
         session.duration shouldBe null
     }
+
+    @Test
+    fun `stopSession on a stopped session keeps the original stop metadata`() {
+        val manager = manager()
+        manager.startSession()
+        clock += 1_000.milliseconds
+        manager.stopSession()
+        val stopped = manager.session.shouldNotBeNull()
+
+        clock += 5_000.milliseconds
+        manager.stopSession()
+
+        manager.session shouldBe stopped
+    }
+
+    @Test
+    fun `handleAppResumed after an explicit stop does not start a session`() {
+        val manager = manager()
+        manager.startSession()
+        val stopped = manager.session.shouldNotBeNull().id
+        manager.stopSession()
+
+        manager.handleAppResumed()
+
+        manager.state shouldBe SessionState.STOPPED
+        manager.session.shouldNotBeNull().id shouldBe stopped
+    }
+
+    @Test
+    fun `startSession after an explicit stop re-enables resume after a timeout`() {
+        val manager = manager()
+        manager.startSession()
+        manager.stopSession()
+        manager.startSession()
+        val restarted = manager.session.shouldNotBeNull().id
+
+        manager.handleAppPaused()
+        fakeScheduler.fireTimeout()
+        manager.handleAppResumed()
+
+        manager.state shouldBe SessionState.ACTIVE
+        manager.session.shouldNotBeNull().id shouldNotBe restarted
+    }
+
+    @Test
+    fun `ensureActiveSession after an explicit stop starts a fresh session`() {
+        val manager = manager()
+        manager.startSession()
+        val stopped = manager.session.shouldNotBeNull().id
+        manager.stopSession()
+
+        manager.ensureActiveSession().id shouldNotBe stopped
+        manager.state shouldBe SessionState.ACTIVE
+    }
+
+    @Test
+    fun `ensureActiveSession in the background after a stop starts a paused session`() {
+        val manager = manager()
+        manager.startSession()
+        manager.stopSession()
+        manager.handleAppPaused()
+
+        val started = manager.ensureActiveSession()
+
+        manager.state shouldBe SessionState.PAUSED
+        fakeScheduler.fireTimeout()
+        manager.state shouldBe SessionState.STOPPED
+        manager.session.shouldNotBeNull().stopTimestamp shouldBe started.startTimestamp
+    }
+
+    @Test
+    fun `ensureActiveSession after a resume starts an active session`() {
+        val manager = manager()
+        manager.startSession()
+        manager.stopSession()
+        manager.handleAppPaused()
+        manager.handleAppResumed()
+
+        manager.ensureActiveSession()
+
+        manager.state shouldBe SessionState.ACTIVE
+    }
+
+    @Test
+    fun `handleAppResumed after clearSession does not start a session`() {
+        val manager = manager()
+        manager.startSession()
+        manager.clearSession()
+
+        manager.handleAppResumed()
+
+        manager.state shouldBe SessionState.STOPPED
+        manager.session shouldBe null
+    }
+
+    @Test
+    fun `timeout that fires after a resume does not stop the session`() {
+        val manager = manager()
+        manager.startSession()
+        val id = manager.session.shouldNotBeNull().id
+        manager.handleAppPaused()
+        val staleTimeout = fakeScheduler.scheduledAction.shouldNotBeNull()
+        manager.handleAppResumed()
+
+        staleTimeout()
+
+        manager.state shouldBe SessionState.ACTIVE
+        manager.session.shouldNotBeNull().id shouldBe id
+        manager.session.shouldNotBeNull().stopTimestamp shouldBe null
+    }
+
+    @Test
+    fun `timeout from an earlier pause does not stop a later pause`() {
+        val manager = manager()
+        manager.startSession()
+        manager.handleAppPaused()
+        val staleTimeout = fakeScheduler.scheduledAction.shouldNotBeNull()
+        manager.handleAppResumed()
+        manager.handleAppPaused()
+
+        staleTimeout()
+
+        manager.state shouldBe SessionState.PAUSED
+        fakeScheduler.fireTimeout()
+        manager.state shouldBe SessionState.STOPPED
+    }
 }
