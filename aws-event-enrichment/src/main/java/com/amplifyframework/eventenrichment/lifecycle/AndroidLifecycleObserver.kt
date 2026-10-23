@@ -18,6 +18,8 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import com.amplifyframework.eventenrichment.session.SessionManager
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * [LifecycleObserver] that bridges Android app foreground/background
@@ -30,22 +32,33 @@ import com.amplifyframework.eventenrichment.session.SessionManager
  *
  * @param application Application to register lifecycle callbacks on.
  * @param sessionManager Session manager driven by the lifecycle transitions.
+ * @param lock The client's session lock. The count and the calls it drives run
+ *   under it, so the client's launch check sees a consistent count.
  */
 internal class AndroidLifecycleObserver(
     private val application: Application,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val lock: ReentrantLock
 ) : LifecycleObserver {
     private var startedActivities = 0
 
+    /** Whether an activity has started and not stopped. Read under [lock]. */
+    val hasStartedActivity: Boolean
+        get() = lock.withLock { startedActivities > 0 }
+
     private val callbacks = object : Application.ActivityLifecycleCallbacks {
         override fun onActivityStarted(activity: Activity) {
-            if (startedActivities == 0) onResume()
-            startedActivities++
+            lock.withLock {
+                if (startedActivities == 0) onResume()
+                startedActivities++
+            }
         }
 
         override fun onActivityStopped(activity: Activity) {
-            if (startedActivities > 0) startedActivities--
-            if (startedActivities == 0) onPause()
+            lock.withLock {
+                if (startedActivities > 0) startedActivities--
+                if (startedActivities == 0) onPause()
+            }
         }
 
         override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit

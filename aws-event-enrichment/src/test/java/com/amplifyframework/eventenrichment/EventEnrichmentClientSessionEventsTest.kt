@@ -16,6 +16,8 @@
 
 package com.amplifyframework.eventenrichment
 
+import android.app.Activity
+import android.app.Application
 import com.amplifyframework.eventenrichment.metadata.AppMetadata
 import com.amplifyframework.eventenrichment.metadata.DeviceMetadata
 import com.amplifyframework.eventenrichment.metadata.SdkMetadata
@@ -28,10 +30,14 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.slot
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -98,7 +104,10 @@ class EventEnrichmentClientSessionEventsTest {
         autoSessionTracking: Boolean = true,
         emitSessionEvents: Boolean = true,
         sinkDispatcher: CoroutineDispatcher = Dispatchers.Unconfined,
-        scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+        application: Application? = null,
+        isAppInForeground: () -> Boolean = { true },
+        lock: ReentrantLock = ReentrantLock()
     ) = EventEnrichmentClient(
         appMetadata = AppMetadata(appId = "my-app"),
         deviceMetadata = DeviceMetadata(platform = "Android"),
@@ -107,13 +116,22 @@ class EventEnrichmentClientSessionEventsTest {
         sink = sink,
         sessionManager = sessionManager(),
         autoSessionTracking = autoSessionTracking,
-        application = null,
+        application = application,
         clock = { clock },
         generateEventId = { "event${idSequence++}" },
         emitSessionEvents = emitSessionEvents,
         scope = scope,
-        sinkDispatcher = sinkDispatcher
+        sinkDispatcher = sinkDispatcher,
+        isAppInForeground = isAppInForeground,
+        lock = lock
     )
+
+    private val lifecycleCallbacks = slot<Application.ActivityLifecycleCallbacks>()
+    private val application = mockk<Application>(relaxed = true) {
+        every { registerActivityLifecycleCallbacks(capture(lifecycleCallbacks)) } returns Unit
+    }
+
+    private fun startActivity() = lifecycleCallbacks.captured.onActivityStarted(mockk<Activity>())
 
     private fun types() = sink.events.map { it.eventType }
 
@@ -313,6 +331,116 @@ class EventEnrichmentClientSessionEventsTest {
 
         client.sessionManager.state shouldBe SessionState.ACTIVE
         types() shouldBe listOf(START, STOP, START)
+    }
+
+    @Test
+    fun `client created in the background pauses the launch session so it times out`() {
+        val client = client(application = application, isAppInForeground = { false })
+
+        client.sessionManager.state shouldBe SessionState.PAUSED
+        scheduledDelay shouldBe 5.seconds
+        clock += 5_000.milliseconds
+        scheduledTimeout.shouldNotBeNull().invoke()
+        types() shouldBe listOf(START, STOP)
+        val (start, stop) = sink.events
+        stop.session.id shouldBe start.session.id
+        stop.session.stopTimestamp shouldBe start.session.startTimestamp
+        stop.session.duration shouldBe 0L
+    }
+
+    @Test
+    fun `resume after a background launch times out starts a fresh active session`() {
+        val client = client(application = application, isAppInForeground = { false })
+        clock += 5_000.milliseconds
+        scheduledTimeout.shouldNotBeNull().invoke()
+        clock += 60_000.milliseconds
+
+        client.handleAppResumed()
+
+        client.sessionManager.state shouldBe SessionState.ACTIVE
+        types() shouldBe listOf(START, STOP, START)
+        sink.events[2].session.id shouldNotBe sink.events[0].session.id
+        sink.events[2].session.startTimestamp shouldBe "2026-07-06T19:53:04.839Z"
+    }
+
+    @Test
+    fun `first activity start after a background launch expires starts a fresh active session`() {
+        val client = client(application = application, isAppInForeground = { false })
+        clock += 60_000.milliseconds
+
+        startActivity()
+
+        client.sessionManager.state shouldBe SessionState.ACTIVE
+        types() shouldBe listOf(START, STOP, START)
+        sink.events[1].session.duration shouldBe 0L
+        sink.events[2].session.id shouldNotBe sink.events[0].session.id
+    }
+
+    @Test
+    fun `first activity start within the timeout resumes the background launch session`() {
+        val client = client(application = application, isAppInForeground = { false })
+        clock += 4_999.milliseconds
+
+        startActivity()
+
+        client.sessionManager.state shouldBe SessionState.ACTIVE
+        types() shouldBe listOf(START)
+    }
+
+    @Test
+    fun `foreground check runs after the lifecycle observer is registered`() {
+        var registeredFirst = false
+
+        client(application = application, isAppInForeground = {
+            registeredFirst = lifecycleCallbacks.isCaptured
+            true
+        })
+
+        registeredFirst shouldBe true
+    }
+
+    @Test
+    fun `activity that starts during the background check resumes the launch session`() {
+        val lock = ReentrantLock()
+        lateinit var starter: Thread
+        val client = client(application = application, lock = lock, isAppInForeground = {
+            // Starts an activity on another thread while the check runs, and waits until
+            // that callback is blocked on the lock or, without the lock, has finished.
+            starter = Thread { startActivity() }.apply { start() }
+            while (!lock.hasQueuedThread(starter) && starter.isAlive) Thread.yield()
+            false
+        })
+        starter.join()
+
+        client.sessionManager.state shouldBe SessionState.ACTIVE
+        clock += 5_000.milliseconds
+        scheduledTimeout?.invoke()
+        client.sessionManager.state shouldBe SessionState.ACTIVE
+        types() shouldBe listOf(START)
+    }
+
+    @Test
+    fun `activity that started before a stale background check keeps the launch session active`() {
+        every { application.registerActivityLifecycleCallbacks(capture(lifecycleCallbacks)) } answers {
+            // The activity starts right after registration, before the check, whose
+            // process importance still says background.
+            startActivity()
+        }
+
+        val client = client(application = application, isAppInForeground = { false })
+
+        client.sessionManager.state shouldBe SessionState.ACTIVE
+        scheduledTimeout shouldBe null
+        types() shouldBe listOf(START)
+    }
+
+    @Test
+    fun `client created in the foreground keeps the launch session active`() {
+        val client = client(application = application, isAppInForeground = { true })
+
+        client.sessionManager.state shouldBe SessionState.ACTIVE
+        scheduledTimeout shouldBe null
+        types() shouldBe listOf(START)
     }
 
     @Test

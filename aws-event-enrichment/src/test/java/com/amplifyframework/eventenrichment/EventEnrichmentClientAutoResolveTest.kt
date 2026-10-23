@@ -14,11 +14,15 @@
  */
 package com.amplifyframework.eventenrichment
 
+import android.app.ActivityManager
+import android.app.ActivityManager.RunningAppProcessInfo
 import android.content.Context
+import android.os.Process
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.eventenrichment.clientid.SharedPreferencesClientIdProvider
 import com.amplifyframework.eventenrichment.metadata.AppMetadata
 import com.amplifyframework.eventenrichment.metadata.SdkMetadata
+import com.amplifyframework.eventenrichment.session.SessionState
 import com.amplifyframework.foundation.result.get
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -27,6 +31,7 @@ import java.util.concurrent.TimeUnit
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(RobolectricTestRunner::class)
 class EventEnrichmentClientAutoResolveTest {
@@ -121,5 +126,42 @@ class EventEnrichmentClientAutoResolveTest {
         event.attributes shouldBe mapOf("theme" to "dark")
         event.metrics shouldBe mapOf("battery" to 0.5)
         client.close()
+    }
+
+    @Test
+    fun `launch session starts paused when the process has no visible activity`() {
+        launchStateFor(RunningAppProcessInfo.IMPORTANCE_CACHED) shouldBe SessionState.PAUSED
+    }
+
+    @Test
+    fun `launch session starts paused when only a foreground service is running`() {
+        launchStateFor(RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE) shouldBe SessionState.PAUSED
+    }
+
+    @Test
+    fun `launch session starts active when an activity is in the foreground`() {
+        launchStateFor(RunningAppProcessInfo.IMPORTANCE_FOREGROUND) shouldBe SessionState.ACTIVE
+    }
+
+    @Test
+    fun `launch session starts active when an activity is visible`() {
+        launchStateFor(RunningAppProcessInfo.IMPORTANCE_VISIBLE) shouldBe SessionState.ACTIVE
+    }
+
+    private fun launchStateFor(importance: Int): SessionState {
+        val process = RunningAppProcessInfo().apply {
+            pid = Process.myPid()
+            this.importance = importance
+        }
+        shadowOf(context.getSystemService(ActivityManager::class.java)).setProcesses(listOf(process))
+        val client = EventEnrichmentClient(
+            context = context,
+            appId = "my-app",
+            sdkMetadata = sdkMetadata,
+            options = options(autoSessionTracking = true)
+        )
+        val state = client.sessionManager.state
+        client.close()
+        return state
     }
 }
