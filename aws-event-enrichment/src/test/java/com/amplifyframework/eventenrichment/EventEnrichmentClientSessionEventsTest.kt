@@ -37,6 +37,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -105,7 +106,8 @@ class EventEnrichmentClientSessionEventsTest {
         sinkDispatcher: CoroutineDispatcher = Dispatchers.Unconfined,
         scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
         application: Application? = null,
-        isAppInForeground: () -> Boolean = { true }
+        isAppInForeground: () -> Boolean = { true },
+        lock: ReentrantLock = ReentrantLock()
     ) = EventEnrichmentClient(
         appMetadata = AppMetadata(appId = "my-app"),
         deviceMetadata = DeviceMetadata(platform = "Android"),
@@ -120,7 +122,8 @@ class EventEnrichmentClientSessionEventsTest {
         emitSessionEvents = emitSessionEvents,
         scope = scope,
         sinkDispatcher = sinkDispatcher,
-        isAppInForeground = isAppInForeground
+        isAppInForeground = isAppInForeground,
+        lock = lock
     )
 
     private val lifecycleCallbacks = slot<Application.ActivityLifecycleCallbacks>()
@@ -394,6 +397,41 @@ class EventEnrichmentClientSessionEventsTest {
         })
 
         registeredFirst shouldBe true
+    }
+
+    @Test
+    fun `activity that starts during the background check resumes the launch session`() {
+        val lock = ReentrantLock()
+        lateinit var starter: Thread
+        val client = client(application = application, lock = lock, isAppInForeground = {
+            // Starts an activity on another thread while the check runs, and waits until
+            // that callback is blocked on the lock or, without the lock, has finished.
+            starter = Thread { startActivity() }.apply { start() }
+            while (!lock.hasQueuedThread(starter) && starter.isAlive) Thread.yield()
+            false
+        })
+        starter.join()
+
+        client.sessionManager.state shouldBe SessionState.ACTIVE
+        clock += 5_000.milliseconds
+        scheduledTimeout?.invoke()
+        client.sessionManager.state shouldBe SessionState.ACTIVE
+        types() shouldBe listOf(START)
+    }
+
+    @Test
+    fun `activity that started before a stale background check keeps the launch session active`() {
+        every { application.registerActivityLifecycleCallbacks(capture(lifecycleCallbacks)) } answers {
+            // The activity starts right after registration, before the check, whose
+            // process importance still says background.
+            startActivity()
+        }
+
+        val client = client(application = application, isAppInForeground = { false })
+
+        client.sessionManager.state shouldBe SessionState.ACTIVE
+        scheduledTimeout shouldBe null
+        types() shouldBe listOf(START)
     }
 
     @Test

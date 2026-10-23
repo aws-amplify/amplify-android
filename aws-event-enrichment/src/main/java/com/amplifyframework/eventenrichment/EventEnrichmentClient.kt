@@ -218,11 +218,17 @@ class EventEnrichmentClient @VisibleForTesting internal constructor(
         if (autoSessionTracking) {
             this.sessionManager.startSession()
             application?.let {
-                lifecycleObserver = AndroidLifecycleObserver(it, this.sessionManager)
-                // Checked after the observer is registered, so an activity that starts in
-                // between still resumes the session. Created in the background: pause the
-                // launch session so it can time out.
-                if (!isAppInForeground()) this.sessionManager.handleAppPaused()
+                val observer = AndroidLifecycleObserver(it, this.sessionManager, lock)
+                lifecycleObserver = observer
+                // Created in the background: pause the launch session so it can time out.
+                // Under the lock the observer's callbacks also take, so an activity that
+                // starts during the check resumes the session after this pause, and one
+                // that already started skips it.
+                lock.withLock {
+                    if (!observer.hasStartedActivity && !isAppInForeground()) {
+                        this.sessionManager.handleAppPaused()
+                    }
+                }
             }
         }
     }
