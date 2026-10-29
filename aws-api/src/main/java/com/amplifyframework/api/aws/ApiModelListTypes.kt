@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws
 
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.ApiCategory
+import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
@@ -54,7 +55,10 @@ internal class ApiLazyModelList<out M : Model> constructor(
     override suspend fun fetchPage(paginationToken: PaginationToken?): ModelPage<M> {
         try {
             val response = query(apiCategory, createRequest(paginationToken), apiName)
-            return response.data
+            return response.data ?: throw ApiException(
+                "GraphQL response did not contain a model page. Errors: ${response.errors}",
+                "Check the GraphQL errors and retry the request."
+            )
         } catch (error: AmplifyException) {
             throw createLazyException(error)
         }
