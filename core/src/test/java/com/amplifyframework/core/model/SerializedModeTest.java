@@ -15,6 +15,7 @@
 
 package com.amplifyframework.core.model;
 
+import com.amplifyframework.datastore.DataStoreException.IrRecoverableException;
 import com.amplifyframework.testutils.Resources;
 
 import com.google.gson.Gson;
@@ -39,9 +40,10 @@ public final class SerializedModeTest {
 
     /**
      * Register some schemas and get gson instance.
+     * @throws IrRecoverableException if a model schema supports lazy model types
      */
     @Before
-    public void setup() {
+    public void setup() throws IrRecoverableException {
         gson = new GsonBuilder().serializeNulls().create();
         schemaRegistry = SchemaRegistry.instance();
         buildSerializedModelNestsSerializedCustomTypeSchemas();
@@ -105,7 +107,7 @@ public final class SerializedModeTest {
         assertEquals(serializedPhone, phone);
     }
 
-    private void buildSerializedModelNestsSerializedCustomTypeSchemas() {
+    private void buildSerializedModelNestsSerializedCustomTypeSchemas() throws IrRecoverableException {
         CustomTypeField addressLine1Field = CustomTypeField.builder()
                 .name("line1")
                 .isRequired(true)

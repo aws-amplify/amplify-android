@@ -712,7 +712,7 @@ public final class AppSyncRequestFactoryTest {
                 .build();
     }
 
-    private void buildSerializedModelNestsSerializedCustomTypeSchemas() {
+    private void buildSerializedModelNestsSerializedCustomTypeSchemas() throws AmplifyException {
         SchemaRegistry schemaRegistry = SchemaRegistry.instance();
 
         CustomTypeField addressLine1Field = CustomTypeField.builder()
