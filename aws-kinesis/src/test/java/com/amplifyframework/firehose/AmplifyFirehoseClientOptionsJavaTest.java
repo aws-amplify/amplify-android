@@ -20,7 +20,6 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.foundation.credentials.AwsCredentials;
 import com.amplifyframework.foundation.credentials.AwsCredentialsProvider;
-import com.amplifyframework.recordcache.FlushStrategy;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
