@@ -7,7 +7,6 @@ def module_backends = [
         'aws-geo-location'      : 'GeoIntegTests',
         'maplibre-adapter'      : 'GeoIntegTests',
         'aws-storage-s3'        : 'NONE',
-        'aws-analytics-pinpoint': 'NONE',
         'aws-predictions'       : 'NONE',
         'core'                  : 'NONE',
         'aws-auth-cognito'      : 'AuthIntegrationTests',
@@ -23,7 +22,6 @@ def module_subpaths = [
 def canaryTests = [
         'aws-datastore'   : ['com.amplifyframework.datastore.DatastoreCanaryTest'],
         'aws-auth-cognito': ['com.amplifyframework.auth.cognito.AuthCanaryTest'],
-        'aws-analytics-pinpoint': ['com.amplifyframework.analytics.pinpoint.PinpointAnalyticsCanaryTest'],
         'aws-geo-location': ['com.amplifyframework.geo.location.GeoCanaryTest'],
         'aws-predictions': ['com.amplifyframework.predictions.aws.PredictionsCanaryTest'],
         'aws-storage-s3': ['com.amplifyframework.storage.s3.StorageCanaryTest'],

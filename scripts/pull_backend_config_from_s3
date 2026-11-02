@@ -12,12 +12,6 @@ readonly config_files=(
     # Core
     "core/src/androidTest/res/raw/amplifyconfiguration.json"
 
-    # Analytics
-    "aws-analytics-pinpoint/src/androidTest/res/raw/amplifyconfiguration.json"
-    "aws-analytics-pinpoint/src/androidTest/res/raw/awsconfiguration.json"
-    "aws-analytics-pinpoint/src/androidTest/res/raw/credentials.json"
-    "aws-analytics-pinpoint/src/androidTest/res/raw/amplify_outputs.json"
-
     # API
     "aws-api/src/androidTest/res/raw/amplifyconfiguration.json"
     "aws-api/src/androidTest/res/raw/awsconfiguration.json"
