@@ -83,8 +83,9 @@ public final class StorageListResult {
 
     /**
      * Gets the next continuation token retrieved by the list API.
-     * @return next continuation token.
+     * @return next continuation token, or null if no more results are available.
      */
+    @Nullable
     public String getNextToken() {
         return nextToken;
     }

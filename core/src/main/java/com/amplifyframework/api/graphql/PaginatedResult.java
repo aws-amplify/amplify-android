@@ -73,8 +73,9 @@ public final class PaginatedResult<T> implements Iterable<T> {
      * Returns a GraphQLRequest which can be used to obtain the next page of results.  The request itself is identical
      * to the GraphQLRequest used to obtain the current page of results, except that pagination metadata is added.
      *
-     * @return GraphQLRequest to obtain the next page of results
+     * @return GraphQLRequest to obtain the next page of results, or null if no next page exists
      */
+    @Nullable
     public GraphQLRequest<PaginatedResult<T>> getRequestForNextResult() {
         return requestForNextResult;
     }
