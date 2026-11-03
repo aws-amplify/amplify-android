@@ -95,7 +95,7 @@ internal class AWSS3StoragePathUploadInputStreamOperation internal constructor(
                     request.path.toS3ServiceKey(authCredentialsProvider)
                 }
             } catch (se: StorageException) {
-                onError.accept(se)
+                onError?.accept(se)
                 return@submit
             }
 
