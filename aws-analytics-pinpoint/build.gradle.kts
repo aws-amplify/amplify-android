@@ -41,8 +41,4 @@ dependencies {
     testImplementation(libs.bundles.test.mockito)
     testImplementation(libs.test.androidx.junit)
     testImplementation(project(":testutils"))
-
-    androidTestImplementation(libs.bundles.test.android)
-    androidTestImplementation(project(":testutils"))
-    androidTestImplementation(project(":aws-auth-cognito"))
 }
