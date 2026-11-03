@@ -29,6 +29,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.withClue
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
@@ -39,7 +40,6 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.test.runTest
 import mockwebserver3.MockResponse
@@ -67,7 +67,11 @@ class ApiLazyModelListNullDataTest {
     @Test
     fun `suspend fetch without api name reports AmplifyException for GraphQL null data`() = runTest {
         respondWith(deniedJson)
-        shouldThrow<AmplifyException> { lazyList(null).fetchPage() }
+        val error = shouldThrow<AmplifyException> { lazyList(null).fetchPage() }
+        error.cause.shouldBeInstanceOf<ApiException>()
+        error.cause!!.message shouldContain "Not Authorized"
+        error.recoverySuggestion shouldContain "Check the GraphQL errors and retry."
+        error.recoverySuggestion shouldContain "Not Authorized"
     }
 
     @Test
@@ -192,7 +196,6 @@ class ApiLazyModelListNullDataTest {
 
     private fun assertCallbackRoutesError(useTokenOverload: Boolean) {
         respondWith(deniedJson)
-        val list = lazyList("myApi")
         val completed = CountDownLatch(1)
         val successes = AtomicInteger()
         val errors = AtomicInteger()
@@ -202,14 +205,14 @@ class ApiLazyModelListNullDataTest {
             uncaught.set(error)
             completed.countDown()
         }
-        val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO + handler)
-        // Observe uncaught coroutine errors without changing the process-wide exception handler.
-        // The production query, response factory, fetch method and callback dispatch all remain real.
-        val field = ApiLazyModelList::class.java.getDeclaredField("callbackScope")
-        field.isAccessible = true
-        val originalScope = field.get(list) as CoroutineScope
-        field.set(list, scope)
-        originalScope.cancel()
+        val scope = CoroutineScope(Dispatchers.IO + handler)
+        val list = ApiLazyModelList(
+            Post::class.java,
+            mapOf("blogPostsId" to "b1"),
+            "myApi",
+            apiCategory,
+            callbackScope = scope
+        )
         try {
             val onSuccess = Consumer<ModelPage<Post>> {
                 successes.incrementAndGet()
@@ -230,7 +233,11 @@ class ApiLazyModelListNullDataTest {
                 uncaught.get() shouldBe null
                 successes.get() shouldBe 0
                 errors.get() shouldBe 1
-                observed.get().shouldBeInstanceOf<AmplifyException>()
+                val error = observed.get().shouldBeInstanceOf<AmplifyException>()
+                error.cause.shouldBeInstanceOf<ApiException>()
+                error.cause!!.message shouldContain "Not Authorized"
+                error.recoverySuggestion shouldContain "Check the GraphQL errors and retry."
+                error.recoverySuggestion shouldContain "Not Authorized"
             }
         } finally {
             scope.cancel()
