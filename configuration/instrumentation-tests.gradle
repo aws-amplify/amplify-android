@@ -19,6 +19,8 @@ def module_subpaths = [
         'aws-sdk-appsync-events': 'appsync/'
 ]
 
+def scriptsDir = layout.projectDirectory.dir("scripts")
+
 def canaryTests = [
         'aws-datastore'   : ['com.amplifyframework.datastore.DatastoreCanaryTest'],
         'aws-auth-cognito': ['com.amplifyframework.auth.cognito.AuthCanaryTest'],
@@ -28,49 +30,66 @@ def canaryTests = [
         'aws-kinesis': ['com.amplifyframework.kinesis.KinesisDataStreamsInstrumentationTest']
 ]
 
+/*
+ * Runs a script once per argument list through the injected ExecOperations.
+ *
+ * Gradle 9 removed Project.exec, and the configuration cache cannot serialize a task action that
+ * captures the Project, so the task takes its script, arguments and working directory as properties
+ * resolved at configuration time and runs the script at execution time.
+ */
+abstract class RunScriptTask extends DefaultTask {
+    @InputFile
+    abstract RegularFileProperty getScript()
+
+    @Input
+    abstract ListProperty<List<String>> getArgumentLists()
+
+    // Every registration passes rootDir; the scripts resolve ./scripts and module paths from there.
+    @Internal
+    abstract DirectoryProperty getWorkingDir()
+
+    @Inject
+    abstract ExecOperations getExecOperations()
+
+    @TaskAction
+    void run() {
+        def directory = workingDir.get().asFile
+        argumentLists.get().each { arguments ->
+            execOperations.exec { spec ->
+                spec.workingDir(directory)
+                spec.commandLine([script.get().asFile.absolutePath] + arguments)
+            }
+        }
+    }
+}
+
 subprojects {
     afterEvaluate { project ->
         if (module_backends.containsKey(project.name)) {
             def moduleWithSubPath = module_subpaths.get(project.name) ?
                     module_subpaths.get(project.name) + project.name : project.name
-            task runTestsInDeviceFarm {
-                doLast {
-                    exec {
-                        commandLine("$rootDir.path/scripts/run_test_in_devicefarm.sh")
-                        args([moduleWithSubPath])
-                    }
-                }
+            tasks.register('runTestsInDeviceFarm', RunScriptTask) {
+                workingDir = rootDir
+                script = scriptsDir.file("run_test_in_devicefarm.sh")
+                argumentLists = [[moduleWithSubPath]]
             }
-            task runCanaryInDeviceFarm {
-                dependsOn(assembleAndroidTest)
-                doLast {
-                    for (canary in canaryTests[project.name]) {
-                        exec {
-                            commandLine("$rootDir.path/scripts/run_canary_in_devicefarm.sh")
-                            args(project.name, canary)
-                        }
-                    }
+            tasks.register('runCanaryInDeviceFarm', RunScriptTask) {
+                dependsOn('assembleAndroidTest')
+                workingDir = rootDir
+                script = scriptsDir.file("run_canary_in_devicefarm.sh")
+                argumentLists = (canaryTests[project.name] ?: []).collect { canary ->
+                    [project.name, canary]
                 }
             }
         }
     }
 }
 
-
-task pullBackendConfigFromAmplify(description: "Pulls backend configurations from Amplify project.") {
-    doLast {
-        for (entry in module_backends) {
-            def moduleName = entry.key
-            def amplifyBackendProjectName = entry.value
-
-            println("Getting config files for $amplifyBackendProjectName")
-            def amplifyPullCommand = "$rootDir.path/scripts/pull_backend_config_from_amplify"
-            exec {
-                workingDir(rootDir.path)
-                executable(amplifyPullCommand)
-                args([amplifyBackendProjectName, moduleName])
-                standardOutput(System.out)
-            }
-        }
+tasks.register('pullBackendConfigFromAmplify', RunScriptTask) {
+    description = "Pulls backend configurations from Amplify project."
+    workingDir = rootDir
+    script = scriptsDir.file("pull_backend_config_from_amplify")
+    argumentLists = module_backends.collect { moduleName, amplifyBackendProjectName ->
+        [amplifyBackendProjectName, moduleName]
     }
 }
