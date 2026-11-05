@@ -27,6 +27,7 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 
@@ -42,6 +43,13 @@ import org.junit.Test
  * - `amplify_outputs` and `credentials` raw resources
  */
 class KinesisDataStreamsInstrumentationTest : BaseStreamClientInstrumentationTest() {
+
+    private companion object {
+        // Drain budget for testFlushLargePayloadWithLargePartitionKeys: the one-shard test
+        // stream keeps throttling while concurrent devices' ~10 MiB bursts drain (~30s for three)
+        const val MAX_FLUSH_ATTEMPTS = 20
+        val FLUSH_RETRY_DELAY = 2.seconds
+    }
 
     override val streamName = "amplify-kinesis-test-stream"
 
@@ -171,6 +179,8 @@ class KinesisDataStreamsInstrumentationTest : BaseStreamClientInstrumentationTes
             options = AmplifyKinesisClientOptions {
                 cacheMaxBytes = 12L * 1_024 * 1_024
                 flushStrategy = FlushStrategy.None
+                // Keep throttled records cached until the drain loop below can resend them
+                maxRetries = MAX_FLUSH_ATTEMPTS
             }
         )
         largeKinesis.enable()
@@ -189,10 +199,20 @@ class KinesisDataStreamsInstrumentationTest : BaseStreamClientInstrumentationTes
                 ).get()
             }
 
-            // Flush sends all records across multiple batches (up to 10 MiB per batch)
-            largeKinesis.flush().get().recordsFlushed shouldBe recordCount
+            // Flush sends all records in batches of up to 10 MiB, but throttled records stay
+            // cached for the next flush, so drain until every record has landed
+            var totalFlushed = 0
+            var attempts = 0
+            while (totalFlushed < recordCount && attempts < MAX_FLUSH_ATTEMPTS) {
+                totalFlushed += largeKinesis.flush().get().recordsFlushed
+                attempts++
+                if (totalFlushed < recordCount) {
+                    delay(FLUSH_RETRY_DELAY) // Let the throttled shard recover before retrying
+                }
+            }
+            totalFlushed shouldBe recordCount
 
-            // Second flush: nothing left
+            // Nothing left to flush
             largeKinesis.flush().get().recordsFlushed shouldBe 0
         } finally {
             largeKinesis.disable()
