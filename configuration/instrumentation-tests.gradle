@@ -31,14 +31,12 @@ def canaryTests = [
 ]
 
 /*
- * Runs a script once per argument list through the injected ExecOperations.
- *
- * Gradle 9 removed Project.exec, and the configuration cache cannot serialize a task action that
- * captures the Project, so the task takes its script, arguments and working directory as properties
- * resolved at configuration time and runs the script at execution time.
+ * Uses injected ExecOperations because Gradle 9 removed Project.exec and configuration-cache task
+ * actions cannot capture Project.
  */
 abstract class RunScriptTask extends DefaultTask {
     @InputFile
+    @PathSensitive(PathSensitivity.RELATIVE)
     abstract RegularFileProperty getScript()
 
     @Input
