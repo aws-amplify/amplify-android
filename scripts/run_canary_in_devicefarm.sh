@@ -84,17 +84,16 @@ for arn in "$test_package_upload_arn" "$app_package_upload_arn"; do
   done
 done
 
-# Get oldest device we can test against.
+# Get oldest device we can test against: Android 7.0 is API 24, the library minSdk.
 minDevice=$(aws devicefarm list-devices \
                 --region="us-west-2" \
                 --filters '[
                     {"attribute":"AVAILABILITY","operator":"EQUALS","values":["HIGHLY_AVAILABLE"]},
                     {"attribute":"PLATFORM","operator":"EQUALS","values":["ANDROID"]},
-                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["8"]},
-                    {"attribute":"OS_VERSION","operator":"LESS_THAN","values":["8.1"]},
+                    {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["7"]},
                     {"attribute":"MANUFACTURER","operator":"IN","values":["Google", "Pixel", "Samsung"]}
                 ]' \
-                | jq -r '.devices[0].arn')
+                | jq -r '[.devices[] | select(.os != null)] | sort_by([.os | scan("[0-9]+") | tonumber]) | .[0].arn // empty')
 
 # Get middle device we can test against.
 middleDevice=$(aws devicefarm list-devices \
@@ -106,7 +105,7 @@ middleDevice=$(aws devicefarm list-devices \
                     {"attribute":"OS_VERSION","operator":"LESS_THAN","values":["11"]},
                     {"attribute":"MANUFACTURER","operator":"IN","values":["Samsung"]}
                 ]' \
-                | jq -r '.devices[0].arn')
+                | jq -r '.devices[0].arn // empty')
 
 # Get latest device we can test against.
 latestDevice=$(aws devicefarm list-devices \
@@ -117,7 +116,7 @@ latestDevice=$(aws devicefarm list-devices \
                     {"attribute":"OS_VERSION","operator":"GREATER_THAN_OR_EQUALS","values":["14"]},
                     {"attribute":"MANUFACTURER","operator":"IN","values":["Google", "Pixel"]}
                 ]' \
-                | jq -r '.devices[0].arn')
+                | jq -r '.devices[0].arn // empty')
 
 # IF we fail to find our required test devices, fail.
 if [[ -z "${minDevice}" || -z "${middleDevice}" || -z "${latestDevice}" ]]; then
@@ -173,6 +172,10 @@ for run_attempt in $(seq 1 $max_run_attempts); do
     --region="us-west-2")
 
   echo "[RUN_IN_DEVICEFARM] Run ARN: $run_arn"
+  if [[ -z "$run_arn" ]]; then
+    echo "[RUN_IN_DEVICEFARM] Failed to schedule the Device Farm run (see error above). Exiting."
+    exit 1
+  fi
   echo "[RUN_IN_DEVICEFARM] Waiting for canary test run to complete..."
 
   status='NONE'
