@@ -154,6 +154,7 @@ class EventsWebSocketClient internal constructor(
      */
     suspend fun disconnect(flushEvents: Boolean = true) {
         eventsWebSocketProvider.existingWebSocket?.disconnect(flushEvents)
+        eventsWebSocketProvider.close()
     }
 
     @Throws(Exception::class)
