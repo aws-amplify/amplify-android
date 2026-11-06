@@ -18,7 +18,6 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.foundation.credentials.AwsCredentials
 import com.amplifyframework.foundation.credentials.AwsCredentialsProvider
-import com.amplifyframework.recordcache.FlushStrategy
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import org.junit.Test

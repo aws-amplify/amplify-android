@@ -25,11 +25,20 @@ import com.amplifyframework.foundation.result.Result
  * requires a `partitionKey` on `record()` while Firehose does not.
  * This interface normalises that by dropping `partitionKey` — the
  * Kinesis adapter supplies a sensible default internally.
+ *
+ * Each client returns its own public result types, so the adapters map them
+ * to the client-neutral [TestFlushData] and [TestClearCacheData] below.
  */
 interface TestableStreamClient {
-    suspend fun record(data: ByteArray, streamName: String): Result<RecordData, Throwable>
-    suspend fun flush(): Result<FlushData, Throwable>
-    suspend fun clearCache(): Result<ClearCacheData, Throwable>
+    suspend fun record(data: ByteArray, streamName: String): Result<Unit, Throwable>
+    suspend fun flush(): Result<TestFlushData, Throwable>
+    suspend fun clearCache(): Result<TestClearCacheData, Throwable>
     fun enable()
     fun disable()
 }
+
+/** Client-neutral view of a flush result, used by the shared instrumentation tests. */
+data class TestFlushData(val recordsFlushed: Int, val flushInProgress: Boolean)
+
+/** Client-neutral view of a clear cache result, used by the shared instrumentation tests. */
+data class TestClearCacheData(val recordsCleared: Int)

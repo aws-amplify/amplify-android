@@ -18,7 +18,6 @@ import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.foundation.logging.Logger
 import com.amplifyframework.foundation.result.Result
 import com.amplifyframework.foundation.result.getOrThrow
-import com.amplifyframework.foundation.result.mapSuccess
 import java.util.concurrent.atomic.AtomicBoolean
 
 internal class RecordClient(
@@ -29,14 +28,13 @@ internal class RecordClient(
     private val logger: Logger = AmplifyLogging.logger<RecordClient>()
     private val isFlushing = AtomicBoolean(false)
 
-    suspend fun record(record: RecordInput): Result<RecordData, Throwable> =
-        storage.addRecord(record) mapSuccess { RecordData() }
+    suspend fun record(record: RecordInput): Result<Unit, Throwable> = storage.addRecord(record)
 
-    suspend fun flush(): Result<FlushData, Throwable> {
+    suspend fun flush(): Result<CacheFlushData, Throwable> {
         // Guard against concurrent flushes to return early
         if (!isFlushing.compareAndSet(false, true)) {
             logger.debug { "Flush already in progress, skipping" }
-            return Result.Success(FlushData(recordsFlushed = 0, flushInProgress = true))
+            return Result.Success(CacheFlushData(recordsFlushed = 0, flushInProgress = true))
         }
         return try {
             var totalFlushed = 0
@@ -95,7 +93,7 @@ internal class RecordClient(
                 recordsByStream = storage.getRecordsByStream(lastIdByStream).getOrThrow()
             }
 
-            Result.Success(FlushData(totalFlushed))
+            Result.Success(CacheFlushData(totalFlushed))
         } catch (e: Throwable) {
             Result.Failure(e)
         } finally {
@@ -124,5 +122,5 @@ internal class RecordClient(
         }
     }
 
-    suspend fun clearCache(): Result<ClearCacheData, Throwable> = storage.clearRecords()
+    suspend fun clearCache(): Result<CacheClearData, Throwable> = storage.clearRecords()
 }

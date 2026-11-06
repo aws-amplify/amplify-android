@@ -16,7 +16,6 @@ package com.amplifyframework.firehose
 
 import aws.sdk.kotlin.services.firehose.FirehoseClient
 import com.amplifyframework.foundation.config.SdkClientConfigurationProvider
-import com.amplifyframework.recordcache.FlushStrategy
 import kotlin.time.Duration.Companion.seconds
 
 /** Provides custom configuration for the underlying [FirehoseClient]. */
