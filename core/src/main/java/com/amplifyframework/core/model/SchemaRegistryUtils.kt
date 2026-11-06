@@ -25,6 +25,7 @@ internal object SchemaRegistryUtils {
      * Registers the ModelSchema's while filtering out unsupported lazy types
      */
     @JvmStatic
+    @Throws(IrRecoverableException::class)
     fun registerSchemas(
         modelSchemaMap: MutableMap<String, ModelSchema>,
         modelSchemas: Map<String, ModelSchema>? = null
@@ -38,6 +39,7 @@ internal object SchemaRegistryUtils {
      * Registers the ModelSchema while filtering out unsupported lazy types
      */
     @JvmStatic
+    @Throws(IrRecoverableException::class)
     fun registerSchema(modelSchemaMap: MutableMap<String, ModelSchema>, modelName: String, modelSchema: ModelSchema) {
         try {
             if (modelSchema.modelClass.getAnnotation(ModelConfig::class.java)?.hasLazySupport == true) {
