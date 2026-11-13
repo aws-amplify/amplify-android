@@ -12,13 +12,14 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-package com.amplifyframework.recordcache
+
+package com.amplifyframework.firehose
 
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Strategy for automatically flushing cached records to Kinesis.
+ * Strategy for automatically flushing records cached by [AmplifyFirehoseClient] to Amazon Data Firehose.
  */
 sealed class FlushStrategy {
     /**
@@ -40,7 +41,7 @@ sealed class FlushStrategy {
     ) : FlushStrategy()
 
     /**
-     * Disable automatic flushing. Records must be flushed manually by calling flush().
+     * Disable automatic flushing. Records must be flushed manually by calling [AmplifyFirehoseClient.flush].
      */
     data object None : FlushStrategy()
 }

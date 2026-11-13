@@ -16,7 +16,6 @@ package com.amplifyframework.kinesis
 
 import aws.sdk.kotlin.services.kinesis.KinesisClient
 import com.amplifyframework.foundation.config.SdkClientConfigurationProvider
-import com.amplifyframework.recordcache.FlushStrategy
 import kotlin.time.Duration.Companion.seconds
 
 /** Provides custom configuration for the underlying [KinesisClient]. */

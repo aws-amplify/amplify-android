@@ -31,5 +31,5 @@ internal abstract class RecordStorage(
     abstract suspend fun deleteRecords(ids: List<Long>): Result<Unit, RecordCacheException>
     abstract suspend fun incrementRetryCount(ids: List<Long>): Result<Unit, RecordCacheException>
     abstract suspend fun getCurrentCacheSize(): Result<Int, RecordCacheException>
-    abstract suspend fun clearRecords(): Result<ClearCacheData, RecordCacheException>
+    abstract suspend fun clearRecords(): Result<CacheClearData, RecordCacheException>
 }
