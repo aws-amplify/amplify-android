@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws
 
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.ApiCategory
+import com.amplifyframework.api.ApiException
 import com.amplifyframework.api.graphql.GraphQLRequest
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
@@ -45,16 +46,20 @@ internal class ApiLazyModelList<out M : Model> constructor(
     // API name is important to provide to future query calls. If a custom API name was used for the original call,
     // the apiName must be provided to the following lazy calls to fetch the lazy list
     private val apiName: String?,
-    private val apiCategory: ApiCategory = Amplify.API
+    private val apiCategory: ApiCategory = Amplify.API,
+    private val callbackScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) : LazyModelList<M> {
 
-    private val callbackScope = CoroutineScope(Dispatchers.IO)
     private val queryPredicate = createPredicate(clazz, keyMap)
 
     override suspend fun fetchPage(paginationToken: PaginationToken?): ModelPage<M> {
         try {
             val response = query(apiCategory, createRequest(paginationToken), apiName)
-            return response.data
+            return response.data ?: throw ApiException(
+                "GraphQL response did not contain a model page. " +
+                    "Check the GraphQL errors and retry. Errors: ${response.errors}",
+                "Check the GraphQL errors and retry the request."
+            )
         } catch (error: AmplifyException) {
             throw createLazyException(error)
         }
