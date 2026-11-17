@@ -32,9 +32,9 @@ class AutoFlushSchedulerTest {
     fun `start should begin periodic flushing`() = runTest {
         // Given
         val mockClient = mockk<RecordClient>()
-        coEvery { mockClient.flush() } returns Result.Success(FlushData(0))
+        coEvery { mockClient.flush() } returns Result.Success(CacheFlushData(0))
 
-        val interval = FlushStrategy.Interval(1.seconds)
+        val interval = 1.seconds
         val scheduler = AutoFlushScheduler(
             interval,
             mockClient,
@@ -54,9 +54,9 @@ class AutoFlushSchedulerTest {
     fun `disable should stop periodic flushing`() = runTest {
         // Given
         val mockClient = mockk<RecordClient>()
-        coEvery { mockClient.flush() } returns Result.Success(FlushData(0))
+        coEvery { mockClient.flush() } returns Result.Success(CacheFlushData(0))
 
-        val interval = FlushStrategy.Interval(1.seconds)
+        val interval = 1.seconds
         val scheduler = AutoFlushScheduler(
             interval,
             mockClient,
@@ -77,9 +77,9 @@ class AutoFlushSchedulerTest {
     fun `start should cancel previous job and restart`() = runTest {
         // Given
         val mockClient = mockk<RecordClient>()
-        coEvery { mockClient.flush() } returns Result.Success(FlushData(0))
+        coEvery { mockClient.flush() } returns Result.Success(CacheFlushData(0))
 
-        val interval = FlushStrategy.Interval(1.seconds)
+        val interval = 1.seconds
         val scheduler = AutoFlushScheduler(
             interval,
             mockClient,

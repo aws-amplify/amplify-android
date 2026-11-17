@@ -25,21 +25,14 @@ import com.amplifyframework.foundation.logging.AmplifyLogging
 import com.amplifyframework.foundation.logging.Logger
 import com.amplifyframework.foundation.result.Result
 import com.amplifyframework.foundation.result.mapFailure
+import com.amplifyframework.foundation.result.mapSuccess
 import com.amplifyframework.foundation.useragent.AmplifyUserAgentInterceptor
 import com.amplifyframework.kinesis.BuildConfig
 import com.amplifyframework.recordcache.AutoFlushScheduler
-import com.amplifyframework.recordcache.ClearCacheData
-import com.amplifyframework.recordcache.FlushData
-import com.amplifyframework.recordcache.FlushStrategy
 import com.amplifyframework.recordcache.RecordClient
-import com.amplifyframework.recordcache.RecordData
 import com.amplifyframework.recordcache.RecordInput
 import com.amplifyframework.recordcache.SQLiteRecordStorage
 import com.amplifyframework.recordcache.logOp
-
-typealias FirehoseRecordResult = Result<RecordData, AmplifyFirehoseException>
-typealias FirehoseFlushResult = Result<FlushData, AmplifyFirehoseException>
-typealias FirehoseClearCacheResult = Result<ClearCacheData, AmplifyFirehoseException>
 
 /**
  * Firehose supports up to 500 records per PutRecordBatch request.
@@ -128,7 +121,7 @@ class AmplifyFirehoseClient(
     init {
         scheduler = when (options.flushStrategy) {
             is FlushStrategy.Interval -> AutoFlushScheduler(
-                options.flushStrategy,
+                interval = options.flushStrategy.interval,
                 client = recordClient
             )
             is FlushStrategy.None -> null
@@ -147,13 +140,16 @@ class AmplifyFirehoseClient(
      *   - [AmplifyFirehoseLimitExceededException] (cache full)
      *   - [AmplifyFirehoseStorageException] (database errors)
      */
-    suspend fun record(data: ByteArray, streamName: String): FirehoseRecordResult {
+    suspend fun record(data: ByteArray, streamName: String): RecordResult {
         if (!isEnabled) {
             logger.debug { "Record collection is disabled, dropping record" }
             return Result.Success(RecordData())
         }
         return logOp(
-            operation = { recordClient.record(RecordInput(streamName = streamName, data = data)).wrapError() },
+            operation = {
+                recordClient.record(RecordInput(streamName = streamName, data = data))
+                    .wrapError() mapSuccess { RecordData() }
+            },
             logSuccess = { _, timeMs -> logger.debug { "Record completed in ${timeMs}ms" } },
             logFailure = { error, timeMs -> logger.warn { "Record failed in ${timeMs}ms: ${error?.message}" } }
         )
@@ -181,8 +177,8 @@ class AmplifyFirehoseClient(
      *   - [AmplifyFirehoseStorageException] (database errors)
      *   - [AmplifyFirehoseUnknownException] (unexpected failures)
      */
-    suspend fun flush(): FirehoseFlushResult = logOp(
-        operation = { recordClient.flush().wrapError() },
+    suspend fun flush(): FlushResult = logOp(
+        operation = { recordClient.flush().wrapError() mapSuccess { it.toFlushData() } },
         logSuccess = { data, timeMs ->
             logger.debug {
                 "Flush completed in ${timeMs}ms - ${data.recordsFlushed} records flushed"
@@ -199,8 +195,8 @@ class AmplifyFirehoseClient(
      * @return Result.Success(ClearCacheData) on success, or Result.Failure with:
      *   - [AmplifyFirehoseStorageException] (database errors)
      */
-    suspend fun clearCache(): FirehoseClearCacheResult = logOp(
-        operation = { recordClient.clearCache().wrapError() },
+    suspend fun clearCache(): ClearCacheResult = logOp(
+        operation = { recordClient.clearCache().wrapError() mapSuccess { it.toClearCacheData() } },
         logSuccess = { data, timeMs ->
             logger.debug { "Clear cache completed in ${timeMs}ms - ${data.recordsCleared} records cleared" }
         },
