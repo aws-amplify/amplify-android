@@ -18,6 +18,7 @@ package com.amplifyframework.core.model;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.datastore.DataStoreException.IrRecoverableException;
 import com.amplifyframework.util.Immutable;
 
 import java.util.HashMap;
@@ -55,8 +56,10 @@ public final class SchemaRegistry {
     /**
      * Registers the modelSchemas provided.
      * @param modelSchemas the map that contains mapping of ModelName to ModelSchema.
+     * @throws IrRecoverableException if a model schema supports lazy model types
      */
-    public synchronized void register(@NonNull Map<String, ModelSchema> modelSchemas) {
+    public synchronized void register(@NonNull Map<String, ModelSchema> modelSchemas)
+            throws IrRecoverableException {
         SchemaRegistryUtils.registerSchemas(modelSchemaMap, modelSchemas);
     }
 
@@ -65,10 +68,11 @@ public final class SchemaRegistry {
      * This method is consumed with Flutter use cases.
      * @param modelSchemas the map that contains mapping of ModelName to ModelSchema.
      * @param customTypeSchemas the map that contains mapping of CustomTypeName to CustomTypeSchema.
+     * @throws IrRecoverableException if a model schema supports lazy model types
      */
     public synchronized void register(
             @NonNull Map<String, ModelSchema> modelSchemas,
-            @NonNull Map<String, CustomTypeSchema> customTypeSchemas) {
+            @NonNull Map<String, CustomTypeSchema> customTypeSchemas) throws IrRecoverableException {
         SchemaRegistryUtils.registerSchemas(modelSchemaMap, modelSchemas);
         customTypeSchemaMap.putAll(customTypeSchemas);
     }
@@ -77,8 +81,10 @@ public final class SchemaRegistry {
      * Registers the modelSchema for the given modelName.
      * @param modelName name of the model
      * @param modelSchema schema of the model to be registered.
+     * @throws IrRecoverableException if the model schema supports lazy model types
      */
-    public synchronized void register(@NonNull String modelName, @NonNull ModelSchema modelSchema) {
+    public synchronized void register(@NonNull String modelName, @NonNull ModelSchema modelSchema)
+            throws IrRecoverableException {
         SchemaRegistryUtils.registerSchema(modelSchemaMap, modelName, modelSchema);
     }
 
