@@ -186,8 +186,9 @@ public abstract class StorageTransferOperation<R, T extends StorageTransferResul
     /**
      * Provide a Consumer to receive transfer errors.
      *
-     * @return onError Consumer which provides transfer errors
+     * @return onError Consumer which provides transfer errors, or null if the listener has been detached
      */
+    @Nullable
     protected Consumer<StorageException> getOnError() {
         return this.internalOnError;
     }
