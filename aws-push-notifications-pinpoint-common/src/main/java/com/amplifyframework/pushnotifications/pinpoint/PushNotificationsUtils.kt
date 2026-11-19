@@ -30,6 +30,7 @@ import androidx.annotation.ChecksSdkIntAtLeast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.IconCompat
 import com.amplifyframework.pushnotifications.pinpoint.common.R
 import java.net.URL
 import kotlinx.coroutines.CoroutineScope
@@ -128,10 +129,15 @@ class PushNotificationsUtils(
             builder.apply {
                 setContentTitle(payload.title)
                 setContentText(payload.body)
-                setSmallIcon(R.drawable.ic_launcher_foreground)
+                setSmallIcon(IconCompat.createWithBitmap(largeImageIcon))
                 setContentIntent(pendingIntent)
                 setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 setLargeIcon(largeImageIcon)
+                setStyle(
+                    NotificationCompat.BigPictureStyle()
+                        .bigPicture(largeImageIcon)
+                        .bigLargeIcon(null)
+                )
                 setAutoCancel(true)
                 setStyle(NotificationCompat.BigTextStyle().bigText(payload.body))
             }
