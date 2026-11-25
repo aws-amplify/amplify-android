@@ -51,8 +51,7 @@ class KotlinMultiplatformConventionPlugin : Plugin<Project> {
             // this one has to reach for the nested extension by type.
             (this as ExtensionAware).extensions.configure<KotlinMultiplatformAndroidLibraryExtension> {
                 namespace = "com.amplifyframework.${project.name.replace("-", ".")}"
-                // Kept in step with AndroidLibraryConventionPlugin, which explains why this is 36.
-                compileSdk = 36
+                compileSdk = 37
                 minSdk = 24
 
                 withHostTestBuilder {

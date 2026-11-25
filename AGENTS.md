@@ -12,7 +12,7 @@
 - **Languages**: Kotlin (primary for all new code) and Java (legacy — existing Java code is not subject to Kotlin standards, but should be internally consistent)
 - **Architecture**: Gradle multi-module monorepo 
 - **Build system**: Gradle with Kotlin DSL (`build.gradle.kts`), convention plugins in `build-logic/plugins/`
-- **Min SDK**: 24, **Compile SDK**: 36, **JVM toolchain**: 17
+- **Min SDK**: 24, **Compile SDK**: 37, **JVM toolchain**: 17
 - **Dependency management**: Version catalog at `gradle/libs.versions.toml` — all dependencies, plugins, and versions MUST be declared there
 - Root `gradle.properties` — version (`VERSION_NAME`), group (`POM_GROUP=com.amplifyframework`)
 
