@@ -27,16 +27,19 @@ class LicensesConventionPlugin : Plugin<Project> {
             pluginManager.apply("app.cash.licensee")
 
             extensions.configure<app.cash.licensee.LicenseeExtension> {
+                // The allow list is shared by every module, so most entries are unused in any given module.
+                unusedAction(app.cash.licensee.UnusedAction.IGNORE)
                 allow("Apache-2.0")
                 allow("MIT")
                 allow("MIT-0")
                 allow("BSD-2-Clause")
+                allow("BSD-3-Clause")
                 allow("CC0-1.0")
                 allowUrl("https://developer.android.com/studio/terms.html")
                 allowUrl("https://opensource.org/license/mit") {
                     because("MIT license - alternate URL used by slf4j 2.0.17+")
                 }
-                allowDependency("net.zetetic", "sqlcipher-android", "4.17.0") {
+                allowDependency("net.zetetic", "sqlcipher-android", "4.20.0") {
                     because("BSD style License")
                 }
                 allowDependency("org.jetbrains", "annotations", "16.0.1") {
