@@ -26,7 +26,8 @@ internal data class SignedInData(
     @Serializable(DateSerializer::class)
     val signedInDate: Date,
     val signInMethod: SignInMethod,
-    val cognitoUserPoolTokens: CognitoUserPoolTokens
+    val cognitoUserPoolTokens: CognitoUserPoolTokens,
+    val inputUsername: String? = null
 ) {
     override fun equals(other: Any?): Boolean = if (super.equals(other)) {
         true
@@ -36,6 +37,7 @@ internal data class SignedInData(
         userId == other.userId &&
             username == other.username &&
             signInMethod == other.signInMethod &&
-            cognitoUserPoolTokens == other.cognitoUserPoolTokens
+            cognitoUserPoolTokens == other.cognitoUserPoolTokens &&
+            inputUsername == other.inputUsername
     }
 }
