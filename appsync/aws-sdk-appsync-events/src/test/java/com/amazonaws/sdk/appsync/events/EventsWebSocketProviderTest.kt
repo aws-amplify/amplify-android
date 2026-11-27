@@ -26,14 +26,21 @@ import io.mockk.unmockkAll
 import java.net.SocketTimeoutException
 import junit.framework.TestCase.fail
 import kotlin.random.Random
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class EventsWebSocketProviderTest {
     private val provider = EventsWebSocketProvider(
         mockk(),
@@ -141,5 +148,63 @@ class EventsWebSocketProviderTest {
         coVerify(exactly = 2) {
             anyConstructed<EventsWebSocket>().connect()
         }
+    }
+
+    @Test
+    fun `cancelling the first caller does not cancel the attempt others joined`() = runTest {
+        val provider = EventsWebSocketProvider(
+            mockk(),
+            mockk(),
+            mockk(),
+            mockk(),
+            null,
+            StandardTestDispatcher(testScheduler)
+        )
+        val connectGate = CompletableDeferred<Unit>()
+        every { anyConstructed<EventsWebSocket>().isClosed } returns false
+        coEvery { anyConstructed<EventsWebSocket>().connect() } coAnswers { connectGate.await() }
+
+        // The first caller triggers the connection attempt; the second joins the same attempt.
+        val first = launch { provider.getConnectedWebSocket() }
+        val second = async { provider.getConnectedWebSocket() }
+        runCurrent()
+
+        // Cancelling the caller that started the attempt must not cancel the attempt itself.
+        first.cancel()
+        connectGate.complete(Unit)
+        advanceUntilIdle()
+
+        second.await().isClosed shouldBe false
+        coVerify(exactly = 1) {
+            anyConstructed<EventsWebSocket>().connect()
+        }
+    }
+
+    @Test
+    fun `close cancels in progress attempt and next call reconnects`() = runTest {
+        val provider = EventsWebSocketProvider(
+            mockk(),
+            mockk(),
+            mockk(),
+            mockk(),
+            null,
+            StandardTestDispatcher(testScheduler)
+        )
+        val firstConnectGate = CompletableDeferred<Unit>()
+        every { anyConstructed<EventsWebSocket>().isClosed } returns false
+        coEvery { anyConstructed<EventsWebSocket>().connect() } coAnswers { firstConnectGate.await() }
+
+        val firstAttempt = async { provider.getConnectedWebSocket() }
+        runCurrent()
+
+        // Closing the provider cancels the in-progress attempt.
+        provider.close()
+        firstConnectGate.complete(Unit)
+        advanceUntilIdle()
+        firstAttempt.isCancelled shouldBe true
+
+        // A subsequent call succeeds on a fresh scope.
+        coEvery { anyConstructed<EventsWebSocket>().connect() } answers {}
+        provider.getConnectedWebSocket().isClosed shouldBe false
     }
 }
