@@ -98,6 +98,7 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                     listOf(
                         "META-INF/COPYRIGHT",
                         "META-INF/DEPENDENCIES",
+                        "META-INF/INDEX.LIST",
                         "META-INF/LICENSE.md",
                         "META-INF/LICENSE-notice.md",
                         "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
