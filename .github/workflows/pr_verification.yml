@@ -90,10 +90,10 @@ jobs:
           path: '**/reports/tests/**'
           retention-days: 7
 
-  # REQUIRED. Runs in parallel with unit-tests so lint/format/API-compat breaks
-  # surface fast. `lint` is included because the old `./gradlew build` gate ran
-  # Android lint with abortOnError/warningsAsErrors — dropping it would silently
-  # remove a gating check.
+  # REQUIRED. Runs in parallel with unit-tests so lint/format/API-compat/license
+  # breaks surface fast. `lint` and `licensee` are included because the old
+  # `./gradlew build` gate ran them via `check` — dropping them would silently
+  # remove gating checks.
   static-analysis:
     runs-on: ubuntu-latest
 
@@ -111,7 +111,7 @@ jobs:
 
       - name: Run static analysis
         # `--continue` reports findings from every check rather than stopping at the first.
-        run: ./gradlew ktlintCheck checkstyle apiCheck lint --continue
+        run: ./gradlew ktlintCheck checkstyle apiCheck lint licensee --continue
 
   # REQUIRED. Verifies that every external type in each published module's public
   # API surface is resolvable on the compile classpath a downstream consumer
