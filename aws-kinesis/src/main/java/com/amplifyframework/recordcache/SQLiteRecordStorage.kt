@@ -304,7 +304,7 @@ internal class SQLiteRecordStorage internal constructor(
 
     override suspend fun getCurrentCacheSize(): Result<Int, RecordCacheException> = Result.Success(cachedSize.toInt())
 
-    override suspend fun clearRecords(): Result<ClearCacheData, RecordCacheException> =
+    override suspend fun clearRecords(): Result<CacheClearData, RecordCacheException> =
         wrapDispatchAndTransactionAndCatching {
             val count = connection.prepare("SELECT COUNT(*) FROM records").use { stmt ->
                 if (stmt.step()) stmt.getInt(0) else 0
@@ -312,7 +312,7 @@ internal class SQLiteRecordStorage internal constructor(
 
             connection.execSQL("DELETE FROM records")
             cachedSize.set(0)
-            ClearCacheData(count)
+            CacheClearData(count)
         }.recoverAsRecordCacheException("Failed to clear cache")
 
     private fun <R> Result<R, Throwable>.recoverAsRecordCacheException(
